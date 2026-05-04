@@ -1,0 +1,13 @@
+---
+description: Bliq product and engineering conventions (multi-tenant service businesses)
+alwaysApply: true
+---
+
+# Bliq
+
+- **Product:** Mobile-first platform for appointment-based service businesses (generic domain: Business, Staff, Service, Customer, Booking—not barber-only).
+- **Stack:** Next.js App Router (web today). **Mobile: Capacitor** scaffold (`capacitor.config.ts`, `capacitor-www/`, npm scripts) wraps the same web app; run `npx cap add ios|android` locally for native projects. APIs remain for any HTTP client.
+- **Before coding:** Read **`docs/BLIQ_BUILD_PLAN.md` first** (source of truth: product, rules, philosophies, phases). Skim **`docs/MASTER_SPINE.md`**, **`docs/ROADMAP.md`**, and **`docs/elite/README.md`** (API standard, security, event catalog targets, UX, release, testing). For folder layout, see **`docs/REPO_LAYOUT.md`** and **`docs/FOLDER_STRUCTURE.md`**. Then `docs/CURSOR_RULES.md`, `prisma/schema.prisma`, and relevant `src/services/*`.
+- **APIs:** Tenant-nested only: `/api/businesses/[businessId]/...`. Handlers use `NextRequest`, `await params`, Zod, thin routes; logic in `src/services/*`.
+- **Tenancy:** Every tenant query includes `businessId`; use `membershipService` on routes; emit `logEvent` for major mutations.
+- **Payments:** No Stripe calls from routes; PSP work stays under `src/services/payments/*` (see build plan Phase 6/7).

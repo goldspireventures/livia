@@ -32,6 +32,17 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+# Local Cursor MCP (project-specific); commit mcp.json.example instead
+.cursor/mcp.json
+
+# Local AI/editor scratch folders (do not commit)
+/.codestudio/
+/.commandcode/
+/.continue/
+/.cortex/
+/.pi/
 
 # vercel
 .vercel
@@ -41,3 +52,10 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+
+# clerk configuration (can include secrets)
+/.clerk/
+
+# Capacitor native projects (create with `npx cap add ios` / `npx cap add android`)
+/ios/
+/android/
