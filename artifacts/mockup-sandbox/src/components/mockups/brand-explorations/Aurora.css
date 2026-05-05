@@ -1,0 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Plus+Jakarta+Sans:wght@400..800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+.aurora-theme {
+  --aurora-bg: #09090b;
+  --aurora-surface: rgba(255, 255, 255, 0.03);
+  --aurora-surface-hover: rgba(255, 255, 255, 0.05);
+  --aurora-border: rgba(255, 255, 255, 0.08);
+  --aurora-border-light: rgba(255, 255, 255, 0.15);
+  
+  --aurora-text: #ffffff;
+  --aurora-text-muted: rgba(255, 255, 255, 0.6);
+  --aurora-text-faint: rgba(255, 255, 255, 0.4);
+  
+  --aurora-gradient-start: #8b5cf6;
+  --aurora-gradient-mid: #06b6d4;
+  --aurora-gradient-end: #10b981;
+  
+  --aurora-accent: #06b6d4;
+  --aurora-success: #10b981;
+  --aurora-warning: #f59e0b;
+  --aurora-destructive: #ef4444;
+  
+  background-color: var(--aurora-bg);
+  color: var(--aurora-text);
+  font-family: 'Geist', sans-serif;
+  min-height: 100vh;
+}
+
+.aurora-gradient-text {
+  background: linear-gradient(135deg, var(--aurora-gradient-start), var(--aurora-gradient-mid), var(--aurora-gradient-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.aurora-gradient-bg {
+  background: linear-gradient(135deg, var(--aurora-gradient-start), var(--aurora-gradient-mid), var(--aurora-gradient-end));
+}
+
+.aurora-glass {
+  background: var(--aurora-surface);
+  border: 1px solid var(--aurora-border);
+  backdrop-filter: blur(12px);
+  border-radius: 1.5rem;
+}
+
+.font-display {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}

@@ -85,3 +85,13 @@ All screens pass TypeScript with zero errors.
 - `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` — mobile app
 - `DATABASE_URL` — Postgres
 - `EXPO_PUBLIC_DOMAIN` — injected at workflow start from `$REPLIT_DEV_DOMAIN`; used as API base URL in mobile app
+
+## Roadmap & Active Work
+
+- 7-wave product roadmap lives in `.local/tasks/RELEASE-PLAN.md`. 17 detailed task plans in `.local/tasks/*.md` (project tasks #6–#22).
+- **Wave 1 (active):** Brand & visual identity (Task #18), brand definition (#6), personas/ICP (#7).
+- Brand exploration in progress on the canvas — three directions (Aurora, Atelier, Pulse) under `artifacts/mockup-sandbox/src/components/mockups/brand-explorations/`. User picks the winner; that becomes the design-system source of truth.
+
+## Auth / Clerk Notes
+
+- Clerk app name "Bliq Goldspire" (auto-generated) is overridden client-side via `localization` on `<ClerkProvider>` in `artifacts/bliq-dashboard/src/App.tsx` — sets `signIn.start.title` and `signUp.start.title` to "Sign in to Bliq" / "Create your Bliq account". Per-component `localization` props on `<SignIn>` / `<SignUp>` do NOT override the provider — set it once at the provider level.

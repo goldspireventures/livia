@@ -115,6 +115,20 @@ function ClerkProviderWithTheme({ children }: { children: React.ReactNode }) {
           colorBackground: currentTheme === "dark" ? "hsl(223, 21%, 10%)" : "white",
         },
       }}
+      localization={{
+        signIn: {
+          start: {
+            title: "Sign in to Bliq",
+            subtitle: "Welcome back to your command center",
+          },
+        },
+        signUp: {
+          start: {
+            title: "Create your Bliq account",
+            subtitle: "Start booking smarter in minutes",
+          },
+        },
+      }}
     >
       {children}
     </ClerkProvider>
