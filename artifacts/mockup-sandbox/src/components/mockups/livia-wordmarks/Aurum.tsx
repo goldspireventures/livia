@@ -53,50 +53,47 @@ export default function Aurum() {
         }}
       />
 
-      {/* Lv monogram — sharp geometric, chrome v */}
+      {/* Lv monogram — soft roundel (D-style), chrome italic v */}
       <div
         style={{
-          width: 132,
-          height: 132,
-          borderRadius: 4,
-          background: ink,
-          border: "1px solid rgba(217,195,154,0.35)",
+          width: 144,
+          height: 144,
+          borderRadius: "50%",
+          border: "1px solid rgba(246,243,236,0.28)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          background:
+            "radial-gradient(circle at 30% 30%, rgba(217,195,154,0.18), transparent 65%)",
           position: "relative",
           boxShadow:
-            "0 0 0 1px rgba(217,195,154,0.08), 0 30px 80px -20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04)",
+            "0 30px 80px -30px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.04)",
         }}
       >
-        <svg width="84" height="84" viewBox="0 0 84 84" fill="none">
-          <defs>
-            <linearGradient id="chrome" x1="0" y1="0" x2="0" y2="84" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="#f6f3ec" />
-              <stop offset="45%" stopColor="#d9c39a" />
-              <stop offset="60%" stopColor="#8a7549" />
-              <stop offset="78%" stopColor="#d9c39a" />
-              <stop offset="100%" stopColor="#f6f3ec" />
-            </linearGradient>
-          </defs>
-          {/* Hairline L */}
-          <path
-            d="M14 8 L14 70 L42 70"
-            stroke={cream}
-            strokeWidth="2.5"
-            strokeLinecap="square"
-            fill="none"
-          />
-          {/* Chrome v — sharp vee */}
-          <path
-            d="M36 30 L52 70 L72 30"
-            stroke="url(#chrome)"
-            strokeWidth="3"
-            strokeLinecap="square"
-            strokeLinejoin="miter"
-            fill="none"
-          />
-        </svg>
+        <span
+          style={{
+            fontFamily: "'Cormorant Garamond', serif",
+            fontSize: 76,
+            fontWeight: 400,
+            lineHeight: 1,
+            color: cream,
+            letterSpacing: "-0.04em",
+          }}
+        >
+          L
+          <span
+            style={{
+              fontStyle: "italic",
+              fontWeight: 400,
+              background: chromeGrad,
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              marginLeft: -6,
+            }}
+          >
+            v
+          </span>
+        </span>
       </div>
 
       {/* Wordmark — Didone serif, chrome v */}
@@ -128,17 +125,21 @@ export default function Aurum() {
         </div>
         <div
           style={{
-            marginTop: 20,
-            fontFamily: "JetBrains Mono, monospace",
-            fontSize: 10,
+            marginTop: 22,
+            fontFamily: "'Cormorant Garamond', serif",
+            fontStyle: "italic",
+            fontSize: 20,
             fontWeight: 300,
-            letterSpacing: "0.5em",
-            textTransform: "uppercase",
-            color: champagne,
-            paddingLeft: "0.5em",
+            letterSpacing: "0.01em",
+            color: "rgba(246,243,236,0.78)",
+            maxWidth: 720,
+            margin: "22px auto 0",
+            lineHeight: 1.45,
           }}
         >
-          Operating System · 2026
+          For barbershops, tattoo studios, dental practices
+          <span style={{ color: champagne }}> — </span>
+          and every appointment in between.
         </div>
       </div>
 
