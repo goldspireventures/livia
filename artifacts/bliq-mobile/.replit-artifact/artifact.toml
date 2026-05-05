@@ -1,6 +1,6 @@
 kind = "mobile"
 previewPath = "/mobile/"
-title = "Bliq Mobile"
+title = "Livia Mobile"
 version = "1.0.0"
 id = "artifacts/bliq-mobile"
 router = "expo-domain"

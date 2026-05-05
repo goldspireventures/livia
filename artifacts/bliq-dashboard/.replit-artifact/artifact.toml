@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/"
-title = "Bliq Dashboard"
+title = "Livia Dashboard"
 version = "1.0.0"
 id = "artifacts/bliq-dashboard"
 router = "path"
