@@ -205,15 +205,17 @@ export default function SignInScreen() {
         <View style={styles.brand}>
           <View style={styles.markWrap}>
             <LinearGradient
-              colors={[aurora.violet, aurora.cyan, aurora.mint]}
+              colors={["#0a0a10", "#161620"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.mark}
             >
-              <Text style={styles.markLetter}>B</Text>
+              <Text style={styles.markLetter}>
+                L<Text style={{ color: "#d9c39a", fontStyle: "italic" }}>v</Text>
+              </Text>
             </LinearGradient>
           </View>
-          <Text style={[styles.appName, { color: colors.foreground }]}>Bliq</Text>
+          <Text style={[styles.appName, { color: colors.foreground }]}>Livia</Text>
           <Text style={[styles.headline, { color: colors.foreground }]}>
             Your day,{" "}
             <Text style={styles.headlineGradient}>already handled.</Text>
@@ -384,7 +386,7 @@ export default function SignInScreen() {
               hitSlop={8}
             >
               <Text style={[styles.toggleText, { color: colors.mutedForeground }]}>
-                {mode === "sign-in" ? "New to Bliq? " : "Already on Bliq? "}
+                {mode === "sign-in" ? "New to Livia? " : "Already on Livia? "}
                 <Text style={{ color: colors.primary, fontFamily: "Inter_600SemiBold" }}>
                   {mode === "sign-in" ? "Create an account" : "Sign in"}
                 </Text>
@@ -413,7 +415,7 @@ export default function SignInScreen() {
         </View>
 
         <Text style={[styles.legal, { color: colors.mutedForeground }]}>
-          By continuing you agree to Bliq's Terms & Privacy Policy.
+          By continuing you agree to Livia's Terms & Privacy Policy.
         </Text>
       </View>
     </KeyboardAvoidingView>
@@ -489,10 +491,13 @@ const styles = StyleSheet.create({
   },
   markWrap: {
     marginBottom: 14,
-    shadowColor: aurora.cyan,
-    shadowOpacity: 0.55,
+    shadowColor: "#d9c39a",
+    shadowOpacity: 0.35,
     shadowRadius: 22,
     shadowOffset: { width: 0, height: 0 },
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(217, 195, 154, 0.25)",
   },
   mark: {
     width: 56,
@@ -502,10 +507,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   markLetter: {
-    color: "#0c0c0f",
-    fontSize: 30,
-    fontFamily: "Inter_700Bold",
+    color: "#f6f3ec",
+    fontSize: 32,
+    fontFamily: "Inter_400Regular",
     marginTop: -2,
+    letterSpacing: -0.5,
   },
   appName: {
     fontSize: 22,

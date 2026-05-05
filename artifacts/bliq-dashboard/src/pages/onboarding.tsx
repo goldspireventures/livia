@@ -65,7 +65,7 @@ export default function OnboardingPage() {
         onSuccess: () => {
           toast({
             title: "Business created",
-            description: "Welcome to Bliq!",
+            description: "Welcome to Livia!",
           });
           window.location.href = "/dashboard";
         },
@@ -174,7 +174,7 @@ export default function OnboardingPage() {
                     <FormControl>
                       <div className="flex items-center">
                         <span className="text-muted-foreground bg-muted px-3 py-2 text-sm border border-r-0 border-input rounded-l-md">
-                          bliq.com/b/
+                          livia.io/b/
                         </span>
                         <Input className="rounded-l-none" placeholder="acme-studio" {...field} />
                       </div>

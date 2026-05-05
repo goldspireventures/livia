@@ -1,9 +1,12 @@
 /**
- * Aurora — Bliq's brand color system, mobile edition.
+ * Livia brand color system, mobile edition.
  * Mirrors artifacts/bliq-dashboard/src/index.css token semantics.
  *
- * Brand: midnight base + aurora gradient (violet → cyan → mint).
- * Cyan is the primary action color. Violet signals AI moments.
+ * Two-layer brand:
+ *   - Aurora (product surface): midnight base + violet/cyan/mint gradient.
+ *     Cyan is the primary action color; violet signals automated/assistant moments.
+ *   - Aurum (wordmark accent): champagne/cream/bronze used for the Livia wordmark
+ *     and the italic v. Reserved for brand-level moments — never for action buttons.
  */
 
 const aurora = {
@@ -11,6 +14,13 @@ const aurora = {
   cyan: "#06b6d4",
   mint: "#10b981",
   midnight: "#09090b",
+};
+
+export const aurum = {
+  champagne: "#d9c39a",
+  cream: "#f6f3ec",
+  bronze: "#8a7549",
+  ink: "#0a0a10",
 };
 
 const colors = {

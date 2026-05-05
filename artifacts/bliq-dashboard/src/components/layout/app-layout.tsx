@@ -27,7 +27,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground font-bold">
               {business?.name.charAt(0).toUpperCase() || "B"}
             </div>
-            <span className="font-semibold truncate max-w-[140px]">{business?.name || "Bliq"}</span>
+            <span className="font-semibold truncate max-w-[140px]">{business?.name || "Livia"}</span>
           </div>
         </div>
         <nav className="flex-1 space-y-1 p-4">
@@ -66,7 +66,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground font-bold text-xs">
               {business?.name.charAt(0).toUpperCase() || "B"}
             </div>
-            <span className="font-semibold text-sm truncate max-w-[120px]">{business?.name || "Bliq"}</span>
+            <span className="font-semibold text-sm truncate max-w-[120px]">{business?.name || "Livia"}</span>
           </div>
           <UserButton afterSignOutUrl="/sign-in" />
         </header>

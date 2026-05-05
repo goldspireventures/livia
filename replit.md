@@ -1,181 +1,106 @@
-# Workspace
+# Livia
 
-## Overview
+Premium AI-native multi-tenant operating system for appointment-based service businesses (beauty/wellness/barber/tattoo/dental). Beachhead: EU/Ireland. AI character is **Liv**.
 
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
-
-## Stack
-
-- **Monorepo tool**: pnpm workspaces
-- **Node.js version**: 24
-- **Package manager**: pnpm
-- **TypeScript version**: 5.9
-- **API framework**: Express 5
-- **Database**: PostgreSQL + Drizzle ORM
-- **Validation**: Zod (`zod/v4`), `drizzle-zod`
-- **API codegen**: Orval (from OpenAPI spec)
-- **Build**: esbuild (CJS bundle)
-
-## Key Commands
+## Run & Operate
 
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
+- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks + Zod schemas from OpenAPI spec
+- `pnpm --filter @workspace/db run push` — push DB schema (dev only)
 - `pnpm --filter @workspace/api-server run dev` — run API server locally
 
-See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
+**Env vars:** `CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` (api), `VITE_CLERK_PUBLISHABLE_KEY` (web), `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` + `EXPO_PUBLIC_DOMAIN` (mobile), `DATABASE_URL`, `AI_INTEGRATIONS_ANTHROPIC_*` (provisioned via Replit AI Integrations).
 
-## Bliq Application
+## Stack
 
-Multi-tenant, AI-native operating system for appointment-based service businesses.
+pnpm workspace monorepo · TypeScript 5.9 · Node 24 · Express 5 · PostgreSQL + Drizzle ORM · Zod (`zod/v4`) + `drizzle-zod` · Orval API codegen · Vite (web) · Expo (mobile) · Clerk auth · Anthropic Claude (AI).
 
-### Artifacts
+## Where things live
 
-- `artifacts/api-server` — Express 5 + Drizzle + Postgres REST API. Mounted at `/api`. Auth via Clerk (`@clerk/express`).
-- `artifacts/bliq-dashboard` — React + Vite owner dashboard mounted at `/`. Auth via `@clerk/clerk-react`. Public booking page at `/b/:slug` lives outside auth guard.
-- `artifacts/bliq-mobile` — Expo (React Native) mobile app for iOS/Android. Shares the same API server. Auth via `@clerk/clerk-expo`.
-- `artifacts/mockup-sandbox` — design preview sandbox.
+- `artifacts/api-server` — Express REST API at `/api`. Auth via `@clerk/express`.
+- `artifacts/bliq-dashboard` — React + Vite owner dashboard (web). Auth via `@clerk/clerk-react`. Public booking at `/b/:slug`. *Directory still named `bliq-dashboard` — rename deferred to keep workflows + Clerk redirect URIs stable.*
+- `artifacts/bliq-mobile` — Expo (React Native) iOS/Android. Same API. Auth via `@clerk/clerk-expo`. *Slug `bliq-mobile` + scheme `bliq-mobile` deliberately preserved — changing them breaks deep links.*
+- `artifacts/mockup-sandbox` — design preview sandbox (canvas iframes).
+- `lib/db` — Drizzle schema (14 tables incl. conversations), DB client, enums, status-transition helpers.
+- `lib/api-spec` — OpenAPI source. `pnpm codegen` regenerates `lib/api-zod` and `lib/api-client-react`.
+- `lib/integrations-anthropic-ai` — Anthropic SDK wrapper wired via Replit AI Integrations.
 
-### Packages
+## Architecture decisions
 
-- `lib/db` — Drizzle schema (14 tables), DB client, enums, status-transition helpers.
-- `lib/api-spec` — OpenAPI source, `pnpm codegen` regenerates `lib/api-zod` (Zod schemas) and `lib/api-client-react` (React Query hooks).
-- `lib/integrations-anthropic-ai` — thin Anthropic SDK wrapper that wires `AI_INTEGRATIONS_ANTHROPIC_*` env vars (provisioned via Replit AI Integrations) to a single `anthropic` client. Used by the AI chat endpoint.
+- Booking creation is conflict-safe: Drizzle transaction + `pg_advisory_xact_lock` keyed by `businessId:staffId`, then conflict check + insert. Prevents double-booking under concurrency.
+- Slot generation is timezone-aware via `artifacts/api-server/src/lib/tz.ts` (Intl longOffset → IANA → UTC). Day boundaries + weekday selection use the business timezone, not server's.
+- AI chat (`services/ai-chat.service.ts`): Claude tool-loop, model `claude-sonnet-4-6`, `MAX_TOOL_HOPS=6`. Two tools: `find_slots` (calls existing `getAvailableSlots`) + `create_booking`. System prompt blends business name/category/`aiTone`/`aiGreeting`/`aiKnowledge` + enumerated services. Gated by `business.aiEnabled !== "false"` (text columns, "true"/"false").
+- Generated React Query hooks use `{ query: UseQueryOptions<...> }` — pass enabled via `query: { enabled: ... } as any`.
+- API field names: Staff/Customer use `displayName` (not `name`); Service uses `priceMinor`; Booking uses `startAt`/`endAt`; list responses use `.data[]`.
+- Mobile mutations use `data` key: `useCreateBooking({ businessId, data })`, `useUpdateBooking({ businessId, bookingId, data })`.
 
-### Mobile App Screens (artifacts/bliq-mobile)
+## Brand — two layers
 
-All screens pass TypeScript with zero errors.
+**Aurora (product surface).** Cinematic midnight base + violet→cyan→mint gradient. Cyan (`#06b6d4`) is the primary action color; violet (`#8b5cf6`) signals automated/assistant moments; mint (`#10b981`) for success. Tokens: dashboard `artifacts/bliq-dashboard/src/index.css` (`--color-aurora-*`, `--primary` cyan), mobile `artifacts/bliq-mobile/constants/colors.ts` (named `aurora` export). Utilities `.aurora-gradient`, `.aurora-gradient-text`, `.aurora-glass`, `.aurora-glow` — use sparingly.
 
-| Screen | File | Description |
-|---|---|---|
-| Dashboard | `app/(tabs)/index.tsx` | Stats cards, upcoming bookings, + Book button |
-| Bookings | `app/(tabs)/bookings.tsx` | Filterable list (upcoming/today/past/all) |
-| Clients | `app/(tabs)/customers.tsx` | Searchable customer list |
-| More | `app/(tabs)/more.tsx` | Staff/Services nav, business card, sign out |
-| Booking Detail | `app/booking/[id].tsx` | Status badge, info cards, status-action buttons |
-| New Booking | `app/booking/new.tsx` | Client picker, service/staff chips, start time |
-| Client Detail | `app/customer/[id].tsx` | Profile + recent bookings |
-| Staff List | `app/staff/index.tsx` | Staff rows with avatar + active badge |
-| Staff Detail | `app/staff/[id].tsx` | Profile, active toggle, assigned services |
-| Services | `app/services/index.tsx` | Services list with duration + price |
+**Aurum (wordmark accent).** Champagne/cream/bronze chrome reserved for the Livia wordmark + the italic *v*. Tokens: `--color-aurum-champagne #d9c39a`, `--color-aurum-cream #f6f3ec`, `--color-aurum-bronze #8a7549`, `--color-aurum-ink #0a0a10`. Mobile equivalents exported from `colors.ts` as `aurum`. Chrome gradient: `linear-gradient(180deg, #f6f3ec 0%, #d9c39a 45%, #8a7549 60%, #d9c39a 78%, #f6f3ec 100%)`. **Never use Aurum for action buttons** — it's brand-only.
 
-### Mobile App Architecture
+**Type.** Display = Plus Jakarta Sans. Body/UI = Geist. Data = JetBrains Mono. **Wordmark = Cormorant Garamond** (italic *v*). Loaded in `artifacts/bliq-dashboard/index.html`. Radius `0.75rem` (12px).
 
-- `app/_layout.tsx` — ClerkProvider + tokenCache (AsyncStorage) + QueryClientProvider + AuthGate (redirect to /sign-in when unauthenticated) + BusinessProvider
-- `contexts/BusinessContext.tsx` — fetches `/api/me/businesses`, holds `currentBusiness`, redirects to onboarding when none
-- `hooks/useColors.ts` — theme-aware color palette (light/dark via `useColorScheme`)
-- `components/BookingCard.tsx` — booking row using `startAt`/`endAt`/`displayName` API fields
-- `components/CustomerCard.tsx` — customer row using `displayName ?? firstName`
-- `components/StatsCard.tsx`, `EmptyState.tsx`, `StatusBadge.tsx`, `ErrorBoundary.tsx`
+**Logo mark:** `artifacts/bliq-dashboard/src/components/brand/BliqMark.tsx` (file rename deferred). Renders the Lv roundel — soft outlined circle, serif "L" in `currentColor`, italic chrome "v". Exports both legacy `BliqMark`/`BliqWordmark` and forward-looking `LiviaMark`/`LiviaWordmark` aliases. The full wordmark composition (roundel + serif "Livia" + tagline + "with Liv at your side" sub-line) is locked on canvas as `livia-wm-aurum` (artifact `XegfDyZt7HqfW2Bb8Ghoy`, position −550, 4900).
 
-### Dashboard Variants (canvas exploration, May 5)
+**Voice.** Precise, calm, slightly poetic. Empty states whisper, success toasts confirm, AI suggestions invite without pressuring.
 
-Three post-login dashboard layout hypotheses live in `artifacts/mockup-sandbox/src/components/mockups/bliq-dashboards/` and are pinned to the canvas (artifact `XegfDyZt7HqfW2Bb8Ghoy`, row at y=2950). Same data shape, three distinct mental models.
+**Tagline (final):** *For barbershops, tattoo studios, dental practices — and every appointment in between.*
 
-| Variant | Mental model | Hero | Status |
-|---|---|---|---|
-| `Cockpit.tsx` | Dashboard-as-cockpit (Linear/Bloomberg) | Live timeline spine + queue rail + KPI tiles | **GRADUATED → `bliq-dashboard/src/pages/dashboard.tsx`** |
-| `Atrium.tsx` | Dashboard-as-front-porch (Apple Health/Mercury) | Single "Next up" hero card + ambient AI nudge | On canvas (kept for record) |
-| `Concierge.tsx` | Dashboard-as-conversation (Stripe feed/Superhuman) | Stack of 4-5 AI proposal cards w/ inline actions | On canvas (kept for record) |
+## AI character
 
-All variants render the same `summary` + `upcomingBookings` + `activityFeed` shape and use Aurora tokens inline (no `index.css` edits). Mockup sandbox URLs: `/__mockup/preview/bliq-dashboards/{Cockpit,Atrium,Concierge}`.
+The AI is **Liv** — the brand's quiet helper. Liv has a name and a personality but is never marketed as the product. The product is Livia; Liv is what's under the hood.
 
-#### Cockpit graduation (May 5)
+## Compliance guardrails
 
-The production dashboard at `artifacts/bliq-dashboard/src/pages/dashboard.tsx` is the Cockpit design wired to real API:
-- KPIs from `useGetDashboardSummary`. Activity Log from `useGetActivityFeed`. Action Queue + Live Timeline + Staff on Shift all derived from `summary.upcomingBookings`.
-- Backend (`dashboard.service.ts`) was widened: `upcomingBookings` now includes PENDING + CONFIRMED + COMPLETED across `[todayStart, todayStart + 7d]` (limit 40) so the same payload powers the queue, timeline, and staff derivation. Filtering to "today" happens client-side.
-- Action Queue mutates via `useUpdateBooking` and invalidates `dashboard-summary`, `list-bookings`, and `activity-feed` query keys.
-- Live Timeline: 8am–8pm spine, 96px/hour. Greedy interval-packing assigns each booking to the lowest free lane (handles N overlapping bookings); container height scales with lane count. Current-time marker reactive via 60s `setInterval`. Blocks crossing 08:00/20:00 are width-clipped to the visible window.
-- Staff on Shift: derived client-side by grouping today's bookings by `staff.id` (no separate utilization API yet).
-- All Aurora colors come from semantic tokens (`bg-card`, `border-border`, `text-primary`) and chart vars (`hsl(var(--chart-3))` mint, `hsl(var(--chart-4))` amber) so light/dark theme both work.
-- App layout content max-width bumped from `max-w-6xl` → `max-w-[1600px]` to give the timeline horizontal room.
-- **Known follow-up:** `enrichBooking` in dashboard summary is N+1 per booking. Acceptable at single-business scale; replace with batched join if list/limit grows or latency regresses.
+- **Brand layer is silent on "AI"** — no "AI-powered" badges in marketing. Disclosure happens where it legally must:
+  - Chat widget first message (EU AI Act Art. 50 — automated interaction disclosure).
+  - Privacy policy + Terms of Service (GDPR Art. 22 — automated decision-making).
+  - Anthropic AUP compliance copy on the public booking page.
+- One private name to never surface in any artifact, copy, repo file, or UI string: **Olivia** (founder's daughter — kept private).
 
-### Key Design Decisions
+## Product surfaces
 
-- Booking creation is conflict-safe: wrapped in a Drizzle transaction with `pg_advisory_xact_lock` keyed by `businessId:staffId`, then conflict check + insert. This prevents double-booking under concurrent requests.
-- Slot generation is timezone-aware via `artifacts/api-server/src/lib/tz.ts` (uses `Intl.DateTimeFormat` longOffset to convert IANA tz local time to UTC). Day boundaries and weekday selection use the business timezone.
-- Centralized error middleware in `app.ts` returns JSON `{error: "..."}` for unknown routes (404) and uncaught exceptions (500).
-- Clerk dev keys: `proxyUrl` only set in production builds (`import.meta.env.PROD`). In dev, the dashboard talks to Clerk directly.
-- Generated React Query hooks use `{ query: UseQueryOptions<...> }` shape — pass enabled flags via `query: { enabled: ... } as any` cast.
-- Mobile mutations use `data` key: `useCreateBooking({ businessId, data })`, `useUpdateBooking({ businessId, bookingId, data })`, `useUpdateStaff({ businessId, staffId, data })`.
-- API field names: Staff/Customer use `displayName` (not `name`); Service uses `priceMinor` (not `price`); Booking uses `startAt`/`endAt` (not `startTime`/`endTime`); list responses use `.data[]` (not `.items[]`).
+**Dashboard pages (`artifacts/bliq-dashboard/src/pages/`):** dashboard (Cockpit), bookings, customers, services, staff, availability, time-off, inbox (AI conversations), settings (Tabs: General / AI Assistant / Demo & Data), onboarding, sign-in, sign-up, public-booking (`/b/:slug`).
 
-### Env vars
+**Mobile screens (`artifacts/bliq-mobile/app/`):** dashboard, bookings, customers, more (tab), booking detail/new, customer detail, staff list/detail, services, sign-in, onboarding. All TS-clean.
 
-- `CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` — server (api-server)
-- `VITE_CLERK_PUBLISHABLE_KEY` — dashboard
-- `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` — mobile app
-- `DATABASE_URL` — Postgres
-- `EXPO_PUBLIC_DOMAIN` — injected at workflow start from `$REPLIT_DEV_DOMAIN`; used as API base URL in mobile app
+**AI Inbox wedge (Wave 2, shipped May 5):** customers chat → Liv books → owner sees the thread, can take over, configure tone/greeting/knowledge/auto-book. Schema in `lib/db/src/schema/conversations.ts` (`conversations`, `conversationMessages`, +5 AI columns on `businesses`). Public chat: `POST /api/public/b/:slug/chat`. Owner views: `GET /api/businesses/:id/conversations[/:cid]`, `PATCH` for take-over/close. Widget: `components/chat-widget.tsx` (FAB on `/b/:slug`). Inbox UI: `pages/inbox.tsx` (two-pane, polls 10s list / 5s thread).
 
-### AI Inbox (Wave 2 wedge — May 5)
+**Demo data:** `POST /api/dev/seed` (3 demo businesses, idempotent), `DELETE /api/dev/seed` (wipes calling user's businesses, cascades). Both 403 in production. Reusable component: `components/demo-data-controls.tsx`.
 
-The wedge: customers chat → AI books → owner sees the thread, can take over, and configure the assistant.
+## Cockpit dashboard (graduated May 5)
 
-**Schema (`lib/db/src/schema/conversations.ts`):**
-- `conversations` — id (text/nanoid), businessId FK (cascade), customerId? FK, channel (`WEB|SMS|IG|WA`), status (`OPEN|HANDED_OFF|CLOSED`), aiHandled bool, plus contact fields captured pre-customer (customerName/Email/Phone), summary, lastMessageAt.
-- `conversationMessages` — id, conversationId FK (cascade), role (`USER|ASSISTANT|SYSTEM|TOOL`), content text, toolName/toolInput/toolResult (text), bookingId? FK, createdAt.
-- 5 new columns on `businesses`: `aiEnabled`, `aiTone`, `aiGreeting`, `aiKnowledge`, `aiCanBookDirectly` — all stored as **text** (`"true"`/`"false"`) for simplicity. Frontend serialises booleans accordingly.
+Production dashboard at `artifacts/bliq-dashboard/src/pages/dashboard.tsx` is the Cockpit design (one of three canvas explorations — Cockpit / Atrium / Concierge in `mockup-sandbox/src/components/mockups/bliq-dashboards/`). Live timeline spine 8am–8pm @ 96px/hour, greedy interval-packing into lanes, current-time marker (60s tick), action queue + staff-on-shift derived from same `summary.upcomingBookings` payload (PENDING+CONFIRMED+COMPLETED, today + 7d, limit 40). All Aurora colors via semantic tokens + chart vars so light/dark both work. Layout content max-width `1600px`. **Known follow-up:** `enrichBooking` in `dashboard.service.ts` is N+1 per booking — acceptable at single-business scale, batch when latency regresses.
 
-**Backend (`artifacts/api-server`):**
-- `services/ai-chat.service.ts` — Claude tool-loop. Model `claude-sonnet-4-6`, `max_tokens=8192`, `MAX_TOOL_HOPS=6`. Dynamic system prompt blends business name/category/description + `aiTone` + `aiGreeting` + `aiKnowledge` + an enumerated services list. Two tools registered: `find_slots(serviceId, date, staffId?)` (calls existing `getAvailableSlots`) and `create_booking(serviceId, startAt, customerFirstName, customerEmail|customerPhone, ...)`. The loop persists every USER/ASSISTANT/TOOL message and links the booking back onto the message + conversation.
-- `services/conversations.service.ts` — CRUD + `listConversationsForBusiness` with raw `sql()` aggregates for lastMessage / messageCount / bookingCount.
-- Routes: `POST /api/public/b/:slug/chat` (no auth — same surface as public booking), `GET /api/businesses/:id/conversations`, `GET /api/businesses/:id/conversations/:cid`, `PATCH /api/businesses/:id/conversations/:cid` (status changes for take-over / close).
-- AI is gated by `business.aiEnabled !== "false"`. When disabled the chat endpoint returns a 403.
+## Auth (Clerk)
 
-**Frontend (`artifacts/bliq-dashboard`):**
-- `components/chat-widget.tsx` — floating "Chat with AI" FAB on the public booking page. Slides up into a 400px bottom-right panel (full-screen on mobile). Aurora gradient bubbles, typing dots, suggested prompts on first open, inline booking-confirmation badge when the AI books.
-- `pages/inbox.tsx` — owner's `/inbox` route. Two-pane: conversation list (filterable Open / Taken-over / Closed / All, polls every 10s) + thread view (polls every 5s). Tool messages collapse into `<details>`. "Take over" button flips status to `HANDED_OFF`, pausing the AI; "Resume AI" / "Mark resolved" round-trip back.
-- `pages/settings.tsx` — restructured into Tabs (General / AI Assistant / Demo & Data). AI tab toggles assistant on/off, picks tone (professional/friendly/playful), edits greeting + free-form knowledge, controls auto-book.
-- `components/demo-data-controls.tsx` — reusable seed/wipe button. Used as the empty-state CTA on a brand-new dashboard (when `summary.todayBookings + weekBookings + totalCustomers === 0`) and on the new Settings → Demo & Data tab.
-- Public booking page (`pages/public-booking.tsx`) was tightened: notes textarea, requires email OR phone, full-page loading overlay during booking submit, all `any` typed away, .ics download on confirmation.
-- New `Inbox` nav item between Dashboard and Bookings (`components/layout/app-layout.tsx`).
+- Clerk app titles overridden via provider-level `localization` in `App.tsx` ("Sign in to Livia" / "Create your Livia account"). Per-component `localization` does NOT override the provider — set once at provider.
+- Appearance themed for Aurora: `colorPrimary: "#06b6d4"`, `fontFamily: Geist`, `borderRadius: "0.75rem"`.
+- Use `signInFallbackRedirectUrl` / `signUpFallbackRedirectUrl` (not deprecated `fallbackRedirectUrl`).
+- `proxyUrl` set only in production builds (`import.meta.env.PROD`).
+- Mobile sign-in is fully custom (not Clerk hosted UI): 3 modes (sign-in / sign-up / verify-OTP), Google OAuth via `useOAuth({ strategy: "oauth_google" })` with `WebBrowser.maybeCompleteAuthSession()` at module scope. Redirect URI generated per-platform via `AuthSession.makeRedirectUri({ scheme: "bliq-mobile", path: "oauth-callback" })` — never hardcoded. Errors mapped via `humanizeAuthError`.
 
-**Demo flow:** sign in → empty Cockpit dashboard → click **"Load demo data"** → 3 businesses seeded → Settings → copy public link → open in incognito → click "Chat with AI" → "I need a haircut tomorrow at 3pm" → AI responds, books → owner sees thread in `/inbox`. End-to-end smoke-tested against real Anthropic on May 5.
+## Mobile premium polish
 
-**Dev seed:** `POST /api/dev/seed` creates 3 demo businesses (idempotent — guards on existing). New `DELETE /api/dev/seed` wipes all of the calling user's businesses (cascades through staff/services/customers/bookings/availability/conversations via FK). Both are 403 in production.
+- Aurora ambient backdrop = 3 absolutely-positioned `LinearGradient` orbs (violet/cyan/mint, 0.2-0.3 alpha) behind content. Used on sign-in + dashboard. See `AuroraBackdrop` in `app/sign-in.tsx`.
+- Brand mark = 56×56 dark gradient square with serif "L" + italic champagne "v" (Aurum-aligned).
+- Gradient CTAs use `LinearGradient` + cyan-tinted shadow + `Pressable` with `transform: scale(0.97)` press state.
+- `expo-haptics`: `Light` on form interactions, `Medium` on primary CTAs. Always `Platform.OS !== "web"` guarded.
+- `StatsCard` has `variant: "default" | "hero"` — hero wraps in 1px Aurora gradient border.
 
-## Roadmap & Active Work
+## Gotchas
 
-- 7-wave product roadmap lives in `.local/tasks/RELEASE-PLAN.md`. 17 detailed task plans in `.local/tasks/*.md` (project tasks #6–#22).
-- **Wave 1 (active):**
-  - ✅ Brand definition (#6) — three explorations on canvas (Aurora / Atelier / Pulse), user picked **Aurora**.
-  - ✅ Design system (#18) — Aurora tokens shipped to dashboard `index.css` + mobile `constants/colors.ts`. Sign-in/up branded.
-  - ⏳ Personas / ICP (#7) — next.
+- **Always `pnpm run typecheck` before declaring done** — generated hooks + Zod schemas have strict shapes that ripple.
+- **Don't rename `bliq-mobile` slug or scheme** — breaks deep links and Google OAuth callback.
+- **Don't change mobile `STORAGE_KEY = "bliq_current_business_id"`** in `BusinessContext.tsx` — would orphan stored business selections on existing devices.
+- **Aurum is brand-only**, never use champagne for action buttons. Cyan stays the primary action color.
+- **`business?.name.charAt(0)` fallback** in `app-layout.tsx` still shows "B" when business name is empty — cosmetic, defer until directory rename round.
 
-## Brand System — Aurora
+## Pointers
 
-Bliq's visual identity is **Aurora** — modern premium AI: cinematic midnight base + a violet→cyan→mint gradient as the AI energy signal.
-
-**Tokens (source of truth):**
-- Colors: violet `#8b5cf6`, cyan `#06b6d4` (primary), mint `#10b981`, midnight `#09090b`. Warning `#f59e0b`, destructive `#ef4444`.
-- Fonts: **Plus Jakarta Sans** (display), **Geist** (body/UI), **JetBrains Mono** (data). Loaded in `artifacts/bliq-dashboard/index.html`.
-- Radius: `0.75rem` (12px). Aurora is a softer, rounder system than the prior 8px default.
-
-**Where the tokens live:**
-- Dashboard CSS vars: `artifacts/bliq-dashboard/src/index.css` — `--primary` is cyan `188 95% 43%`; dark mode is the canonical Aurora theme. Brand colors are also exposed as Tailwind utilities (`bg-aurora-violet`, `text-aurora-cyan`, `bg-aurora-mint`) via the `@theme` block.
-- Dashboard utilities: `.aurora-gradient`, `.aurora-gradient-text`, `.aurora-glass`, `.aurora-glow` — use `aurora-gradient-text` for taglines and `aurora-gradient` for AI-energy buttons/badges. Use sparingly.
-- Mobile palette: `artifacts/bliq-mobile/constants/colors.ts` — same Aurora mapping. Exports a named `aurora` object with the three brand hexes.
-- Logo mark: `artifacts/bliq-dashboard/src/components/brand/BliqMark.tsx` — gradient SVG + `<BliqWordmark>`.
-- Brand showcase pages (reference for future brand work): `artifacts/mockup-sandbox/src/components/mockups/brand-explorations/Aurora.{tsx,css}`. Atelier and Pulse are kept on disk for archival/comparison.
-
-**Voice:** precise, calm, slightly poetic. Empty states whisper, success toasts confirm, AI suggestions invite without pressuring. Examples in `Aurora.tsx` section 7.
-
-## Auth / Clerk Notes
-
-- Clerk app name "Bliq Goldspire" (auto-generated) is overridden client-side via `localization` on `<ClerkProvider>` in `artifacts/bliq-dashboard/src/App.tsx` — sets `signIn.start.title` and `signUp.start.title` to "Sign in to Bliq" / "Create your Bliq account". Per-component `localization` props on `<SignIn>` / `<SignUp>` do NOT override the provider — set it once at the provider level.
-- Clerk appearance variables (also in `App.tsx`) are themed for Aurora: `colorPrimary: "#06b6d4"`, `fontFamily: Geist`, `borderRadius: "0.75rem"`. Sign-in/sign-up pages use `<BliqMark />` and `aurora-gradient-text` for the branded hero.
-- ClerkProvider uses `signInFallbackRedirectUrl` (not the deprecated `fallbackRedirectUrl`) and `signUpFallbackRedirectUrl`. Web sign-in page also includes user-facing copy: "if you signed up with Google, sign in with Google — that account has no password" — addresses the most common login failure mode for Google-only Clerk accounts.
-- Mobile sign-in (`artifacts/bliq-mobile/app/sign-in.tsx`) is a fully custom Aurora-branded screen (not Clerk's hosted UI). It supports 3 modes: `sign-in` (email + password), `sign-up` (email + password → email_code verification), and `verify` (6-digit OTP). It includes "Continue with Google" via `useOAuth({ strategy: "oauth_google" })` from `@clerk/clerk-expo` with `WebBrowser.maybeCompleteAuthSession()` at module scope and warmup/cooldown in `useEffect`. Redirect URI is generated per-platform via `AuthSession.makeRedirectUri({ scheme: "bliq-mobile", path: "oauth-callback" })` — never hardcoded — so it works in Expo Go, dev clients, web preview, and standalone builds. Handles non-complete OAuth outcomes (transferable status → `signUp.create({ transfer: true })`, cancellation, generic failure) with humanized error messages. Errors are mapped via `humanizeAuthError(code, fallback)` covering `form_identifier_not_found`, `form_password_incorrect`, `form_password_pwned`, `form_password_length_too_short`, `form_identifier_exists`, `form_code_incorrect`, `session_exists`.
-
-## Mobile Premium Polish
-
-- Aurora ambient backdrop pattern: a non-interactive `View` with 3 absolutely-positioned `LinearGradient` "orbs" (violet/cyan/mint at 0.2-0.3 alpha) layered behind content. Used on sign-in and dashboard. See `AuroraBackdrop` in `app/sign-in.tsx` and the `glowWrap`/`glow` styles in `app/(tabs)/index.tsx`.
-- Brand mark on mobile = a 56×56 LinearGradient square (violet→cyan→mint diagonal) with a cyan glow shadow and a black "B" centered. Mirrors `<BliqMark />` on web.
-- Gradient CTAs (sign-in submit, "New booking" pill) use `LinearGradient` with `[aurora.violet, aurora.cyan]` horizontal, plus a cyan-tinted shadow for depth. Buttons use `Pressable` with a `transform: scale(0.97)` press state for tactile feel.
-- Haptics: `expo-haptics` `Haptics.ImpactFeedbackStyle.Light` on form interactions, `Medium` on primary CTAs (Google button, New booking). Always wrapped in `Platform.OS !== "web"` guard.
-- `StatsCard` has a `variant: "default" | "hero"` prop. Hero variant wraps the card in a 1px `LinearGradient` border (violet→cyan→mint) for a glowing-edge effect — used on the "Today" stat in dashboard.
-- Dashboard header shows time-of-day greeting (`Good morning/afternoon/evening/night`) + full date, then the business name in 30pt bold, then the gradient "+ New booking" pill. This replaced a plain "+ Book" button.
+- Skills: `pnpm-workspace`, `clerk-auth`, `database`, `deployment`, `artifacts`, `react-vite`, `expo`, `canvas`, `mockup-sandbox`.
+- Roadmap: `.local/tasks/RELEASE-PLAN.md` + 17 task plans `.local/tasks/*.md` (project tasks #6–#22).
+- Pending plan: `.local/tasks/livia-launch-plan.md` (5 lanes, 3 gates — write in Plan mode).

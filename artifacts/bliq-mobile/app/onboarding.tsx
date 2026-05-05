@@ -126,7 +126,7 @@ export default function OnboardingScreen() {
             Set up your business
           </Text>
           <Text style={[styles.sub, { color: colors.mutedForeground }]}>
-            You're almost ready to manage appointments with Bliq.
+            You're almost ready to manage appointments with Livia.
           </Text>
         </View>
 
@@ -182,7 +182,7 @@ export default function OnboardingScreen() {
             <Text style={[styles.label, { color: colors.mutedForeground }]}>
               URL slug *{" "}
               <Text style={{ color: colors.primary, fontSize: 11 }}>
-                bliq.app/b/{slug || "your-slug"}
+                livia.io/b/{slug || "your-slug"}
               </Text>
             </Text>
             <TextInput

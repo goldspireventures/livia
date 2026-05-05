@@ -10,7 +10,7 @@ export async function getOrCreateUser(clerkUserId: string, email?: string, fullN
     .insert(usersTable)
     .values({
       id: clerkUserId,
-      email: email ?? `${clerkUserId}@unknown.bliq`,
+      email: email ?? `${clerkUserId}@unknown.livia`,
       fullName: fullName ?? null,
     })
     .returning();

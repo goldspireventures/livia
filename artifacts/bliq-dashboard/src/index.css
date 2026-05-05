@@ -66,10 +66,16 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  /* Aurora brand colors — exposed as Tailwind utilities (bg-aurora-violet, text-aurora-cyan, etc.) */
+  /* Aurora brand colors — primary product palette (bg-aurora-violet, text-aurora-cyan, etc.) */
   --color-aurora-violet: #8b5cf6;
   --color-aurora-cyan: #06b6d4;
   --color-aurora-mint: #10b981;
+
+  /* Aurum brand colors — Livia wordmark accent layer (text-aurum-champagne, etc.) */
+  --color-aurum-champagne: #d9c39a;
+  --color-aurum-cream: #f6f3ec;
+  --color-aurum-bronze: #8a7549;
+  --color-aurum-ink: #0a0a10;
 }
 
 /* LIGHT MODE — Aurora light variant (cream-tinged neutrals, cyan primary, violet accent) */
@@ -133,7 +139,7 @@
 
   --app-font-sans: 'Geist', 'Inter', system-ui, sans-serif;
   --app-font-display: 'Plus Jakarta Sans', 'Geist', sans-serif;
-  --app-font-serif: Georgia, serif;
+  --app-font-serif: 'Cormorant Garamond', Georgia, serif;
   --app-font-mono: 'JetBrains Mono', Menlo, monospace;
   --radius: 0.75rem; /* 12px — Aurora is a softer, rounder system */
   --shadow-2xs: 0px 1px 2px 0px hsl(240 10% 4% / 0.04);

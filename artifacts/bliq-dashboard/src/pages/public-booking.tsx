@@ -85,11 +85,11 @@ function buildIcsDataUri(args: {
   location: string;
 }): string {
   const fmt = (iso: string) => iso.replace(/[-:]/g, "").replace(/\.\d{3}/, "");
-  const uid = `${Date.now()}@bliq`;
+  const uid = `${Date.now()}@livia`;
   const ics = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Bliq//Booking//EN",
+    "PRODID:-//Livia//Booking//EN",
     "BEGIN:VEVENT",
     `UID:${uid}`,
     `DTSTAMP:${fmt(new Date().toISOString())}`,
@@ -586,7 +586,7 @@ export default function PublicBookingPage() {
                 endAt: confirmation.endAt,
                 location: confirmation.businessName,
               })}
-              download={`bliq-booking-${confirmation.bookingId.slice(-6)}.ics`}
+              download={`livia-booking-${confirmation.bookingId.slice(-6)}.ics`}
               className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
               data-testid="link-add-calendar"
             >

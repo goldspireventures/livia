@@ -122,13 +122,13 @@ function ClerkProviderWithTheme({ children }: { children: React.ReactNode }) {
       localization={{
         signIn: {
           start: {
-            title: "Sign in to Bliq",
+            title: "Sign in to Livia",
             subtitle: "Welcome back to your command center",
           },
         },
         signUp: {
           start: {
-            title: "Create your Bliq account",
+            title: "Create your Livia account",
             subtitle: "Start booking smarter in minutes",
           },
         },

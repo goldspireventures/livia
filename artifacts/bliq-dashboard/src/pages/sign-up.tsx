@@ -18,8 +18,19 @@ export default function SignUpPage() {
         <div className="mb-10 text-center">
           <div className="mb-5 flex items-center justify-center gap-3">
             <BliqMark className="h-10 w-10" />
-            <span className="font-display text-3xl font-semibold tracking-tight text-foreground">
-              Bliq
+            <span className="font-serif text-4xl font-normal tracking-tight text-foreground" style={{ letterSpacing: "0.01em" }}>
+              Li
+              <span
+                style={{
+                  fontStyle: "italic",
+                  background: "linear-gradient(180deg, #f6f3ec 0%, #d9c39a 45%, #8a7549 60%, #d9c39a 78%, #f6f3ec 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}
+              >
+                v
+              </span>
+              ia
             </span>
           </div>
           <h1 className="font-display text-4xl font-bold tracking-tight">

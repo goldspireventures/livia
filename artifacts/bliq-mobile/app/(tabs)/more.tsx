@@ -57,7 +57,7 @@ export default function MoreScreen() {
             </Text>
             {currentBusiness.slug && (
               <Text style={[styles.bizSlug, { color: colors.mutedForeground }]}>
-                bliq.app/b/{currentBusiness.slug}
+                livia.io/b/{currentBusiness.slug}
               </Text>
             )}
           </View>
@@ -150,7 +150,7 @@ export default function MoreScreen() {
       </View>
 
       <Text style={[styles.version, { color: colors.mutedForeground }]}>
-        Bliq v1.0.0
+        Livia v1.0.0
       </Text>
     </ScrollView>
   );

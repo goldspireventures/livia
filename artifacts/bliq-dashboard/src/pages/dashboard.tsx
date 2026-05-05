@@ -289,7 +289,7 @@ export default function DashboardPage() {
             className="text-base font-semibold tracking-tight"
             style={{ fontFamily: "var(--app-font-display)" }}
           >
-            Welcome to Bliq
+            Welcome to Livia
           </h1>
           <p className="text-xs text-muted-foreground font-mono mt-1">
             Your command center is ready. Let's get something on screen.
@@ -303,7 +303,7 @@ export default function DashboardPage() {
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-[hsl(var(--chart-1))] mb-4 shadow-lg shadow-primary/30">
                 <Sparkles className="h-5 w-5 text-primary-foreground" />
               </div>
-              <h2 className="text-xl font-semibold mb-2">See Bliq in 5 seconds</h2>
+              <h2 className="text-xl font-semibold mb-2">See Livia in 5 seconds</h2>
               <p className="text-sm text-muted-foreground mb-6 max-w-md">
                 Load a demo workspace with 3 example businesses — a hair salon, a tattoo
                 studio, and a personal training gym — pre-loaded with staff, services,
@@ -331,7 +331,7 @@ export default function DashboardPage() {
                     </span>
                   </Link>
                   <p className="text-xs text-muted-foreground">
-                    Bliq needs to know who works there and what they do.
+                    Livia needs to know who works there and what they do.
                   </p>
                 </div>
               </li>

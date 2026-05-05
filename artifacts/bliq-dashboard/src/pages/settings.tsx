@@ -385,7 +385,7 @@ export default function SettingsPage() {
                     <Label>Greeting message</Label>
                     <Textarea
                       {...aiForm.register("aiGreeting")}
-                      placeholder="Hi! I'm Bliq, your booking buddy. How can I help?"
+                      placeholder="Hi! I'm Liv, your booking assistant. How can I help?"
                       rows={2}
                       data-testid="input-ai-greeting"
                     />
