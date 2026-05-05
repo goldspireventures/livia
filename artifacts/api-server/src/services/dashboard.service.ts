@@ -1,5 +1,5 @@
 import { db, bookingsTable, customersTable, eventsTable } from "@workspace/db";
-import { eq, and, gte, lte, sql } from "drizzle-orm";
+import { eq, and, gte, lte, sql, inArray } from "drizzle-orm";
 import { enrichBooking } from "./bookings.service";
 import { desc } from "drizzle-orm";
 
@@ -76,20 +76,23 @@ export async function getDashboardSummary(businessId: string) {
     .from(customersTable)
     .where(eq(customersTable.businessId, businessId));
 
-  // Upcoming confirmed/pending bookings in next 7 days
+  // Upcoming actionable bookings (today + next 7 days). Include both PENDING and
+  // CONFIRMED so the dashboard's Action Queue, Live Timeline, and "Staff on shift"
+  // derivations all see the same source of truth. Also include today's COMPLETED
+  // bookings so the timeline shows the full day, not just what's left.
   const upcomingRaw = await db
     .select()
     .from(bookingsTable)
     .where(
       and(
         eq(bookingsTable.businessId, businessId),
-        gte(bookingsTable.startAt, now),
+        gte(bookingsTable.startAt, todayStart),
         lte(bookingsTable.startAt, weekEnd),
-        eq(bookingsTable.status, "CONFIRMED"),
+        inArray(bookingsTable.status, ["PENDING", "CONFIRMED", "COMPLETED"]),
       ),
     )
     .orderBy(bookingsTable.startAt)
-    .limit(10);
+    .limit(40);
 
   const upcomingBookings = await Promise.all(upcomingRaw.map(enrichBooking));
 

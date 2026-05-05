@@ -70,15 +70,27 @@ All screens pass TypeScript with zero errors.
 
 ### Dashboard Variants (canvas exploration, May 5)
 
-Three post-login dashboard layout hypotheses live in `artifacts/mockup-sandbox/src/components/mockups/bliq-dashboards/` and are pinned to the canvas (artifact `XegfDyZt7HqfW2Bb8Ghoy`, row at y=2950). Same data shape, three distinct mental models — pick one to graduate via `mockup-graduate` skill before Wave 2 work.
+Three post-login dashboard layout hypotheses live in `artifacts/mockup-sandbox/src/components/mockups/bliq-dashboards/` and are pinned to the canvas (artifact `XegfDyZt7HqfW2Bb8Ghoy`, row at y=2950). Same data shape, three distinct mental models.
 
-| Variant | Mental model | Hero | Best for |
+| Variant | Mental model | Hero | Status |
 |---|---|---|---|
-| `Cockpit.tsx` | Dashboard-as-cockpit (Linear/Bloomberg) | Live timeline spine + queue rail + KPI tiles | Power users; high-volume single-chair shops |
-| `Atrium.tsx` | Dashboard-as-front-porch (Apple Health/Mercury) | Single "Next up" hero card + ambient AI nudge | Owners who check between clients; solo operators |
-| `Concierge.tsx` | Dashboard-as-conversation (Stripe feed/Superhuman) | Stack of 4-5 AI proposal cards w/ inline actions | Owners who delegate; AI-forward positioning |
+| `Cockpit.tsx` | Dashboard-as-cockpit (Linear/Bloomberg) | Live timeline spine + queue rail + KPI tiles | **GRADUATED → `bliq-dashboard/src/pages/dashboard.tsx`** |
+| `Atrium.tsx` | Dashboard-as-front-porch (Apple Health/Mercury) | Single "Next up" hero card + ambient AI nudge | On canvas (kept for record) |
+| `Concierge.tsx` | Dashboard-as-conversation (Stripe feed/Superhuman) | Stack of 4-5 AI proposal cards w/ inline actions | On canvas (kept for record) |
 
 All variants render the same `summary` + `upcomingBookings` + `activityFeed` shape and use Aurora tokens inline (no `index.css` edits). Mockup sandbox URLs: `/__mockup/preview/bliq-dashboards/{Cockpit,Atrium,Concierge}`.
+
+#### Cockpit graduation (May 5)
+
+The production dashboard at `artifacts/bliq-dashboard/src/pages/dashboard.tsx` is the Cockpit design wired to real API:
+- KPIs from `useGetDashboardSummary`. Activity Log from `useGetActivityFeed`. Action Queue + Live Timeline + Staff on Shift all derived from `summary.upcomingBookings`.
+- Backend (`dashboard.service.ts`) was widened: `upcomingBookings` now includes PENDING + CONFIRMED + COMPLETED across `[todayStart, todayStart + 7d]` (limit 40) so the same payload powers the queue, timeline, and staff derivation. Filtering to "today" happens client-side.
+- Action Queue mutates via `useUpdateBooking` and invalidates `dashboard-summary`, `list-bookings`, and `activity-feed` query keys.
+- Live Timeline: 8am–8pm spine, 96px/hour. Greedy interval-packing assigns each booking to the lowest free lane (handles N overlapping bookings); container height scales with lane count. Current-time marker reactive via 60s `setInterval`. Blocks crossing 08:00/20:00 are width-clipped to the visible window.
+- Staff on Shift: derived client-side by grouping today's bookings by `staff.id` (no separate utilization API yet).
+- All Aurora colors come from semantic tokens (`bg-card`, `border-border`, `text-primary`) and chart vars (`hsl(var(--chart-3))` mint, `hsl(var(--chart-4))` amber) so light/dark theme both work.
+- App layout content max-width bumped from `max-w-6xl` → `max-w-[1600px]` to give the timeline horizontal room.
+- **Known follow-up:** `enrichBooking` in dashboard summary is N+1 per booking. Acceptable at single-business scale; replace with batched join if list/limit grows or latency regresses.
 
 ### Key Design Decisions
 
