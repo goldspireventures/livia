@@ -1,4 +1,5 @@
 import { useCreateBusiness } from "@workspace/api-client-react";
+import { useAuth } from "@clerk/clerk-expo";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -34,6 +35,7 @@ export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { refetch } = useBusiness();
+  const { getToken } = useAuth();
 
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
@@ -41,6 +43,7 @@ export default function OnboardingScreen() {
   const [timezone, setTimezone] = useState("America/New_York");
   const [showTz, setShowTz] = useState(false);
   const [error, setError] = useState("");
+  const [seedLoading, setSeedLoading] = useState(false);
 
   const { mutateAsync: createBusiness, isPending } = useCreateBusiness();
 
@@ -74,6 +77,33 @@ export default function OnboardingScreen() {
     }
   };
 
+  const handleLoadDemo = async () => {
+    setSeedLoading(true);
+    setError("");
+    try {
+      const token = await getToken();
+      const apiBase = `https://${process.env.EXPO_PUBLIC_DOMAIN}`;
+      const res = await fetch(`${apiBase}/api/dev/seed`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error ?? "Seed failed");
+      await refetch();
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      router.replace("/");
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      setError(e?.message ?? "Could not load demo data.");
+      setSeedLoading(false);
+    }
+  };
+
+  const isLoading = isPending || seedLoading;
+
   const inputStyle = [
     styles.input,
     { backgroundColor: colors.input, color: colors.foreground, borderColor: colors.border },
@@ -100,6 +130,41 @@ export default function OnboardingScreen() {
           </Text>
         </View>
 
+        {/* ── Demo shortcut ──────────────────────────────────────────── */}
+        <View style={[styles.demoBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.demoTitle, { color: colors.foreground }]}>
+            ✦  Just exploring?
+          </Text>
+          <Text style={[styles.demoSub, { color: colors.mutedForeground }]}>
+            Load 3 demo businesses instantly — a hair salon, a tattoo studio, and a personal training gym — each with real staff, clients, and bookings.
+          </Text>
+          <TouchableOpacity
+            style={[
+              styles.demoCta,
+              { backgroundColor: colors.primary + "18", borderColor: colors.primary + "55" },
+              isLoading && { opacity: 0.6 },
+            ]}
+            onPress={handleLoadDemo}
+            disabled={isLoading}
+            activeOpacity={0.8}
+          >
+            {seedLoading ? (
+              <ActivityIndicator color={colors.primary} size="small" />
+            ) : (
+              <Text style={[styles.demoCtaText, { color: colors.primary }]}>
+                Load demo workspace
+              </Text>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.divider}>
+          <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+          <Text style={[styles.dividerText, { color: colors.mutedForeground }]}>or set up your own</Text>
+          <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+        </View>
+
+        {/* ── Manual form ────────────────────────────────────────────── */}
         <View style={styles.form}>
           <View style={styles.field}>
             <Text style={[styles.label, { color: colors.mutedForeground }]}>Business name *</Text>
@@ -189,9 +254,9 @@ export default function OnboardingScreen() {
           ) : null}
 
           <TouchableOpacity
-            style={[styles.cta, { backgroundColor: colors.primary }, isPending && { opacity: 0.6 }]}
+            style={[styles.cta, { backgroundColor: colors.primary }, isLoading && { opacity: 0.6 }]}
             onPress={handleCreate}
-            disabled={isPending}
+            disabled={isLoading}
             activeOpacity={0.85}
             testID="create-business-button"
           >
@@ -209,10 +274,33 @@ export default function OnboardingScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  container: { paddingHorizontal: 24, gap: 32 },
+  container: { paddingHorizontal: 24, gap: 24 },
   header: { gap: 8 },
   title: { fontSize: 28, fontFamily: "Inter_700Bold", letterSpacing: -0.5 },
   sub: { fontSize: 15, fontFamily: "Inter_400Regular", lineHeight: 22 },
+  demoBox: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 16,
+    gap: 10,
+  },
+  demoTitle: { fontSize: 15, fontFamily: "Inter_600SemiBold" },
+  demoSub: { fontSize: 13, fontFamily: "Inter_400Regular", lineHeight: 19 },
+  demoCta: {
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingVertical: 13,
+    alignItems: "center",
+    marginTop: 2,
+  },
+  demoCtaText: { fontSize: 15, fontFamily: "Inter_600SemiBold" },
+  divider: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  dividerLine: { flex: 1, height: 1 },
+  dividerText: { fontSize: 12, fontFamily: "Inter_400Regular" },
   form: { gap: 16 },
   field: { gap: 6 },
   label: { fontSize: 13, fontFamily: "Inter_500Medium" },
