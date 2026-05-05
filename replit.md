@@ -68,6 +68,18 @@ All screens pass TypeScript with zero errors.
 - `components/CustomerCard.tsx` — customer row using `displayName ?? firstName`
 - `components/StatsCard.tsx`, `EmptyState.tsx`, `StatusBadge.tsx`, `ErrorBoundary.tsx`
 
+### Dashboard Variants (canvas exploration, May 5)
+
+Three post-login dashboard layout hypotheses live in `artifacts/mockup-sandbox/src/components/mockups/bliq-dashboards/` and are pinned to the canvas (artifact `XegfDyZt7HqfW2Bb8Ghoy`, row at y=2950). Same data shape, three distinct mental models — pick one to graduate via `mockup-graduate` skill before Wave 2 work.
+
+| Variant | Mental model | Hero | Best for |
+|---|---|---|---|
+| `Cockpit.tsx` | Dashboard-as-cockpit (Linear/Bloomberg) | Live timeline spine + queue rail + KPI tiles | Power users; high-volume single-chair shops |
+| `Atrium.tsx` | Dashboard-as-front-porch (Apple Health/Mercury) | Single "Next up" hero card + ambient AI nudge | Owners who check between clients; solo operators |
+| `Concierge.tsx` | Dashboard-as-conversation (Stripe feed/Superhuman) | Stack of 4-5 AI proposal cards w/ inline actions | Owners who delegate; AI-forward positioning |
+
+All variants render the same `summary` + `upcomingBookings` + `activityFeed` shape and use Aurora tokens inline (no `index.css` edits). Mockup sandbox URLs: `/__mockup/preview/bliq-dashboards/{Cockpit,Atrium,Concierge}`.
+
 ### Key Design Decisions
 
 - Booking creation is conflict-safe: wrapped in a Drizzle transaction with `pg_advisory_xact_lock` keyed by `businessId:staffId`, then conflict check + insert. This prevents double-booking under concurrent requests.
