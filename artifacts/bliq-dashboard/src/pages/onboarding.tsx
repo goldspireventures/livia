@@ -1,7 +1,7 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useLocation } from "wouter";
 import { useCreateBusiness } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Loader2, Sparkles } from "lucide-react";
 
 const formSchema = z.object({
   name: z.string().min(2, "Business name must be at least 2 characters"),
@@ -28,9 +30,9 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export default function OnboardingPage() {
-  const [, setLocation] = useLocation();
   const { toast } = useToast();
   const createBusiness = useCreateBusiness();
+  const [seedLoading, setSeedLoading] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -65,7 +67,6 @@ export default function OnboardingPage() {
             title: "Business created",
             description: "Welcome to Bliq!",
           });
-          // Redirect to dashboard to reload the businesses
           window.location.href = "/dashboard";
         },
         onError: (error) => {
@@ -79,6 +80,27 @@ export default function OnboardingPage() {
     );
   };
 
+  const loadDemoData = async () => {
+    setSeedLoading(true);
+    try {
+      const res = await fetch("/api/dev/seed", { method: "POST" });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Seed failed");
+      toast({
+        title: "Demo workspace ready!",
+        description: `${body.business?.name ?? "Luxe Salon & Spa"} — 3 staff, 5 services, 8 clients, 15 bookings loaded.`,
+      });
+      window.location.href = "/dashboard";
+    } catch (err: any) {
+      toast({
+        title: "Could not load demo data",
+        description: err.message,
+        variant: "destructive",
+      });
+      setSeedLoading(false);
+    }
+  };
+
   return (
     <div className="flex min-h-[100dvh] w-full items-center justify-center bg-background p-4">
       <Card className="w-full max-w-lg">
@@ -88,7 +110,45 @@ export default function OnboardingPage() {
             Let's get your command center ready. You can change these details later.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
+
+          {/* ── Demo shortcut ─────────────────────────────────────────── */}
+          <div className="rounded-lg border border-dashed border-muted-foreground/30 bg-muted/30 p-4 space-y-2">
+            <p className="text-sm font-medium flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-violet-400" />
+              Just exploring? Load a demo workspace instantly.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Creates Luxe Salon &amp; Spa — 3 staff, 5 services, 8 clients, and 15 bookings — so you can try every feature right away.
+            </p>
+            <Button
+              type="button"
+              variant="secondary"
+              className="w-full mt-1"
+              onClick={loadDemoData}
+              disabled={seedLoading || createBusiness.isPending}
+            >
+              {seedLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Loading demo data…
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Load demo workspace
+                </>
+              )}
+            </Button>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Separator className="flex-1" />
+            <span className="text-xs text-muted-foreground">or set up your own</span>
+            <Separator className="flex-1" />
+          </div>
+
+          {/* ── Manual setup form ─────────────────────────────────────── */}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
@@ -167,13 +227,12 @@ export default function OnboardingPage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="America/New_York">Eastern Time (US & Canada)</SelectItem>
-                        <SelectItem value="America/Chicago">Central Time (US & Canada)</SelectItem>
-                        <SelectItem value="America/Denver">Mountain Time (US & Canada)</SelectItem>
-                        <SelectItem value="America/Los_Angeles">Pacific Time (US & Canada)</SelectItem>
+                        <SelectItem value="America/New_York">Eastern Time (US &amp; Canada)</SelectItem>
+                        <SelectItem value="America/Chicago">Central Time (US &amp; Canada)</SelectItem>
+                        <SelectItem value="America/Denver">Mountain Time (US &amp; Canada)</SelectItem>
+                        <SelectItem value="America/Los_Angeles">Pacific Time (US &amp; Canada)</SelectItem>
                         <SelectItem value="Europe/London">London</SelectItem>
                         <SelectItem value="Europe/Paris">Paris</SelectItem>
-                        {/* More timezones can be added */}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -181,8 +240,15 @@ export default function OnboardingPage() {
                 )}
               />
 
-              <Button type="submit" className="w-full" disabled={createBusiness.isPending}>
-                {createBusiness.isPending ? "Creating..." : "Create Business"}
+              <Button type="submit" className="w-full" disabled={createBusiness.isPending || seedLoading}>
+                {createBusiness.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating…
+                  </>
+                ) : (
+                  "Create Business"
+                )}
               </Button>
             </form>
           </Form>
