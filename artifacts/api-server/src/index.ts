@@ -3,6 +3,12 @@ initSentry();
 
 import app from "./app";
 import { logger } from "./lib/logger";
+import { initTransports } from "./lib/transports";
+
+// Wire Twilio + Resend transports if their secrets are present. Absent
+// secrets keep the queued-only no-op transports so notificationLogs still
+// captures every PENDING outbound message.
+initTransports();
 
 const rawPort = process.env["PORT"];
 

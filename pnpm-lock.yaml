@@ -193,6 +193,12 @@ importers:
       '@workspace/integrations-anthropic-ai':
         specifier: workspace:*
         version: link:../../lib/integrations-anthropic-ai
+      '@workspace/integrations-resend':
+        specifier: workspace:*
+        version: link:../../lib/integrations-resend
+      '@workspace/integrations-twilio':
+        specifier: workspace:*
+        version: link:../../lib/integrations-twilio
       cookie-parser:
         specifier: ^1.4.7
         version: 1.4.7
@@ -1022,6 +1028,18 @@ importers:
       '@anthropic-ai/sdk':
         specifier: ^0.78.0
         version: 0.78.0(zod@4.3.6)
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 25.3.5
+
+  lib/integrations-resend:
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 25.3.5
+
+  lib/integrations-twilio:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'

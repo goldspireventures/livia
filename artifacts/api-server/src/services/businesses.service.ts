@@ -115,3 +115,27 @@ export async function userHasAccessToBusiness(userId: string, businessId: string
     );
   return !!member;
 }
+
+// Stricter access check used for billing/channel-control operations
+// (Twilio number provisioning + release, per-shop from-address, test-send).
+// Returns true only when the user OWNS the business or has an ADMIN
+// membership — STAFF members are explicitly excluded so a junior team
+// member cannot purchase numbers or change the shop's outbound sender.
+export async function userIsOwnerOrAdmin(userId: string, businessId: string): Promise<boolean> {
+  const [owned] = await db
+    .select({ id: businessesTable.id })
+    .from(businessesTable)
+    .where(and(eq(businessesTable.id, businessId), eq(businessesTable.ownerId, userId)));
+  if (owned) return true;
+
+  const [member] = await db
+    .select({ role: businessMembershipsTable.role })
+    .from(businessMembershipsTable)
+    .where(
+      and(
+        eq(businessMembershipsTable.businessId, businessId),
+        eq(businessMembershipsTable.userId, userId),
+      ),
+    );
+  return member?.role === "OWNER" || member?.role === "ADMIN";
+}

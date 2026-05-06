@@ -32,6 +32,8 @@ import {
 } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import DemoDataControls from "@/components/demo-data-controls";
+import CommunicationsControls from "@/components/communications-controls";
+import { MessageSquare } from "lucide-react";
 
 interface SettingsForm {
   name: string;
@@ -417,6 +419,26 @@ export default function SettingsPage() {
                     {updateBusiness.isPending ? "Saving..." : "Save AI Settings"}
                   </Button>
                 </form>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <MessageSquare className="h-4 w-4" />
+                  Communications
+                </CardTitle>
+                <CardDescription>
+                  Per-shop SMS number and email sender. Liv uses these to confirm
+                  bookings, send reminders, and reply to customer texts.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {bid ? (
+                  <CommunicationsControls businessId={bid} />
+                ) : (
+                  <p className="text-sm text-muted-foreground">Select a business to manage communications.</p>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

@@ -13,6 +13,8 @@ Premium AI-native multi-tenant operating system for appointment-based service bu
 
 **Optional Gate-2 env vars:** `SENTRY_DSN_API`, `VITE_SENTRY_DSN`, `SENTRY_RELEASE` / `VITE_SENTRY_RELEASE`, `LOG_LEVEL`. Sentry SDKs no-op cleanly when DSN is unset.
 
+**Optional Closed-Beta comms env vars (Task #28):** `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_DEFAULT_FROM`, `RESEND_API_KEY`, `RESEND_DEFAULT_FROM` (default `Livia <onboarding@resend.dev>`), `PUBLIC_BASE_URL`, `INTERNAL_CRON_SECRET`, `TWILIO_SKIP_SIGNATURE_VALIDATION`. All transports degrade to PENDING-only writes when secrets are absent — no boot failure.
+
 ## Stack
 
 pnpm workspace monorepo · TypeScript 5.9 · Node 24 · Express 5 · PostgreSQL + Drizzle ORM · Zod (`zod/v4`) + `drizzle-zod` · Orval API codegen · Vite (web) · Expo (mobile) · Clerk auth · Anthropic Claude (AI).
@@ -27,6 +29,8 @@ pnpm workspace monorepo · TypeScript 5.9 · Node 24 · Express 5 · PostgreSQL 
 - `lib/db` — Drizzle schema (15 tables incl. `marketing_leads` + `conversations`), DB client, enums, status-transition helpers.
 - `lib/api-spec` — OpenAPI source. `pnpm codegen` regenerates `lib/api-zod` and `lib/api-client-react`.
 - `lib/integrations-anthropic-ai` — Anthropic SDK wrapper wired via Replit AI Integrations.
+- `lib/integrations-resend` — fetch-based Resend client + 3 HTML templates (booking confirmation/reminder/cancellation).
+- `lib/integrations-twilio` — sendSms, search/purchase/release LocalNumbers, validateTwilioSignature (HMAC-SHA1), TWIML_EMPTY_RESPONSE.
 
 ## Architecture decisions
 
@@ -58,7 +62,7 @@ The AI is **Liv** — the brand's quiet helper. Liv has a name and a personality
 
 - **Brand layer is silent on "AI"** — no "AI-powered" badges in marketing. Disclosure happens where it legally must:
   - Chat widget first message + persistent footer (EU AI Act Art. 50 — automated interaction disclosure).
-  - Outbound SMS prefix + outbound email block when Liv authors them (Art. 50, wired when Twilio/Resend land in Task #28).
+  - Outbound SMS prefix + outbound email block when Liv authors them (Art. 50). Twilio/Resend transports landed in Task #28 — disclosure is applied in `services/ai-outbound.service.ts` *before* persistence so it cannot be bypassed by transport choice.
   - Privacy policy + Terms (GDPR Art. 22 — automated decision-making).
   - Anthropic AUP compliance copy on the public booking page.
 - **Disclosure copy is centralised** in the shared `@workspace/ai-disclosure` package (`lib/ai-disclosure/src/index.ts`) and treated as legal text — never paraphrased, never per-business overridable. Both api-server (`src/lib/ai-disclosure.ts` is a thin re-export) and the dashboard `chat-widget.tsx` import from this package, so drift between customer view and Inbox view is structurally impossible. Outbound SMS/email always go through `services/ai-outbound.service.ts` (`sendAiSms`, `sendAiEmail`) which apply the disclosure before persistence; transport is pluggable (Task #28 wires Twilio/Resend).
@@ -79,6 +83,14 @@ The AI is **Liv** — the brand's quiet helper. Liv has a name and a personality
 - Use `signInFallbackRedirectUrl` / `signUpFallbackRedirectUrl` (deprecated `fallbackRedirectUrl` is wrong).
 - `proxyUrl` set only in production builds (`import.meta.env.PROD`).
 - **Mobile sign-in is fully custom** (not Clerk hosted UI): 3 modes (sign-in / sign-up / verify-OTP), Google OAuth via `useOAuth({ strategy: "oauth_google" })` with `WebBrowser.maybeCompleteAuthSession()` at module scope. Redirect URI generated per-platform via `AuthSession.makeRedirectUri({ scheme: "bliq-mobile", path: "oauth-callback" })` — never hardcoded.
+
+## Per-shop comms (Task #28, Closed Beta)
+
+- **Schema:** `businesses.twilioPhoneNumber`, `businesses.twilioPhoneSid`, `businesses.resendFromAddress` — every send resolves these per business, falling back to platform defaults.
+- **Boot:** `src/lib/transports.ts::initTransports()` is called from `src/index.ts` and wires the live Twilio/Resend clients into `ai-outbound.service.ts` *only if* both creds are present. Missing creds → transports stay no-op and rows persist with status=PENDING (no boot failure, no silent send).
+- **Routes:** `routes/communications.ts` (provisioned-number CRUD, search/buy/release, test-send), `routes/sms-webhook.ts` (Twilio inbound — HMAC validated unless `TWILIO_SKIP_SIGNATURE_VALIDATION=true`, returns empty TwiML), `routes/internal-cron.ts` (24h-before reminder sweep, gated by `INTERNAL_CRON_SECRET` Bearer).
+- **Booking lifecycle hooks:** `services/booking-emails.service.ts` is invoked fire-and-forget from `bookings.service.ts` on createBooking + updateBookingStatus(CANCELLED). Reminders run via the cron route.
+- **Settings UI:** `components/communications-controls.tsx` mounted as a Card inside the AI tab in `pages/settings.tsx` — owner sees provisioned number, can search by area code → buy → release, edits from-address, and test-sends.
 
 ## Observability (Gate-2 floor, Task #25)
 

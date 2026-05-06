@@ -15,6 +15,9 @@ import devRouter from "./dev";
 import chatRouter from "./chat";
 import conversationsRouter from "./conversations";
 import marketingRouter from "./marketing";
+import communicationsRouter from "./communications";
+import smsWebhookRouter from "./sms-webhook";
+import internalCronRouter from "./internal-cron";
 
 const router: IRouter = Router();
 
@@ -33,6 +36,9 @@ router.use(publicRouter);
 router.use(chatRouter);
 router.use(conversationsRouter);
 router.use(marketingRouter);
+router.use(communicationsRouter);
+router.use(smsWebhookRouter);
+router.use(internalCronRouter);
 router.use(devRouter);
 
 export default router;

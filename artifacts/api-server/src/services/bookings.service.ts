@@ -8,6 +8,10 @@ import {
 } from "@workspace/db";
 import { eq, and, gte, lte, or, sql, desc } from "drizzle-orm";
 import { generateId } from "../lib/id";
+import {
+  sendBookingConfirmationEmail,
+  sendBookingCancellationEmail,
+} from "./booking-emails.service";
 
 export async function listBookings(
   businessId: string,
@@ -141,7 +145,17 @@ export async function createBooking(
     return b;
   });
 
-  return enrichBooking(inserted);
+  const enriched = await enrichBooking(inserted);
+
+  // Fire-and-forget: confirmation email. Failure must not affect the
+  // booking write — `sendBookingConfirmationEmail` swallows + logs errors
+  // and writes a FAILED row to notificationLogs for retry.
+  void sendBookingConfirmationEmail({
+    business: enriched.businessId,
+    booking: enriched as Parameters<typeof sendBookingConfirmationEmail>[0]["booking"],
+  });
+
+  return enriched;
 }
 
 export async function updateBookingStatus(
@@ -181,5 +195,17 @@ export async function updateBookingStatus(
     .where(and(eq(bookingsTable.id, bookingId), eq(bookingsTable.businessId, businessId)))
     .returning();
 
-  return updated ? enrichBooking(updated) : null;
+  if (!updated) return null;
+  const enriched = await enrichBooking(updated);
+
+  // Fire-and-forget cancellation email when transitioning to CANCELLED.
+  if (updates.status === "CANCELLED" && existing.status !== "CANCELLED") {
+    void sendBookingCancellationEmail({
+      business: enriched.businessId,
+      booking: enriched as Parameters<typeof sendBookingCancellationEmail>[0]["booking"],
+      reason: updates.cancellationReason ?? null,
+    });
+  }
+
+  return enriched;
 }

@@ -15,18 +15,41 @@ import { generateId } from "../lib/id";
 import { AI_DISCLOSURE } from "@workspace/ai-disclosure";
 import { appendMessage } from "./conversations.service";
 
-export type SmsTransport = (args: { to: string; body: string }) => Promise<{
-  externalMessageId?: string;
-}>;
+export type SmsTransport = (args: {
+  to: string;
+  body: string;
+  // Optional per-shop sender (Twilio phone number). When omitted the
+  // transport falls back to a server-default (TWILIO_DEFAULT_FROM).
+  from?: string;
+}) => Promise<{ externalMessageId?: string }>;
 
 export type EmailTransport = (args: {
   to: string;
   subject: string;
-  body: string;
+  body: string; // plaintext fallback (always present)
+  // Optional rendered HTML; when omitted the transport may build a simple
+  // <pre>-wrapped HTML body from `body`.
+  html?: string;
+  // Optional per-shop sender (e.g. "Acme <hi@acme.com>"). When omitted the
+  // transport falls back to RESEND_DEFAULT_FROM.
+  from?: string;
+  replyTo?: string;
 }) => Promise<{ externalMessageId?: string }>;
 
-let smsTransport: SmsTransport = async () => ({});
-let emailTransport: EmailTransport = async () => ({});
+// Default transports throw "TRANSPORT_NOT_CONFIGURED" so missing-secret
+// sends land as FAILED in notificationLogs — never silently SENT. The
+// catch blocks in sendAiSms / sendAiEmail surface this as a FAILED row
+// with the full error message in payload, so the owner / ops can see
+// exactly what's missing. setSmsTransport / setEmailTransport in
+// src/lib/transports.ts replace these only when both Twilio / Resend
+// creds are present at boot.
+const TRANSPORT_NOT_CONFIGURED = "TRANSPORT_NOT_CONFIGURED";
+let smsTransport: SmsTransport = async () => {
+  throw new Error(`${TRANSPORT_NOT_CONFIGURED}: SMS transport not configured (missing TWILIO_ACCOUNT_SID + TWILIO_AUTH_TOKEN)`);
+};
+let emailTransport: EmailTransport = async () => {
+  throw new Error(`${TRANSPORT_NOT_CONFIGURED}: Email transport not configured (missing RESEND_API_KEY)`);
+};
 
 export function setSmsTransport(t: SmsTransport): void {
   smsTransport = t;
@@ -71,6 +94,10 @@ export async function sendAiSms(args: {
   customerId?: string | null;
   customerPhone: string;
   content: string;
+  // Optional per-shop Twilio sender — passed through to the transport so
+  // each shop's SMS shows up from THEIR provisioned number, not a shared
+  // default. Falls back to TWILIO_DEFAULT_FROM in the transport.
+  fromPhone?: string | null;
 }): Promise<{ body: string; status: "PENDING" | "SENT" | "FAILED" }> {
   const isFirstOnThread = await isFirstAssistantSmsOnConversation(args.conversationId);
   const body = applySmsPrefix({
@@ -109,7 +136,11 @@ export async function sendAiSms(args: {
   });
 
   try {
-    const transport = await smsTransport({ to: args.customerPhone, body });
+    const transport = await smsTransport({
+      to: args.customerPhone,
+      body,
+      ...(args.fromPhone ? { from: args.fromPhone } : {}),
+    });
     await db
       .update(notificationLogsTable)
       .set({
@@ -166,6 +197,13 @@ export async function sendAiEmail(args: {
   body: string;
   signature?: string;
   templateKey?: string;
+  // Pre-rendered HTML body (e.g. from a React-Email-equivalent template).
+  // When omitted the transport renders a <pre>-wrapped fallback from `body`.
+  html?: string;
+  // Per-shop sender (e.g. "Acme Salon <hi@acme.salon>"). Falls back to
+  // RESEND_DEFAULT_FROM in the transport.
+  fromAddress?: string | null;
+  replyTo?: string;
 }): Promise<{ body: string; status: "PENDING" | "SENT" | "FAILED" }> {
   const composed = composeAiEmailBody({
     businessName: args.businessName,
@@ -190,6 +228,9 @@ export async function sendAiEmail(args: {
       to: args.to,
       subject: args.subject,
       body: composed,
+      ...(args.html ? { html: args.html } : {}),
+      ...(args.fromAddress ? { from: args.fromAddress } : {}),
+      ...(args.replyTo ? { replyTo: args.replyTo } : {}),
     });
     await db
       .update(notificationLogsTable)
