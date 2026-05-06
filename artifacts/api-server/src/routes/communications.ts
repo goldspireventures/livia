@@ -1,22 +1,21 @@
 // Owner/admin routes for the per-shop Twilio number + Resend from-address
 // + a test-send box. When Twilio creds are absent endpoints return 503
 // (TWILIO_NOT_CONFIGURED) so the Settings UI can surface it cleanly.
+//
+// Access: OWNER+ADMIN. Comms config is sensitive (provisioning costs $$
+// and outbound copy is brand-tone) so it's gated above STAFF.
 
 import { Router, type IRouter } from "express";
-import { requireAuth, getUserId } from "../lib/auth";
-import { db, businessesTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
-import {
-  userIsOwnerOrAdmin,
-  getBusinessById,
-  updateBusiness,
-} from "../services/businesses.service";
+import { requireAuth, requireRole } from "../lib/auth";
+import { getBusinessById, updateBusiness } from "../services/businesses.service";
 import { createTwilioClient } from "@workspace/integrations-twilio";
 import { sendAiSms, sendAiEmail } from "../services/ai-outbound.service";
 import { createConversation } from "../services/conversations.service";
 import { getTransportStatus } from "../lib/transports";
 
 const router: IRouter = Router();
+const getBizId = (param: string | string[]) =>
+  Array.isArray(param) ? param[0] : param;
 
 function smsWebhookUrl(): string | null {
   const base = process.env["PUBLIC_BASE_URL"];
@@ -27,16 +26,9 @@ function smsWebhookUrl(): string | null {
 router.get(
   "/businesses/:businessId/communications",
   requireAuth,
+  requireRole("ADMIN"),
   async (req, res): Promise<void> => {
-    const userId = getUserId(req);
-    const { businessId } = req.params;
-    const id = Array.isArray(businessId) ? businessId[0] : businessId;
-
-    if (!(await userIsOwnerOrAdmin(userId, id))) {
-      res.status(404).json({ error: "Business not found" });
-      return;
-    }
-
+    const id = getBizId(req.params.businessId);
     const biz = await getBusinessById(id);
     if (!biz) { res.status(404).json({ error: "Business not found" }); return; }
 
@@ -55,18 +47,11 @@ router.get(
   },
 );
 
-// List available Twilio local numbers (defaults to IE, Closed Beta).
 router.get(
   "/businesses/:businessId/communications/sms/available-numbers",
   requireAuth,
+  requireRole("ADMIN"),
   async (req, res): Promise<void> => {
-    const userId = getUserId(req);
-    const { businessId } = req.params;
-    const id = Array.isArray(businessId) ? businessId[0] : businessId;
-    if (!(await userIsOwnerOrAdmin(userId, id))) {
-      res.status(404).json({ error: "Business not found" }); return;
-    }
-
     const sid = process.env["TWILIO_ACCOUNT_SID"];
     const token = process.env["TWILIO_AUTH_TOKEN"];
     if (!sid || !token) {
@@ -76,17 +61,12 @@ router.get(
       });
       return;
     }
-
     const country = (req.query["countryCode"] as string | undefined) ?? "IE";
     const areaCode = req.query["areaCode"] as string | undefined;
-
     try {
       const twilio = createTwilioClient({ accountSid: sid, authToken: token });
       const numbers = await twilio.searchAvailableLocalNumbers({
-        countryCode: country,
-        areaCode,
-        smsEnabled: true,
-        limit: 5,
+        countryCode: country, areaCode, smsEnabled: true, limit: 5,
       });
       res.json({ numbers });
     } catch (err) {
@@ -98,20 +78,12 @@ router.get(
   },
 );
 
-// Provision a Twilio number for this business. If body.phoneNumber is
-// omitted the server picks the first available SMS-enabled IE/areaCode=1
-// number (Closed Beta default). 409 if a number is already bound.
 router.post(
   "/businesses/:businessId/communications/sms/provision-number",
   requireAuth,
+  requireRole("ADMIN"),
   async (req, res): Promise<void> => {
-    const userId = getUserId(req);
-    const { businessId } = req.params;
-    const id = Array.isArray(businessId) ? businessId[0] : businessId;
-    if (!(await userIsOwnerOrAdmin(userId, id))) {
-      res.status(404).json({ error: "Business not found" }); return;
-    }
-
+    const id = getBizId(req.params.businessId);
     const sid = process.env["TWILIO_ACCOUNT_SID"];
     const token = process.env["TWILIO_AUTH_TOKEN"];
     if (!sid || !token) {
@@ -141,10 +113,6 @@ router.post(
       return;
     }
 
-    // Server-driven default: Closed Beta target is Ireland (IE), preferred
-    // area code "1" (Dublin). When the client doesn't pass an explicit
-    // E.164, search Twilio for the first SMS-enabled local IE/areaCode=1
-    // number and provision that. Explicit phoneNumber overrides this path.
     let phoneNumber = (req.body?.phoneNumber as string | undefined)?.trim();
     const country = (req.body?.countryCode as string | undefined)?.trim() || "IE";
     const preferredArea = (req.body?.areaCode as string | undefined)?.trim()
@@ -154,10 +122,7 @@ router.post(
       const twilio = createTwilioClient({ accountSid: sid, authToken: token });
       if (!phoneNumber) {
         const candidates = await twilio.searchAvailableLocalNumbers({
-          countryCode: country,
-          areaCode: preferredArea,
-          smsEnabled: true,
-          limit: 1,
+          countryCode: country, areaCode: preferredArea, smsEnabled: true, limit: 1,
         });
         if (candidates.length === 0) {
           res.status(404).json({
@@ -169,9 +134,7 @@ router.post(
         phoneNumber = candidates[0].phoneNumber;
       }
       const purchased = await twilio.purchasePhoneNumber({
-        phoneNumber,
-        smsUrl: webhook,
-        friendlyName: `Livia · ${biz.name}`,
+        phoneNumber, smsUrl: webhook, friendlyName: `Livia · ${biz.name}`,
       });
       await updateBusiness(id, {
         twilioPhoneNumber: purchased.phoneNumber,
@@ -191,17 +154,12 @@ router.post(
   },
 );
 
-// Release the provisioned number (returns it to Twilio's pool).
 router.delete(
   "/businesses/:businessId/communications/sms/number",
   requireAuth,
+  requireRole("ADMIN"),
   async (req, res): Promise<void> => {
-    const userId = getUserId(req);
-    const { businessId } = req.params;
-    const id = Array.isArray(businessId) ? businessId[0] : businessId;
-    if (!(await userIsOwnerOrAdmin(userId, id))) {
-      res.status(404).json({ error: "Business not found" }); return;
-    }
+    const id = getBizId(req.params.businessId);
     const biz = await getBusinessById(id);
     if (!biz?.twilioPhoneSid) {
       res.status(404).json({ error: "No number provisioned" }); return;
@@ -213,8 +171,7 @@ router.delete(
         const twilio = createTwilioClient({ accountSid: sid, authToken: token });
         await twilio.releasePhoneNumber(biz.twilioPhoneSid);
       } catch {
-        // Best-effort — even if Twilio release fails we clear our row so
-        // the owner is unblocked. They can clean up in Twilio console.
+        // Best-effort — clear our row even if Twilio release fails.
       }
     }
     await updateBusiness(id, { twilioPhoneNumber: null, twilioPhoneSid: null });
@@ -222,35 +179,24 @@ router.delete(
   },
 );
 
-// Update the per-shop "from" email address (e.g. "Acme Salon <hi@acme.com>").
 router.put(
   "/businesses/:businessId/communications/email/from",
   requireAuth,
+  requireRole("ADMIN"),
   async (req, res): Promise<void> => {
-    const userId = getUserId(req);
-    const { businessId } = req.params;
-    const id = Array.isArray(businessId) ? businessId[0] : businessId;
-    if (!(await userIsOwnerOrAdmin(userId, id))) {
-      res.status(404).json({ error: "Business not found" }); return;
-    }
+    const id = getBizId(req.params.businessId);
     const fromAddress = (req.body?.fromAddress as string | undefined)?.trim() || null;
     await updateBusiness(id, { resendFromAddress: fromAddress });
     res.json({ resendFromAddress: fromAddress });
   },
 );
 
-// Test-send: SMS or email through the real transports. Writes to
-// notificationLogs either way so failures are inspectable.
 router.post(
   "/businesses/:businessId/communications/test-send",
   requireAuth,
+  requireRole("ADMIN"),
   async (req, res): Promise<void> => {
-    const userId = getUserId(req);
-    const { businessId } = req.params;
-    const id = Array.isArray(businessId) ? businessId[0] : businessId;
-    if (!(await userIsOwnerOrAdmin(userId, id))) {
-      res.status(404).json({ error: "Business not found" }); return;
-    }
+    const id = getBizId(req.params.businessId);
     const biz = await getBusinessById(id);
     if (!biz) { res.status(404).json({ error: "Business not found" }); return; }
 
@@ -267,18 +213,12 @@ router.post(
     }
 
     if (channel === "SMS") {
-      // Transient conversation so the disclosure-prefix path runs.
       const convo = await createConversation({
-        businessId: biz.id,
-        channel: "SMS",
-        customerPhone: to,
+        businessId: biz.id, channel: "SMS", customerPhone: to,
       });
       const result = await sendAiSms({
-        conversationId: convo.id,
-        businessId: biz.id,
-        businessName: biz.name,
-        customerPhone: to,
-        content: message,
+        conversationId: convo.id, businessId: biz.id, businessName: biz.name,
+        customerPhone: to, content: message,
         fromPhone: biz.twilioPhoneNumber ?? null,
       });
       res.json({ channel, status: result.status, body: result.body, conversationId: convo.id });
@@ -286,13 +226,9 @@ router.post(
     }
 
     const result = await sendAiEmail({
-      businessId: biz.id,
-      businessName: biz.name,
-      to,
-      subject: `Livia test message · ${biz.name}`,
-      body: message,
-      templateKey: "test-send",
-      fromAddress: biz.resendFromAddress ?? null,
+      businessId: biz.id, businessName: biz.name, to,
+      subject: `Livia test message · ${biz.name}`, body: message,
+      templateKey: "test-send", fromAddress: biz.resendFromAddress ?? null,
     });
     res.json({ channel, status: result.status, body: result.body });
   },

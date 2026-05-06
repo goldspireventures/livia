@@ -36,6 +36,7 @@ import { fonts, type } from "@/constants/typography";
 import { useBusiness } from "@/contexts/BusinessContext";
 import { useColors } from "@/hooks/useColors";
 import { useHaptics } from "@/hooks/useHaptics";
+import { useMembership } from "@/hooks/useMembership";
 import { useRelativeTime } from "@/hooks/useRelativeTime";
 
 function timeOfDayGreeting(): string {
@@ -54,11 +55,18 @@ export default function DashboardScreen() {
   const haptics = useHaptics();
   const { currentBusiness, isLoading: bizLoading } = useBusiness();
 
+  const { role, isLoading: roleLoading } = useMembership();
+
   useEffect(() => {
     if (!bizLoading && !currentBusiness) {
       router.replace("/onboarding");
+      return;
     }
-  }, [currentBusiness, bizLoading]);
+    // STAFF should never see the owner cockpit. Redirect to My Day.
+    if (!roleLoading && role === "STAFF") {
+      router.replace("/my-day");
+    }
+  }, [currentBusiness, bizLoading, role, roleLoading]);
 
   const {
     data: summary,

@@ -12,14 +12,22 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fonts } from "@/constants/typography";
 import { useColors } from "@/hooks/useColors";
 import { useHaptics } from "@/hooks/useHaptics";
+import { useMembership } from "@/hooks/useMembership";
 
-function NativeTabLayout() {
+function NativeTabLayout({ isStaff }: { isStaff: boolean }) {
   return (
     <NativeTabs>
-      <NativeTabs.Trigger name="index">
-        <Icon sf={{ default: "house", selected: "house.fill" }} />
-        <Label>Today</Label>
-      </NativeTabs.Trigger>
+      {isStaff ? (
+        <NativeTabs.Trigger name="my-day">
+          <Icon sf={{ default: "sun.max", selected: "sun.max.fill" }} />
+          <Label>My day</Label>
+        </NativeTabs.Trigger>
+      ) : (
+        <NativeTabs.Trigger name="index">
+          <Icon sf={{ default: "house", selected: "house.fill" }} />
+          <Label>Today</Label>
+        </NativeTabs.Trigger>
+      )}
       <NativeTabs.Trigger name="bookings">
         <Icon sf={{ default: "calendar", selected: "calendar" }} />
         <Label>Bookings</Label>
@@ -36,11 +44,11 @@ function NativeTabLayout() {
   );
 }
 
-function ClassicTabLayout() {
+function ClassicTabLayout({ isStaff }: { isStaff: boolean }) {
   const colors = useColors();
   const colorScheme = useColorScheme();
   const haptics = useHaptics();
-  const isDark = colorScheme !== "light"; // we default to dark
+  const isDark = colorScheme !== "light";
   const isIOS = Platform.OS === "ios";
   const isWeb = Platform.OS === "web";
   const insets = useSafeAreaInsets();
@@ -94,15 +102,30 @@ function ClassicTabLayout() {
         },
       }}
     >
+      {/* Owner/admin Today screen — hidden from STAFF (they get my-day instead). */}
       <Tabs.Screen
         name="index"
         options={{
           title: "Today",
+          href: isStaff ? null : undefined,
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="house.fill" tintColor={color} size={22} />
             ) : (
               <Feather name="home" size={22} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="my-day"
+        options={{
+          title: "My day",
+          href: isStaff ? undefined : null,
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="sun.max.fill" tintColor={color} size={22} />
+            ) : (
+              <Feather name="sun" size={22} color={color} />
             ),
         }}
       />
@@ -147,8 +170,11 @@ function ClassicTabLayout() {
 }
 
 export default function TabLayout() {
+  const { role } = useMembership();
+  const isStaff = role === "STAFF";
+
   if (isLiquidGlassAvailable()) {
-    return <NativeTabLayout />;
+    return <NativeTabLayout isStaff={isStaff} />;
   }
-  return <ClassicTabLayout />;
+  return <ClassicTabLayout isStaff={isStaff} />;
 }

@@ -1,6 +1,10 @@
+// Inbox / conversations.
+// Access: OWNER+ADMIN. STAFF do not see customer conversations in v1
+// (the inbox is a brand-tone surface; staff training to handle the
+// AI's hand-off voice is a deliberate future task).
+
 import { Router, type IRouter } from "express";
-import { requireAuth, getUserId } from "../lib/auth";
-import { userHasAccessToBusiness } from "../services/businesses.service";
+import { requireAuth, requireRole } from "../lib/auth";
 import {
   listConversationsForBusiness,
   getConversation,
@@ -10,22 +14,15 @@ import {
 } from "../services/conversations.service";
 
 const router: IRouter = Router();
+const getBizId = (param: string | string[]) =>
+  Array.isArray(param) ? param[0] : param;
 
 router.get(
   "/businesses/:businessId/conversations",
   requireAuth,
+  requireRole("ADMIN"),
   async (req, res): Promise<void> => {
-    const userId = getUserId(req);
-    const businessId = Array.isArray(req.params.businessId)
-      ? req.params.businessId[0]
-      : req.params.businessId;
-
-    const ok = await userHasAccessToBusiness(userId, businessId);
-    if (!ok) {
-      res.status(404).json({ error: "Business not found" });
-      return;
-    }
-
+    const businessId = getBizId(req.params.businessId);
     const status = req.query.status as ConversationStatus | undefined;
     const rows = await listConversationsForBusiness(businessId, { status });
     res.json(rows);
@@ -35,20 +32,10 @@ router.get(
 router.get(
   "/businesses/:businessId/conversations/:conversationId",
   requireAuth,
+  requireRole("ADMIN"),
   async (req, res): Promise<void> => {
-    const userId = getUserId(req);
-    const businessId = Array.isArray(req.params.businessId)
-      ? req.params.businessId[0]
-      : req.params.businessId;
-    const conversationId = Array.isArray(req.params.conversationId)
-      ? req.params.conversationId[0]
-      : req.params.conversationId;
-
-    const ok = await userHasAccessToBusiness(userId, businessId);
-    if (!ok) {
-      res.status(404).json({ error: "Business not found" });
-      return;
-    }
+    const businessId = getBizId(req.params.businessId);
+    const conversationId = getBizId(req.params.conversationId);
 
     const conv = await getConversation(conversationId);
     if (!conv || conv.businessId !== businessId) {
@@ -57,8 +44,6 @@ router.get(
     }
 
     const messages = await listMessagesForConversation(conversationId);
-
-    // Build the list-item shape for the conversation header
     const messageCount = messages.length;
     const bookingCount = messages.filter((m) => !!m.bookingId).length;
     const lastMessage =
@@ -66,12 +51,7 @@ router.get(
       null;
 
     res.json({
-      conversation: {
-        ...conv,
-        lastMessage,
-        messageCount,
-        bookingCount,
-      },
+      conversation: { ...conv, lastMessage, messageCount, bookingCount },
       messages: messages.map((m) => ({
         id: m.id,
         conversationId: m.conversationId,
@@ -88,20 +68,10 @@ router.get(
 router.patch(
   "/businesses/:businessId/conversations/:conversationId",
   requireAuth,
+  requireRole("ADMIN"),
   async (req, res): Promise<void> => {
-    const userId = getUserId(req);
-    const businessId = Array.isArray(req.params.businessId)
-      ? req.params.businessId[0]
-      : req.params.businessId;
-    const conversationId = Array.isArray(req.params.conversationId)
-      ? req.params.conversationId[0]
-      : req.params.conversationId;
-
-    const ok = await userHasAccessToBusiness(userId, businessId);
-    if (!ok) {
-      res.status(404).json({ error: "Business not found" });
-      return;
-    }
+    const businessId = getBizId(req.params.businessId);
+    const conversationId = getBizId(req.params.conversationId);
 
     const conv = await getConversation(conversationId);
     if (!conv || conv.businessId !== businessId) {
@@ -111,11 +81,6 @@ router.patch(
 
     const { status, aiHandled } = req.body ?? {};
     const nextStatus: ConversationStatus = status ?? conv.status;
-    // Default aiHandled transitions per status:
-    //   HANDED_OFF → AI off (human is driving)
-    //   CLOSED     → AI off (conversation finished)
-    //   OPEN       → AI on (resume / fresh)
-    // Caller can still override by passing an explicit aiHandled flag.
     let nextAiHandled: boolean;
     if (aiHandled !== undefined) {
       nextAiHandled = !!aiHandled;
@@ -128,8 +93,6 @@ router.patch(
     }
 
     const updated = await updateConversationStatus(conversationId, nextStatus, nextAiHandled);
-
-    // Return list-item shape for cache consistency
     const messages = await listMessagesForConversation(conversationId);
     const lastMessage =
       [...messages].reverse().find((m) => m.role === "USER" || m.role === "ASSISTANT")?.content ??

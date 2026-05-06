@@ -25,6 +25,7 @@ import StaffDetailPage from "@/pages/staff-detail";
 import ServicesPage from "@/pages/services";
 import SettingsPage from "@/pages/settings";
 import InboxPage from "@/pages/inbox";
+import MyDayPage from "@/pages/my-day";
 import PublicBookingPage from "@/pages/public-booking";
 
 const queryClient = new QueryClient({
@@ -54,6 +55,7 @@ function AuthenticatedRoutes() {
       <AppLayout>
         <Switch>
           <Route path="/dashboard" component={DashboardPage} />
+          <Route path="/my-day" component={MyDayPage} />
           <Route path="/bookings/new" component={BookingNewPage} />
           <Route path="/bookings/:bookingId" component={BookingDetailPage} />
           <Route path="/bookings" component={BookingsPage} />

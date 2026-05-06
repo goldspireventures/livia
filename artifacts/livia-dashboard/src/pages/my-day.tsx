@@ -1,0 +1,196 @@
+// STAFF landing page — "My Day".
+// Read-only by design: today's slate, the next appointment, and the
+// roster of customers I've served before.
+
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { useBusiness } from "@/lib/business-context";
+import { useMembership, personaQuery } from "@/lib/membership-context";
+import { apiFetch } from "@/lib/api-fetch";
+import { Link } from "wouter";
+import { Calendar, Users, Clock, ArrowRight } from "lucide-react";
+
+interface MyDayResponse {
+  staffId: string | null;
+  todayCount: number;
+  weekCount: number;
+  today: Array<{
+    id: string;
+    startAt: string;
+    endAt: string;
+    status: string;
+    customer?: { id: string; displayName: string | null } | null;
+    service?: { id: string; name: string } | null;
+  }>;
+  next: MyDayResponse["today"][number] | null;
+  myCustomers: Array<{ id: string; displayName: string | null; email: string | null }>;
+  role: string;
+  effectiveRole: string;
+}
+
+function fmtTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+}
+
+function timeUntil(iso: string): string {
+  const ms = new Date(iso).getTime() - Date.now();
+  if (ms < 0) return "now";
+  const m = Math.round(ms / 60000);
+  if (m < 60) return `in ${m}m`;
+  const h = Math.floor(m / 60);
+  const mm = m % 60;
+  return mm ? `in ${h}h ${mm}m` : `in ${h}h`;
+}
+
+export default function MyDayPage() {
+  const { business } = useBusiness();
+  const { effectiveRole, viewingAsStaffId, ownStaffId } = useMembership();
+  const bid = business?.id ?? "";
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["my-day", bid, viewingAsStaffId, ownStaffId],
+    queryFn: () =>
+      apiFetch<MyDayResponse>(`/businesses/${bid}/my-day${personaQuery(viewingAsStaffId)}`),
+    enabled: !!bid,
+    staleTime: 30_000,
+  });
+
+  if (isLoading || !data) {
+    return (
+      <div className="space-y-6 max-w-5xl">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-32 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
+
+  const isViewingAs = effectiveRole === "STAFF" && viewingAsStaffId !== null;
+
+  return (
+    <div className="space-y-6 max-w-5xl">
+      <header className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">My Day</h1>
+          <p className="text-muted-foreground mt-1">
+            {data.todayCount === 0
+              ? "Nothing on the books today — go take a breather."
+              : `${data.todayCount} appointment${data.todayCount === 1 ? "" : "s"} today · ${data.weekCount} more this week`}
+          </p>
+        </div>
+        {isViewingAs ? (
+          <Badge variant="outline" className="text-xs">
+            Viewing as staff (read-only)
+          </Badge>
+        ) : null}
+      </header>
+
+      {data.next ? (
+        <Card className="border-primary/40 bg-primary/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <Clock className="h-4 w-4" />
+              Up next
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-baseline justify-between gap-3 flex-wrap">
+              <div>
+                <div className="text-2xl font-semibold">
+                  {data.next.customer?.displayName ?? "Unnamed customer"}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {data.next.service?.name ?? "Appointment"}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-xl font-semibold">{fmtTime(data.next.startAt)}</div>
+                <div className="text-xs text-muted-foreground">{timeUntil(data.next.startAt)}</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Today's appointments
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {data.today.length === 0 ? (
+            <div className="text-sm text-muted-foreground py-6 text-center">
+              {data.staffId
+                ? "No appointments today."
+                : "Your account isn't linked to a staff row yet — ask your manager to link it."}
+            </div>
+          ) : (
+            <ul className="divide-y">
+              {data.today.map((b) => (
+                <li key={b.id} className="py-3 flex items-center gap-4">
+                  <div className="w-20 shrink-0">
+                    <div className="font-medium">{fmtTime(b.startAt)}</div>
+                    <div className="text-xs text-muted-foreground">{fmtTime(b.endAt)}</div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate">
+                      {b.customer?.displayName ?? "Unnamed customer"}
+                    </div>
+                    <div className="text-sm text-muted-foreground truncate">
+                      {b.service?.name ?? "Appointment"}
+                    </div>
+                  </div>
+                  <Badge variant={b.status === "CONFIRMED" ? "default" : "secondary"}>
+                    {b.status.toLowerCase()}
+                  </Badge>
+                  <Link href={`/bookings/${b.id}`}>
+                    <Button variant="ghost" size="sm">
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            My customers
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {data.myCustomers.length === 0 ? (
+            <div className="text-sm text-muted-foreground py-6 text-center">
+              No customers yet — they'll show up here as you work through bookings.
+            </div>
+          ) : (
+            <ul className="divide-y">
+              {data.myCustomers.slice(0, 20).map((c) => (
+                <li key={c.id} className="py-3 flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="font-medium truncate">{c.displayName ?? "Unnamed"}</div>
+                    {c.email ? (
+                      <div className="text-xs text-muted-foreground truncate">{c.email}</div>
+                    ) : null}
+                  </div>
+                  <Link href={`/customers/${c.id}`}>
+                    <Button variant="ghost" size="sm">View</Button>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

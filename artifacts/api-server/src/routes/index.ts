@@ -18,6 +18,8 @@ import marketingRouter from "./marketing";
 import communicationsRouter from "./communications";
 import smsWebhookRouter from "./sms-webhook";
 import internalCronRouter from "./internal-cron";
+import myDayRouter from "./my-day";
+import invitationsRouter from "./invitations";
 
 const router: IRouter = Router();
 
@@ -39,6 +41,8 @@ router.use(marketingRouter);
 router.use(communicationsRouter);
 router.use(smsWebhookRouter);
 router.use(internalCronRouter);
+router.use(myDayRouter);
+router.use(invitationsRouter);
 router.use(devRouter);
 
 export default router;

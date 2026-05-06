@@ -34,6 +34,7 @@ import { useForm, Controller } from "react-hook-form";
 import DemoDataControls from "@/components/demo-data-controls";
 import CommunicationsControls from "@/components/communications-controls";
 import { MessageSquare } from "lucide-react";
+import { useMembership } from "@/lib/membership-context";
 
 interface SettingsForm {
   name: string;
@@ -58,6 +59,11 @@ export default function SettingsPage() {
   const { business } = useBusiness();
   const { toast } = useToast();
   const qc = useQueryClient();
+  const { effectiveRole } = useMembership();
+  // STAFF can see general profile + demo controls, but not the
+  // brand-tone AI/comms surfaces. Server-side gating still enforces
+  // it; this is the matching UI hide.
+  const canEditAI = effectiveRole === "OWNER" || effectiveRole === "ADMIN";
 
   const bid = business?.id ?? "";
 
@@ -168,10 +174,12 @@ export default function SettingsPage() {
               <Settings className="h-4 w-4 mr-2" />
               General
             </TabsTrigger>
-            <TabsTrigger value="ai" data-testid="tab-ai">
-              <Sparkles className="h-4 w-4 mr-2" />
-              AI Assistant
-            </TabsTrigger>
+            {canEditAI && (
+              <TabsTrigger value="ai" data-testid="tab-ai">
+                <Sparkles className="h-4 w-4 mr-2" />
+                AI Assistant
+              </TabsTrigger>
+            )}
             <TabsTrigger value="demo" data-testid="tab-demo">
               <FlaskConical className="h-4 w-4 mr-2" />
               Demo & Data
@@ -301,7 +309,8 @@ export default function SettingsPage() {
             </Card>
           </TabsContent>
 
-          {/* ===== AI Assistant tab ===== */}
+          {/* ===== AI Assistant tab (admin+) ===== */}
+          {canEditAI && (
           <TabsContent value="ai" className="space-y-6 mt-0">
             <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-[hsl(var(--chart-1))]/5">
               <CardHeader>
@@ -442,6 +451,7 @@ export default function SettingsPage() {
               </CardContent>
             </Card>
           </TabsContent>
+          )}
 
           {/* ===== Demo & Data tab ===== */}
           <TabsContent value="demo" className="space-y-6 mt-0">

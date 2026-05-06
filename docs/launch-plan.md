@@ -162,7 +162,7 @@ Sizing: **S** ≤ one focused day · **M** 2-5 days · **L** > 1 week. Target ga
 The stale `.local/tasks/RELEASE-PLAN.md` and the 12 legacy `01-…17-` task files were audited and folded into the lanes above. Specifically:
 
 - `01-brand-story-first-impression` → Brand B1, B2, B3.
-- `02-personas-roles-action-dashboard` → covered by shipped Cockpit dashboard + the role expansion (FRONT_DESK, ORG_OWNER) which is deferred until post-Gate-3 and is **not** in this plan.
+- `02-personas-roles-action-dashboard` → covered by the shipped Cockpit dashboard + the OWNER/ADMIN/STAFF split landed in Task #48 (see ADR 0009). Further role expansion (FRONT_DESK, ORG_OWNER) is deferred until post-Gate-3 and is **not** in this plan.
 - `03-ai-inbound-and-notifications` → Lane 4 (L3, L4, L5); the AI inbox itself shipped May 5.
 - `04-revenue-protection-deposits-tips` → Launch ops L6, L7 (infra) + a separate post-Gate-3 product task.
 - `05-walkins-recurring-import-whitelabel` → out of v1 launch scope; revisit post-Gate-3.

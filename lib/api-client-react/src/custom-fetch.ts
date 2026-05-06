@@ -17,6 +17,18 @@ const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
 
 let _baseUrl: string | null = null;
 let _authTokenGetter: AuthTokenGetter | null = null;
+let _queryParamGetter: (() => Record<string, string> | null) | null = null;
+
+/**
+ * Register a getter that returns extra query params to merge into every
+ * request (e.g. `{ as: "staff:abc" }` for the persona switcher). Returning
+ * `null` is a no-op. Existing query params on the URL win over injected ones.
+ */
+export function setRequestQueryParamGetter(
+  getter: (() => Record<string, string> | null) | null,
+): void {
+  _queryParamGetter = getter;
+}
 
 /**
  * Set a base URL that is prepended to every relative request URL
@@ -70,6 +82,28 @@ function applyBaseUrl(input: RequestInfo | URL): RequestInfo | URL {
   if (typeof input === "string") return absolute;
   if (isUrl(input)) return new URL(absolute);
   return new Request(absolute, input as Request);
+}
+
+function applyInjectedQueryParams(input: RequestInfo | URL): RequestInfo | URL {
+  if (!_queryParamGetter) return input;
+  const extra = _queryParamGetter();
+  if (!extra || Object.keys(extra).length === 0) return input;
+
+  const url = resolveUrl(input);
+  // Don't touch absolute URLs that aren't aimed at our API base.
+  if (/^https?:\/\//i.test(url) && _baseUrl && !url.startsWith(_baseUrl)) {
+    return input;
+  }
+  const [path, existingQs] = url.split("?", 2);
+  const params = new URLSearchParams(existingQs ?? "");
+  for (const [k, v] of Object.entries(extra)) {
+    if (!params.has(k)) params.set(k, v);
+  }
+  const next = params.toString();
+  const merged = next ? `${path}?${next}` : path;
+  if (typeof input === "string") return merged;
+  if (isUrl(input)) return new URL(merged);
+  return new Request(merged, input as Request);
 }
 
 function resolveUrl(input: RequestInfo | URL): string {
@@ -327,6 +361,7 @@ export async function customFetch<T = unknown>(
   options: CustomFetchOptions = {},
 ): Promise<T> {
   input = applyBaseUrl(input);
+  input = applyInjectedQueryParams(input);
   const { responseType = "auto", headers: headersInit, ...init } = options;
 
   const method = resolveMethod(input, init.method);

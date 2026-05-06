@@ -1,6 +1,72 @@
 import { db, customersTable, bookingsTable } from "@workspace/db";
-import { eq, and, or, ilike, sql, desc } from "drizzle-orm";
+import { eq, and, or, ilike, sql, desc, inArray } from "drizzle-orm";
 import { generateId } from "../lib/id";
+
+// STAFF-scoped: list customers I (the staff row) have served. Mirrors
+// the shape of `listCustomers` so the route can swap them transparently.
+// When `staffId` is null (a STAFF user has no linked staff row yet) we
+// return an empty page instead of leaking the full roster.
+export async function listCustomersServedByStaff(
+  businessId: string,
+  staffId: string | null,
+  opts: { search?: string; isBlocked?: boolean; limit?: number; offset?: number },
+) {
+  if (!staffId) return { data: [], total: 0, limit: opts.limit ?? 50, offset: opts.offset ?? 0 };
+  const { search, isBlocked, limit = 50, offset = 0 } = opts;
+
+  const servedRows = await db
+    .selectDistinct({ customerId: bookingsTable.customerId })
+    .from(bookingsTable)
+    .where(and(eq(bookingsTable.businessId, businessId), eq(bookingsTable.staffId, staffId)));
+  const ids = servedRows.map((r) => r.customerId);
+  if (ids.length === 0) return { data: [], total: 0, limit, offset };
+
+  const conditions = [eq(customersTable.businessId, businessId), inArray(customersTable.id, ids)];
+  if (isBlocked !== undefined) conditions.push(eq(customersTable.isBlocked, isBlocked));
+  if (search) {
+    conditions.push(
+      or(
+        ilike(customersTable.displayName, `%${search}%`),
+        ilike(customersTable.firstName, `%${search}%`),
+        ilike(customersTable.lastName, `%${search}%`),
+        ilike(customersTable.email, `%${search}%`),
+        ilike(customersTable.phone, `%${search}%`),
+      )!,
+    );
+  }
+  const whereClause = and(...conditions);
+  const [countResult] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(customersTable)
+    .where(whereClause);
+  const data = await db
+    .select()
+    .from(customersTable)
+    .where(whereClause)
+    .limit(limit)
+    .offset(offset)
+    .orderBy(desc(customersTable.createdAt));
+  return { data, total: countResult?.count ?? 0, limit, offset };
+}
+
+export async function isCustomerServedByStaff(
+  businessId: string,
+  customerId: string,
+  staffId: string,
+): Promise<boolean> {
+  const [hit] = await db
+    .select({ id: bookingsTable.id })
+    .from(bookingsTable)
+    .where(
+      and(
+        eq(bookingsTable.businessId, businessId),
+        eq(bookingsTable.customerId, customerId),
+        eq(bookingsTable.staffId, staffId),
+      ),
+    )
+    .limit(1);
+  return !!hit;
+}
 
 export async function listCustomers(
   businessId: string,

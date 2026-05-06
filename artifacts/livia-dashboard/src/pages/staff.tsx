@@ -14,8 +14,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { UsersRound, UserPlus, ChevronRight } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { UsersRound, UserPlus, ChevronRight, Mail } from "lucide-react";
+import { useForm, Controller } from "react-hook-form";
+import { useMembership } from "@/lib/membership-context";
+import { apiFetch, ApiFetchError } from "@/lib/api-fetch";
+import { useMutation } from "@tanstack/react-query";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface StaffForm {
   firstName: string;
@@ -23,6 +33,93 @@ interface StaffForm {
   displayName: string;
   email: string;
   phone: string;
+}
+
+interface InviteForm {
+  email: string;
+  role: "ADMIN" | "STAFF";
+}
+
+function InviteDialog({ businessId }: { businessId: string }) {
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+  const { register, handleSubmit, reset, control } = useForm<InviteForm>({
+    defaultValues: { email: "", role: "STAFF" },
+  });
+
+  const invite = useMutation({
+    mutationFn: (vals: InviteForm) =>
+      apiFetch(`/businesses/${businessId}/invitations`, {
+        method: "POST",
+        body: JSON.stringify(vals),
+      }),
+    onSuccess: () => {
+      toast({ title: "Invitation sent", description: "They'll receive an email shortly." });
+      reset();
+      setOpen(false);
+    },
+    onError: (err: unknown) => {
+      const e = err as ApiFetchError;
+      const msg =
+        e?.code === "CLERK_NOT_CONFIGURED"
+          ? "Invitations need server config. Ask your admin to set CLERK_SECRET_KEY."
+          : e?.message ?? "Failed to send invitation";
+      toast({ title: "Invitation failed", description: msg, variant: "destructive" });
+    },
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" data-testid="button-invite-teammate">
+          <Mail className="h-4 w-4 mr-2" />
+          Invite teammate
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Invite a teammate</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit((v) => invite.mutate(v))} className="space-y-4">
+          <div className="space-y-2">
+            <Label>Email *</Label>
+            <Input
+              type="email"
+              {...register("email", { required: true })}
+              placeholder="them@yourshop.com"
+              data-testid="input-invite-email"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Role *</Label>
+            <Controller
+              control={control}
+              name="role"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger data-testid="select-invite-role">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="STAFF">Staff — sees their own slate</SelectItem>
+                    <SelectItem value="ADMIN">Admin — full access except billing</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </div>
+          <div className="flex gap-2 justify-end">
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={invite.isPending} data-testid="button-submit-invite">
+              {invite.isPending ? "Sending…" : "Send invitation"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 export default function StaffPage() {
@@ -41,6 +138,8 @@ export default function StaffPage() {
 
   const createStaff = useCreateStaff();
   const { register, handleSubmit, reset } = useForm<StaffForm>();
+  const { effectiveRole } = useMembership();
+  const canManage = effectiveRole === "OWNER" || effectiveRole === "ADMIN";
 
   function onSubmit(vals: StaffForm) {
     if (!bid) return;
@@ -67,6 +166,9 @@ export default function StaffPage() {
           <h1 className="text-3xl font-bold tracking-tight">Staff</h1>
           <p className="text-muted-foreground">Manage your team members</p>
         </div>
+        <div className="flex items-center gap-2">
+          {canManage && bid ? <InviteDialog businessId={bid} /> : null}
+          {canManage ? (
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button data-testid="button-add-staff">
@@ -116,6 +218,8 @@ export default function StaffPage() {
             </form>
           </DialogContent>
         </Dialog>
+          ) : null}
+        </div>
       </div>
 
       <Card>
