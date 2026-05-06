@@ -1,0 +1,150 @@
+/* Pulse.css */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+.pulse-theme {
+  --pulse-bg: #000000;
+  --pulse-surface: #111111;
+  --pulse-ink: #222222;
+  --pulse-border: #333333;
+  
+  --pulse-fg: #ffffff;
+  --pulse-fg-muted: #a1a1aa;
+  
+  --pulse-accent: #ccff00;
+  --pulse-accent-hover: #b3e600;
+  --pulse-accent-fg: #000000;
+  
+  --pulse-success: #10b981;
+  --pulse-warning: #fbbf24;
+  --pulse-destructive: #ef4444;
+
+  font-family: "Inter", sans-serif;
+  background-color: var(--pulse-bg);
+  color: var(--pulse-fg);
+  min-height: 100vh;
+}
+
+.pulse-theme h1, 
+.pulse-theme h2, 
+.pulse-theme h3, 
+.pulse-theme h4, 
+.pulse-theme h5, 
+.pulse-theme h6,
+.pulse-display {
+  font-family: "Space Grotesk", sans-serif;
+  letter-spacing: -0.04em;
+}
+
+.pulse-mono {
+  font-family: "Space Mono", monospace;
+}
+
+.pulse-btn {
+  font-family: "Space Grotesk", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  border-radius: 9999px; /* Pill */
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pulse-btn:active {
+  transform: scale(0.97);
+}
+
+.pulse-btn-primary {
+  background-color: var(--pulse-accent);
+  color: var(--pulse-accent-fg);
+  border: 2px solid var(--pulse-accent);
+}
+
+.pulse-btn-primary:hover {
+  background-color: var(--pulse-accent-hover);
+  border-color: var(--pulse-accent-hover);
+  box-shadow: 0 0 20px rgba(204, 255, 0, 0.4);
+}
+
+.pulse-btn-secondary {
+  background-color: transparent;
+  color: var(--pulse-fg);
+  border: 2px solid var(--pulse-border);
+}
+
+.pulse-btn-secondary:hover {
+  border-color: var(--pulse-fg);
+  background-color: var(--pulse-ink);
+}
+
+.pulse-btn-ghost {
+  background-color: transparent;
+  color: var(--pulse-fg-muted);
+  border: 2px solid transparent;
+}
+
+.pulse-btn-ghost:hover {
+  color: var(--pulse-fg);
+  background-color: var(--pulse-surface);
+}
+
+.pulse-btn-destructive {
+  background-color: transparent;
+  color: var(--pulse-destructive);
+  border: 2px solid var(--pulse-destructive);
+}
+
+.pulse-btn-destructive:hover {
+  background-color: var(--pulse-destructive);
+  color: #fff;
+}
+
+.pulse-input {
+  background-color: var(--pulse-surface);
+  border: 2px solid var(--pulse-border);
+  color: var(--pulse-fg);
+  border-radius: 8px;
+  font-family: "Space Mono", monospace;
+  font-size: 0.875rem;
+}
+
+.pulse-input:focus {
+  outline: none;
+  border-color: var(--pulse-accent);
+  box-shadow: 0 0 0 1px var(--pulse-accent);
+}
+
+.pulse-badge {
+  background-color: var(--pulse-surface);
+  color: var(--pulse-fg);
+  border: 1px solid var(--pulse-border);
+  border-radius: 9999px;
+  font-family: "Space Mono", monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.pulse-badge-accent {
+  background-color: rgba(204, 255, 0, 0.1);
+  color: var(--pulse-accent);
+  border-color: rgba(204, 255, 0, 0.2);
+}
+
+.pulse-card {
+  background-color: var(--pulse-surface);
+  border: 2px solid var(--pulse-border);
+  border-radius: 16px;
+}
+
+/* Custom Scrollbar for the showcase */
+.pulse-theme ::-webkit-scrollbar {
+  width: 10px;
+}
+.pulse-theme ::-webkit-scrollbar-track {
+  background: var(--pulse-bg);
+}
+.pulse-theme ::-webkit-scrollbar-thumb {
+  background: var(--pulse-border);
+}
+.pulse-theme ::-webkit-scrollbar-thumb:hover {
+  background: var(--pulse-fg-muted);
+}

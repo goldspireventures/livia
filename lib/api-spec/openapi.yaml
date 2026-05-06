@@ -1,0 +1,2157 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: Bliq API — multi-tenant appointment operating system
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: me
+    description: Authenticated user profile
+  - name: businesses
+    description: Business management
+  - name: staff
+    description: Staff management
+  - name: services
+    description: Service catalog
+  - name: customers
+    description: Customer management
+  - name: bookings
+    description: Booking management
+  - name: availability
+    description: Availability rules and time off
+  - name: slots
+    description: Available slot engine
+  - name: public
+    description: Public booking page (unauthenticated)
+  - name: dashboard
+    description: Dashboard summary and analytics
+  - name: feature-flags
+    description: Feature flags
+  - name: conversations
+    description: AI inbox conversations and messages
+  - name: chat
+    description: Public AI chat assistant
+  - name: marketing
+    description: Public marketing site (livia.io) lead capture
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # ─── Me ───────────────────────────────────────────────────────────────────
+  /me:
+    get:
+      operationId: getMe
+      tags: [me]
+      summary: Get authenticated user profile
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    patch:
+      operationId: updateMe
+      tags: [me]
+      summary: Update authenticated user profile
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMeBody"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /me/businesses:
+    get:
+      operationId: getMyBusinesses
+      tags: [me]
+      summary: Get all businesses the authenticated user belongs to
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: List of businesses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Business"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  # ─── Businesses ───────────────────────────────────────────────────────────
+  /businesses:
+    post:
+      operationId: createBusiness
+      tags: [businesses]
+      summary: Create a new business
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBusinessBody"
+      responses:
+        "201":
+          description: Created business
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Business"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /businesses/{businessId}:
+    get:
+      operationId: getBusiness
+      tags: [businesses]
+      summary: Get a business by ID
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+      responses:
+        "200":
+          description: Business
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Business"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      operationId: updateBusiness
+      tags: [businesses]
+      summary: Update a business
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBusinessBody"
+      responses:
+        "200":
+          description: Updated business
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Business"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ─── Staff ────────────────────────────────────────────────────────────────
+  /businesses/{businessId}/staff:
+    get:
+      operationId: listStaff
+      tags: [staff]
+      summary: List all staff for a business
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - name: isActive
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of staff
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Staff"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      operationId: createStaff
+      tags: [staff]
+      summary: Add a staff member
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateStaffBody"
+      responses:
+        "201":
+          description: Created staff member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Staff"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /businesses/{businessId}/staff/{staffId}:
+    get:
+      operationId: getStaff
+      tags: [staff]
+      summary: Get a staff member
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - $ref: "#/components/parameters/StaffId"
+      responses:
+        "200":
+          description: Staff member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Staff"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      operationId: updateStaff
+      tags: [staff]
+      summary: Update a staff member
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - $ref: "#/components/parameters/StaffId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateStaffBody"
+      responses:
+        "200":
+          description: Updated staff member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Staff"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      operationId: deleteStaff
+      tags: [staff]
+      summary: Deactivate a staff member
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - $ref: "#/components/parameters/StaffId"
+      responses:
+        "204":
+          description: Deactivated
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /businesses/{businessId}/staff/{staffId}/services:
+    get:
+      operationId: getStaffServices
+      tags: [staff]
+      summary: Get services assigned to a staff member
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - $ref: "#/components/parameters/StaffId"
+      responses:
+        "200":
+          description: Assigned services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Service"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    put:
+      operationId: setStaffServices
+      tags: [staff]
+      summary: Set services for a staff member (replaces all)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - $ref: "#/components/parameters/StaffId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetStaffServicesBody"
+      responses:
+        "200":
+          description: Updated service assignments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Service"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  # ─── Services ─────────────────────────────────────────────────────────────
+  /businesses/{businessId}/services:
+    get:
+      operationId: listServices
+      tags: [services]
+      summary: List all services for a business
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - name: isActive
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Service"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      operationId: createService
+      tags: [services]
+      summary: Create a service
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateServiceBody"
+      responses:
+        "201":
+          description: Created service
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Service"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /businesses/{businessId}/services/{serviceId}:
+    get:
+      operationId: getService
+      tags: [services]
+      summary: Get a service
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - $ref: "#/components/parameters/ServiceId"
+      responses:
+        "200":
+          description: Service
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Service"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      operationId: updateService
+      tags: [services]
+      summary: Update a service
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - $ref: "#/components/parameters/ServiceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateServiceBody"
+      responses:
+        "200":
+          description: Updated service
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Service"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      operationId: deleteService
+      tags: [services]
+      summary: Deactivate a service
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - $ref: "#/components/parameters/ServiceId"
+      responses:
+        "204":
+          description: Deactivated
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ─── Customers ────────────────────────────────────────────────────────────
+  /businesses/{businessId}/customers:
+    get:
+      operationId: listCustomers
+      tags: [customers]
+      summary: List customers for a business
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: isBlocked
+          in: query
+          schema:
+            type: boolean
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: Paginated customer list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      operationId: createCustomer
+      tags: [customers]
+      summary: Create a customer
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCustomerBody"
+      responses:
+        "201":
+          description: Created customer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /businesses/{businessId}/customers/{customerId}:
+    get:
+      operationId: getCustomer
+      tags: [customers]
+      summary: Get a customer with booking history
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - $ref: "#/components/parameters/CustomerId"
+      responses:
+        "200":
+          description: Customer with recent bookings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerDetail"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      operationId: updateCustomer
+      tags: [customers]
+      summary: Update a customer
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - $ref: "#/components/parameters/CustomerId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCustomerBody"
+      responses:
+        "200":
+          description: Updated customer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ─── Bookings ─────────────────────────────────────────────────────────────
+  /businesses/{businessId}/bookings:
+    get:
+      operationId: listBookings
+      tags: [bookings]
+      summary: List bookings for a business
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [PENDING, CONFIRMED, CANCELLED, COMPLETED, NO_SHOW]
+        - name: staffId
+          in: query
+          schema:
+            type: string
+        - name: customerId
+          in: query
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: Paginated booking list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      operationId: createBooking
+      tags: [bookings]
+      summary: Create a booking
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBookingBody"
+      responses:
+        "201":
+          description: Created booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /businesses/{businessId}/bookings/{bookingId}:
+    get:
+      operationId: getBooking
+      tags: [bookings]
+      summary: Get a booking
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - $ref: "#/components/parameters/BookingId"
+      responses:
+        "200":
+          description: Booking with details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingDetail"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      operationId: updateBooking
+      tags: [bookings]
+      summary: Update booking status or notes
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - $ref: "#/components/parameters/BookingId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBookingBody"
+      responses:
+        "200":
+          description: Updated booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  # ─── Availability ─────────────────────────────────────────────────────────
+  /businesses/{businessId}/availability:
+    get:
+      operationId: listAvailabilityRules
+      tags: [availability]
+      summary: List availability rules for a business or staff member
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - name: staffId
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Availability rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AvailabilityRule"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    put:
+      operationId: setAvailabilityRules
+      tags: [availability]
+      summary: Replace all availability rules for a business or staff member
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetAvailabilityRulesBody"
+      responses:
+        "200":
+          description: Updated availability rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AvailabilityRule"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /businesses/{businessId}/time-off:
+    get:
+      operationId: listTimeOff
+      tags: [availability]
+      summary: List time off periods
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - name: staffId
+          in: query
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: Time off periods
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TimeOff"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      operationId: createTimeOff
+      tags: [availability]
+      summary: Block a time period
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTimeOffBody"
+      responses:
+        "201":
+          description: Created time off
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimeOff"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /businesses/{businessId}/time-off/{timeOffId}:
+    delete:
+      operationId: deleteTimeOff
+      tags: [availability]
+      summary: Remove a time off period
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - name: timeOffId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ─── Slots ────────────────────────────────────────────────────────────────
+  /businesses/{businessId}/slots:
+    get:
+      operationId: getAvailableSlots
+      tags: [slots]
+      summary: Get available booking slots for a service on a date
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - name: serviceId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: staffId
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Available slots
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SlotListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  # ─── Dashboard ────────────────────────────────────────────────────────────
+  /businesses/{businessId}/dashboard:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard KPIs and upcoming bookings
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /businesses/{businessId}/activity:
+    get:
+      operationId: getActivityFeed
+      tags: [dashboard]
+      summary: Recent activity feed for the business
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Activity feed
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  # ─── Feature Flags ────────────────────────────────────────────────────────
+  /businesses/{businessId}/feature-flags:
+    get:
+      operationId: listFeatureFlags
+      tags: [feature-flags]
+      summary: List feature flags for a business
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+      responses:
+        "200":
+          description: Feature flags
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FeatureFlag"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  # ─── Public (unauthenticated) ─────────────────────────────────────────────
+  /public/b/{slug}:
+    get:
+      operationId: getPublicBusiness
+      tags: [public]
+      summary: Get public storefront for a business by slug
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Public business profile with services
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicBusiness"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /public/b/{slug}/slots:
+    get:
+      operationId: getPublicSlots
+      tags: [public]
+      summary: Get available slots on the public booking page
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: serviceId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: staffId
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Available slots
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SlotListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /public/b/{slug}/chat:
+    post:
+      operationId: sendPublicChatMessage
+      tags: [chat]
+      summary: Send a message to the public AI booking assistant
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PublicChatBody"
+      responses:
+        "200":
+          description: Assistant reply
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicChatResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /businesses/{businessId}/conversations:
+    get:
+      operationId: listConversations
+      tags: [conversations]
+      summary: List conversations for a business
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [OPEN, HANDED_OFF, CLOSED]
+      responses:
+        "200":
+          description: Conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ConversationListItem"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /businesses/{businessId}/conversations/{conversationId}:
+    get:
+      operationId: getConversation
+      tags: [conversations]
+      summary: Get one conversation with messages
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Conversation thread
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConversationDetail"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      operationId: updateConversation
+      tags: [conversations]
+      summary: Update conversation status (take over, close)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateConversationBody"
+      responses:
+        "200":
+          description: Updated conversation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConversationListItem"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /public/b/{slug}/book:
+    post:
+      operationId: createPublicBooking
+      tags: [public]
+      summary: Create a booking from the public booking page
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePublicBookingBody"
+      responses:
+        "201":
+          description: Created booking confirmation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicBookingConfirmation"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  # ─── Marketing (livia.io) ─────────────────────────────────────────────────
+  /public/marketing/leads:
+    post:
+      operationId: createMarketingLead
+      tags: [marketing]
+      summary: Capture a closed-beta signup from livia.io
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMarketingLeadBody"
+      responses:
+        "201":
+          description: Lead recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketingLeadAck"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    BusinessId:
+      name: businessId
+      in: path
+      required: true
+      schema:
+        type: string
+    StaffId:
+      name: staffId
+      in: path
+      required: true
+      schema:
+        type: string
+    ServiceId:
+      name: serviceId
+      in: path
+      required: true
+      schema:
+        type: string
+    CustomerId:
+      name: customerId
+      in: path
+      required: true
+      schema:
+        type: string
+    BookingId:
+      name: bookingId
+      in: path
+      required: true
+      schema:
+        type: string
+
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Conflict:
+      description: Conflict (e.g. slug taken, slot unavailable)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
+    # ── Users ──
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        fullName:
+          type: ["string", "null"]
+        avatarUrl:
+          type: ["string", "null"]
+        role:
+          type: string
+          enum: [OWNER, STAFF, ADMIN, SUPERADMIN]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, email, role, createdAt, updatedAt]
+
+    UpdateMeBody:
+      type: object
+      properties:
+        fullName:
+          type: string
+        avatarUrl:
+          type: string
+
+    # ── Business ──
+    Business:
+      type: object
+      properties:
+        id:
+          type: string
+        ownerId:
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: ["string", "null"]
+        category:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        addressLine1:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        country:
+          type: ["string", "null"]
+        timezone:
+          type: string
+        logoUrl:
+          type: ["string", "null"]
+        coverImageUrl:
+          type: ["string", "null"]
+        instagramHandle:
+          type: ["string", "null"]
+        aiEnabled:
+          type: string
+        aiTone:
+          type: string
+        aiGreeting:
+          type: ["string", "null"]
+        aiKnowledge:
+          type: ["string", "null"]
+        aiCanBookDirectly:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, ownerId, name, slug, timezone, createdAt, updatedAt]
+
+    CreateBusinessBody:
+      type: object
+      properties:
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        timezone:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        logoUrl:
+          type: string
+        instagramHandle:
+          type: string
+      required: [name, slug]
+
+    UpdateBusinessBody:
+      type: object
+      properties:
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        timezone:
+          type: string
+        addressLine1:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        logoUrl:
+          type: string
+        coverImageUrl:
+          type: string
+        instagramHandle:
+          type: string
+        aiEnabled:
+          type: string
+        aiTone:
+          type: string
+          enum: [PROFESSIONAL, FRIENDLY, PLAYFUL]
+        aiGreeting:
+          type: string
+        aiKnowledge:
+          type: string
+        aiCanBookDirectly:
+          type: string
+
+    # ── Staff ──
+    Staff:
+      type: object
+      properties:
+        id:
+          type: string
+        businessId:
+          type: string
+        userId:
+          type: ["string", "null"]
+        firstName:
+          type: string
+        lastName:
+          type: ["string", "null"]
+        displayName:
+          type: string
+        email:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        photoUrl:
+          type: ["string", "null"]
+        bio:
+          type: ["string", "null"]
+        color:
+          type: ["string", "null"]
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, businessId, firstName, displayName, isActive, createdAt, updatedAt]
+
+    CreateStaffBody:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        displayName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        photoUrl:
+          type: string
+        bio:
+          type: string
+        color:
+          type: string
+      required: [firstName, displayName]
+
+    UpdateStaffBody:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        displayName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        photoUrl:
+          type: string
+        bio:
+          type: string
+        color:
+          type: string
+        isActive:
+          type: boolean
+
+    SetStaffServicesBody:
+      type: object
+      properties:
+        serviceIds:
+          type: array
+          items:
+            type: string
+      required: [serviceIds]
+
+    # ── Service ──
+    Service:
+      type: object
+      properties:
+        id:
+          type: string
+        businessId:
+          type: string
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        category:
+          type: ["string", "null"]
+        durationMinutes:
+          type: integer
+        bufferBeforeMinutes:
+          type: integer
+        bufferAfterMinutes:
+          type: integer
+        priceMinor:
+          type: integer
+        currency:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        isActive:
+          type: boolean
+        sortOrder:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, businessId, name, durationMinutes, bufferBeforeMinutes, bufferAfterMinutes, priceMinor, currency, isActive, sortOrder, createdAt, updatedAt]
+
+    CreateServiceBody:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        durationMinutes:
+          type: integer
+        bufferBeforeMinutes:
+          type: integer
+          default: 0
+        bufferAfterMinutes:
+          type: integer
+          default: 0
+        priceMinor:
+          type: integer
+          default: 0
+        currency:
+          type: string
+          default: GBP
+        imageUrl:
+          type: string
+        sortOrder:
+          type: integer
+          default: 0
+      required: [name, durationMinutes]
+
+    UpdateServiceBody:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        durationMinutes:
+          type: integer
+        bufferBeforeMinutes:
+          type: integer
+        bufferAfterMinutes:
+          type: integer
+        priceMinor:
+          type: integer
+        currency:
+          type: string
+        imageUrl:
+          type: string
+        isActive:
+          type: boolean
+        sortOrder:
+          type: integer
+
+    # ── Customer ──
+    Customer:
+      type: object
+      properties:
+        id:
+          type: string
+        businessId:
+          type: string
+        firstName:
+          type: ["string", "null"]
+        lastName:
+          type: ["string", "null"]
+        displayName:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        tags:
+          type: ["array", "null"]
+          items:
+            type: string
+        isBlocked:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, businessId, isBlocked, createdAt, updatedAt]
+
+    CustomerListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Customer"
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+      required: [data, total, limit, offset]
+
+    CustomerDetail:
+      allOf:
+        - $ref: "#/components/schemas/Customer"
+        - type: object
+          properties:
+            recentBookings:
+              type: array
+              items:
+                $ref: "#/components/schemas/Booking"
+            totalBookings:
+              type: integer
+            noShowCount:
+              type: integer
+          required: [recentBookings, totalBookings, noShowCount]
+
+    CreateCustomerBody:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        displayName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        notes:
+          type: string
+
+    UpdateCustomerBody:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        displayName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        notes:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        isBlocked:
+          type: boolean
+
+    # ── Booking ──
+    Booking:
+      type: object
+      properties:
+        id:
+          type: string
+        businessId:
+          type: string
+        staffId:
+          type: ["string", "null"]
+        serviceId:
+          type: string
+        customerId:
+          type: string
+        channelType:
+          type: string
+          enum: [WEB, APP, WHATSAPP, SMS, INSTAGRAM, SNAPCHAT, EMAIL]
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [PENDING, CONFIRMED, CANCELLED, COMPLETED, NO_SHOW]
+        notes:
+          type: ["string", "null"]
+        internalNotes:
+          type: ["string", "null"]
+        cancellationReason:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, businessId, serviceId, customerId, channelType, startAt, endAt, status, createdAt, updatedAt]
+
+    BookingDetail:
+      allOf:
+        - $ref: "#/components/schemas/Booking"
+        - type: object
+          properties:
+            service:
+              $ref: "#/components/schemas/Service"
+            customer:
+              $ref: "#/components/schemas/Customer"
+            staff:
+              oneOf:
+                - $ref: "#/components/schemas/Staff"
+                - type: "null"
+          required: [service, customer]
+
+    BookingListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/BookingDetail"
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+      required: [data, total, limit, offset]
+
+    CreateBookingBody:
+      type: object
+      properties:
+        serviceId:
+          type: string
+        customerId:
+          type: string
+        staffId:
+          type: string
+        startAt:
+          type: string
+          format: date-time
+        channelType:
+          type: string
+          enum: [WEB, APP, WHATSAPP, SMS, INSTAGRAM, SNAPCHAT, EMAIL]
+          default: WEB
+        notes:
+          type: string
+      required: [serviceId, customerId, startAt]
+
+    UpdateBookingBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [PENDING, CONFIRMED, CANCELLED, COMPLETED, NO_SHOW]
+        internalNotes:
+          type: string
+        cancellationReason:
+          type: string
+        staffId:
+          type: string
+
+    # ── Availability ──
+    AvailabilityRule:
+      type: object
+      properties:
+        id:
+          type: string
+        businessId:
+          type: ["string", "null"]
+        staffId:
+          type: ["string", "null"]
+        dayOfWeek:
+          type: integer
+          minimum: 0
+          maximum: 6
+        startTime:
+          type: string
+          example: "09:00"
+        endTime:
+          type: string
+          example: "18:00"
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, dayOfWeek, startTime, endTime, isActive, createdAt, updatedAt]
+
+    SetAvailabilityRulesBody:
+      type: object
+      properties:
+        staffId:
+          type: string
+        rules:
+          type: array
+          items:
+            type: object
+            properties:
+              dayOfWeek:
+                type: integer
+                minimum: 0
+                maximum: 6
+              startTime:
+                type: string
+              endTime:
+                type: string
+            required: [dayOfWeek, startTime, endTime]
+      required: [rules]
+
+    TimeOff:
+      type: object
+      properties:
+        id:
+          type: string
+        businessId:
+          type: ["string", "null"]
+        staffId:
+          type: ["string", "null"]
+        startsAt:
+          type: string
+          format: date-time
+        endsAt:
+          type: string
+          format: date-time
+        reason:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, startsAt, endsAt, createdAt, updatedAt]
+
+    CreateTimeOffBody:
+      type: object
+      properties:
+        staffId:
+          type: string
+        startsAt:
+          type: string
+          format: date-time
+        endsAt:
+          type: string
+          format: date-time
+        reason:
+          type: string
+      required: [startsAt, endsAt]
+
+    # ── Slots ──
+    Slot:
+      type: object
+      properties:
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        staffId:
+          type: ["string", "null"]
+        staffDisplayName:
+          type: ["string", "null"]
+        available:
+          type: boolean
+      required: [startAt, endAt, available]
+
+    SlotListResponse:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        serviceId:
+          type: string
+        slots:
+          type: array
+          items:
+            $ref: "#/components/schemas/Slot"
+      required: [date, serviceId, slots]
+
+    # ── Dashboard ──
+    DashboardSummary:
+      type: object
+      properties:
+        todayBookings:
+          type: integer
+        weekBookings:
+          type: integer
+        pendingCount:
+          type: integer
+        confirmedCount:
+          type: integer
+        completedTodayCount:
+          type: integer
+        noShowTodayCount:
+          type: integer
+        totalCustomers:
+          type: integer
+        upcomingBookings:
+          type: array
+          items:
+            $ref: "#/components/schemas/BookingDetail"
+      required: [todayBookings, weekBookings, pendingCount, confirmedCount, completedTodayCount, noShowTodayCount, totalCustomers, upcomingBookings]
+
+    ActivityItem:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        level:
+          type: string
+          enum: [INFO, WARN, ERROR]
+        entityType:
+          type: ["string", "null"]
+        entityId:
+          type: ["string", "null"]
+        context:
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, type, level, createdAt]
+
+    # ── Feature Flags ──
+    FeatureFlag:
+      type: object
+      properties:
+        id:
+          type: string
+        key:
+          type: string
+        businessId:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        isEnabled:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, key, isEnabled, createdAt, updatedAt]
+
+    # ── Public ──
+    PublicBusiness:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: ["string", "null"]
+        category:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        logoUrl:
+          type: ["string", "null"]
+        coverImageUrl:
+          type: ["string", "null"]
+        instagramHandle:
+          type: ["string", "null"]
+        timezone:
+          type: string
+        services:
+          type: array
+          items:
+            $ref: "#/components/schemas/Service"
+        staff:
+          type: array
+          items:
+            $ref: "#/components/schemas/Staff"
+      required: [id, name, slug, timezone, services, staff]
+
+    CreatePublicBookingBody:
+      type: object
+      properties:
+        serviceId:
+          type: string
+        staffId:
+          type: string
+        startAt:
+          type: string
+          format: date-time
+        customerFirstName:
+          type: string
+        customerLastName:
+          type: string
+        customerEmail:
+          type: string
+        customerPhone:
+          type: string
+        notes:
+          type: string
+        channelType:
+          type: string
+          enum: [WEB, APP, WHATSAPP, SMS, INSTAGRAM, SNAPCHAT, EMAIL]
+          default: WEB
+      required: [serviceId, startAt, customerFirstName]
+
+    PublicChatBody:
+      type: object
+      properties:
+        conversationId:
+          type: string
+        message:
+          type: string
+        customerName:
+          type: string
+        customerEmail:
+          type: string
+        customerPhone:
+          type: string
+      required: [message]
+
+    PublicChatResponse:
+      type: object
+      properties:
+        conversationId:
+          type: string
+        reply:
+          type: string
+        bookingId:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [OPEN, HANDED_OFF, CLOSED]
+      required: [conversationId, reply, status]
+
+    ConversationListItem:
+      type: object
+      properties:
+        id:
+          type: string
+        businessId:
+          type: string
+        customerId:
+          type: ["string", "null"]
+        channel:
+          type: string
+          enum: [WEB, SMS, INSTAGRAM, WHATSAPP, EMAIL]
+        status:
+          type: string
+          enum: [OPEN, HANDED_OFF, CLOSED]
+        customerName:
+          type: ["string", "null"]
+        customerEmail:
+          type: ["string", "null"]
+        customerPhone:
+          type: ["string", "null"]
+        aiHandled:
+          type: boolean
+        summary:
+          type: ["string", "null"]
+        lastMessage:
+          type: ["string", "null"]
+        lastMessageAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        messageCount:
+          type: integer
+        bookingCount:
+          type: integer
+      required: [id, businessId, channel, status, aiHandled, lastMessageAt, createdAt, messageCount, bookingCount]
+
+    ConversationMessage:
+      type: object
+      properties:
+        id:
+          type: string
+        conversationId:
+          type: string
+        role:
+          type: string
+          enum: [USER, ASSISTANT, SYSTEM, TOOL]
+        content:
+          type: string
+        toolName:
+          type: ["string", "null"]
+        bookingId:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, conversationId, role, content, createdAt]
+
+    ConversationDetail:
+      type: object
+      properties:
+        conversation:
+          $ref: "#/components/schemas/ConversationListItem"
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConversationMessage"
+      required: [conversation, messages]
+
+    UpdateConversationBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [OPEN, HANDED_OFF, CLOSED]
+        aiHandled:
+          type: boolean
+
+    PublicBookingConfirmation:
+      type: object
+      properties:
+        bookingId:
+          type: string
+        status:
+          type: string
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        serviceName:
+          type: string
+        staffDisplayName:
+          type: ["string", "null"]
+        businessName:
+          type: string
+      required: [bookingId, status, startAt, endAt, serviceName, businessName]
+
+    CreateMarketingLeadBody:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        source:
+          type: string
+        referrer:
+          type: ["string", "null"]
+        utmSource:
+          type: ["string", "null"]
+        utmMedium:
+          type: ["string", "null"]
+        utmCampaign:
+          type: ["string", "null"]
+      required: [email]
+
+    MarketingLeadAck:
+      type: object
+      properties:
+        ok:
+          type: boolean
+      required: [ok]
