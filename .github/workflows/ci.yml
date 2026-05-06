@@ -22,4 +22,4 @@ jobs:
       - name: Typecheck
         run: pnpm run typecheck
       - name: OpenAPI codegen guard
-        run: ./scripts/check-codegen.sh
+        run: bash ./scripts/check-codegen.sh
