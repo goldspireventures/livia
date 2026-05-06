@@ -57,6 +57,7 @@
   --color-sidebar-ring: hsl(var(--sidebar-ring));
 
   --font-sans: var(--app-font-sans);
+  --font-display: var(--app-font-display);
   --font-serif: var(--app-font-serif);
   --font-mono: var(--app-font-mono);
 
@@ -64,94 +65,91 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
+  /* Aurora brand colors — primary product palette (bg-aurora-violet, text-aurora-cyan, etc.) */
+  --color-aurora-violet: #8b5cf6;
+  --color-aurora-cyan: #06b6d4;
+  --color-aurora-mint: #10b981;
+
+  /* Aurum brand colors — Livia wordmark accent layer (text-aurum-champagne, etc.) */
+  --color-aurum-champagne: #d9c39a;
+  --color-aurum-cream: #f6f3ec;
+  --color-aurum-bronze: #8a7549;
+  --color-aurum-ink: #0a0a10;
 }
 
-/* LIGHT MODE */
+/* LIGHT MODE — Aurora light variant (cream-tinged neutrals, cyan primary, violet accent) */
 :root {
-  --button-outline: rgba(0,0,0, .10);
-  --badge-outline: rgba(0,0,0, .05);
+  --button-outline: rgba(9,9,11, .10);
+  --badge-outline: rgba(9,9,11, .05);
 
   /* Automatic computation of border around primary / danger buttons */
   --opaque-button-border-intensity: -8; /* In terms of percentages */
 
   /* Backgrounds applied on top of other backgrounds when hovered/active */
-  --elevate-1: rgba(0,0,0, .03);
-  --elevate-2: rgba(0,0,0, .08);
+  --elevate-1: rgba(9,9,11, .03);
+  --elevate-2: rgba(9,9,11, .07);
 
-  --background: red; /*replace with H S L */
+  --background: 0 0% 99%;
+  --foreground: 240 10% 6%;
 
-  --foreground: red; /*replace with H S L */
+  --border: 240 6% 90%;
 
-  --border: red; /*replace with H S L */
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 6%;
+  --card-border: 240 6% 90%;
 
-  --card: red; /*replace with H S L */
+  --sidebar: 0 0% 100%;
+  --sidebar-foreground: 240 10% 6%;
+  --sidebar-border: 240 6% 90%;
+  --sidebar-primary: 188 95% 43%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 240 6% 96%;
+  --sidebar-accent-foreground: 240 10% 6%;
+  --sidebar-ring: 188 95% 43%;
 
-  --card-foreground: red; /*replace with H S L */
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 6%;
+  --popover-border: 240 6% 90%;
 
-  --card-border: red; /*replace with H S L */
+  /* Aurora cyan as primary brand action */
+  --primary: 188 95% 43%;
+  --primary-foreground: 0 0% 100%;
 
-  --sidebar: red; /*replace with H S L */
+  --secondary: 240 6% 96%;
+  --secondary-foreground: 240 10% 6%;
 
-  --sidebar-foreground: red; /*replace with H S L */
+  --muted: 240 6% 96%;
+  --muted-foreground: 240 4% 46%;
 
-  --sidebar-border: red; /*replace with H S L */
+  /* Aurora violet as accent (AI moments) */
+  --accent: 258 90% 96%;
+  --accent-foreground: 258 90% 30%;
 
-  --sidebar-primary: red; /*replace with H S L */
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
 
-  --sidebar-primary-foreground: red; /*replace with H S L */
+  --input: 240 6% 90%;
+  --ring: 188 95% 43%;
+  --chart-1: 258 90% 66%;  /* violet  */
+  --chart-2: 188 95% 43%;  /* cyan    */
+  --chart-3: 158 84% 39%;  /* mint    */
+  --chart-4: 38 92% 50%;   /* warning */
+  --chart-5: 320 80% 60%;  /* magenta */
 
-  --sidebar-accent: red; /*replace with H S L */
-
-  --sidebar-accent-foreground: red; /*replace with H S L */
-
-  --sidebar-ring: red; /*replace with H S L */
-
-  --popover: red; /*replace with H S L */
-
-  --popover-foreground: red; /*replace with H S L */
-
-  --popover-border: red; /*replace with H S L */
-
-  --primary: red; /*replace with H S L */
-
-  --primary-foreground: red; /*replace with H S L */
-
-  --secondary: red; /*replace with H S L */
-
-  --secondary-foreground: red; /*replace with H S L */
-
-  --muted: red; /*replace with H S L */
-
-  --muted-foreground: red; /*replace with H S L */
-
-  --accent: red; /*replace with H S L */
-
-  --accent-foreground: red; /*replace with H S L */
-
-  --destructive: red; /*replace with H S L */
-
-  --destructive-foreground: red; /*replace with H S L */
-
-  --input: red; /*replace with H S L */
-  --ring: red; /*replace with H S L */
-  --chart-1: red; /*replace with H S L */
-  --chart-2: red; /*replace with H S L */
-  --chart-3: red; /*replace with H S L */
-  --chart-4: red; /*replace with H S L */
-  --chart-5: red; /*replace with H S L */
-
-  --app-font-sans: 'Inter', sans-serif;
-  --app-font-serif: Georgia, serif;
-  --app-font-mono: Menlo, monospace;
-  --radius: .5rem; /* 8px */
-  --shadow-2xs: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00); /*replace with H S L */
-  --shadow-xs: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00); /*replace with H S L */
-  --shadow-sm: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 1px 2px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 1px 2px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-md: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 2px 4px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-lg: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 4px 6px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-xl: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 8px 10px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-2xl: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);
+  --app-font-sans: 'Geist', 'Inter', system-ui, sans-serif;
+  --app-font-display: 'Plus Jakarta Sans', 'Geist', sans-serif;
+  --app-font-serif: 'Cormorant Garamond', Georgia, serif;
+  --app-font-mono: 'JetBrains Mono', Menlo, monospace;
+  --radius: 0.75rem; /* 12px — Aurora is a softer, rounder system */
+  --shadow-2xs: 0px 1px 2px 0px hsl(240 10% 4% / 0.04);
+  --shadow-xs: 0px 1px 2px 0px hsl(240 10% 4% / 0.05);
+  --shadow-sm: 0px 1px 3px 0px hsl(240 10% 4% / 0.07), 0px 1px 2px -1px hsl(240 10% 4% / 0.05);
+  --shadow: 0px 1px 3px 0px hsl(240 10% 4% / 0.08), 0px 1px 2px -1px hsl(240 10% 4% / 0.05);
+  --shadow-md: 0px 4px 6px -1px hsl(240 10% 4% / 0.08), 0px 2px 4px -2px hsl(240 10% 4% / 0.05);
+  --shadow-lg: 0px 10px 15px -3px hsl(240 10% 4% / 0.10), 0px 4px 6px -4px hsl(240 10% 4% / 0.05);
+  --shadow-xl: 0px 20px 25px -5px hsl(240 10% 4% / 0.12), 0px 8px 10px -6px hsl(240 10% 4% / 0.05);
+  --shadow-2xl: 0px 25px 50px -12px hsl(240 10% 4% / 0.20);
   --tracking-normal: 0em;
   --spacing: 0.25rem;
 
@@ -186,88 +184,122 @@
   --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 }
 
+/* DARK MODE — Aurora primary theme. Midnight base, cyan primary, violet accent. */
 .dark {
   --button-outline: rgba(255,255,255, .10);
   --badge-outline: rgba(255,255,255, .05);
 
   --opaque-button-border-intensity: 9;  /* In terms of percentages */
 
-  /* Backgrounds applied on top of other backgrounds when hovered/active */
-  --elevate-1: rgba(255,255,255, .04);
-  --elevate-2: rgba(255,255,255, .09);
+  /* Glass-style elevation overlays for the Aurora aesthetic */
+  --elevate-1: rgba(255,255,255, .035);
+  --elevate-2: rgba(255,255,255, .07);
 
-  --background: red; /*replace with H S L */
+  /* Midnight base — #09090b */
+  --background: 240 10% 4%;
+  --foreground: 0 0% 100%;
 
-  --foreground: red; /*replace with H S L */
+  /* Glass borders — low-saturation white at low opacity baked into HSL */
+  --border: 240 6% 14%;
 
-  --border: red; /*replace with H S L */
+  --card: 240 8% 7%;
+  --card-foreground: 0 0% 100%;
+  --card-border: 240 6% 14%;
 
-  --card: red; /*replace with H S L */
+  --sidebar: 240 9% 5%;
+  --sidebar-foreground: 0 0% 100%;
+  --sidebar-border: 240 6% 14%;
+  --sidebar-primary: 188 95% 43%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 240 6% 12%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-ring: 188 95% 43%;
 
-  --card-foreground: red; /*replace with H S L */
+  --popover: 240 8% 8%;
+  --popover-foreground: 0 0% 100%;
+  --popover-border: 240 6% 14%;
 
-  --card-border: red; /*replace with H S L */
+  /* Aurora cyan = primary action color */
+  --primary: 188 95% 43%;
+  --primary-foreground: 240 10% 4%;
 
-  --sidebar: red; /*replace with H S L */
+  --secondary: 240 6% 12%;
+  --secondary-foreground: 0 0% 100%;
 
-  --sidebar-foreground: red; /*replace with H S L */
+  --muted: 240 6% 12%;
+  --muted-foreground: 240 5% 64%;
 
-  --sidebar-border: red; /*replace with H S L */
+  /* Aurora violet = AI / accent moments */
+  --accent: 258 90% 18%;
+  --accent-foreground: 258 90% 88%;
 
-  --sidebar-primary: red; /*replace with H S L */
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
 
-  --sidebar-primary-foreground: red; /*replace with H S L */
+  --input: 240 6% 14%;
+  --ring: 188 95% 43%;
+  --chart-1: 258 90% 66%;  /* violet  */
+  --chart-2: 188 95% 43%;  /* cyan    */
+  --chart-3: 158 84% 39%;  /* mint    */
+  --chart-4: 38 92% 50%;   /* warning */
+  --chart-5: 320 80% 60%;  /* magenta */
 
-  --sidebar-accent: red; /*replace with H S L */
+  --shadow-2xs: 0px 1px 2px 0px hsl(0 0% 0% / 0.4);
+  --shadow-xs: 0px 1px 2px 0px hsl(0 0% 0% / 0.5);
+  --shadow-sm: 0px 1px 3px 0px hsl(0 0% 0% / 0.5), 0px 1px 2px -1px hsl(0 0% 0% / 0.4);
+  --shadow: 0px 1px 3px 0px hsl(0 0% 0% / 0.6), 0px 1px 2px -1px hsl(0 0% 0% / 0.4);
+  --shadow-md: 0px 4px 6px -1px hsl(0 0% 0% / 0.6), 0px 2px 4px -2px hsl(0 0% 0% / 0.4);
+  --shadow-lg: 0px 10px 15px -3px hsl(0 0% 0% / 0.7), 0px 4px 6px -4px hsl(0 0% 0% / 0.4);
+  --shadow-xl: 0px 20px 25px -5px hsl(0 0% 0% / 0.7), 0px 8px 10px -6px hsl(0 0% 0% / 0.4);
+  --shadow-2xl: 0px 25px 50px -12px hsl(0 0% 0% / 0.85);
+}
 
-  --sidebar-accent-foreground: red; /*replace with H S L */
+/* ============================================================
+   AURORA UTILITIES — gradient signals for AI / brand moments
+   ============================================================ */
 
-  --sidebar-ring: red; /*replace with H S L */
+/* The signature aurora gradient — use sparingly for AI / brand-energy moments */
+.aurora-gradient {
+  background-image: linear-gradient(
+    135deg,
+    var(--color-aurora-violet) 0%,
+    var(--color-aurora-cyan) 50%,
+    var(--color-aurora-mint) 100%
+  );
+}
 
-  --popover: red; /*replace with H S L */
+.aurora-gradient-text {
+  background-image: linear-gradient(
+    135deg,
+    var(--color-aurora-violet) 0%,
+    var(--color-aurora-cyan) 50%,
+    var(--color-aurora-mint) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
 
-  --popover-foreground: red; /*replace with H S L */
+/* Soft glass surface — for AI suggestion cards, modals, premium surfaces */
+.aurora-glass {
+  background: hsl(var(--card) / 0.8);
+  border: 1px solid hsl(var(--border));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
 
-  --popover-border: red; /*replace with H S L */
-
-  --primary: red; /*replace with H S L */
-
-  --primary-foreground: red; /*replace with H S L */
-
-  --secondary: red; /*replace with H S L */
-
-  --secondary-foreground: red; /*replace with H S L */
-
-  --muted: red; /*replace with H S L */
-
-  --muted-foreground: red; /*replace with H S L */
-
-  --accent: red; /*replace with H S L */
-
-  --accent-foreground: red; /*replace with H S L */
-
-  --destructive: red; /*replace with H S L */
-
-  --destructive-foreground: red; /*replace with H S L */
-
-  /* Used as the border around inputs. Dark mode: Should be a border that is light enough to have high contrast when rendered on a --card background. More contrast than standard --border */
-  --input: red; /*replace with H S L */
-  --ring: red; /*replace with H S L */
-  --chart-1: red; /*replace with H S L */
-  --chart-2: red; /*replace with H S L */
-  --chart-3: red; /*replace with H S L */
-  --chart-4: red; /*replace with H S L */
-  --chart-5: red; /*replace with H S L */
-
-  --shadow-2xs: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-xs: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-sm: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 1px 2px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 1px 2px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-md: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 2px 4px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-lg: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 4px 6px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-xl: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 8px 10px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-2xl: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);
-
+/* Subtle ambient aurora glow — apply to a positioned element to add cinematic depth */
+.aurora-glow::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background:
+    radial-gradient(circle at 30% 30%, hsl(258 90% 66% / 0.15), transparent 50%),
+    radial-gradient(circle at 70% 70%, hsl(188 95% 43% / 0.12), transparent 50%);
+  filter: blur(60px);
+  z-index: -1;
+  pointer-events: none;
 }
 
 @layer base {
@@ -278,6 +310,82 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
+}
+
+/* ============================================================
+   CELEBRATE — champagne shimmer for the booking-confirmed moment.
+   Wraps a confirmation surface; the gradient sweeps across once.
+   Respects reduced-motion via the host element opting out.
+   ============================================================ */
+.celebrate-shimmer {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.celebrate-shimmer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    rgba(217, 195, 154, 0)   30%,
+    rgba(246, 243, 236, 0.55) 48%,
+    rgba(217, 195, 154, 0.45) 52%,
+    rgba(138, 117, 73, 0)    70%,
+    transparent 100%
+  );
+  background-size: 220% 100%;
+  background-position: 120% 0;
+  animation: celebrate-sweep 1400ms cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+  mix-blend-mode: screen;
+}
+@keyframes celebrate-sweep {
+  0%   { background-position: 120% 0; opacity: 0; }
+  20%  { opacity: 1; }
+  100% { background-position: -20% 0; opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .celebrate-shimmer::before { display: none; }
+}
+
+/* ============================================================
+   WELCOME SWEEP — one-shot aurora wash on first cockpit load.
+   Used by the dashboard header on first sign-in / per-session.
+   ============================================================ */
+.welcome-sweep {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.welcome-sweep::after {
+  content: "";
+  position: absolute;
+  inset: -20% -10%;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+      ellipse at 20% 30%,
+      hsl(var(--chart-1) / 0.18) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse at 80% 20%,
+      hsl(var(--chart-3) / 0.14) 0%,
+      transparent 60%
+    );
+  opacity: 0;
+  animation: welcome-aurora 1800ms cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+@keyframes welcome-aurora {
+  0%   { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  35%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .welcome-sweep::after { display: none; }
 }
 
 /**

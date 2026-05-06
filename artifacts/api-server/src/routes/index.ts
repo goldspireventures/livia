@@ -14,6 +14,7 @@ import publicRouter from "./public";
 import devRouter from "./dev";
 import chatRouter from "./chat";
 import conversationsRouter from "./conversations";
+import marketingRouter from "./marketing";
 
 const router: IRouter = Router();
 
@@ -31,6 +32,7 @@ router.use(featureFlagsRouter);
 router.use(publicRouter);
 router.use(chatRouter);
 router.use(conversationsRouter);
+router.use(marketingRouter);
 router.use(devRouter);
 
 export default router;

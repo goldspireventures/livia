@@ -654,6 +654,23 @@ export interface PublicBookingConfirmation {
   businessName: string;
 }
 
+export interface CreateMarketingLeadBody {
+  email: string;
+  source?: string;
+  /** @nullable */
+  referrer?: string | null;
+  /** @nullable */
+  utmSource?: string | null;
+  /** @nullable */
+  utmMedium?: string | null;
+  /** @nullable */
+  utmCampaign?: string | null;
+}
+
+export interface MarketingLeadAck {
+  ok: boolean;
+}
+
 /**
  * Unauthorized
  */

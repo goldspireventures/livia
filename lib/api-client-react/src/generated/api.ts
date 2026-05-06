@@ -30,6 +30,7 @@ import type {
   CreateBookingBody,
   CreateBusinessBody,
   CreateCustomerBody,
+  CreateMarketingLeadBody,
   CreatePublicBookingBody,
   CreateServiceBody,
   CreateStaffBody,
@@ -50,6 +51,7 @@ import type {
   ListServicesParams,
   ListStaffParams,
   ListTimeOffParams,
+  MarketingLeadAck,
   NotFoundResponse,
   PublicBookingConfirmation,
   PublicBusiness,
@@ -4293,4 +4295,90 @@ export const useCreatePublicBooking = <
   TContext
 > => {
   return useMutation(getCreatePublicBookingMutationOptions(options));
+};
+
+/**
+ * @summary Capture a closed-beta signup from livia.io
+ */
+export const getCreateMarketingLeadUrl = () => {
+  return `/api/public/marketing/leads`;
+};
+
+export const createMarketingLead = async (
+  createMarketingLeadBody: CreateMarketingLeadBody,
+  options?: RequestInit,
+): Promise<MarketingLeadAck> => {
+  return customFetch<MarketingLeadAck>(getCreateMarketingLeadUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createMarketingLeadBody),
+  });
+};
+
+export const getCreateMarketingLeadMutationOptions = <
+  TError = ErrorType<BadRequestResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createMarketingLead>>,
+    TError,
+    { data: BodyType<CreateMarketingLeadBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createMarketingLead>>,
+  TError,
+  { data: BodyType<CreateMarketingLeadBody> },
+  TContext
+> => {
+  const mutationKey = ["createMarketingLead"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createMarketingLead>>,
+    { data: BodyType<CreateMarketingLeadBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createMarketingLead(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateMarketingLeadMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createMarketingLead>>
+>;
+export type CreateMarketingLeadMutationBody = BodyType<CreateMarketingLeadBody>;
+export type CreateMarketingLeadMutationError = ErrorType<BadRequestResponse>;
+
+/**
+ * @summary Capture a closed-beta signup from livia.io
+ */
+export const useCreateMarketingLead = <
+  TError = ErrorType<BadRequestResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createMarketingLead>>,
+    TError,
+    { data: BodyType<CreateMarketingLeadBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createMarketingLead>>,
+  TError,
+  { data: BodyType<CreateMarketingLeadBody> },
+  TContext
+> => {
+  return useMutation(getCreateMarketingLeadMutationOptions(options));
 };

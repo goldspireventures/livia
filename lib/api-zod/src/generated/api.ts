@@ -1446,3 +1446,15 @@ export const CreatePublicBookingBody = zod.object({
     .enum(["WEB", "APP", "WHATSAPP", "SMS", "INSTAGRAM", "SNAPCHAT", "EMAIL"])
     .default(createPublicBookingBodyChannelTypeDefault),
 });
+
+/**
+ * @summary Capture a closed-beta signup from livia.io
+ */
+export const CreateMarketingLeadBody = zod.object({
+  email: zod.string().email(),
+  source: zod.string().optional(),
+  referrer: zod.string().nullish(),
+  utmSource: zod.string().nullish(),
+  utmMedium: zod.string().nullish(),
+  utmCampaign: zod.string().nullish(),
+});

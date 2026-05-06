@@ -35,6 +35,8 @@ tags:
     description: AI inbox conversations and messages
   - name: chat
     description: Public AI chat assistant
+  - name: marketing
+    description: Public marketing site (livia.io) lead capture
 
 paths:
   /healthz:
@@ -1109,6 +1111,28 @@ paths:
         "409":
           $ref: "#/components/responses/Conflict"
 
+  # ─── Marketing (livia.io) ─────────────────────────────────────────────────
+  /public/marketing/leads:
+    post:
+      operationId: createMarketingLead
+      tags: [marketing]
+      summary: Capture a closed-beta signup from livia.io
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMarketingLeadBody"
+      responses:
+        "201":
+          description: Lead recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketingLeadAck"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -2106,3 +2130,28 @@ components:
         businessName:
           type: string
       required: [bookingId, status, startAt, endAt, serviceName, businessName]
+
+    CreateMarketingLeadBody:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        source:
+          type: string
+        referrer:
+          type: ["string", "null"]
+        utmSource:
+          type: ["string", "null"]
+        utmMedium:
+          type: ["string", "null"]
+        utmCampaign:
+          type: ["string", "null"]
+      required: [email]
+
+    MarketingLeadAck:
+      type: object
+      properties:
+        ok:
+          type: boolean
+      required: [ok]
