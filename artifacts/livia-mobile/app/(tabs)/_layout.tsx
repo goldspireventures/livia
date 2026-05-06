@@ -5,16 +5,18 @@ import { Tabs } from "expo-router";
 import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
 import { SymbolView } from "expo-symbols";
 import React from "react";
-import { Platform, StyleSheet, View, useColorScheme } from "react-native";
+import { Platform, Pressable, StyleSheet, View, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { fonts } from "@/constants/typography";
 import { useColors } from "@/hooks/useColors";
+import { useHaptics } from "@/hooks/useHaptics";
 
 function NativeTabLayout() {
   return (
     <NativeTabs>
       <NativeTabs.Trigger name="index">
         <Icon sf={{ default: "house", selected: "house.fill" }} />
-        <Label>Dashboard</Label>
+        <Label>Today</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="bookings">
         <Icon sf={{ default: "calendar", selected: "calendar" }} />
@@ -35,10 +37,13 @@ function NativeTabLayout() {
 function ClassicTabLayout() {
   const colors = useColors();
   const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const haptics = useHaptics();
+  const isDark = colorScheme !== "light"; // we default to dark
   const isIOS = Platform.OS === "ios";
   const isWeb = Platform.OS === "web";
   const insets = useSafeAreaInsets();
+
+  const onTabPress = () => haptics.selection();
 
   return (
     <Tabs
@@ -48,7 +53,7 @@ function ClassicTabLayout() {
         tabBarInactiveTintColor: colors.mutedForeground,
         tabBarStyle: {
           position: "absolute",
-          backgroundColor: isIOS ? "transparent" : colors.background,
+          backgroundColor: isIOS ? "transparent" : colors.background + "ee",
           borderTopWidth: isWeb ? 1 : 0,
           borderTopColor: colors.border,
           elevation: 0,
@@ -58,21 +63,30 @@ function ClassicTabLayout() {
         tabBarBackground: () =>
           isIOS ? (
             <BlurView
-              intensity={100}
+              intensity={90}
               tint={isDark ? "dark" : "light"}
-              style={StyleSheet.absoluteFill}
+              style={[StyleSheet.absoluteFill, { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border }]}
             />
           ) : isWeb ? (
             <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.background }]} />
-          ) : null,
+          ) : (
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.background + "f5" }]} />
+          ),
         tabBarShowLabel: true,
-        tabBarLabelStyle: { fontSize: 11, fontFamily: "Inter_500Medium" },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontFamily: fonts.bodyMed,
+          letterSpacing: 0.3,
+        },
+        tabBarButton: (props) => (
+          <Pressable {...(props as any)} onPressIn={onTabPress} />
+        ),
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: "Dashboard",
+          title: "Today",
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="house.fill" tintColor={color} size={22} />

@@ -4,15 +4,20 @@ import { useRouter } from "expo-router";
 import React from "react";
 import {
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LiviaWordmark } from "@/components/brand/LiviaWordmark";
+import { aurum } from "@/constants/colors";
+import { elevation } from "@/constants/elevation";
+import { fonts, type } from "@/constants/typography";
 import { useBusiness } from "@/contexts/BusinessContext";
 import { useColors } from "@/hooks/useColors";
+import { useHaptics } from "@/hooks/useHaptics";
 
 interface MenuItem {
   icon: keyof typeof Feather.glyphMap;
@@ -29,6 +34,7 @@ export default function MoreScreen() {
   const colors = useColors();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const haptics = useHaptics();
   const { businesses, currentBusiness, setCurrentBusiness } = useBusiness();
   const { signOut } = useAuth();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
@@ -38,15 +44,29 @@ export default function MoreScreen() {
   return (
     <ScrollView
       style={[styles.root, { backgroundColor: colors.background }]}
-      contentContainerStyle={[styles.content, { paddingTop: topPad + 12 }]}
+      contentContainerStyle={[styles.content, { paddingTop: topPad + 8 }]}
       contentInsetAdjustmentBehavior="automatic"
     >
+      <View style={styles.headerTop}>
+        <LiviaWordmark size="sm" color={colors.foreground} />
+      </View>
       <Text style={[styles.title, { color: colors.foreground }]}>More</Text>
 
       {/* Current business card */}
       {currentBusiness && (
-        <View style={[styles.businessCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <View style={[styles.bizAvatar, { backgroundColor: colors.primary + "22" }]}>
+        <View
+          style={[
+            styles.businessCard,
+            { backgroundColor: colors.card, borderColor: colors.border },
+            elevation.resting,
+          ]}
+        >
+          <View
+            style={[
+              styles.bizAvatar,
+              { backgroundColor: colors.primary + "22", borderColor: colors.primary + "55" },
+            ]}
+          >
             <Text style={[styles.bizInitial, { color: colors.primary }]}>
               {currentBusiness.name[0]?.toUpperCase() ?? "B"}
             </Text>
@@ -62,35 +82,44 @@ export default function MoreScreen() {
             )}
           </View>
           {otherBusinesses.length > 0 && (
-            <View style={[styles.activePill, { backgroundColor: colors.primary + "22" }]}>
-              <Text style={[styles.activePillText, { color: colors.primary }]}>Active</Text>
+            <View style={[styles.activePill, { backgroundColor: aurum.champagne + "22", borderColor: aurum.champagne + "55" }]}>
+              <Text style={[styles.activePillText, { color: aurum.champagne }]}>Active</Text>
             </View>
           )}
         </View>
       )}
 
-      {/* Business switcher — only shown when user has multiple businesses */}
+      {/* Business switcher */}
       {otherBusinesses.length > 0 && (
-        <View>
+        <View style={styles.sectionGroup}>
           <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
-            Switch Business
+            Switch business
           </Text>
-          <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View
+            style={[
+              styles.section,
+              { backgroundColor: colors.card, borderColor: colors.border },
+              elevation.resting,
+            ]}
+          >
             {otherBusinesses.map((biz, index) => (
-              <TouchableOpacity
+              <Pressable
                 key={biz.id}
-                style={[
+                style={({ pressed }) => [
                   styles.menuItem,
                   index < otherBusinesses.length - 1 && [
                     styles.menuItemBorder,
                     { borderBottomColor: colors.border },
                   ],
+                  pressed && { backgroundColor: colors.primary + "0c" },
                 ]}
-                onPress={() => setCurrentBusiness(biz)}
-                activeOpacity={0.7}
+                onPress={() => {
+                  haptics.selection();
+                  setCurrentBusiness(biz);
+                }}
                 testID={`switch-business-${biz.id}`}
               >
-                <View style={[styles.menuIcon, { backgroundColor: colors.border }]}>
+                <View style={[styles.menuIcon, { backgroundColor: colors.muted }]}>
                   <Text style={[styles.switchInitial, { color: colors.foreground }]}>
                     {biz.name[0]?.toUpperCase() ?? "B"}
                   </Text>
@@ -106,51 +135,74 @@ export default function MoreScreen() {
                   )}
                 </View>
                 <Feather name="refresh-cw" size={15} color={colors.primary} />
-              </TouchableOpacity>
+              </Pressable>
             ))}
           </View>
         </View>
       )}
 
-      {/* Main navigation items */}
-      <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      {/* Main navigation */}
+      <View
+        style={[
+          styles.section,
+          { backgroundColor: colors.card, borderColor: colors.border },
+          elevation.resting,
+        ]}
+      >
         {MENU_ITEMS.map((item, index) => (
-          <TouchableOpacity
+          <Pressable
             key={item.route}
-            style={[
+            style={({ pressed }) => [
               styles.menuItem,
-              index < MENU_ITEMS.length - 1 && [styles.menuItemBorder, { borderBottomColor: colors.border }],
+              index < MENU_ITEMS.length - 1 && [
+                styles.menuItemBorder,
+                { borderBottomColor: colors.border },
+              ],
+              pressed && { backgroundColor: colors.primary + "0c" },
             ]}
-            onPress={() => router.push(item.route as never)}
-            activeOpacity={0.7}
+            onPress={() => {
+              haptics.tap();
+              router.push(item.route as never);
+            }}
             testID={`menu-${item.label.toLowerCase()}`}
           >
-            <View style={[styles.menuIcon, { backgroundColor: colors.primary + "18" }]}>
+            <View style={[styles.menuIcon, { backgroundColor: colors.primary + "1a" }]}>
               <Feather name={item.icon} size={18} color={colors.primary} />
             </View>
             <Text style={[styles.menuLabel, { color: colors.foreground }]}>{item.label}</Text>
             <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
-          </TouchableOpacity>
+          </Pressable>
         ))}
       </View>
 
       {/* Sign out */}
-      <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <TouchableOpacity
-          style={styles.menuItem}
-          onPress={() => signOut()}
-          activeOpacity={0.7}
+      <View
+        style={[
+          styles.section,
+          { backgroundColor: colors.card, borderColor: colors.border },
+          elevation.resting,
+        ]}
+      >
+        <Pressable
+          style={({ pressed }) => [
+            styles.menuItem,
+            pressed && { backgroundColor: colors.destructive + "0c" },
+          ]}
+          onPress={() => {
+            haptics.warning();
+            signOut();
+          }}
           testID="sign-out-button"
         >
-          <View style={[styles.menuIcon, { backgroundColor: colors.destructive + "18" }]}>
+          <View style={[styles.menuIcon, { backgroundColor: colors.destructive + "1a" }]}>
             <Feather name="log-out" size={18} color={colors.destructive} />
           </View>
-          <Text style={[styles.menuLabel, { color: colors.destructive }]}>Sign Out</Text>
-        </TouchableOpacity>
+          <Text style={[styles.menuLabel, { color: colors.destructive }]}>Sign out</Text>
+        </Pressable>
       </View>
 
       <Text style={[styles.version, { color: colors.mutedForeground }]}>
-        Livia v1.0.0
+        Livia · v1.0.0
       </Text>
     </ScrollView>
   );
@@ -158,46 +210,45 @@ export default function MoreScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  content: { paddingHorizontal: 16, paddingBottom: 120, gap: 16 },
-  title: { fontSize: 28, fontFamily: "Inter_700Bold", letterSpacing: -0.5, marginBottom: 4 },
-  sectionLabel: {
-    fontSize: 12,
-    fontFamily: "Inter_500Medium",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    paddingLeft: 4,
-    marginBottom: -4,
+  content: { paddingHorizontal: 16, paddingBottom: 140, gap: 16 },
+  headerTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  title: {
+    fontFamily: fonts.serifMedium,
+    fontSize: 36,
+    lineHeight: 42,
+    letterSpacing: -0.6,
+    marginTop: 4,
   },
+  sectionGroup: { gap: 8 },
+  sectionLabel: { ...type.eyebrow, fontSize: 11, paddingLeft: 4 },
   businessCard: {
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
-    borderRadius: 14,
+    borderRadius: 18,
     borderWidth: 1,
     padding: 16,
   },
   bizAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",
   },
-  bizInitial: { fontSize: 22, fontFamily: "Inter_700Bold" },
-  switchInitial: { fontSize: 15, fontFamily: "Inter_600SemiBold" },
-  bizName: { fontSize: 16, fontFamily: "Inter_600SemiBold" },
-  bizSlug: { fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 1 },
+  bizInitial: { ...type.numericSm, fontSize: 22 },
+  switchInitial: { ...type.numericSm, fontSize: 14 },
+  bizName: { fontFamily: fonts.serifMedium, fontSize: 18 },
+  bizSlug: { ...type.caption, fontSize: 12, marginTop: 1 },
   activePill: {
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 3,
-  },
-  activePillText: { fontSize: 11, fontFamily: "Inter_600SemiBold" },
-  section: {
-    borderRadius: 14,
     borderWidth: 1,
-    overflow: "hidden",
   },
+  activePillText: { fontSize: 10.5, fontFamily: fonts.bodySemi, letterSpacing: 0.6 },
+  section: { borderRadius: 16, borderWidth: 1, overflow: "hidden" },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -207,17 +258,12 @@ const styles = StyleSheet.create({
   },
   menuItemBorder: { borderBottomWidth: 1 },
   menuIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 9,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",
   },
-  menuLabel: { flex: 1, fontSize: 16, fontFamily: "Inter_500Medium" },
-  version: {
-    fontSize: 12,
-    fontFamily: "Inter_400Regular",
-    textAlign: "center",
-    marginTop: 8,
-  },
+  menuLabel: { flex: 1, fontSize: 16, fontFamily: fonts.bodyMed },
+  version: { ...type.caption, fontSize: 11.5, textAlign: "center", marginTop: 8 },
 });

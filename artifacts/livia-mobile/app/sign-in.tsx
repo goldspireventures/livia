@@ -1,8 +1,6 @@
 import { useOAuth, useSignIn, useSignUp } from "@clerk/clerk-expo";
 import { Feather } from "@expo/vector-icons";
 import * as AuthSession from "expo-auth-session";
-import * as Haptics from "expo-haptics";
-import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import React, { useCallback, useEffect, useState } from "react";
@@ -17,18 +15,39 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useColors } from "@/hooks/useColors";
+import { AuroraHalo } from "@/components/brand/AuroraHalo";
+import { LiviaWordmark } from "@/components/brand/LiviaWordmark";
 import { aurora } from "@/constants/colors";
+import { elevation } from "@/constants/elevation";
+import { SPRING_GENTLE } from "@/constants/motion";
+import { fonts, type } from "@/constants/typography";
+import { useColors } from "@/hooks/useColors";
+import { useHaptics } from "@/hooks/useHaptics";
 
 WebBrowser.maybeCompleteAuthSession();
 
 type Mode = "sign-in" | "sign-up" | "verify";
 
+/**
+ * Cinematic sign-in. The brand mark and headline settle in over ~700ms
+ * with a single breathing aurora halo behind them. No three-orb backdrop,
+ * no violet→cyan gradient pill (gradients are reserved for AI moments
+ * per ADR 0007). Auth flow itself is unchanged.
+ */
 export default function SignInScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const haptics = useHaptics();
 
   const { signIn, setActive: setActiveSignIn, isLoaded: signInLoaded } = useSignIn();
   const { signUp, setActive: setActiveSignUp, isLoaded: signUpLoaded } = useSignUp();
@@ -44,6 +63,39 @@ export default function SignInScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [focused, setFocused] = useState<"email" | "password" | "code" | null>(null);
 
+  // Cinematic mount animations — runs on first render only
+  const wordmarkY = useSharedValue(-12);
+  const wordmarkOpacity = useSharedValue(0);
+  const headlineOpacity = useSharedValue(0);
+  const headlineY = useSharedValue(14);
+  const taglineOpacity = useSharedValue(0);
+  const cardOpacity = useSharedValue(0);
+  const cardY = useSharedValue(20);
+
+  useEffect(() => {
+    wordmarkOpacity.value = withTiming(1, { duration: 540, easing: Easing.out(Easing.cubic) });
+    wordmarkY.value = withSpring(0, { damping: 16, stiffness: 130 });
+    headlineOpacity.value = withDelay(180, withTiming(1, { duration: 480, easing: Easing.out(Easing.cubic) }));
+    headlineY.value = withDelay(180, withSpring(0, SPRING_GENTLE));
+    taglineOpacity.value = withDelay(360, withTiming(1, { duration: 460 }));
+    cardOpacity.value = withDelay(440, withTiming(1, { duration: 460 }));
+    cardY.value = withDelay(440, withSpring(0, SPRING_GENTLE));
+  }, []);
+
+  const wordmarkStyle = useAnimatedStyle(() => ({
+    opacity: wordmarkOpacity.value,
+    transform: [{ translateY: wordmarkY.value }],
+  }));
+  const headlineStyle = useAnimatedStyle(() => ({
+    opacity: headlineOpacity.value,
+    transform: [{ translateY: headlineY.value }],
+  }));
+  const taglineStyle = useAnimatedStyle(() => ({ opacity: taglineOpacity.value }));
+  const cardStyle = useAnimatedStyle(() => ({
+    opacity: cardOpacity.value,
+    transform: [{ translateY: cardY.value }],
+  }));
+
   // Warm up the in-app browser to make OAuth feel instant on Android.
   useEffect(() => {
     if (Platform.OS !== "web") {
@@ -54,19 +106,16 @@ export default function SignInScreen() {
     }
   }, []);
 
-  const tap = useCallback((style: Haptics.ImpactFeedbackStyle = Haptics.ImpactFeedbackStyle.Light) => {
-    if (Platform.OS !== "web") Haptics.impactAsync(style).catch(() => {});
-  }, []);
-
   const handleSignIn = async () => {
     if (!signInLoaded || loading) return;
-    tap();
+    haptics.tap();
     setLoading(true);
     setError("");
     try {
       const result = await signIn.create({ identifier: email.trim(), password });
       if (result.status === "complete") {
         await setActiveSignIn({ session: result.createdSessionId });
+        haptics.success();
       } else {
         setError("Almost there — extra verification needed. Try Google for now.");
       }
@@ -74,6 +123,7 @@ export default function SignInScreen() {
       const e = err as { errors?: Array<{ message: string; code?: string }> };
       const first = e?.errors?.[0];
       setError(humanizeAuthError(first?.code, first?.message));
+      haptics.warning();
     } finally {
       setLoading(false);
     }
@@ -81,7 +131,7 @@ export default function SignInScreen() {
 
   const handleSignUp = async () => {
     if (!signUpLoaded || loading) return;
-    tap();
+    haptics.tap();
     setLoading(true);
     setError("");
     try {
@@ -92,6 +142,7 @@ export default function SignInScreen() {
       const e = err as { errors?: Array<{ message: string; code?: string }> };
       const first = e?.errors?.[0];
       setError(humanizeAuthError(first?.code, first?.message));
+      haptics.warning();
     } finally {
       setLoading(false);
     }
@@ -99,18 +150,20 @@ export default function SignInScreen() {
 
   const handleVerify = async () => {
     if (!signUpLoaded || loading) return;
-    tap();
+    haptics.tap();
     setLoading(true);
     setError("");
     try {
       const result = await signUp.attemptEmailAddressVerification({ code: code.trim() });
       if (result.status === "complete") {
         await setActiveSignUp({ session: result.createdSessionId });
+        haptics.success();
       }
     } catch (err: unknown) {
       const e = err as { errors?: Array<{ message: string; code?: string }> };
       const first = e?.errors?.[0];
       setError(humanizeAuthError(first?.code, first?.message));
+      haptics.warning();
     } finally {
       setLoading(false);
     }
@@ -118,48 +171,37 @@ export default function SignInScreen() {
 
   const handleGoogle = async () => {
     if (oauthLoading) return;
-    tap(Haptics.ImpactFeedbackStyle.Medium);
+    haptics.impact();
     setOauthLoading(true);
     setError("");
     try {
-      // Generate platform-aware redirect URI so this works in Expo Go,
-      // dev clients, web preview, and standalone builds.
       const redirectUrl = AuthSession.makeRedirectUri({
         scheme: "livia-mobile",
         path: "oauth-callback",
       });
-
       const result = await startGoogleFlow({ redirectUrl });
       const { createdSessionId, setActive, signIn: oauthSignIn, signUp: oauthSignUp } = result;
-
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
+        haptics.success();
         return;
       }
-
-      // OAuth returned without a complete session — figure out why so we can
-      // give the user something actionable instead of a silent no-op.
       const transferable =
         (oauthSignIn as { firstFactorVerification?: { status?: string } } | undefined)
           ?.firstFactorVerification?.status === "transferable";
-
       if (transferable && signUp) {
-        // Account exists at the OAuth provider but not in Clerk yet — transfer
-        // creates the Clerk user from the verified OAuth identity.
         try {
           await signUp.create({ transfer: true });
           if (signUp.createdSessionId && setActiveSignUp) {
             await setActiveSignUp({ session: signUp.createdSessionId });
+            haptics.success();
             return;
           }
         } catch {
           /* fall through */
         }
       }
-
-      setError(
-        "Google sign-in didn't complete. Please try again, or use email + password below."
-      );
+      setError("Google sign-in didn't complete. Please try again, or use email + password below.");
     } catch (err: unknown) {
       const e = err as {
         errors?: Array<{ message: string; code?: string }>;
@@ -167,11 +209,11 @@ export default function SignInScreen() {
       };
       const first = e?.errors?.[0];
       const raw = first?.message ?? e?.message ?? "";
-      // Common cancellation paths shouldn't read like a scary error.
       if (/cancel|dismiss|user_cancel/i.test(raw)) {
         setError("Sign-in cancelled. Tap Continue with Google to try again.");
       } else {
         setError(humanizeAuthError(first?.code, raw || "Google sign-in failed."));
+        haptics.warning();
       }
     } finally {
       setOauthLoading(false);
@@ -182,18 +224,21 @@ export default function SignInScreen() {
   const submitLabel = mode === "verify" ? "Verify email" : mode === "sign-in" ? "Sign in" : "Create account";
   const tagline =
     mode === "verify"
-      ? "Check your email for a 6-digit code."
+      ? "We just sent a 6-digit code to your inbox."
       : mode === "sign-in"
-      ? "Welcome back to your command center."
-      : "Start booking smarter in minutes.";
+        ? "Welcome back. Your day is already in motion."
+        : "Two minutes to set up. Hours back every week.";
 
   return (
     <KeyboardAvoidingView
       style={[styles.root, { backgroundColor: colors.background }]}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      {/* Aurora ambient backdrop */}
-      <AuroraBackdrop background={colors.background} />
+      {/* Single breathing halo — replaces the old three-orb backdrop */}
+      <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
+        <AuroraHalo tone="ambient" size={520} style={{ top: -180, left: -100 }} />
+        <AuroraHalo tone="primary" size={420} intensity={0.7} style={{ bottom: -160, right: -120 }} />
+      </View>
 
       <View
         style={[
@@ -201,43 +246,43 @@ export default function SignInScreen() {
           { paddingTop: insets.top + 28, paddingBottom: insets.bottom + 24 },
         ]}
       >
-        {/* Brand */}
         <View style={styles.brand}>
-          <View style={styles.markWrap}>
-            <LinearGradient
-              colors={["#0a0a10", "#161620"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.mark}
-            >
-              <Text style={styles.markLetter}>
-                L<Text style={{ color: "#d9c39a", fontStyle: "italic" }}>v</Text>
-              </Text>
-            </LinearGradient>
-          </View>
-          <Text style={[styles.appName, { color: colors.foreground }]}>Livia</Text>
-          <Text style={[styles.headline, { color: colors.foreground }]}>
-            Your day,{" "}
-            <Text style={styles.headlineGradient}>already handled.</Text>
-          </Text>
-          <Text style={[styles.tagline, { color: colors.mutedForeground }]}>{tagline}</Text>
+          <Animated.View style={wordmarkStyle}>
+            <LiviaWordmark size="lg" color={colors.foreground} />
+          </Animated.View>
+
+          <Animated.Text
+            style={[styles.headline, { color: colors.foreground }, headlineStyle]}
+          >
+            Your day,{"\n"}
+            <Text style={[styles.headlineItalic, { color: colors.mutedForeground }]}>
+              already handled.
+            </Text>
+          </Animated.Text>
+
+          <Animated.Text
+            style={[styles.tagline, { color: colors.mutedForeground }, taglineStyle]}
+          >
+            {tagline}
+          </Animated.Text>
         </View>
 
-        {/* Card */}
-        <View
+        <Animated.View
           style={[
             styles.card,
             {
-              backgroundColor: colors.card,
+              backgroundColor: colors.card + "f0",
               borderColor: colors.border,
             },
+            elevation.floating,
+            cardStyle,
           ]}
         >
           {mode !== "verify" && (
             <>
               <TouchableOpacity
                 style={[styles.googleBtn, { backgroundColor: "#ffffff" }]}
-                activeOpacity={0.85}
+                activeOpacity={0.9}
                 onPress={handleGoogle}
                 disabled={oauthLoading || loading}
                 testID="google-button"
@@ -310,7 +355,7 @@ export default function SignInScreen() {
                   hitSlop={10}
                   style={styles.eyeBtn}
                   onPress={() => {
-                    tap();
+                    haptics.selection();
                     setShowPassword((v) => !v);
                   }}
                 >
@@ -349,36 +394,44 @@ export default function SignInScreen() {
           )}
 
           {error ? (
-            <View style={[styles.errorBox, { backgroundColor: colors.destructive + "1a", borderColor: colors.destructive + "55" }]}>
+            <View
+              style={[
+                styles.errorBox,
+                {
+                  backgroundColor: colors.destructive + "1a",
+                  borderColor: colors.destructive + "55",
+                },
+              ]}
+            >
               <Feather name="alert-circle" size={14} color={colors.destructive} />
               <Text style={[styles.errorText, { color: colors.destructive }]}>{error}</Text>
             </View>
           ) : null}
 
           <TouchableOpacity
-            activeOpacity={0.9}
+            activeOpacity={0.92}
             onPress={submit}
             disabled={loading || oauthLoading}
             testID="submit-button"
+            style={[
+              styles.submitBtn,
+              { backgroundColor: colors.primary },
+              (loading || oauthLoading) && { opacity: 0.6 },
+            ]}
           >
-            <LinearGradient
-              colors={[aurora.violet, aurora.cyan]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={[styles.submitBtn, (loading || oauthLoading) && { opacity: 0.6 }]}
-            >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.submitText}>{submitLabel}</Text>
-              )}
-            </LinearGradient>
+            {loading ? (
+              <ActivityIndicator color={colors.primaryForeground} />
+            ) : (
+              <Text style={[styles.submitText, { color: colors.primaryForeground }]}>
+                {submitLabel}
+              </Text>
+            )}
           </TouchableOpacity>
 
           {mode !== "verify" && (
             <TouchableOpacity
               onPress={() => {
-                tap();
+                haptics.selection();
                 setError("");
                 setMode(mode === "sign-in" ? "sign-up" : "sign-in");
               }}
@@ -387,7 +440,7 @@ export default function SignInScreen() {
             >
               <Text style={[styles.toggleText, { color: colors.mutedForeground }]}>
                 {mode === "sign-in" ? "New to Livia? " : "Already on Livia? "}
-                <Text style={{ color: colors.primary, fontFamily: "Inter_600SemiBold" }}>
+                <Text style={{ color: colors.primary, fontFamily: fonts.bodySemi }}>
                   {mode === "sign-in" ? "Create an account" : "Sign in"}
                 </Text>
               </Text>
@@ -397,7 +450,7 @@ export default function SignInScreen() {
           {mode === "verify" && (
             <TouchableOpacity
               onPress={() => {
-                tap();
+                haptics.selection();
                 setMode("sign-up");
                 setCode("");
                 setError("");
@@ -406,13 +459,13 @@ export default function SignInScreen() {
               hitSlop={8}
             >
               <Text style={[styles.toggleText, { color: colors.mutedForeground }]}>
-                <Text style={{ color: colors.primary, fontFamily: "Inter_600SemiBold" }}>
+                <Text style={{ color: colors.primary, fontFamily: fonts.bodySemi }}>
                   ← Back
                 </Text>
               </Text>
             </TouchableOpacity>
           )}
-        </View>
+        </Animated.View>
 
         <Text style={[styles.legal, { color: colors.mutedForeground }]}>
           By continuing you agree to Livia's Terms & Privacy Policy.
@@ -426,28 +479,7 @@ function FieldLabel({ children, color }: { children: React.ReactNode; color: str
   return <Text style={[styles.label, { color }]}>{children}</Text>;
 }
 
-function AuroraBackdrop({ background }: { background: string }) {
-  return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
-      <View style={[StyleSheet.absoluteFillObject, { backgroundColor: background }]} />
-      <LinearGradient
-        colors={[aurora.violet + "55", "transparent"]}
-        style={[styles.orb, { top: -120, left: -80, width: 380, height: 380 }]}
-      />
-      <LinearGradient
-        colors={[aurora.cyan + "44", "transparent"]}
-        style={[styles.orb, { top: 220, right: -120, width: 360, height: 360 }]}
-      />
-      <LinearGradient
-        colors={[aurora.mint + "33", "transparent"]}
-        style={[styles.orb, { bottom: -100, left: -60, width: 320, height: 320 }]}
-      />
-    </View>
-  );
-}
-
 function GoogleGlyph() {
-  // Multi-color "G" approximation without external SVG dependencies.
   return (
     <View style={styles.googleGlyph}>
       <Text style={styles.googleGlyphText}>G</Text>
@@ -486,70 +518,37 @@ const styles = StyleSheet.create({
   },
   brand: {
     alignItems: "center",
-    gap: 8,
-    paddingTop: 16,
-  },
-  markWrap: {
-    marginBottom: 14,
-    shadowColor: "#d9c39a",
-    shadowOpacity: 0.35,
-    shadowRadius: 22,
-    shadowOffset: { width: 0, height: 0 },
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "rgba(217, 195, 154, 0.25)",
-  },
-  mark: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  markLetter: {
-    color: "#f6f3ec",
-    fontSize: 32,
-    fontFamily: "Inter_400Regular",
-    marginTop: -2,
-    letterSpacing: -0.5,
-  },
-  appName: {
-    fontSize: 22,
-    fontFamily: "Inter_600SemiBold",
-    letterSpacing: -0.5,
+    gap: 16,
+    paddingTop: 24,
   },
   headline: {
-    fontSize: 26,
-    fontFamily: "Inter_700Bold",
+    fontFamily: fonts.serifMedium,
+    fontSize: 36,
+    lineHeight: 42,
     letterSpacing: -0.6,
     textAlign: "center",
-    marginTop: 4,
+    marginTop: 18,
   },
-  headlineGradient: {
-    color: aurora.cyan,
+  headlineItalic: {
+    fontFamily: fonts.serifMediumItalic,
+    fontStyle: "italic",
   },
   tagline: {
-    fontSize: 14,
-    fontFamily: "Inter_400Regular",
-    marginTop: 2,
+    ...type.body,
     textAlign: "center",
+    maxWidth: 320,
   },
   card: {
-    borderRadius: 22,
+    borderRadius: 24,
     borderWidth: 1,
     padding: 18,
     gap: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.25,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 6 },
   },
   label: {
+    ...type.label,
     fontSize: 12,
-    fontFamily: "Inter_500Medium",
     marginTop: 4,
     marginBottom: 4,
-    letterSpacing: 0.2,
   },
   input: {
     borderRadius: 12,
@@ -557,13 +556,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 13,
     fontSize: 15,
-    fontFamily: "Inter_400Regular",
+    fontFamily: fonts.body,
   },
   codeInput: {
     fontSize: 22,
     letterSpacing: 6,
     textAlign: "center",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: fonts.bodySemi,
   },
   eyeBtn: {
     position: "absolute",
@@ -587,7 +586,7 @@ const styles = StyleSheet.create({
   errorText: {
     flex: 1,
     fontSize: 12.5,
-    fontFamily: "Inter_500Medium",
+    fontFamily: fonts.bodyMed,
     lineHeight: 17,
   },
   submitBtn: {
@@ -597,12 +596,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 6,
     minHeight: 50,
+    shadowColor: aurora.cyan,
+    shadowOpacity: 0.4,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 4 },
   },
   submitText: {
-    color: "#fff",
     fontSize: 15,
-    fontFamily: "Inter_600SemiBold",
-    letterSpacing: 0.2,
+    fontFamily: fonts.bodySemi,
+    letterSpacing: 0.3,
   },
   toggle: {
     alignItems: "center",
@@ -611,7 +613,7 @@ const styles = StyleSheet.create({
   },
   toggleText: {
     fontSize: 13.5,
-    fontFamily: "Inter_400Regular",
+    fontFamily: fonts.body,
   },
   googleBtn: {
     borderRadius: 14,
@@ -625,7 +627,7 @@ const styles = StyleSheet.create({
   googleBtnText: {
     color: "#1f1f1f",
     fontSize: 15,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: fonts.bodySemi,
   },
   googleGlyph: {
     width: 22,
@@ -639,7 +641,7 @@ const styles = StyleSheet.create({
   },
   googleGlyphText: {
     fontSize: 13,
-    fontFamily: "Inter_700Bold",
+    fontFamily: fonts.bodyBold,
     color: "#4285F4",
     marginTop: -2,
   },
@@ -655,19 +657,14 @@ const styles = StyleSheet.create({
   },
   dividerText: {
     fontSize: 11,
-    fontFamily: "Inter_500Medium",
+    fontFamily: fonts.bodyMed,
     letterSpacing: 1,
     textTransform: "uppercase",
-  },
-  orb: {
-    position: "absolute",
-    borderRadius: 9999,
-    opacity: 0.9,
   },
   legal: {
     textAlign: "center",
     fontSize: 11.5,
-    fontFamily: "Inter_400Regular",
+    fontFamily: fonts.body,
     paddingHorizontal: 12,
   },
 });

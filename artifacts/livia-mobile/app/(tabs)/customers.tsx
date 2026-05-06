@@ -11,9 +11,16 @@ import {
   TextInput,
   View,
 } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CustomerCard } from "@/components/CustomerCard";
+import { LiviaWordmark } from "@/components/brand/LiviaWordmark";
 import { EmptyState } from "@/components/EmptyState";
+import { fonts, type } from "@/constants/typography";
 import { useBusiness } from "@/contexts/BusinessContext";
 import { useColors } from "@/hooks/useColors";
 
@@ -23,11 +30,19 @@ export default function CustomersScreen() {
   const insets = useSafeAreaInsets();
   const { currentBusiness } = useBusiness();
   const [search, setSearch] = useState("");
+  const [focused, setFocused] = useState(false);
+
+  // Animate search box border color + glow on focus
+  const focus = useSharedValue(0);
+  const focusStyle = useAnimatedStyle(() => ({
+    borderColor: focused ? colors.primary : colors.border,
+    shadowOpacity: focus.value * 0.35,
+  }));
 
   const { data, isLoading, refetch, isRefetching } = useListCustomers(
     currentBusiness?.id ?? "",
     { search: search || undefined, limit: 50 },
-    { query: { enabled: !!currentBusiness?.id } as any }
+    { query: { enabled: !!currentBusiness?.id } as any },
   );
 
   const customers = data?.data ?? [];
@@ -35,22 +50,42 @@ export default function CustomersScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { paddingTop: topPad + 12 }]}>
+      <View style={[styles.header, { paddingTop: topPad + 8 }]}>
+        <View style={styles.headerTop}>
+          <LiviaWordmark size="sm" color={colors.foreground} />
+          <Text style={[styles.count, { color: colors.mutedForeground }]}>
+            {(data as { total?: number })?.total ?? 0} total
+          </Text>
+        </View>
         <Text style={[styles.title, { color: colors.foreground }]}>Clients</Text>
-        <Text style={[styles.count, { color: colors.mutedForeground }]}>
-          {(data as { total?: number })?.total ?? 0} total
-        </Text>
       </View>
 
-      <View style={[styles.searchWrap, { borderColor: colors.border }]}>
-        <View style={[styles.searchBox, { backgroundColor: colors.input, borderColor: colors.border }]}>
-          <Feather name="search" size={16} color={colors.mutedForeground} />
+      <View style={styles.searchWrap}>
+        <Animated.View
+          style={[
+            styles.searchBox,
+            {
+              backgroundColor: colors.input + "55",
+              shadowColor: colors.primary,
+            },
+            focusStyle,
+          ]}
+        >
+          <Feather name="search" size={16} color={focused ? colors.primary : colors.mutedForeground} />
           <TextInput
             style={[styles.searchInput, { color: colors.foreground }]}
             placeholder="Search clients…"
             placeholderTextColor={colors.mutedForeground}
             value={search}
             onChangeText={setSearch}
+            onFocus={() => {
+              setFocused(true);
+              focus.value = withTiming(1, { duration: 220 });
+            }}
+            onBlur={() => {
+              setFocused(false);
+              focus.value = withTiming(0, { duration: 220 });
+            }}
             autoCapitalize="none"
             autoCorrect={false}
             testID="customer-search"
@@ -63,15 +98,16 @@ export default function CustomersScreen() {
               onPress={() => setSearch("")}
             />
           )}
-        </View>
+        </Animated.View>
       </View>
 
       <FlatList
         data={customers}
         keyExtractor={(c) => c.id}
-        renderItem={({ item }) => (
+        renderItem={({ item, index }) => (
           <CustomerCard
             customer={item}
+            index={index}
             onPress={() => router.push(`/customer/${item.id}`)}
           />
         )}
@@ -82,13 +118,13 @@ export default function CustomersScreen() {
         ListEmptyComponent={
           <EmptyState
             icon="users"
-            title={isLoading ? "Loading…" : search ? "No results" : "No clients yet"}
+            title={isLoading ? "Loading…" : search ? "No matches" : "No clients yet"}
             subtitle={
               isLoading
                 ? undefined
                 : search
-                ? "Try a different search"
-                : "Clients appear here after their first booking"
+                  ? "Try a different name or phone number."
+                  : "Clients land here the moment they book — Liv handles the import."
             }
             isLoading={isLoading}
           />
@@ -109,29 +145,39 @@ export default function CustomersScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   header: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    gap: 10,
     paddingHorizontal: 16,
     paddingBottom: 12,
+    gap: 12,
   },
-  title: { fontSize: 28, fontFamily: "Inter_700Bold", letterSpacing: -0.5 },
-  count: { fontSize: 14, fontFamily: "Inter_400Regular" },
+  headerTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  title: {
+    fontFamily: fonts.serifMedium,
+    fontSize: 36,
+    lineHeight: 42,
+    letterSpacing: -0.6,
+  },
+  count: { ...type.caption, fontSize: 12 },
   searchWrap: { paddingHorizontal: 16, paddingBottom: 12 },
   searchBox: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
     paddingHorizontal: 14,
     paddingVertical: 11,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 0 },
   },
   searchInput: {
     flex: 1,
     fontSize: 15,
-    fontFamily: "Inter_400Regular",
+    fontFamily: fonts.body,
   },
-  list: { paddingHorizontal: 16, paddingBottom: 120 },
+  list: { paddingHorizontal: 16, paddingBottom: 140 },
   listEmpty: { flex: 1 },
 });

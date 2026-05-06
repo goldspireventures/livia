@@ -1,7 +1,19 @@
 import { Feather } from "@expo/vector-icons";
-import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React, { useEffect } from "react";
+import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
+import { elevation } from "@/constants/elevation";
+import { SPRING_GENTLE } from "@/constants/motion";
+import { fonts, type } from "@/constants/typography";
 import { useColors } from "@/hooks/useColors";
+import { useHaptics } from "@/hooks/useHaptics";
 import { StatusBadge } from "./StatusBadge";
 
 function formatTime(iso: string) {
@@ -32,55 +44,91 @@ interface BookingCardProps {
     notes?: string | null;
   };
   showDate?: boolean;
+  index?: number;
   onPress?: () => void;
 }
 
-export function BookingCard({ booking, showDate = false, onPress }: BookingCardProps) {
+export function BookingCard({ booking, showDate = false, index = 0, onPress }: BookingCardProps) {
   const colors = useColors();
+  const haptics = useHaptics();
   const c = booking.customer;
   const customerName = c?.displayName ?? c?.firstName ?? "Walk-in";
   const serviceName = booking.service?.name ?? "Service";
   const staffName = booking.staff?.displayName;
 
+  // Entry stagger
+  const opacity = useSharedValue(0);
+  const translateY = useSharedValue(8);
+  // Press scale
+  const press = useSharedValue(1);
+
+  useEffect(() => {
+    const delay = Math.min(index, 8) * 50;
+    opacity.value = withDelay(delay, withTiming(1, { duration: 280, easing: Easing.out(Easing.cubic) }));
+    translateY.value = withDelay(delay, withSpring(0, SPRING_GENTLE));
+  }, []);
+
+  const enter = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateY: translateY.value }, { scale: press.value }],
+  }));
+
   return (
-    <TouchableOpacity
-      style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
-      onPress={onPress}
-      activeOpacity={0.75}
-      testID={`booking-card-${booking.id}`}
-    >
-      <View style={styles.left}>
-        <View style={[styles.timeBar, { backgroundColor: colors.primary }]} />
-        <View style={styles.timeBlock}>
-          <Text style={[styles.timeText, { color: colors.primary }]}>
-            {formatTime(booking.startAt)}
-          </Text>
-          {showDate && (
-            <Text style={[styles.dateText, { color: colors.mutedForeground }]}>
-              {formatDate(booking.startAt)}
+    <Animated.View style={enter}>
+      <Pressable
+        onPress={() => {
+          haptics.tap();
+          onPress?.();
+        }}
+        onPressIn={() => {
+          press.value = withSpring(0.98, { damping: 14, stiffness: 280 });
+        }}
+        onPressOut={() => {
+          press.value = withSpring(1, { damping: 14, stiffness: 280 });
+        }}
+        style={[
+          styles.card,
+          {
+            backgroundColor: colors.card,
+            borderColor: colors.border,
+          },
+          Platform.OS !== "web" && elevation.resting,
+        ]}
+        testID={`booking-card-${booking.id}`}
+      >
+        <View style={styles.left}>
+          <View style={[styles.timeBar, { backgroundColor: colors.primary }]} />
+          <View>
+            <Text style={[styles.timeText, { color: colors.foreground }]}>
+              {formatTime(booking.startAt)}
             </Text>
-          )}
+            {showDate && (
+              <Text style={[styles.dateText, { color: colors.mutedForeground }]}>
+                {formatDate(booking.startAt)}
+              </Text>
+            )}
+          </View>
         </View>
-      </View>
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <Text style={[styles.name, { color: colors.foreground }]} numberOfLines={1}>
-            {customerName}
+        <View style={styles.content}>
+          <View style={styles.header}>
+            <Text style={[styles.name, { color: colors.foreground }]} numberOfLines={1}>
+              {customerName}
+            </Text>
+            <StatusBadge status={booking.status} />
+          </View>
+          <Text style={[styles.service, { color: colors.mutedForeground }]} numberOfLines={1}>
+            {serviceName}
+            {staffName ? ` · ${staffName}` : ""}
           </Text>
-          <StatusBadge status={booking.status} />
+          {booking.notes ? (
+            <Text style={[styles.notes, { color: colors.mutedForeground }]} numberOfLines={1}>
+              {booking.notes}
+            </Text>
+          ) : null}
         </View>
-        <Text style={[styles.service, { color: colors.mutedForeground }]} numberOfLines={1}>
-          {serviceName}
-          {staffName ? ` · ${staffName}` : ""}
-        </Text>
-        {booking.notes ? (
-          <Text style={[styles.notes, { color: colors.mutedForeground }]} numberOfLines={1}>
-            {booking.notes}
-          </Text>
-        ) : null}
-      </View>
-      <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
-    </TouchableOpacity>
+        <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -88,55 +136,33 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 12,
+    borderRadius: 16,
     borderWidth: 1,
-    marginBottom: 8,
+    marginBottom: 10,
     padding: 14,
     gap: 12,
   },
   left: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    minWidth: 72,
+    gap: 10,
+    minWidth: 76,
   },
   timeBar: {
     width: 3,
     height: 36,
     borderRadius: 2,
   },
-  timeBlock: {},
-  timeText: {
-    fontSize: 13,
-    fontFamily: "Inter_600SemiBold",
-  },
-  dateText: {
-    fontSize: 11,
-    fontFamily: "Inter_400Regular",
-    marginTop: 2,
-  },
-  content: {
-    flex: 1,
-    gap: 2,
-  },
+  timeText: { ...type.numericSm, fontSize: 14 },
+  dateText: { ...type.caption, fontSize: 11, marginTop: 2 },
+  content: { flex: 1, gap: 3 },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 8,
   },
-  name: {
-    fontSize: 15,
-    fontFamily: "Inter_600SemiBold",
-    flex: 1,
-  },
-  service: {
-    fontSize: 13,
-    fontFamily: "Inter_400Regular",
-  },
-  notes: {
-    fontSize: 12,
-    fontFamily: "Inter_400Regular",
-    fontStyle: "italic",
-  },
+  name: { fontFamily: fonts.serifMedium, fontSize: 18, letterSpacing: -0.2, flex: 1 },
+  service: { ...type.body, fontSize: 13 },
+  notes: { ...type.caption, fontStyle: "italic" },
 });

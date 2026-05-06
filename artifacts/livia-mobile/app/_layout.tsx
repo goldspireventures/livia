@@ -5,6 +5,13 @@ import {
   Inter_700Bold,
   useFonts,
 } from "@expo-google-fonts/inter";
+import {
+  CormorantGaramond_400Regular,
+  CormorantGaramond_400Regular_Italic,
+  CormorantGaramond_500Medium,
+  CormorantGaramond_500Medium_Italic,
+} from "@expo-google-fonts/cormorant-garamond";
+import { StatusBar } from "expo-status-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import {
@@ -93,6 +100,10 @@ export default function RootLayout() {
     Inter_500Medium,
     Inter_600SemiBold,
     Inter_700Bold,
+    CormorantGaramond_400Regular,
+    CormorantGaramond_400Regular_Italic,
+    CormorantGaramond_500Medium,
+    CormorantGaramond_500Medium_Italic,
   });
 
   useEffect(() => {
@@ -111,8 +122,9 @@ export default function RootLayout() {
             publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? ""}
             tokenCache={tokenCache}
           >
-            <GestureHandlerRootView style={{ flex: 1 }}>
+            <GestureHandlerRootView style={{ flex: 1, backgroundColor: "#09090b" }}>
               <KeyboardProvider>
+                <StatusBar style="light" />
                 <ClerkAuthBridge />
                 <RootLayoutNav />
               </KeyboardProvider>

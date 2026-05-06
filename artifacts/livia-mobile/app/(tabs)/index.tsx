@@ -1,7 +1,5 @@
 import { useGetDashboardSummary } from "@workspace/api-client-react";
 import { Feather } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
-import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useEffect } from "react";
 import {
@@ -13,17 +11,33 @@ import {
   Text,
   View,
 } from "react-native";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BookingCard } from "@/components/BookingCard";
+import { AuroraHalo } from "@/components/brand/AuroraHalo";
+import { LivPulse } from "@/components/brand/LivPulse";
+import { LiviaWordmark } from "@/components/brand/LiviaWordmark";
+import { Shimmer } from "@/components/brand/Shimmer";
 import { EmptyState } from "@/components/EmptyState";
 import { StatsCard } from "@/components/StatsCard";
 import { aurora } from "@/constants/colors";
+import { elevation } from "@/constants/elevation";
+import { SPRING_GENTLE } from "@/constants/motion";
+import { fonts, type } from "@/constants/typography";
 import { useBusiness } from "@/contexts/BusinessContext";
 import { useColors } from "@/hooks/useColors";
+import { useHaptics } from "@/hooks/useHaptics";
 
 function timeOfDayGreeting(): string {
   const h = new Date().getHours();
-  if (h < 5) return "Good night";
+  if (h < 5) return "Still up";
   if (h < 12) return "Good morning";
   if (h < 17) return "Good afternoon";
   if (h < 21) return "Good evening";
@@ -34,6 +48,7 @@ export default function DashboardScreen() {
   const colors = useColors();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const haptics = useHaptics();
   const { currentBusiness, isLoading: bizLoading } = useBusiness();
 
   useEffect(() => {
@@ -53,14 +68,30 @@ export default function DashboardScreen() {
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
+  // Header settle animation
+  const headOpacity = useSharedValue(0);
+  const headY = useSharedValue(8);
+  useEffect(() => {
+    headOpacity.value = withTiming(1, { duration: 420, easing: Easing.out(Easing.cubic) });
+    headY.value = withSpring(0, SPRING_GENTLE);
+  }, []);
+  const headStyle = useAnimatedStyle(() => ({
+    opacity: headOpacity.value,
+    transform: [{ translateY: headY.value }],
+  }));
+
+  // CTA press scale
+  const ctaScale = useSharedValue(1);
+  const ctaStyle = useAnimatedStyle(() => ({ transform: [{ scale: ctaScale.value }] }));
+
   const handleNewBooking = () => {
-    if (Platform.OS !== "web") {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    }
+    haptics.impact();
     router.push("/booking/new");
   };
 
   if (!currentBusiness && !bizLoading) return null;
+
+  const next = summary?.upcomingBookings?.[0];
 
   return (
     <ScrollView
@@ -72,24 +103,28 @@ export default function DashboardScreen() {
           refreshing={isRefetching}
           onRefresh={refetch}
           tintColor={colors.primary}
+          colors={[colors.primary]}
         />
       }
       showsVerticalScrollIndicator={false}
     >
-      {/* Soft aurora glow behind the header */}
+      {/* Single soft halo behind the greeting — replaces the two-orb glow */}
       <View pointerEvents="none" style={styles.glowWrap}>
-        <LinearGradient
-          colors={[aurora.violet + "33", "transparent"]}
-          style={[styles.glow, { top: -100, left: -60, width: 320, height: 320 }]}
-        />
-        <LinearGradient
-          colors={[aurora.cyan + "2a", "transparent"]}
-          style={[styles.glow, { top: -40, right: -80, width: 280, height: 280 }]}
-        />
+        <AuroraHalo tone="primary" size={420} style={{ top: -160, left: -100 }} intensity={0.85} />
       </View>
 
       {/* Header */}
-      <View style={styles.headerBlock}>
+      <Animated.View style={[styles.headerBlock, headStyle]}>
+        <View style={styles.brandRow}>
+          <LiviaWordmark size="sm" color={colors.foreground} />
+          <View style={styles.presence}>
+            <LivPulse size={9} state="idle" />
+            <Text style={[styles.presenceText, { color: colors.mutedForeground }]}>
+              Liv is watching
+            </Text>
+          </View>
+        </View>
+
         <Text style={[styles.greeting, { color: colors.mutedForeground }]}>
           {timeOfDayGreeting()} ·{" "}
           {new Date().toLocaleDateString("en-US", {
@@ -98,58 +133,110 @@ export default function DashboardScreen() {
             day: "numeric",
           })}
         </Text>
-        <Text
-          style={[styles.bizName, { color: colors.foreground }]}
-          numberOfLines={1}
-        >
+        <Text style={[styles.bizName, { color: colors.foreground }]} numberOfLines={1}>
           {currentBusiness?.name ?? "Loading…"}
         </Text>
+      </Animated.View>
 
+      {/* Next-up hero card — only when something is coming up */}
+      {!isLoading && next ? (
+        <Pressable
+          onPress={() => {
+            haptics.tap();
+            router.push(`/booking/${next.id}`);
+          }}
+          style={({ pressed }) => [{ transform: [{ scale: pressed ? 0.99 : 1 }] }]}
+        >
+          <View
+            style={[
+              styles.nextCard,
+              { backgroundColor: colors.card, borderColor: aurora.cyan + "44" },
+              elevation.floating,
+            ]}
+          >
+            <View style={styles.nextRow}>
+              <Text style={[styles.nextEyebrow, { color: aurora.cyan }]}>NEXT UP</Text>
+              <Text style={[styles.nextTime, { color: colors.foreground }]}>
+                {new Date(next.startAt).toLocaleTimeString("en-US", {
+                  hour: "numeric",
+                  minute: "2-digit",
+                  hour12: true,
+                })}
+              </Text>
+            </View>
+            <Text style={[styles.nextName, { color: colors.foreground }]} numberOfLines={1}>
+              {next.customer?.displayName ?? next.customer?.firstName ?? "Walk-in"}
+            </Text>
+            <Text style={[styles.nextSub, { color: colors.mutedForeground }]} numberOfLines={1}>
+              {next.service?.name ?? "Service"}
+              {next.staff?.displayName ? `  ·  ${next.staff.displayName}` : ""}
+            </Text>
+          </View>
+        </Pressable>
+      ) : null}
+
+      {/* Primary CTA — solid cyan (gradients reserved for AI moments per ADR 0007) */}
+      <Animated.View style={[ctaStyle, { alignSelf: "flex-start" }]}>
         <Pressable
           onPress={handleNewBooking}
+          onPressIn={() => {
+            ctaScale.value = withSpring(0.96, { damping: 14, stiffness: 280 });
+          }}
+          onPressOut={() => {
+            ctaScale.value = withSpring(1, { damping: 14, stiffness: 280 });
+          }}
           testID="new-booking-button"
-          style={({ pressed }) => [
-            styles.ctaPressable,
-            { transform: [{ scale: pressed ? 0.97 : 1 }] },
+          style={[
+            styles.ctaBtn,
+            { backgroundColor: colors.primary },
+            elevation.floating,
           ]}
         >
-          <LinearGradient
-            colors={[aurora.violet, aurora.cyan]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.ctaBtn}
-          >
-            <Feather name="plus" size={16} color="#fff" />
-            <Text style={styles.ctaText}>New booking</Text>
-          </LinearGradient>
+          <Feather name="plus" size={16} color={colors.primaryForeground} />
+          <Text style={[styles.ctaText, { color: colors.primaryForeground }]}>
+            New booking
+          </Text>
         </Pressable>
-      </View>
+      </Animated.View>
 
       {/* Stats */}
       <View style={styles.statsRow}>
-        <StatsCard
-          label="Today"
-          value={isLoading ? "—" : (summary?.todayBookings ?? 0)}
-          color={colors.primary}
-          variant="hero"
-        />
-        <StatsCard
-          label="Pending"
-          value={isLoading ? "—" : (summary?.pendingCount ?? 0)}
-          color={colors.warning}
-        />
-        <StatsCard
-          label="Done"
-          value={isLoading ? "—" : (summary?.completedTodayCount ?? 0)}
-          color={colors.success}
-        />
+        {isLoading ? (
+          <>
+            <Shimmer height={92} radius={16} style={{ flex: 1 }} />
+            <Shimmer height={92} radius={16} style={{ flex: 1 }} />
+            <Shimmer height={92} radius={16} style={{ flex: 1 }} />
+          </>
+        ) : (
+          <>
+            <StatsCard
+              label="Today"
+              value={summary?.todayBookings ?? 0}
+              color={colors.primary}
+              variant="hero"
+              index={0}
+            />
+            <StatsCard
+              label="Pending"
+              value={summary?.pendingCount ?? 0}
+              color={colors.warning}
+              index={1}
+            />
+            <StatsCard
+              label="Done"
+              value={summary?.completedTodayCount ?? 0}
+              color={colors.success}
+              index={2}
+            />
+          </>
+        )}
       </View>
 
       {/* Upcoming */}
       <View style={styles.section}>
         <View style={styles.sectionHead}>
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-            Upcoming bookings
+            Upcoming
           </Text>
           {summary?.upcomingBookings && summary.upcomingBookings.length > 0 ? (
             <Text style={[styles.sectionMeta, { color: colors.mutedForeground }]}>
@@ -162,15 +249,16 @@ export default function DashboardScreen() {
         ) : !summary?.upcomingBookings?.length ? (
           <EmptyState
             icon="calendar"
-            title="No upcoming bookings"
-            subtitle="All clear for now"
+            title="All clear"
+            subtitle="Nothing on the books — a rare and beautiful thing."
           />
         ) : (
-          summary.upcomingBookings.slice(0, 10).map((b) => (
+          summary.upcomingBookings.slice(0, 10).map((b, i) => (
             <BookingCard
               key={b.id}
               booking={b}
               showDate
+              index={i}
               onPress={() => router.push(`/booking/${b.id}`)}
             />
           ))
@@ -182,52 +270,62 @@ export default function DashboardScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  content: { paddingHorizontal: 16, paddingBottom: 120, gap: 22 },
+  content: { paddingHorizontal: 16, paddingBottom: 140, gap: 22 },
   glowWrap: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
-    height: 280,
+    height: 320,
     overflow: "hidden",
   },
-  glow: {
-    position: "absolute",
-    borderRadius: 9999,
-  },
   headerBlock: { gap: 6 },
-  greeting: {
-    fontSize: 13,
-    fontFamily: "Inter_500Medium",
-    letterSpacing: 0.1,
+  brandRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 14,
   },
-  bizName: {
-    fontSize: 30,
-    fontFamily: "Inter_700Bold",
-    letterSpacing: -0.7,
-  },
-  ctaPressable: {
-    alignSelf: "flex-start",
-    marginTop: 10,
-    borderRadius: 999,
-    shadowColor: aurora.cyan,
-    shadowOpacity: 0.4,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 4 },
-  },
-  ctaBtn: {
+  presence: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+  },
+  presenceText: { ...type.caption, fontSize: 11 },
+  greeting: { ...type.label, fontSize: 13 },
+  bizName: {
+    fontFamily: fonts.serifMedium,
+    fontSize: 38,
+    lineHeight: 44,
+    letterSpacing: -0.6,
+  },
+  nextCard: {
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 18,
+    gap: 6,
+  },
+  nextRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  nextEyebrow: { ...type.eyebrow, fontSize: 10 },
+  nextTime: { ...type.numericSm, fontSize: 14 },
+  nextName: { fontFamily: fonts.serifMedium, fontSize: 24, letterSpacing: -0.3 },
+  nextSub: { ...type.body, fontSize: 14 },
+  ctaBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
     borderRadius: 999,
   },
   ctaText: {
-    color: "#fff",
     fontSize: 14,
-    fontFamily: "Inter_600SemiBold",
-    letterSpacing: 0.2,
+    fontFamily: fonts.bodySemi,
+    letterSpacing: 0.3,
   },
   statsRow: { flexDirection: "row", gap: 10 },
   section: { gap: 10 },
@@ -237,12 +335,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   sectionTitle: {
-    fontSize: 18,
-    fontFamily: "Inter_700Bold",
+    fontFamily: fonts.serifMedium,
+    fontSize: 22,
     letterSpacing: -0.3,
   },
-  sectionMeta: {
-    fontSize: 12,
-    fontFamily: "Inter_500Medium",
-  },
+  sectionMeta: { ...type.caption, fontSize: 12 },
 });

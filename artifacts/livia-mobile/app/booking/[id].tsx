@@ -1,25 +1,30 @@
 import { useGetBooking, useUpdateBooking } from "@workspace/api-client-react";
-import * as Haptics from "expo-haptics";
+import { Feather } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
   ActivityIndicator,
   Alert,
+  Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
-import { useBusiness } from "@/contexts/BusinessContext";
-import { StatusBadge } from "@/components/StatusBadge";
+import { AuroraHalo } from "@/components/brand/AuroraHalo";
 import { EmptyState } from "@/components/EmptyState";
+import { StatusBadge } from "@/components/StatusBadge";
+import { elevation } from "@/constants/elevation";
+import { fonts, type } from "@/constants/typography";
+import { useBusiness } from "@/contexts/BusinessContext";
 import { useColors } from "@/hooks/useColors";
+import { useHaptics } from "@/hooks/useHaptics";
 
 function formatDateTime(iso: string) {
   return new Date(iso).toLocaleString("en-US", {
-    weekday: "short",
-    month: "short",
+    weekday: "long",
+    month: "long",
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
@@ -32,12 +37,12 @@ function formatDuration(startAt: string, endAt: string) {
   if (mins < 60) return `${mins} min`;
   const h = Math.floor(mins / 60);
   const m = mins % 60;
-  return m ? `${h}h ${m}min` : `${h}h`;
+  return m ? `${h}h ${m}m` : `${h}h`;
 }
 
 const STATUS_ACTIONS: Record<string, Array<{ label: string; next: string; danger?: boolean }>> = {
   PENDING:   [{ label: "Confirm", next: "CONFIRMED" }, { label: "Cancel", next: "CANCELLED", danger: true }],
-  CONFIRMED: [{ label: "Mark Complete", next: "COMPLETED" }, { label: "No-show", next: "NO_SHOW" }, { label: "Cancel", next: "CANCELLED", danger: true }],
+  CONFIRMED: [{ label: "Mark complete", next: "COMPLETED" }, { label: "No-show", next: "NO_SHOW" }, { label: "Cancel", next: "CANCELLED", danger: true }],
   COMPLETED: [],
   CANCELLED: [],
   NO_SHOW:   [],
@@ -45,14 +50,14 @@ const STATUS_ACTIONS: Record<string, Array<{ label: string; next: string; danger
 
 export default function BookingDetailScreen() {
   const colors = useColors();
-  const router = useRouter();
+  const haptics = useHaptics();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { currentBusiness } = useBusiness();
 
   const { data: booking, isLoading, refetch } = useGetBooking(
     currentBusiness?.id ?? "",
     id ?? "",
-    { query: { enabled: !!currentBusiness?.id && !!id } as any }
+    { query: { enabled: !!currentBusiness?.id && !!id } as any },
   );
 
   const { mutateAsync: updateBooking, isPending } = useUpdateBooking();
@@ -66,20 +71,23 @@ export default function BookingDetailScreen() {
         data: { status: nextStatus as "CONFIRMED" | "CANCELLED" | "COMPLETED" | "NO_SHOW" },
       })
         .then(() => {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          haptics.success();
           refetch();
         })
         .catch((err: unknown) => {
           const e = err as { message?: string };
+          haptics.warning();
           Alert.alert("Error", e?.message ?? "Could not update booking");
         });
 
     if (nextStatus === "CANCELLED") {
-      Alert.alert("Cancel Booking", "Are you sure?", [
-        { text: "Keep", style: "cancel" },
-        { text: "Cancel Booking", style: "destructive", onPress: action },
+      haptics.warning();
+      Alert.alert("Cancel booking", "Are you sure?", [
+        { text: "Keep it", style: "cancel" },
+        { text: "Cancel booking", style: "destructive", onPress: action },
       ]);
     } else {
+      haptics.tap();
       await action();
     }
   };
@@ -94,7 +102,9 @@ export default function BookingDetailScreen() {
 
   if (!booking) {
     return (
-      <EmptyState icon="alert-circle" title="Booking not found" subtitle="It may have been deleted" />
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <EmptyState icon="alert-circle" title="Booking not found" subtitle="It may have been deleted." />
+      </View>
     );
   }
 
@@ -115,7 +125,18 @@ export default function BookingDetailScreen() {
       contentContainerStyle={styles.content}
       contentInsetAdjustmentBehavior="automatic"
     >
-      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      {/* Single soft halo behind hero */}
+      <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, height: 240, overflow: "hidden" }}>
+        <AuroraHalo tone="primary" size={360} intensity={0.6} style={{ top: -120, left: -60 }} />
+      </View>
+
+      <View
+        style={[
+          styles.heroCard,
+          { backgroundColor: colors.card, borderColor: colors.border },
+          Platform.OS !== "web" && elevation.resting,
+        ]}
+      >
         <View style={styles.cardHeader}>
           <StatusBadge status={booking.status} />
           <Text style={[styles.time, { color: colors.mutedForeground }]}>
@@ -125,11 +146,20 @@ export default function BookingDetailScreen() {
         <Text style={[styles.dateTime, { color: colors.foreground }]}>
           {formatDateTime(booking.startAt)}
         </Text>
+        <Text style={[styles.heroName, { color: colors.foreground }]} numberOfLines={1}>
+          {customerName}
+        </Text>
       </View>
 
       {customer && (
-        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>CLIENT</Text>
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: colors.card, borderColor: colors.border },
+            Platform.OS !== "web" && elevation.resting,
+          ]}
+        >
+          <Text style={[styles.eyebrow, { color: colors.mutedForeground }]}>Client</Text>
           <Text style={[styles.value, { color: colors.foreground }]}>{customerName}</Text>
           {customer?.email && (
             <Text style={[styles.sub, { color: colors.mutedForeground }]}>{customer.email}</Text>
@@ -140,8 +170,14 @@ export default function BookingDetailScreen() {
         </View>
       )}
 
-      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>SERVICE</Text>
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: colors.card, borderColor: colors.border },
+          Platform.OS !== "web" && elevation.resting,
+        ]}
+      >
+        <Text style={[styles.eyebrow, { color: colors.mutedForeground }]}>Service</Text>
         <Text style={[styles.value, { color: colors.foreground }]}>
           {service?.name ?? "Unknown service"}
         </Text>
@@ -153,35 +189,52 @@ export default function BookingDetailScreen() {
       </View>
 
       {booking.notes ? (
-        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>NOTES</Text>
-          <Text style={[styles.value, { color: colors.foreground }]}>{booking.notes}</Text>
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: colors.card, borderColor: colors.border },
+            Platform.OS !== "web" && elevation.resting,
+          ]}
+        >
+          <Text style={[styles.eyebrow, { color: colors.mutedForeground }]}>Notes</Text>
+          <Text style={[styles.noteText, { color: colors.foreground }]}>{booking.notes}</Text>
         </View>
       ) : null}
 
       {actions.length > 0 && (
         <View style={styles.actions}>
           {actions.map((a) => (
-            <TouchableOpacity
+            <Pressable
               key={a.next}
-              style={[
+              style={({ pressed }) => [
                 styles.actionBtn,
                 {
                   backgroundColor: a.danger ? colors.destructive : colors.primary,
                   opacity: isPending ? 0.6 : 1,
+                  transform: [{ scale: pressed ? 0.97 : 1 }],
                 },
+                !a.danger && elevation.floating,
               ]}
               onPress={() => handleStatusChange(a.next)}
               disabled={isPending}
-              activeOpacity={0.85}
               testID={`action-${a.next.toLowerCase()}`}
             >
               {isPending ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={a.danger ? "#fff" : colors.primaryForeground} />
               ) : (
-                <Text style={styles.actionText}>{a.label}</Text>
+                <>
+                  {!a.danger && <Feather name="check" size={16} color={colors.primaryForeground} />}
+                  <Text
+                    style={[
+                      styles.actionText,
+                      { color: a.danger ? "#fff" : colors.primaryForeground },
+                    ]}
+                  >
+                    {a.label}
+                  </Text>
+                </>
               )}
-            </TouchableOpacity>
+            </Pressable>
           ))}
         </View>
       )}
@@ -192,15 +245,39 @@ export default function BookingDetailScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
-  content: { padding: 16, gap: 12, paddingBottom: 40 },
-  card: { borderRadius: 14, borderWidth: 1, padding: 16, gap: 4 },
-  cardHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 4 },
-  time: { fontSize: 13, fontFamily: "Inter_500Medium" },
-  dateTime: { fontSize: 18, fontFamily: "Inter_700Bold", letterSpacing: -0.3 },
-  sectionLabel: { fontSize: 11, fontFamily: "Inter_600SemiBold", letterSpacing: 0.8, marginBottom: 4 },
-  value: { fontSize: 16, fontFamily: "Inter_600SemiBold" },
-  sub: { fontSize: 14, fontFamily: "Inter_400Regular" },
+  content: { padding: 16, gap: 12, paddingBottom: 60 },
+  heroCard: {
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 18,
+    gap: 8,
+  },
+  card: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 16,
+    gap: 4,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  time: { ...type.label, fontSize: 12.5 },
+  dateTime: { fontFamily: fonts.body, fontSize: 14, marginTop: 2 },
+  heroName: { fontFamily: fonts.serifMedium, fontSize: 32, letterSpacing: -0.5, marginTop: 4 },
+  eyebrow: { ...type.eyebrow, fontSize: 10.5, marginBottom: 4 },
+  value: { fontFamily: fonts.serifMedium, fontSize: 20, letterSpacing: -0.2 },
+  sub: { ...type.body, fontSize: 14 },
+  noteText: { ...type.body, lineHeight: 22 },
   actions: { gap: 10, marginTop: 4 },
-  actionBtn: { borderRadius: 12, paddingVertical: 14, alignItems: "center" },
-  actionText: { color: "#fff", fontSize: 15, fontFamily: "Inter_600SemiBold" },
+  actionBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    borderRadius: 14,
+    paddingVertical: 15,
+  },
+  actionText: { fontSize: 15, fontFamily: fonts.bodySemi, letterSpacing: 0.3 },
 });
