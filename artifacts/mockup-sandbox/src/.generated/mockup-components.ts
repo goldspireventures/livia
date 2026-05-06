@@ -4,13 +4,13 @@ export const modules: ModuleMap = {
   "./components/mockups/bliq-dashboards/Atrium.tsx": () => import("../components/mockups/bliq-dashboards/Atrium.tsx"),
   "./components/mockups/bliq-dashboards/Cockpit.tsx": () => import("../components/mockups/bliq-dashboards/Cockpit.tsx"),
   "./components/mockups/bliq-dashboards/Concierge.tsx": () => import("../components/mockups/bliq-dashboards/Concierge.tsx"),
+  "./components/mockups/brand-explorations/Atelier.tsx": () => import("../components/mockups/brand-explorations/Atelier.tsx"),
+  "./components/mockups/brand-explorations/Aurora.tsx": () => import("../components/mockups/brand-explorations/Aurora.tsx"),
+  "./components/mockups/brand-explorations/Pulse.tsx": () => import("../components/mockups/brand-explorations/Pulse.tsx"),
   "./components/mockups/livia-wordmarks/Atelier.tsx": () => import("../components/mockups/livia-wordmarks/Atelier.tsx"),
   "./components/mockups/livia-wordmarks/Aurum.tsx": () => import("../components/mockups/livia-wordmarks/Aurum.tsx"),
   "./components/mockups/livia-wordmarks/Empress.tsx": () => import("../components/mockups/livia-wordmarks/Empress.tsx"),
   "./components/mockups/livia-wordmarks/Maison.tsx": () => import("../components/mockups/livia-wordmarks/Maison.tsx"),
   "./components/mockups/livia-wordmarks/Monogram.tsx": () => import("../components/mockups/livia-wordmarks/Monogram.tsx"),
-  "./components/mockups/livia-wordmarks/SoftModern.tsx": () => import("../components/mockups/livia-wordmarks/SoftModern.tsx"),
-  "./components/mockups/brand-explorations/Atelier.tsx": () => import("../components/mockups/brand-explorations/Atelier.tsx"),
-  "./components/mockups/brand-explorations/Aurora.tsx": () => import("../components/mockups/brand-explorations/Aurora.tsx"),
-  "./components/mockups/brand-explorations/Pulse.tsx": () => import("../components/mockups/brand-explorations/Pulse.tsx")
+  "./components/mockups/livia-wordmarks/SoftModern.tsx": () => import("../components/mockups/livia-wordmarks/SoftModern.tsx")
 };
