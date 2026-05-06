@@ -53,21 +53,19 @@ app.use(
   pinoHttp({
     logger,
     genReqId: (req) => (req as Request & { id?: string }).id ?? randomUUID(),
-    customProps: (req) => ({
+    customProps: (req, res) => ({
       request_id: (req as Request & { id?: string }).id,
       tenant_id: extractTenantId(req as Request),
       user_id: extractUserId(req as Request),
+      method: req.method,
+      path: (req.url ?? "").split("?")[0],
+      status: res.statusCode,
     }),
+    customAttributeKeys: { responseTime: "duration_ms" },
+    // Drop the verbose default `req`/`res` blobs — top-level fields above are the contract.
     serializers: {
-      req(req) {
-        return {
-          method: req.method,
-          path: (req.url ?? "").split("?")[0],
-        };
-      },
-      res(res) {
-        return { status: res.statusCode };
-      },
+      req: () => undefined as unknown as object,
+      res: () => undefined as unknown as object,
     },
     customSuccessMessage: (req, res, responseTime) =>
       `${req.method} ${(req.url ?? "").split("?")[0]} ${res.statusCode} ${Math.round(responseTime)}ms`,
