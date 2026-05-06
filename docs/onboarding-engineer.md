@@ -9,45 +9,51 @@ Livia is a premium AI-native operating system for appointment-based service busi
 ## What's shipped
 
 - Multi-tenant API (Node 24 + Express 5 + Postgres + Drizzle), with Clerk auth and conflict-safe booking creation under advisory locks.
-- Web dashboard (React + Vite) — the **Cockpit** layout shipped May 5, with a live timeline spine, action queue, and staff-on-shift card.
-- Mobile app (Expo, iOS + Android) — premium polish pass complete: Aurora ambient backdrop, gradient CTAs, haptics, custom sign-in.
+- Web dashboard (React + Vite) — the **Cockpit** layout, with a live timeline spine, action queue, and staff-on-shift card.
+- Mobile app (Expo, iOS + Android) — premium polish: Aurora ambient backdrop, gradient CTAs, haptics, custom Clerk sign-in.
 - Public booking page at `/b/:slug` with chat widget powered by Liv (Anthropic Claude tool-loop, `find_slots` + `create_booking`).
 - AI Inbox — owners watch Liv's conversations live, can take over, and configure tone / greeting / knowledge / auto-book in Settings → AI Assistant.
-- Demo-ready surface — token sweep complete, wow-moment champagne shimmer + welcome aurora sweep, demo script in `docs/demo-script.md`.
+- Brand re-alignment complete (Task #40, May 2026): dashboard is rebased onto the marketing site (`livia.io`), which is the brand bible — see ADR 0004.
 
-## What's next
+## Where to start reading (in this order)
 
-`docs/launch-plan.md` — the single source of truth. Five lanes (Engineering / Brand / Compliance / Launch ops / GTM), three gates (Demo Day ✅ / Closed Beta / Public Launch). Everything else is downstream of that doc.
-
-## Where to start reading
-
-In this order:
-
-1. `replit.md` — repo conventions, brand layers (Aurora vs Aurum), gotchas, AI character.
-2. `docs/launch-plan.md` — what we're shipping and why.
-3. `docs/operating-cadence.md` — how we run the week.
-4. `docs/demo-script.md` — what the product *should feel like* when it works.
-5. `docs/adr/` — architecture decision records (Aurora/Aurum split, Clerk auth, Anthropic via Replit Integrations, pnpm monorepo routing). Read these before you suggest changing anything load-bearing.
-6. `lib/db/src/schema/` — single source of truth for the data model. Conversations live in `conversations.ts`; the 5 AI columns on `businesses` are the contract for Liv's behaviour.
-7. `lib/api-spec/openapi.yaml` — single source of truth for HTTP. `pnpm --filter @workspace/api-spec run codegen` regenerates hooks + Zod schemas. The CI guard is in lane Engineering E4.
+1. [`README.md`](../README.md) — the front door. Repo map, run-it-locally, where to look first.
+2. [`replit.md`](../replit.md) — repo conventions, brand layers (Aurora vs Aurum), gotchas, AI character.
+3. [`docs/launch-plan.md`](./launch-plan.md) — what we're shipping and why. Five lanes, three gates.
+4. [`docs/operating-cadence.md`](./operating-cadence.md) — how we run the week.
+5. [`docs/demo-script.md`](./demo-script.md) — what the product *should feel like* when it works.
+6. [`docs/adr/`](./adr/) — architecture decision records. Read these before suggesting changes to anything load-bearing:
+   - [0001 — Codename Bliq renamed to Livia](./adr/0001-codename-bliq-renamed-to-livia.md)
+   - [0002 — Multi-tenant via `businessId` scoping](./adr/0002-multi-tenant-via-business-id-scoping.md)
+   - [0003 — Clerk for authentication](./adr/0003-clerk-for-auth.md)
+   - [0004 — Marketing site as brand bible](./adr/0004-marketing-site-as-brand-bible.md)
+   - [0005 — OpenAPI as contract source](./adr/0005-openapi-as-contract-source.md)
+   - [0006 — Monorepo via pnpm workspaces](./adr/0006-monorepo-via-pnpm-workspaces.md)
+   - [0007 — Aurora tokens and gradient discipline](./adr/0007-aurora-tokens-and-gradient-discipline.md)
+7. `lib/db/src/schema/` — single source of truth for the data model. Conversations live in `conversations.ts`; the 5 AI columns on `businesses` are the contract for Liv's behaviour.
+8. `lib/api-spec/openapi.yaml` — single source of truth for HTTP. `pnpm --filter @workspace/api-spec run codegen` regenerates hooks + Zod schemas. CI guard: `scripts/check-codegen.sh` (lane Engineering E4).
 
 ## How to run the repo
 
 ```bash
 pnpm install
-pnpm run typecheck                # full graph
-pnpm --filter @workspace/db run push                # dev DB schema
+pnpm run typecheck                                   # full graph
+pnpm --filter @workspace/db run push                 # dev DB schema
 pnpm --filter @workspace/api-server run dev          # API
-# Web + Mobile artifacts auto-start via the workflow runner.
+# Web + Mobile + marketing artifacts auto-start via the workflow runner.
 ```
 
-Required env vars are listed in `replit.md` → "Run & Operate". Anthropic credentials come via Replit AI Integrations — there is no `ANTHROPIC_API_KEY` to set.
+Required env: `CLERK_*`, `DATABASE_URL`, `AI_INTEGRATIONS_ANTHROPIC_*`. Anthropic credentials come via Replit AI Integrations — there is no `ANTHROPIC_API_KEY` to set.
+
+Optional (transports degrade to PENDING-only writes when absent — no boot failure): `SENTRY_DSN_*`, `LOG_LEVEL`, `TWILIO_*`, `RESEND_*`, `PUBLIC_BASE_URL`, `INTERNAL_CRON_SECRET`.
 
 ## Brand rules — non-negotiable
 
-- **Aurora** = product surface. Cyan (`#06b6d4`) is the only primary action colour. Violet for AI moments, mint for success.
+See [ADR 0007](./adr/0007-aurora-tokens-and-gradient-discipline.md) for the full statement. The short version:
+
+- **Aurora** = product surface. Cyan `#06b6d4` is the only primary action colour. Violet for AI moments, mint for success. The aurora gradient is an **accent**, not a headline treatment.
 - **Aurum** = wordmark only — champagne / cream / bronze chrome. **Never** Aurum on action buttons. The single sanctioned exception is `.celebrate-shimmer` (one-shot champagne sweep on booking confirmation).
-- **Wordmark** = Cormorant Garamond, italic *v*. Lock-up is on canvas at `livia-wm-aurum`.
+- **Wordmark** = Cormorant Garamond, italic *v*. Always rendered via `LiviaWordmark` / `LiviaMark`.
 - **Voice** = precise, calm, slightly poetic. Empty states whisper. AI suggestions invite, never pressure.
 - Tagline: *For barbershops, tattoo studios, dental practices — and every appointment in between.*
 
@@ -66,11 +72,38 @@ Required env vars are listed in `replit.md` → "Run & Operate". Anthropic crede
 
 ## Things to never do
 
-- **Never reintroduce the name "Bliq" in user-facing copy or new code.** The repo was fully renamed to Livia in Task #38 (May 6 cleanup). The only surviving `bliq` strings are: (a) the legacy mobile URL scheme `bliq-mobile://` kept as a second entry in `app.json` for in-flight OAuth, (b) the `LEGACY_STORAGE_KEY` constant powering the one-shot AsyncStorage migration, and (c) historical brand-exploration mockups under `artifacts/mockup-sandbox/src/components/mockups/brand-explorations/`. All three are scheduled for cleanup in Task #38's follow-up + Task #39.
-- **Never use the name "Olivia" anywhere** — in code, comments, copy, file names, UI strings, or commit messages. It's the founder's daughter's name and is privately reserved. There is a CI guard in lane Compliance C12 that fails the build if it appears.
-- **Never use Aurum for an action button.** Cyan stays the action colour. The only exception is the celebrate shimmer.
-- **Never edit `lib/db/src/schema/*` without a migration**, and never edit `lib/api-spec/openapi.yaml` without re-running `pnpm codegen`.
-- **Never deploy on a Friday after 16:00 IST** unless it's a P0 hotfix (see `docs/operating-cadence.md`).
+- **Never reintroduce the name "Bliq" in user-facing copy or new code.** See [ADR 0001](./adr/0001-codename-bliq-renamed-to-livia.md). Three deliberate `bliq` strings survive (mobile URL scheme, AsyncStorage migration shim, archived brand mockups) — each is documented in its own file.
+- **Never use the name "Olivia" anywhere** — in code, comments, copy, file names, UI strings, or commit messages. CI guard fails the build (lane Compliance C12).
+- **Never use Aurum for an action button.** See [ADR 0007](./adr/0007-aurora-tokens-and-gradient-discipline.md).
+- **Never edit `lib/db/src/schema/*` without a migration**, and never edit `lib/api-spec/openapi.yaml` without re-running `pnpm codegen` (CI guard: `scripts/check-codegen.sh`).
+- **Never deploy on a Friday after 16:00 IST** unless it's a P0 hotfix. See [`docs/operating-cadence.md`](./operating-cadence.md).
+
+## Day 1 / Week 1 / Month 1
+
+**Day 1 — productive by EOD.**
+
+- [ ] Read `README.md` end-to-end.
+- [ ] Read this file end-to-end.
+- [ ] Run `pnpm install` + `pnpm run typecheck` — confirm green.
+- [ ] Bring up the API + dashboard locally; sign in via Clerk; create a test booking against a seeded shop (`pnpm --filter scripts run seed:demo`).
+- [ ] Read ADRs 0001, 0002, 0007 — the three you'll feel within your first week.
+- [ ] Skim `docs/demo-script.md` to understand what "good" looks like.
+- [ ] Pick one PROPOSED tracker task that touches the surface you're least familiar with. Don't start it yet.
+
+**Week 1 — first PR landed.**
+
+- [ ] Read the remaining ADRs (0003, 0004, 0005, 0006).
+- [ ] Read `lib/db/src/schema/businesses.ts` and `lib/db/src/schema/conversations.ts` — the two most important schemas.
+- [ ] Read `lib/api-spec/openapi.yaml` — at least the AI Inbox + bookings sections.
+- [ ] Open a branch for that tracker task. First PR is small (< 200 LOC). Ship it.
+- [ ] Sit in on one design-partner call (see `docs/operating-cadence.md`).
+
+**Month 1 — owning a lane.**
+
+- [ ] Take ownership of one of the five lanes in `docs/launch-plan.md`. The founder remains the gate-keeper but you drive the next 2-3 items in the lane.
+- [ ] Have written at least one ADR — for a decision you made that future-you (or a future hire) would appreciate not having to re-litigate.
+- [ ] Have shipped to TestFlight or Play Store internal testing at least once.
+- [ ] Have read and understood the EU AI Act Art. 50 disclosure surfaces (Compliance C1, C2) — they are non-obvious and load-bearing for our launch posture.
 
 ## When you're stuck
 
