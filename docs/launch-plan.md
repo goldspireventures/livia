@@ -135,7 +135,7 @@ Sizing: **S** ≤ one focused day · **M** 2-5 days · **L** > 1 week. Target ga
 
 | # | Item | Size | Gate |
 |---|---|---|---|
-| G1 | Design-partner shortlist — 25 Dublin shops, hand-picked across barber / nails / lashes / tattoo / dental. → `.local/research/design-partners/shortlist.md` + tracker at `.local/research/design-partners/tracker.md`. | S | 2 |
+| G1 | Design-partner shortlist — 25 Dublin shops, hand-picked across barber / nails / lashes / tattoo / dental. → `.local/research/design-partners/shortlist.md` + tracker at `.local/research/design-partners/tracker.md`. *(Both intentionally under `.local/` — research notes follow the same gitignored-by-design convention as design-partner call notes in `docs/operating-cadence.md`.)* | S | 2 |
 | G2 | Outreach script v1 — DM (3 vertical variants) + walk-in + intro email + follow-up + warm-intro. Founder-led, no SDR voice. → `docs/gtm/outreach-scripts.md`. | S | 2 |
 | G3 | Onboarding loom #1 — "Get Liv answering your DMs in 5 minutes." Timed beat script. → `docs/gtm/loom-onboarding-1.md`. Recording is a separate founder action. | S | 2 |
 | G4 | Onboarding loom #2 — "Wire up your Stripe to take deposits." | S | 3 |

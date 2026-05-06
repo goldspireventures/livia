@@ -4,7 +4,7 @@
 
 Five scripts the founder uses to convert a stranger into a design partner. Founder voice — calm, specific, not SDR-ish. Each script ≤ 120 words. Read each one aloud before sending — if it doesn't sound like a person, rewrite it.
 
-**Merge fields used throughout:** `{{first_name}}`, `{{shop_name}}`, `{{neighbourhood}}`, `{{specific_observation}}`, `{{founder_first_name}}`.
+**Merge fields used throughout:** `{{first_name}}`, `{{shop_name}}`, `{{neighbourhood}}`, `{{specific_observation}}`, `{{founder_first_name}}`, `{{mutual_first_name}}` (warm-intro only).
 
 ---
 
