@@ -7,6 +7,8 @@
 
 This is the single authoritative document that sequences Livia from "we can demo this" to "real shops are paying us in production." It supersedes earlier "Bliq"-era plans, which were removed during the May 6 cleanup pass.
 
+**Strategy anchors (added 2026-05-06, Task #59):** the multi-tenant + persona model is locked in [ADR 0010](./adr/0010-multi-tenant-and-persona-model.md). Mobile is the flagship surface per [ADR 0011](./adr/0011-mobile-flagship.md). The personas this product serves are catalogued in [`docs/personas.md`](./personas.md) (read the *hotel principle* section first — it's the experience tenet every persona is judged against). Policy back-stop in [`docs/policy/`](./policy/). Mobile execution sequence in [`docs/mobile-roadmap.md`](./mobile-roadmap.md). Per-persona demo experience spec in [`docs/demo-gateway.md`](./demo-gateway.md).
+
 The plan is organised as **five lanes** running in parallel, gated by **three release gates**. Each gate has explicit, non-negotiable acceptance criteria. No gate is "passed" by feel — only by criteria check.
 
 ---
@@ -166,7 +168,7 @@ Sizing: **S** ≤ one focused day · **M** 2-5 days · **L** > 1 week. Target ga
 The stale `.local/tasks/RELEASE-PLAN.md` and the 12 legacy `01-…17-` task files were audited and folded into the lanes above. Specifically:
 
 - `01-brand-story-first-impression` → Brand B1, B2, B3.
-- `02-personas-roles-action-dashboard` → covered by the shipped Cockpit dashboard + the OWNER/ADMIN/STAFF split landed in Task #48 (see ADR 0009). Further role expansion (FRONT_DESK, ORG_OWNER) is deferred until post-Gate-3 and is **not** in this plan.
+- `02-personas-roles-action-dashboard` → covered by the Cockpit dashboard, the OWNER/ADMIN/STAFF split (Task #48, ADR 0009), the multi-tenant + persona model (Task #59, ADR 0010), and the per-persona experience tenet in `docs/personas.md`. The mobile roadmap to flagship (`docs/mobile-roadmap.md`) lands in phased build tasks across Gate 2 + 3. Further role expansion (FRONT_DESK as a real role, ORG_OWNER) and consolidated org-level billing remain deferred until post-Gate-3.
 - `03-ai-inbound-and-notifications` → Lane 4 (L3, L4, L5); the AI inbox itself shipped May 5.
 - `04-revenue-protection-deposits-tips` → Launch ops L6, L7 (infra) + a separate post-Gate-3 product task.
 - `05-walkins-recurring-import-whitelabel` → out of v1 launch scope; revisit post-Gate-3.
