@@ -85,7 +85,7 @@ export default function StaffDetailPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Status</p>
-                <p className={`font-medium ${(member as any).isActive ? "text-green-500" : "text-muted-foreground"}`}>
+                <p className={`font-medium ${(member as any).isActive ? "text-[hsl(var(--chart-3))]" : "text-muted-foreground"}`}>
                   {(member as any).isActive ? "Active" : "Inactive"}
                 </p>
               </div>

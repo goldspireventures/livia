@@ -242,7 +242,7 @@ export default function InboxPage() {
                         </Badge>
                       ) : null}
                       {c.bookingCount > 0 && (
-                        <Badge className="h-5 px-1.5 text-[10px] gap-1 bg-green-500/15 text-green-500 border-green-500/30">
+                        <Badge className="h-5 px-1.5 text-[10px] gap-1 bg-[hsl(var(--chart-3))]/15 text-[hsl(var(--chart-3))] border-[hsl(var(--chart-3))]/30">
                           <CalendarCheck className="h-2.5 w-2.5" />
                           {c.bookingCount} booking{c.bookingCount > 1 ? "s" : ""}
                         </Badge>

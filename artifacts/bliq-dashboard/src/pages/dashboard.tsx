@@ -177,6 +177,28 @@ export default function DashboardPage() {
     return () => clearInterval(id);
   }, []);
 
+  // One-shot welcome aurora sweep, fired once per browser session on
+  // first cockpit mount. Respects reduced-motion via the CSS class itself
+  // and the global celebrate kill-switch.
+  const [showWelcomeSweep, setShowWelcomeSweep] = useState(false);
+  useEffect(() => {
+    let timeoutId: number | undefined;
+    try {
+      const seen = window.sessionStorage.getItem("livia.welcomeSweep") === "1";
+      const off = window.localStorage.getItem("livia.celebrate") === "off";
+      if (!seen && !off) {
+        setShowWelcomeSweep(true);
+        window.sessionStorage.setItem("livia.welcomeSweep", "1");
+        timeoutId = window.setTimeout(() => setShowWelcomeSweep(false), 1900);
+      }
+    } catch {
+      // sessionStorage may be unavailable (private mode in some browsers).
+    }
+    return () => {
+      if (timeoutId !== undefined) window.clearTimeout(timeoutId);
+    };
+  }, []);
+
   // Filter to today's bookings only for both timeline + queue
   const todaysBookings = useMemo(() => {
     if (!summary?.upcomingBookings) return [];
@@ -374,11 +396,13 @@ export default function DashboardPage() {
 
   return (
     <div
-      className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
+      className={`flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 ${
+        showWelcomeSweep ? "welcome-sweep" : ""
+      }`}
       style={{ fontFamily: "var(--app-font-sans)" }}
     >
       {/* ============== Page header ============== */}
-      <header className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+      <header className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between relative z-10">
         <div className="flex items-center gap-3 flex-wrap">
           <h1
             className="text-base font-semibold tracking-tight"

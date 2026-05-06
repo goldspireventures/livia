@@ -91,13 +91,25 @@ Production dashboard at `artifacts/bliq-dashboard/src/pages/dashboard.tsx` is th
 - `expo-haptics`: `Light` on form interactions, `Medium` on primary CTAs. Always `Platform.OS !== "web"` guarded.
 - `StatsCard` has `variant: "default" | "hero"` — hero wraps in 1px Aurora gradient border.
 
+## Demo readiness (Task #23, partial)
+
+- **Visual token sweep:** removed every `bg-yellow-500 / text-green-500 / text-red-500 / text-yellow / bg-green-500 / bg-gray-50 / text-gray-900` from dashboard pages (bookings, booking-detail, customer-detail, staff, staff-detail, inbox, public-booking, not-found). All status colors now route through `--chart-3` (success/mint), `--chart-4` (warning), `--destructive`, `--primary`. Mobile `StatusBadge.tsx` rebuilt to use `colors` + `aurora` tokens.
+- **Wow moments shipped:**
+  - Champagne shimmer + soft three-note Web-Audio chime on the public booking confirmation. Code: `artifacts/bliq-dashboard/src/lib/celebrate.ts` + `.celebrate-shimmer` keyframe in `index.css`.
+  - One-shot welcome aurora sweep on dashboard cockpit first-mount per browser session — `.welcome-sweep` keyframe in `index.css`, gated via `sessionStorage["livia.welcomeSweep"]`.
+  - All wow moments respect `prefers-reduced-motion` and the global `localStorage["livia.celebrate"] = "off"` kill switch.
+- **Demo script:** `docs/demo-script.md` — founder-narratable 90-second walkthrough, reset-between-demos workflow, kill-switch instructions.
+- **Reset-demo path:** already wired — `Settings → Demo & Data` renders `<DemoDataControls variant="settings" />` with both reload + wipe.
+- **Deferred** to the queued "Livia post-demo launch plan" follow-up: Playwright E2E + CI wiring, Lighthouse 90+ audits, full architect-review pass, "Liv made you €X today" cockpit line (needs `bookings.sourceConversationId` schema column + OpenAPI/codegen ripple), public-booking auto-generated `og:image`, mobile pull-to-refresh haptic spinner, full mobile state-coverage walk.
+
 ## Gotchas
 
 - **Always `pnpm run typecheck` before declaring done** — generated hooks + Zod schemas have strict shapes that ripple.
 - **Don't rename `bliq-mobile` slug or scheme** — breaks deep links and Google OAuth callback.
 - **Don't change mobile `STORAGE_KEY = "bliq_current_business_id"`** in `BusinessContext.tsx` — would orphan stored business selections on existing devices.
-- **Aurum is brand-only**, never use champagne for action buttons. Cyan stays the primary action color.
+- **Aurum is brand-only**, never use champagne for action buttons. Cyan stays the primary action color. The one sanctioned exception is the celebrate shimmer (`.celebrate-shimmer`) — a one-shot champagne sweep on booking confirmation.
 - **`business?.name.charAt(0)` fallback** in `app-layout.tsx` still shows "B" when business name is empty — cosmetic, defer until directory rename round.
+- **`shadow*` / `pointerEvents` deprecation warnings** from React Native Web are expected until Expo upstream ships fixes; they do not block the demo.
 
 ## Pointers
 

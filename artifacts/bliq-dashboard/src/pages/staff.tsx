@@ -159,7 +159,7 @@ export default function StaffPage() {
                       <span
                         className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                           member.isActive
-                            ? "bg-green-500/10 text-green-500"
+                            ? "bg-[hsl(var(--chart-3))]/10 text-[hsl(var(--chart-3))]"
                             : "bg-muted text-muted-foreground"
                         }`}
                       >

@@ -14,9 +14,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Mail, Phone, Calendar, AlertCircle } from "lucide-react";
 
 const STATUS_COLORS: Record<string, string> = {
-  PENDING: "text-yellow-500",
+  PENDING: "text-[hsl(var(--chart-4))]",
   CONFIRMED: "text-primary",
-  COMPLETED: "text-green-500",
+  COMPLETED: "text-[hsl(var(--chart-3))]",
   CANCELLED: "text-destructive",
   NO_SHOW: "text-muted-foreground",
 };

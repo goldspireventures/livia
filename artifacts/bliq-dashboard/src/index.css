@@ -312,6 +312,82 @@
   }
 }
 
+/* ============================================================
+   CELEBRATE — champagne shimmer for the booking-confirmed moment.
+   Wraps a confirmation surface; the gradient sweeps across once.
+   Respects reduced-motion via the host element opting out.
+   ============================================================ */
+.celebrate-shimmer {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.celebrate-shimmer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    rgba(217, 195, 154, 0)   30%,
+    rgba(246, 243, 236, 0.55) 48%,
+    rgba(217, 195, 154, 0.45) 52%,
+    rgba(138, 117, 73, 0)    70%,
+    transparent 100%
+  );
+  background-size: 220% 100%;
+  background-position: 120% 0;
+  animation: celebrate-sweep 1400ms cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+  mix-blend-mode: screen;
+}
+@keyframes celebrate-sweep {
+  0%   { background-position: 120% 0; opacity: 0; }
+  20%  { opacity: 1; }
+  100% { background-position: -20% 0; opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .celebrate-shimmer::before { display: none; }
+}
+
+/* ============================================================
+   WELCOME SWEEP — one-shot aurora wash on first cockpit load.
+   Used by the dashboard header on first sign-in / per-session.
+   ============================================================ */
+.welcome-sweep {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.welcome-sweep::after {
+  content: "";
+  position: absolute;
+  inset: -20% -10%;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+      ellipse at 20% 30%,
+      hsl(var(--chart-1) / 0.18) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse at 80% 20%,
+      hsl(var(--chart-3) / 0.14) 0%,
+      transparent 60%
+    );
+  opacity: 0;
+  animation: welcome-aurora 1800ms cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+@keyframes welcome-aurora {
+  0%   { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  35%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .welcome-sweep::after { display: none; }
+}
+
 /**
  * Using the elevate system.
  * Automatic contrast adjustment.

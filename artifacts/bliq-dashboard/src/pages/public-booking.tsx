@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { playCelebrationChime, celebrationEnabled } from "@/lib/celebrate";
 import { useParams } from "wouter";
 import {
   useGetPublicBusiness,
@@ -175,6 +176,8 @@ export default function PublicBookingPage() {
         onSuccess: (data) => {
           setConfirmation(data as BookingConfirmation);
           setStep("confirmed");
+          // Champagne shimmer + soft chime — gated by reduced-motion + opt-out.
+          playCelebrationChime();
         },
         onError: (err: any) => {
           const msg = err?.response?.data?.error ?? "Slot no longer available";
@@ -527,9 +530,13 @@ export default function PublicBookingPage() {
 
         {/* Step: Confirmed */}
         {step === "confirmed" && confirmation && (
-          <div className="text-center space-y-6 animate-in fade-in zoom-in-95 duration-500">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-500/10 mx-auto">
-              <CheckCircle2 className="h-10 w-10 text-green-500" />
+          <div
+            className={`text-center space-y-6 animate-in fade-in zoom-in-95 duration-500 rounded-2xl p-2 ${
+              celebrationEnabled() ? "celebrate-shimmer" : ""
+            }`}
+          >
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[hsl(var(--chart-3))]/10 mx-auto">
+              <CheckCircle2 className="h-10 w-10 text-[hsl(var(--chart-3))]" />
             </div>
             <div>
               <h2 className="text-2xl font-bold" data-testid="text-confirmed">
@@ -564,7 +571,7 @@ export default function PublicBookingPage() {
                   <span className="text-muted-foreground">Status</span>
                   <Badge
                     variant="outline"
-                    className="text-yellow-500 border-yellow-500/30"
+                    className="text-[hsl(var(--chart-4))] border-[hsl(var(--chart-4))]/30"
                   >
                     {confirmation.status}
                   </Badge>

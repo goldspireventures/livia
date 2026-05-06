@@ -16,9 +16,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CalendarPlus, Search, Calendar, ChevronRight } from "lucide-react";
 
 const STATUS_COLORS: Record<string, string> = {
-  PENDING: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
+  PENDING: "bg-[hsl(var(--chart-4))]/10 text-[hsl(var(--chart-4))] border-[hsl(var(--chart-4))]/20",
   CONFIRMED: "bg-primary/10 text-primary border-primary/20",
-  COMPLETED: "bg-green-500/10 text-green-500 border-green-500/20",
+  COMPLETED: "bg-[hsl(var(--chart-3))]/10 text-[hsl(var(--chart-3))] border-[hsl(var(--chart-3))]/20",
   CANCELLED: "bg-destructive/10 text-destructive border-destructive/20",
   NO_SHOW: "bg-muted text-muted-foreground border-border",
 };

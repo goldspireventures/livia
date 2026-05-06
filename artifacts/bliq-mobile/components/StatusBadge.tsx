@@ -1,20 +1,23 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useColorScheme } from "react-native";
+import colors, { aurora } from "@/constants/colors";
 
+// Aurora-aligned status palette. Tints derived from semantic tokens
+// (warning, primary cyan, mint success, destructive, muted).
 const LIGHT: Record<string, { bg: string; color: string; label: string }> = {
-  PENDING:   { bg: "#fef3c7", color: "#92400e", label: "Pending" },
-  CONFIRMED: { bg: "#d1fae5", color: "#065f46", label: "Confirmed" },
-  CANCELLED: { bg: "#fee2e2", color: "#991b1b", label: "Cancelled" },
-  COMPLETED: { bg: "#dbeafe", color: "#1e40af", label: "Completed" },
-  NO_SHOW:   { bg: "#f3f4f6", color: "#374151", label: "No-show" },
+  PENDING:   { bg: "#fef3e7", color: colors.light.warning,     label: "Pending" },
+  CONFIRMED: { bg: "#e0f7fb", color: aurora.cyan,              label: "Confirmed" },
+  COMPLETED: { bg: "#e0f7ee", color: aurora.mint,              label: "Completed" },
+  CANCELLED: { bg: "#fde8e8", color: colors.light.destructive, label: "Cancelled" },
+  NO_SHOW:   { bg: colors.light.muted, color: colors.light.mutedForeground, label: "No-show" },
 };
 const DARK: Record<string, { bg: string; color: string; label: string }> = {
-  PENDING:   { bg: "#451a03", color: "#fbbf24", label: "Pending" },
-  CONFIRMED: { bg: "#064e3b", color: "#34d399", label: "Confirmed" },
-  CANCELLED: { bg: "#450a0a", color: "#f87171", label: "Cancelled" },
-  COMPLETED: { bg: "#1e3a5f", color: "#60a5fa", label: "Completed" },
-  NO_SHOW:   { bg: "#1f2937", color: "#9ca3af", label: "No-show" },
+  PENDING:   { bg: "rgba(245,158,11,0.15)", color: colors.dark.warning,     label: "Pending" },
+  CONFIRMED: { bg: "rgba(6,182,212,0.15)",  color: aurora.cyan,             label: "Confirmed" },
+  COMPLETED: { bg: "rgba(16,185,129,0.15)", color: aurora.mint,             label: "Completed" },
+  CANCELLED: { bg: "rgba(239,68,68,0.15)",  color: colors.dark.destructive, label: "Cancelled" },
+  NO_SHOW:   { bg: colors.dark.muted, color: colors.dark.mutedForeground, label: "No-show" },
 };
 
 interface Props {
