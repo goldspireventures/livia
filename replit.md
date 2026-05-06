@@ -61,7 +61,7 @@ The AI is **Liv** — the brand's quiet helper. Liv has a name and a personality
   - Outbound SMS prefix + outbound email block when Liv authors them (Art. 50, wired when Twilio/Resend land in Task #28).
   - Privacy policy + Terms (GDPR Art. 22 — automated decision-making).
   - Anthropic AUP compliance copy on the public booking page.
-- **Disclosure copy is centralised** in `artifacts/api-server/src/lib/ai-disclosure.ts` and treated as legal text — never paraphrased, never per-business overridable. Frontend constants in `chat-widget.tsx` MUST stay byte-identical (drift checked in code review).
+- **Disclosure copy is centralised** in the shared `@workspace/ai-disclosure` package (`lib/ai-disclosure/src/index.ts`) and treated as legal text — never paraphrased, never per-business overridable. Both api-server (`src/lib/ai-disclosure.ts` is a thin re-export) and the dashboard `chat-widget.tsx` import from this package, so drift between customer view and Inbox view is structurally impossible. Outbound SMS/email always go through `services/ai-outbound.service.ts` (`sendAiSms`, `sendAiEmail`) which apply the disclosure before persistence; transport is pluggable (Task #28 wires Twilio/Resend).
 - **One name to never surface anywhere** in repo, copy, comments, UI, or commits: **Olivia** (founder's daughter — kept private).
 
 ## Product surfaces
