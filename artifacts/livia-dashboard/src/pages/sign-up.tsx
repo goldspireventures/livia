@@ -22,7 +22,7 @@ export default function SignUpPage() {
           <div className="mb-10 text-center">
             <h1 className="font-serif text-4xl md:text-5xl font-normal leading-[1.1] tracking-tight">
               Start booking
-              <span className="block mt-1 text-white/55 italic">smarter.</span>
+              <span className="block mt-1 italic text-muted-foreground/90">smarter.</span>
             </h1>
             <p className="mt-5 text-sm text-muted-foreground">
               Create your account in under a minute.
@@ -34,7 +34,7 @@ export default function SignUpPage() {
               elements: {
                 formButtonPrimary:
                   "bg-primary hover:bg-primary/90 text-primary-foreground",
-                card: "bg-card/80 backdrop-blur-xl border border-border shadow-2xl",
+                card: "bg-card/80 backdrop-blur-xl border border-border shadow-xl",
               },
             }}
             routing="path"
