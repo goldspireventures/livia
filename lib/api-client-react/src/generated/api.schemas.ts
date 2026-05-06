@@ -5,6 +5,36 @@
  * Bliq API — multi-tenant appointment operating system
  * OpenAPI spec version: 0.1.0
  */
+export type BusinessCommunicationsProviderStatusSmsProvider =
+  (typeof BusinessCommunicationsProviderStatusSmsProvider)[keyof typeof BusinessCommunicationsProviderStatusSmsProvider];
+
+export const BusinessCommunicationsProviderStatusSmsProvider = {
+  twilio: "twilio",
+  noop: "noop",
+} as const;
+
+export type BusinessCommunicationsProviderStatusEmailProvider =
+  (typeof BusinessCommunicationsProviderStatusEmailProvider)[keyof typeof BusinessCommunicationsProviderStatusEmailProvider];
+
+export const BusinessCommunicationsProviderStatusEmailProvider = {
+  resend: "resend",
+  noop: "noop",
+} as const;
+
+export type BusinessCommunicationsProviderStatus = {
+  smsProvider: BusinessCommunicationsProviderStatusSmsProvider;
+  emailProvider: BusinessCommunicationsProviderStatusEmailProvider;
+  emailDefaultFrom: string | null;
+};
+
+export interface BusinessCommunications {
+  twilioPhoneNumber: string | null;
+  twilioPhoneSid: string | null;
+  resendFromAddress: string | null;
+  smsWebhookUrl: string | null;
+  providerStatus: BusinessCommunicationsProviderStatus;
+}
+
 export interface HealthStatus {
   status: string;
 }
@@ -765,3 +795,92 @@ export const ListConversationsStatus = {
   HANDED_OFF: "HANDED_OFF",
   CLOSED: "CLOSED",
 } as const;
+
+export type ListAvailableSmsNumbersParams = {
+  countryCode?: string;
+  areaCode?: string;
+};
+
+export type ListAvailableSmsNumbers200NumbersItem = {
+  phoneNumber: string;
+  friendlyName: string;
+  isoCountry: string;
+};
+
+export type ListAvailableSmsNumbers200 = {
+  numbers: ListAvailableSmsNumbers200NumbersItem[];
+};
+
+export type ProvisionSmsNumberBody = {
+  /** E.164 (e.g. +35315551234). Omit to let server pick. */
+  phoneNumber?: string;
+  countryCode?: string;
+  /** Defaults to '1' (Dublin) when countryCode=IE. */
+  areaCode?: string;
+};
+
+export type ProvisionSmsNumber201 = {
+  twilioPhoneNumber: string;
+  twilioPhoneSid: string;
+  smsWebhookUrl: string;
+};
+
+export type UpdateEmailFromAddressBody = {
+  /** e.g. "Acme Salon <hi@acme.com>". Pass null to clear. */
+  fromAddress?: string | null;
+};
+
+export type UpdateEmailFromAddress200 = {
+  resendFromAddress?: string | null;
+};
+
+export type TestSendCommunicationBodyChannel =
+  (typeof TestSendCommunicationBodyChannel)[keyof typeof TestSendCommunicationBodyChannel];
+
+export const TestSendCommunicationBodyChannel = {
+  SMS: "SMS",
+  EMAIL: "EMAIL",
+} as const;
+
+export type TestSendCommunicationBody = {
+  channel: TestSendCommunicationBodyChannel;
+  to: string;
+  message?: string;
+};
+
+export type TestSendCommunication200Channel =
+  (typeof TestSendCommunication200Channel)[keyof typeof TestSendCommunication200Channel];
+
+export const TestSendCommunication200Channel = {
+  SMS: "SMS",
+  EMAIL: "EMAIL",
+} as const;
+
+export type TestSendCommunication200Status =
+  (typeof TestSendCommunication200Status)[keyof typeof TestSendCommunication200Status];
+
+export const TestSendCommunication200Status = {
+  PENDING: "PENDING",
+  SENT: "SENT",
+  FAILED: "FAILED",
+} as const;
+
+export type TestSendCommunication200 = {
+  channel: TestSendCommunication200Channel;
+  status: TestSendCommunication200Status;
+  body: string;
+  conversationId?: string;
+};
+
+export type TwilioSmsInboundBody = {
+  From: string;
+  To: string;
+  Body: string;
+  MessageSid?: string;
+};
+
+export type CronSendReminders200 = {
+  checked: number;
+  sent: number;
+  skipped: number;
+};

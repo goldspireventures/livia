@@ -1,14 +1,8 @@
-// Boot wiring for outbound communication transports. Reads secrets at
-// startup and binds Twilio + Resend into the ai-outbound service if the
-// secrets are present. Absent secrets → the default no-op transports stay
-// in place so disclosure-correct PENDING rows still land in
-// notificationLogs (Closed-Beta safe behaviour).
-//
-// Per-shop sender selection happens here too: the SMS transport accepts an
-// optional `from` (the shop's Twilio phone number); if missing it falls
-// back to TWILIO_DEFAULT_FROM. The email transport uses the
-// per-business `resendFromAddress` if provided in the call site, else
-// RESEND_DEFAULT_FROM.
+// Boot wiring for outbound transports. Binds Twilio + Resend into the
+// ai-outbound service when their creds are present; otherwise the default
+// throwing transports stay in place so missing-secret sends land FAILED
+// (never silently SENT). Per-shop sender (`from`) falls back to
+// TWILIO_DEFAULT_FROM / RESEND_DEFAULT_FROM.
 
 import { createResendClient } from "@workspace/integrations-resend";
 import { createTwilioClient } from "@workspace/integrations-twilio";

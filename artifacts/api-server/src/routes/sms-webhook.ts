@@ -1,16 +1,7 @@
-// Inbound SMS webhook from Twilio. Twilio POSTs application/x-www-form-
-// urlencoded with at least { From, To, Body, MessageSid }. We:
-//   1. Validate the request signature using the shop's authToken.
-//   2. Look up the business by `To` (their provisioned twilioPhoneNumber).
-//   3. Find or create a customer by phone, find or create an OPEN
-//      SMS conversation, append the inbound USER message.
-//   4. Hand off to the AI chat tool-loop. Outbound reply is sent via
-//      sendAiSms (Twilio transport), which prefixes the AI Act Art. 50
-//      disclosure on the first outbound SMS of the thread.
-//   5. ACK with empty TwiML so Twilio doesn't auto-reply.
-//
-// Failures MUST still ACK 200 with empty TwiML — Twilio's retry behaviour
-// on 5xx will hammer the same broken state.
+// Inbound SMS webhook from Twilio. Validates signature, resolves the
+// business by To-number, persists the inbound message, then fires the AI
+// reply off-thread. Always ACKs 200 with empty TwiML so Twilio doesn't
+// retry against a broken state.
 
 import { Router, type IRouter, type Request } from "express";
 import express from "express";

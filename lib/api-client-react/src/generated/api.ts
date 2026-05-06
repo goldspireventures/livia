@@ -24,6 +24,7 @@ import type {
   BookingDetail,
   BookingListResponse,
   Business,
+  BusinessCommunications,
   ConflictResponse,
   ConversationDetail,
   ConversationListItem,
@@ -35,6 +36,7 @@ import type {
   CreateServiceBody,
   CreateStaffBody,
   CreateTimeOffBody,
+  CronSendReminders200,
   Customer,
   CustomerDetail,
   CustomerListResponse,
@@ -45,6 +47,8 @@ import type {
   GetPublicSlotsParams,
   HealthStatus,
   ListAvailabilityRulesParams,
+  ListAvailableSmsNumbers200,
+  ListAvailableSmsNumbersParams,
   ListBookingsParams,
   ListConversationsParams,
   ListCustomersParams,
@@ -53,6 +57,8 @@ import type {
   ListTimeOffParams,
   MarketingLeadAck,
   NotFoundResponse,
+  ProvisionSmsNumber201,
+  ProvisionSmsNumberBody,
   PublicBookingConfirmation,
   PublicBusiness,
   PublicChatBody,
@@ -62,12 +68,17 @@ import type {
   SetStaffServicesBody,
   SlotListResponse,
   Staff,
+  TestSendCommunication200,
+  TestSendCommunicationBody,
   TimeOff,
+  TwilioSmsInboundBody,
   UnauthorizedResponse,
   UpdateBookingBody,
   UpdateBusinessBody,
   UpdateConversationBody,
   UpdateCustomerBody,
+  UpdateEmailFromAddress200,
+  UpdateEmailFromAddressBody,
   UpdateMeBody,
   UpdateServiceBody,
   UpdateStaffBody,
@@ -4381,4 +4392,766 @@ export const useCreateMarketingLead = <
   TContext
 > => {
   return useMutation(getCreateMarketingLeadMutationOptions(options));
+};
+
+/**
+ * @summary Read provisioned Twilio number + Resend from-address + provider status
+ */
+export const getGetBusinessCommunicationsUrl = (businessId: string) => {
+  return `/api/businesses/${businessId}/communications`;
+};
+
+export const getBusinessCommunications = async (
+  businessId: string,
+  options?: RequestInit,
+): Promise<BusinessCommunications> => {
+  return customFetch<BusinessCommunications>(
+    getGetBusinessCommunicationsUrl(businessId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetBusinessCommunicationsQueryKey = (businessId: string) => {
+  return [`/api/businesses/${businessId}/communications`] as const;
+};
+
+export const getGetBusinessCommunicationsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getBusinessCommunications>>,
+  TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+>(
+  businessId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getBusinessCommunications>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetBusinessCommunicationsQueryKey(businessId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getBusinessCommunications>>
+  > = ({ signal }) =>
+    getBusinessCommunications(businessId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!businessId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getBusinessCommunications>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetBusinessCommunicationsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getBusinessCommunications>>
+>;
+export type GetBusinessCommunicationsQueryError = ErrorType<
+  UnauthorizedResponse | NotFoundResponse
+>;
+
+/**
+ * @summary Read provisioned Twilio number + Resend from-address + provider status
+ */
+
+export function useGetBusinessCommunications<
+  TData = Awaited<ReturnType<typeof getBusinessCommunications>>,
+  TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+>(
+  businessId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getBusinessCommunications>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetBusinessCommunicationsQueryOptions(
+    businessId,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Search Twilio for available local SMS numbers (defaults to IE)
+ */
+export const getListAvailableSmsNumbersUrl = (
+  businessId: string,
+  params?: ListAvailableSmsNumbersParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/businesses/${businessId}/communications/sms/available-numbers?${stringifiedParams}`
+    : `/api/businesses/${businessId}/communications/sms/available-numbers`;
+};
+
+export const listAvailableSmsNumbers = async (
+  businessId: string,
+  params?: ListAvailableSmsNumbersParams,
+  options?: RequestInit,
+): Promise<ListAvailableSmsNumbers200> => {
+  return customFetch<ListAvailableSmsNumbers200>(
+    getListAvailableSmsNumbersUrl(businessId, params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListAvailableSmsNumbersQueryKey = (
+  businessId: string,
+  params?: ListAvailableSmsNumbersParams,
+) => {
+  return [
+    `/api/businesses/${businessId}/communications/sms/available-numbers`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getListAvailableSmsNumbersQueryOptions = <
+  TData = Awaited<ReturnType<typeof listAvailableSmsNumbers>>,
+  TError = ErrorType<void>,
+>(
+  businessId: string,
+  params?: ListAvailableSmsNumbersParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listAvailableSmsNumbers>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getListAvailableSmsNumbersQueryKey(businessId, params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listAvailableSmsNumbers>>
+  > = ({ signal }) =>
+    listAvailableSmsNumbers(businessId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!businessId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listAvailableSmsNumbers>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListAvailableSmsNumbersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listAvailableSmsNumbers>>
+>;
+export type ListAvailableSmsNumbersQueryError = ErrorType<void>;
+
+/**
+ * @summary Search Twilio for available local SMS numbers (defaults to IE)
+ */
+
+export function useListAvailableSmsNumbers<
+  TData = Awaited<ReturnType<typeof listAvailableSmsNumbers>>,
+  TError = ErrorType<void>,
+>(
+  businessId: string,
+  params?: ListAvailableSmsNumbersParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listAvailableSmsNumbers>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListAvailableSmsNumbersQueryOptions(
+    businessId,
+    params,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Provision a Twilio number (server-picks IE/areaCode=1 if phoneNumber omitted)
+ */
+export const getProvisionSmsNumberUrl = (businessId: string) => {
+  return `/api/businesses/${businessId}/communications/sms/provision-number`;
+};
+
+export const provisionSmsNumber = async (
+  businessId: string,
+  provisionSmsNumberBody?: ProvisionSmsNumberBody,
+  options?: RequestInit,
+): Promise<ProvisionSmsNumber201> => {
+  return customFetch<ProvisionSmsNumber201>(
+    getProvisionSmsNumberUrl(businessId),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(provisionSmsNumberBody),
+    },
+  );
+};
+
+export const getProvisionSmsNumberMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof provisionSmsNumber>>,
+    TError,
+    { businessId: string; data: BodyType<ProvisionSmsNumberBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof provisionSmsNumber>>,
+  TError,
+  { businessId: string; data: BodyType<ProvisionSmsNumberBody> },
+  TContext
+> => {
+  const mutationKey = ["provisionSmsNumber"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof provisionSmsNumber>>,
+    { businessId: string; data: BodyType<ProvisionSmsNumberBody> }
+  > = (props) => {
+    const { businessId, data } = props ?? {};
+
+    return provisionSmsNumber(businessId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ProvisionSmsNumberMutationResult = NonNullable<
+  Awaited<ReturnType<typeof provisionSmsNumber>>
+>;
+export type ProvisionSmsNumberMutationBody = BodyType<ProvisionSmsNumberBody>;
+export type ProvisionSmsNumberMutationError = ErrorType<void>;
+
+/**
+ * @summary Provision a Twilio number (server-picks IE/areaCode=1 if phoneNumber omitted)
+ */
+export const useProvisionSmsNumber = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof provisionSmsNumber>>,
+    TError,
+    { businessId: string; data: BodyType<ProvisionSmsNumberBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof provisionSmsNumber>>,
+  TError,
+  { businessId: string; data: BodyType<ProvisionSmsNumberBody> },
+  TContext
+> => {
+  return useMutation(getProvisionSmsNumberMutationOptions(options));
+};
+
+/**
+ * @summary Release the provisioned Twilio number
+ */
+export const getReleaseSmsNumberUrl = (businessId: string) => {
+  return `/api/businesses/${businessId}/communications/sms/number`;
+};
+
+export const releaseSmsNumber = async (
+  businessId: string,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getReleaseSmsNumberUrl(businessId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getReleaseSmsNumberMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof releaseSmsNumber>>,
+    TError,
+    { businessId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof releaseSmsNumber>>,
+  TError,
+  { businessId: string },
+  TContext
+> => {
+  const mutationKey = ["releaseSmsNumber"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof releaseSmsNumber>>,
+    { businessId: string }
+  > = (props) => {
+    const { businessId } = props ?? {};
+
+    return releaseSmsNumber(businessId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReleaseSmsNumberMutationResult = NonNullable<
+  Awaited<ReturnType<typeof releaseSmsNumber>>
+>;
+
+export type ReleaseSmsNumberMutationError = ErrorType<void>;
+
+/**
+ * @summary Release the provisioned Twilio number
+ */
+export const useReleaseSmsNumber = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof releaseSmsNumber>>,
+    TError,
+    { businessId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof releaseSmsNumber>>,
+  TError,
+  { businessId: string },
+  TContext
+> => {
+  return useMutation(getReleaseSmsNumberMutationOptions(options));
+};
+
+/**
+ * @summary Update the per-shop Resend from-address
+ */
+export const getUpdateEmailFromAddressUrl = (businessId: string) => {
+  return `/api/businesses/${businessId}/communications/email/from`;
+};
+
+export const updateEmailFromAddress = async (
+  businessId: string,
+  updateEmailFromAddressBody: UpdateEmailFromAddressBody,
+  options?: RequestInit,
+): Promise<UpdateEmailFromAddress200> => {
+  return customFetch<UpdateEmailFromAddress200>(
+    getUpdateEmailFromAddressUrl(businessId),
+    {
+      ...options,
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(updateEmailFromAddressBody),
+    },
+  );
+};
+
+export const getUpdateEmailFromAddressMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateEmailFromAddress>>,
+    TError,
+    { businessId: string; data: BodyType<UpdateEmailFromAddressBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateEmailFromAddress>>,
+  TError,
+  { businessId: string; data: BodyType<UpdateEmailFromAddressBody> },
+  TContext
+> => {
+  const mutationKey = ["updateEmailFromAddress"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateEmailFromAddress>>,
+    { businessId: string; data: BodyType<UpdateEmailFromAddressBody> }
+  > = (props) => {
+    const { businessId, data } = props ?? {};
+
+    return updateEmailFromAddress(businessId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateEmailFromAddressMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateEmailFromAddress>>
+>;
+export type UpdateEmailFromAddressMutationBody =
+  BodyType<UpdateEmailFromAddressBody>;
+export type UpdateEmailFromAddressMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update the per-shop Resend from-address
+ */
+export const useUpdateEmailFromAddress = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateEmailFromAddress>>,
+    TError,
+    { businessId: string; data: BodyType<UpdateEmailFromAddressBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateEmailFromAddress>>,
+  TError,
+  { businessId: string; data: BodyType<UpdateEmailFromAddressBody> },
+  TContext
+> => {
+  return useMutation(getUpdateEmailFromAddressMutationOptions(options));
+};
+
+/**
+ * @summary Send a single SMS or email through the real transports
+ */
+export const getTestSendCommunicationUrl = (businessId: string) => {
+  return `/api/businesses/${businessId}/communications/test-send`;
+};
+
+export const testSendCommunication = async (
+  businessId: string,
+  testSendCommunicationBody: TestSendCommunicationBody,
+  options?: RequestInit,
+): Promise<TestSendCommunication200> => {
+  return customFetch<TestSendCommunication200>(
+    getTestSendCommunicationUrl(businessId),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(testSendCommunicationBody),
+    },
+  );
+};
+
+export const getTestSendCommunicationMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof testSendCommunication>>,
+    TError,
+    { businessId: string; data: BodyType<TestSendCommunicationBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof testSendCommunication>>,
+  TError,
+  { businessId: string; data: BodyType<TestSendCommunicationBody> },
+  TContext
+> => {
+  const mutationKey = ["testSendCommunication"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof testSendCommunication>>,
+    { businessId: string; data: BodyType<TestSendCommunicationBody> }
+  > = (props) => {
+    const { businessId, data } = props ?? {};
+
+    return testSendCommunication(businessId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type TestSendCommunicationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof testSendCommunication>>
+>;
+export type TestSendCommunicationMutationBody =
+  BodyType<TestSendCommunicationBody>;
+export type TestSendCommunicationMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Send a single SMS or email through the real transports
+ */
+export const useTestSendCommunication = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof testSendCommunication>>,
+    TError,
+    { businessId: string; data: BodyType<TestSendCommunicationBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof testSendCommunication>>,
+  TError,
+  { businessId: string; data: BodyType<TestSendCommunicationBody> },
+  TContext
+> => {
+  return useMutation(getTestSendCommunicationMutationOptions(options));
+};
+
+/**
+ * Twilio POSTs application/x-www-form-urlencoded with at least
+From, To, Body, MessageSid. Signature header `X-Twilio-Signature`
+is validated unless TWILIO_SKIP_SIGNATURE_VALIDATION=true.
+Always responds with empty TwiML so Twilio never auto-replies
+and never retries against broken state.
+
+ * @summary Twilio inbound SMS webhook (HMAC-SHA1 signature validated)
+ */
+export const getTwilioSmsInboundUrl = () => {
+  return `/api/channels/sms/inbound`;
+};
+
+export const twilioSmsInbound = async (
+  twilioSmsInboundBody: TwilioSmsInboundBody,
+  options?: RequestInit,
+): Promise<string> => {
+  const formUrlEncoded = new URLSearchParams();
+  formUrlEncoded.append(`From`, twilioSmsInboundBody.From);
+  formUrlEncoded.append(`To`, twilioSmsInboundBody.To);
+  formUrlEncoded.append(`Body`, twilioSmsInboundBody.Body);
+  if (twilioSmsInboundBody.MessageSid !== undefined) {
+    formUrlEncoded.append(`MessageSid`, twilioSmsInboundBody.MessageSid);
+  }
+
+  return customFetch<string>(getTwilioSmsInboundUrl(), {
+    ...options,
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      ...options?.headers,
+    },
+    body: formUrlEncoded,
+  });
+};
+
+export const getTwilioSmsInboundMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof twilioSmsInbound>>,
+    TError,
+    { data: BodyType<TwilioSmsInboundBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof twilioSmsInbound>>,
+  TError,
+  { data: BodyType<TwilioSmsInboundBody> },
+  TContext
+> => {
+  const mutationKey = ["twilioSmsInbound"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof twilioSmsInbound>>,
+    { data: BodyType<TwilioSmsInboundBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return twilioSmsInbound(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type TwilioSmsInboundMutationResult = NonNullable<
+  Awaited<ReturnType<typeof twilioSmsInbound>>
+>;
+export type TwilioSmsInboundMutationBody = BodyType<TwilioSmsInboundBody>;
+export type TwilioSmsInboundMutationError = ErrorType<void>;
+
+/**
+ * @summary Twilio inbound SMS webhook (HMAC-SHA1 signature validated)
+ */
+export const useTwilioSmsInbound = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof twilioSmsInbound>>,
+    TError,
+    { data: BodyType<TwilioSmsInboundBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof twilioSmsInbound>>,
+  TError,
+  { data: BodyType<TwilioSmsInboundBody> },
+  TContext
+> => {
+  return useMutation(getTwilioSmsInboundMutationOptions(options));
+};
+
+/**
+ * Header-protected by `X-Internal-Cron-Secret`. Sends reminder
+emails for CONFIRMED/PENDING bookings starting in [now+23h, now+25h),
+deduped via notificationLogs.templateKey = "booking-reminder-t24".
+
+ * @summary T-24h booking reminder sweep
+ */
+export const getCronSendRemindersUrl = () => {
+  return `/api/internal/cron/send-reminders`;
+};
+
+export const cronSendReminders = async (
+  options?: RequestInit,
+): Promise<CronSendReminders200> => {
+  return customFetch<CronSendReminders200>(getCronSendRemindersUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getCronSendRemindersMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof cronSendReminders>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof cronSendReminders>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["cronSendReminders"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof cronSendReminders>>,
+    void
+  > = () => {
+    return cronSendReminders(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CronSendRemindersMutationResult = NonNullable<
+  Awaited<ReturnType<typeof cronSendReminders>>
+>;
+
+export type CronSendRemindersMutationError = ErrorType<void>;
+
+/**
+ * @summary T-24h booking reminder sweep
+ */
+export const useCronSendReminders = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof cronSendReminders>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof cronSendReminders>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getCronSendRemindersMutationOptions(options));
 };

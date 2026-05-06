@@ -1,8 +1,6 @@
-// AI outbound message composer — applies EU AI Act Art. 50 disclosure to
-// every SMS and email authored by Liv before it is queued or persisted.
-// Transport (Twilio / Resend) is pluggable via setSmsTransport /
-// setEmailTransport; default is a queued-only no-op so disclosure-correct
-// records land in notificationLogs even before Task #28 wires real senders.
+// AI outbound composer. Applies EU AI Act Art. 50 disclosure to every
+// Liv-authored SMS and email before persistence. Transport is pluggable
+// via setSmsTransport / setEmailTransport (wired at boot in lib/transports.ts).
 
 import { and, eq } from "drizzle-orm";
 import {
@@ -36,13 +34,7 @@ export type EmailTransport = (args: {
   replyTo?: string;
 }) => Promise<{ externalMessageId?: string }>;
 
-// Default transports throw "TRANSPORT_NOT_CONFIGURED" so missing-secret
-// sends land as FAILED in notificationLogs — never silently SENT. The
-// catch blocks in sendAiSms / sendAiEmail surface this as a FAILED row
-// with the full error message in payload, so the owner / ops can see
-// exactly what's missing. setSmsTransport / setEmailTransport in
-// src/lib/transports.ts replace these only when both Twilio / Resend
-// creds are present at boot.
+// Defaults throw so missing-secret sends land FAILED, never silently SENT.
 const TRANSPORT_NOT_CONFIGURED = "TRANSPORT_NOT_CONFIGURED";
 let smsTransport: SmsTransport = async () => {
   throw new Error(`${TRANSPORT_NOT_CONFIGURED}: SMS transport not configured (missing TWILIO_ACCOUNT_SID + TWILIO_AUTH_TOKEN)`);

@@ -1458,3 +1458,131 @@ export const CreateMarketingLeadBody = zod.object({
   utmMedium: zod.string().nullish(),
   utmCampaign: zod.string().nullish(),
 });
+
+/**
+ * @summary Read provisioned Twilio number + Resend from-address + provider status
+ */
+export const GetBusinessCommunicationsParams = zod.object({
+  businessId: zod.coerce.string(),
+});
+
+export const GetBusinessCommunicationsResponse = zod.object({
+  twilioPhoneNumber: zod.string().nullable(),
+  twilioPhoneSid: zod.string().nullable(),
+  resendFromAddress: zod.string().nullable(),
+  smsWebhookUrl: zod.string().nullable(),
+  providerStatus: zod.object({
+    smsProvider: zod.enum(["twilio", "noop"]),
+    emailProvider: zod.enum(["resend", "noop"]),
+    emailDefaultFrom: zod.string().nullable(),
+  }),
+});
+
+/**
+ * @summary Search Twilio for available local SMS numbers (defaults to IE)
+ */
+export const ListAvailableSmsNumbersParams = zod.object({
+  businessId: zod.coerce.string(),
+});
+
+export const listAvailableSmsNumbersQueryCountryCodeDefault = `IE`;
+
+export const ListAvailableSmsNumbersQueryParams = zod.object({
+  countryCode: zod.coerce
+    .string()
+    .default(listAvailableSmsNumbersQueryCountryCodeDefault),
+  areaCode: zod.coerce.string().optional(),
+});
+
+export const ListAvailableSmsNumbersResponse = zod.object({
+  numbers: zod.array(
+    zod.object({
+      phoneNumber: zod.string(),
+      friendlyName: zod.string(),
+      isoCountry: zod.string(),
+    }),
+  ),
+});
+
+/**
+ * @summary Provision a Twilio number (server-picks IE/areaCode=1 if phoneNumber omitted)
+ */
+export const ProvisionSmsNumberParams = zod.object({
+  businessId: zod.coerce.string(),
+});
+
+export const provisionSmsNumberBodyCountryCodeDefault = `IE`;
+
+export const ProvisionSmsNumberBody = zod.object({
+  phoneNumber: zod
+    .string()
+    .optional()
+    .describe("E.164 (e.g. +35315551234). Omit to let server pick."),
+  countryCode: zod.string().default(provisionSmsNumberBodyCountryCodeDefault),
+  areaCode: zod
+    .string()
+    .optional()
+    .describe("Defaults to '1' (Dublin) when countryCode=IE."),
+});
+
+/**
+ * @summary Release the provisioned Twilio number
+ */
+export const ReleaseSmsNumberParams = zod.object({
+  businessId: zod.coerce.string(),
+});
+
+/**
+ * @summary Update the per-shop Resend from-address
+ */
+export const UpdateEmailFromAddressParams = zod.object({
+  businessId: zod.coerce.string(),
+});
+
+export const UpdateEmailFromAddressBody = zod.object({
+  fromAddress: zod
+    .string()
+    .nullish()
+    .describe('e.g. \"Acme Salon <hi@acme.com>\". Pass null to clear.'),
+});
+
+export const UpdateEmailFromAddressResponse = zod.object({
+  resendFromAddress: zod.string().nullish(),
+});
+
+/**
+ * @summary Send a single SMS or email through the real transports
+ */
+export const TestSendCommunicationParams = zod.object({
+  businessId: zod.coerce.string(),
+});
+
+export const TestSendCommunicationBody = zod.object({
+  channel: zod.enum(["SMS", "EMAIL"]),
+  to: zod.string(),
+  message: zod.string().optional(),
+});
+
+export const TestSendCommunicationResponse = zod.object({
+  channel: zod.enum(["SMS", "EMAIL"]),
+  status: zod.enum(["PENDING", "SENT", "FAILED"]),
+  body: zod.string(),
+  conversationId: zod.string().optional(),
+});
+
+/**
+ * Header-protected by `X-Internal-Cron-Secret`. Sends reminder
+emails for CONFIRMED/PENDING bookings starting in [now+23h, now+25h),
+deduped via notificationLogs.templateKey = "booking-reminder-t24".
+
+ * @summary T-24h booking reminder sweep
+ */
+export const CronSendRemindersHeader = zod.object({
+  "x-internal-cron-secret": zod.string(),
+});
+
+export const CronSendRemindersResponse = zod.object({
+  checked: zod.number(),
+  sent: zod.number(),
+  skipped: zod.number(),
+});

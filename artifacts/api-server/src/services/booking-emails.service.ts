@@ -1,11 +1,7 @@
-// Booking-lifecycle email senders. Wraps the React-Email-equivalent HTML
-// templates in `@workspace/integrations-resend/templates` and routes them
-// through `sendAiEmail` so the EU AI Act Art. 50 disclosure block is
-// applied consistently and a notificationLogs row is always written.
-//
-// All three calls are fire-and-forget from the booking write path: a send
-// failure must NEVER fail the booking transaction. The transport's own
-// error handling marks the notificationLogs row FAILED for retry.
+// Booking-lifecycle email senders. Templates live in
+// `@workspace/integrations-resend/templates`; sendAiEmail applies the
+// Art. 50 disclosure once on the persisted body. Fire-and-forget from
+// the booking write path — send failures never fail the booking.
 
 import {
   renderBookingConfirmationEmail,
@@ -15,7 +11,7 @@ import {
 } from "@workspace/integrations-resend/templates";
 import { db, businessesTable, type Business, type Booking } from "@workspace/db";
 import { eq } from "drizzle-orm";
-import { sendAiEmail, composeAiEmailBody } from "./ai-outbound.service";
+import { sendAiEmail } from "./ai-outbound.service";
 import { AI_DISCLOSURE } from "@workspace/ai-disclosure";
 import { logger } from "../lib/logger";
 
@@ -52,11 +48,10 @@ function buildContext(args: {
 }): BookingTemplateContext {
   const { business, booking } = args;
   const startAtFormatted = formatStartAt(booking.startAt, business.timezone);
-  const fullName = booking.customer.displayName ?? booking.customer.firstName ?? "there";
-  const composedTextBody = composeAiEmailBody({
-    businessName: business.name,
-    body: `Hi ${customerFirstName(booking.customer)},\n\nYour booking with ${business.name} is set:\n${booking.service.name}${booking.staff ? ` with ${booking.staff.displayName}` : ""}\n${startAtFormatted} · ${booking.service.durationMinutes} min`,
-  });
+  // Plain body — sendAiEmail() runs composeAiEmailBody() once on this
+  // text before persisting / sending so the Art. 50 disclosure is added
+  // exactly once. Pre-composing here would double-print the disclosure.
+  const bodyText = `Hi ${customerFirstName(booking.customer)},\n\nYour booking with ${business.name} is set:\n${booking.service.name}${booking.staff ? ` with ${booking.staff.displayName}` : ""}\n${startAtFormatted} · ${booking.service.durationMinutes} min`;
   return {
     businessName: business.name,
     customerFirstName: customerFirstName(booking.customer),
@@ -68,7 +63,7 @@ function buildContext(args: {
       ? [business.addressLine1, business.city].filter(Boolean).join(", ")
       : null,
     manageUrl: manageUrl(business, booking),
-    composedTextBody,
+    bodyText,
     disclosureLine: AI_DISCLOSURE.emailBlock(business.name),
   };
 }

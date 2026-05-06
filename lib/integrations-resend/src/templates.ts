@@ -24,10 +24,10 @@ interface BookingTemplateContext {
   durationMinutes: number;
   locationLine?: string | null;
   manageUrl?: string | null;
-  // Disclosure-wrapped body returned from `composeAiEmailBody` — used as the
-  // plaintext fallback. The HTML renderer also embeds the disclosure block
-  // explicitly via `disclosureLine`.
-  composedTextBody: string;
+  // Plain-text body. sendAiEmail() composes the Art. 50 disclosure once
+  // before persisting / sending — DO NOT add disclosure here. The HTML
+  // renderer embeds the disclosure block explicitly via `disclosureLine`.
+  bodyText: string;
   disclosureLine: string;
 }
 
@@ -109,7 +109,7 @@ export function renderBookingConfirmationEmail(c: BookingTemplateContext): Rende
       inner,
       disclosureLine: c.disclosureLine,
     }),
-    text: c.composedTextBody,
+    text: c.bodyText,
   };
 }
 
@@ -130,7 +130,7 @@ export function renderBookingReminderEmail(c: BookingTemplateContext): RenderedE
       inner,
       disclosureLine: c.disclosureLine,
     }),
-    text: c.composedTextBody,
+    text: c.bodyText,
   };
 }
 
@@ -152,7 +152,7 @@ export function renderBookingCancellationEmail(
       inner,
       disclosureLine: c.disclosureLine,
     }),
-    text: c.composedTextBody,
+    text: c.bodyText,
   };
 }
 

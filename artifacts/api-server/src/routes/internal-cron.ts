@@ -1,15 +1,6 @@
-// Internal cron-callable routes. Protected by a shared header secret
-// (INTERNAL_CRON_SECRET) so an external scheduler — Replit Scheduled
-// Deployments, GH Actions, or a one-line `curl` cronjob — can drive them.
-// In Closed Beta we drive these manually + via the dashboard "Send now"
-// button; production wiring is a follow-up (Inngest or Replit Scheduled
-// Deployments).
-//
-// Currently exposes:
-//   POST /internal/cron/send-reminders
-//     Sends T-24h booking reminder emails for every CONFIRMED or PENDING
-//     booking starting in the [now+23h, now+25h) window that hasn't
-//     received a reminder yet (deduped via notificationLogs.templateKey).
+// Internal cron-callable routes. Protected by INTERNAL_CRON_SECRET header.
+// POST /internal/cron/send-reminders — T-24h booking reminders, deduped
+// via notificationLogs.templateKey.
 
 import { Router, type IRouter } from "express";
 import { db, bookingsTable, notificationLogsTable } from "@workspace/db";

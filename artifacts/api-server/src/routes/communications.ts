@@ -1,12 +1,6 @@
-// Owner-facing routes for managing the per-shop Twilio number and the
-// Resend "from" address, plus a test-send box that exercises both
-// transports end-to-end.
-//
-// Provisioning calls Twilio's AvailablePhoneNumbers + IncomingPhoneNumbers
-// APIs and writes the resulting number + sid back to the business row.
-// When TWILIO_ACCOUNT_SID is absent these endpoints return 503 with a
-// clear "not configured" message, which the Settings UI surfaces to the
-// owner — no silent failure.
+// Owner/admin routes for the per-shop Twilio number + Resend from-address
+// + a test-send box. When Twilio creds are absent endpoints return 503
+// (TWILIO_NOT_CONFIGURED) so the Settings UI can surface it cleanly.
 
 import { Router, type IRouter } from "express";
 import { requireAuth, getUserId } from "../lib/auth";
@@ -61,8 +55,7 @@ router.get(
   },
 );
 
-// List a few available Twilio local numbers in a country so the owner can
-// pick one. countryCode defaults to IE for Ireland (Closed Beta target).
+// List available Twilio local numbers (defaults to IE, Closed Beta).
 router.get(
   "/businesses/:businessId/communications/sms/available-numbers",
   requireAuth,
@@ -105,8 +98,9 @@ router.get(
   },
 );
 
-// Provision (purchase) a Twilio number and bind it to this business.
-// If a number is already bound, returns 409 — owner must release first.
+// Provision a Twilio number for this business. If body.phoneNumber is
+// omitted the server picks the first available SMS-enabled IE/areaCode=1
+// number (Closed Beta default). 409 if a number is already bound.
 router.post(
   "/businesses/:businessId/communications/sms/provision-number",
   requireAuth,
@@ -147,14 +141,33 @@ router.post(
       return;
     }
 
-    const phoneNumber = (req.body?.phoneNumber as string | undefined)?.trim();
-    if (!phoneNumber) {
-      res.status(400).json({ error: "phoneNumber is required (E.164, e.g. +35315551234)" });
-      return;
-    }
+    // Server-driven default: Closed Beta target is Ireland (IE), preferred
+    // area code "1" (Dublin). When the client doesn't pass an explicit
+    // E.164, search Twilio for the first SMS-enabled local IE/areaCode=1
+    // number and provision that. Explicit phoneNumber overrides this path.
+    let phoneNumber = (req.body?.phoneNumber as string | undefined)?.trim();
+    const country = (req.body?.countryCode as string | undefined)?.trim() || "IE";
+    const preferredArea = (req.body?.areaCode as string | undefined)?.trim()
+      || (country === "IE" ? "1" : undefined);
 
     try {
       const twilio = createTwilioClient({ accountSid: sid, authToken: token });
+      if (!phoneNumber) {
+        const candidates = await twilio.searchAvailableLocalNumbers({
+          countryCode: country,
+          areaCode: preferredArea,
+          smsEnabled: true,
+          limit: 1,
+        });
+        if (candidates.length === 0) {
+          res.status(404).json({
+            error: `No available ${country} numbers${preferredArea ? ` in area ${preferredArea}` : ""}. Pass phoneNumber explicitly or try a different areaCode.`,
+            code: "NO_AVAILABLE_NUMBERS",
+          });
+          return;
+        }
+        phoneNumber = candidates[0].phoneNumber;
+      }
       const purchased = await twilio.purchasePhoneNumber({
         phoneNumber,
         smsUrl: webhook,
@@ -226,9 +239,8 @@ router.put(
   },
 );
 
-// Test-send box: sends a single SMS or email through the real transports
-// so the owner can verify their setup. Always writes to notificationLogs
-// so failures are inspectable.
+// Test-send: SMS or email through the real transports. Writes to
+// notificationLogs either way so failures are inspectable.
 router.post(
   "/businesses/:businessId/communications/test-send",
   requireAuth,
@@ -255,8 +267,7 @@ router.post(
     }
 
     if (channel === "SMS") {
-      // Test SMS uses a transient conversation so it routes through the
-      // disclosure-prefix path, faithful to a real customer reply.
+      // Transient conversation so the disclosure-prefix path runs.
       const convo = await createConversation({
         businessId: biz.id,
         channel: "SMS",

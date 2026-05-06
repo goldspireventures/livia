@@ -37,6 +37,12 @@ tags:
     description: Public AI chat assistant
   - name: marketing
     description: Public marketing site (livia.io) lead capture
+  - name: communications
+    description: Per-shop Twilio number + Resend from-address provisioning (owner/admin)
+  - name: channels
+    description: Inbound channel webhooks (Twilio SMS)
+  - name: internal
+    description: Internal scheduler-callable routes (header-secret protected)
 
 paths:
   /healthz:
@@ -1133,6 +1139,235 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
 
+  # ─── Communications (Task #28) ────────────────────────────────────────────
+  /businesses/{businessId}/communications:
+    get:
+      operationId: getBusinessCommunications
+      tags: [communications]
+      summary: Read provisioned Twilio number + Resend from-address + provider status
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+      responses:
+        "200":
+          description: Communications status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BusinessCommunications"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /businesses/{businessId}/communications/sms/available-numbers:
+    get:
+      operationId: listAvailableSmsNumbers
+      tags: [communications]
+      summary: Search Twilio for available local SMS numbers (defaults to IE)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - in: query
+          name: countryCode
+          schema: { type: string, default: "IE" }
+        - in: query
+          name: areaCode
+          schema: { type: string }
+      responses:
+        "200":
+          description: Available numbers
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [numbers]
+                properties:
+                  numbers:
+                    type: array
+                    items:
+                      type: object
+                      required: [phoneNumber, friendlyName, isoCountry]
+                      properties:
+                        phoneNumber: { type: string }
+                        friendlyName: { type: string }
+                        isoCountry: { type: string }
+        "503":
+          description: Twilio not configured
+
+  /businesses/{businessId}/communications/sms/provision-number:
+    post:
+      operationId: provisionSmsNumber
+      tags: [communications]
+      summary: Provision a Twilio number (server-picks IE/areaCode=1 if phoneNumber omitted)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                phoneNumber: { type: string, description: "E.164 (e.g. +35315551234). Omit to let server pick." }
+                countryCode: { type: string, default: "IE" }
+                areaCode: { type: string, description: "Defaults to '1' (Dublin) when countryCode=IE." }
+      responses:
+        "201":
+          description: Provisioned
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [twilioPhoneNumber, twilioPhoneSid, smsWebhookUrl]
+                properties:
+                  twilioPhoneNumber: { type: string }
+                  twilioPhoneSid: { type: string }
+                  smsWebhookUrl: { type: string }
+        "404":
+          description: No available numbers in country/area
+        "409":
+          description: Already provisioned
+        "503":
+          description: Twilio or PUBLIC_BASE_URL not configured
+
+  /businesses/{businessId}/communications/sms/number:
+    delete:
+      operationId: releaseSmsNumber
+      tags: [communications]
+      summary: Release the provisioned Twilio number
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+      responses:
+        "204": { description: Released }
+        "404": { description: No number provisioned }
+
+  /businesses/{businessId}/communications/email/from:
+    put:
+      operationId: updateEmailFromAddress
+      tags: [communications]
+      summary: Update the per-shop Resend from-address
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fromAddress:
+                  type: string
+                  nullable: true
+                  description: 'e.g. "Acme Salon <hi@acme.com>". Pass null to clear.'
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  resendFromAddress: { type: string, nullable: true }
+
+  /businesses/{businessId}/communications/test-send:
+    post:
+      operationId: testSendCommunication
+      tags: [communications]
+      summary: Send a single SMS or email through the real transports
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channel, to]
+              properties:
+                channel: { type: string, enum: [SMS, EMAIL] }
+                to: { type: string }
+                message: { type: string }
+      responses:
+        "200":
+          description: Send attempt result (status reflects PENDING/SENT/FAILED)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [channel, status, body]
+                properties:
+                  channel: { type: string, enum: [SMS, EMAIL] }
+                  status: { type: string, enum: [PENDING, SENT, FAILED] }
+                  body: { type: string }
+                  conversationId: { type: string }
+
+  # ─── Inbound channel webhooks ─────────────────────────────────────────────
+  /channels/sms/inbound:
+    post:
+      operationId: twilioSmsInbound
+      tags: [channels]
+      summary: Twilio inbound SMS webhook (HMAC-SHA1 signature validated)
+      description: |
+        Twilio POSTs application/x-www-form-urlencoded with at least
+        From, To, Body, MessageSid. Signature header `X-Twilio-Signature`
+        is validated unless TWILIO_SKIP_SIGNATURE_VALIDATION=true.
+        Always responds with empty TwiML so Twilio never auto-replies
+        and never retries against broken state.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [From, To, Body]
+              properties:
+                From: { type: string }
+                To: { type: string }
+                Body: { type: string }
+                MessageSid: { type: string }
+      responses:
+        "200":
+          description: Empty TwiML ACK
+          content:
+            text/xml: { schema: { type: string } }
+        "403":
+          description: Signature validation failed
+
+  # ─── Internal cron ───────────────────────────────────────────────────────
+  /internal/cron/send-reminders:
+    post:
+      operationId: cronSendReminders
+      tags: [internal]
+      summary: T-24h booking reminder sweep
+      description: |
+        Header-protected by `X-Internal-Cron-Secret`. Sends reminder
+        emails for CONFIRMED/PENDING bookings starting in [now+23h, now+25h),
+        deduped via notificationLogs.templateKey = "booking-reminder-t24".
+      parameters:
+        - in: header
+          name: x-internal-cron-secret
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Sweep result
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [checked, sent, skipped]
+                properties:
+                  checked: { type: integer }
+                  sent: { type: integer }
+                  skipped: { type: integer }
+        "401":
+          description: Missing or invalid cron secret
+
 components:
   securitySchemes:
     bearerAuth:
@@ -1199,6 +1434,22 @@ components:
             $ref: "#/components/schemas/ErrorResponse"
 
   schemas:
+    BusinessCommunications:
+      type: object
+      required: [twilioPhoneNumber, twilioPhoneSid, resendFromAddress, providerStatus, smsWebhookUrl]
+      properties:
+        twilioPhoneNumber: { type: string, nullable: true }
+        twilioPhoneSid: { type: string, nullable: true }
+        resendFromAddress: { type: string, nullable: true }
+        smsWebhookUrl: { type: string, nullable: true }
+        providerStatus:
+          type: object
+          required: [smsProvider, emailProvider, emailDefaultFrom]
+          properties:
+            smsProvider: { type: string, enum: [twilio, noop] }
+            emailProvider: { type: string, enum: [resend, noop] }
+            emailDefaultFrom: { type: string, nullable: true }
+
     HealthStatus:
       type: object
       properties:
