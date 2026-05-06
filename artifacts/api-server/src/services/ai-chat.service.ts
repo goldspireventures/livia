@@ -19,7 +19,7 @@ import {
   type ConversationMessageRole,
 } from "./conversations.service";
 import { AI_DISCLOSURE } from "../lib/ai-disclosure";
-import { sendAiEmail } from "./ai-outbound.service";
+import { sendAiEmail, sendAiSms } from "./ai-outbound.service";
 
 const MODEL = "claude-sonnet-4-6";
 const MAX_TOOL_HOPS = 6;
@@ -236,6 +236,25 @@ async function executeTool(args: {
         }).catch((err) => {
           // Don't fail the booking if email enqueue fails — log and move on.
           console.error("[ai-chat] sendAiEmail failed", err);
+        });
+      } else if (toolInput.customerPhone) {
+        // Phone-only customer — Liv-authored confirmation SMS. sendAiSms
+        // applies the Art. 50 prefix once per thread (idempotent across
+        // repeat AI sends on the same conversation).
+        const startLocal = new Date(booking.startAt).toLocaleString("en-IE", {
+          dateStyle: "medium",
+          timeStyle: "short",
+        });
+        const serviceName = booking.service?.name ?? "your appointment";
+        sendAiSms({
+          conversationId,
+          businessId: business.id,
+          businessName: business.name,
+          customerId: customer.id,
+          customerPhone: toolInput.customerPhone,
+          content: `${serviceName} confirmed for ${startLocal} at ${business.name}. Reply to reschedule.`,
+        }).catch((err) => {
+          console.error("[ai-chat] sendAiSms failed", err);
         });
       }
 

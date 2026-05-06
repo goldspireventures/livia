@@ -35,9 +35,21 @@ export function setEmailTransport(t: EmailTransport): void {
   emailTransport = t;
 }
 
+// Pure prefix-once decision. Exposed for unit tests so we can prove the
+// "prefix exactly once per thread" semantic without touching the DB.
+export function applySmsPrefix(args: {
+  isFirstOnThread: boolean;
+  businessName: string;
+  content: string;
+}): string {
+  return args.isFirstOnThread
+    ? `${AI_DISCLOSURE.smsPrefix(args.businessName)}${args.content}`
+    : args.content;
+}
+
 // Prefix is added on the FIRST AI-authored SMS of a thread only. We mark
 // SMS rows with toolName="sms" so we can detect "first SMS" cheaply.
-async function isFirstAssistantSmsOnConversation(conversationId: string): Promise<boolean> {
+export async function isFirstAssistantSmsOnConversation(conversationId: string): Promise<boolean> {
   const [existing] = await db
     .select({ id: conversationMessagesTable.id })
     .from(conversationMessagesTable)
@@ -60,10 +72,12 @@ export async function sendAiSms(args: {
   customerPhone: string;
   content: string;
 }): Promise<{ body: string; status: "PENDING" | "SENT" | "FAILED" }> {
-  const isFirst = await isFirstAssistantSmsOnConversation(args.conversationId);
-  const body = isFirst
-    ? `${AI_DISCLOSURE.smsPrefix(args.businessName)}${args.content}`
-    : args.content;
+  const isFirstOnThread = await isFirstAssistantSmsOnConversation(args.conversationId);
+  const body = applySmsPrefix({
+    isFirstOnThread,
+    businessName: args.businessName,
+    content: args.content,
+  });
 
   await appendMessage({
     conversationId: args.conversationId,
