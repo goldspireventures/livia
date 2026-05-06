@@ -55,6 +55,9 @@ export function MarketingForm() {
             <FormItem className="flex-1">
               <FormControl>
                 <Input
+                  type="email"
+                  aria-label="Email address"
+                  autoComplete="email"
                   placeholder="name@studio.com"
                   className="h-12 bg-background/50 border-white/10 text-white placeholder:text-muted-foreground focus-visible:ring-aurora-cyan"
                   {...field}
