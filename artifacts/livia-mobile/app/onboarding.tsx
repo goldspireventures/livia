@@ -291,7 +291,6 @@ export default function OnboardingScreen() {
   );
 }
 
-/** A single intro slide with a parallax background pulse + staggered headline. */
 function Slide({
   meta,
   index,
@@ -351,7 +350,6 @@ function Slide({
   );
 }
 
-/** Animated paging dot — width grows on the active page. */
 function Dot({
   index,
   scrollX,
@@ -369,7 +367,6 @@ function Dot({
   return <Animated.View style={[styles.dot, { backgroundColor: color }, style]} />;
 }
 
-/** The original onboarding form, now living on the third slide. */
 function FormSlide({
   colors,
   inputStyle,

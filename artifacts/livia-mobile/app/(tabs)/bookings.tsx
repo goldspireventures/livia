@@ -31,27 +31,27 @@ import { useBusiness } from "@/contexts/BusinessContext";
 import { useColors } from "@/hooks/useColors";
 import { useHaptics } from "@/hooks/useHaptics";
 
-type Filter = "upcoming" | "today" | "past" | "all";
+type Filter = "day" | "week" | "month";
 
 function getDateParams(filter: Filter) {
   const now = new Date();
-  if (filter === "today") {
-    const start = new Date(now);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(now);
+  const start = new Date(now);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(start);
+  if (filter === "day") {
     end.setHours(23, 59, 59, 999);
-    return { from: start.toISOString(), to: end.toISOString() };
+  } else if (filter === "week") {
+    end.setDate(end.getDate() + 7);
+  } else {
+    end.setMonth(end.getMonth() + 1);
   }
-  if (filter === "upcoming") return { from: now.toISOString() };
-  if (filter === "past") return { to: now.toISOString() };
-  return {};
+  return { from: start.toISOString(), to: end.toISOString() };
 }
 
 const FILTERS: { key: Filter; label: string }[] = [
-  { key: "upcoming", label: "Upcoming" },
-  { key: "today", label: "Today" },
-  { key: "past", label: "Past" },
-  { key: "all", label: "All" },
+  { key: "day", label: "Day" },
+  { key: "week", label: "Week" },
+  { key: "month", label: "Month" },
 ];
 
 export default function BookingsScreen() {
@@ -60,10 +60,8 @@ export default function BookingsScreen() {
   const insets = useSafeAreaInsets();
   const haptics = useHaptics();
   const { currentBusiness } = useBusiness();
-  const [filter, setFilter] = useState<Filter>("upcoming");
+  const [filter, setFilter] = useState<Filter>("day");
 
-  // Spring-animated segmented indicator. We measure each chip's layout once
-  // and spring the indicator's translateX/width to the active chip.
   const indicator = useSharedValue({ x: 0, w: 0 });
   const [layouts, setLayouts] = useState<Record<Filter, { x: number; w: number }>>(
     {} as Record<Filter, { x: number; w: number }>,
@@ -97,7 +95,6 @@ export default function BookingsScreen() {
 
   const advanceStatus = async (bookingId: string, current: string) => {
     if (!currentBusiness?.id) return;
-    // Cycle: PENDING -> CONFIRMED -> COMPLETED. Anything else is a no-op.
     const next =
       current === "PENDING" ? "CONFIRMED" : current === "CONFIRMED" ? "COMPLETED" : null;
     if (!next) {
@@ -233,7 +230,7 @@ export default function BookingsScreen() {
             >
               <BookingCard
                 booking={item}
-                showDate={filter !== "today"}
+                showDate={filter !== "day"}
                 index={index}
                 onPress={() => router.push(`/booking/${item.id}`)}
                 onLongPress={() =>

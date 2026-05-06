@@ -40,10 +40,13 @@ export function AuroraHalo({
     opacity: breath.value * intensity,
   }));
 
+  // ADR 0007: gradient (cyan→violet→mint) is reserved for AI-moments only.
+  // Halo here stays cyan-only (with a softer cyan inner ring) for non-AI
+  // surfaces; ambient tone uses champagne for sign-in / onboarding warmth.
   const inner: readonly [string, string, string] =
     tone === "primary"
-      ? [aurora.cyan + "55", aurora.violet + "1c", "transparent"]
-      : ["#d9c39a55", "#06b6d420", "transparent"];
+      ? [aurora.cyan + "55", aurora.cyan + "18", "transparent"]
+      : ["#d9c39a55", "#d9c39a14", "transparent"];
 
   return (
     <View pointerEvents="none" style={[styles.wrap, { width: size, height: size }, style]}>

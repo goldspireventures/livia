@@ -9,6 +9,7 @@ import {
   Text,
   View,
 } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { BookingCard } from "@/components/BookingCard";
 import { AuroraHalo } from "@/components/brand/AuroraHalo";
 import { EmptyState } from "@/components/EmptyState";
@@ -76,7 +77,13 @@ export default function CustomerDetailScreen() {
         <View style={[styles.avatar, { backgroundColor: colors.primary + "1f", borderColor: colors.primary + "55" }]}>
           <Text style={[styles.initials, { color: colors.primary }]}>{initials}</Text>
         </View>
-        <Text style={[styles.name, { color: colors.foreground }]}>{displayName}</Text>
+        <Animated.Text
+          entering={FadeInDown.duration(360).damping(18).stiffness(180)}
+          nativeID={`customer-${customer.id}-name`}
+          style={[styles.name, { color: colors.foreground }]}
+        >
+          {displayName}
+        </Animated.Text>
         {customer.email && (
           <Text style={[styles.contact, { color: colors.mutedForeground }]}>{customer.email}</Text>
         )}

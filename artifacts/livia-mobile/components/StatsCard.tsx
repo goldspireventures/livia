@@ -19,21 +19,10 @@ interface StatsCardProps {
   value: number | string;
   color?: string;
   subtitle?: string;
-  /** Index used to stagger the entry animation in a row. */
   index?: number;
-  /** "hero" gets a subtle aurora-tinted border. Use for the primary stat. */
   variant?: "default" | "hero";
 }
 
-/**
- * Stat card with a count-up animation on the numeric value (so the dashboard
- * feels like the business is *moving*, not just sitting). Strings render
- * verbatim — count-up only kicks in when `value` is a finite number.
- *
- * Cards stagger in on mount, lifting by 8px with a gentle spring. The aurora
- * dot pulses once on mount as a tiny "hello" without being noisy on every
- * re-render.
- */
 export function StatsCard({
   label,
   value,
@@ -45,8 +34,7 @@ export function StatsCard({
   const colors = useColors();
   const accent = color ?? colors.primary;
 
-  // Count-up animation. We tween a JS state because RN <Text> can't read
-  // SharedValues directly without a wrapper.
+  // Tween JS state — RN <Text> can't read SharedValues directly.
   const [shown, setShown] = useState<number | string>(
     typeof value === "number" ? 0 : value,
   );
@@ -63,7 +51,6 @@ export function StatsCard({
     const duration = 700;
     const tick = () => {
       const t = Math.min(1, (Date.now() - start) / duration);
-      // Ease-out cubic for a "settling" feel.
       const eased = 1 - Math.pow(1 - t, 3);
       const next = Math.round(from + (to - from) * eased);
       setShown(next);
@@ -77,13 +64,11 @@ export function StatsCard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
-  // Entry animation
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(10);
   const dotScale = useSharedValue(0.6);
 
   useEffect(() => {
-    // Cap stagger to avoid runaway timelines if a row ever balloons (ADR 0008).
     const delay = Math.min(index, 8) * 70;
     opacity.value = withDelay(delay, withTiming(1, { duration: 320, easing: Easing.out(Easing.cubic) }));
     translateY.value = withDelay(delay, withSpring(0, SPRING_GENTLE));

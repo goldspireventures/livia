@@ -37,12 +37,6 @@ WebBrowser.maybeCompleteAuthSession();
 
 type Mode = "sign-in" | "sign-up" | "verify";
 
-/**
- * Cinematic sign-in. The brand mark and headline settle in over ~700ms
- * with a single breathing aurora halo behind them. No three-orb backdrop,
- * no violet→cyan gradient pill (gradients are reserved for AI moments
- * per ADR 0007). Auth flow itself is unchanged.
- */
 export default function SignInScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -63,7 +57,6 @@ export default function SignInScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [focused, setFocused] = useState<"email" | "password" | "code" | null>(null);
 
-  // Cinematic mount animations — runs on first render only
   const wordmarkY = useSharedValue(-12);
   const wordmarkOpacity = useSharedValue(0);
   const headlineOpacity = useSharedValue(0);
@@ -96,7 +89,6 @@ export default function SignInScreen() {
     transform: [{ translateY: cardY.value }],
   }));
 
-  // Warm up the in-app browser to make OAuth feel instant on Android.
   useEffect(() => {
     if (Platform.OS !== "web") {
       WebBrowser.warmUpAsync();

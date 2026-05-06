@@ -85,7 +85,11 @@ export function CustomerCard({ customer, index = 0, onPress }: CustomerCardProps
           <Text style={[styles.initials, { color: colors.primary }]}>{initials}</Text>
         </View>
         <View style={styles.content}>
-          <Text style={[styles.name, { color: colors.foreground }]} numberOfLines={1}>
+          <Text
+            nativeID={`customer-${customer.id}-name`}
+            style={[styles.name, { color: colors.foreground }]}
+            numberOfLines={1}
+          >
             {displayName}
             {customer.isBlocked ? "  ⛔" : ""}
           </Text>
