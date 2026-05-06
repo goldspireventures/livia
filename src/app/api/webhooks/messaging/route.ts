@@ -25,14 +25,14 @@ export function GET() {
     {
       ok: true,
       configured,
-      post: "POST JSON with header x-bliq-messaging-secret (see docs/MESSAGING_AI_CAPACITOR.md).",
+      post: "POST JSON with header x-livia-messaging-secret (see docs/MESSAGING_AI_CAPACITOR.md).",
     },
     { status: 200 },
   );
 }
 
 /**
- * T6 inbound scaffold. When `MESSAGING_INBOUND_SECRET` is set, require header `x-bliq-messaging-secret`
+ * T6 inbound scaffold. When `MESSAGING_INBOUND_SECRET` is set, require header `x-livia-messaging-secret`
  * matching that value, then persist a `MessageLog` and attempt `ChannelIdentity` match.
  * Without the secret, returns 501 (no fake provider).
  */
@@ -58,9 +58,9 @@ export async function POST(req: Request) {
       );
     }
 
-    const got = req.headers.get("x-bliq-messaging-secret");
+    const got = req.headers.get("x-livia-messaging-secret");
     if (got !== secret) {
-      return NextResponse.json({ ok: false, code: "UNAUTHORIZED", message: "Invalid or missing x-bliq-messaging-secret." }, { status: 401 });
+      return NextResponse.json({ ok: false, code: "UNAUTHORIZED", message: "Invalid or missing x-livia-messaging-secret." }, { status: 401 });
     }
 
     const body = Body.parse(await req.json());

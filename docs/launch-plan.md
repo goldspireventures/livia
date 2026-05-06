@@ -5,7 +5,7 @@
 **Cadence:** revisited every Monday (see `docs/operating-cadence.md`)
 **Last reviewed:** 2026-05-06 — founder (v1 lock)
 
-This is the single authoritative document that sequences Livia from "we can demo this" to "real shops are paying us in production." It replaces the stale `.local/tasks/RELEASE-PLAN.md` and the legacy `01-…17-` task files (all of which still reference "Bliq" and predate the Aurora/Aurum brand, the AI-inbox wedge, and the demo-readiness pass).
+This is the single authoritative document that sequences Livia from "we can demo this" to "real shops are paying us in production." It replaces the stale `.local/tasks/RELEASE-PLAN.md` and the legacy `01-…17-` task files (predating the Aurora/Aurum brand, the AI-inbox wedge, and the demo-readiness pass).
 
 The plan is organised as **five lanes** running in parallel, gated by **three release gates**. Each gate has explicit, non-negotiable acceptance criteria. No gate is "passed" by feel — only by criteria check.
 
@@ -95,7 +95,7 @@ Sizing: **S** ≤ one focused day · **M** 2-5 days · **L** > 1 week. Target ga
 | B7 | Social presence seeded: X/@liviaio, LinkedIn page, Instagram (handle parked at minimum). | S | 3 |
 | B8 | Press kit at `livia.io/press` — one-pager, founder photo, screenshots, logo zip. | S | 3 |
 | B9 | First eight founder posts written + scheduled (Linear or a Notion calendar). | M | 3 |
-| B10 | Brand audit: every "Bliq" string in code, copy, comments, file paths reviewed. Anything user-facing must read "Livia" or "Liv". Internal slugs stay (documented in `replit.md`). | M | 2 |
+| B10 | Brand audit: every legacy brand string in code, copy, comments, file paths reviewed. Anything user-facing must read "Livia" or "Liv". Internal slugs stay (documented in `replit.md`). | M | 2 |
 
 ### Lane 3 — Compliance
 

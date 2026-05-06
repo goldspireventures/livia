@@ -2,7 +2,7 @@ import type { EventLevel } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 
-export const BliqEventTypes = {
+export const LiviaEventTypes = {
   BUSINESS_CREATED: "BUSINESS_CREATED",
   BUSINESS_UPDATED: "BUSINESS_UPDATED",
   BUSINESS_ACCESS_CHECKED: "BUSINESS_ACCESS_CHECKED",
@@ -48,14 +48,14 @@ export const BliqEventTypes = {
   STRIPE_WEBHOOK_UNKNOWN_INTENT: "STRIPE_WEBHOOK_UNKNOWN_INTENT",
 } as const;
 
-export type BliqEventType = (typeof BliqEventTypes)[keyof typeof BliqEventTypes];
+export type LiviaEventType = (typeof LiviaEventTypes)[keyof typeof LiviaEventTypes];
 
 // Back-compat for Phase 1 imports
-export const Phase1EventTypes = BliqEventTypes;
-export type Phase1EventType = BliqEventType;
+export const Phase1EventTypes = LiviaEventTypes;
+export type Phase1EventType = LiviaEventType;
 
 type LogEventArgs = {
-  type: BliqEventType;
+  type: LiviaEventType;
   source: "web" | "mobile" | "api" | "system";
   level?: EventLevel;
   businessId?: string;

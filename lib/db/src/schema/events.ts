@@ -28,7 +28,7 @@ export const eventsTable = pgTable(
 
 export const insertEventSchema = createInsertSchema(eventsTable).omit({ createdAt: true });
 export type InsertEvent = z.infer<typeof insertEventSchema>;
-export type BliqEvent = typeof eventsTable.$inferSelect;
+export type LiviaEvent = typeof eventsTable.$inferSelect;
 
 export const EventType = {
   USER_SIGNED_UP: "USER_SIGNED_UP",

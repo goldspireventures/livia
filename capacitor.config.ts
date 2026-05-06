@@ -7,8 +7,8 @@ import type { CapacitorConfig } from "@capacitor/cli";
 const serverUrl = process.env.CAPACITOR_SERVER_URL?.trim();
 
 const config: CapacitorConfig = {
-  appId: "com.bliq.app",
-  appName: "Bliq",
+  appId: "com.livia.app",
+  appName: "Livia",
   webDir: "capacitor-www",
   ...(serverUrl
     ? {

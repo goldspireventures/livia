@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { BliqEventTypes, logEvent } from "@/lib/events";
+import { LiviaEventTypes, logEvent } from "@/lib/events";
 import { conflict, notFound } from "@/lib/errors";
 import { prisma } from "@/lib/prisma";
 
@@ -27,7 +27,7 @@ export async function assignServiceToStaff(input: z.infer<typeof AssignInput>) {
     });
 
     await logEvent({
-      type: BliqEventTypes.STAFF_SERVICE_ASSIGNED,
+      type: LiviaEventTypes.STAFF_SERVICE_ASSIGNED,
       source: "api",
       businessId,
       actorUserId,
@@ -81,7 +81,7 @@ export async function unassignServiceFromStaff(input: z.infer<typeof UnassignInp
   await prisma.staffServiceAssignment.delete({ where: { id: existing.id } });
 
   await logEvent({
-    type: BliqEventTypes.STAFF_SERVICE_UNASSIGNED,
+    type: LiviaEventTypes.STAFF_SERVICE_UNASSIGNED,
     source: "api",
     businessId,
     actorUserId,

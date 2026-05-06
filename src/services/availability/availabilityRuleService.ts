@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
-import { BliqEventTypes, logEvent } from "@/lib/events";
+import { LiviaEventTypes, logEvent } from "@/lib/events";
 import { badRequest, notFound } from "@/lib/errors";
 import { prisma } from "@/lib/prisma";
 import { getStaffById } from "@/services/staff/staffService";
@@ -84,7 +84,7 @@ export async function createAvailabilityRule(input: z.infer<typeof CreateAvailab
   });
 
   await logEvent({
-    type: BliqEventTypes.AVAILABILITY_RULE_CREATED,
+    type: LiviaEventTypes.AVAILABILITY_RULE_CREATED,
     source: "api",
     businessId,
     actorUserId,
@@ -181,7 +181,7 @@ export async function updateAvailabilityRule(input: z.infer<typeof UpdateAvailab
   });
 
   await logEvent({
-    type: BliqEventTypes.AVAILABILITY_RULE_UPDATED,
+    type: LiviaEventTypes.AVAILABILITY_RULE_UPDATED,
     source: "api",
     businessId,
     actorUserId,
@@ -207,7 +207,7 @@ export async function deleteAvailabilityRule(input: z.infer<typeof DeleteAvailab
   await prisma.availabilityRule.delete({ where: { id: ruleId } });
 
   await logEvent({
-    type: BliqEventTypes.AVAILABILITY_RULE_DELETED,
+    type: LiviaEventTypes.AVAILABILITY_RULE_DELETED,
     source: "api",
     businessId,
     actorUserId,

@@ -2,14 +2,14 @@
  * Idempotent demo seed. Requires DATABASE_URL in .env (see prisma.config.ts).
  * Run: npm run db:seed
  *
- * Ensures demo-bliq has owner, a service, staff, assignment, and Mon–Fri UTC
- * availability so `/book/demo-bliq` can list slots after seed.
+ * Ensures demo tenant has owner, a service, staff, assignment, and Mon–Fri UTC
+ * availability so `/book/demo` can list slots after seed.
  */
 import { createBusiness } from "@/services/business/businessService";
 import { prisma } from "@/lib/prisma";
 
-const DEMO_OWNER_EMAIL = "seed-owner@bliq.example";
-const DEMO_SLUG = "demo-bliq";
+const DEMO_OWNER_EMAIL = "seed-owner@livia.example";
+const DEMO_SLUG = "demo";
 
 /** Weekday 0=Sun .. 6=Sat (schema convention). Mon–Fri = 1..5 */
 const DEMO_WEEKDAYS = [1, 2, 3, 4, 5] as const;

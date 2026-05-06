@@ -26,5 +26,5 @@ Add when the matching **tranche** ships ([TRANCHES.md](./TRANCHES.md)):
 
 ## Indexing & constraints
 
-- Prefer **soft lifecycle** (`active`, status enums) over hard deletes for staff, services, customers, bookings — see BLIQ_BUILD_PLAN Part A §5.4.
+- Prefer **soft lifecycle** (`active`, status enums) over hard deletes for staff, services, customers, bookings — see LIVIA_BUILD_PLAN Part A §5.4.
 - Add indexes and uniques at migration time with a short comment in `schema.prisma` when new models land.

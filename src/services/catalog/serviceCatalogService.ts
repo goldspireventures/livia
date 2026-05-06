@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
-import { BliqEventTypes, logEvent } from "@/lib/events";
+import { LiviaEventTypes, logEvent } from "@/lib/events";
 import { notFound } from "@/lib/errors";
 import { prisma } from "@/lib/prisma";
 
@@ -51,7 +51,7 @@ export async function createService(input: z.infer<typeof CreateServiceInput>) {
   });
 
   await logEvent({
-    type: BliqEventTypes.SERVICE_CREATED,
+    type: LiviaEventTypes.SERVICE_CREATED,
     source: "api",
     businessId,
     actorUserId,
@@ -142,7 +142,7 @@ export async function updateService(input: z.infer<typeof UpdateServiceInput>) {
   });
 
   await logEvent({
-    type: BliqEventTypes.SERVICE_UPDATED,
+    type: LiviaEventTypes.SERVICE_UPDATED,
     source: "api",
     businessId,
     actorUserId,
@@ -170,7 +170,7 @@ export async function deactivateService(input: z.infer<typeof DeactivateServiceI
   });
 
   await logEvent({
-    type: BliqEventTypes.SERVICE_DEACTIVATED,
+    type: LiviaEventTypes.SERVICE_DEACTIVATED,
     source: "api",
     businessId,
     actorUserId,

@@ -2,7 +2,7 @@ import "server-only";
 
 import type Stripe from "stripe";
 
-import { BliqEventTypes, logEvent } from "@/lib/events";
+import { LiviaEventTypes, logEvent } from "@/lib/events";
 import { env } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 import { fanOutInAppAndPushToBusinessAdmins } from "@/services/notifications/notifyBusinessAdmins";
@@ -61,7 +61,7 @@ async function ensurePaymentRowForSucceededIntent({
 }
 
 /**
- * Apply Stripe webhook events for PaymentIntents created by Bliq.
+ * Apply Stripe webhook events for PaymentIntents created by Livia.
  * Safe to replay (idempotent status / payment writes).
  */
 export async function applyStripeWebhookEvent(event: Stripe.Event): Promise<void> {
@@ -78,7 +78,7 @@ export async function applyStripeWebhookEvent(event: Stripe.Event): Promise<void
 
   const pi = event.data.object as Stripe.PaymentIntent;
   const externalId = pi.id;
-  const recordId = pi.metadata?.bliqPaymentIntentRecordId;
+  const recordId = pi.metadata?.liviaPaymentIntentRecordId;
   const businessIdMeta = pi.metadata?.businessId;
 
   let row =
@@ -96,7 +96,7 @@ export async function applyStripeWebhookEvent(event: Stripe.Event): Promise<void
 
   if (!row) {
     await logEvent({
-      type: BliqEventTypes.STRIPE_WEBHOOK_UNKNOWN_INTENT,
+      type: LiviaEventTypes.STRIPE_WEBHOOK_UNKNOWN_INTENT,
       source: "system",
       level: "WARN",
       subjectType: "StripeEvent",
@@ -130,7 +130,7 @@ export async function applyStripeWebhookEvent(event: Stripe.Event): Promise<void
   });
 
   await logEvent({
-    type: BliqEventTypes.PAYMENT_INTENT_UPDATED,
+    type: LiviaEventTypes.PAYMENT_INTENT_UPDATED,
     source: "system",
     businessId: row.businessId,
     subjectType: "PaymentIntentRecord",

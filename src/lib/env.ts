@@ -12,7 +12,7 @@ const EnvSchema = z.object({
   STRIPE_WEBHOOK_SECRET: z.string().min(1).optional(),
   /// Resend API key; when unset, booking emails are logged as SKIPPED.
   RESEND_API_KEY: z.string().min(1).optional(),
-  /// From address for Resend (e.g. `Bliq <bookings@yourdomain.com>`).
+  /// From address for Resend (e.g. `Livia <bookings@yourdomain.com>`).
   NOTIFICATION_EMAIL_FROM: z.string().min(1).optional(),
   VAPID_PUBLIC_KEY: z.string().min(1).optional(),
   VAPID_PRIVATE_KEY: z.string().min(1).optional(),

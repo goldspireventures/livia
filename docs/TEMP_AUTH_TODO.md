@@ -6,4 +6,4 @@ Until real sessions land ([TRANCHES.md](./TRANCHES.md) T1), routes use `?userId=
 rg "TODO: Replace temporary (userId|actorUserId)" src/app/api
 ```
 
-All matches are under `src/app/api/businesses/...` and should be replaced with the chosen auth provider (see BLIQ_BUILD_PLAN Part C).
+All matches are under `src/app/api/businesses/...` and should be replaced with the chosen auth provider (see LIVIA_BUILD_PLAN Part C).

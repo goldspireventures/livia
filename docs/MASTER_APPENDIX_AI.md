@@ -1,6 +1,6 @@
 # Appendix — AI-native architecture (condensed)
 
-**Principles:** Modular, observable, auditable, **constrained**, provider-agnostic where practical. AI is **not** the source of truth for bookings, payments, or permissions (see BLIQ_BUILD_PLAN Part A §10).
+**Principles:** Modular, observable, auditable, **constrained**, provider-agnostic where practical. AI is **not** the source of truth for bookings, payments, or permissions (see LIVIA_BUILD_PLAN Part A §10).
 
 ## Layers (target layout under `src/` when built)
 

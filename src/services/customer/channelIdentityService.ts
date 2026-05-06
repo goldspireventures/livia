@@ -1,7 +1,7 @@
 import { Prisma, type ChannelType } from "@prisma/client";
 import { z } from "zod";
 
-import { BliqEventTypes, logEvent } from "@/lib/events";
+import { LiviaEventTypes, logEvent } from "@/lib/events";
 import { conflict, notFound } from "@/lib/errors";
 import { prisma } from "@/lib/prisma";
 
@@ -41,7 +41,7 @@ export async function createChannelIdentityForCustomer(input: z.infer<typeof Cre
     });
 
     await logEvent({
-      type: BliqEventTypes.CHANNEL_IDENTITY_CREATED,
+      type: LiviaEventTypes.CHANNEL_IDENTITY_CREATED,
       source: "api",
       businessId,
       actorUserId,
@@ -135,7 +135,7 @@ export async function updateChannelIdentityForCustomer(input: z.infer<typeof Upd
   }
 
   await logEvent({
-    type: BliqEventTypes.CHANNEL_IDENTITY_UPDATED,
+    type: LiviaEventTypes.CHANNEL_IDENTITY_UPDATED,
     source: "api",
     businessId,
     actorUserId,
@@ -163,7 +163,7 @@ export async function deleteChannelIdentityForCustomer(input: z.infer<typeof Del
   });
 
   await logEvent({
-    type: BliqEventTypes.CHANNEL_IDENTITY_DELETED,
+    type: LiviaEventTypes.CHANNEL_IDENTITY_DELETED,
     source: "api",
     businessId,
     actorUserId,

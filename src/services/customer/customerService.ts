@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
-import { BliqEventTypes, logEvent } from "@/lib/events";
+import { LiviaEventTypes, logEvent } from "@/lib/events";
 import { conflict, notFound } from "@/lib/errors";
 import { prisma } from "@/lib/prisma";
 
@@ -26,7 +26,7 @@ export async function createCustomer(input: z.infer<typeof CreateCustomerInput>)
   });
 
   await logEvent({
-    type: BliqEventTypes.CUSTOMER_CREATED,
+    type: LiviaEventTypes.CUSTOMER_CREATED,
     source: "api",
     businessId,
     actorUserId,
@@ -91,7 +91,7 @@ export async function updateCustomer(input: z.infer<typeof UpdateCustomerInput>)
   });
 
   await logEvent({
-    type: BliqEventTypes.CUSTOMER_UPDATED,
+    type: LiviaEventTypes.CUSTOMER_UPDATED,
     source: "api",
     businessId,
     actorUserId,
@@ -129,7 +129,7 @@ export async function deleteCustomer(input: z.infer<typeof DeleteCustomerInput>)
   });
 
   await logEvent({
-    type: BliqEventTypes.CUSTOMER_DELETED,
+    type: LiviaEventTypes.CUSTOMER_DELETED,
     source: "api",
     businessId,
     actorUserId,

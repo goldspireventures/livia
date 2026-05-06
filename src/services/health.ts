@@ -1,7 +1,7 @@
 export function getHealthPayload() {
   return {
     ok: true,
-    service: "bliq",
+    service: "livia",
     time: new Date().toISOString(),
   };
 }

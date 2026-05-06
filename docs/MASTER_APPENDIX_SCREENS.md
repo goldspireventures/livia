@@ -39,4 +39,4 @@ Tag each surface for planning; **tranche** links to [TRANCHES.md](./TRANCHES.md)
 
 ## Mobile UX (cross-cutting)
 
-Bottom nav or equivalent, thumb-friendly actions, loading/empty/error states, no hover-only flows — see BLIQ_BUILD_PLAN Part A §5.7–§5.8.
+Bottom nav or equivalent, thumb-friendly actions, loading/empty/error states, no hover-only flows — see LIVIA_BUILD_PLAN Part A §5.7–§5.8.

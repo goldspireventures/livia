@@ -1,7 +1,7 @@
 import { Prisma, type PaymentIntentStatus } from "@prisma/client";
 import { z } from "zod";
 
-import { BliqEventTypes, logEvent } from "@/lib/events";
+import { LiviaEventTypes, logEvent } from "@/lib/events";
 import { badRequest, conflict, notFound } from "@/lib/errors";
 import { prisma } from "@/lib/prisma";
 import { getBookingById } from "@/services/booking/bookingService";
@@ -53,7 +53,7 @@ export async function createPaymentIntentRecord(input: z.infer<typeof CreatePaym
   });
 
   await logEvent({
-    type: BliqEventTypes.PAYMENT_INTENT_CREATED,
+    type: LiviaEventTypes.PAYMENT_INTENT_CREATED,
     source: "api",
     businessId,
     actorUserId,
@@ -68,11 +68,11 @@ export async function createPaymentIntentRecord(input: z.infer<typeof CreatePaym
         amountMinorUnits,
         currency,
         metadata: {
-          bliqPaymentIntentRecordId: row.id,
+          liviaPaymentIntentRecordId: row.id,
           businessId,
           bookingId: bookingId ?? null,
         },
-        idempotencyKey: `bliq-pi-${row.id}`,
+        idempotencyKey: `livia-pi-${row.id}`,
       });
 
       const updated = await prisma.paymentIntentRecord.update({
@@ -84,7 +84,7 @@ export async function createPaymentIntentRecord(input: z.infer<typeof CreatePaym
       });
 
       await logEvent({
-        type: BliqEventTypes.PAYMENT_INTENT_UPDATED,
+        type: LiviaEventTypes.PAYMENT_INTENT_UPDATED,
         source: "api",
         businessId,
         actorUserId,
@@ -177,7 +177,7 @@ export async function updatePaymentIntentRecord(input: z.infer<typeof UpdatePaym
     });
 
     await logEvent({
-      type: BliqEventTypes.PAYMENT_INTENT_UPDATED,
+      type: LiviaEventTypes.PAYMENT_INTENT_UPDATED,
       source: "api",
       businessId,
       actorUserId,

@@ -1,6 +1,6 @@
 import type { MembershipRole } from "@prisma/client";
 
-import { BliqEventTypes, logEvent } from "@/lib/events";
+import { LiviaEventTypes, logEvent } from "@/lib/events";
 import { forbidden, notFound } from "@/lib/errors";
 import { prisma } from "@/lib/prisma";
 
@@ -36,7 +36,7 @@ export async function assertUserCanAccessBusiness({
   if (!membership) {
     if (emitAccessDenied) {
       await logEvent({
-        type: BliqEventTypes.BUSINESS_ACCESS_DENIED,
+        type: LiviaEventTypes.BUSINESS_ACCESS_DENIED,
         source: "api",
         businessId,
         actorUserId: userId,
@@ -50,7 +50,7 @@ export async function assertUserCanAccessBusiness({
 
   if (emitAccessChecked) {
     await logEvent({
-      type: BliqEventTypes.BUSINESS_ACCESS_CHECKED,
+      type: LiviaEventTypes.BUSINESS_ACCESS_CHECKED,
       source: "api",
       businessId,
       actorUserId: userId,
@@ -88,7 +88,7 @@ export async function assertUserRole({
   if (!membership) {
     if (emitAccessDenied) {
       await logEvent({
-        type: BliqEventTypes.BUSINESS_ACCESS_DENIED,
+        type: LiviaEventTypes.BUSINESS_ACCESS_DENIED,
         source: "api",
         businessId,
         actorUserId: userId,
@@ -102,7 +102,7 @@ export async function assertUserRole({
 
   if (emitAccessChecked) {
     await logEvent({
-      type: BliqEventTypes.BUSINESS_ACCESS_CHECKED,
+      type: LiviaEventTypes.BUSINESS_ACCESS_CHECKED,
       source: "api",
       businessId,
       actorUserId: userId,
@@ -115,7 +115,7 @@ export async function assertUserRole({
   if (!allowedRoles.includes(membership.role)) {
     if (options?.emitRoleDenied ?? true) {
       await logEvent({
-        type: BliqEventTypes.BUSINESS_ACCESS_DENIED,
+        type: LiviaEventTypes.BUSINESS_ACCESS_DENIED,
         source: "api",
         businessId,
         actorUserId: userId,

@@ -1,12 +1,12 @@
-# Bliq
+# Livia
 
 Mobile-first, multi-tenant **operating system for appointment-based service businesses** — APIs and services today; native shell later.
 
 ## Docs for contributors
 
 0. **[docs/REPO_LAYOUT.md](docs/REPO_LAYOUT.md)** — one-page map of folders and layers; **[docs/FOLDER_STRUCTURE.md](docs/FOLDER_STRUCTURE.md)** — canonical `src/services/*` ↔ API layout.
-1. **[docs/BLIQ_BUILD_PLAN.md](docs/BLIQ_BUILD_PLAN.md)** — product principles, architecture rules, HTTP surface, phased roadmap (read first).
-2. **[docs/ROADMAP.md](docs/ROADMAP.md)** — how BLIQ phases relate to the broader master spec.
+1. **[docs/LIVIA_BUILD_PLAN.md](docs/LIVIA_BUILD_PLAN.md)** — product principles, architecture rules, HTTP surface, phased roadmap (read first).
+2. **[docs/ROADMAP.md](docs/ROADMAP.md)** — how Livia phases relate to the broader master spec.
 3. **[docs/MASTER_SPINE.md](docs/MASTER_SPINE.md)** — short master-spec spine + links to appendices (screens, AI, schema target, events).
 4. **[docs/CURSOR_RULES.md](docs/CURSOR_RULES.md)** — day-to-day editing rules.
 5. **[docs/REPO_DELTA.md](docs/REPO_DELTA.md)** — spec vs current implementation checklist.
@@ -41,7 +41,7 @@ Next.js (App Router), TypeScript, Tailwind, Prisma, PostgreSQL (Supabase). Tenan
 
 ## Auth
 
-Bliq uses **Clerk**. Owner and tenant routes are protected via middleware; API routes resolve the caller from the **Clerk session** (no `?userId=` / `actorUserId` fallbacks).
+Livia uses **Clerk**. Owner and tenant routes are protected via middleware; API routes resolve the caller from the **Clerk session** (no `?userId=` / `actorUserId` fallbacks).
 
 ## Health check
 

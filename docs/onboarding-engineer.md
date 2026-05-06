@@ -66,7 +66,7 @@ Required env vars are listed in `replit.md` → "Run & Operate". Anthropic crede
 
 ## Things to never do
 
-- **Never reintroduce the name "Bliq" in user-facing copy.** Internal slugs (`bliq-mobile`, `bliq-dashboard`, `STORAGE_KEY = "bliq_current_business_id"`, scheme `bliq-mobile`) are deliberately preserved — changing them breaks Clerk redirect URIs, Google OAuth callbacks, and on-device storage. See `replit.md` → "Where things live" + "Gotchas".
+- **Never reintroduce the old legacy product name in user-facing copy.** The repo has been rebranded to Livia.
 - **Never use the name "Olivia" anywhere** — in code, comments, copy, file names, UI strings, or commit messages. It's the founder's daughter's name and is privately reserved. There is a CI guard in lane Compliance C12 that fails the build if it appears.
 - **Never use Aurum for an action button.** Cyan stays the action colour. The only exception is the celebrate shimmer.
 - **Never edit `lib/db/src/schema/*` without a migration**, and never edit `lib/api-spec/openapi.yaml` without re-running `pnpm codegen`.

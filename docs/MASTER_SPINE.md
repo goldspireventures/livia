@@ -1,6 +1,6 @@
 # Master product spec — spine (in-repo)
 
-This is the **short normative spine** for the external “master build” vision. Read **[BLIQ_BUILD_PLAN.md](./BLIQ_BUILD_PLAN.md)** first for execution law, tenancy, and engineering non‑negotiables. Use appendices below for depth without duplicating Part A.
+This is the **short normative spine** for the external “master build” vision. Read **[LIVIA_BUILD_PLAN.md](./LIVIA_BUILD_PLAN.md)** first for execution law, tenancy, and engineering non‑negotiables. Use appendices below for depth without duplicating Part A.
 
 ## Positioning
 
@@ -27,13 +27,13 @@ Each quarter, list **in** [TRANCHES.md](./TRANCHES.md) or a short release note: 
 | AI architecture & safety | [MASTER_APPENDIX_AI.md](./MASTER_APPENDIX_AI.md) |
 | Event taxonomy (current + future) | [MASTER_APPENDIX_EVENTS.md](./MASTER_APPENDIX_EVENTS.md) |
 | Delivery tranches T0–T6 | [TRANCHES.md](./TRANCHES.md) |
-| BLIQ phases ↔ this spec | [MASTER_BLIQ_INDEX.md](./MASTER_BLIQ_INDEX.md) |
+| Livia phases ↔ this spec | [MASTER_LIVIA_INDEX.md](./MASTER_LIVIA_INDEX.md) |
 | Repo gap checklist | [REPO_DELTA.md](./REPO_DELTA.md) |
 | ADR template (auth, renames) | [ADR_TEMPLATE.md](./ADR_TEMPLATE.md) |
 | Elite standards pack (API, security, events target, UX, release, testing) | [elite/README.md](./elite/README.md) |
 
 ## Precedence
 
-If the master vision conflicts with **implementation** (routes, `businessId`, service layer), **[BLIQ_BUILD_PLAN.md](./BLIQ_BUILD_PLAN.md)** wins until schema and APIs are intentionally updated.
+If the master vision conflicts with **implementation** (routes, `businessId`, service layer), **[LIVIA_BUILD_PLAN.md](./LIVIA_BUILD_PLAN.md)** wins until schema and APIs are intentionally updated.
 
-For **API response shape, error codes, security rules, event catalog targets, UX and release discipline**, treat **[elite/BLIQ_API_STANDARD.md](./elite/BLIQ_API_STANDARD.md)** and siblings as **normative** where they do not contradict BLIQ or the live codebase.
+For **API response shape, error codes, security rules, event catalog targets, UX and release discipline**, treat **[elite/LIVIA_API_STANDARD.md](./elite/LIVIA_API_STANDARD.md)** and siblings as **normative** where they do not contradict Livia or the live codebase.

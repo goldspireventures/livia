@@ -1,7 +1,7 @@
 import { Prisma, type BookingStatus } from "@prisma/client";
 import { z } from "zod";
 
-import { BliqEventTypes, logEvent } from "@/lib/events";
+import { LiviaEventTypes, logEvent } from "@/lib/events";
 import { badRequest, conflict, notFound } from "@/lib/errors";
 import { prisma } from "@/lib/prisma";
 import { getServiceById } from "@/services/catalog/serviceCatalogService";
@@ -145,7 +145,7 @@ export async function createBooking(input: z.infer<typeof CreateBookingInput>) {
   });
 
   await logEvent({
-    type: BliqEventTypes.BOOKING_CREATED,
+    type: LiviaEventTypes.BOOKING_CREATED,
     source: "api",
     businessId,
     actorUserId,
@@ -322,7 +322,7 @@ export async function updateBooking(input: z.infer<typeof UpdateBookingInput>) {
   });
 
   await logEvent({
-    type: BliqEventTypes.BOOKING_UPDATED,
+    type: LiviaEventTypes.BOOKING_UPDATED,
     source: "api",
     businessId,
     actorUserId,

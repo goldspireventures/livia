@@ -13,7 +13,7 @@ export function Pulse() {
             <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-[#ccff00] text-black">
               <Zap size={28} strokeWidth={2.5} />
             </div>
-            <h1 className="text-5xl font-bold tracking-tighter uppercase pulse-display">BLIQ</h1>
+            <h1 className="text-5xl font-bold tracking-tighter uppercase pulse-display">LIVIA</h1>
           </div>
           
           <h2 className="text-6xl md:text-8xl font-black uppercase leading-[0.9] tracking-tighter mb-8 max-w-4xl">
@@ -497,7 +497,7 @@ export function Pulse() {
 
         {/* 8. Footer */}
         <footer className="py-12 flex justify-between items-center text-[#a1a1aa] pulse-mono text-xs uppercase">
-          <div>Bliq • Bold Kinetic • v0.1</div>
+          <div>Livia • Bold Kinetic • v0.1</div>
           <div className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-[#ccff00]"></div>
             System Online

@@ -14,7 +14,7 @@ export function Aurora() {
         <div className="z-10 flex flex-col items-center max-w-4xl mx-auto space-y-8">
           <div className="flex items-center gap-3 mb-4">
             <LogoMark className="w-10 h-10" />
-            <span className="font-display text-4xl font-semibold tracking-tight">Bliq</span>
+            <span className="font-display text-4xl font-semibold tracking-tight">Livia</span>
           </div>
           
           <h1 className="font-display text-6xl md:text-8xl font-bold tracking-tighter leading-[1.1]">
@@ -294,7 +294,7 @@ export function Aurora() {
                          <div className="bg-[#09090b]/90 rounded-[15px] p-5 relative z-10 h-full backdrop-blur-2xl">
                             <div className="flex items-center gap-2 mb-4">
                                <SparklesIcon className="w-4 h-4 text-[#06b6d4]" />
-                               <span className="text-xs font-mono text-[var(--aurora-text-faint)] uppercase tracking-wider">Bliq Intelligence</span>
+                               <span className="text-xs font-mono text-[var(--aurora-text-faint)] uppercase tracking-wider">Livia Intelligence</span>
                             </div>
                             <p className="font-medium mb-2 leading-snug text-lg">Reschedule Gap Detected</p>
                             <p className="text-sm text-[var(--aurora-text-muted)] mb-5">You have a 90m opening at 2:00 PM. Send an early-access invite to 3 clients on your waitlist?</p>
@@ -329,7 +329,7 @@ export function Aurora() {
             <div className="aurora-glass p-8 border-t-4 border-t-[#06b6d4]">
                <p className="font-mono text-xs text-[var(--aurora-text-faint)] uppercase mb-4 tracking-wider">Empty State</p>
                <p className="text-lg font-medium">A quiet day.</p>
-               <p className="text-sm text-[var(--aurora-text-muted)] mt-2">No appointments scheduled yet. Take a breath, or let Bliq fill the gaps.</p>
+               <p className="text-sm text-[var(--aurora-text-muted)] mt-2">No appointments scheduled yet. Take a breath, or let Livia fill the gaps.</p>
             </div>
             
             <div className="aurora-glass p-8 border-t-4 border-t-[#10b981]">
@@ -348,7 +348,7 @@ export function Aurora() {
 
         {/* 8. Footer */}
         <footer className="pt-12 border-t border-[var(--aurora-border)] text-center pb-8">
-           <p className="font-mono text-sm text-[var(--aurora-text-faint)]">Bliq • Aurora • v0.1</p>
+           <p className="font-mono text-sm text-[var(--aurora-text-faint)]">Livia • Aurora • v0.1</p>
         </footer>
 
       </div>

@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
-import { BliqEventTypes, logEvent } from "@/lib/events";
+import { LiviaEventTypes, logEvent } from "@/lib/events";
 import { badRequest, notFound } from "@/lib/errors";
 import { prisma } from "@/lib/prisma";
 import { getStaffById } from "@/services/staff/staffService";
@@ -41,7 +41,7 @@ export async function createTimeOff(input: z.infer<typeof CreateTimeOffInput>) {
   });
 
   await logEvent({
-    type: BliqEventTypes.TIME_OFF_CREATED,
+    type: LiviaEventTypes.TIME_OFF_CREATED,
     source: "api",
     businessId,
     actorUserId,
@@ -130,7 +130,7 @@ export async function updateTimeOff(input: z.infer<typeof UpdateTimeOffInput>) {
   });
 
   await logEvent({
-    type: BliqEventTypes.TIME_OFF_UPDATED,
+    type: LiviaEventTypes.TIME_OFF_UPDATED,
     source: "api",
     businessId,
     actorUserId,
@@ -156,7 +156,7 @@ export async function deleteTimeOff(input: z.infer<typeof DeleteTimeOffInput>) {
   await prisma.timeOff.delete({ where: { id: timeOffId } });
 
   await logEvent({
-    type: BliqEventTypes.TIME_OFF_DELETED,
+    type: LiviaEventTypes.TIME_OFF_DELETED,
     source: "api",
     businessId,
     actorUserId,

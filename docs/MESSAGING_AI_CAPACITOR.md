@@ -3,7 +3,7 @@
 ## Messaging inbound (`MessageLog`)
 
 1. Set `MESSAGING_INBOUND_SECRET` in `.env`.
-2. `POST /api/webhooks/messaging` with header `x-bliq-messaging-secret: <same>` and JSON body:
+2. `POST /api/webhooks/messaging` with header `x-livia-messaging-secret: <same>` and JSON body:
    - `businessId`, `channel` (`EMAIL` | `PHONE` | `SMS` | …), `from`, `body`
    - optional `provider`, `payload`
 3. A row is written to `MessageLog`. If `ChannelIdentity` exists for the same `businessId` + `channel` + normalized `from`, status is `LINKED` and `customerId` is set; else `UNMATCHED`.

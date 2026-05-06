@@ -44,7 +44,7 @@ type CreateStripePaymentIntentArgs = {
   amountMinorUnits: number;
   currency: string;
   metadata: {
-    bliqPaymentIntentRecordId: string;
+    liviaPaymentIntentRecordId: string;
     businessId: string;
     bookingId?: string | null;
   };
@@ -59,7 +59,7 @@ export async function createStripePaymentIntent({
 }: CreateStripePaymentIntentArgs): Promise<Stripe.PaymentIntent> {
   const stripe = getStripeClient();
   const meta: Stripe.MetadataParam = {
-    bliqPaymentIntentRecordId: metadata.bliqPaymentIntentRecordId,
+    liviaPaymentIntentRecordId: metadata.liviaPaymentIntentRecordId,
     businessId: metadata.businessId,
   };
   if (metadata.bookingId) {

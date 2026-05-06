@@ -20,7 +20,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Bliq",
+  title: "Livia",
   description: "Appointments for service businesses",
 };
 
@@ -39,7 +39,7 @@ export default function RootLayout({
           <header className="flex items-center justify-end gap-3 border-b border-zinc-200 px-4 py-2 dark:border-zinc-800">
             <div className="mr-auto flex items-center gap-4">
               <Link href="/" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                Bliq
+                Livia
               </Link>
               <Link
                 href="/b"

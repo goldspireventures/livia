@@ -1,6 +1,6 @@
 /* global self */
 self.addEventListener("push", (event) => {
-  let data = { title: "Bliq", body: "" };
+  let data = { title: "Livia", body: "" };
   try {
     if (event.data) {
       data = { ...data, ...event.data.json() };

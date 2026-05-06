@@ -1,4 +1,4 @@
-# Bliq repository layout (onboarding map)
+# Livia repository layout (onboarding map)
 
 One-page map of **where things live** and **how layers interact**. Canonical service ↔ API paths are also in [FOLDER_STRUCTURE.md](./FOLDER_STRUCTURE.md).
 
@@ -23,7 +23,7 @@ One-page map of **where things live** and **how layers interact**. Canonical ser
 
 | Kind | Examples |
 |------|-----------|
-| Product + roadmap | `BLIQ_BUILD_PLAN.md`, `ROADMAP.md`, `MASTER_SPINE.md`, `TRANCHES.md` |
+| Product + roadmap | `LIVIA_BUILD_PLAN.md`, `ROADMAP.md`, `MASTER_SPINE.md`, `TRANCHES.md` |
 | Day-to-day editing | `CURSOR_RULES.md`, this file |
 | Standards pack | `elite/*` |
 | Deep dives | `MASTER_APPENDIX_*`, `PAYMENTS_STRIPE.md`, `REPO_DELTA.md` |

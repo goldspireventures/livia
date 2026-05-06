@@ -1,7 +1,7 @@
 import { Prisma, type StaffRole } from "@prisma/client";
 import { z } from "zod";
 
-import { BliqEventTypes, logEvent } from "@/lib/events";
+import { LiviaEventTypes, logEvent } from "@/lib/events";
 import { conflict, notFound } from "@/lib/errors";
 import { prisma } from "@/lib/prisma";
 
@@ -74,7 +74,7 @@ export async function createStaff(input: z.infer<typeof CreateStaffInput>) {
   });
 
   await logEvent({
-    type: BliqEventTypes.STAFF_CREATED,
+    type: LiviaEventTypes.STAFF_CREATED,
     source: "api",
     businessId,
     actorUserId,
@@ -185,7 +185,7 @@ export async function updateStaff(input: z.infer<typeof UpdateStaffInput>) {
   });
 
   await logEvent({
-    type: BliqEventTypes.STAFF_UPDATED,
+    type: LiviaEventTypes.STAFF_UPDATED,
     source: "api",
     businessId,
     actorUserId,
@@ -213,7 +213,7 @@ export async function deactivateStaff(input: z.infer<typeof DeactivateStaffInput
   });
 
   await logEvent({
-    type: BliqEventTypes.STAFF_DEACTIVATED,
+    type: LiviaEventTypes.STAFF_DEACTIVATED,
     source: "api",
     businessId,
     actorUserId,

@@ -68,7 +68,7 @@ export async function dispatchPublicBookingCreatedNotifications(input: {
     </ul>
     <p>Status: <strong>${escapeHtml(booking.status)}</strong>. The business may confirm or adjust your appointment.</p>
     ${appBase ? `<p><a href="${escapeHtml(`${appBase}/book/${businessSlug}`)}">View booking page</a></p>` : ""}
-    <p style="color:#666;font-size:12px">Sent by Bliq</p>
+    <p style="color:#666;font-size:12px">Sent by Livia</p>
   `.trim();
 
     const emailLog = await createNotificationLog({

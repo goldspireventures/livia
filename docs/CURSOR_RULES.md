@@ -1,6 +1,6 @@
-# Cursor Rules for Bliq
+# Cursor Rules for Livia
 
-**Foundational document:** `docs/BLIQ_BUILD_PLAN.md` — read it **first** for what Bliq is, engineering non‑negotiables, booking/payment/messaging/storefront/AI/UX philosophy, and the build roadmap (Parts A–D).
+**Foundational document:** `docs/LIVIA_BUILD_PLAN.md` — read it **first** for what Livia is, engineering non‑negotiables, booking/payment/messaging/storefront/AI/UX philosophy, and the build roadmap (Parts A–D).
 
 Also skim **`docs/ROADMAP.md`**, **`docs/MASTER_SPINE.md`**, **`docs/TRANCHES.md`**, **`docs/REPO_DELTA.md`**, and **`docs/elite/README.md`** (elite pack index).
 

@@ -7,8 +7,8 @@ export function Atelier() {
       {/* 1. Hero Band */}
       <section className="min-h-[80vh] flex flex-col justify-center px-8 md:px-16 lg:px-24">
         <div className="max-w-6xl mx-auto w-full">
-          <p className="text-[var(--at-accent)] text-sm tracking-[0.2em] uppercase mb-8 font-medium">Bliq Brand Identity</p>
-          <h1 className="display-font text-8xl md:text-9xl font-medium tracking-tight mb-8">Bliq.</h1>
+          <p className="text-[var(--at-accent)] text-sm tracking-[0.2em] uppercase mb-8 font-medium">Livia Brand Identity</p>
+          <h1 className="display-font text-8xl md:text-9xl font-medium tracking-tight mb-8">Livia.</h1>
           <div className="max-w-2xl">
             <h2 className="display-font text-4xl md:text-5xl text-[var(--at-ink-muted)] italic mb-6">Care, made effortless.</h2>
             <p className="text-xl text-[var(--at-ink)] font-light leading-relaxed">
@@ -29,10 +29,10 @@ export function Atelier() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="aspect-[4/3] bg-[var(--at-surface)] thin-border flex items-center justify-center p-8">
-              <span className="display-font text-6xl font-medium">Bliq.</span>
+              <span className="display-font text-6xl font-medium">Livia.</span>
             </div>
             <div className="aspect-[4/3] bg-[var(--at-ink)] text-[var(--at-surface)] flex items-center justify-center p-8">
-              <span className="display-font text-6xl font-medium">Bliq.</span>
+              <span className="display-font text-6xl font-medium">Livia.</span>
             </div>
             <div className="aspect-[4/3] bg-[var(--at-accent)] text-[var(--at-bg)] flex items-center justify-center p-8">
               <span className="display-font text-7xl font-medium italic">bq</span>
@@ -144,7 +144,7 @@ export function Atelier() {
                   <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center mb-6">
                     <span className="text-xs">✦</span>
                   </div>
-                  <h5 className="display-font text-2xl font-medium mb-2">Bliq Premium</h5>
+                  <h5 className="display-font text-2xl font-medium mb-2">Livia Premium</h5>
                   <p className="text-sm text-white/70 leading-relaxed mb-6">Elevate your practice with AI-driven insights and clienteling.</p>
                   <div className="text-xs uppercase tracking-wider font-medium text-[var(--at-bg)]">Upgrade</div>
                 </div>
@@ -251,7 +251,7 @@ export function Atelier() {
       {/* 8. Footer */}
       <footer className="py-12 text-center border-t border-[var(--at-border)] mt-16">
         <p className="ui-font text-xs uppercase tracking-widest text-[var(--at-ink-muted)]">
-          Bliq • Atelier Direction • v0.1
+          Livia • Atelier Direction • v0.1
         </p>
       </footer>
     </div>

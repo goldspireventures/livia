@@ -20,7 +20,7 @@ export async function ensureUserForClerk({ clerkUserId }: { clerkUserId: string 
     clerk?.primaryEmailAddress?.emailAddress ??
     clerk?.emailAddresses?.[0]?.emailAddress;
   if (!email) {
-    throw badRequest("Clerk user has no email; cannot create Bliq user.");
+    throw badRequest("Clerk user has no email; cannot create Livia user.");
   }
 
   const name =

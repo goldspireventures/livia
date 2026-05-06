@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
-import { BliqEventTypes, logEvent } from "@/lib/events";
+import { LiviaEventTypes, logEvent } from "@/lib/events";
 import { conflict } from "@/lib/errors";
 
 const CreateBusinessInput = z.object({
@@ -53,7 +53,7 @@ export async function createBusiness(input: z.infer<typeof CreateBusinessInput>)
   });
 
   await logEvent({
-    type: BliqEventTypes.BUSINESS_CREATED,
+    type: LiviaEventTypes.BUSINESS_CREATED,
     source: "api",
     businessId: result.business.id,
     actorUserId: ownerUserId,
@@ -63,7 +63,7 @@ export async function createBusiness(input: z.infer<typeof CreateBusinessInput>)
   });
 
   await logEvent({
-    type: BliqEventTypes.MEMBERSHIP_CREATED,
+    type: LiviaEventTypes.MEMBERSHIP_CREATED,
     source: "api",
     businessId: result.business.id,
     actorUserId: ownerUserId,
@@ -131,7 +131,7 @@ export async function updateBusiness(input: z.infer<typeof UpdateBusinessInput>)
   });
 
   await logEvent({
-    type: BliqEventTypes.BUSINESS_UPDATED,
+    type: LiviaEventTypes.BUSINESS_UPDATED,
     source: "api",
     businessId,
     actorUserId,

@@ -28,7 +28,7 @@ export async function getBusinessHealthInsight(input: { businessId: string; user
   const started = Date.now();
   const llm = await optionalChatCompletion({
     system:
-      "You are Bliq ops assistant. Reply with 2–4 short bullet lines of operational tips (no markdown headers). No PII. If data is thin, say what to configure next.",
+      "You are a Livia ops assistant. Reply with 2–4 short bullet lines of operational tips (no markdown headers). No PII. If data is thin, say what to configure next.",
     user: `BusinessId ${businessId}. ${baseline}`,
     maxTokens: 220,
   });

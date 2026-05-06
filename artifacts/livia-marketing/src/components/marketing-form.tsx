@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -16,7 +16,8 @@ export function MarketingForm() {
   const createLead = useCreateMarketingLead();
 
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+    // zod v4 types can mismatch resolver's bundled zod typings; runtime validation is fine.
+    resolver: zodResolver(formSchema as unknown as Parameters<typeof zodResolver>[0]),
     defaultValues: { email: "" },
   });
 

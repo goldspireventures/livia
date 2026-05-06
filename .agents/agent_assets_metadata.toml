@@ -3,7 +3,7 @@ outputs = []
 
 [[generated]]
 id = "ZaCqvP5QzimB-lZWdbKYH"
-uri = "file://artifacts/bliq-mobile/assets/images/icon.png"
+uri = "file://artifacts/livia-mobile/assets/images/icon.png"
 type = "image"
 title = "generated_image"
 

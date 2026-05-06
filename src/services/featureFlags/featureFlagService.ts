@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
-import { BliqEventTypes, logEvent } from "@/lib/events";
+import { LiviaEventTypes, logEvent } from "@/lib/events";
 import { conflict, notFound } from "@/lib/errors";
 import { prisma } from "@/lib/prisma";
 
@@ -33,7 +33,7 @@ export async function createFeatureFlag(input: z.infer<typeof CreateFeatureFlagI
     });
 
     await logEvent({
-      type: BliqEventTypes.FEATURE_FLAG_CREATED,
+      type: LiviaEventTypes.FEATURE_FLAG_CREATED,
       source: "api",
       businessId,
       actorUserId,
@@ -103,7 +103,7 @@ export async function updateFeatureFlag(input: z.infer<typeof UpdateFeatureFlagI
   });
 
   await logEvent({
-    type: BliqEventTypes.FEATURE_FLAG_UPDATED,
+    type: LiviaEventTypes.FEATURE_FLAG_UPDATED,
     source: "api",
     businessId,
     actorUserId,
@@ -128,7 +128,7 @@ export async function deleteFeatureFlag(input: z.infer<typeof DeleteFeatureFlagI
   await prisma.featureFlag.delete({ where: { id: featureFlagId } });
 
   await logEvent({
-    type: BliqEventTypes.FEATURE_FLAG_DELETED,
+    type: LiviaEventTypes.FEATURE_FLAG_DELETED,
     source: "api",
     businessId,
     actorUserId,

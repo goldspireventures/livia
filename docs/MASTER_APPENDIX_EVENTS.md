@@ -2,9 +2,9 @@
 
 ## Implemented (`src/lib/events.ts`)
 
-Canonical string types live in **`BliqEventTypes`** — business, membership, staff, service, staff–service, customer, channel identity, booking, availability rules, time off, feature flags, payment intents, Stripe webhook unknown intent.
+Canonical string types live in **`LiviaEventTypes`** — business, membership, staff, service, staff–service, customer, channel identity, booking, availability rules, time off, feature flags, payment intents, Stripe webhook unknown intent.
 
-**Target / aspirational catalog:** [elite/BLIQ_EVENT_CATALOG.md](./elite/BLIQ_EVENT_CATALOG.md) — grow `BliqEventTypes` + `logEvent` usage toward that list over time.
+**Target / aspirational catalog:** [elite/LIVIA_EVENT_CATALOG.md](./elite/LIVIA_EVENT_CATALOG.md) — grow `LiviaEventTypes` + `logEvent` usage toward that list over time.
 
 ## Future (master spec alignment)
 
