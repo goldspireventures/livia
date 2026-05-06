@@ -131,7 +131,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-medium mb-3">AI Inbox</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  A Livia AI replies to customer messages instantly across WhatsApp, Instagram, and SMS, seamlessly booking them into your calendar without you lifting a finger.
+                  A Livia AI replies to customer messages instantly — across SMS today, with WhatsApp and Instagram joining at public launch — and books them into your calendar without you lifting a finger.
                 </p>
               </motion.div>
 
@@ -147,7 +147,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-medium mb-3">Revenue Protection</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  End the pain of empty chairs. Smart no-show recovery, beautifully timed automated reminders, and flexible deposit logic that protects your bottom line.
+                  End the pain of empty chairs. Beautifully timed booking reminders and smart no-show recovery, with deposit-ready scheduling rolling out at public launch.
                 </p>
               </motion.div>
 
@@ -178,6 +178,7 @@ export default function Home() {
             <div className="text-center mb-20">
               <h2 className="text-3xl md:text-5xl font-serif mb-6 tracking-tight">Simple, European pricing.</h2>
               <p className="text-muted-foreground text-lg">No hidden fees. VAT handled clearly.</p>
+              <p className="text-muted-foreground/70 text-sm mt-3">Pricing locks at public launch — closed beta is on the house.</p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-8 items-center">
@@ -213,7 +214,7 @@ export default function Home() {
                   <li className="flex items-start gap-3 text-white/90"><span className="text-aurora-cyan mt-1">✦</span> Up to 5 staff members</li>
                   <li className="flex items-start gap-3 text-white/90"><span className="text-aurora-cyan mt-1">✦</span> Full AI Inbox & Auto-booking</li>
                   <li className="flex items-start gap-3 text-white/90"><span className="text-aurora-cyan mt-1">✦</span> Advanced Revenue Protection</li>
-                  <li className="flex items-start gap-3 text-white/90"><span className="text-aurora-cyan mt-1">✦</span> Custom Deposit Logic</li>
+                  <li className="flex items-start gap-3 text-white/90"><span className="text-aurora-cyan mt-1">✦</span> Deposit-ready (rolls out at public launch)</li>
                 </ul>
               </div>
 
@@ -247,7 +248,7 @@ export default function Home() {
             <AccordionItem value="item-1" className="border-white/10 px-2">
               <AccordionTrigger className="text-left text-lg font-medium hover:no-underline hover:text-aurora-cyan transition-colors">What exactly is Livia?</AccordionTrigger>
               <AccordionContent className="text-muted-foreground text-base leading-relaxed">
-                Livia is an operating system built specifically for European service businesses. It handles everything from calendar management to customer messaging via AI, payments, and no-show protection, all in one calm interface.
+                Livia is an operating system built specifically for European service businesses. It pairs your calendar with an AI assistant that answers customer messages and books appointments, in one calm interface. Payments and no-show deposits roll out at public launch.
               </AccordionContent>
             </AccordionItem>
             
@@ -268,7 +269,7 @@ export default function Home() {
             <AccordionItem value="item-4" className="border-white/10 px-2">
               <AccordionTrigger className="text-left text-lg font-medium hover:no-underline hover:text-aurora-cyan transition-colors">How does the AI handle bookings?</AccordionTrigger>
               <AccordionContent className="text-muted-foreground text-base leading-relaxed">
-                When a client DMs you on Instagram or WhatsApp, Livia replies conversationally, checks your real-time availability, and securely books them into your calendar. It speaks your brand's tone and knows your specific booking rules.
+                Today, when a client texts your shop's number, Livia replies conversationally, checks your real-time availability, and securely books them into your calendar — speaking your brand's tone and respecting your specific booking rules. WhatsApp and Instagram inbound join at public launch.
               </AccordionContent>
             </AccordionItem>
 
@@ -282,14 +283,14 @@ export default function Home() {
             <AccordionItem value="item-6" className="border-white/10 px-2">
               <AccordionTrigger className="text-left text-lg font-medium hover:no-underline hover:text-aurora-cyan transition-colors">Are you GDPR and EU AI Act compliant?</AccordionTrigger>
               <AccordionContent className="text-muted-foreground text-base leading-relaxed">
-                Yes. Livia is built in Europe, for Europe. We strictly adhere to GDPR for all customer data and are fully aligned with the requirements of the EU AI Act. Your data stays in the EU.
+                Yes. Livia is built in Europe, for Europe. We adhere to GDPR for all customer data and align with EU AI Act Art. 50 — every Liv-authored message identifies itself as AI. EU data residency rolls out at general availability; closed beta runs on the same EU-region infrastructure we'll lock for launch.
               </AccordionContent>
             </AccordionItem>
 
             <AccordionItem value="item-7" className="border-white/10 px-2">
               <AccordionTrigger className="text-left text-lg font-medium hover:no-underline hover:text-aurora-cyan transition-colors">How does pricing and VAT work?</AccordionTrigger>
               <AccordionContent className="text-muted-foreground text-base leading-relaxed">
-                Our pricing is straightforward and transparent. We charge a flat monthly fee based on your tier. If you have a valid EU VAT number, the reverse charge mechanism applies.
+                Pricing locks at public launch with a flat monthly fee per tier — closed beta is on the house. If you have a valid EU VAT number, the reverse-charge mechanism will apply at launch.
               </AccordionContent>
             </AccordionItem>
 

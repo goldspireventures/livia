@@ -10,6 +10,16 @@ How the founder runs the build between Demo Day (May 5) and Gate 3 (Public Launc
 4. Update the Gate 2 / Gate 3 target dates if drift is real (not aspirational).
 5. Post the week's headline ("This week: shipping E6 + L3 + G1") to founder log.
 
+### Promise integrity (added by Task #49)
+
+Walk `docs/audits/marketing-vs-reality.md` row by row before closing the review:
+
+- Any row in `build-before-G2` or `build-before-G3` that **isn't** linked to a live tracker task → either link one this morning, or convert the row to `defer-and-remove-claim` and ship the marketing edit by EOD.
+- Any new claim added to `livia.io` since last review (check `git log -- artifacts/livia-marketing/`) → add a new audit row and decide it now.
+- Any row that lands in `defer-and-remove-claim`: confirm the marketing surface no longer carries the claim. If it does, the audit isn't done.
+
+We promise what we ship.
+
 ## Daily build cadence
 
 - One tracker task closed per day (single-session-sized; that's why they're scoped that way).

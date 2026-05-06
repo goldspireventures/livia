@@ -37,6 +37,8 @@ Already locked by Task #23 (Livia demo readiness). Acceptance:
 
 Acceptance — **all must hold for 7 consecutive days before declaring Gate 2 passed:**
 
+- `docs/audits/marketing-vs-reality.md` has zero rows in state `build-before-G2`. (Promise integrity — see Task #49.)
+
 - TestFlight build accepted by Apple; internal testers can install.
 - Play Store internal testing track live; internal testers can install.
 - Resend transactional emails actually sending (booking confirm, reminder, cancel) with verified `livia.io` sender domain.
@@ -48,6 +50,8 @@ Acceptance — **all must hold for 7 consecutive days before declaring Gate 2 pa
 ### Gate 3 — Public Launch
 
 Acceptance:
+
+- `docs/audits/marketing-vs-reality.md` has zero rows in state `build-before-G3`. (Promise integrity — see Task #49.)
 
 - Stripe Billing live with €49 / €99 / €149 tiers; first paid subscriber active.
 - Stripe Connect live for shop deposits + tips; one shop has taken a real deposit and a real tip.
