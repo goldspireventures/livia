@@ -5,7 +5,7 @@
 **Cadence:** revisited every Monday (see `docs/operating-cadence.md`)
 **Last reviewed:** 2026-05-06 — founder (v1 lock)
 
-This is the single authoritative document that sequences Livia from "we can demo this" to "real shops are paying us in production." It replaces the stale `.local/tasks/RELEASE-PLAN.md` and the legacy `01-…17-` task files (all of which still reference "Bliq" and predate the Aurora/Aurum brand, the AI-inbox wedge, and the demo-readiness pass).
+This is the single authoritative document that sequences Livia from "we can demo this" to "real shops are paying us in production." It supersedes earlier "Bliq"-era plans, which were removed during the May 6 cleanup pass.
 
 The plan is organised as **five lanes** running in parallel, gated by **three release gates**. Each gate has explicit, non-negotiable acceptance criteria. No gate is "passed" by feel — only by criteria check.
 
@@ -163,7 +163,7 @@ The stale `.local/tasks/RELEASE-PLAN.md` and the 12 legacy `01-…17-` task file
 
 - `01-brand-story-first-impression` → Brand B1, B2, B3.
 - `02-personas-roles-action-dashboard` → covered by shipped Cockpit dashboard + the role expansion (FRONT_DESK, ORG_OWNER) which is deferred until post-Gate-3 and is **not** in this plan.
-- `03-ai-inbound-and-notifications` → Lane 4 (L3, L4, L5) + the AI inbox already shipped in Wave 2.
+- `03-ai-inbound-and-notifications` → Lane 4 (L3, L4, L5); the AI inbox itself shipped May 5.
 - `04-revenue-protection-deposits-tips` → Launch ops L6, L7 (infra) + a separate post-Gate-3 product task.
 - `05-walkins-recurring-import-whitelabel` → out of v1 launch scope; revisit post-Gate-3.
 - `06-premium-ops-loyalty-retail-portfolio` → out of v1 launch scope; revisit post-Gate-3.
