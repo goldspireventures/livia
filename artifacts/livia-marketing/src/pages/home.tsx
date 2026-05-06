@@ -131,7 +131,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-medium mb-3">AI Inbox</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  A Livia AI replies to customer messages instantly — across SMS today, with WhatsApp and Instagram joining at public launch — and books them into your calendar without you lifting a finger.
+                  A Livia AI replies to your shop's text messages instantly, and books customers into your calendar without you lifting a finger. More inbound channels are on the roadmap as we grow.
                 </p>
               </motion.div>
 
@@ -269,7 +269,7 @@ export default function Home() {
             <AccordionItem value="item-4" className="border-white/10 px-2">
               <AccordionTrigger className="text-left text-lg font-medium hover:no-underline hover:text-aurora-cyan transition-colors">How does the AI handle bookings?</AccordionTrigger>
               <AccordionContent className="text-muted-foreground text-base leading-relaxed">
-                Today, when a client texts your shop's number, Livia replies conversationally, checks your real-time availability, and securely books them into your calendar — speaking your brand's tone and respecting your specific booking rules. WhatsApp and Instagram inbound join at public launch.
+                When a client texts your shop's number, Livia replies conversationally, checks your real-time availability, and securely books them into your calendar — speaking your brand's tone and respecting your specific booking rules. Additional inbound channels are on the roadmap.
               </AccordionContent>
             </AccordionItem>
 

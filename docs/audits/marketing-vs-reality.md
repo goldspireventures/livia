@@ -22,8 +22,7 @@ The audit's job is to keep `livia.io` honest. Every claim on the marketing surfa
 
 | # | Pair | Claim (verbatim) | Reality today | Decision | Owner | Linked task / edit |
 |---|---|---|---|---|---|---|
-| 1a | A | "...across WhatsApp, Instagram, and SMS..." (`home.tsx` AI Inbox pillar) | SMS is live via Twilio. WhatsApp and Instagram inbound do **not** exist — no webhook, no schema, no provider account. | `rewrite-claim` | founder | **Edit applied 2026-05-06:** AI Inbox pillar reworded to "across SMS today, with WhatsApp and Instagram joining at public launch." Same edit applied to FAQ item-4. |
-| 1b | A | (same) — implicit promise that WA/IG inbound will exist by GA | Not built. | `build-before-G3` | founder | **Linked task: TBD** — no tracker exists; per process rule above, this auto-converts to `defer-and-remove-claim` (and the AI Inbox pillar drops the WA/IG mention entirely) at the next Monday review if no tracker is created. |
+| 1 | — | "...across WhatsApp, Instagram, and SMS..." (`home.tsx` AI Inbox pillar + FAQ item-4) | SMS is live via Twilio. WhatsApp and Instagram inbound do **not** exist — no webhook, no schema, no provider account. There is no tracker task to build them, and no founder commitment to ship them by any specific gate. | `defer-and-remove-claim` | founder | **Edits applied 2026-05-06:** WhatsApp + Instagram named-channel mentions removed entirely from the AI Inbox pillar and FAQ item-4. New copy talks about SMS today and "more inbound channels on the roadmap" — open-ended, no gate-time commitment. The named channels return to marketing copy only when a tracker task to build them is opened and accepted. |
 | 2a | B | "...flexible deposit logic..." (Revenue Protection pillar) + "Custom Deposit Logic" (Studio tier bullet) | Deposits do not exist. `DEPOSITS_ENABLED` flag exists but no surface honours it. Stripe Connect not live. | `defer-and-remove-claim` | founder | **Edit applied 2026-05-06:** "flexible deposit logic" removed from Revenue Protection pillar; Studio tier line replaced with "Deposit-ready (rolls out at public launch)". |
 | 2b | B | (same) — Studio tier promises deposits at GA | Not built. | `build-before-G3` | founder | **Linked task: #58** — "Connect Stripe so shops can take real deposits" (covers `launch-plan.md` L6). |
 | 3 | — | "Beautifully timed booking reminders" (Revenue Protection pillar — was "automated reminders" pre-edit) | Schema + service implemented (`bookingsService.scheduleReminders`). The cron that fires them is **not** scheduled in production. | `build-before-G2` | founder | **Linked task:** existing tracker task **"Schedule the booking-reminder cron in production"**. Also: edit applied to drop the present-tense "today" framing from the pillar copy, so the claim matches what fires once the cron is live. |
@@ -43,12 +42,12 @@ The audit's job is to keep `livia.io` honest. Every claim on the marketing surfa
 
 ## Summary by state
 
-- `rewrite-claim` (resolved today): rows 1a, 2a (also `defer-and-remove-claim`), 4a, 5a, 6a, 7, 8a, 9a — eight marketing edits applied in the same PR as this audit.
-- `defer-and-remove-claim` (resolved today): row 2a.
+- `rewrite-claim` (resolved today): rows 4a, 5a, 6a, 7, 8a, 9a — six marketing edits applied in the same PR as this audit.
+- `defer-and-remove-claim` (resolved today): rows 1, 2a — named channels and "deposit logic" stripped from `livia.io`.
 - `build-before-G2` (gates closed beta): rows 3, 5b. Both linked to live trackers.
-- `build-before-G3` (gates public launch): rows 1b (TBD — auto-converts next Monday), 2b/8b (#58), 4b/9b (existing Stripe billing task), 6b (#57). One unlinked, four linked.
+- `build-before-G3` (gates public launch): rows 2b/8b (#58), 4b/9b (existing Stripe billing task), 6b (#57). All four linked.
 
-Gate 2 cannot be declared until rows 3 and 5b flip to ✅. Gate 3 cannot be declared until 1b is resolved (built or stripped) and 2b/4b/6b flip to ✅.
+Gate 2 cannot be declared until rows 3 and 5b flip to ✅. Gate 3 cannot be declared until 2b/4b/6b flip to ✅.
 
 ---
 
