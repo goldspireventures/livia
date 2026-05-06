@@ -3,6 +3,7 @@ import { useSendPublicChatMessage } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sparkles, Send, X, Loader2 } from "lucide-react";
+import { AI_DISCLOSURE } from "@workspace/ai-disclosure";
 
 interface ChatMessage {
   id: string;
@@ -16,14 +17,6 @@ const SUGGESTED = [
   "What services do you offer?",
   "Book a 1-hour massage this weekend",
 ];
-
-// EU AI Act Art. 50 disclosure copy. MUST stay byte-identical to the strings
-// in `artifacts/api-server/src/lib/ai-disclosure.ts`. Treated as legal text:
-// never paraphrased, never per-business overridable.
-function disclosureFirstMessage(businessName: string): string {
-  return `Hi, I'm Liv — an AI assistant booking on behalf of ${businessName}. I keep notes for the team and a human can take over any time.`;
-}
-const DISCLOSURE_FOOTER = "AI-assisted by Liv · Powered by Anthropic Claude";
 
 interface ChatWidgetProps {
   slug: string;
@@ -61,7 +54,7 @@ export default function ChatWidget({
         {
           id: "disclosure",
           role: "assistant",
-          content: disclosureFirstMessage(businessName),
+          content: AI_DISCLOSURE.chatFirstMessage(businessName),
         },
       ];
       const customGreeting = greeting?.trim();
@@ -252,7 +245,7 @@ export default function ChatWidget({
           data-testid="chat-disclosure-footer"
           className="px-3 py-1.5 text-[10px] text-center text-muted-foreground border-t border-border bg-muted/30 sm:rounded-b-2xl"
         >
-          {DISCLOSURE_FOOTER}
+          {AI_DISCLOSURE.chatFooterLine}
         </div>
       </div>
     </div>

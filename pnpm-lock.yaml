@@ -181,6 +181,9 @@ importers:
       '@sentry/node':
         specifier: ^10.51.0
         version: 10.51.0
+      '@workspace/ai-disclosure':
+        specifier: workspace:*
+        version: link:../../lib/ai-disclosure
       '@workspace/api-zod':
         specifier: workspace:*
         version: link:../../lib/api-zod
@@ -363,6 +366,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: 'catalog:'
         version: 5.1.4(vite@7.3.2(@types/node@25.3.5)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.2))
+      '@workspace/ai-disclosure':
+        specifier: workspace:*
+        version: link:../../lib/ai-disclosure
       '@workspace/api-client-react':
         specifier: workspace:*
         version: link:../../lib/api-client-react
@@ -955,6 +961,12 @@ importers:
       zod:
         specifier: 'catalog:'
         version: 3.25.76
+
+  lib/ai-disclosure:
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 25.3.5
 
   lib/api-client-react:
     dependencies:

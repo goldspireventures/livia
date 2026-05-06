@@ -19,6 +19,7 @@ import {
   type ConversationMessageRole,
 } from "./conversations.service";
 import { AI_DISCLOSURE } from "../lib/ai-disclosure";
+import { sendAiEmail } from "./ai-outbound.service";
 
 const MODEL = "claude-sonnet-4-6";
 const MAX_TOOL_HOPS = 6;
@@ -209,6 +210,34 @@ async function executeTool(args: {
         entityId: booking.id,
         context: { source: "ai-assistant", conversationId },
       });
+
+      // Liv-authored confirmation email — disclosure block is wrapped by
+      // sendAiEmail. Fire-and-forget; transport stub records PENDING until
+      // Task #28 installs Resend.
+      if (toolInput.customerEmail) {
+        const startLocal = new Date(booking.startAt).toLocaleString("en-IE", {
+          dateStyle: "full",
+          timeStyle: "short",
+        });
+        const serviceName = booking.service?.name ?? "your appointment";
+        const staffLine = booking.staff?.displayName
+          ? ` with ${booking.staff.displayName}`
+          : "";
+        sendAiEmail({
+          businessId: business.id,
+          businessName: business.name,
+          customerId: customer.id,
+          bookingId: booking.id,
+          to: toolInput.customerEmail,
+          subject: `Booking confirmed — ${serviceName} at ${business.name}`,
+          body: `Hi ${toolInput.customerFirstName},\n\nYour booking is confirmed:\n\n${serviceName}${staffLine}\n${startLocal}\n\nReply to this email if you need to reschedule.`,
+          signature: `— The ${business.name} team`,
+          templateKey: "liv-booking-confirmation",
+        }).catch((err) => {
+          // Don't fail the booking if email enqueue fails — log and move on.
+          console.error("[ai-chat] sendAiEmail failed", err);
+        });
+      }
 
       return {
         bookingId: booking.id,
