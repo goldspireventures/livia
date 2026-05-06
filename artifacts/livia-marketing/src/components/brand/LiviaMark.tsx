@@ -120,7 +120,3 @@ export function LiviaWordmark({
   );
 }
 
-// Legacy aliases — existing callers import { BliqMark, BliqWordmark }.
-// Kept exported so the dashboard rebrand doesn't ripple into a wider import refactor.
-export const BliqMark = LiviaMark;
-export const BliqWordmark = LiviaWordmark;

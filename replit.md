@@ -24,7 +24,8 @@ pnpm workspace monorepo · TypeScript 5.9 · Node 24 · Express 5 · PostgreSQL 
 - `artifacts/bliq-dashboard` — React + Vite owner dashboard (web). Auth via `@clerk/clerk-react`. Public booking at `/b/:slug`. *Directory still named `bliq-dashboard` — rename deferred to keep workflows + Clerk redirect URIs stable.*
 - `artifacts/bliq-mobile` — Expo (React Native) iOS/Android. Same API. Auth via `@clerk/clerk-expo`. *Slug `bliq-mobile` + scheme `bliq-mobile` deliberately preserved — changing them breaks deep links.*
 - `artifacts/mockup-sandbox` — design preview sandbox (canvas iframes).
-- `lib/db` — Drizzle schema (14 tables incl. conversations), DB client, enums, status-transition helpers.
+- `artifacts/livia-marketing` — public marketing site (livia.io v1) at `/livia-marketing/`. React + Vite, dark Aurora surface, single-page (hero / pillars / pricing €49/€99/€149 / 8-Q FAQ / founder note / lead-capture / footer). Lead form posts to `POST /api/public/marketing/leads` → `marketing_leads` table; no real outbound email yet (Resend in Launch ops L3). OG image at `public/og.png` 1200×630.
+- `lib/db` — Drizzle schema (15 tables incl. conversations + marketing_leads), DB client, enums, status-transition helpers.
 - `lib/api-spec` — OpenAPI source. `pnpm codegen` regenerates `lib/api-zod` and `lib/api-client-react`.
 - `lib/integrations-anthropic-ai` — Anthropic SDK wrapper wired via Replit AI Integrations.
 

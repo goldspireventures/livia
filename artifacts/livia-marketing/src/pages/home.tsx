@@ -314,7 +314,7 @@ export default function Home() {
               <p className="text-lg md:text-xl leading-relaxed text-white/90 mb-8 font-serif italic">
                 "We built this because the European craft economy deserves better software. You shouldn't need an IT degree to run a barbershop, and you shouldn't lose revenue because you were too busy working to check Instagram. Livia is our answer to that — a tool that works as hard as you do."
               </p>
-              <p className="text-aurum-champagne font-medium">— The Livia team</p>
+              <p className="text-foreground/80 font-medium">— The Livia team</p>
             </div>
 
             <div className="mt-24">
