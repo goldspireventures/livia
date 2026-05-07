@@ -14,15 +14,23 @@ import { useColors } from "@/hooks/useColors";
 import { useHaptics } from "@/hooks/useHaptics";
 import { usePersona, type PersonaKind } from "@/hooks/usePersona";
 
-type TabKey = "index" | "my-day" | "shops" | "approvals" | "bookings" | "customers" | "more";
+type TabKey =
+  | "index"
+  | "my-day"
+  | "shops"
+  | "approvals"
+  | "inbox"
+  | "bookings"
+  | "customers"
+  | "more";
 
 const TAB_VISIBILITY: Record<PersonaKind, TabKey[]> = {
-  founder: ["index", "shops", "approvals", "bookings", "more"],
-  owner: ["index", "bookings", "customers", "more"],
-  manager: ["approvals", "bookings", "customers", "more"],
+  founder: ["index", "shops", "approvals", "inbox", "more"],
+  owner: ["index", "bookings", "customers", "inbox", "more"],
+  manager: ["approvals", "bookings", "customers", "inbox", "more"],
   "staff-senior": ["my-day", "bookings", "customers", "more"],
   "staff-junior": ["my-day", "bookings", "more"],
-  receptionist: ["index", "bookings", "customers", "more"],
+  receptionist: ["bookings", "customers", "inbox", "more"],
   customer: ["index", "more"],
 };
 
@@ -38,6 +46,7 @@ const ALL_TABS: TabSpec[] = [
   { name: "my-day", title: "My day", sf: { default: "sun.max", selected: "sun.max.fill" }, feather: "sun" },
   { name: "shops", title: "Shops", sf: { default: "building.2", selected: "building.2.fill" }, feather: "grid" },
   { name: "approvals", title: "Approvals", sf: { default: "checkmark.shield", selected: "checkmark.shield.fill" }, feather: "shield" },
+  { name: "inbox", title: "Inbox", sf: { default: "tray", selected: "tray.fill" }, feather: "inbox" },
   { name: "bookings", title: "Bookings", sf: { default: "calendar", selected: "calendar" }, feather: "calendar" },
   { name: "customers", title: "Clients", sf: { default: "person.2", selected: "person.2.fill" }, feather: "users" },
   { name: "more", title: "More", sf: { default: "ellipsis", selected: "ellipsis" }, feather: "menu" },
@@ -139,7 +148,7 @@ const SAFE_INITIAL_TABS: TabKey[] = ["index", "bookings", "customers", "more"];
 export default function TabLayout() {
   const { kind, isLoading } = usePersona();
   const visible = new Set<TabKey>(
-    isLoading ? SAFE_INITIAL_TABS : (TAB_VISIBILITY[kind] ?? TAB_VISIBILITY.owner),
+    isLoading ? SAFE_INITIAL_TABS : TAB_VISIBILITY[kind],
   );
 
   if (isLiquidGlassAvailable()) {

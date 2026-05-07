@@ -77,15 +77,14 @@ export function deriveAutoPersona(args: {
   businessCount: number;
   isReception?: boolean;
   tenureDays?: number;
-  utilisation14?: number;
 }): PersonaKind {
-  const { role, businessCount, isReception, tenureDays = 0, utilisation14 = 0 } = args;
+  const { role, businessCount, isReception, tenureDays = 0 } = args;
   if (!role || businessCount === 0) return "customer";
   if (role === "OWNER" && businessCount >= 2) return "founder";
   if (role === "OWNER") return "owner";
   if (role === "ADMIN" && isReception) return "receptionist";
   if (role === "ADMIN") return "manager";
-  if (tenureDays > 365 && utilisation14 > 0.7) return "staff-senior";
+  if (tenureDays > 365) return "staff-senior";
   return "staff-junior";
 }
 
@@ -94,7 +93,7 @@ export function usePersona(): {
   override: PersonaKind | null;
   isLoading: boolean;
 } {
-  const { role, isLoading: roleLoading } = useMembership();
+  const { role, isReception, tenureDays, isLoading: roleLoading } = useMembership();
   const { businesses, isLoading: bizLoading } = useBusiness();
   const [override, setOverride] = useState<PersonaKind | null>(cachedOverride);
   const [hydrated, setHydrated] = useState(cachedOverride !== null);
@@ -121,6 +120,8 @@ export function usePersona(): {
   const auto = deriveAutoPersona({
     role,
     businessCount: businesses.length,
+    isReception,
+    tenureDays,
   });
 
   return {

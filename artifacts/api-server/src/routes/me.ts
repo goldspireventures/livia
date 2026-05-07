@@ -1,9 +1,13 @@
 import { Router, type IRouter } from "express";
+import { db, staffTable } from "@workspace/db";
+import { and, eq } from "drizzle-orm";
 import { requireAuth, getUserId, resolveMembership, getStaffIdForUser } from "../lib/auth";
 import { getOrCreateUser, updateUser } from "../services/users.service";
 import { getBusinessesForUser } from "../services/businesses.service";
 
 const router: IRouter = Router();
+
+const RECEPTION_HINT = /(reception|front[ -]?desk|concierge)/i;
 
 router.get("/me", requireAuth, async (req, res): Promise<void> => {
   const userId = getUserId(req);
@@ -28,10 +32,13 @@ router.get("/me/businesses", requireAuth, async (req, res): Promise<void> => {
   res.json(businesses);
 });
 
-// What role does this user have inside this business? Used by the
-// dashboard + mobile app to decide whether to show STAFF surfaces, the
-// persona switcher, AI/communications settings, etc. Returns 404 when
-// there's no membership at all (cross-tenant isolation).
+// Per ADR 0010 — persona is derived, never stored. We surface the
+// minimum signal needed for the client to derive the right shell:
+// role, ownStaffId, plus two cheap signals about that staff record
+// (front-desk title hint, tenure in days). The client combines these
+// with businessCount to pick founder/owner/manager/receptionist/
+// senior/junior/customer. Returns 404 when there's no membership at
+// all (cross-tenant isolation).
 router.get(
   "/me/businesses/:businessId/membership",
   requireAuth,
@@ -46,7 +53,29 @@ router.get(
       return;
     }
     const staffId = await getStaffIdForUser(userId, businessId);
-    res.json({ businessId, role, staffId });
+
+    let isReception = false;
+    let tenureDays = 0;
+    if (staffId) {
+      const [s] = await db
+        .select({
+          displayName: staffTable.displayName,
+          firstName: staffTable.firstName,
+          lastName: staffTable.lastName,
+          bio: staffTable.bio,
+          createdAt: staffTable.createdAt,
+        })
+        .from(staffTable)
+        .where(and(eq(staffTable.id, staffId), eq(staffTable.businessId, businessId)));
+      if (s) {
+        const haystack = `${s.displayName ?? ""} ${s.firstName ?? ""} ${s.lastName ?? ""} ${s.bio ?? ""}`;
+        isReception = RECEPTION_HINT.test(haystack);
+        const ms = Date.now() - new Date(s.createdAt).getTime();
+        tenureDays = Math.max(0, Math.floor(ms / 86_400_000));
+      }
+    }
+
+    res.json({ businessId, role, staffId, isReception, tenureDays });
   },
 );
 

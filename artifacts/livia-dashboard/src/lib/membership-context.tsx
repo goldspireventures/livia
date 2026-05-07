@@ -29,12 +29,16 @@ interface MembershipResponse {
   businessId: string;
   role: Role;
   staffId: string | null;
+  isReception?: boolean;
+  tenureDays?: number;
 }
 
 interface MembershipContextType {
   role: Role | null;
   effectiveRole: Role | null;
   ownStaffId: string | null;
+  isReception: boolean;
+  tenureDays: number;
   // OWNER/ADMIN may impersonate a specific staffId. STAFF cannot.
   viewingAsStaffId: string | null;
   setViewingAsStaffId: (id: string | null) => void;
@@ -111,16 +115,21 @@ export function MembershipProvider({ children }: { children: ReactNode }) {
     };
   }, [activeStaffId]);
 
+  const isReception = data?.isReception ?? false;
+  const tenureDays = data?.tenureDays ?? 0;
+
   const value = useMemo(
     () => ({
       role,
       effectiveRole,
       ownStaffId,
+      isReception,
+      tenureDays,
       viewingAsStaffId: activeStaffId,
       setViewingAsStaffId,
       isLoading,
     }),
-    [role, effectiveRole, ownStaffId, activeStaffId, isLoading],
+    [role, effectiveRole, ownStaffId, isReception, tenureDays, activeStaffId, isLoading],
   );
 
   return (

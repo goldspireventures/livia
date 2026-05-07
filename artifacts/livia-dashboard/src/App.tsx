@@ -1,8 +1,8 @@
-import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
+import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ClerkProvider, useAuth } from "@clerk/clerk-react";
+import { ClerkProvider } from "@clerk/clerk-react";
 import { dark } from "@clerk/themes";
 import { ThemeProvider, useTheme } from "next-themes";
 import { useState, useEffect } from "react";
@@ -46,12 +46,6 @@ if (!PUBLISHABLE_KEY) {
   throw new Error("Missing Publishable Key");
 }
 
-function RootRedirect() {
-  const { isSignedIn, isLoaded } = useAuth();
-  if (!isLoaded) return null;
-  return <Redirect to={isSignedIn ? "/dashboard" : "/sign-in"} />;
-}
-
 function AuthenticatedRoutes() {
   return (
     <AuthGuard>
@@ -79,7 +73,6 @@ function AuthenticatedRoutes() {
 function AppRouter() {
   return (
     <Switch>
-      <Route path="/" component={RootRedirect} />
       <Route path="/sign-in" component={SignInPage} />
       <Route path="/sign-up" component={SignUpPage} />
       <Route path="/b/:slug" component={PublicBookingPage} />
