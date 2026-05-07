@@ -1,7 +1,7 @@
 import { pgTable, text, timestamp, integer, boolean, jsonb, pgEnum, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
-import { businessesTable } from "./businesses";
-import { usersTable } from "./users";
+import { businessesTable } from "../identity/businesses";
+import { usersTable } from "../identity/users";
 
 export const aiObservationStatusEnum = pgEnum("ai_observation_status", [
   "NEW", "REVIEWED", "DISMISSED", "ESCALATED",

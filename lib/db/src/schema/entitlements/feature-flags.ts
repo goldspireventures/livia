@@ -1,7 +1,7 @@
 import { pgTable, text, timestamp, boolean, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod/v4";
-import { businessesTable } from "./businesses";
+import { businessesTable } from "../identity/businesses";
 
 export const featureFlagsTable = pgTable(
   "feature_flags",

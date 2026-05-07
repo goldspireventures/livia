@@ -1,9 +1,9 @@
 import { pgTable, text, timestamp, boolean, jsonb, pgEnum, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
-import { businessesTable } from "./businesses";
-import { customersTable } from "./customers";
-import { bookingsTable } from "./bookings";
-import { usersTable } from "./users";
+import { businessesTable } from "../identity/businesses";
+import { customersTable } from "../booking/customers";
+import { bookingsTable } from "../booking/bookings";
+import { usersTable } from "../identity/users";
 
 export const notificationChannelEnum = pgEnum("notification_channel", [
   "EMAIL", "SMS", "PUSH", "WHATSAPP", "IN_APP",

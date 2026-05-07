@@ -1,8 +1,8 @@
 import { pgTable, text, timestamp, boolean, integer, jsonb, pgEnum, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
-import { businessesTable } from "./businesses";
-import { customersTable } from "./customers";
-import { bookingsTable } from "./bookings";
+import { businessesTable } from "../identity/businesses";
+import { customersTable } from "../booking/customers";
+import { bookingsTable } from "../booking/bookings";
 
 export const paymentProviderEnum = pgEnum("payment_provider", ["STRIPE", "MULAH"]);
 

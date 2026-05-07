@@ -5,13 +5,24 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./schema": "./src/schema/index.ts"
+    "./schema": "./src/schema/index.ts",
+    "./schema/identity": "./src/schema/identity/index.ts",
+    "./schema/booking": "./src/schema/booking/index.ts",
+    "./schema/conversations": "./src/schema/conversations/index.ts",
+    "./schema/payments": "./src/schema/payments/index.ts",
+    "./schema/notifications": "./src/schema/notifications/index.ts",
+    "./schema/ai": "./src/schema/ai/index.ts",
+    "./schema/events": "./src/schema/events/index.ts",
+    "./schema/entitlements": "./src/schema/entitlements/index.ts",
+    "./schema/marketing": "./src/schema/marketing/index.ts"
   },
   "scripts": {
     "push": "drizzle-kit push --config ./drizzle.config.ts",
     "push-force": "drizzle-kit push --force --config ./drizzle.config.ts"
   },
   "dependencies": {
+    "@workspace/audit-log": "workspace:*",
+    "@workspace/eval": "workspace:*",
     "drizzle-orm": "catalog:",
     "drizzle-zod": "^0.8.3",
     "pg": "^8.20.0",

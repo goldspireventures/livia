@@ -60,6 +60,7 @@ When in doubt, read in this order: F7 → F3 → F1 → F4 → F5 → F6 → F8 
 - [`docs/engineering/ai-eval-and-guardrails.md`](../engineering/ai-eval-and-guardrails.md) — ADR 0016.
 - [`docs/engineering/observability-and-on-call.md`](../engineering/observability-and-on-call.md) — ADR 0017.
 - [`docs/engineering/design-system.md`](../engineering/design-system.md).
+- [`docs/engineering/composable-monetisation-architecture.md`](../engineering/composable-monetisation-architecture.md) — **the North Star; ADR 0018.**
 
 ### F9 — Business, pricing, GTM
 - [`docs/business/pricing-and-packaging.md`](../business/pricing-and-packaging.md).
@@ -158,6 +159,7 @@ When in doubt, read in this order: F7 → F3 → F1 → F4 → F5 → F6 → F8 
 - ADR 0015 — Audit log: append-only hash-chained.
 - ADR 0016 — AI eval: three layers.
 - ADR 0017 — Observability: OTel + Grafana Cloud.
+- ADR 0018 — Composable monetisation as architectural North Star.
 
 ## How to use this index
 

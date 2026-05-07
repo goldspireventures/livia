@@ -1,9 +1,9 @@
 import { pgTable, text, timestamp, jsonb, pgEnum, index, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod/v4";
-import { businessesTable } from "./businesses";
-import { customersTable } from "./customers";
-import { bookingsTable } from "./bookings";
+import { businessesTable } from "../identity/businesses";
+import { customersTable } from "../booking/customers";
+import { bookingsTable } from "../booking/bookings";
 
 export const conversationChannelEnum = pgEnum("conversation_channel", [
   "WEB",

@@ -1,8 +1,8 @@
 import { pgTable, text, timestamp, boolean, integer, index } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod/v4";
-import { businessesTable } from "./businesses";
-import { staffTable } from "./staff";
+import { businessesTable } from "../identity/businesses";
+import { staffTable } from "../identity/staff";
 
 export const availabilityRulesTable = pgTable(
   "availability_rules",

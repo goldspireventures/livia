@@ -1,13 +1,18 @@
-import { pgTable, text, timestamp, pgEnum, index } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, integer, pgEnum, index } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod/v4";
-import { businessesTable } from "./businesses";
-import { staffTable } from "./staff";
+import { businessesTable } from "../identity/businesses";
+import { staffTable } from "../identity/staff";
 import { servicesTable } from "./services";
 import { customersTable, channelTypeEnum } from "./customers";
 
 export const bookingStatusEnum = pgEnum("booking_status", [
   "PENDING", "CONFIRMED", "CANCELLED", "COMPLETED", "NO_SHOW",
+]);
+
+// Provenance — who/what brought this booking in. Drives outcome-share settlement.
+export const bookingSourceEnum = pgEnum("booking_source", [
+  "voice", "whatsapp", "sms", "instagram", "email", "web", "owner-manual", "walk-in", "google-cal-import",
 ]);
 
 export const bookingsTable = pgTable(
@@ -25,12 +30,19 @@ export const bookingsTable = pgTable(
       .notNull()
       .references(() => customersTable.id, { onDelete: "restrict" }),
     channelType: channelTypeEnum("channel_type").notNull().default("WEB"),
+    // Composable monetisation: source provenance for settlement (voice 4% capped, etc).
+    source: bookingSourceEnum("source").notNull().default("web"),
+    // If source = voice/whatsapp/sms/instagram/email, link to the conversation.
+    sourceConversationId: text("source_conversation_id"),
     startAt: timestamp("start_at", { withTimezone: true }).notNull(),
     endAt: timestamp("end_at", { withTimezone: true }).notNull(),
     status: bookingStatusEnum("status").notNull().default("PENDING"),
     notes: text("notes"),
     internalNotes: text("internal_notes"),
     cancellationReason: text("cancellation_reason"),
+    // Money on the booking — denormalised for fast settlement reads.
+    depositPaidEurCents: integer("deposit_paid_eur_cents").notNull().default(0),
+    totalPaidEurCents: integer("total_paid_eur_cents").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -40,6 +52,8 @@ export const bookingsTable = pgTable(
     index("bookings_customer_idx").on(t.customerId),
     index("bookings_start_at_idx").on(t.businessId, t.startAt),
     index("bookings_status_idx").on(t.businessId, t.status),
+    index("bookings_source_idx").on(t.businessId, t.source),
+    index("bookings_source_conversation_idx").on(t.sourceConversationId),
   ],
 );
 

@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 import { businessesTable } from "./businesses";
 import { usersTable } from "./users";
 
+
 export const staffTable = pgTable(
   "staff",
   {
