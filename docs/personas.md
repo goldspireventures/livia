@@ -1,174 +1,377 @@
-# Livia personas
+# Personas v2
 
-**Status:** v1 (2026-05-06) — anchors ADR 0010 (multi-tenant + persona model) and ADR 0011 (mobile flagship).
+**Status:** F3 spine doc (2026-05-07). Replaces v1.
 
-This document is the canonical roster of humans Livia serves. Every product decision, every UI gate, every demo story should be traceable to one of these cards. If a feature doesn't sit clearly inside one persona's day, ask whether it should ship at all.
-
-These cards are grounded in the ten Dublin design partners we are recruiting — barber, nails, lashes, tattoo, dental, podiatrist, physio, brow bar, lash lift, men's grooming. They are not invented composites.
+The hotel principle is the design substrate. Same building, different sets of keys. Surfaces, language, defaults, alerts, and authorities differ by persona — enforced at the data-access layer, not the UI.
 
 ---
 
-## The hotel principle (experience tenet)
+## 0. The hierarchy
 
-> A great hotel doesn't show its presidential-suite guest a smaller version of the standard-room key card. It builds a different ritual: the unmarked side entrance, the butler's introduction, the welcome champagne, the stationery already engraved with your name. **Same building. Different ritual.**
+Eight roles inside the salon plus one outside. Per ADR 0009.
 
-Livia is the same building for every persona. It must not be the same *experience.* This is the bar:
+```
+P1 Founder (multi-business OWNER)
+    └─ at each business: P2a Owner-with-Mgr  OR  P2b Owner-no-Mgr  (single-business OWNER)
+        └─ optional: P3 Manager (ADM)
+            └─ optional: P4b Senior-with-admin (STA + delegations row)
+                └─ P4a Senior STAFF (STA)
+                    └─ P5 Junior STAFF (STA)
+            └─ P6 Receptionist (REC)
 
-1. **Different first frame.** A STAFF signs in and the screen says "Good morning, Lara — three booked, one chair waiting." An OWNER signs in and the screen says "€1,240 booked today across 14 chairs." Same data layer; different opening line. *Never* the same dashboard with rows hidden.
-2. **Different ritual.** The Founder's Sunday-evening ritual is a glance across three shops + an inbox triage. The Senior Stylist's morning ritual is "who's first, am I running on time, do I have coffee." The Manager's ritual is "what landed overnight, who needs me first." Each ritual gets its own purpose-built surface, not a filter on the OWNER cockpit.
-3. **Different copy.** The voice doc (`docs/brand/voice.md`) lists the tone *for* each persona. STAFF copy is colleague-warm ("nice one — that's Mary's third visit"). OWNER copy is operator-direct ("3 cancellations this week — usual rate is 1"). Manager copy is steward-attentive. Customer copy is concierge-soft.
-4. **Different motion.** The OWNER cockpit can afford richer dashboards-as-canvas animation. STAFF surfaces should feel as light as iMessage — instant, no ceremony. The persona dictates the motion budget, not the engineer.
-5. **Different empty state.** A junior STAFF with an empty day should see "Your chair is open — here's how walk-ins work" hero, not "No data." The Founder with a quiet Tuesday should see "Quiet morning — Liv is handling 3 inbound DMs in the background," not the same blank state.
-6. **Different memorable moment.** Each persona should have one "I cannot believe my software does this" moment. We name them in `docs/mobile-roadmap.md`. They are not the same moment for everyone.
+P7 Customer (outside the org; per `customer-typologies.md`)
+```
 
-This is the difference between a role-gated app (boring, defensive) and a purpose-built experience (memorable, premium). It's also the difference between Aurora and Aurum — the brand split (ADR 0007) was always about giving moments their own register; the persona split is the same idea applied to humans.
-
-The hotel principle is the lens every product decision in this document is judged against. If a screen for STAFF is "the OWNER screen with bits hidden," it has failed the principle and must be rebuilt.
-
----
-
-## P1 · The Founder (multi-business owner)
-
-- **Real-world example:** Aoife runs three salons across Dublin and Galway under one brand. She has 18 staff total.
-- **Tenant axis:** OWNER membership at ≥ 2 businesses.
-- **Role axis:** OWNER (per business).
-- **Primary device:** phone (95%), laptop on Sunday evenings.
-- **Jobs to be done:**
-  - Glance at all three shops' day in under 30 seconds.
-  - Triage the AI inbox across shops.
-  - Approve manager requests (refunds, schedule changes, deposit waivers).
-  - Handle escalations from staff.
-- **Surfaces touched:** Today (cockpit per shop), Inbox, Bookings, Customers, Settings → AI, Settings → Plan/Billing, Demo gateway.
-- **Surfaces NOT touched (today):** day-to-day staff scheduling, individual chair availability, walk-in walk-out logging.
-- **Data scope:** Each business in isolation. **No cross-business consolidated view in v1** — she switches with the tenant switcher. She accepts this as a cost of clean GDPR posture.
-- **Demo story:** "Aurora Studio" + "Aurora Mews" + "Aurora Galway." Same brand, three businesses, three sets of staff and customers. The demo proves the tenant switcher.
-
-## P2 · The Single-shop Owner
-
-- **Real-world example:** Conor runs one barber shop in Stoneybatter. He has two chairs and one part-time receptionist.
-- **Tenant axis:** OWNER at exactly 1 business.
-- **Role axis:** OWNER.
-- **Primary device:** phone (90%), laptop for AI training.
-- **Jobs to be done:**
-  - Run his own chair (he's a working owner).
-  - Take inbound DMs and SMS through Liv.
-  - See the day's revenue at a glance.
-  - Configure the AI's tone and the public booking page once a quarter.
-- **Surfaces touched:** Today, Bookings, Customers, Inbox, Settings → AI (rarely), public booking page (once a quarter).
-- **Surfaces NOT touched:** anything multi-business; advanced reports.
-- **Data scope:** his single business. The tenant switcher is hidden because he has 1 membership.
-- **Demo story:** "Conor's Cut Co." Solo OWNER. The default sign-in gets you here.
-
-## P3 · The Manager (ADMIN role)
-
-- **Real-world example:** Niamh manages the floor at Aoife's flagship while Aoife is on the road. She does everything except billing and inviting other admins.
-- **Tenant axis:** ADMIN at one business (could be ADMIN at more than one for a chain manager — supported but rare).
-- **Role axis:** ADMIN.
-- **Primary device:** phone (80%), tablet at the front desk for multi-staff scheduling.
-- **Jobs to be done:**
-  - Reschedule, refund, cancel on behalf of any staff.
-  - Onboard new staff (invite + initial settings).
-  - Step into a STAFF view to verify what a junior actually sees ("am I sending Sarah the right slate?").
-  - Run the daily wrap-up.
-- **Surfaces touched:** Today, Bookings, Customers, Inbox, Settings → AI, Staff (invite/edit), Persona switcher (peeks as STAFF).
-- **Surfaces NOT touched:** Settings → Plan / Billing / Delete business.
-- **Data scope:** the single business she manages. Persona switcher is one of her core tools.
-- **Demo story:** Niamh at "Aurora Studio." Demonstrates the impersonation flow + audit log.
-
-## P4 · The Senior STAFF (top earner)
-
-- **Real-world example:** Lara is the top stylist at Aurora Studio. Her clients book her by name; she earns 40% of the shop's revenue.
-- **Tenant axis:** STAFF at 1 business (could be 2 if she chair-rents at a second salon — supported).
-- **Role axis:** STAFF.
-- **Primary device:** phone, exclusively. She doesn't own a laptop.
-- **Jobs to be done:**
-  - See *her* day, not the shop's day. Next client, in how many minutes.
-  - Mark her own bookings done / no-show.
-  - View her own clients (history, preferences, spend with her).
-  - Check her own week's earnings — but **never** the shop total.
-  - Get a push when her next client confirms or cancels.
-- **Surfaces touched:** My Day (the entire app, basically), Bookings (filtered to her), Clients (her clients only), Profile.
-- **Surfaces NOT touched:** Settings, AI configuration, Inbox (until v1.1), Communications, the shop cockpit, anyone else's slate.
-- **Data scope:** scoped to her `staff.id` by `requireRole("STAFF")`. She physically cannot reach colleagues' data — query-layer enforcement (per ADR 0009).
-- **Demo story:** "Lara Byrne, Senior Stylist." Sign in as her, land on My Day with three booked + one waiting.
-
-## P5 · The Junior STAFF / Walk-in handler
-
-- **Real-world example:** Mo is six weeks into a barber apprenticeship. He takes walk-ins, assists Conor, and doesn't yet have his own client base.
-- **Tenant axis:** STAFF at 1 business.
-- **Role axis:** STAFF.
-- **Primary device:** phone.
-- **Jobs to be done:**
-  - See what's been assigned to him today (often nothing pre-booked).
-  - Convert a walk-in into a booking (write his own slate).
-  - Build a personal client base over time.
-- **Surfaces touched:** My Day (often empty), Walk-in flow, his client list (small).
-- **Surfaces NOT touched:** Same as P4.
-- **Data scope:** same query-layer enforcement.
-- **Demo story:** "Mo Healy, Junior Barber." Empty state magic — proves we handle "your day is open" gracefully, not as a failure.
-
-## P6 · The Receptionist / Front-desk
-
-- **Real-world example:** Síobhan runs the front desk at Aurora Studio four days a week. She books for everyone, takes phone calls, handles cash.
-- **Tenant axis:** Modelled as **ADMIN** (one membership). She needs cross-staff visibility.
-- **Role axis:** ADMIN, but with a "front-desk" preset that hides AI training, Plan/Billing, and brand settings from her default view.
-- **Primary device:** tablet at the desk, phone on the move.
-- **Jobs to be done:**
-  - Schedule across all staff in one calendar view.
-  - Handle inbound phone calls — log them as bookings.
-  - Take walk-ins and route them to the right chair.
-  - Field "can I move my appointment?" requests on behalf of customers.
-- **Surfaces touched:** Bookings (multi-staff calendar), Customers, Inbox, light Settings.
-- **Surfaces NOT touched:** AI training, Plan, Billing, Brand. Hidden via a "front-desk preset" on the ADMIN role rather than a new role (per ADR 0009 deferral).
-- **Data scope:** the single business. No cross-tenant.
-- **Demo story:** "Síobhan at Aurora Studio." Demonstrates multi-staff scheduling.
-
-> Note: a true `FRONT_DESK` role (with finer-grained permissions than ADMIN minus billing) is deferred per ADR 0009. v1 ships a UI preset over ADMIN.
-
-## P7 · The End Customer
-
-- **Real-world example:** Mary books a deep clean at Aurora Studio every six weeks. She'd rather DM than call.
-- **Tenant axis:** N/A — customers are not tenants of the app.
-- **Role axis:** N/A — customers are not Clerk users.
-- **Primary device:** phone (Instagram DM, SMS, or `livia.io/b/aurora-studio`).
-- **Jobs to be done:**
-  - Book without phoning.
-  - Reschedule without guilt.
-  - Get a sensible reply at 22:00 when the salon is closed.
-- **Surfaces touched:** Public booking page, the chat widget, SMS thread, email confirmations.
-- **Surfaces NOT touched:** the dashboard. She never sees Livia's product.
-- **Data scope:** her own row in `customers` (per business). She has GDPR rights against the controller (the salon).
-- **Demo story:** "Book a slot at Aurora Studio." Demo viewer plays the customer side from the public URL.
+Customer-typology axis is six archetypes (CT1-CT6) sitting outside the hierarchy. See `customer-typologies.md`.
 
 ---
 
-## How these compose
+## P1 — The Founder
 
-| Persona | Tenant axis | Role axis | Can impersonate? | Default mobile tab |
-|---|---|---|---|---|
-| P1 Founder | N businesses | OWNER each | Yes (any STAFF in current biz) | Today |
-| P2 Single-shop Owner | 1 business | OWNER | Yes (any STAFF) | Today |
-| P3 Manager | 1 (sometimes N) | ADMIN | Yes (any STAFF) | Today |
-| P4 Senior STAFF | 1 (sometimes 2) | STAFF | No | My Day |
-| P5 Junior STAFF | 1 | STAFF | No | My Day |
-| P6 Receptionist | 1 | ADMIN + FE preset | Yes | Bookings (multi-staff) |
-| P7 Customer | n/a | n/a | n/a | n/a — uses public page |
+**Real-world example.** Aoife Kelly. Three Aurora salons (Dublin centre, Dublin south, Galway). 60 staff total. Sunday-evening triage; on the road most weekdays.
+
+**What she really needs to know.** *(in Liv's morning briefing voice)*
+> *Galway colour revenue is down 18% week-on-week. New colourist quit Friday; Niamh's been covering. Two managers' cash totals match exactly to the till for the week. Dublin centre's Senior is on the third sick day this month. I've drafted three things — coffee while you read?*
+
+**Tuesday (from F2 walks).** [INFERRED]
+- 07:30 daily briefing on phone over coffee (3 numbers per shop)
+- 09:00 drive to Galway, call Niamh on the way
+- 11:30 onsite, walk floor, approve queued €140 refund
+- 13:30 drive back, transit-texts (regular complaint, supplier, accountant)
+- 17:00 home with laptop, week-to-date cross-shop P&L
+- 22:00 sofa with phone, Instagram DM triage across three shops
+
+**Pain (with euro number where defensible).**
+- ~€40k-80k/yr leaks across 3 shops in missed-call bookings (web-research §1).
+- Sunday-evening triage costs ~90 min/week × 50 weeks = ~75 hrs/yr at her time-cost (>€150/hr) = €11k+/yr.
+- Cross-shop "is everything OK?" anxiety is the largest non-monetary cost.
+
+**The promise.** Sunday evening becomes 15 minutes. Liv sees what's about to break before Aoife does.
+
+**Anti-list.**
+- Liv never decides to fire, hire, or promote.
+- Liv never speaks for a Manager to her own team.
+- Liv never moves a customer between shops without the customer's request.
+- Liv never edits brand or pricing.
+
+**Failure mode today.** Phorest's chain story is OK but generic; Aoife reads three Phorest dashboards and consolidates in Excel. Mobile UX is weak; she's on her phone all day.
+
+**Failure mode in 6 months.** Phorest ships a chain dashboard refresh. Aoife stays because of switching cost, not delight.
+
+**Ambition rung.** R1 Day 1 → R4 Month 12.
+
+**Hierarchy edges.** OWNER at each shop (independent memberships per ADR 0010). Direct line to each Manager. May intervene at any level but typically respects the Manager's authority.
+
+**Configurations.** C7 small chain (2-5 shops); C8 mid chain (6-15) at v2; C13 multi-brand portfolio (1-5+ brands).
+
+**Verticals.** All v1/v2 verticals; most commonly Hair, Beauty.
+
+**Owner psychology variants.**
+- **First-time Founder** (one shop became two): more reassurance, more "is this normal?".
+- **Serial entrepreneur** (third venture): less hand-holding; trust the second derivative.
+- **Inheritor** (took over family chain): legacy-respect; "your mother's Friday cash routine still encoded."
+
+**No-app variant.** Rare for Founder (multi-shop visualisation requires visual surfaces). Possible for older inheritor; gets WhatsApp + voice digest equivalents.
 
 ---
 
-## Appendix A — Current state audit (where the model leaks today)
+## P2a — Owner-with-Manager (single-shop)
 
-This is the snapshot that motivated ADR 0010 and ADR 0011.
+**Real-world example.** Roisín Doherty. Owns Aurora Studio (single shop); Niamh manages the floor; Roisín hands-off-floor.
 
-| # | Symptom | File / surface | Captured in |
-|---|---|---|---|
-| 1 | Web silently picks `businesses[0]`; no switcher anywhere. Founder cannot reach business B. | `artifacts/livia-dashboard/src/components/auth-guard.tsx:59` | ADR 0010 — first-class `currentBusinessId` |
-| 2 | Persona switcher is web-only; mobile `_layout.tsx` only branches on real role. | `artifacts/livia-mobile/app/(tabs)/_layout.tsx:172-179` | ADR 0010 — persona switcher contract |
-| 3 | Mobile theme defaults to light when `useColorScheme()` returns `null` in some places, dark in others. Demo viewers see two palettes on one screen. | `artifacts/livia-mobile/app/(tabs)/_layout.tsx:51` | ADR 0011 — theme rule |
-| 4 | Mobile parity is ~30% of OWNER daily-use surfaces. No Inbox, no Settings, no AI config, no create flows for customers / staff / services. | `artifacts/livia-mobile/app/(tabs)/more.tsx`, missing screens | ADR 0011 — parity target ≥ 70% |
-| 5 | Zero native goodies in production: no push, biometrics, widgets, Live Activities, offline, camera, location. | mobile codebase | ADR 0011 — N1-N8 |
-| 6 | No demo gateway → every demo starts on an empty owner cockpit. Founder cannot show the persona range without account-juggling. | n/a | `docs/demo-gateway.md` |
-| 7 | Persona impersonation is shipped but **not audited** — no `audit_log` table. Liability without the log. | `artifacts/api-server/src/lib/auth.ts` | `docs/policy/impersonation-audit.md` |
-| 8 | `currentBusinessId` storage key on mobile is the legacy `livia_current_business_id`; web has no equivalent. Inconsistency between platforms. | `artifacts/livia-mobile/contexts/BusinessContext.tsx:23` | ADR 0010 — unify to `livia.currentBusinessId` |
+**What she really needs to know.**
+> *Niamh approved Mary's refund (€60). She queued one for your call: €180 — Lara's late client, unhappy. Recommendation: refund. Your week is on plan; Saturday is full; one Senior on Sunday is the only weak slot.*
 
-The follow-on build tasks proposed at the end of Task #59 close every row above.
+**Tuesday.** [INFERRED]
+- 08:00 emails over breakfast at home; reads Niamh's Monday close
+- 10:00 in shop, walks floor, talks to two Seniors
+- 12:00 meets supplier on-site
+- 14:00 home; afternoon admin (accountant, marketing, supplier payments)
+- 17:00 brief end-of-day call with Niamh
+- 21:00 phone-check; one DM, one Niamh question
+
+**Pain.**
+- The "what should I be looking at?" fog. Phorest gives reports; doesn't tell her what matters.
+- Refund-cap escalations from Niamh interrupt her day.
+
+**Promise.** Liv tells her what matters; Liv handles the cap escalations as one-tap approvals.
+
+**Anti-list.**
+- Doesn't substitute for her conversation with Niamh.
+- Doesn't replace the floor walk-through.
+- Doesn't decide on staff matters.
+
+**Rung.** R1 Day 1 → R4 Month 12.
+
+**Edges.** OWNER; one tier above Niamh (ADM).
+
+**Configurations.** C5, C6.
+**Verticals.** Hair, Beauty primarily.
+**No-app variant.** Possible — interacts via WhatsApp + voice; weekly digest as voice-note.
+
+---
+
+## P2b — Owner-no-Manager (working owner)
+
+**Real-world example.** Conor McGee. Single-chair barbershop in Stoneybatter; one apprentice (Mo); part-time Saturday receptionist (Síobhan).
+
+**What she really needs to know.**
+> *Phone rang twice during your last cut — both regulars. I have them rebooked. Conor McGee wants Saturday at 3. You have 4 walk-ins on the schedule today; cash so far €245.*
+
+**Tuesday.** [INFERRED]
+- 08:30 opens, returns voicemails (4 from Monday close)
+- 09:00 first client; phone rings during cut
+- 10:00 Mo arrives, takes walk-in; Conor returns calls (two already booked elsewhere)
+- 12:00 standing-sandwich + Instagram DMs
+- 15:30 regular cancels via WhatsApp; doesn't see for 20 min; slot empty
+- 18:00 close + Excel cash-and-tip update
+
+**Pain.**
+- Missed calls during cuts → ~€8-15k/yr revenue lost (web-research §1).
+- Excel admin steals dinner-time, ~10 hrs/week.
+- Empty-slot recovery never happens.
+
+**Promise.** Liv answers the phone. Liv recovers empty slots from waitlist. Liv closes the day with him in 5 minutes, not 30.
+
+**Anti-list.**
+- Tip allocation between Conor and Mo (Liv records but never decides).
+- Brand decisions.
+- The Conor-Mo dynamic.
+
+**Rung.** R1 Day 1 → **R3 Month 3** (Liv IS the team) → R5 Month 12.
+
+**Edges.** OWNER; informal mentor to Mo; partner-of-convenience to Síobhan.
+
+**Configurations.** C2, C3, C4 (and C10 chair-rental host variant).
+
+**Verticals.** Hair (especially barbershop), Beauty (solo lash/brow).
+
+**Owner psychology variants.** Common: ex-employee-now-owner (collegial peerness with Liv); first-time owner (reassurance-heavy register).
+
+**No-app variant.** Common — older P2b interacts via WhatsApp + voice only.
+
+---
+
+## P3 — Manager
+
+**Real-world example.** Niamh Byrne. Manages Aurora Studio's floor for Roisín; 14 staff including herself.
+
+**What she really needs to know.**
+> *Lara called in sick. Her four bookings: I've messaged the customers and offered Niamh-Tuesday or Sarah-Thursday. Three responses in. One needs your call. Today's first walk-in arrives in 12 minutes; Mo's free.*
+
+**Tuesday.** [INFERRED]
+- 07:45 arrives early; reads overnight DMs
+- 08:30 stand-up
+- 10:00 Lara sick; rebook 4 customers (40 min on phone)
+- 12:30 floor walk; reassigns walk-in
+- 15:00 €180 refund — texts Roisín; approved at 15:42
+- 18:00 daily cash close + tomorrow prep
+- 22:30 evening DM thread
+
+**Pain.**
+- Re-rota when a Senior calls in sick (~3-5 hrs/week).
+- Cap-bound refunds requiring Owner ping (+30-90 min wait).
+- Late-evening DM coverage on her own time.
+
+**Promise.** Liv handles the rebook list. Liv queues cap-bound refunds with a recommendation Owner can one-tap. Liv takes the 22:30 DM.
+
+**Anti-list.**
+- Disciplinary conversations.
+- Hire conversations.
+- Promotion to senior-w-admin.
+- Anything Owner has flagged "ask me first."
+
+**Rung.** R1 Day 1 → R3 Month 6.
+
+**Edges.** ADM; reports to OWNER; supervises STA + REC.
+
+**Configurations.** C5, C6, C7 (per shop), C8 (per shop), C12 partnership.
+
+**Verticals.** All.
+
+**No-app variant.** Possible — but rare; the Manager surface is multi-staff visual.
+
+---
+
+## P4a — Senior STAFF
+
+**Real-world example.** Lara O'Connor. Top stylist at Aurora Studio. 40% of revenue. Books 3 weeks out.
+
+**What she really needs to know.**
+> *Mary just rebooked you for Nov 4.*
+
+That's it. Often the entire day's Liv interaction.
+
+**Tuesday.** [INFERRED]
+- 08:45 reads "My Day"; 3 bookings + 1 empty 14:00
+- 09:00 Mary McNamara (regular 7yrs); they talk wedding
+- 11:30 push: 14:00 just filled
+- 14:00 new client; offers her direct WhatsApp card
+- 16:30 push: Mary booked Nov 4
+- 17:30 done; checks her week's earnings (her, not shop)
+
+**Pain.**
+- Phone juggling between cuts.
+- Empty-slot anxiety on quiet days.
+- Front-desk sometimes mis-books her sacred Tuesday lunch (12:30-13:00).
+
+**Promise.** Liv pushes when next client confirms. Liv fills gaps from waitlist with stylist-preference match. Liv shows her her week's earnings (her). Liv blocks her sacred lunch automatically.
+
+**Anti-list (the longest of any persona).**
+- Never books one of her regulars with anyone else.
+- Never pushes a refund without her input.
+- Never sees her tip totals.
+- Never sees her colleagues' slates.
+- Never writes in her voice to her customer.
+- Never volunteers her availability outside her stated working hours.
+
+**Rung.** R1 Day 1 → R2 Month 12. **Deliberately low** — the senior's craft is the senior's. Liv removes friction; never enters the relationship.
+
+**Edges.** STA; reports to ADM (or ADM-D if scoped under one).
+
+**Configurations.** C4-C8. C10 chair-rental (where she IS effectively a one-person tenant).
+
+**Verticals.** All.
+
+**No-app variant.** Possible; gets push via SMS.
+
+---
+
+## P4b — Senior-with-admin
+
+**Real-world example.** Sarah Walsh. Senior stylist at Aurora Studio with delegated authority over the colour service-line — approves time-off for the colour team and refunds within the colour-line cap.
+
+**What she really needs to know.**
+> *Time-off request from Mo for the 12th-14th. Your team's covered Tue and Thu; need Niamh's review for Wed. Approve with that condition?*
+
+**Tuesday.** [INFERRED]
+- Same as P4a's day for the chair work
+- Plus: 10:30 reviews and approves a same-day time-off swap on her phone between clients
+- Plus: 17:00 reviews her team's week (her colour team's bookings, gaps, retention)
+
+**Pain.**
+- Authority makes the customer-relationship sometimes awkward (a regular asks her about pricing changes she has no authority over).
+- The "I'm a stylist AND I'm partly running this" identity tension.
+- Owner sometimes overrides her without telling her.
+
+**Promise.** Liv respects her dual role. Authority within scope is invisible-but-clean (one-tap approvals). Outside her scope, Liv routes elsewhere without involving her.
+
+**Anti-list.** As P4a plus: doesn't make Owner-only decisions visible to her unless she's involved.
+
+**Rung.** R1 Day 1 → R3 Month 9.
+
+**Edges.** STA + `delegations` row from ADM with scope. Reports to ADM. Supervises the STA + JR within her scope.
+
+**Configurations.** C6 mature single-shop only.
+
+**Verticals.** Hair, Beauty primarily.
+
+---
+
+## P5 — Junior STAFF
+
+**Real-world example.** Mo Devlin. Six weeks into a barber apprenticeship at Aurora Cuts. No client base.
+
+**What she really needs to know.**
+> *Today: 2 cuts, €30 in. One walk-in interested in rebooking — tap to offer her a slot.*
+
+**Tuesday.** [INFERRED]
+- 09:00 phone says "no bookings"; practices fade on uncle
+- 10:30 first walk-in; Conor watches; €15
+- 12:00 lunch alone
+- 13:30 second walk-in; doesn't know how to "book" them; asks Conor
+- 15:00 walk-in asks for Conor specifically; Mo waits 'til 17:00
+- 17:00 closes till with Conor
+
+**Pain.**
+- Empty days = anxiety + no income.
+- Doesn't know how to convert walk-in to rebook.
+- Empty-state on the dashboard feels like a verdict.
+
+**Promise.** Liv hero-states the empty day ("Your day is open — here's the walk-in flow"). One-tap rebook of a walk-in. Daily 18:00 push: "Today: 2 cuts, €30, 1 customer interested in rebooking."
+
+**Anti-list.**
+- Doesn't push him to do work above his skill.
+- Doesn't expose his earnings to anyone but him + Conor.
+- Doesn't shame the empty days.
+- Doesn't tell the team chat "Mo had a quiet day."
+
+**Rung.** R1 Day 1 → R2 Month 12. Stays low-touch.
+
+**Edges.** STA; reports to ADM (or directly to OWN in C4).
+
+**Configurations.** C4-C8.
+
+**Verticals.** Hair (apprentice barbers, junior stylists) most common; Beauty (junior tech).
+
+**No-app variant.** **Common** — apprentice barbers often don't install the staff app; gets day-list via SMS.
+
+---
+
+## P6 — Receptionist
+
+**Real-world example.** Síobhan Kelly. Front desk Wed-Sat at Aurora Studio. Tablet at desk; phone in hand.
+
+**What she really needs to know.**
+> *Three on the waitlist for tonight. Mary McGuire said any time after 6. No-show at 14:30 — I've drafted the waitlist message; tap to send.*
+
+**Wednesday (her Tuesday).** [INFERRED]
+- 08:30 opens desk; reads overnight bookings/cancels
+- 09:00 first call: regular wants Thu→Fri move
+- 11:00 walk-in: new customer wants "any senior, any time today"; Síobhan offers 14:00 with Lara
+- 13:00 lunch on the desk
+- 14:30 Senior no-show; triages waitlist (8 min)
+- 16:30 daily cash sums; €15 discrepancy
+- 18:30 closes desk
+
+**Pain.**
+- Multi-staff scheduling cognitive load.
+- No-show recovery (every day).
+- Cash discrepancies (chase manually).
+- Phone constantly.
+
+**Promise.** Multi-staff calendar smart-suggests. No-show waitlist auto-message draft. Cash-discrepancy auto-flag. Voice line takes the half of calls that don't need her.
+
+**Anti-list.**
+- Doesn't take walk-in conversations off her — they're her relationship-building moments.
+- Doesn't escalate to Manager on small things she can handle.
+- Doesn't surface stylist-team dynamics to her.
+
+**Rung.** R1 Day 1 → R3 Month 6 (heavy use).
+
+**Edges.** REC; reports to ADM.
+
+**Configurations.** C5, C6, C7 (per shop), C8 (per shop), C13 (per brand).
+
+**Verticals.** All with multi-staff configurations.
+
+**No-app variant.** Tablet kiosk variant — never installs the app; works in browser kiosk mode.
+
+---
+
+## P7 — Customer
+
+See `docs/customer-typologies.md` for the six archetypes (CT1-CT6) and Liv's posture per type.
+
+---
+
+## Compose table — persona × configuration × vertical with rung commitment
+
+Filtered to populated cells (per `persona-vertical-configuration-matrix.md`). Rung notation = Day 1 / Month 12 commitment.
+
+| Cell | Day 1 | Month 12 |
+|---|---|---|
+| P1 × C7-C8 × Hair | R1 | R4 |
+| P1 × C13 × multi-vertical | R1 | R4 |
+| P2a × C5-C6 × Hair/Beauty | R1 | R4 |
+| **P2b × C2-C4 × Hair (barbershop)** | R1 | **R5** (Liv = team) |
+| P2b × C2-C4 × Beauty (lash/brow) | R1 | R4 |
+| P2b × C10 (chair-rental host) | R1 | R3 (v1.5) |
+| P3 × C5-C8 × all | R1 | R3 |
+| P4b × C6 × Hair/Beauty | R1 | R3 |
+| P4a × all | R1 | R2 |
+| P5 × C4-C7 × all | R1 | R2 |
+| P6 × C5-C8 × all | R1 | R3 |
+| P7 (CT1-CT6) × all | R2 | R3 |
+
+The R5 commitment for P2b in barbershop heartland is the deepest single bet. F7 anchors it; F8 architects to deliver it.
