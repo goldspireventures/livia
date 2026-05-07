@@ -2,6 +2,14 @@ import { Link, useLocation } from "wouter";
 import { ReactNode } from "react";
 import { useBusiness } from "@/lib/business-context";
 import { useMembership, type Role } from "@/lib/membership-context";
+import {
+  ALL_PERSONAS,
+  PERSONA_ACCENT,
+  PERSONA_LABEL,
+  isDemoLoginEnabled,
+  setDevPersonaOverride,
+  usePersona,
+} from "@/lib/persona";
 import { UserButton } from "@clerk/clerk-react";
 import {
   LayoutDashboard,
@@ -126,6 +134,44 @@ function PersonaSwitcher() {
   );
 }
 
+function DevPersonaPill() {
+  const { kind, override } = usePersona();
+  if (!isDemoLoginEnabled) return null;
+  return (
+    <div className="px-4 py-2 border-t border-border">
+      <label className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 block">
+        Dev persona
+      </label>
+      <Select
+        value={override ?? "__auto__"}
+        onValueChange={(v) => {
+          setDevPersonaOverride(v === "__auto__" ? null : (v as never));
+          window.location.reload();
+        }}
+      >
+        <SelectTrigger
+          className="h-8 text-xs"
+          data-testid="dev-persona-trigger"
+          style={{ borderColor: PERSONA_ACCENT[kind] + "55" }}
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="__auto__">Auto-detect</SelectItem>
+          {ALL_PERSONAS.map((p) => (
+            <SelectItem key={p} value={p} data-testid={`dev-persona-option-${p}`}>
+              {PERSONA_LABEL[p]}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <p className="text-[10px] text-muted-foreground mt-1">
+        Dev-only — flips app shell, not data.
+      </p>
+    </div>
+  );
+}
+
 export function AppLayout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
   const { business } = useBusiness();
@@ -173,6 +219,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           })}
         </nav>
         <PersonaSwitcher />
+        <DevPersonaPill />
         <div className="border-t border-border p-4">
           <div className="flex items-center gap-3">
             <UserButton afterSignOutUrl="/sign-in" />

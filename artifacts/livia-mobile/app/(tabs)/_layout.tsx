@@ -12,39 +12,51 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fonts } from "@/constants/typography";
 import { useColors } from "@/hooks/useColors";
 import { useHaptics } from "@/hooks/useHaptics";
-import { useMembership } from "@/hooks/useMembership";
+import { usePersona, type PersonaKind } from "@/hooks/usePersona";
 
-function NativeTabLayout({ isStaff }: { isStaff: boolean }) {
+type TabKey = "index" | "my-day" | "shops" | "approvals" | "bookings" | "customers" | "more";
+
+const TAB_VISIBILITY: Record<PersonaKind, TabKey[]> = {
+  founder: ["index", "shops", "approvals", "bookings", "more"],
+  owner: ["index", "bookings", "customers", "more"],
+  manager: ["approvals", "bookings", "customers", "more"],
+  "staff-senior": ["my-day", "bookings", "customers", "more"],
+  "staff-junior": ["my-day", "bookings", "more"],
+  receptionist: ["index", "bookings", "customers", "more"],
+  customer: ["index", "more"],
+};
+
+interface TabSpec {
+  name: TabKey;
+  title: string;
+  sf: { default: string; selected: string };
+  feather: keyof typeof Feather.glyphMap;
+}
+
+const ALL_TABS: TabSpec[] = [
+  { name: "index", title: "Today", sf: { default: "house", selected: "house.fill" }, feather: "home" },
+  { name: "my-day", title: "My day", sf: { default: "sun.max", selected: "sun.max.fill" }, feather: "sun" },
+  { name: "shops", title: "Shops", sf: { default: "building.2", selected: "building.2.fill" }, feather: "grid" },
+  { name: "approvals", title: "Approvals", sf: { default: "checkmark.shield", selected: "checkmark.shield.fill" }, feather: "shield" },
+  { name: "bookings", title: "Bookings", sf: { default: "calendar", selected: "calendar" }, feather: "calendar" },
+  { name: "customers", title: "Clients", sf: { default: "person.2", selected: "person.2.fill" }, feather: "users" },
+  { name: "more", title: "More", sf: { default: "ellipsis", selected: "ellipsis" }, feather: "menu" },
+];
+
+function NativeTabLayout({ visible }: { visible: Set<TabKey> }) {
   return (
     <NativeTabs>
-      {isStaff ? (
-        <NativeTabs.Trigger name="my-day">
-          <Icon sf={{ default: "sun.max", selected: "sun.max.fill" }} />
-          <Label>My day</Label>
+      {ALL_TABS.filter((t) => visible.has(t.name)).map((t) => (
+        <NativeTabs.Trigger key={t.name} name={t.name}>
+          <Icon sf={t.sf} />
+          <Label>{t.title}</Label>
         </NativeTabs.Trigger>
-      ) : (
-        <NativeTabs.Trigger name="index">
-          <Icon sf={{ default: "house", selected: "house.fill" }} />
-          <Label>Today</Label>
-        </NativeTabs.Trigger>
-      )}
-      <NativeTabs.Trigger name="bookings">
-        <Icon sf={{ default: "calendar", selected: "calendar" }} />
-        <Label>Bookings</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="customers">
-        <Icon sf={{ default: "person.2", selected: "person.2.fill" }} />
-        <Label>Clients</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="more">
-        <Icon sf="ellipsis" />
-        <Label>More</Label>
-      </NativeTabs.Trigger>
+      ))}
     </NativeTabs>
   );
 }
 
-function ClassicTabLayout({ isStaff }: { isStaff: boolean }) {
+function ClassicTabLayout({ visible }: { visible: Set<TabKey> }) {
   const colors = useColors();
   const colorScheme = useColorScheme();
   const haptics = useHaptics();
@@ -102,79 +114,36 @@ function ClassicTabLayout({ isStaff }: { isStaff: boolean }) {
         },
       }}
     >
-      {/* Owner/admin Today screen — hidden from STAFF (they get my-day instead). */}
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Today",
-          href: isStaff ? null : undefined,
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="house.fill" tintColor={color} size={22} />
-            ) : (
-              <Feather name="home" size={22} color={color} />
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="my-day"
-        options={{
-          title: "My day",
-          href: isStaff ? undefined : null,
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="sun.max.fill" tintColor={color} size={22} />
-            ) : (
-              <Feather name="sun" size={22} color={color} />
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="bookings"
-        options={{
-          title: "Bookings",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="calendar" tintColor={color} size={22} />
-            ) : (
-              <Feather name="calendar" size={22} color={color} />
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="customers"
-        options={{
-          title: "Clients",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="person.2.fill" tintColor={color} size={22} />
-            ) : (
-              <Feather name="users" size={22} color={color} />
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="more"
-        options={{
-          title: "More",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="ellipsis" tintColor={color} size={22} />
-            ) : (
-              <Feather name="menu" size={22} color={color} />
-            ),
-        }}
-      />
+      {ALL_TABS.map((t) => (
+        <Tabs.Screen
+          key={t.name}
+          name={t.name}
+          options={{
+            title: t.title,
+            href: visible.has(t.name) ? undefined : null,
+            tabBarIcon: ({ color }) =>
+              isIOS ? (
+                <SymbolView name={t.sf.selected as never} tintColor={color} size={22} />
+              ) : (
+                <Feather name={t.feather} size={22} color={color} />
+              ),
+          }}
+        />
+      ))}
     </Tabs>
   );
 }
 
+const SAFE_INITIAL_TABS: TabKey[] = ["index", "bookings", "customers", "more"];
+
 export default function TabLayout() {
-  const { role } = useMembership();
-  const isStaff = role === "STAFF";
+  const { kind, isLoading } = usePersona();
+  const visible = new Set<TabKey>(
+    isLoading ? SAFE_INITIAL_TABS : (TAB_VISIBILITY[kind] ?? TAB_VISIBILITY.owner),
+  );
 
   if (isLiquidGlassAvailable()) {
-    return <NativeTabLayout isStaff={isStaff} />;
+    return <NativeTabLayout visible={visible} />;
   }
-  return <ClassicTabLayout isStaff={isStaff} />;
+  return <ClassicTabLayout visible={visible} />;
 }

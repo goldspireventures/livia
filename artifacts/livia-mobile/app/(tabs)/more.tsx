@@ -19,6 +19,15 @@ import { fonts, type } from "@/constants/typography";
 import { useBusiness } from "@/contexts/BusinessContext";
 import { useColors } from "@/hooks/useColors";
 import { useHaptics } from "@/hooks/useHaptics";
+import {
+  ALL_PERSONAS,
+  PERSONA_ACCENT,
+  PERSONA_LABEL,
+  isDemoLoginEnabled,
+  setDevPersonaOverride,
+  usePersona,
+  type PersonaKind,
+} from "@/hooks/usePersona";
 
 interface MenuItem {
   icon: keyof typeof Feather.glyphMap;
@@ -38,8 +47,17 @@ export default function MoreScreen() {
   const haptics = useHaptics();
   const { businesses, currentBusiness, setCurrentBusiness } = useBusiness();
   const { signOut } = useAuth();
+  const { kind: currentPersona, override } = usePersona();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const [switcherOpen, setSwitcherOpen] = useState(false);
+  const [personaSheetOpen, setPersonaSheetOpen] = useState(false);
+
+  const handlePickPersona = async (p: PersonaKind | null) => {
+    haptics.selection();
+    await setDevPersonaOverride(p);
+    setPersonaSheetOpen(false);
+    router.replace("/" as never);
+  };
 
   const otherBusinesses = businesses.filter((b) => b.id !== currentBusiness?.id);
   const hasOthers = otherBusinesses.length > 0;
@@ -187,6 +205,111 @@ export default function MoreScreen() {
           </Pressable>
         ))}
       </View>
+
+      {/* Dev: switch persona */}
+      {isDemoLoginEnabled ? (
+        <View
+          style={[
+            styles.section,
+            { backgroundColor: colors.card, borderColor: colors.border },
+            elevation.resting,
+          ]}
+        >
+          <Pressable
+            style={({ pressed }) => [
+              styles.menuItem,
+              pressed && { backgroundColor: colors.primary + "0c" },
+            ]}
+            onPress={() => {
+              haptics.tap();
+              setPersonaSheetOpen(true);
+            }}
+            testID="switch-persona-button"
+          >
+            <View
+              style={[
+                styles.menuIcon,
+                { backgroundColor: PERSONA_ACCENT[currentPersona] + "1f" },
+              ]}
+            >
+              <Feather name="users" size={18} color={PERSONA_ACCENT[currentPersona]} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.menuLabel, { color: colors.foreground }]}>Switch persona</Text>
+              <Text style={[styles.bizSlug, { color: colors.mutedForeground }]}>
+                {override ? `Override: ${PERSONA_LABEL[currentPersona]}` : `Auto: ${PERSONA_LABEL[currentPersona]}`}
+              </Text>
+            </View>
+            <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+          </Pressable>
+        </View>
+      ) : null}
+
+      <BottomSheet visible={personaSheetOpen} onClose={() => setPersonaSheetOpen(false)}>
+        <Text style={[styles.sheetTitle, { color: colors.foreground }]}>Switch persona</Text>
+        <Text style={[styles.sheetSub, { color: colors.mutedForeground }]}>
+          Dev-only. The data you see is your own; only the app shell flips.
+        </Text>
+        <View style={{ marginTop: 14, paddingBottom: 8 }}>
+          {ALL_PERSONAS.map((p) => {
+            const isCurrent = p === currentPersona;
+            const accent = PERSONA_ACCENT[p];
+            return (
+              <Pressable
+                key={p}
+                onPress={() => handlePickPersona(p)}
+                style={({ pressed }) => [
+                  styles.sheetRow,
+                  pressed && { backgroundColor: colors.muted },
+                ]}
+                testID={`persona-row-${p}`}
+              >
+                <View
+                  style={[
+                    styles.sheetAvatar,
+                    { backgroundColor: accent + "1c", borderColor: accent + "55" },
+                  ]}
+                >
+                  <Text style={[styles.switchInitial, { color: accent }]}>{p[0]?.toUpperCase()}</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.menuLabel, { color: colors.foreground }]} numberOfLines={1}>
+                    {PERSONA_LABEL[p]}
+                  </Text>
+                </View>
+                {isCurrent ? (
+                  <Text style={[styles.activePillText, { color: accent }]}>Active</Text>
+                ) : (
+                  <Feather name="arrow-right" size={16} color={accent} />
+                )}
+              </Pressable>
+            );
+          })}
+          <Pressable
+            onPress={() => handlePickPersona(null)}
+            style={({ pressed }) => [
+              styles.sheetRow,
+              pressed && { backgroundColor: colors.muted },
+            ]}
+            testID="persona-row-auto"
+          >
+            <View
+              style={[
+                styles.sheetAvatar,
+                { backgroundColor: colors.muted, borderColor: colors.border },
+              ]}
+            >
+              <Feather name="refresh-ccw" size={14} color={colors.mutedForeground} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.menuLabel, { color: colors.foreground }]}>Reset to auto-detect</Text>
+              <Text style={[styles.bizSlug, { color: colors.mutedForeground }]}>
+                Use the persona derived from your real role.
+              </Text>
+            </View>
+          </Pressable>
+        </View>
+      </BottomSheet>
 
       {/* Sign out */}
       <View

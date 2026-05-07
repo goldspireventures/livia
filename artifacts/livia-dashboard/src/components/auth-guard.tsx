@@ -3,6 +3,7 @@ import { Redirect, useLocation } from "wouter";
 import { useGetMyBusinesses } from "@workspace/api-client-react";
 import { BusinessProvider } from "@/lib/business-context";
 import { MembershipProvider, useMembership } from "@/lib/membership-context";
+import { usePersona, PERSONA_LANDING } from "@/lib/persona";
 import { Spinner } from "@/components/ui/spinner";
 import { ReactNode, useEffect } from "react";
 import { apiFetch } from "@/lib/api-fetch";
@@ -82,14 +83,19 @@ const STAFF_BLOCKED_LANDING = new Set([
 
 function RoleGate({ children }: { children: ReactNode }) {
   const { effectiveRole, isLoading } = useMembership();
+  const { kind: persona, isLoading: personaLoading } = usePersona();
   const [location, navigate] = useLocation();
 
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading || personaLoading) return;
+    if ((location === "/" || location === "") && persona !== "customer") {
+      navigate(PERSONA_LANDING[persona], { replace: true });
+      return;
+    }
     if (effectiveRole === "STAFF" && STAFF_BLOCKED_LANDING.has(location)) {
       navigate("/my-day", { replace: true });
     }
-  }, [effectiveRole, isLoading, location, navigate]);
+  }, [effectiveRole, isLoading, location, navigate, persona, personaLoading]);
 
   return <>{children}</>;
 }

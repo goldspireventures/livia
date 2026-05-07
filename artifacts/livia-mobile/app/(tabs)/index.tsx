@@ -37,6 +37,7 @@ import { useBusiness } from "@/contexts/BusinessContext";
 import { useColors } from "@/hooks/useColors";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useMembership } from "@/hooks/useMembership";
+import { usePersona } from "@/hooks/usePersona";
 import { useRelativeTime } from "@/hooks/useRelativeTime";
 
 function timeOfDayGreeting(): string {
@@ -56,17 +57,20 @@ export default function DashboardScreen() {
   const { currentBusiness, isLoading: bizLoading } = useBusiness();
 
   const { role, isLoading: roleLoading } = useMembership();
+  const { kind: persona, isLoading: personaLoading } = usePersona();
 
   useEffect(() => {
     if (!bizLoading && !currentBusiness) {
       router.replace("/onboarding");
       return;
     }
-    // STAFF should never see the owner cockpit. Redirect to My Day.
-    if (!roleLoading && role === "STAFF") {
+    if (personaLoading || roleLoading) return;
+    if (persona === "staff-senior" || persona === "staff-junior") {
       router.replace("/my-day");
+    } else if (persona === "manager") {
+      router.replace("/approvals");
     }
-  }, [currentBusiness, bizLoading, role, roleLoading]);
+  }, [currentBusiness, bizLoading, role, roleLoading, persona, personaLoading]);
 
   const {
     data: summary,
