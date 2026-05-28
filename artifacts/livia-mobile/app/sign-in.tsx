@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -26,12 +27,19 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AuroraHalo } from "@/components/brand/AuroraHalo";
 import { LiviaWordmark } from "@/components/brand/LiviaWordmark";
-import { aurora } from "@/constants/colors";
+import { aurora, aurum } from "@/constants/colors";
 import { elevation } from "@/constants/elevation";
 import { SPRING_GENTLE } from "@/constants/motion";
 import { fonts, type } from "@/constants/typography";
 import { useColors } from "@/hooks/useColors";
 import { useHaptics } from "@/hooks/useHaptics";
+import {
+  fetchDemoSignInTicket,
+  isDemoLiviaEmail,
+  normalizeDemoSignInIdentifier,
+} from "@/lib/demo-sign-in";
+import { persistDemoSession } from "@/lib/demo-session";
+import { setDevPersonaOverride } from "@/hooks/usePersona";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -56,6 +64,14 @@ export default function SignInScreen() {
   const [oauthLoading, setOauthLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [focused, setFocused] = useState<"email" | "password" | "code" | null>(null);
+
+  const emailRef = React.useRef<TextInput>(null);
+  const passwordRef = React.useRef<TextInput>(null);
+  const codeRef = React.useRef<TextInput>(null);
+
+  function normalizeIdentifier(raw: string): string {
+    return normalizeDemoSignInIdentifier(raw);
+  }
 
   const wordmarkY = useSharedValue(-12);
   const wordmarkOpacity = useSharedValue(0);
@@ -103,18 +119,42 @@ export default function SignInScreen() {
     haptics.tap();
     setLoading(true);
     setError("");
+    const identifier = normalizeIdentifier(email);
     try {
-      const result = await signIn.create({ identifier: email.trim(), password });
+      if (isDemoLiviaEmail(identifier)) {
+        const ticket = await fetchDemoSignInTicket(identifier, password);
+        await persistDemoSession(ticket);
+        await setDevPersonaOverride(null);
+        const attempt = await signIn!.create({
+          strategy: "ticket",
+          ticket: ticket.token,
+        });
+        if (attempt.status === "complete" && attempt.createdSessionId) {
+          await setActiveSignIn({ session: attempt.createdSessionId });
+          haptics.success();
+          return;
+        }
+      }
+
+      const result = await signIn.create({ identifier, password });
       if (result.status === "complete") {
         await setActiveSignIn({ session: result.createdSessionId });
         haptics.success();
+      } else if (isDemoLiviaEmail(identifier)) {
+        setError(
+          "Demo account needs a ticket sign-in. Use password LiviaDemo2026! (from LIVIA_DEMO_PASSWORD) and ensure the API is running with demo provisioned.",
+        );
       } else {
         setError("Almost there — extra verification needed. Try Google for now.");
       }
     } catch (err: unknown) {
       const e = err as { errors?: Array<{ message: string; code?: string }> };
       const first = e?.errors?.[0];
-      setError(humanizeAuthError(first?.code, first?.message));
+      setError(
+        err instanceof Error && !first
+          ? err.message
+          : humanizeAuthError(first?.code, first?.message),
+      );
       haptics.warning();
     } finally {
       setLoading(false);
@@ -224,16 +264,17 @@ export default function SignInScreen() {
   return (
     <KeyboardAvoidingView
       style={[styles.root, { backgroundColor: colors.background }]}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? Math.max(0, insets.top) : 0}
     >
-      {/* Single breathing halo — replaces the old three-orb backdrop */}
+      {/* ADR 0004 / marketing bible: single soft cyan halo */}
       <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
-        <AuroraHalo tone="ambient" size={520} style={{ top: -180, left: -100 }} />
-        <AuroraHalo tone="primary" size={420} intensity={0.7} style={{ bottom: -160, right: -120 }} />
+        <AuroraHalo tone="primary" size={480} intensity={0.85} style={{ top: -100, left: -60 }} />
       </View>
 
-      <View
-        style={[
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={[
           styles.container,
           { paddingTop: insets.top + 28, paddingBottom: insets.bottom + 24 },
         ]}
@@ -250,6 +291,12 @@ export default function SignInScreen() {
             <Text style={[styles.headlineItalic, { color: colors.mutedForeground }]}>
               already handled.
             </Text>
+          </Animated.Text>
+
+          <Animated.Text
+            style={[styles.livLine, { color: colors.mutedForeground }, taglineStyle]}
+          >
+            Her name is <Text style={{ color: aurum.champagne, fontFamily: fonts.serifItalic }}>Liv</Text>.
           </Animated.Text>
 
           <Animated.Text
@@ -301,6 +348,7 @@ export default function SignInScreen() {
             <>
               <FieldLabel color={colors.mutedForeground}>Email</FieldLabel>
               <TextInput
+                ref={emailRef}
                 style={[
                   styles.input,
                   {
@@ -309,13 +357,16 @@ export default function SignInScreen() {
                     borderColor: focused === "email" ? colors.primary : colors.border,
                   },
                 ]}
-                placeholder="you@studio.com"
+                placeholder="you@studio.com or demo slug (conors-cut-co)"
                 placeholderTextColor={colors.mutedForeground}
                 value={email}
                 onChangeText={setEmail}
                 autoCapitalize="none"
                 keyboardType="email-address"
                 autoComplete="email"
+                returnKeyType="next"
+                blurOnSubmit={false}
+                onSubmitEditing={() => passwordRef.current?.focus()}
                 onFocus={() => setFocused("email")}
                 onBlur={() => setFocused(null)}
                 testID="email-input"
@@ -324,6 +375,7 @@ export default function SignInScreen() {
               <FieldLabel color={colors.mutedForeground}>Password</FieldLabel>
               <View style={{ position: "relative" }}>
                 <TextInput
+                  ref={passwordRef}
                   style={[
                     styles.input,
                     {
@@ -339,6 +391,8 @@ export default function SignInScreen() {
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
                   autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
+                  returnKeyType="done"
+                  onSubmitEditing={submit}
                   onFocus={() => setFocused("password")}
                   onBlur={() => setFocused(null)}
                   testID="password-input"
@@ -363,6 +417,7 @@ export default function SignInScreen() {
             <>
               <FieldLabel color={colors.mutedForeground}>Verification code</FieldLabel>
               <TextInput
+                ref={codeRef}
                 style={[
                   styles.input,
                   styles.codeInput,
@@ -378,6 +433,8 @@ export default function SignInScreen() {
                 onChangeText={setCode}
                 keyboardType="number-pad"
                 autoFocus
+                returnKeyType="done"
+                onSubmitEditing={submit}
                 onFocus={() => setFocused("code")}
                 onBlur={() => setFocused(null)}
                 testID="otp-input"
@@ -462,7 +519,7 @@ export default function SignInScreen() {
         <Text style={[styles.legal, { color: colors.mutedForeground }]}>
           By continuing you agree to Livia's Terms & Privacy Policy.
         </Text>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -524,6 +581,13 @@ const styles = StyleSheet.create({
   headlineItalic: {
     fontFamily: fonts.serifMediumItalic,
     fontStyle: "italic",
+  },
+  livLine: {
+    ...type.serifSm,
+    textAlign: "center",
+    marginTop: 8,
+    marginBottom: 4,
+    opacity: 0.9,
   },
   tagline: {
     ...type.body,

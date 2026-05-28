@@ -2,122 +2,83 @@
 // future entry point, but the tab bar only surfaces it for STAFF.
 
 import { Feather } from "@expo/vector-icons";
-import { useAuth } from "@clerk/clerk-expo";
-import { useQuery } from "@tanstack/react-query";
+import { useGetMyDay } from "@workspace/api-client-react";
 import { useRouter } from "expo-router";
-import React from "react";
+import { usePreviewStaffId } from "@/hooks/usePreviewStaffId";
+import React, { useEffect, useState } from "react";
 import {
-  Platform,
   Pressable,
-  RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AuroraHalo } from "@/components/brand/AuroraHalo";
-import { LiviaWordmark } from "@/components/brand/LiviaWordmark";
+import { OperationalScreen } from "@/components/OperationalScreen";
 import { Shimmer } from "@/components/brand/Shimmer";
 import { EmptyState } from "@/components/EmptyState";
-import { aurora } from "@/constants/colors";
 import { elevation } from "@/constants/elevation";
 import { fonts, type } from "@/constants/typography";
 import { useBusiness } from "@/contexts/BusinessContext";
 import { useColors } from "@/hooks/useColors";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useRelativeTime } from "@/hooks/useRelativeTime";
-
-const BASE = `https://${process.env.EXPO_PUBLIC_DOMAIN}`;
-
-interface MyDayResponse {
-  staffId: string | null;
-  todayCount: number;
-  weekCount: number;
-  today: Array<{
-    id: string;
-    startAt: string;
-    endAt: string;
-    status: string;
-    customer?: { id: string; displayName: string | null } | null;
-    service?: { id: string; name: string } | null;
-  }>;
-  next: MyDayResponse["today"][number] | null;
-  myCustomers: Array<{ id: string; displayName: string | null; email: string | null }>;
-}
-
-function fmtTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
-}
+import { useBusinessTimezone } from "@/hooks/useBusinessTimezone";
 
 export default function MyDayScreen() {
   const colors = useColors();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const haptics = useHaptics();
   const { currentBusiness } = useBusiness();
-  const { getToken } = useAuth();
   const bid = currentBusiness?.id ?? "";
+  const { timeZone: businessTz, formatTime, formatLongDateNow } = useBusinessTimezone();
+  const [clock, setClock] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setClock(Date.now()), 30_000);
+    return () => clearInterval(t);
+  }, []);
 
-  const { data, isLoading, refetch, isRefetching } = useQuery({
-    queryKey: ["my-day", bid],
-    enabled: !!bid,
-    staleTime: 30_000,
-    queryFn: async (): Promise<MyDayResponse> => {
-      const token = await getToken();
-      const res = await fetch(`${BASE}/api/businesses/${bid}/my-day`, {
-        headers: token
-          ? { Accept: "application/json", Authorization: `Bearer ${token}` }
-          : { Accept: "application/json" },
-      });
-      if (!res.ok) throw new Error(`my-day ${res.status}`);
-      return res.json();
+  const { staffId: previewStaffId, staffName, isPreview, loading: previewLoading } =
+    usePreviewStaffId();
+
+  const { data, isLoading, refetch, isRefetching } = useGetMyDay(
+    bid,
+    previewStaffId ? { staffId: previewStaffId } : undefined,
+    {
+      query: { enabled: !!bid && (!isPreview || !!previewStaffId), staleTime: 30_000 } as never,
     },
-  });
+  );
 
   const next = data?.next ?? null;
   const nextRelative = useRelativeTime(next?.startAt);
-  const topPad = Platform.OS === "web" ? 67 : insets.top;
+
+  const subtitle = isPreview && staffName
+    ? `Viewing ${staffName}'s chair (owner preview)`
+    : data
+      ? data.todayCount === 0
+        ? "Nothing on the books today."
+        : `${data.todayCount} today · ${data.weekCount} more this week`
+      : formatLongDateNow(clock);
 
   return (
-    <ScrollView
-      style={[styles.root, { backgroundColor: colors.background }]}
-      contentContainerStyle={[styles.content, { paddingTop: topPad + 12 }]}
-      refreshControl={
-        <RefreshControl
-          refreshing={isRefetching}
-          onRefresh={() => {
-            haptics.tap();
-            refetch();
-          }}
-          tintColor={colors.primary}
-        />
+    <OperationalScreen
+      eyebrow={formatLongDateNow(clock)}
+      title="My chair"
+      subtitle={subtitle}
+      refreshing={isRefetching}
+      onRefresh={() => {
+        haptics.tap();
+        refetch();
+      }}
+      contentStyle={{ paddingBottom: 100 }}
+      headerExtra={
+        <>
+          {isPreview && !previewStaffId && !previewLoading ? (
+            <Text style={[styles.sub, { color: colors.destructive }]}>
+              No staff on this shop yet — add team on web or pick another business.
+            </Text>
+          ) : null}
+        </>
       }
-      showsVerticalScrollIndicator={false}
     >
-      <View pointerEvents="none" style={styles.glowWrap}>
-        <AuroraHalo tone="primary" size={420} style={{ top: -160, left: -100 }} intensity={0.85} />
-      </View>
-
-      <View style={styles.headerBlock}>
-        <LiviaWordmark size="sm" color={colors.foreground} />
-        <Text style={[styles.greeting, { color: colors.mutedForeground }]}>
-          {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
-        </Text>
-        <Text style={[styles.title, { color: colors.foreground }]}>My day</Text>
-        {data ? (
-          <Text style={[styles.sub, { color: colors.mutedForeground }]}>
-            {data.todayCount === 0
-              ? "Nothing on the books today."
-              : `${data.todayCount} today · ${data.weekCount} more this week`}
-          </Text>
-        ) : null}
-      </View>
-
       {/* Up next */}
       {!isLoading && next ? (
         <Pressable
@@ -129,17 +90,19 @@ export default function MyDayScreen() {
           <View
             style={[
               styles.nextCard,
-              { backgroundColor: colors.card, borderColor: aurora.cyan + "44" },
+              { backgroundColor: colors.card, borderColor: colors.aurora.cyan + "44" },
               elevation.floating,
             ]}
           >
             <View style={styles.nextRow}>
-              <Text style={[styles.nextEyebrow, { color: aurora.cyan }]}>UP NEXT</Text>
+              <Text style={[styles.nextEyebrow, { color: colors.aurora.cyan }]}>UP NEXT</Text>
               <View style={styles.nextTimes}>
                 {nextRelative ? (
-                  <Text style={[styles.nextCountdown, { color: aurora.cyan }]}>{nextRelative}</Text>
+                  <Text style={[styles.nextCountdown, { color: colors.aurora.cyan }]}>{nextRelative}</Text>
                 ) : null}
-                <Text style={[styles.nextTime, { color: colors.foreground }]}>{fmtTime(next.startAt)}</Text>
+                <Text style={[styles.nextTime, { color: colors.foreground }]}>
+                  {formatTime(next.startAt)}
+                </Text>
               </View>
             </View>
             <Text style={[styles.nextName, { color: colors.foreground }]} numberOfLines={1}>
@@ -150,6 +113,37 @@ export default function MyDayScreen() {
             </Text>
           </View>
         </Pressable>
+      ) : null}
+
+      {/* Rest of week */}
+      {!isLoading && (data?.week?.length ?? 0) > 0 ? (
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>My week</Text>
+          <Text style={[styles.weekHint, { color: colors.mutedForeground }]}>
+            {data!.weekCount} upcoming after today
+          </Text>
+          {data!.week.map((b) => (
+            <Pressable
+              key={b.id}
+              onPress={() => {
+                haptics.tap();
+                router.push(`/booking/${b.id}`);
+              }}
+            >
+              <View style={[styles.row, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                <View style={styles.rowMain}>
+                  <Text style={[styles.rowName, { color: colors.foreground }]} numberOfLines={1}>
+                    {b.customer?.displayName ?? "Walk-in"}
+                  </Text>
+                  <Text style={[styles.rowSub, { color: colors.mutedForeground }]} numberOfLines={1}>
+                    {formatTime(b.startAt)} · {b.service?.name ?? "Appointment"}
+                  </Text>
+                </View>
+                <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
+              </View>
+            </Pressable>
+          ))}
+        </View>
       ) : null}
 
       {/* Today's slate */}
@@ -181,8 +175,12 @@ export default function MyDayScreen() {
             >
               <View style={[styles.row, { backgroundColor: colors.card, borderColor: colors.border }]}>
                 <View style={styles.rowTime}>
-                  <Text style={[styles.rowTimeText, { color: colors.foreground }]}>{fmtTime(b.startAt)}</Text>
-                  <Text style={[styles.rowTimeSub, { color: colors.mutedForeground }]}>{fmtTime(b.endAt)}</Text>
+                  <Text style={[styles.rowTimeText, { color: colors.foreground }]}>
+                    {formatTime(b.startAt)}
+                  </Text>
+                  <Text style={[styles.rowTimeSub, { color: colors.mutedForeground }]}>
+                    {formatTime(b.endAt)}
+                  </Text>
                 </View>
                 <View style={styles.rowMain}>
                   <Text style={[styles.rowName, { color: colors.foreground }]} numberOfLines={1}>
@@ -236,7 +234,7 @@ export default function MyDayScreen() {
           ))
         )}
       </View>
-    </ScrollView>
+    </OperationalScreen>
   );
 }
 
@@ -258,6 +256,7 @@ const styles = StyleSheet.create({
   nextSub: { ...type.body, fontSize: 14 },
   section: { gap: 10 },
   sectionTitle: { fontFamily: fonts.serifMedium, fontSize: 22, letterSpacing: -0.3 },
+  weekHint: { ...type.caption, fontSize: 12, marginTop: -4, marginBottom: 4 },
   row: {
     flexDirection: "row",
     alignItems: "center",

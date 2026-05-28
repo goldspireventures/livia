@@ -42,6 +42,18 @@ export const entitlementKeySchema = z.enum([
   "vertical_pack_fitness",
   "vertical_pack_medspa",
   "vertical_pack_allied_health",
+  "vertical_pack_pet_grooming",
+  "vertical_pack_automotive_detailing",
+  "class_booking",
+  "tattoo_design_proof",
+  "package_credits",
+  "franchise_rollup",
+  "locale_pack_nordic",
+  "public_api_alpha",
+  "payroll_export",
+  "booking_continuity",
+  "enterprise_audit_export",
+  "enterprise_sso",
 ]);
 export type EntitlementKey = z.infer<typeof entitlementKeySchema>;
 
@@ -89,6 +101,8 @@ export const PLAN_CATALOGUE: Record<string, ProductPlan> = {
       "google_calendar_export",
       "csv_importer",
       "phorest_migration_broker",
+      "payroll_export",
+      "booking_continuity",
     ]),
   },
   studio: {
@@ -112,12 +126,164 @@ export const PLAN_CATALOGUE: Record<string, ProductPlan> = {
       "csv_importer",
       "phorest_migration_broker",
       "delegations_advanced",
+      "payroll_export",
+      "booking_continuity",
+    ]),
+  },
+  /** 14-day self-serve trial — core ops without voice (upgrade to Solo/Studio for wedge). */
+  trial: {
+    id: "trial",
+    name: "Trial",
+    baseEurCentsPerMonth: 0,
+    seatEurCentsPerMonth: null,
+    voiceOutcomeShare: 0,
+    voiceOutcomeCapEurCents: null,
+    entitlements: new Set<EntitlementKey>([
+      "whatsapp_inbound",
+      "sms_outbound",
+      "audit_log_owner_view",
+      "audit_log_export",
+      "csv_importer",
+    ]),
+  },
+  /** Multi-shop — per-shop billing (RFC 0010). */
+  chain: {
+    id: "chain",
+    name: "Chain",
+    baseEurCentsPerMonth: 24900,
+    seatEurCentsPerMonth: 1500,
+    voiceOutcomeShare: 0.04,
+    voiceOutcomeCapEurCents: null,
+    entitlements: new Set<EntitlementKey>([
+      "voice_receptionist",
+      "whatsapp_inbound",
+      "whatsapp_outbound",
+      "sms_outbound",
+      "audit_log_owner_view",
+      "audit_log_export",
+      "deposits",
+      "stripe_connect_payouts",
+      "delegations_advanced",
+      "multi_brand",
+      "payroll_export",
+      "booking_continuity",
+      "enterprise_audit_export",
+      "enterprise_sso",
+      "public_api_alpha",
+    ]),
+  },
+  "chair-host": {
+    id: "chair-host",
+    name: "Host",
+    baseEurCentsPerMonth: 9900,
+    seatEurCentsPerMonth: 1900,
+    voiceOutcomeShare: 0.04,
+    voiceOutcomeCapEurCents: 10000,
+    entitlements: new Set<EntitlementKey>([
+      "voice_receptionist",
+      "chair_rental",
+      "sms_outbound",
+      "audit_log_owner_view",
+      "audit_log_export",
+      "deposits",
+      "stripe_connect_payouts",
+    ]),
+  },
+  "mid-chain": {
+    id: "mid-chain",
+    name: "Mid-chain",
+    baseEurCentsPerMonth: 24900,
+    seatEurCentsPerMonth: 3900,
+    voiceOutcomeShare: 0.04,
+    voiceOutcomeCapEurCents: null,
+    entitlements: new Set<EntitlementKey>([
+      "voice_receptionist",
+      "whatsapp_inbound",
+      "whatsapp_outbound",
+      "sms_outbound",
+      "audit_log_owner_view",
+      "audit_log_export",
+      "deposits",
+      "stripe_connect_payouts",
+      "delegations_advanced",
+      "multi_brand",
+      "class_booking",
+      "enterprise_audit_export",
+      "enterprise_sso",
+      "public_api_alpha",
+      "payroll_export",
+      "booking_continuity",
+    ]),
+  },
+  franchise: {
+    id: "franchise",
+    name: "Franchise",
+    baseEurCentsPerMonth: 19900,
+    seatEurCentsPerMonth: 1500,
+    voiceOutcomeShare: 0.04,
+    voiceOutcomeCapEurCents: 10000,
+    entitlements: new Set<EntitlementKey>([
+      "voice_receptionist",
+      "sms_outbound",
+      "audit_log_owner_view",
+      "audit_log_export",
+      "franchise_rollup",
+      "delegations_advanced",
+      "enterprise_audit_export",
+      "enterprise_sso",
+      "public_api_alpha",
+    ]),
+  },
+  "white-label": {
+    id: "white-label",
+    name: "Multi-brand",
+    baseEurCentsPerMonth: 9900,
+    seatEurCentsPerMonth: 1500,
+    voiceOutcomeShare: 0.04,
+    voiceOutcomeCapEurCents: 15000,
+    entitlements: new Set<EntitlementKey>([
+      "voice_receptionist",
+      "whatsapp_inbound",
+      "whatsapp_outbound",
+      "sms_outbound",
+      "audit_log_owner_view",
+      "audit_log_export",
+      "deposits",
+      "stripe_connect_payouts",
+      "delegations_advanced",
+      "multi_brand",
     ]),
   },
 } as const;
 
+/** Plans customers can subscribe to via Stripe Billing in v1. */
+export const SELF_SERVE_PLAN_IDS = ["solo", "studio"] as const;
+
+/** Plans available in Stripe Checkout (Phase 10: Chain + Host). */
+export const CHECKOUT_PLAN_IDS = [
+  "solo",
+  "studio",
+  "chain",
+  "mid-chain",
+  "franchise",
+  "chair-host",
+  "white-label",
+] as const;
+
+/** Peer insights add-on — €49/mo per pricing-and-packaging.md */
+export const PEER_INSIGHTS_ADDON_EUR_CENTS = 4900;
+
 export function planHasEntitlement(plan: ProductPlan, key: EntitlementKey): boolean {
   return plan.entitlements.has(key);
+}
+
+export function tenantHasEntitlement(
+  plan: ProductPlan,
+  key: EntitlementKey,
+  denylist: ReadonlySet<string> = new Set(),
+): boolean {
+  if (denylist.has(key)) return false;
+  return planHasEntitlement(plan, key);
 }
 
 export function lookupPlan(id: string): ProductPlan | undefined {

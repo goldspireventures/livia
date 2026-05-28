@@ -1,0 +1,14 @@
+appId: ${MAESTRO_APP_ID}
+---
+- tapOn:
+    id: "email-input"
+- inputText: ${MAESTRO_DEMO_EMAIL}
+- tapOn:
+    id: "password-input"
+- inputText: ${MAESTRO_DEMO_PASSWORD}
+- tapOn:
+    id: "submit-button"
+- extendedWaitUntil:
+    notVisible:
+      id: "submit-button"
+    timeout: 45000

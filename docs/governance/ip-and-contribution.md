@@ -70,7 +70,7 @@ Publication requires:
 
 ## AI-generated content
 
-- LLM-generated code (e.g., Replit-Agent-assisted refactors, Claude-suggested tests): treated as authored by the contributor; same IP rules apply; contributor responsible for review + accuracy.
+- LLM-assisted code (e.g. Claude-suggested tests): treated as authored by the contributor; same IP rules apply; contributor responsible for review + accuracy.
 - LLM-generated brand copy: brand stewards review; cannot be merged untouched onto customer surfaces.
 - LLM-generated Liv-mouth content: per ADR 0016 eval; cannot ship untested.
 

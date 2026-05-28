@@ -5,6 +5,7 @@ import { businessesTable } from "../identity/businesses";
 import { staffTable } from "../identity/staff";
 import { servicesTable } from "./services";
 import { customersTable, channelTypeEnum } from "./customers";
+import { bookingResourcesTable } from "./booking-resources";
 
 export const bookingStatusEnum = pgEnum("booking_status", [
   "PENDING", "CONFIRMED", "CANCELLED", "COMPLETED", "NO_SHOW",
@@ -12,7 +13,16 @@ export const bookingStatusEnum = pgEnum("booking_status", [
 
 // Provenance — who/what brought this booking in. Drives outcome-share settlement.
 export const bookingSourceEnum = pgEnum("booking_source", [
-  "voice", "whatsapp", "sms", "instagram", "email", "web", "owner-manual", "walk-in", "google-cal-import",
+  "voice",
+  "whatsapp",
+  "sms",
+  "instagram",
+  "messenger",
+  "email",
+  "web",
+  "owner-manual",
+  "walk-in",
+  "google-cal-import",
 ]);
 
 export const bookingsTable = pgTable(
@@ -23,6 +33,9 @@ export const bookingsTable = pgTable(
       .notNull()
       .references(() => businessesTable.id, { onDelete: "cascade" }),
     staffId: text("staff_id").references(() => staffTable.id, { onDelete: "set null" }),
+    resourceId: text("resource_id").references(() => bookingResourcesTable.id, {
+      onDelete: "set null",
+    }),
     serviceId: text("service_id")
       .notNull()
       .references(() => servicesTable.id, { onDelete: "restrict" }),
@@ -37,6 +50,10 @@ export const bookingsTable = pgTable(
     startAt: timestamp("start_at", { withTimezone: true }).notNull(),
     endAt: timestamp("end_at", { withTimezone: true }).notNull(),
     status: bookingStatusEnum("status").notNull().default("PENDING"),
+    /** Machine reason while status=PENDING (e.g. AWAITING_DEPOSIT). */
+    pendingReason: text("pending_reason"),
+    continuityConversationId: text("continuity_conversation_id"),
+    continuitySentAt: timestamp("continuity_sent_at", { withTimezone: true }),
     notes: text("notes"),
     internalNotes: text("internal_notes"),
     cancellationReason: text("cancellation_reason"),

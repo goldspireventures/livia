@@ -27,6 +27,24 @@ node_modules
 !.vscode/launch.json
 !.vscode/extensions.json
 
+# Local API uploads (design proofs, media)
+uploads/
+
+# secrets — never commit; use .env.example as template
+.env
+.env.local
+.env.*.local
+artifacts/**/.env
+!.env.example
+!**/.env.example
+.local/
+
+# Playwright UX audit captures (regenerate locally; do not commit)
+e2e/visual-captures/
+
+# Local design reference screenshots (not product source)
+.inspiration-samples/
+
 # misc
 /.sass-cache
 /connect.lock
@@ -47,3 +65,6 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Local E2E scratch (do not commit)
+signin.json

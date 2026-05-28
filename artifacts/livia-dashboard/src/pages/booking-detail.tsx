@@ -1,4 +1,5 @@
-import { useParams, Link } from "wouter";
+import { Link } from "wouter";
+import { usePathId } from "@/lib/detail-route-params";
 import { useBusiness } from "@/lib/business-context";
 import {
   useGetBooking,
@@ -9,11 +10,19 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { formatDateTime } from "@/lib/format";
+import { pendingReasonLabel } from "@/lib/booking-pending";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, User, Scissors, Clock, FileText } from "lucide-react";
+import { HelpSupportDialog } from "@/components/help-support-dialog";
+import { BookingContextRail } from "@/components/booking/booking-context-rail";
+import { BookingContinuityPanel } from "@/components/booking-continuity-panel";
+import { BookingSourceBadge } from "@/components/booking/booking-source-badge";
+import { invalidateOperationalState } from "@/lib/operational-cache";
+import { PageFrame } from "@/components/ui/page-frame";
+import { PersonaRitualHeader } from "@/components/ritual/persona-ritual-header";
 
 const STATUS_COLORS: Record<string, string> = {
   PENDING: "bg-[hsl(var(--chart-4))]/10 text-[hsl(var(--chart-4))] border-[hsl(var(--chart-4))]/20",
@@ -46,7 +55,7 @@ const ACTION_VARIANTS: Record<string, "default" | "destructive" | "outline"> = {
 };
 
 export default function BookingDetailPage() {
-  const { bookingId } = useParams<{ bookingId: string }>();
+  const bookingId = usePathId("bookings");
   const { business } = useBusiness();
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -69,7 +78,7 @@ export default function BookingDetailPage() {
       {
         onSuccess: () => {
           qc.invalidateQueries({ queryKey: getGetBookingQueryKey(bid, bkId) });
-          qc.invalidateQueries({ queryKey: getListBookingsQueryKey(bid) });
+          invalidateOperationalState(qc, bid);
           toast({ title: `Booking ${newStatus.toLowerCase()}` });
         },
         onError: () => toast({ title: "Failed to update booking", variant: "destructive" }),
@@ -80,17 +89,27 @@ export default function BookingDetailPage() {
   const allowedTransitions = (booking as any) ? TRANSITIONS[(booking as any).status] ?? [] : [];
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-2xl">
+    <PageFrame width="md">
       <div className="flex items-center gap-3">
         <Link href="/bookings">
-          <Button variant="ghost" size="icon" data-testid="button-back">
+          <Button variant="ghost" size="icon" data-testid="button-back" aria-label="Back to bookings">
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Booking Detail</h1>
-          <p className="text-muted-foreground">View and manage appointment</p>
+        <div className="flex-1">
+          <PersonaRitualHeader
+            variant="page"
+            title="Booking detail"
+            subtitle="Status, continuity thread, and next actions"
+            className="pb-0"
+          />
         </div>
+        {booking ? (
+          <HelpSupportDialog
+            defaultCategory="liv_error"
+            context={{ bookingId: bkId, bookingStatus: (booking as { status?: string }).status }}
+          />
+        ) : null}
       </div>
 
       {isLoading ? (
@@ -116,9 +135,37 @@ export default function BookingDetailPage() {
               </span>
             </CardHeader>
             <CardContent>
+              <div className="mb-3">
+                <BookingSourceBadge source={(booking as { source?: string }).source} />
+              </div>
+              {(booking as any).status === "PENDING" && (booking as any).pendingReason ? (
+                <p className="text-sm text-muted-foreground mb-3">
+                  {pendingReasonLabel((booking as any).pendingReason)}
+                </p>
+              ) : null}
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
                 <Clock className="h-4 w-4" />
                 {formatDateTime((booking as any).startAt)} — {formatDateTime((booking as any).endAt)}
+              </div>
+              <div className="mb-4">
+                <BookingContextRail
+                  businessId={bid}
+                  bookingId={bkId}
+                  status={(booking as { status: string }).status}
+                  customerName={
+                    (booking as { customer?: { firstName?: string; lastName?: string } }).customer
+                      ? [
+                          (booking as { customer?: { firstName?: string } }).customer?.firstName,
+                          (booking as { customer?: { lastName?: string } }).customer?.lastName,
+                        ]
+                          .filter(Boolean)
+                          .join(" ")
+                      : undefined
+                  }
+                  continuityConversationId={
+                    (booking as { continuityConversationId?: string }).continuityConversationId
+                  }
+                />
               </div>
               {allowedTransitions.length > 0 && (
                 <div className="flex flex-wrap gap-2">
@@ -138,6 +185,15 @@ export default function BookingDetailPage() {
               )}
             </CardContent>
           </Card>
+
+          <BookingContinuityPanel
+            businessId={bid}
+            bookingId={bkId}
+            pendingReason={(booking as { pendingReason?: string }).pendingReason}
+            continuityConversationId={
+              (booking as { continuityConversationId?: string }).continuityConversationId
+            }
+          />
 
           <div className="grid gap-4 md:grid-cols-2">
             <Card>
@@ -195,6 +251,27 @@ export default function BookingDetailPage() {
             </Card>
           </div>
 
+          {Array.isArray((booking as any).media) && (booking as any).media.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Reference photos</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-wrap gap-2">
+                {(booking as any).media.map((m: { id: string; url: string }) => (
+                  <a
+                    key={m.id}
+                    href={m.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="h-20 w-20 rounded-md overflow-hidden border block"
+                  >
+                    <img src={m.url} alt="" className="h-full w-full object-cover" />
+                  </a>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
           {(booking as any).notes && (
             <Card>
               <CardHeader>
@@ -210,6 +287,6 @@ export default function BookingDetailPage() {
           )}
         </>
       )}
-    </div>
+    </PageFrame>
   );
 }

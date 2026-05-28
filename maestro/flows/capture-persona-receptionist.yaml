@@ -1,0 +1,16 @@
+appId: ${MAESTRO_APP_ID}
+env:
+  PERSONA: receptionist
+---
+- runFlow: sign-in-demo.yaml
+- runFlow: helpers/switch-persona.yaml
+- takeScreenshot: e2e/visual-captures/mobile/reception-floor
+- tapOn: "Clients"
+- takeScreenshot: e2e/visual-captures/mobile/reception-clients
+- tapOn: "Messages"
+- takeScreenshot: e2e/visual-captures/mobile/reception-messages
+- tapOn: "More"
+- takeScreenshot: e2e/visual-captures/mobile/reception-more
+- tapOn:
+    id: "menu-settings"
+- takeScreenshot: e2e/visual-captures/mobile/reception-settings

@@ -1,0 +1,51 @@
+import { customFetch } from "@workspace/api-client-react";
+
+export type DesignProofRow = {
+  id: string;
+  status: string;
+  imageUrl?: string | null;
+  note?: string | null;
+  customerId?: string | null;
+  bookingId?: string | null;
+  createdAt?: string;
+};
+
+export type DesignProofStatus =
+  | "draft"
+  | "pending_review"
+  | "approved"
+  | "rejected";
+
+export async function listDesignProofs(businessId: string, status?: DesignProofStatus) {
+  const q = status ? `?status=${encodeURIComponent(status)}` : "";
+  const res = await customFetch<DesignProofRow[]>(
+    `/api/businesses/${businessId}/design-proofs${q}`,
+  );
+  return Array.isArray(res) ? res : [];
+}
+
+export async function createDesignProof(
+  businessId: string,
+  body: { imageUrl?: string; note?: string; customerId?: string; bookingId?: string },
+) {
+  return customFetch<DesignProofRow>(`/api/businesses/${businessId}/design-proofs`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+export async function updateDesignProofStatus(
+  businessId: string,
+  proofId: string,
+  status: DesignProofStatus,
+) {
+  return customFetch<DesignProofRow>(
+    `/api/businesses/${businessId}/design-proofs/${proofId}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    },
+  );
+}

@@ -74,11 +74,11 @@ The **salon is the controller** for this data. We process it on their behalf per
 ## 7. Who we share data with
 
 Subprocessors per `sub-processors.md`. Categories:
-- Hosting + storage (Replit / cloud providers).
+- Hosting + storage (Supabase EU + application hosting).
 - Authentication (Clerk).
 - Email (Resend).
 - SMS + voice (Twilio).
-- AI inference (Anthropic, via Replit AI Integrations proxy).
+- AI inference (Anthropic).
 - Error monitoring (Sentry).
 - Analytics (Plausible — anonymous-only).
 - Payments (Stripe).

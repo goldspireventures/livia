@@ -14,7 +14,7 @@
  */
 
 export type PersonaId =
-  | "founder"
+  | "org_admin"
   | "owner"
   | "manager"
   | "staff-senior"
@@ -85,8 +85,8 @@ export interface Persona {
 
 // ----------------------- shared seed data --------------------------
 
-/** Three demo businesses the founder owns, used by the Founder persona only. */
-export const FOUNDER_SHOPS: PersonaShop[] = [
+/** Three demo businesses the org admin oversees, used by the org-admin persona only. */
+export const ORG_ADMIN_SHOPS: PersonaShop[] = [
   {
     id: "shop-dublin",
     name: "Aoife & Co. — Dublin",
@@ -122,7 +122,7 @@ export const FOUNDER_SHOPS: PersonaShop[] = [
   },
 ];
 
-/** Owner's own salon — shared with Manager + Receptionist personas. */
+/** Owner's own business — shared with Manager + Receptionist personas. */
 export const OWNER_TODAY: PersonaBooking[] = [
   { id: "b1",  time: "09:00", durationMin: 45, customer: "Niamh O'Reilly",   service: "Cut & Style",      staff: "Lara",  status: "COMPLETED", tipEur: 8 },
   { id: "b2",  time: "09:45", durationMin: 60, customer: "Pádraig Murphy",   service: "Skin Fade + Beard",staff: "Ciarán",status: "COMPLETED", tipEur: 5 },
@@ -150,13 +150,13 @@ export const STAFF_JUNIOR_TODAY: PersonaBooking[] = [
 
 export const PERSONAS: Persona[] = [
   {
-    id: "founder",
+    id: "org_admin",
     displayName: "Aoife Brennan",
-    roleLabel: "Founder · 3 salons",
+    roleLabel: "Org admin · 3 locations",
     businessName: "Aoife & Co. (Dublin · Cork · Galway)",
     accent: "champagne",
     iconName: "Sparkles",
-    tease: "Three salons before the first coffee. One glance.",
+    tease: "Three locations before the first coffee. One glance.",
     welcomeLine: "Good morning, Aoife.",
     welcomeSub: "Three rooms, one quiet read.",
     ritualLine: "The morning glance — what's healthy, what needs a hand.",
@@ -169,7 +169,7 @@ export const PERSONAS: Persona[] = [
   {
     id: "owner",
     displayName: "Sarah Kavanagh",
-    roleLabel: "Owner · single salon",
+    roleLabel: "Single-shop owner",
     businessName: "Sarah's Hair Studio · Dublin 6",
     accent: "cyan",
     iconName: "LayoutDashboard",

@@ -1,35 +1,61 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ClerkProvider } from "@clerk/clerk-react";
+import { ClerkProvider, useAuth } from "@clerk/clerk-react";
+import { setAuthTokenGetter } from "@workspace/api-client-react";
 import { dark } from "@clerk/themes";
 import { ThemeProvider, useTheme } from "next-themes";
 import { useState, useEffect } from "react";
 
 import { AuthGuard } from "@/components/auth-guard";
 import { AppLayout } from "@/components/layout/app-layout";
+import { LazyRoute } from "@/components/route-suspense";
+import { WedgeRouteGuard } from "@/components/wedge-route-guard";
+import {
+  LazyAuditPage,
+  LazyBookingDetailPage,
+  LazyBookingNewPage,
+  LazyBookingsPage,
+  LazyBrandsPage,
+  LazyChainPage,
+  LazyClassesPage,
+  LazyCustomerDetailPage,
+  LazyCustomersPage,
+  LazyDayPackagesPage,
+  LazyDesignProofsPage,
+  LazyDemoShowcase,
+  LazyExperiencePage,
+  LazyFranchisePage,
+  LazyGuidesPage,
+  LazyHostPage,
+  LazyInboxPage,
+  LazyLaunchStatusPage,
+  LazyLifecyclePage,
+  LazyMedspaHubPage,
+  LazyMyDayPage,
+  LazyPortalPage,
+  LazyPremisesPage,
+  LazyRotaPage,
+  LazyServicesPage,
+  LazySettingsPage,
+  LazyStaffDetailPage,
+  LazyStaffPage,
+  LazyToolkitPage,
+} from "@/lib/lazy-pages";
 
 import NotFound from "@/pages/not-found";
 import SignInPage from "@/pages/sign-in";
 import SignUpPage from "@/pages/sign-up";
 import OnboardingPage from "@/pages/onboarding";
+import LegalAcceptancePage from "@/pages/legal-acceptance";
 import DashboardPage from "@/pages/dashboard";
-import BookingsPage from "@/pages/bookings";
-import BookingNewPage from "@/pages/booking-new";
-import BookingDetailPage from "@/pages/booking-detail";
-import CustomersPage from "@/pages/customers";
-import CustomerDetailPage from "@/pages/customer-detail";
-import StaffPage from "@/pages/staff";
-import StaffDetailPage from "@/pages/staff-detail";
-import ServicesPage from "@/pages/services";
-import SettingsPage from "@/pages/settings";
-import InboxPage from "@/pages/inbox";
-import MyDayPage from "@/pages/my-day";
 import PublicBookingPage from "@/pages/public-booking";
+import PublicVisitPage from "@/pages/public-visit";
+import PublicPremisesPage from "@/pages/public-premises";
 import DemoLauncher from "@/pages/demo/Launcher";
-import DemoShowcase from "@/pages/demo/Showcase";
 import { DemoProvider } from "@/lib/demo/demo-context";
+import { isProductionCustomerSurface } from "@/lib/production-surface";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -52,17 +78,69 @@ function AuthenticatedRoutes() {
       <AppLayout>
         <Switch>
           <Route path="/dashboard" component={DashboardPage} />
-          <Route path="/my-day" component={MyDayPage} />
-          <Route path="/bookings/new" component={BookingNewPage} />
-          <Route path="/bookings/:bookingId" component={BookingDetailPage} />
-          <Route path="/bookings" component={BookingsPage} />
-          <Route path="/customers/:customerId" component={CustomerDetailPage} />
-          <Route path="/customers" component={CustomersPage} />
-          <Route path="/staff/:staffId" component={StaffDetailPage} />
-          <Route path="/staff" component={StaffPage} />
-          <Route path="/services" component={ServicesPage} />
-          <Route path="/inbox" component={InboxPage} />
-          <Route path="/settings" component={SettingsPage} />
+          <Route path="/my-day">{() => <LazyRoute page={LazyMyDayPage} />}</Route>
+          <Route path="/bookings/new">{() => <LazyRoute page={LazyBookingNewPage} />}</Route>
+          <Route path="/bookings/:bookingId">{() => <LazyRoute page={LazyBookingDetailPage} />}</Route>
+          <Route path="/bookings">{() => <LazyRoute page={LazyBookingsPage} />}</Route>
+          <Route path="/customers/:customerId">{() => <LazyRoute page={LazyCustomerDetailPage} />}</Route>
+          <Route path="/customers">{() => <LazyRoute page={LazyCustomersPage} />}</Route>
+          <Route path="/staff/:staffId">{() => <LazyRoute page={LazyStaffDetailPage} />}</Route>
+          <Route path="/staff">{() => <LazyRoute page={LazyStaffPage} />}</Route>
+          <Route path="/services">{() => <LazyRoute page={LazyServicesPage} />}</Route>
+          <Route path="/inbox">{() => <LazyRoute page={LazyInboxPage} />}</Route>
+          <Route path="/audit">{() => <LazyRoute page={LazyAuditPage} />}</Route>
+          <Route path="/chain">{() => <LazyRoute page={LazyChainPage} />}</Route>
+          <Route path="/premises">{() => <LazyRoute page={LazyPremisesPage} />}</Route>
+          <Route path="/day-packages">
+            {() => (
+              <WedgeRouteGuard path="/day-packages">
+                <LazyRoute page={LazyDayPackagesPage} />
+              </WedgeRouteGuard>
+            )}
+          </Route>
+          <Route path="/host">
+            {() => (
+              <WedgeRouteGuard path="/host">
+                <LazyRoute page={LazyHostPage} />
+              </WedgeRouteGuard>
+            )}
+          </Route>
+          <Route path="/brands">{() => <LazyRoute page={LazyBrandsPage} />}</Route>
+          <Route path="/rota">{() => <LazyRoute page={LazyRotaPage} />}</Route>
+          <Route path="/classes">
+            {() => (
+              <WedgeRouteGuard path="/classes">
+                <LazyRoute page={LazyClassesPage} />
+              </WedgeRouteGuard>
+            )}
+          </Route>
+          <Route path="/franchise">
+            {() => (
+              <WedgeRouteGuard path="/franchise">
+                <LazyRoute page={LazyFranchisePage} />
+              </WedgeRouteGuard>
+            )}
+          </Route>
+          <Route path="/design-proofs">
+            {() => (
+              <WedgeRouteGuard path="/design-proofs">
+                <LazyRoute page={LazyDesignProofsPage} />
+              </WedgeRouteGuard>
+            )}
+          </Route>
+          <Route path="/medspa">
+            {() => (
+              <WedgeRouteGuard path="/medspa">
+                <LazyRoute page={LazyMedspaHubPage} />
+              </WedgeRouteGuard>
+            )}
+          </Route>
+          <Route path="/toolkit">{() => <LazyRoute page={LazyToolkitPage} />}</Route>
+          <Route path="/lifecycle">{() => <LazyRoute page={LazyLifecyclePage} />}</Route>
+          <Route path="/experience">{() => <LazyRoute page={LazyExperiencePage} />}</Route>
+          <Route path="/portal">{() => <LazyRoute page={LazyPortalPage} />}</Route>
+          <Route path="/launch-status">{() => <LazyRoute page={LazyLaunchStatusPage} />}</Route>
+          <Route path="/settings">{() => <LazyRoute page={LazySettingsPage} />}</Route>
           <Route component={NotFound} />
         </Switch>
       </AppLayout>
@@ -75,11 +153,32 @@ function AppRouter() {
     <Switch>
       <Route path="/sign-in" component={SignInPage} />
       <Route path="/sign-up" component={SignUpPage} />
+      <Route path="/b/:slug/visit/:token" component={PublicVisitPage} />
       <Route path="/b/:slug" component={PublicBookingPage} />
+      <Route path="/p/:slug" component={PublicPremisesPage} />
 
-      {/* Public demo gateway — no Clerk required. ADR 0010 + docs/demo-gateway.md */}
-      <Route path="/demo" component={DemoLauncher} />
-      <Route path="/demo/:persona" component={DemoShowcase} />
+      {/* QA / sales only — stripped from production customer builds */}
+      {!isProductionCustomerSurface ? (
+        <>
+          <Route path="/guides">{() => <LazyRoute page={LazyGuidesPage} />}</Route>
+          <Route path="/demo" component={DemoLauncher} />
+          <Route path="/demo/:persona">{() => <LazyRoute page={LazyDemoShowcase} />}</Route>
+        </>
+      ) : (
+        <>
+          <Route path="/guides">{() => <Redirect to="/sign-in" />}</Route>
+          <Route path="/demo">{() => <Redirect to="/sign-in" />}</Route>
+          <Route path="/demo/:persona">{() => <Redirect to="/sign-in" />}</Route>
+        </>
+      )}
+
+      <Route path="/legal-acceptance">
+        {() => (
+          <AuthGuard>
+            <LegalAcceptancePage />
+          </AuthGuard>
+        )}
+      </Route>
 
       <Route path="/onboarding">
         {() => (
@@ -89,11 +188,21 @@ function AppRouter() {
         )}
       </Route>
 
-      <Route path="/:rest*">
+      {/* Default route — do not use /:rest*; it breaks useParams on nested detail paths */}
+      <Route>
         <AuthenticatedRoutes />
       </Route>
     </Switch>
   );
+}
+
+/** Attach Clerk session JWT to API client (required for Vite-proxied dev). */
+function ClerkAuthBridge() {
+  const { getToken } = useAuth();
+  // Register synchronously so the first authenticated query (e.g. accept-invitations)
+  // does not race ahead of useEffect and hit the API without a Bearer token.
+  setAuthTokenGetter(() => getToken());
+  return null;
 }
 
 function ClerkProviderWithTheme({ children }: { children: React.ReactNode }) {
@@ -111,7 +220,7 @@ function ClerkProviderWithTheme({ children }: { children: React.ReactNode }) {
       routerReplace={(to) => window.history.replaceState(null, "", to)}
       {...(import.meta.env.PROD ? { proxyUrl: window.location.origin + "/api/__clerk" } : {})}
       signInFallbackRedirectUrl="/dashboard"
-      signUpFallbackRedirectUrl="/onboarding"
+      signUpFallbackRedirectUrl="/legal-acceptance"
       appearance={{
         baseTheme: currentTheme === "dark" ? dark : undefined,
         variables: {
@@ -136,6 +245,7 @@ function ClerkProviderWithTheme({ children }: { children: React.ReactNode }) {
         },
       }}
     >
+      <ClerkAuthBridge />
       {children}
     </ClerkProvider>
   );

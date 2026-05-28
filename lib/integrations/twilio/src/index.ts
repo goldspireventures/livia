@@ -53,8 +53,18 @@ export interface TwilioClient {
   purchasePhoneNumber(args: {
     phoneNumber: string;
     smsUrl: string;
+    voiceUrl?: string;
+    voiceStatusCallback?: string;
     friendlyName?: string;
   }): Promise<TwilioPhoneNumberResource>;
+  updateIncomingPhoneNumber(
+    sid: string,
+    args: {
+      smsUrl?: string;
+      voiceUrl?: string;
+      voiceStatusCallback?: string;
+    },
+  ): Promise<void>;
   releasePhoneNumber(sid: string): Promise<void>;
 }
 
@@ -137,6 +147,10 @@ export function createTwilioClient(creds: TwilioCreds): TwilioClient {
         PhoneNumber: args.phoneNumber,
         SmsUrl: args.smsUrl,
         SmsMethod: "POST",
+        VoiceUrl: args.voiceUrl,
+        VoiceMethod: args.voiceUrl ? "POST" : undefined,
+        StatusCallback: args.voiceStatusCallback,
+        StatusCallbackMethod: args.voiceStatusCallback ? "POST" : undefined,
         FriendlyName: args.friendlyName,
       });
       const res = (await twilioFetch(creds, "/IncomingPhoneNumbers.json", {
@@ -161,7 +175,60 @@ export function createTwilioClient(creds: TwilioCreds): TwilioClient {
         method: "DELETE",
       });
     },
+
+    async updateIncomingPhoneNumber(sid, args) {
+      const body = form({
+        SmsUrl: args.smsUrl,
+        SmsMethod: args.smsUrl ? "POST" : undefined,
+        VoiceUrl: args.voiceUrl,
+        VoiceMethod: args.voiceUrl ? "POST" : undefined,
+        StatusCallback: args.voiceStatusCallback,
+        StatusCallbackMethod: args.voiceStatusCallback ? "POST" : undefined,
+      });
+      await twilioFetch(creds, `/IncomingPhoneNumbers/${encodeURIComponent(sid)}.json`, {
+        method: "POST",
+        body,
+      });
+    },
   };
+}
+
+function escapeXml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
+/** Truncate for TTS — Twilio Say is practical up to ~500 chars per turn. */
+export function truncateForVoiceTts(text: string, max = 480): string {
+  const t = text.replace(/\s+/g, " ").trim();
+  if (t.length <= max) return t;
+  return `${t.slice(0, max - 3)}...`;
+}
+
+export function buildTwimlSayAndGather(args: {
+  say: string;
+  gatherActionUrl: string;
+  language?: string;
+  speechTimeout?: number;
+}): string {
+  const lang = args.language ?? "en-IE";
+  const say = escapeXml(truncateForVoiceTts(args.say));
+  const action = escapeXml(args.gatherActionUrl);
+  const timeout = args.speechTimeout ?? 3;
+  return `<?xml version="1.0" encoding="UTF-8"?><Response><Gather input="speech" language="${lang}" speechTimeout="${timeout}" action="${action}" method="POST"><Say language="${lang}">${say}</Say></Gather><Say language="${lang}">I didn't catch that. Goodbye.</Say><Hangup/></Response>`;
+}
+
+export function buildTwimlSayAndHangup(args: {
+  say: string;
+  language?: string;
+}): string {
+  const lang = args.language ?? "en-IE";
+  const say = escapeXml(truncateForVoiceTts(args.say));
+  return `<?xml version="1.0" encoding="UTF-8"?><Response><Say language="${lang}">${say}</Say><Hangup/></Response>`;
 }
 
 // Twilio-style request signature: HMAC-SHA1 over (url + sorted-concat of

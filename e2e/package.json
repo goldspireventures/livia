@@ -1,0 +1,27 @@
+{
+  "name": "@workspace/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:api": "playwright test tests/api-gate.spec.ts tests/meta-channels.spec.ts tests/full-platform-demo.spec.ts",
+    "test:platform": "playwright test --project=platform",
+    "test:marketing": "playwright test --project=marketing",
+    "test:visual-capture": "playwright test --project=visual-capture",
+    "test:marketing-visual": "playwright test --project=marketing-visual",
+    "test:founder-checklist": "playwright test --project=founder-checklist",
+    "test:contextual-web": "playwright test --project=contextual-web",
+    "test:full-visual-audit": "playwright test --project=full-visual-audit",
+    "test:all-verticals": "playwright test --project=all-verticals-smoke --workers=1",
+    "test:ux-quality-gate": "playwright test tests/ux-quality-gate.spec.ts --project=dashboard",
+    "test:preflight": "playwright test --project=v3-preflight-ui && playwright test --project=founder-auth-setup --project=v3-preflight-auth --project=api --project=dashboard --project=internal --project=marketing",
+    "test:preflight:fast": "playwright test --project=api --project=dashboard --project=internal tests/v3-preflight.spec.ts",
+    "test:demo-owner": "playwright test tests/demo-owner-flow.spec.ts --project=dashboard",
+    "install-browsers": "playwright install chromium --with-deps"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.11.3",
+    "@playwright/test": "^1.52.0"
+  }
+}

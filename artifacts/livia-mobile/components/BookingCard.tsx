@@ -14,25 +14,13 @@ import { SPRING_GENTLE } from "@/constants/motion";
 import { fonts, type } from "@/constants/typography";
 import { useColors } from "@/hooks/useColors";
 import { useHaptics } from "@/hooks/useHaptics";
+import { pendingReasonLabel } from "@/lib/booking-pending";
+import { formatShortDateInZone, formatTimeInZone, resolveBusinessTimeZone } from "@/lib/datetime";
 import { StatusBadge } from "./StatusBadge";
 
-function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
-}
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
-}
-
 interface BookingCardProps {
+  /** IANA zone from `Business.timezone`; falls back to device when omitted. */
+  timeZone?: string;
   booking: {
     id: string;
     status: string;
@@ -42,6 +30,7 @@ interface BookingCardProps {
     staff?: { displayName?: string | null } | null;
     service?: { name?: string | null } | null;
     notes?: string | null;
+    pendingReason?: string | null;
   };
   showDate?: boolean;
   index?: number;
@@ -49,9 +38,17 @@ interface BookingCardProps {
   onLongPress?: () => void;
 }
 
-export function BookingCard({ booking, showDate = false, index = 0, onPress, onLongPress }: BookingCardProps) {
+export function BookingCard({
+  booking,
+  timeZone: timeZoneProp,
+  showDate = false,
+  index = 0,
+  onPress,
+  onLongPress,
+}: BookingCardProps) {
   const colors = useColors();
   const haptics = useHaptics();
+  const timeZone = resolveBusinessTimeZone(timeZoneProp ? { timezone: timeZoneProp } : null);
   const c = booking.customer;
   const customerName = c?.displayName ?? c?.firstName ?? "Walk-in";
   const serviceName = booking.service?.name ?? "Service";
@@ -110,11 +107,11 @@ export function BookingCard({ booking, showDate = false, index = 0, onPress, onL
           <View style={[styles.timeBar, { backgroundColor: colors.primary }]} />
           <View>
             <Text style={[styles.timeText, { color: colors.foreground }]}>
-              {formatTime(booking.startAt)}
+              {formatTimeInZone(booking.startAt, timeZone)}
             </Text>
             {showDate && (
               <Text style={[styles.dateText, { color: colors.mutedForeground }]}>
-                {formatDate(booking.startAt)}
+                {formatShortDateInZone(booking.startAt, timeZone)}
               </Text>
             )}
           </View>
@@ -134,6 +131,11 @@ export function BookingCard({ booking, showDate = false, index = 0, onPress, onL
             {serviceName}
             {staffName ? ` · ${staffName}` : ""}
           </Text>
+          {booking.status === "PENDING" && booking.pendingReason ? (
+            <Text style={[styles.pendingReason, { color: colors.primary }]} numberOfLines={1}>
+              {pendingReasonLabel(booking.pendingReason)}
+            </Text>
+          ) : null}
           {booking.notes ? (
             <Text style={[styles.notes, { color: colors.mutedForeground }]} numberOfLines={1}>
               {booking.notes}
@@ -178,5 +180,6 @@ const styles = StyleSheet.create({
   },
   name: { fontFamily: fonts.serifMedium, fontSize: 18, letterSpacing: -0.2, flex: 1 },
   service: { ...type.body, fontSize: 13 },
+  pendingReason: { ...type.caption, fontSize: 12 },
   notes: { ...type.caption, fontStyle: "italic" },
 });

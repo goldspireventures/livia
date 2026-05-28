@@ -11,8 +11,24 @@ import {
 } from "@workspace/db";
 import { eq, and, desc, asc, sql } from "drizzle-orm";
 import { generateId } from "../lib/id";
+import {
+  sendAiEmail,
+  sendAiInstagram,
+  sendAiMessenger,
+  sendAiSms,
+  sendAiWhatsapp,
+} from "./ai-outbound.service";
+import { listChannelIdentitiesForCustomer } from "./channel-identities.service";
+import { businessesTable } from "@workspace/db";
 
-export type ConversationChannel = "WEB" | "SMS" | "INSTAGRAM" | "WHATSAPP" | "EMAIL";
+export type ConversationChannel =
+  | "WEB"
+  | "SMS"
+  | "INSTAGRAM"
+  | "WHATSAPP"
+  | "MESSENGER"
+  | "EMAIL"
+  | "VOICE";
 export type ConversationStatus = "OPEN" | "HANDED_OFF" | "CLOSED";
 export type ConversationMessageRole = "USER" | "ASSISTANT" | "SYSTEM" | "TOOL";
 
@@ -64,6 +80,8 @@ export async function listConversationsForBusiness(
       customerPhone: conversationsTable.customerPhone,
       aiHandled: conversationsTable.aiHandled,
       summary: conversationsTable.summary,
+      linkedBookingId: conversationsTable.linkedBookingId,
+      caseIntent: conversationsTable.caseIntent,
       lastMessageAt: conversationsTable.lastMessageAt,
       createdAt: conversationsTable.createdAt,
       lastMessage: sql<string | null>`(
@@ -129,6 +147,7 @@ export async function appendMessage(input: {
   toolInput?: unknown;
   toolResult?: unknown;
   bookingId?: string;
+  authorUserId?: string | null;
 }): Promise<ConversationMessage> {
   const id = generateId();
   const [row] = await db
@@ -142,6 +161,7 @@ export async function appendMessage(input: {
       toolInput: input.toolInput ?? null,
       toolResult: input.toolResult ?? null,
       bookingId: input.bookingId ?? null,
+      authorUserId: input.authorUserId ?? null,
     })
     .returning();
 
@@ -184,6 +204,86 @@ export async function updateConversationContact(
     .update(conversationsTable)
     .set(patch)
     .where(eq(conversationsTable.id, conversationId));
+}
+
+/** Staff outbound reply from dashboard (HANDED_OFF or OPEN with ai paused). */
+export async function sendStaffMessage(input: {
+  businessId: string;
+  conversationId: string;
+  authorUserId: string;
+  content: string;
+}): Promise<ConversationMessage> {
+  const conv = await getConversation(input.conversationId);
+  if (!conv || conv.businessId !== input.businessId) {
+    throw new Error("CONVERSATION_NOT_FOUND");
+  }
+  const trimmed = input.content.trim();
+  if (!trimmed) throw new Error("EMPTY_MESSAGE");
+
+  const row = await appendMessage({
+    conversationId: input.conversationId,
+    role: "ASSISTANT",
+    content: trimmed,
+    authorUserId: input.authorUserId,
+  });
+
+  const [biz] = await db.select().from(businessesTable).where(eq(businessesTable.id, input.businessId));
+
+  if (conv.channel === "WHATSAPP" && conv.customerPhone && biz) {
+    void sendAiWhatsapp({
+      conversationId: conv.id,
+      businessId: biz.id,
+      businessName: biz.name,
+      customerId: conv.customerId ?? undefined,
+      customerPhone: conv.customerPhone,
+      content: trimmed,
+    }).catch(() => undefined);
+  } else if (conv.channel === "SMS" && conv.customerPhone && biz) {
+    void sendAiSms({
+      conversationId: conv.id,
+      businessId: biz.id,
+      businessName: biz.name,
+      customerId: conv.customerId ?? undefined,
+      customerPhone: conv.customerPhone,
+      content: trimmed,
+      fromPhone: biz.twilioPhoneNumber ?? null,
+    }).catch(() => undefined);
+  } else if ((conv.channel === "INSTAGRAM" || conv.channel === "MESSENGER") && biz) {
+    let recipientId: string | undefined;
+    if (conv.customerId) {
+      const identities = await listChannelIdentitiesForCustomer(biz.id, conv.customerId);
+      recipientId = identities.find((i) => i.channelType === "INSTAGRAM")?.externalId;
+    }
+    if (!recipientId && conv.customerPhone?.startsWith("meta:")) {
+      recipientId = conv.customerPhone.slice("meta:".length);
+    }
+    if (recipientId) {
+      const send =
+        conv.channel === "INSTAGRAM" ? sendAiInstagram : sendAiMessenger;
+      void send({
+        conversationId: conv.id,
+        businessId: biz.id,
+        businessName: biz.name,
+        customerId: conv.customerId ?? undefined,
+        recipientId,
+        content: trimmed,
+      }).catch(() => undefined);
+    }
+  } else if (conv.customerEmail && biz) {
+    void sendAiEmail({
+      businessId: biz.id,
+      businessName: biz.name,
+      customerId: conv.customerId ?? undefined,
+      bookingId: undefined,
+      to: conv.customerEmail,
+      subject: `Message from ${biz.name}`,
+      body: trimmed,
+      signature: `— ${biz.name}`,
+      templateKey: "staff-inbox-reply",
+    }).catch(() => undefined);
+  }
+
+  return row;
 }
 
 export async function attachCustomer(

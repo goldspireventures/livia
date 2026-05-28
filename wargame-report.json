@@ -1,0 +1,64 @@
+{
+  "generatedAt": "2026-05-27T09:12:45.820Z",
+  "apiBase": "http://127.0.0.1:3001",
+  "config": {
+    "tenantCount": 6,
+    "days": 14,
+    "concurrency": 20
+  },
+  "summary": {
+    "total": 7008,
+    "errors": 0,
+    "errorRate": "0%",
+    "latency": {
+      "p50": 20,
+      "p95": 69,
+      "p99": 101,
+      "max": 296
+    }
+  },
+  "layers": {
+    "all": {
+      "n": 7008,
+      "p50": 20,
+      "p95": 69,
+      "p99": 101,
+      "max": 296
+    },
+    "l1": {
+      "n": 2429,
+      "p50": 47,
+      "p95": 86,
+      "p99": 137,
+      "max": 296
+    },
+    "l2": {
+      "n": 1420,
+      "p50": 18,
+      "p95": 31,
+      "p99": 52,
+      "max": 93
+    }
+  },
+  "opMix": {
+    "L1 public loads": 732,
+    "L1 services probe": 471,
+    "L1 availability probe": 335,
+    "L1 public booking": 891,
+    "L2 SMS inbound": 1420,
+    "L3 my-day": 533,
+    "L3 inbox": 504,
+    "L3 bookings list": 307,
+    "L3 booking create": 263,
+    "L3 customers": 177,
+    "L3 staff": 164,
+    "L3 packages": 130,
+    "L4 proposals load": 373,
+    "L4 proposal approve": 0,
+    "L4 meta inbound sim": 355,
+    "L5 billing probe": 345
+  },
+  "errorsByStatus": {},
+  "errorsByLayer": {},
+  "errorSamples": []
+}

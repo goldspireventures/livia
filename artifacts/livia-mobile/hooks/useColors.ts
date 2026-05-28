@@ -1,6 +1,6 @@
 import { Platform } from "react-native";
 
-import colors from "@/constants/colors";
+import colors, { aurora, aurum } from "@/constants/colors";
 
 /**
  * Returns the design tokens for the current color scheme.
@@ -19,5 +19,5 @@ import colors from "@/constants/colors";
 export function useColors() {
   // Future: read a persisted user preference here. For now, always dark.
   void Platform.OS; // keep platform import live for future per-platform tweaks
-  return { ...colors.dark, radius: colors.radius };
+  return { ...colors.dark, radius: colors.radius, aurora, aurum };
 }

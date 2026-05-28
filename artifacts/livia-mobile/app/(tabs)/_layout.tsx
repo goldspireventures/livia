@@ -1,12 +1,10 @@
 import { Feather } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
-import { isLiquidGlassAvailable } from "expo-glass-effect";
 import type { BottomTabBarButtonProps } from "@react-navigation/bottom-tabs";
 import { PlatformPressable } from "@react-navigation/elements";
 import { Tabs } from "expo-router";
-import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
 import { SymbolView } from "expo-symbols";
-import React from "react";
+import React, { useMemo } from "react";
 import { Platform, StyleSheet, View, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fonts } from "@/constants/typography";
@@ -25,13 +23,20 @@ type TabKey =
   | "more";
 
 const TAB_VISIBILITY: Record<PersonaKind, TabKey[]> = {
-  founder: ["index", "shops", "approvals", "inbox", "more"],
+  org_admin: ["index", "shops", "approvals", "inbox", "more"],
   owner: ["index", "bookings", "customers", "inbox", "more"],
   manager: ["approvals", "bookings", "customers", "inbox", "more"],
-  "staff-senior": ["my-day", "bookings", "customers", "more"],
-  "staff-junior": ["my-day", "bookings", "more"],
+  staff: ["my-day", "bookings", "customers", "more"],
   receptionist: ["bookings", "customers", "inbox", "more"],
-  customer: ["index", "more"],
+};
+
+/** Ritual labels — aligned with web `persona-rituals.ts` */
+const TAB_RITUAL_TITLE: Record<PersonaKind, Partial<Record<TabKey, string>>> = {
+  org_admin: { index: "Today", shops: "Glance", approvals: "Approvals", inbox: "Queue" },
+  owner: { index: "Today", bookings: "Bookings", inbox: "Inbox", customers: "Clients" },
+  manager: { approvals: "Queue", bookings: "Floor", inbox: "Queue", customers: "Clients" },
+  staff: { "my-day": "My chair", bookings: "Appointments", customers: "Clients" },
+  receptionist: { bookings: "Floor", inbox: "Messages", customers: "Clients" },
 };
 
 interface TabSpec {
@@ -52,20 +57,9 @@ const ALL_TABS: TabSpec[] = [
   { name: "more", title: "More", sf: { default: "ellipsis", selected: "ellipsis" }, feather: "menu" },
 ];
 
-function NativeTabLayout({ visible }: { visible: Set<TabKey> }) {
-  return (
-    <NativeTabs>
-      {ALL_TABS.filter((t) => visible.has(t.name)).map((t) => (
-        <NativeTabs.Trigger key={t.name} name={t.name}>
-          <Icon sf={t.sf} />
-          <Label>{t.title}</Label>
-        </NativeTabs.Trigger>
-      ))}
-    </NativeTabs>
-  );
-}
+const DEFAULT_VISIBLE: TabKey[] = TAB_VISIBILITY.owner;
 
-function ClassicTabLayout({ visible }: { visible: Set<TabKey> }) {
+export default function TabLayout() {
   const colors = useColors();
   const colorScheme = useColorScheme();
   const haptics = useHaptics();
@@ -73,6 +67,12 @@ function ClassicTabLayout({ visible }: { visible: Set<TabKey> }) {
   const isIOS = Platform.OS === "ios";
   const isWeb = Platform.OS === "web";
   const insets = useSafeAreaInsets();
+  const { kind, isLoading } = usePersona();
+
+  const visible = useMemo(
+    () => new Set<TabKey>(isLoading ? DEFAULT_VISIBLE : TAB_VISIBILITY[kind]),
+    [isLoading, kind],
+  );
 
   const onTabPress = () => haptics.selection();
 
@@ -123,12 +123,14 @@ function ClassicTabLayout({ visible }: { visible: Set<TabKey> }) {
         },
       }}
     >
-      {ALL_TABS.map((t) => (
+      {ALL_TABS.map((t) => {
+        const ritualTitle = TAB_RITUAL_TITLE[kind]?.[t.name] ?? t.title;
+        return (
         <Tabs.Screen
           key={t.name}
           name={t.name}
           options={{
-            title: t.title,
+            title: isLoading ? t.title : ritualTitle,
             href: visible.has(t.name) ? undefined : null,
             tabBarIcon: ({ color }) =>
               isIOS ? (
@@ -138,21 +140,8 @@ function ClassicTabLayout({ visible }: { visible: Set<TabKey> }) {
               ),
           }}
         />
-      ))}
+      );
+      })}
     </Tabs>
   );
-}
-
-const SAFE_INITIAL_TABS: TabKey[] = ["index", "bookings", "customers", "more"];
-
-export default function TabLayout() {
-  const { kind, isLoading } = usePersona();
-  const visible = new Set<TabKey>(
-    isLoading ? SAFE_INITIAL_TABS : TAB_VISIBILITY[kind],
-  );
-
-  if (isLiquidGlassAvailable()) {
-    return <NativeTabLayout visible={visible} />;
-  }
-  return <ClassicTabLayout visible={visible} />;
 }

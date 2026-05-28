@@ -1,0 +1,26 @@
+id: web.onboarding.wizard
+vertical: [hair, beauty, barber, tattoo, wellness]
+locale: [en-IE, en-GB]
+persona: [owner, founder]
+modality: web
+route: /onboarding
+
+purpose: >
+  Guide a new EU owner through A1–A12 with honest progress, inline saves,
+  and a go-live checklist before customers arrive.
+
+must_do:
+  - Create business (A1) with vertical + jurisdiction seed
+  - Inline shop profile, services preview, hours, Liv, channels
+  - Persist onboardingState on PATCH business
+  - Public test booking link (A8)
+  - Go-live checklist persisted (A12)
+
+api:
+  - POST /businesses
+  - PATCH /businesses/{id} (onboardingState)
+  - GET/PATCH business fields for A2/A6
+
+exit_criteria:
+  - percentComplete reaches 100 or user dismisses banner
+  - Playwright data-testid onboarding-go-live-checklist

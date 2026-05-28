@@ -3,53 +3,59 @@ import { useBusiness } from "./business-context";
 import { useMembership, type Role } from "./membership-context";
 
 export type PersonaKind =
-  | "founder"
+  | "org_admin"
   | "owner"
   | "manager"
-  | "staff-senior"
-  | "staff-junior"
-  | "receptionist"
-  | "customer";
+  | "staff"
+  | "receptionist";
 
 export const PERSONA_LABEL: Record<PersonaKind, string> = {
-  founder: "Founder · multi-shop owner",
-  owner: "Owner · single salon",
+  org_admin: "Org admin · multi-location",
+  owner: "Owner · single location",
   manager: "Manager · approvals",
-  "staff-senior": "Senior stylist",
-  "staff-junior": "Junior stylist",
+  staff: "Staff · your chair",
   receptionist: "Front desk",
-  customer: "Customer",
 };
 
 export const PERSONA_ACCENT: Record<PersonaKind, string> = {
-  founder: "#d9c39a",
+  org_admin: "#d9c39a",
   owner: "#22d3ee",
   manager: "#a78bfa",
-  "staff-senior": "#34d399",
-  "staff-junior": "#fbbf24",
+  staff: "#34d399",
   receptionist: "#818cf8",
-  customer: "#fb7185",
 };
 
 export const ALL_PERSONAS: PersonaKind[] = [
-  "founder",
+  "org_admin",
   "owner",
   "manager",
-  "staff-senior",
-  "staff-junior",
+  "staff",
   "receptionist",
-  "customer",
 ];
 
 const LS_KEY = "livia.devPersona";
+
+function normalizeStoredPersona(raw: string | null): PersonaKind | null {
+  if (!raw) return null;
+  if (raw === "staff-senior" || raw === "staff-junior") return "staff";
+  if (raw === "customer") return "owner";
+  // Legacy internal id (pre org-admin rename)
+  if (raw === "founder") return "org_admin";
+  if (ALL_PERSONAS.includes(raw as PersonaKind)) return raw as PersonaKind;
+  return null;
+}
 
 export const isDemoLoginEnabled =
   import.meta.env.VITE_DEMO_LOGIN === "true" || import.meta.env.DEV;
 
 export function getDevPersonaOverride(): PersonaKind | null {
   if (typeof window === "undefined") return null;
-  const v = window.localStorage.getItem(LS_KEY) as PersonaKind | null;
-  return v ?? null;
+  const raw = window.localStorage.getItem(LS_KEY);
+  const v = normalizeStoredPersona(raw);
+  if (raw && v && raw !== v) {
+    window.localStorage.setItem(LS_KEY, v);
+  }
+  return v;
 }
 
 export function setDevPersonaOverride(p: PersonaKind | null): void {
@@ -62,17 +68,30 @@ export function setDevPersonaOverride(p: PersonaKind | null): void {
 export function deriveAutoPersona(args: {
   role: Role | null;
   businessCount: number;
+  businesses?: Array<{ parentBusinessId?: string | null; structureKind?: string | null; tier?: string | null }>;
   isReception?: boolean;
   tenureDays?: number;
 }): PersonaKind {
-  const { role, businessCount, isReception, tenureDays = 0 } = args;
-  if (!role || businessCount === 0) return "customer";
-  if (role === "OWNER" && businessCount >= 2) return "founder";
-  if (role === "OWNER") return "owner";
+  const { role, businessCount, isReception, businesses } = args;
+  if (!role || businessCount === 0) {
+    return "owner";
+  }
+  // "Founder/owner" was confusing — what we actually need is "org-wide /
+  // multi-location operator". We treat an OWNER as org admin when they have
+  // an explicit multi-location structure signal (chain tier, parent links, or
+  // brand entity present), not merely "2 businesses" (consultants can have 2+).
+  if (role === "OWNER") {
+    const hasHierarchy =
+      (businesses ?? []).some((b) => !!b.parentBusinessId) ||
+      (businesses ?? []).some((b) => b.structureKind === "brand_entity" || b.structureKind === "location") ||
+      (businesses ?? []).some((b) => b.tier === "chain" || b.tier === "mid-chain" || b.tier === "franchise");
+    if (hasHierarchy && businessCount >= 2) return "org_admin";
+    return "owner";
+  }
   if (role === "ADMIN" && isReception) return "receptionist";
   if (role === "ADMIN") return "manager";
-  if (tenureDays > 365) return "staff-senior";
-  return "staff-junior";
+  if (role === "STAFF") return "staff";
+  return "owner";
 }
 
 export function usePersona(): {
@@ -80,9 +99,9 @@ export function usePersona(): {
   override: PersonaKind | null;
   isLoading: boolean;
 } {
-  const { role, isReception, tenureDays, isLoading: roleLoading } = useMembership();
+  const { role, isReception, tenureDays: _tenureDays, isLoading: roleLoading } = useMembership();
   const { businesses, isLoading: bizLoading } = useBusiness();
-  const [override, setOverride] = useState<PersonaKind | null>(getDevPersonaOverride);
+  const [override, setOverride] = useState<PersonaKind | null>(() => getDevPersonaOverride());
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -90,7 +109,7 @@ export function usePersona(): {
       setOverride(next ?? null);
     };
     const storageHandler = (e: StorageEvent) => {
-      if (e.key === LS_KEY) setOverride((e.newValue as PersonaKind | null) ?? null);
+      if (e.key === LS_KEY) setOverride(normalizeStoredPersona(e.newValue));
     };
     window.addEventListener("livia:devPersonaChange", handler);
     window.addEventListener("storage", storageHandler);
@@ -103,22 +122,25 @@ export function usePersona(): {
   const auto = deriveAutoPersona({
     role,
     businessCount: businesses.length,
+    businesses: businesses as unknown as Array<{
+      parentBusinessId?: string | null;
+      structureKind?: string | null;
+      tier?: string | null;
+    }>,
     isReception,
-    tenureDays,
+    tenureDays: _tenureDays,
   });
   return {
-    kind: isDemoLoginEnabled && override ? override : auto,
-    override: isDemoLoginEnabled ? override : null,
+    kind: auto,
+    override: null,
     isLoading: roleLoading || bizLoading,
   };
 }
 
 export const PERSONA_LANDING: Record<PersonaKind, string> = {
-  founder: "/dashboard",
+  org_admin: "/chain",
   owner: "/dashboard",
   manager: "/inbox",
-  "staff-senior": "/my-day",
-  "staff-junior": "/my-day",
+  staff: "/my-day",
   receptionist: "/bookings",
-  customer: "/my-day",
 };

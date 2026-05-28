@@ -29,6 +29,7 @@ import { generateId } from "../lib/id";
 import { logger } from "../lib/logger";
 
 export type InvitableRole = "ADMIN" | "STAFF";
+export type DeskRole = "manager" | "reception";
 
 function getClerk() {
   const secretKey = process.env["CLERK_SECRET_KEY"];
@@ -41,6 +42,7 @@ export async function createInvitation(opts: {
   businessName: string;
   email: string;
   role: InvitableRole;
+  deskRole?: DeskRole;
   inviterUserId: string;
   redirectUrl?: string;
 }) {
@@ -63,6 +65,7 @@ export async function createInvitation(opts: {
         businessId: opts.businessId,
         businessName: opts.businessName,
         role: opts.role,
+        deskRole: opts.deskRole ?? (opts.role === "ADMIN" ? "manager" : undefined),
         invitedBy: opts.inviterUserId,
       },
     },
@@ -110,7 +113,7 @@ export async function acceptPendingInvitations(userId: string) {
 
   const meta = (user.publicMetadata as Record<string, unknown> | undefined) ?? {};
   const livia = meta["livia"] as
-    | { businessId?: string; role?: InvitableRole }
+    | { businessId?: string; role?: InvitableRole; deskRole?: DeskRole }
     | undefined;
   if (!livia?.businessId || !livia?.role) {
     return { accepted: [] };
@@ -144,13 +147,26 @@ export async function acceptPendingInvitations(userId: string) {
         eq(businessMembershipsTable.userId, userId),
       ),
     );
+  const scope =
+    livia.deskRole === "reception" || livia.deskRole === "manager"
+      ? { deskRole: livia.deskRole }
+      : livia.role === "ADMIN"
+        ? { deskRole: "manager" as const }
+        : undefined;
+
   if (!existing) {
     await db.insert(businessMembershipsTable).values({
       id: generateId(),
       businessId: biz.id,
       userId,
       role: livia.role,
+      scope: scope ?? null,
     });
+  } else if (scope && !existing.scope) {
+    await db
+      .update(businessMembershipsTable)
+      .set({ scope, updatedAt: new Date() })
+      .where(eq(businessMembershipsTable.id, existing.id));
   }
 
   // Clear the invitation marker so we don't re-process it. Best-effort —

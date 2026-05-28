@@ -17,8 +17,8 @@
     "./schema/marketing": "./src/schema/marketing/index.ts"
   },
   "scripts": {
-    "push": "drizzle-kit push --config ./drizzle.config.ts",
-    "push-force": "drizzle-kit push --force --config ./drizzle.config.ts"
+    "push": "node ./scripts/drizzle-push.mjs",
+    "push-force": "node ./scripts/drizzle-push.mjs --force"
   },
   "dependencies": {
     "@workspace/audit-log": "workspace:*",

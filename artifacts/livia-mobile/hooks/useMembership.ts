@@ -1,44 +1,18 @@
-import { useAuth } from "@clerk/clerk-expo";
-import { useQuery } from "@tanstack/react-query";
+import { useGetMyMembership } from "@workspace/api-client-react";
 import { useBusiness } from "@/contexts/BusinessContext";
 
 export type Role = "OWNER" | "ADMIN" | "STAFF";
 
-interface MembershipResponse {
-  businessId: string;
-  role: Role;
-  staffId: string | null;
-  isReception?: boolean;
-  tenureDays?: number;
-}
-
-const BASE = `https://${process.env.EXPO_PUBLIC_DOMAIN}`;
-
 export function useMembership() {
-  const { getToken } = useAuth();
   const { currentBusiness } = useBusiness();
-  const bid = currentBusiness?.id ?? null;
+  const bid = currentBusiness?.id ?? "";
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["membership", bid],
-    enabled: !!bid,
-    staleTime: 60_000,
-    queryFn: async (): Promise<MembershipResponse> => {
-      const token = await getToken();
-      const res = await fetch(`${BASE}/api/me/businesses/${bid}/membership`, {
-        headers: token
-          ? { Accept: "application/json", Authorization: `Bearer ${token}` }
-          : { Accept: "application/json" },
-      });
-      if (!res.ok) {
-        throw new Error(`membership ${res.status}`);
-      }
-      return res.json();
-    },
+  const { data, isLoading } = useGetMyMembership(bid, {
+    query: { enabled: !!bid, staleTime: 60_000 } as never,
   });
 
   return {
-    role: data?.role ?? null,
+    role: (data?.role as Role | undefined) ?? null,
     staffId: data?.staffId ?? null,
     isReception: data?.isReception ?? false,
     tenureDays: data?.tenureDays ?? 0,

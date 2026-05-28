@@ -20,6 +20,15 @@ Every entry:
 
 ---
 
+## 2026-05-25 — OS Phase A — dashboard · api · mobile · docs · marketing
+
+- **Removed**: Job board / Hiring from product — team growth is **Staff → Invite** only.
+- **Changed**: Owner toolkit is now **Liv command** (briefing & tuning); duplicate Operations nav grid removed.
+- **Added**: **Running late** on Today and booking detail (one appointment or all today); same on mobile long-press / booking screen.
+- **Changed**: Leave — staff request for themselves; managers approve on Rota (not filed on behalf of staff).
+- **Added**: Vertical theme tokens on web (nine verticals); lifecycle nav hidden until relevant.
+- **Added**: Business **Operator ready pack** and starter templates (`docs/business/`); internal support runbook updated.
+
 ## 2026-05-07 — pre-v1 — foundation
 
 - **Added**: Foundation documentation programme (F1–F10) complete; 17 ADRs published; roadmap v1 / v1.5 / v2 / v3 scopes locked.
@@ -31,7 +40,20 @@ Every entry:
 
 ---
 
-(Future entries land below as we ship.)
+## 2026-05-22 — v3 — whole product (seven surfaces)
+
+- **Added**: Booking continuity — SMS thread after web book, stuck queue, reference photos, German formal templates.
+- **Added**: Medspa clinical hub — consent, intake review, public consent step; slot waitlist when appointments cancel.
+- **Added**: DACH — Germany jurisdiction pack, `/de` on livia.io, regulatory footer on public booking.
+- **Added**: Partner API v1 (read + create bookings); enterprise audit CSV export; internal continuity traces.
+- **Added**: Pet profiles on customer records; running-late SMS broadcast for today's appointments.
+- **Added**: France text pack; allied health vertical; design-proof approval workflow.
+
+## 2026-05-22 — v3-in-progress — dashboard · api · public booking · policy
+
+- **Added**: After online booking, clients get a text/email thread for style pics and confirmation — replaces “message us on Instagram” handoffs.
+- **Added**: Pet grooming and automotive detailing vertical packs; payroll hours CSV export from rota (Studio+).
+- **Added**: Owner toolkit surfaces for stuck bookings and booking continuity timeline.
 
 ---
 

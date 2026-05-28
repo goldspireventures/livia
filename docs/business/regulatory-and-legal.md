@@ -1,6 +1,7 @@
 # Regulatory and legal posture — F9
 
-**Status:** F9 (2026-05-07). Reviewed by external counsel before each market launch (placeholder; legal review not in F9 scope).
+**Status:** F9 (2026-05-07), aligned with OS Phase A/B (2026-05-25). Reviewed by external counsel before each market launch (placeholder; legal review not in F9 scope).  
+**Operator templates:** [`OPERATOR-READY-PACK.md`](./OPERATOR-READY-PACK.md) · [`templates/`](./templates/)
 
 ## GDPR posture
 
@@ -18,7 +19,7 @@
 ## EU AI Act posture
 
 Livia is **plausibly a high-risk AI under some readings** of the EU AI Act because Liv:
-- Touches employment-adjacent decisions (rota proposals, hiring intake).
+- Touches employment-adjacent decisions (rota proposals, team onboarding).
 - Touches consumer-decisions (refund handling, drift recovery).
 - Acts on behalf of natural persons in customer-facing contexts (voice + DM).
 
@@ -51,7 +52,7 @@ When Liv touches rota / time-off / hiring, she nudges into territory with employ
 |---|---|---|
 | Rota proposals | If proposal is implemented as-is, could constitute scheduling decision; in some jurisdictions, requires employee consent or notice period. | Liv proposes; Manager confirms. Audit log records the proposal + the human confirmation. |
 | Time-off approvals | Could constitute employment decision. | Always human-confirmed (Manager, sometimes Owner). Liv drafts; never decides. |
-| Hiring intake | Job-posting + screening DM is under EU employment-law transparency rules (especially with EU AI Act for screening). | Liv drafts the JD; Owner publishes. Liv summarises applications; Owner decides. No automated screening decision. |
+| Team invite (not job board) | Staff access is employment-adjacent but not automated hiring. | **Team → Invite** via Clerk; no in-product job board (removed 2026-05-25). Liv does not screen résumés. |
 | Termination conversations | Liv never participates. Hard refusal. | In refusal taxonomy. |
 | Performance feedback | Liv summarises Owner-input only; never generates. | In refusal taxonomy. |
 

@@ -8,7 +8,15 @@ import { and, eq, gte, lte, or, inArray } from "drizzle-orm";
 import { enrichBooking } from "../services/bookings.service";
 import { sendBookingReminderEmail } from "../services/booking-emails.service";
 import { logger } from "../lib/logger";
+import { runVoiceSettlementSweep } from "../services/settlement.service";
+import { snapshotActiveStaffSeats } from "../services/billing.service";
+import { businessesTable } from "@workspace/db";
+import { sendOnboardingStuckNudges, findStuckOnboardingBusinesses } from "../services/onboarding-nudge.service";
+import { isInngestWorkflowsEnabled } from "../lib/inngest";
+import { notifyBusinessMembersPush } from "../services/push.service";
+import { sweepPendingWebhookDeliveries } from "../services/webhook-delivery.service";
 
+import { sendError } from "../lib/http-errors";
 const router: IRouter = Router();
 
 function authorize(req: Parameters<Parameters<IRouter["post"]>[1]>[0]): boolean {
@@ -22,7 +30,19 @@ const REMINDER_TEMPLATE_KEY = "booking-reminder-t24";
 
 router.post("/internal/cron/send-reminders", async (req, res): Promise<void> => {
   if (!authorize(req)) {
-    res.status(401).json({ error: "Unauthorized" });
+    sendError(res, req, 401, "Unauthorized");
+    return;
+  }
+
+  if (isInngestWorkflowsEnabled()) {
+    res.json({
+      checked: 0,
+      sent: 0,
+      skipped: 0,
+      engine: "inngest",
+      message:
+        "T-24h reminders are scheduled by the booking-reminder-t24 workflow. Cron sweep is fallback only when WORKFLOWS_DISABLED or Inngest is off.",
+    });
     return;
   }
 
@@ -82,6 +102,74 @@ router.post("/internal/cron/send-reminders", async (req, res): Promise<void> => 
   }
 
   res.json({ checked: candidates.length, sent, skipped });
+});
+
+router.post("/internal/cron/billing-snapshot", async (req, res): Promise<void> => {
+  if (!authorize(req)) {
+    sendError(res, req, 401, "Unauthorized");
+    return;
+  }
+
+  const businesses = await db.select({ id: businessesTable.id }).from(businessesTable);
+  let seats = 0;
+  for (const { id } of businesses) {
+    await snapshotActiveStaffSeats(id);
+    seats++;
+  }
+
+  const settlement = await runVoiceSettlementSweep();
+  res.json({ staffSnapshots: seats, settlement });
+});
+
+router.post("/internal/cron/webhook-deliveries", async (req, res): Promise<void> => {
+  if (!authorize(req)) {
+    sendError(res, req, 401, "Unauthorized");
+    return;
+  }
+  const result = await sweepPendingWebhookDeliveries();
+  res.json(result);
+});
+
+/** Businesses stuck in onboarding >48h with &lt;50% progress — list + optional Resend nudge. */
+router.post("/internal/cron/onboarding-stuck", async (req, res): Promise<void> => {
+  if (!authorize(req)) {
+    sendError(res, req, 401, "Unauthorized");
+    return;
+  }
+  const send = req.body?.send === true || req.query.send === "true";
+  const stuck = await findStuckOnboardingBusinesses();
+  const nudge = send ? await sendOnboardingStuckNudges() : null;
+  res.json({
+    stuck: stuck.map((s) => ({
+      id: s.id,
+      name: s.name,
+      slug: s.slug,
+      percentComplete: s.percentComplete,
+      currentAct: s.currentAct,
+      updatedAt: s.updatedAt,
+      ownerEmail: s.ownerEmail ? `${s.ownerEmail.slice(0, 3)}…` : null,
+    })),
+    nudge,
+  });
+});
+
+router.post("/internal/cron/test-push", async (req, res): Promise<void> => {
+  if (!authorize(req)) {
+    sendError(res, req, 401, "Unauthorized");
+    return;
+  }
+  const businessId = (req.body?.businessId as string | undefined)?.trim();
+  if (!businessId) {
+    sendError(res, req, 400, "businessId is required");
+    return;
+  }
+  const result = await notifyBusinessMembersPush({
+    businessId,
+    title: "Livia test push",
+    body: "Push pipeline is wired. New bookings will notify like this.",
+    data: { type: "test" },
+  });
+  res.json(result);
 });
 
 export default router;

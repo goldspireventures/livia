@@ -7,29 +7,142 @@ function id() {
 }
 
 const SLUG = "luxe-salon-spa";
+const OWNER_ID = process.env.SEED_DEMO_OWNER_ID ?? "seed-demo-user";
+const OWNER_EMAIL = process.env.SEED_DEMO_OWNER_EMAIL ?? "seed-demo@livia.local";
 
-const client = new Client({ connectionString: process.env.DATABASE_URL });
+const connectionString = process.env.SUPABASE_DATABASE_URL ?? process.env.DATABASE_URL;
+if (!connectionString) {
+  console.error("SUPABASE_DATABASE_URL or DATABASE_URL must be set");
+  process.exit(1);
+}
+
+const client = new Client({ connectionString });
 await client.connect();
+
+const messagingChannels = JSON.stringify({
+  whatsapp: { phoneNumberId: "demo_wa_luxe", displayPhone: "+44 7700 900123" },
+  instagram: { pageId: "demo_ig_luxe_page" },
+  messenger: { pageId: "demo_ig_luxe_page" },
+});
+
+async function ensureSocialInbox(bizId) {
+  const hasWa = await client.query(
+    `SELECT 1 FROM conversations WHERE business_id = $1 AND channel = 'WHATSAPP' LIMIT 1`,
+    [bizId],
+  );
+  if (hasWa.rows.length > 0) return;
+  const convWa = id();
+  const convIg = id();
+  const ts = new Date().toISOString();
+  await client.query(
+    `INSERT INTO conversations (id, business_id, channel, status, customer_name, customer_phone, ai_handled, last_message_at, created_at, updated_at)
+     VALUES ($1,$2,'WHATSAPP','OPEN','Emma Walsh','447700900456',true,$3,$3,$3)`,
+    [convWa, bizId, ts],
+  );
+  await client.query(
+    `INSERT INTO conversations (id, business_id, channel, status, customer_name, customer_phone, ai_handled, last_message_at, created_at, updated_at)
+     VALUES ($1,$2,'INSTAGRAM','OPEN','@sophie_styles','meta:ig_demo_sophie',true,$3,$3,$3)`,
+    [convIg, bizId, ts],
+  );
+  for (const [convoId, msgs] of [
+    [convWa, [
+      ["USER", "Hi can I book a blowdry Saturday?"],
+      ["ASSISTANT", "Hi Emma! I'm Liv, the AI assistant for Luxe Salon & Spa. Saturday looks good — what time works?"],
+    ]],
+    [convIg, [
+      ["USER", "Do you have balayage slots next week?"],
+      ["ASSISTANT", "Hi! I'm Liv, the AI assistant for Luxe Salon & Spa. Yes — I can suggest times with Maya. Which day suits you?"],
+    ]],
+  ]) {
+    for (const [role, content] of msgs) {
+      await client.query(
+        `INSERT INTO conversation_messages (id, conversation_id, role, content, created_at)
+         VALUES ($1,$2,$3,$4,$5)`,
+        [id(), convoId, role, content, ts],
+      );
+    }
+  }
+  console.log("  Patched: WhatsApp + Instagram demo inbox threads");
+}
+
+async function hasMessagingChannelsColumn() {
+  const r = await client.query(
+    `SELECT 1 FROM information_schema.columns
+     WHERE table_name = 'businesses' AND column_name = 'messaging_channels' LIMIT 1`,
+  );
+  return r.rows.length > 0;
+}
 
 // Check if already seeded
 const existing = await client.query("SELECT id FROM businesses WHERE slug = $1", [SLUG]);
 if (existing.rows.length > 0) {
-  console.log(`Already seeded — business "${SLUG}" exists (id: ${existing.rows[0].id})`);
+  const bizId = existing.rows[0].id;
+  if (await hasMessagingChannelsColumn()) {
+    await client.query(
+      `UPDATE businesses SET messaging_channels = $1::jsonb, instagram_handle = COALESCE(instagram_handle, 'luxesalonspa')
+       WHERE id = $2`,
+      [messagingChannels, bizId],
+    );
+  } else {
+    console.warn(
+      "  ⚠ Column messaging_channels missing — run: node --env-file=.env scripts/apply-sql-migrations.mjs",
+    );
+  }
+  await ensureSocialInbox(bizId);
+  console.log(`Already seeded — patched social channels for "${SLUG}" (id: ${bizId})`);
   await client.end();
   process.exit(0);
 }
 
 console.log("Seeding demo workspace…");
 
+// 0. Placeholder owner (businesses.owner_id FK)
+await client.query(
+  `INSERT INTO users (id, email, full_name, role)
+   VALUES ($1, $2, $3, 'OWNER')
+   ON CONFLICT (id) DO NOTHING`,
+  [OWNER_ID, OWNER_EMAIL, "Demo Seed Owner"],
+);
+
 // 1. Business
 const bizId = id();
+const aiGreeting =
+  "Hi! I'm Liv, the AI assistant for Luxe Salon & Spa. I can help you book appointments.";
+const bizBase = [
+  bizId,
+  OWNER_ID,
+  "Luxe Salon & Spa",
+  SLUG,
+  "Premium hair, beauty and wellness services in the heart of the city.",
+  "hair_salon",
+  "hello@luxesalon.co",
+  "+44 20 7946 0958",
+  "Europe/London",
+  "London",
+  "GB",
+  "luxesalonspa",
+];
+
+if (await hasMessagingChannelsColumn()) {
+  await client.query(
+    `INSERT INTO businesses (id, owner_id, name, slug, description, category, email, phone, timezone, city, country, instagram_handle, messaging_channels, ai_greeting)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::jsonb,$14)`,
+    [...bizBase, messagingChannels, aiGreeting],
+  );
+} else {
+  console.warn("  ⚠ Skipping messaging_channels on insert — apply SQL migrations first");
+  await client.query(
+    `INSERT INTO businesses (id, owner_id, name, slug, description, category, email, phone, timezone, city, country, instagram_handle, ai_greeting)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+    [...bizBase, aiGreeting],
+  );
+}
+
 await client.query(
-  `INSERT INTO businesses (id, name, slug, description, category, email, phone, timezone, city, country)
-   VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
-  [bizId, "Luxe Salon & Spa", SLUG,
-   "Premium hair, beauty and wellness services in the heart of the city.",
-   "hair_salon", "hello@luxesalon.co", "+44 20 7946 0958",
-   "Europe/London", "London", "GB"]
+  `INSERT INTO business_memberships (id, business_id, user_id, role, role_v2, status)
+   VALUES ($1, $2, $3, 'OWNER', 'OWN', 'ACTIVE')
+   ON CONFLICT (business_id, user_id) DO NOTHING`,
+  [id(), bizId, OWNER_ID],
 );
 
 // 2. Staff
@@ -150,8 +263,11 @@ for (const b of bookings) {
   );
 }
 
+// 8. Demo inbox threads (WhatsApp + Instagram)
+await ensureSocialInbox(bizId);
+
 await client.end();
 console.log("✓ Seeded successfully:");
 console.log(`  Business: Luxe Salon & Spa (slug: ${SLUG})`);
-console.log(`  Staff: 3 | Services: 5 | Customers: 8 | Bookings: ${bookings.length}`);
+console.log(`  Staff: 3 | Services: 5 | Customers: 8 | Bookings: ${bookings.length} | Inbox: WA + IG demos`);
 console.log(`  Public booking URL: /b/${SLUG}`);

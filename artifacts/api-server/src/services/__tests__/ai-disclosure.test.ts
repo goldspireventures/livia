@@ -36,6 +36,12 @@ test("smsPrefix has Liv + AI assistant identity", () => {
   assert.ok(AI_DISCLOSURE.smsPrefix("Acme").startsWith("(Liv, AI assistant"));
   assert.match(AI_DISCLOSURE.smsPrefix("Acme"), /Acme/);
 });
+test("voiceOpeningLine identifies AI and English-IE booking", () => {
+  const line = AI_DISCLOSURE.voiceOpeningLine("Acme");
+  assert.match(line, /Liv/);
+  assert.match(line, /AI assistant/);
+  assert.match(line, /Acme/);
+});
 test("emailBlock identifies AI + invites human reply", () => {
   const block = AI_DISCLOSURE.emailBlock("Acme");
   assert.match(block, /AI assistant/);

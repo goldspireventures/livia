@@ -32,6 +32,8 @@ export interface BusinessCommunications {
   twilioPhoneSid: string | null;
   resendFromAddress: string | null;
   smsWebhookUrl: string | null;
+  voiceWebhookUrl?: string | null;
+  voiceStatusWebhookUrl?: string | null;
   providerStatus: BusinessCommunicationsProviderStatus;
 }
 
@@ -41,6 +43,111 @@ export interface HealthStatus {
 
 export interface ErrorResponse {
   error: string;
+}
+
+export type AuditLogEntryPayload = { [key: string]: unknown };
+
+export interface AuditLogEntry {
+  id: string;
+  businessId: string;
+  occurredAt: string;
+  actorKind: string;
+  actorId: string;
+  onBehalfOfId?: string | null;
+  actionClass: string;
+  resourceKind: string;
+  resourceId?: string | null;
+  payload?: AuditLogEntryPayload;
+}
+
+export interface AuditLogSearchResponse {
+  data: AuditLogEntry[];
+  total: number;
+}
+
+export interface InternalTenantListItem {
+  id: string;
+  name: string;
+  slug: string;
+  ownerId: string;
+  ownerEmail?: string | null;
+  planId?: string | null;
+  stripeSubscriptionStatus?: string | null;
+  createdAt: string;
+  lastBookingAt?: string | null;
+}
+
+export interface InternalTenantSearchResponse {
+  data: InternalTenantListItem[];
+  total: number;
+}
+
+export interface InternalTenantDeepLinks {
+  stripeCustomer: string | null;
+  clerkUser: string | null;
+  tenantDashboard: string | null;
+  publicBooking: string | null;
+}
+
+export type InternalTenantDetail = InternalTenantListItem & {
+  email?: string | null;
+  phone?: string | null;
+  timezone: string;
+  tier: string;
+  vertical: string;
+  aiEnabled: boolean;
+  voiceProvisioned: boolean;
+  stripeCustomerId?: string | null;
+  stripeSubscriptionId?: string | null;
+  twilioPhoneNumber?: string | null;
+  activeStaffCount: number;
+  bookingCount: number;
+  lastInboundSmsAt?: string | null;
+  voiceReceptionistEntitled: boolean;
+  deepLinks: InternalTenantDeepLinks;
+};
+
+export interface InternalSupportContext {
+  businessId: string;
+  impersonationPolicy: string;
+  note: string;
+}
+
+export type EntitlementRequiredErrorCode =
+  (typeof EntitlementRequiredErrorCode)[keyof typeof EntitlementRequiredErrorCode];
+
+export const EntitlementRequiredErrorCode = {
+  ENTITLEMENT_REQUIRED: "ENTITLEMENT_REQUIRED",
+} as const;
+
+export interface EntitlementRequiredError {
+  error: string;
+  code: EntitlementRequiredErrorCode;
+  entitlement: string;
+  planId: string;
+  planName?: string;
+}
+
+export type BillingStateUsage = { [key: string]: number };
+
+export interface BillingState {
+  businessId: string;
+  planId: string;
+  planName: string;
+  tier?: string;
+  baseEurCentsPerMonth?: number;
+  /** @nullable */
+  seatEurCentsPerMonth?: number | null;
+  activeStaffSeats?: number;
+  entitlements: string[];
+  usage: BillingStateUsage;
+  voiceOutcomeShareEurCents: number;
+  /** @nullable */
+  voiceOutcomeCapEurCents?: number | null;
+  voiceOutcomeShareRate?: number;
+  /** @nullable */
+  stripeSubscriptionStatus?: string | null;
+  designPartnerActive?: boolean;
 }
 
 export type UserRole = (typeof UserRole)[keyof typeof UserRole];
@@ -69,6 +176,50 @@ export interface UpdateMeBody {
   avatarUrl?: string;
 }
 
+export type OnboardingActId =
+  (typeof OnboardingActId)[keyof typeof OnboardingActId];
+
+export const OnboardingActId = {
+  a1_create_business: "a1_create_business",
+  a2_shop_profile: "a2_shop_profile",
+  a3_service_menu: "a3_service_menu",
+  a4_team: "a4_team",
+  a5_hours: "a5_hours",
+  a6_liv: "a6_liv",
+  a7_channels: "a7_channels",
+  a8_public_link: "a8_public_link",
+  a9_billing: "a9_billing",
+  a10_invite_team: "a10_invite_team",
+  a11_migration: "a11_migration",
+  a12_go_live: "a12_go_live",
+} as const;
+
+export interface OnboardingChecklist {
+  testBooking?: boolean;
+  livEnabled?: boolean;
+  publicLinkShared?: boolean;
+  smsOrVoiceConnected?: boolean;
+  teamInvited?: boolean;
+  billingStarted?: boolean;
+  servicesConfirmed?: boolean;
+  hoursConfirmed?: boolean;
+}
+
+/**
+ * Self-serve wizard progress (acts A1–A12)
+ */
+export interface OnboardingState {
+  currentAct: OnboardingActId;
+  completedActs: OnboardingActId[];
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  percentComplete: number;
+  checklist?: OnboardingChecklist;
+  updatedAt?: string;
+}
+
 export interface Business {
   id: string;
   ownerId: string;
@@ -89,6 +240,10 @@ export interface Business {
   /** @nullable */
   country?: string | null;
   timezone: string;
+  /** BCP-47 locale for customer-facing copy and formatting (e.g. en-IE) */
+  locale?: string;
+  /** ISO 4217 currency code (e.g. EUR) */
+  currency?: string;
   /** @nullable */
   logoUrl?: string | null;
   /** @nullable */
@@ -104,7 +259,104 @@ export interface Business {
   aiCanBookDirectly?: string;
   createdAt: string;
   updatedAt: string;
+  onboardingState?: OnboardingState;
 }
+
+export type SupportTicketCategory =
+  (typeof SupportTicketCategory)[keyof typeof SupportTicketCategory];
+
+export const SupportTicketCategory = {
+  bug: "bug",
+  billing: "billing",
+  liv_error: "liv_error",
+  feature: "feature",
+  other: "other",
+} as const;
+
+export type SupportTicketSeverity =
+  (typeof SupportTicketSeverity)[keyof typeof SupportTicketSeverity];
+
+export const SupportTicketSeverity = {
+  blocking: "blocking",
+  annoying: "annoying",
+  nice_to_have: "nice_to_have",
+} as const;
+
+export type SupportTicketStatus =
+  (typeof SupportTicketStatus)[keyof typeof SupportTicketStatus];
+
+export const SupportTicketStatus = {
+  open: "open",
+  triaged: "triaged",
+  resolved: "resolved",
+  closed: "closed",
+} as const;
+
+export type SupportTicketContext = { [key: string]: unknown };
+
+export interface SupportTicket {
+  id: string;
+  businessId: string;
+  userId: string;
+  category: SupportTicketCategory;
+  severity: SupportTicketSeverity;
+  description: string;
+  status: SupportTicketStatus;
+  context?: SupportTicketContext;
+  consentLogsAccess?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CreateSupportTicketBodyContext = { [key: string]: unknown };
+
+export interface CreateSupportTicketBody {
+  category: SupportTicketCategory;
+  severity?: SupportTicketSeverity;
+  /** @minLength 10 */
+  description: string;
+  context?: CreateSupportTicketBodyContext;
+  consentLogsAccess?: boolean;
+}
+
+/**
+ * ISO jurisdiction pack code (IE, GB, DE, ES, IT, NL, PL)
+ */
+export type CreateBusinessBodyJurisdiction =
+  (typeof CreateBusinessBodyJurisdiction)[keyof typeof CreateBusinessBodyJurisdiction];
+
+export const CreateBusinessBodyJurisdiction = {
+  IE: "IE",
+  GB: "GB",
+  DE: "DE",
+  ES: "ES",
+  IT: "IT",
+  NL: "NL",
+  PL: "PL",
+} as const;
+
+export type BusinessVertical =
+  (typeof BusinessVertical)[keyof typeof BusinessVertical];
+
+export const BusinessVertical = {
+  hair: "hair",
+  beauty: "beauty",
+  "body-art": "body-art",
+  wellness: "wellness",
+  fitness: "fitness",
+  medspa: "medspa",
+  "allied-health": "allied-health",
+} as const;
+
+export type BusinessTier = (typeof BusinessTier)[keyof typeof BusinessTier];
+
+export const BusinessTier = {
+  solo: "solo",
+  studio: "studio",
+  chain: "chain",
+  "chair-host": "chair-host",
+  "white-label": "white-label",
+} as const;
 
 export interface CreateBusinessBody {
   name: string;
@@ -116,8 +368,74 @@ export interface CreateBusinessBody {
   timezone?: string;
   city?: string;
   country?: string;
+  /** ISO jurisdiction pack code (IE, GB, DE, ES, IT, NL, PL) */
+  jurisdiction?: CreateBusinessBodyJurisdiction;
+  vertical?: BusinessVertical;
+  tier?: BusinessTier;
+  /** When true (default), seed services and staff from the vertical pack */
+  seedDefaults?: boolean;
   logoUrl?: string;
   instagramHandle?: string;
+}
+
+export type OnboardingCatalogResponseJurisdictionsItem = {
+  jurisdiction?: string;
+  label?: string;
+  currency?: string;
+  defaultTimezone?: string;
+};
+
+export type OnboardingCatalogResponseVerticalsItem = {
+  vertical?: BusinessVertical;
+  label?: string;
+};
+
+export interface OnboardingCatalogResponse {
+  jurisdictions: OnboardingCatalogResponseJurisdictionsItem[];
+  verticals: OnboardingCatalogResponseVerticalsItem[];
+  tiers: BusinessTier[];
+}
+
+export type OnboardingPreviewBodyJurisdiction =
+  (typeof OnboardingPreviewBodyJurisdiction)[keyof typeof OnboardingPreviewBodyJurisdiction];
+
+export const OnboardingPreviewBodyJurisdiction = {
+  IE: "IE",
+  GB: "GB",
+  DE: "DE",
+  ES: "ES",
+  IT: "IT",
+  NL: "NL",
+  PL: "PL",
+} as const;
+
+export interface OnboardingPreviewBody {
+  name: string;
+  country?: string;
+  category?: string;
+  vertical?: BusinessVertical;
+  tier?: BusinessTier;
+  jurisdiction?: OnboardingPreviewBodyJurisdiction;
+}
+
+export type OnboardingDefaultsEuRegion =
+  (typeof OnboardingDefaultsEuRegion)[keyof typeof OnboardingDefaultsEuRegion];
+
+export const OnboardingDefaultsEuRegion = {
+  fra: "fra",
+  dub: "dub",
+} as const;
+
+export interface OnboardingDefaults {
+  country?: string;
+  currency?: string;
+  locale?: string;
+  timezone?: string;
+  euRegion?: OnboardingDefaultsEuRegion;
+  vertical?: BusinessVertical;
+  tier?: BusinessTier;
+  category?: string;
+  aiGreeting?: string;
 }
 
 export type UpdateBusinessBodyAiTone =
@@ -148,6 +466,7 @@ export interface UpdateBusinessBody {
   aiGreeting?: string;
   aiKnowledge?: string;
   aiCanBookDirectly?: string;
+  onboardingState?: OnboardingState;
 }
 
 export type MembershipRole =
@@ -164,6 +483,78 @@ export interface Membership {
   role: MembershipRole;
   /** @nullable */
   staffId?: string | null;
+  /** Heuristic from staff title/bio (reception/front-desk hint) */
+  isReception?: boolean;
+  /** Days since the linked staff row was created */
+  tenureDays?: number;
+}
+
+export type InAppNotificationPriority =
+  (typeof InAppNotificationPriority)[keyof typeof InAppNotificationPriority];
+
+export const InAppNotificationPriority = {
+  info: "info",
+  watch: "watch",
+  act: "act",
+} as const;
+
+export interface InAppNotification {
+  id: string;
+  /** @nullable */
+  businessId?: string | null;
+  kind: string;
+  priority: InAppNotificationPriority;
+  /** @nullable */
+  personaHint?: string | null;
+  title: string;
+  body: string;
+  /** @nullable */
+  href?: string | null;
+  /** @nullable */
+  mobileHref?: string | null;
+  /** @nullable */
+  resourceKind?: string | null;
+  /** @nullable */
+  resourceId?: string | null;
+  /** @nullable */
+  readAt?: string | null;
+  createdAt: string;
+}
+
+export interface InAppNotificationList {
+  data: InAppNotification[];
+  unreadCount: number;
+}
+
+export type RegisterDeviceTokenBodyPlatform =
+  (typeof RegisterDeviceTokenBodyPlatform)[keyof typeof RegisterDeviceTokenBodyPlatform];
+
+export const RegisterDeviceTokenBodyPlatform = {
+  IOS: "IOS",
+  ANDROID: "ANDROID",
+  WEB: "WEB",
+} as const;
+
+export interface RegisterDeviceTokenBody {
+  /** Expo push token (ExponentPushToken[...]) */
+  token: string;
+  platform: RegisterDeviceTokenBodyPlatform;
+}
+
+export type DeviceTokenPlatform =
+  (typeof DeviceTokenPlatform)[keyof typeof DeviceTokenPlatform];
+
+export const DeviceTokenPlatform = {
+  IOS: "IOS",
+  ANDROID: "ANDROID",
+  WEB: "WEB",
+} as const;
+
+export interface DeviceToken {
+  id: string;
+  platform: DeviceTokenPlatform;
+  token: string;
+  isActive: boolean;
 }
 
 export type MyDayRole = (typeof MyDayRole)[keyof typeof MyDayRole];
@@ -217,12 +608,38 @@ export interface Booking {
   startAt: string;
   endAt: string;
   status: BookingStatus;
+  /**
+   * Machine reason while status is PENDING (awaiting_staff_confirm, awaiting_deposit, etc.)
+   * @nullable
+   */
+  pendingReason?: string | null;
   /** @nullable */
   notes?: string | null;
   /** @nullable */
   internalNotes?: string | null;
   /** @nullable */
   cancellationReason?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Service {
+  id: string;
+  businessId: string;
+  name: string;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  category?: string | null;
+  durationMinutes: number;
+  bufferBeforeMinutes: number;
+  bufferAfterMinutes: number;
+  priceMinor: number;
+  currency: string;
+  /** @nullable */
+  imageUrl?: string | null;
+  isActive: boolean;
+  sortOrder: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -249,11 +666,43 @@ export interface Customer {
   updatedAt: string;
 }
 
+export interface Staff {
+  id: string;
+  businessId: string;
+  /** @nullable */
+  userId?: string | null;
+  firstName: string;
+  /** @nullable */
+  lastName?: string | null;
+  displayName: string;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  photoUrl?: string | null;
+  /** @nullable */
+  bio?: string | null;
+  /** @nullable */
+  color?: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type BookingDetail = Booking & {
+  service: Service;
+  customer: Customer;
+  staff?: Staff | null;
+};
+
 export interface MyDay {
   /** @nullable */
   staffId?: string | null;
-  today: Booking[];
-  next?: Booking | null;
+  today: BookingDetail[];
+  /** Upcoming bookings for the rest of this week (after today) */
+  week: BookingDetail[];
+  next?: BookingDetail | null;
   myCustomers: Customer[];
   todayCount: number;
   weekCount: number;
@@ -297,30 +746,6 @@ export interface Invitation {
   publicMetadata?: InvitationPublicMetadata;
 }
 
-export interface Staff {
-  id: string;
-  businessId: string;
-  /** @nullable */
-  userId?: string | null;
-  firstName: string;
-  /** @nullable */
-  lastName?: string | null;
-  displayName: string;
-  /** @nullable */
-  email?: string | null;
-  /** @nullable */
-  phone?: string | null;
-  /** @nullable */
-  photoUrl?: string | null;
-  /** @nullable */
-  bio?: string | null;
-  /** @nullable */
-  color?: string | null;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface CreateStaffBody {
   firstName: string;
   lastName?: string;
@@ -346,27 +771,6 @@ export interface UpdateStaffBody {
 
 export interface SetStaffServicesBody {
   serviceIds: string[];
-}
-
-export interface Service {
-  id: string;
-  businessId: string;
-  name: string;
-  /** @nullable */
-  description?: string | null;
-  /** @nullable */
-  category?: string | null;
-  durationMinutes: number;
-  bufferBeforeMinutes: number;
-  bufferAfterMinutes: number;
-  priceMinor: number;
-  currency: string;
-  /** @nullable */
-  imageUrl?: string | null;
-  isActive: boolean;
-  sortOrder: number;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface CreateServiceBody {
@@ -428,12 +832,6 @@ export interface UpdateCustomerBody {
   tags?: string[];
   isBlocked?: boolean;
 }
-
-export type BookingDetail = Booking & {
-  service: Service;
-  customer: Customer;
-  staff?: Staff | null;
-};
 
 export interface BookingListResponse {
   data: BookingDetail[];
@@ -561,6 +959,12 @@ export interface DashboardSummary {
   noShowTodayCount: number;
   totalCustomers: number;
   upcomingBookings: BookingDetail[];
+  /** Bookings with source=voice created in the last 7 days */
+  voiceBookingsThisWeek: number;
+  /** Sum of service prices for voice-sourced bookings this week */
+  voiceRecoveredValueEurCents: number;
+  /** Estimated voice outcome share this billing period (from meters) */
+  voiceOutcomeShareEurCents: number;
 }
 
 export type ActivityItemLevel =
@@ -615,6 +1019,14 @@ export interface PublicBusiness {
   /** @nullable */
   instagramHandle?: string | null;
   timezone: string;
+  aiEnabled?: string;
+  /** @nullable */
+  aiGreeting?: string | null;
+  /** Jurisdiction-localized first message for public Liv chat */
+  aiDisclosureChatFirstMessage?: string;
+  aiDisclosureFooterLine?: string;
+  bookingTermsBlock?: string;
+  depositPolicySummary?: string;
   services: Service[];
   staff: Staff[];
 }
@@ -732,6 +1144,11 @@ export interface ConversationMessage {
   toolName?: string | null;
   /** @nullable */
   bookingId?: string | null;
+  /**
+   * Clerk user id when sent by staff from dashboard
+   * @nullable
+   */
+  authorUserId?: string | null;
   createdAt: string;
 }
 
@@ -782,6 +1199,105 @@ export interface MarketingLeadAck {
   ok: boolean;
 }
 
+export type ChainShopRollupPulseStatus =
+  (typeof ChainShopRollupPulseStatus)[keyof typeof ChainShopRollupPulseStatus];
+
+export const ChainShopRollupPulseStatus = {
+  ok: "ok",
+  watch: "watch",
+  act: "act",
+} as const;
+
+export interface ChainShopRollup {
+  businessId: string;
+  name: string;
+  slug: string;
+  /** @nullable */
+  planId?: string | null;
+  tier: string;
+  /** @nullable */
+  city?: string | null;
+  bookingsThisWeek: number;
+  completedThisWeek: number;
+  todayBookings: number;
+  pendingBookings: number;
+  openConversations: number;
+  handedOffConversations: number;
+  pendingTimeOff: number;
+  pulseStatus: ChainShopRollupPulseStatus;
+  /** @nullable */
+  pulseReason?: string | null;
+}
+
+export type ChainAlertSeverity =
+  (typeof ChainAlertSeverity)[keyof typeof ChainAlertSeverity];
+
+export const ChainAlertSeverity = {
+  watch: "watch",
+  act: "act",
+} as const;
+
+export type ChainAlertCode =
+  (typeof ChainAlertCode)[keyof typeof ChainAlertCode];
+
+export const ChainAlertCode = {
+  handed_off: "handed_off",
+  time_off: "time_off",
+  inbox: "inbox",
+  pending_bookings: "pending_bookings",
+} as const;
+
+export interface ChainAlert {
+  businessId: string;
+  shopName: string;
+  severity: ChainAlertSeverity;
+  code: ChainAlertCode;
+  message: string;
+}
+
+export interface ChainRollup {
+  shopCount: number;
+  bookingsThisWeek: number;
+  completedThisWeek: number;
+  shopsNeedingAttention: number;
+  founderBriefingLine: string;
+  alerts: ChainAlert[];
+  shops: ChainShopRollup[];
+}
+
+export type PeerInsightsBenchmarks = {
+  avgBookingsPerWeek?: number;
+  noShowRatePct?: number;
+  voiceBookingSharePct?: number;
+};
+
+export interface PeerInsights {
+  available: boolean;
+  peerCount?: number;
+  required?: number;
+  vertical: string;
+  country: string;
+  message?: string;
+  disclaimer?: string;
+  benchmarks?: PeerInsightsBenchmarks;
+}
+
+export type PartnerBookingsResponseBookingsItem = {
+  id?: string;
+  status?: string;
+  startAt?: string;
+  endAt?: string;
+  /** @nullable */
+  serviceId?: string | null;
+};
+
+export interface PartnerBookingsResponse {
+  slug: string;
+  from: string;
+  to: string;
+  bookings: PartnerBookingsResponseBookingsItem[];
+}
+
 /**
  * Unauthorized
  */
@@ -807,11 +1323,54 @@ export type ForbiddenResponse = ErrorResponse;
  */
 export type ConflictResponse = ErrorResponse;
 
+export type ListMyNotificationsParams = {
+  businessId?: string;
+  unreadOnly?: boolean;
+  limit?: number;
+};
+
+export type GetMyNotificationUnreadCountParams = {
+  businessId?: string;
+};
+
+export type GetMyNotificationUnreadCount200 = {
+  count: number;
+};
+
+export type MarkAllMyNotificationsReadBody = {
+  businessId?: string;
+};
+
+export type MarkAllMyNotificationsRead200 = {
+  updated?: number;
+};
+
+export type MarkMyNotificationRead200 = {
+  ok?: boolean;
+};
+
 export type GetMyDayParams = {
   /**
    * OWNER/ADMIN may pass an explicit staffId to audit a persona.
    */
   staffId?: string;
+};
+
+export type ListSupportTicketsParams = {
+  status?: SupportTicketStatus;
+};
+
+export type SearchAuditLogParams = {
+  /**
+   * Free-text search across action, resource, actor, and payload
+   */
+  q?: string;
+  actionClass?: string;
+  resourceKind?: string;
+  from?: string;
+  to?: string;
+  limit?: number;
+  offset?: number;
 };
 
 export type ListStaffParams = {
@@ -888,6 +1447,43 @@ export const ListConversationsStatus = {
   HANDED_OFF: "HANDED_OFF",
   CLOSED: "CLOSED",
 } as const;
+
+export type SendConversationMessageBody = {
+  content: string;
+};
+
+export type CreateBillingCheckoutSessionBodyPlanId =
+  (typeof CreateBillingCheckoutSessionBodyPlanId)[keyof typeof CreateBillingCheckoutSessionBodyPlanId];
+
+export const CreateBillingCheckoutSessionBodyPlanId = {
+  solo: "solo",
+  studio: "studio",
+  chain: "chain",
+  "chair-host": "chair-host",
+} as const;
+
+export type CreateBillingCheckoutSessionBody = {
+  planId?: CreateBillingCheckoutSessionBodyPlanId;
+  /** Chain tier — shops billed (min 2) */
+  shopCount?: number;
+  /** Host tier — renter seats */
+  renterCount?: number;
+};
+
+export type CreateBillingCheckoutSession200 = { [key: string]: unknown };
+
+export type OptInPeerInsights200 = {
+  optedIn?: boolean;
+};
+
+export type CreatePeerInsightsCheckout200 = { [key: string]: unknown };
+
+export type ListPartnerBookingsParams = {
+  from?: string;
+  to?: string;
+};
+
+export type GetVoiceStatus200 = { [key: string]: unknown };
 
 export type ListAvailableSmsNumbersParams = {
   countryCode?: string;
@@ -972,8 +1568,43 @@ export type TwilioSmsInboundBody = {
   MessageSid?: string;
 };
 
+export type TwilioVoiceInboundBody = {
+  CallSid: string;
+  From: string;
+  To: string;
+};
+
+export type TwilioVoiceGatherParams = {
+  conversationId?: string;
+  slug: string;
+};
+
+export type TwilioVoiceGatherBody = {
+  CallSid: string;
+  SpeechResult?: string;
+};
+
+export type TwilioVoiceStatusBody = {
+  CallSid?: string;
+  CallStatus?: string;
+  CallDuration?: string;
+};
+
+export type SearchInternalTenantsParams = {
+  /**
+   * Name, slug, owner email, Stripe customer id, or Clerk user id
+   */
+  q?: string;
+  limit?: number;
+  offset?: number;
+};
+
 export type CronSendReminders200 = {
   checked: number;
   sent: number;
   skipped: number;
 };
+
+export type SeedDevWorkspace200 = { [key: string]: unknown };
+
+export type ClearDevWorkspace200 = { [key: string]: unknown };

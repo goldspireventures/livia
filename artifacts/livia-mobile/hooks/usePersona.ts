@@ -2,47 +2,51 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
 import { useBusiness } from "@/contexts/BusinessContext";
 import { useMembership } from "@/hooks/useMembership";
+import { demoPersonaToMobile, getDemoSession } from "@/lib/demo-session";
 
 export type PersonaKind =
-  | "founder"
+  | "org_admin"
   | "owner"
   | "manager"
-  | "staff-senior"
-  | "staff-junior"
-  | "receptionist"
-  | "customer";
+  | "staff"
+  | "receptionist";
 
 export const PERSONA_LABEL: Record<PersonaKind, string> = {
-  founder: "Founder · multi-shop owner",
-  owner: "Owner · single salon",
+  org_admin: "Org admin · multi-location",
+  owner: "Owner · single location",
   manager: "Manager · approvals",
-  "staff-senior": "Senior stylist",
-  "staff-junior": "Junior stylist",
+  staff: "Staff · your chair",
   receptionist: "Front desk",
-  customer: "Customer",
 };
 
 export const PERSONA_ACCENT: Record<PersonaKind, string> = {
-  founder: "#d9c39a",
+  org_admin: "#d9c39a",
   owner: "#22d3ee",
   manager: "#a78bfa",
-  "staff-senior": "#34d399",
-  "staff-junior": "#fbbf24",
+  staff: "#34d399",
   receptionist: "#818cf8",
-  customer: "#fb7185",
 };
 
 export const ALL_PERSONAS: PersonaKind[] = [
-  "founder",
+  "org_admin",
   "owner",
   "manager",
-  "staff-senior",
-  "staff-junior",
+  "staff",
   "receptionist",
-  "customer",
 ];
 
 const DEV_OVERRIDE_KEY = "livia.devPersona";
+
+/** Maps deprecated dev-switcher keys to current persona ids. */
+function normalizeStoredPersona(raw: string | null): PersonaKind | null {
+  if (!raw) return null;
+  if (raw === "staff-senior" || raw === "staff-junior") return "staff";
+  if (raw === "customer") return "owner";
+  // Legacy internal id (pre org-admin rename)
+  if (raw === "founder") return "org_admin";
+  if (ALL_PERSONAS.includes(raw as PersonaKind)) return raw as PersonaKind;
+  return null;
+}
 
 export const isDemoLoginEnabled =
   process.env.EXPO_PUBLIC_DEMO_LOGIN === "true" ||
@@ -67,25 +71,38 @@ export async function setDevPersonaOverride(p: PersonaKind | null): Promise<void
 
 export async function getDevPersonaOverride(): Promise<PersonaKind | null> {
   if (cachedOverride !== null) return cachedOverride;
-  const v = (await AsyncStorage.getItem(DEV_OVERRIDE_KEY)) as PersonaKind | null;
-  cachedOverride = v ?? null;
-  return cachedOverride;
+  const raw = await AsyncStorage.getItem(DEV_OVERRIDE_KEY);
+  const v = normalizeStoredPersona(raw);
+  if (raw && raw !== v && v) {
+    await AsyncStorage.setItem(DEV_OVERRIDE_KEY, v);
+  }
+  cachedOverride = v;
+  return v;
 }
 
 export function deriveAutoPersona(args: {
   role: "OWNER" | "ADMIN" | "STAFF" | null;
   businessCount: number;
+  businesses?: Array<{ parentBusinessId?: string | null; structureKind?: string | null; tier?: string | null }>;
   isReception?: boolean;
   tenureDays?: number;
 }): PersonaKind {
-  const { role, businessCount, isReception, tenureDays = 0 } = args;
-  if (!role || businessCount === 0) return "customer";
-  if (role === "OWNER" && businessCount >= 2) return "founder";
-  if (role === "OWNER") return "owner";
+  const { role, businessCount, businesses, isReception } = args;
+  if (!role || businessCount === 0) {
+    return "owner";
+  }
+  if (role === "OWNER") {
+    const hasHierarchy =
+      (businesses ?? []).some((b) => !!b.parentBusinessId) ||
+      (businesses ?? []).some((b) => b.structureKind === "brand_entity" || b.structureKind === "location") ||
+      (businesses ?? []).some((b) => b.tier === "chain" || b.tier === "mid-chain" || b.tier === "franchise");
+    if (hasHierarchy && businessCount >= 2) return "org_admin";
+    return "owner";
+  }
   if (role === "ADMIN" && isReception) return "receptionist";
   if (role === "ADMIN") return "manager";
-  if (tenureDays > 365) return "staff-senior";
-  return "staff-junior";
+  if (role === "STAFF") return "staff";
+  return "owner";
 }
 
 export function usePersona(): {
@@ -93,10 +110,11 @@ export function usePersona(): {
   override: PersonaKind | null;
   isLoading: boolean;
 } {
-  const { role, isReception, tenureDays, isLoading: roleLoading } = useMembership();
+  const { role, isReception, tenureDays: _tenureDays, isLoading: roleLoading } = useMembership();
   const { businesses, isLoading: bizLoading } = useBusiness();
   const [override, setOverride] = useState<PersonaKind | null>(cachedOverride);
   const [hydrated, setHydrated] = useState(cachedOverride !== null);
+  const [demoPersona, setDemoPersona] = useState<PersonaKind | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -117,16 +135,34 @@ export function usePersona(): {
     };
   }, []);
 
+  useEffect(() => {
+    let alive = true;
+    getDemoSession().then((s) => {
+      if (!alive || !s?.persona) return;
+      setDemoPersona(demoPersonaToMobile(s.persona));
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   const auto = deriveAutoPersona({
     role,
     businessCount: businesses.length,
+    businesses: businesses as unknown as Array<{
+      parentBusinessId?: string | null;
+      structureKind?: string | null;
+      tier?: string | null;
+    }>,
     isReception,
-    tenureDays,
+    tenureDays: _tenureDays,
   });
 
+  const fromDemo = demoPersona && !override ? demoPersona : null;
+
   return {
-    kind: isDemoLoginEnabled && override ? override : auto,
-    override: isDemoLoginEnabled ? override : null,
+    kind: fromDemo ?? auto,
+    override: null,
     isLoading: roleLoading || bizLoading || !hydrated,
   };
 }

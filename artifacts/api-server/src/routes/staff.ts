@@ -12,6 +12,7 @@ import {
 import { logEvent } from "../services/events.service";
 import { EventType } from "@workspace/db";
 
+import { sendError } from "../lib/http-errors";
 const router: IRouter = Router();
 
 const getBizId = (param: string | string[]) => Array.isArray(param) ? param[0] : param;
@@ -24,7 +25,8 @@ router.get(
   async (req, res): Promise<void> => {
     const businessId = getBizId(req.params.businessId);
     const isActive = req.query.isActive !== undefined ? req.query.isActive === "true" : undefined;
-    const staff = await listStaff(businessId, isActive);
+    const serviceId = typeof req.query.serviceId === "string" ? req.query.serviceId : undefined;
+    const staff = await listStaff(businessId, { isActive, serviceId });
     res.json(staff);
   },
 );
@@ -39,7 +41,7 @@ router.post(
     const businessId = getBizId(req.params.businessId);
     const { firstName, displayName } = req.body;
     if (!firstName || !displayName) {
-      res.status(400).json({ error: "firstName and displayName are required" }); return;
+      sendError(res, req, 400, "firstName and displayName are required"); return;
     }
     const s = await createStaff(businessId, req.body);
     await logEvent({ type: EventType.STAFF_CREATED, businessId, userId, entityType: "staff", entityId: s.id });
@@ -56,7 +58,7 @@ router.get(
     const businessId = getBizId(req.params.businessId);
     const staffId = getBizId(req.params.staffId);
     const s = await getStaffById(businessId, staffId);
-    if (!s) { res.status(404).json({ error: "Staff not found" }); return; }
+    if (!s) { sendError(res, req, 404, "Staff not found"); return; }
     res.json(s);
   },
 );
@@ -72,7 +74,7 @@ router.patch(
     const businessId = getBizId(req.params.businessId);
     const staffId = getBizId(req.params.staffId);
     const updated = await updateStaff(businessId, staffId, req.body);
-    if (!updated) { res.status(404).json({ error: "Staff not found" }); return; }
+    if (!updated) { sendError(res, req, 404, "Staff not found"); return; }
     await logEvent({ type: EventType.STAFF_UPDATED, businessId, userId, entityType: "staff", entityId: staffId });
     res.json(updated);
   },
@@ -88,7 +90,7 @@ router.delete(
     const businessId = getBizId(req.params.businessId);
     const staffId = getBizId(req.params.staffId);
     const s = await deactivateStaff(businessId, staffId);
-    if (!s) { res.status(404).json({ error: "Staff not found" }); return; }
+    if (!s) { sendError(res, req, 404, "Staff not found"); return; }
     await logEvent({ type: EventType.STAFF_DEACTIVATED, businessId, userId, entityType: "staff", entityId: staffId });
     res.sendStatus(204);
   },
@@ -117,7 +119,7 @@ router.put(
     const staffId = getBizId(req.params.staffId);
     const { serviceIds } = req.body;
     if (!Array.isArray(serviceIds)) {
-      res.status(400).json({ error: "serviceIds must be an array" }); return;
+      sendError(res, req, 400, "serviceIds must be an array"); return;
     }
     await setStaffServices(staffId, serviceIds);
     const services = await getStaffServicesForStaff(businessId, staffId);

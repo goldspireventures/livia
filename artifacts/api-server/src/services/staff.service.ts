@@ -2,7 +2,24 @@ import { db, staffTable, staffServicesTable, servicesTable } from "@workspace/db
 import { eq, and } from "drizzle-orm";
 import { generateId } from "../lib/id";
 
-export async function listStaff(businessId: string, isActive?: boolean) {
+export async function listStaff(
+  businessId: string,
+  opts?: { isActive?: boolean; serviceId?: string },
+) {
+  const { isActive, serviceId } = opts ?? {};
+  if (serviceId) {
+    const conditions = [
+      eq(staffTable.businessId, businessId),
+      eq(staffServicesTable.serviceId, serviceId),
+    ];
+    if (isActive !== undefined) conditions.push(eq(staffTable.isActive, isActive));
+    const rows = await db
+      .select({ staff: staffTable })
+      .from(staffTable)
+      .innerJoin(staffServicesTable, eq(staffServicesTable.staffId, staffTable.id))
+      .where(and(...conditions));
+    return rows.map((r) => r.staff);
+  }
   const conditions = [eq(staffTable.businessId, businessId)];
   if (isActive !== undefined) conditions.push(eq(staffTable.isActive, isActive));
   return db.select().from(staffTable).where(and(...conditions));

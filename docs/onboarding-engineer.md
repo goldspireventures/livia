@@ -4,7 +4,9 @@ Welcome. This is the only doc you have to read before your first PR. Everything 
 
 ## What Livia is
 
-Livia is a premium AI-native operating system for appointment-based service businesses — barbershops, tattoo studios, dental practices, nail salons. Beachhead market: EU, starting Dublin. The product is **Livia**; the AI character that does the work under the hood is called **Liv**. We never market "Liv" as the product, and we never market Livia as "AI software" — the AI shows up only where it has to (legally) and where it actually helps the customer.
+Livia is a premium AI-native **operating system for appointment-based service businesses** globally (hair, beauty, tattoo, wellness, fitness, medspa, allied health, and more). **Ireland / EN-IE** is the first market we prove; **hair/barber** is the first vertical pack, not the product definition. The product is **Livia**; the AI colleague is **Liv**.
+
+**Read first:** [`docs/LIVIA-ALIGNMENT.md`](./LIVIA-ALIGNMENT.md) · **Active program:** [`docs/product/SYSTEM-REALIGNMENT-PROGRAM.md`](./product/SYSTEM-REALIGNMENT-PROGRAM.md)
 
 ## What's shipped
 
@@ -17,12 +19,13 @@ Livia is a premium AI-native operating system for appointment-based service busi
 
 ## Where to start reading (in this order)
 
-1. [`README.md`](../README.md) — the front door. Repo map, run-it-locally, where to look first.
-2. [`replit.md`](../replit.md) — repo conventions, brand layers (Aurora vs Aurum), gotchas, AI character.
-3. [`docs/launch-plan.md`](./launch-plan.md) — what we're shipping and why. Five lanes, three gates.
-4. [`docs/operating-cadence.md`](./operating-cadence.md) — how we run the week.
-5. [`docs/demo-script.md`](./demo-script.md) — what the product *should feel like* when it works.
-6. [`docs/adr/`](./adr/) — architecture decision records. Read these before suggesting changes to anything load-bearing:
+1. [`docs/LIVIA-ALIGNMENT.md`](./LIVIA-ALIGNMENT.md) — company, product, Liv, production-grade bar.
+2. [`README.md`](../README.md) — repo map, run-it-locally, where to look first.
+3. [`docs/LOCAL_DEV.md`](./LOCAL_DEV.md) — run API, dashboard, marketing, mobile on your machine.
+4. [`docs/launch-plan.md`](./launch-plan.md) — what we're shipping and why. Five lanes, three gates.
+5. [`docs/operating-cadence.md`](./operating-cadence.md) — how we run the week.
+6. [`docs/demo-script.md`](./demo-script.md) — what the product *should feel like* when it works.
+7. [`docs/adr/`](./adr/) — architecture decision records. Read these before suggesting changes to anything load-bearing:
    - [0001 — Codename Bliq renamed to Livia](./adr/0001-codename-bliq-renamed-to-livia.md)
    - [0002 — Multi-tenant via `businessId` scoping](./adr/0002-multi-tenant-via-business-id-scoping.md)
    - [0003 — Clerk for authentication](./adr/0003-clerk-for-auth.md)
@@ -40,10 +43,10 @@ pnpm install
 pnpm run typecheck                                   # full graph
 pnpm --filter @workspace/db run push                 # dev DB schema
 pnpm --filter @workspace/api-server run dev          # API
-# Web + Mobile + marketing artifacts auto-start via the workflow runner.
+# Other terminals: pnpm dev:dashboard, pnpm dev:marketing, pnpm dev:mobile:device
 ```
 
-Required env: `CLERK_*`, `DATABASE_URL`, `AI_INTEGRATIONS_ANTHROPIC_*`. Anthropic credentials come via Replit AI Integrations — there is no `ANTHROPIC_API_KEY` to set.
+Required env: `CLERK_*`, `DATABASE_URL`, `ANTHROPIC_API_KEY` (optional in dev — Liv chat degrades gracefully).
 
 Optional (transports degrade to PENDING-only writes when absent — no boot failure): `SENTRY_DSN_*`, `LOG_LEVEL`, `TWILIO_*`, `RESEND_*`, `PUBLIC_BASE_URL`, `INTERNAL_CRON_SECRET`.
 

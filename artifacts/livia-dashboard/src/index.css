@@ -323,6 +323,14 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
+
+  /* One scroll surface in the authenticated shell (main), not html+main stacked. */
+  html.app-shell-locked,
+  html.app-shell-locked body,
+  html.app-shell-locked #root {
+    height: 100%;
+    overflow: hidden;
+  }
 }
 
 /* ============================================================
@@ -510,5 +518,118 @@
   .border.active-elevate-2:not(.no-active-interaction-elevate)::after,
   .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
     inset: -1px;
+  }
+
+  /* v3 pack-driven confirm tone (M1.8) */
+  .tone-celebrate {
+    --primary: 262 83% 58%;
+  }
+  .tone-calm {
+    --primary: 250 40% 45%;
+  }
+  .tone-warm {
+    --primary: 280 55% 52%;
+  }
+  .tone-studio {
+    --primary: 24 90% 48%;
+  }
+
+  /* Public B2C booking — vertical hero wash (tokens from vertical-theme.ts) */
+  .public-booking-shell {
+    position: relative;
+  }
+  .public-booking-hero {
+    background: linear-gradient(
+      180deg,
+      hsl(var(--vertical-hero-from) / 0.72) 0%,
+      hsl(var(--vertical-hero-from) / 0.2) 45%,
+      hsl(var(--background)) 100%
+    );
+    height: 12rem;
+  }
+  html[data-motion="calm"] .public-booking-shell {
+    scroll-behavior: smooth;
+  }
+
+  .public-booking-shell.has-sticky-cta {
+    padding-bottom: 5.5rem;
+  }
+
+  @media (min-width: 768px) {
+    .public-booking-shell.has-sticky-cta {
+      padding-bottom: 0;
+    }
+  }
+
+  .public-booking-cover {
+    mask-image: linear-gradient(180deg, #000 40%, transparent 100%);
+  }
+
+  /* ── Experience skins: vertical × market × persona ── */
+
+  html[data-persona="org_admin"] .app-shell-main {
+    box-shadow: inset 3px 0 0 var(--persona-accent, #d9c39a);
+  }
+  html[data-persona="owner"] .app-shell-main {
+    box-shadow: inset 3px 0 0 var(--persona-accent, #22d3ee);
+  }
+  html[data-persona="manager"] .app-shell-main {
+    box-shadow: inset 3px 0 0 var(--persona-accent, #a78bfa);
+  }
+  html[data-persona="staff"] .app-shell-main {
+    box-shadow: inset 3px 0 0 var(--persona-accent, #34d399);
+  }
+  html[data-persona="receptionist"] .app-shell-main {
+    box-shadow: inset 3px 0 0 var(--persona-accent, #818cf8);
+  }
+
+  html[data-vertical-display="serif"] .public-booking-shell h1,
+  html[data-vertical-display="serif"] .public-booking-shell h2,
+  html[data-vertical-display="serif"] .public-booking-shell h3 {
+    font-family: var(--app-font-serif);
+  }
+
+  .public-skin-clinical .public-booking-shell [data-testid="public-service-catalog"] .rounded-lg {
+    border-radius: 0.25rem;
+  }
+  .public-skin-clinical .public-booking-shell {
+    letter-spacing: 0.01em;
+  }
+  .public-skin-soft .public-booking-shell [data-testid="public-storefront-hero"] {
+    border-radius: 1.25rem;
+  }
+  .public-skin-bold .public-booking-shell [data-testid="public-service-catalog"] button {
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.7rem;
+  }
+  .public-skin-playful .public-booking-shell {
+    --primary: 271 81% 56%;
+  }
+  .public-skin-warm .public-booking-hero {
+    background: linear-gradient(
+      165deg,
+      hsl(var(--vertical-hero-from) / 0.85) 0%,
+      hsl(43 40% 18% / 0.35) 40%,
+      hsl(var(--background)) 100%
+    );
+  }
+
+  html[data-country="de"] .public-booking-shell {
+    font-feature-settings: "kern" 1, "liga" 1;
+  }
+  html[data-country="gb"] .public-market-gb.public-booking-shell {
+    --ring: 215 20% 45%;
+  }
+  html[data-country="ie"] .public-market-ie.public-booking-shell::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse 80% 40% at 50% -10%, hsl(142 40% 30% / 0.12), transparent);
+    z-index: 0;
+  }
+  html[data-market-tone="luxe"] .public-booking-shell [data-testid="public-storefront-hero"] {
+    border-color: hsl(var(--primary) / 0.25);
   }
 }

@@ -16,6 +16,13 @@ export function initSentry(): void {
     environment: process.env.NODE_ENV ?? "development",
     release: process.env.SENTRY_RELEASE ?? process.env.REPL_DEPLOYMENT_ID ?? undefined,
     tracesSampleRate: 0,
+    beforeSend(event) {
+      if (event.request?.headers) {
+        delete event.request.headers.authorization;
+        delete event.request.headers.cookie;
+      }
+      return event;
+    },
   });
 
   initialized = true;

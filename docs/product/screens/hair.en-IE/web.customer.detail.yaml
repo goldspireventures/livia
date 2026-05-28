@@ -1,0 +1,19 @@
+id: web.customer.detail
+vertical: [hair, beauty]
+locale: [en-IE, en-GB]
+persona: [owner, manager, receptionist]
+modality: web
+route: /customers/:customerId
+
+purpose: >
+  Client profile with booking history, activity timeline, block/unblock, book again.
+
+must_do:
+  - Edit client fields (owner/admin)
+  - Activity feed filtered by customer
+  - Link to new booking with customerId prefilled
+
+api:
+  - GET /customers/{id}
+  - PATCH /customers/{id}
+  - GET /businesses/{id}/activity

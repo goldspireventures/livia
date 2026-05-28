@@ -1,6 +1,6 @@
 # Demo gateway — persona launcher
 
-**Status:** v1 spec (2026-05-06) — implementation is a separate follow-on build task.
+**Status:** v1 implemented for local dev (2026-05-20). Production requires `LIVIA_DEMO_ENABLED=true`.
 **Anchors:** ADR 0009, ADR 0010, ADR 0011, `docs/personas.md` (the hotel principle).
 
 ## Why this exists
@@ -78,15 +78,31 @@ A founder demoing on a real device must sign in as a `@livia.io` user first; ord
 
 ## Implementation status
 
-- [ ] `audit_log` table — shared dependency with impersonation policy. Build task A.
-- [ ] `lib/db/seed-demo.ts` — build task B.
-- [ ] `POST /api/demo/sign-in` endpoint with three safety rails — build task C.
-- [ ] `/demo` route on web + Demo entry on mobile More tab — build task C.
-- [ ] Persistent corner chip + reset button — build task C.
-- [ ] Nightly cron to reset demo state — build task C.
+- [x] `audit_log` table — shared dependency with impersonation policy.
+- [x] `POST /api/demo/provision` — Aurora world + Clerk users (`demo-portal.service.ts`).
+- [x] `POST /api/demo/sign-in` — Clerk ticket + safety rails (dev open; prod gated).
+- [x] `/demo` live launcher on web — one-tap persona sign-in.
+- [x] Persistent **Switch persona** chip on authenticated shell.
+- [x] `docs/testing/FULL-LIVIA-EXPERIENCE.md` — personal E2E playbook.
+- [ ] Nightly cron to reset demo state in production — follow-on.
+- [ ] Full gateway seed density (200 customers / 25 conversations per shop) — follow-on.
 
 These are all proposed at the end of Task #59. The gateway must not ship until **all three** safety rails are independently tested.
 
 ## EU/IRE residency
 
 Demo personas, demo businesses, demo customers, demo conversations all live in the same EU/IRE Postgres as real tenant data, behind the same row-level isolation. Demo data is real data — it just resets nightly.
+
+## Channel stack (WhatsApp / Instagram / SMS)
+
+After `pnpm demo:provision`, flagship shops (e.g. **aurora-studio**, **conors-cut-co**, market capitals) get production-like comms config:
+
+| Surface | What you see |
+|---------|----------------|
+| **Settings → Communications** | WhatsApp Phone number ID, Instagram Page ID, demo SMS number, Meta webhook URL |
+| **Inbox** | WhatsApp, Instagram DM, Messenger threads with Liv replies (not SMS-only) |
+| **`GET /api/demo/status`** | `channels.ready: true`, thread counts |
+
+Stable demo Meta IDs (e.g. `demo_wa_aurora_studio`) so `META_DEV_SIMULATE=true` + **Simulate inbound** resolves the right tenant.
+
+**Try it:** Sign in as founder → Aurora Studio → Inbox (Emma Walsh on WhatsApp) → Settings → Communications (channels show as configured).

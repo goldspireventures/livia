@@ -6,12 +6,9 @@
 
 import { createResendClient } from "@workspace/integrations-resend";
 import { createTwilioClient } from "@workspace/integrations-twilio";
-import {
-  setSmsTransport,
-  setEmailTransport,
-  type SmsTransport,
-  type EmailTransport,
-} from "../services/ai-outbound.service";
+import type { SmsTransport, EmailTransport } from "../services/ai-outbound.service";
+import { setTransactionalEmailTransport } from "../services/transactional-email.service";
+import { initOutboundChannels } from "./channel-router";
 import { logger } from "./logger";
 
 export interface TransportStatus {
@@ -35,6 +32,9 @@ let _status: TransportStatus = {
 export function getTransportStatus(): TransportStatus {
   return { ..._status };
 }
+
+let smsTransportImpl: SmsTransport | null = null;
+let emailTransportImpl: EmailTransport | null = null;
 
 export function initTransports(): void {
   const twilioSid = process.env["TWILIO_ACCOUNT_SID"];
@@ -62,7 +62,7 @@ export function initTransports(): void {
       const r = await twilio.sendSms({ from: sender, to, body });
       return { externalMessageId: r.sid };
     };
-    setSmsTransport(transport);
+    smsTransportImpl = transport;
     _status.smsProvider = "twilio";
     logger.info(
       { twilioDefaultFrom: twilioDefaultFrom ?? "(none — per-shop only)" },
@@ -88,7 +88,7 @@ export function initTransports(): void {
       });
       return { externalMessageId: r.id };
     };
-    setEmailTransport(transport);
+    emailTransportImpl = transport;
     _status.emailProvider = "resend";
     logger.info({ resendDefaultFrom }, "Resend email transport wired");
   } else {
@@ -96,6 +96,22 @@ export function initTransports(): void {
       "RESEND_API_KEY not set — outbound email sends will be logged as FAILED until provisioned.",
     );
   }
+
+  const sms: SmsTransport =
+    smsTransportImpl ??
+    (async () => {
+      throw new Error(
+        "TRANSPORT_NOT_CONFIGURED: SMS transport not configured (missing TWILIO_ACCOUNT_SID + TWILIO_AUTH_TOKEN)",
+      );
+    });
+  const email: EmailTransport =
+    emailTransportImpl ??
+    (async () => {
+      throw new Error("TRANSPORT_NOT_CONFIGURED: Email transport not configured (missing RESEND_API_KEY)");
+    });
+
+  setTransactionalEmailTransport(email);
+  initOutboundChannels({ sms, email });
 }
 
 function escapeHtml(s: string): string {

@@ -18,10 +18,16 @@ import {
   findOpenConversationByChannelAndPhone,
 } from "../services/conversations.service";
 import { handlePublicChat } from "../services/ai-chat.service";
-import { sendAiSms } from "../services/ai-outbound.service";
+import { extractTwilioMediaUrls } from "../services/booking-media.service";
+import { handleContinuityInbound } from "../services/continuity-inbound.service";
+import { resolveInboundSmsBusiness } from "../services/channel-routing.service";
+import { sendAiSms, sendDirectSms } from "../services/ai-outbound.service";
 import { logger } from "../lib/logger";
+import { twilioSignatureRequired } from "../lib/webhook-guard";
 
 const router: IRouter = Router();
+
+const YES_LIKE = /^(yes|y|yeah|yep|ok|okay|confirm|book)\b/i;
 
 // Twilio sends application/x-www-form-urlencoded. We need this parser
 // scoped to this route because the rest of the app uses express.json().
@@ -30,7 +36,7 @@ const formParser = express.urlencoded({ extended: false });
 function buildFullUrl(req: Request): string {
   // Twilio signs the exact URL it called — including scheme + host +
   // path + query (no body). We honour the X-Forwarded-* headers since
-  // the app sits behind Replit's proxy.
+  // the app may sit behind a reverse proxy (honour X-Forwarded-*).
   const proto = (req.headers["x-forwarded-proto"] as string | undefined)?.split(",")[0]?.trim()
     ?? req.protocol;
   const host = (req.headers["x-forwarded-host"] as string | undefined)?.split(",")[0]?.trim()
@@ -58,14 +64,21 @@ router.post(
       const externalMessageId = params["MessageSid"];
 
       if (!from || !to || typeof body !== "string") {
-        logger.warn({ params }, "Inbound SMS missing required fields");
+        logger.warn(
+          { messageSid: externalMessageId, fromLast4: from?.slice(-4), toLast4: to?.slice(-4) },
+          "Inbound SMS missing required fields",
+        );
         ack(400);
         return;
       }
 
-      const authToken = process.env["TWILIO_AUTH_TOKEN"];
-      const skipValidation = process.env["TWILIO_SKIP_SIGNATURE_VALIDATION"] === "true";
-      if (authToken && !skipValidation) {
+      if (twilioSignatureRequired()) {
+        const authToken = process.env["TWILIO_AUTH_TOKEN"];
+        if (!authToken) {
+          logger.error("Inbound SMS rejected — TWILIO_AUTH_TOKEN missing in production");
+          ack();
+          return;
+        }
         const signature = req.headers["x-twilio-signature"] as string | undefined;
         const ok = validateTwilioSignature({
           authToken,
@@ -74,22 +87,29 @@ router.post(
           params,
         });
         if (!ok) {
-          logger.warn({ from, to, signature }, "Inbound SMS signature validation failed");
+          logger.warn(
+            { messageSid: externalMessageId, fromLast4: from.slice(-4), toLast4: to.slice(-4) },
+            "Inbound SMS signature validation failed",
+          );
           res.status(403).end();
           return;
         }
       }
 
-      // Look up business by their provisioned number.
-      const [business] = await db
-        .select()
-        .from(businessesTable)
-        .where(eq(businessesTable.twilioPhoneNumber, to));
-      if (!business) {
-        logger.warn({ to }, "Inbound SMS: no business owns this number");
+      const route = await resolveInboundSmsBusiness(to, from, body);
+      if (route.kind === "not_found") {
+        logger.warn({ to }, "Inbound SMS: no business or premises owns this number");
         ack();
         return;
       }
+      if (route.kind === "menu_required") {
+        ack();
+        void sendDirectSms({ to: from, body: route.menuText, from: to }).catch((err) =>
+          logger.error({ err }, "Premises menu SMS failed"),
+        );
+        return;
+      }
+      const business = route.business;
 
       // Find / create customer by phone (scoped to this business).
       let [customer] = await db
@@ -107,6 +127,34 @@ router.post(
           })
           .returning();
         customer = created;
+      }
+
+      const { tryAcceptWaitlistOfferFromSms } = await import(
+        "../services/waitlist-inbound.service"
+      );
+      const waitlistResult = await tryAcceptWaitlistOfferFromSms({
+        businessId: business.id,
+        customerId: customer.id,
+        phone: from,
+        body,
+      });
+      if (waitlistResult.accepted && waitlistResult.message) {
+        ack();
+        void sendDirectSms({
+          to: from,
+          body: waitlistResult.message,
+          from: to,
+        }).catch((err) => logger.error({ err }, "Waitlist accept SMS failed"));
+        return;
+      }
+      if (waitlistResult.message && !waitlistResult.accepted && YES_LIKE.test(body.trim())) {
+        ack();
+        void sendDirectSms({
+          to: from,
+          body: waitlistResult.message,
+          from: to,
+        }).catch((err) => logger.error({ err }, "Waitlist expiry SMS failed"));
+        return;
       }
 
       // DB-level lookup of the existing OPEN SMS conversation for
@@ -129,11 +177,20 @@ router.post(
       // Persist inbound USER message + raw message log. handlePublicChat
       // is invoked below with skipPersistence:true so it does NOT
       // re-append the USER row (or the ASSISTANT — sendAiSms owns that).
+      const mediaUrls = extractTwilioMediaUrls(params);
+
       await appendMessage({
         conversationId: conversation.id,
         role: "USER",
-        content: body,
+        content: body || (mediaUrls.length ? "[image attached]" : ""),
       });
+
+      void handleContinuityInbound({
+        businessId: business.id,
+        conversationId: conversation.id,
+        body,
+        mediaUrls,
+      }).catch((err) => logger.error({ err }, "Continuity inbound handler failed"));
       await db.insert(messageLogsTable).values({
         id: generateId(),
         businessId: business.id,

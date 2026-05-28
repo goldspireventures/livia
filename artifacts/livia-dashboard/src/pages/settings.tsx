@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, type ReactNode } from "react";
+import { Link } from "wouter";
 import { useBusiness } from "@/lib/business-context";
 import {
   useGetBusiness,
@@ -29,12 +30,42 @@ import {
   Globe,
   Sparkles,
   FlaskConical,
+  KeyRound,
 } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import DemoDataControls from "@/components/demo-data-controls";
 import CommunicationsControls from "@/components/communications-controls";
-import { MessageSquare } from "lucide-react";
+import { NotificationPreferencesControls } from "@/components/notification-preferences-controls";
+import BillingControls from "@/components/billing-controls";
+import PeerInsightsControls from "@/components/peer-insights-controls";
+import IntegrationsControls from "@/components/integrations-controls";
+import OperationalPolicyControls from "@/components/operational-policy-controls";
+import { BookingResourcesPanel } from "@/components/settings/booking-resources-panel";
+import LivPromptControls from "@/components/liv-prompt-controls";
+import LivMandateControls from "@/components/liv-mandate-controls";
+import { LivToolCatalogControls } from "@/components/liv/liv-tool-catalog-controls";
+import { MessageSquare, CreditCard, Plug, Shield } from "lucide-react";
 import { useMembership } from "@/lib/membership-context";
+import { usePersona } from "@/lib/persona";
+import {
+  settingsTabsForPersona,
+  SETTINGS_TAB_LABELS,
+  canEditShop,
+  canEditLiv,
+  canViewComms,
+  canViewTeam,
+  canViewBilling,
+  type SettingsTabId,
+} from "@/lib/settings-persona";
+import { PersonaSettingsBanner } from "@/components/ritual/persona-settings-banner";
+import { PersonaRitualHeader } from "@/components/ritual/persona-ritual-header";
+import { PageFrame } from "@/components/ui/page-frame";
+import { SettingsDisclosure } from "@/components/ui/settings-disclosure";
+import { EU_TIMEZONES } from "@/lib/eu-timezones";
+import { verticalPackUi } from "@/lib/vertical-pack-ui";
+import { showPeerInsightsForTenant } from "@workspace/policy";
+import { OwnershipTransferPanel } from "@/components/lifecycle/ownership-transfer-panel";
+import { Users, FileText } from "lucide-react";
 
 interface SettingsForm {
   name: string;
@@ -45,6 +76,7 @@ interface SettingsForm {
   country: string;
   description: string;
   instagramHandle: string;
+  logoUrl: string;
 }
 
 interface AIForm {
@@ -60,12 +92,32 @@ export default function SettingsPage() {
   const { toast } = useToast();
   const qc = useQueryClient();
   const { effectiveRole } = useMembership();
-  // STAFF can see general profile + demo controls, but not the
-  // brand-tone AI/comms surfaces. Server-side gating still enforces
-  // it; this is the matching UI hide.
-  const canEditAI = effectiveRole === "OWNER" || effectiveRole === "ADMIN";
+  const { kind: persona } = usePersona();
+  const showDemo = import.meta.env.DEV;
+  const visibleTabs = useMemo(
+    () => settingsTabsForPersona(persona, { showDemo }),
+    [persona, showDemo],
+  );
+  const shopEditable = canEditShop(persona);
+  const livEditable = canEditLiv(persona);
+  const showComms = canViewComms(persona);
+  const showTeam = canViewTeam(persona);
+  const showBilling = canViewBilling(persona);
+  const canTransferOwnership = effectiveRole === "OWNER";
+
+  const defaultTab = useMemo((): SettingsTabId => {
+    if (typeof window === "undefined") return visibleTabs[0] ?? "shop";
+    const raw = new URLSearchParams(window.location.search).get("tab");
+    const mapped =
+      raw === "general" ? "shop" : raw === "ai" ? "liv" : (raw as SettingsTabId | null);
+    if (mapped && visibleTabs.includes(mapped)) return mapped;
+    return visibleTabs[0] ?? "shop";
+  }, [visibleTabs]);
 
   const bid = business?.id ?? "";
+  const businessVertical = (business as { vertical?: string } | null)?.vertical;
+  const vocab = verticalPackUi(businessVertical, business?.category);
+  const showPeerInsights = showPeerInsightsForTenant(businessVertical);
 
   const { data: biz, isLoading } = useGetBusiness(
     bid,
@@ -96,6 +148,7 @@ export default function SettingsPage() {
         country: b.country ?? "",
         description: b.description ?? "",
         instagramHandle: b.instagramHandle ?? "",
+        logoUrl: b.logoUrl ?? "",
       });
       aiForm.reset({
         aiEnabled: (b.aiEnabled ?? "true") !== "false",
@@ -156,11 +209,13 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-3xl">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">Manage your business profile and AI assistant</p>
-      </div>
+    <PageFrame width="md">
+      <PersonaRitualHeader
+        variant="page"
+        title="Settings"
+        subtitle="Shop profile, Liv, channels, and plan — grouped by what you configure most."
+      />
+      <PersonaSettingsBanner />
 
       {isLoading ? (
         <div className="space-y-4">
@@ -168,26 +223,49 @@ export default function SettingsPage() {
           <Skeleton className="h-96" />
         </div>
       ) : (
-        <Tabs defaultValue="general" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="general" data-testid="tab-general">
-              <Settings className="h-4 w-4 mr-2" />
-              General
-            </TabsTrigger>
-            {canEditAI && (
-              <TabsTrigger value="ai" data-testid="tab-ai">
-                <Sparkles className="h-4 w-4 mr-2" />
-                AI Assistant
-              </TabsTrigger>
-            )}
-            <TabsTrigger value="demo" data-testid="tab-demo">
-              <FlaskConical className="h-4 w-4 mr-2" />
-              Demo & Data
-            </TabsTrigger>
+        <Tabs defaultValue={defaultTab} className="space-y-6">
+          <TabsList className="flex flex-wrap h-auto gap-1">
+            {visibleTabs.map((tab) => {
+              const icons: Partial<Record<SettingsTabId, ReactNode>> = {
+                shop: <Settings className="h-4 w-4 mr-1.5 shrink-0" />,
+                policy: <Shield className="h-4 w-4 mr-1.5 shrink-0" />,
+                liv: <Sparkles className="h-4 w-4 mr-1.5 shrink-0" />,
+                comms: <MessageSquare className="h-4 w-4 mr-1.5 shrink-0" />,
+                team: <Users className="h-4 w-4 mr-1.5 shrink-0" />,
+                billing: <CreditCard className="h-4 w-4 mr-1.5 shrink-0" />,
+                ownership: <KeyRound className="h-4 w-4 mr-1.5 shrink-0" />,
+                integrations: <Plug className="h-4 w-4 mr-1.5 shrink-0" />,
+                legal: <FileText className="h-4 w-4 mr-1.5 shrink-0" />,
+                demo: <FlaskConical className="h-4 w-4 mr-1.5 shrink-0" />,
+              };
+              const label =
+                tab === "shop" ? vocab.locationNoun : SETTINGS_TAB_LABELS[tab];
+              if (tab === "billing" && !showBilling) return null;
+              if (tab === "integrations" && !showBilling) return null;
+              if (tab === "ownership" && !canTransferOwnership) return null;
+              if (tab === "team" && !showTeam) return null;
+              if (tab === "comms" && !showComms) return null;
+              return (
+                <TabsTrigger
+                  key={tab}
+                  value={tab}
+                  data-testid={`tab-${tab}`}
+                  className="text-xs sm:text-sm"
+                >
+                  {icons[tab]}
+                  {label}
+                </TabsTrigger>
+              );
+            })}
           </TabsList>
 
-          {/* ===== General tab ===== */}
-          <TabsContent value="general" className="space-y-6 mt-0">
+          {/* ===== Shop tab ===== */}
+          <TabsContent value="shop" className="space-y-6 mt-0">
+            {!shopEditable && (
+              <p className="text-sm text-muted-foreground rounded-lg border border-border p-3">
+                View-only for your role — ask the owner to change {vocab.locationNoun.toLowerCase()} details.
+              </p>
+            )}
             {b && (
               <Card>
                 <CardHeader>
@@ -207,13 +285,14 @@ export default function SettingsPage() {
                     <Button
                       variant="outline"
                       size="icon"
+                      aria-label="Copy booking link"
                       onClick={copyLink}
                       data-testid="button-copy-link"
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
                     <a href={bookingUrl} target="_blank" rel="noopener noreferrer">
-                      <Button variant="outline" size="icon" data-testid="button-open-link">
+                      <Button variant="outline" size="icon" aria-label="Open booking link" data-testid="button-open-link">
                         <ExternalLink className="h-4 w-4" />
                       </Button>
                     </a>
@@ -234,6 +313,7 @@ export default function SettingsPage() {
                   onSubmit={generalForm.handleSubmit(onSubmitGeneral)}
                   className="space-y-4"
                 >
+                  <fieldset disabled={!shopEditable} className="space-y-4 disabled:opacity-80">
                   <div className="space-y-2">
                     <Label>Business Name *</Label>
                     <Input
@@ -260,6 +340,27 @@ export default function SettingsPage() {
                       {...generalForm.register("description")}
                       data-testid="input-description"
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Logo image URL</Label>
+                    <Input
+                      {...generalForm.register("logoUrl")}
+                      placeholder="https://… (HTTPS image for booking page)"
+                      data-testid="input-logo-url"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Shown on your public booking page. Upload to your CDN or storage, then paste the URL here.
+                    </p>
+                    {generalForm.watch("logoUrl") ? (
+                      <img
+                        src={generalForm.watch("logoUrl")}
+                        alt=""
+                        className="h-12 w-12 rounded-lg object-cover border"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                    ) : null}
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -290,28 +391,54 @@ export default function SettingsPage() {
                   </div>
                   <div className="space-y-2">
                     <Label>Timezone</Label>
-                    <Input
-                      {...generalForm.register("timezone")}
-                      placeholder="e.g. America/New_York"
-                      data-testid="input-timezone"
+                    <Controller
+                      control={generalForm.control}
+                      name="timezone"
+                      render={({ field }) => (
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger aria-label="Time zone" data-testid="input-timezone">
+                            <SelectValue placeholder="Select timezone" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {EU_TIMEZONES.map((tz) => (
+                              <SelectItem key={tz.value} value={tz.value}>
+                                {tz.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
                     />
                   </div>
+                  {shopEditable && (
                   <Button
                     type="submit"
                     disabled={updateBusiness.isPending}
                     className="w-full"
                     data-testid="button-save-settings"
                   >
-                    {updateBusiness.isPending ? "Saving..." : "Save Changes"}
+                    {updateBusiness.isPending ? "Saving..." : "Save shop details"}
                   </Button>
+                  )}
+                  </fieldset>
                 </form>
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* ===== AI Assistant tab (admin+) ===== */}
-          {canEditAI && (
-          <TabsContent value="ai" className="space-y-6 mt-0">
+          {visibleTabs.includes("policy") && (
+            <TabsContent value="policy" className="space-y-6 mt-0">
+              <OperationalPolicyControls />
+              <BookingResourcesPanel />
+            </TabsContent>
+          )}
+
+          {/* ===== Liv tab ===== */}
+          {visibleTabs.includes("liv") && (
+          <TabsContent value="liv" className="space-y-6 mt-0">
+            {!livEditable && (
+              <p className="text-sm text-muted-foreground">You do not have permission to edit Liv settings.</p>
+            )}
             <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-[hsl(var(--chart-1))]/5">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
@@ -325,6 +452,7 @@ export default function SettingsPage() {
               </CardHeader>
               <CardContent>
                 <form onSubmit={aiForm.handleSubmit(onSubmitAI)} className="space-y-6">
+                  <fieldset disabled={!livEditable} className="space-y-6 disabled:opacity-80">
                   <Controller
                     control={aiForm.control}
                     name="aiEnabled"
@@ -373,7 +501,7 @@ export default function SettingsPage() {
                       <div className="space-y-2">
                         <Label>Tone of voice</Label>
                         <Select value={field.value} onValueChange={field.onChange}>
-                          <SelectTrigger data-testid="select-ai-tone">
+                          <SelectTrigger aria-label="Liv AI tone" data-testid="select-ai-tone">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -419,38 +547,163 @@ export default function SettingsPage() {
                     </p>
                   </div>
 
+                  {livEditable && (
                   <Button
                     type="submit"
                     disabled={updateBusiness.isPending}
                     className="w-full"
                     data-testid="button-save-ai"
                   >
-                    {updateBusiness.isPending ? "Saving..." : "Save AI Settings"}
+                    {updateBusiness.isPending ? "Saving..." : "Save Liv settings"}
                   </Button>
+                  )}
+                  </fieldset>
                 </form>
               </CardContent>
             </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <MessageSquare className="h-4 w-4" />
-                  Communications
-                </CardTitle>
-                <CardDescription>
-                  Per-shop SMS number and email sender. Liv uses these to confirm
-                  bookings, send reminders, and reply to customer texts.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {bid ? (
-                  <CommunicationsControls businessId={bid} />
-                ) : (
-                  <p className="text-sm text-muted-foreground">Select a business to manage communications.</p>
-                )}
-              </CardContent>
-            </Card>
+            {livEditable ? <LivMandateControls /> : null}
+            {livEditable ? (
+              <SettingsDisclosure
+                title="Prompt overrides"
+                description="Advanced — custom system prompts per workflow."
+              >
+                <LivPromptControls />
+              </SettingsDisclosure>
+            ) : null}
+            {livEditable ? (
+              <SettingsDisclosure
+                title="Tool catalog"
+                description="Which actions Liv can take on your behalf."
+              >
+                <LivToolCatalogControls />
+              </SettingsDisclosure>
+            ) : null}
           </TabsContent>
+          )}
+
+          {visibleTabs.includes("comms") && showComms && (
+            <TabsContent value="comms" className="space-y-4 mt-0">
+              {bid ? (
+                <>
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base">Notifications</CardTitle>
+                      <CardDescription>Push and email alerts for you and your team.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <NotificationPreferencesControls />
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <MessageSquare className="h-4 w-4" />
+                        SMS, email & social
+                      </CardTitle>
+                      <CardDescription>
+                        Your shop number, WhatsApp, and Instagram — Liv replies from one inbox.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <CommunicationsControls businessId={bid} />
+                    </CardContent>
+                  </Card>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">Select a business first.</p>
+              )}
+            </TabsContent>
+          )}
+
+          {visibleTabs.includes("team") && showTeam && (
+            <TabsContent value="team" className="space-y-6 mt-0">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Team & services</CardTitle>
+                  <CardDescription>
+                    Roster, service assignments, and schedules live on the Team page.
+                    {persona === "manager" ? " You can view; owners invite and edit profiles." : ""}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-wrap gap-3">
+                  <a href="/staff">
+                    <Button variant="default">Open team roster</Button>
+                  </a>
+                  <a href="/services">
+                    <Button variant="outline">Manage services</Button>
+                  </a>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
+
+          {visibleTabs.includes("legal") && (
+            <TabsContent value="legal" className="space-y-6 mt-0">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Legal & trust</CardTitle>
+                  <CardDescription>Published policies for customers and design partners.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm">
+                  <div className="rounded-lg border border-border p-3 space-y-2">
+                    <p className="font-medium text-foreground">Operator ready pack</p>
+                    <p className="text-muted-foreground text-xs leading-relaxed">
+                      Starter policies, leave procedure, running late, and team invite copy — ready for your
+                      practice (adapt with your solicitor). In-repo:{" "}
+                      <code className="text-[11px]">docs/business/OPERATOR-READY-PACK.md</code>
+                    </p>
+                    <Link href="/guides">
+                      <Button variant="outline" size="sm">
+                        Open guides & vertical demos
+                      </Button>
+                    </Link>
+                  </div>
+                  <a
+                    href="https://livia.io/legal/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline block"
+                  >
+                    Privacy policy
+                  </a>
+                  <a
+                    href="https://livia.io/legal/tos"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline block"
+                  >
+                    Terms of service
+                  </a>
+                  <a
+                    href="https://livia.io/legal/dpa"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline block"
+                  >
+                    Data processing agreement (DPA)
+                  </a>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
+
+          {canTransferOwnership && (
+            <TabsContent value="ownership" className="space-y-6 mt-0">
+              <OwnershipTransferPanel />
+            </TabsContent>
+          )}
+
+          {showBilling && visibleTabs.includes("billing") && (
+            <TabsContent value="billing" className="space-y-6 mt-0">
+              <BillingControls />
+              {showPeerInsights ? <PeerInsightsControls /> : null}
+            </TabsContent>
+          )}
+
+          {showBilling && visibleTabs.includes("integrations") && (
+            <TabsContent value="integrations" className="space-y-6 mt-0">
+              <IntegrationsControls />
+            </TabsContent>
           )}
 
           {/* ===== Demo & Data tab ===== */}
@@ -477,6 +730,6 @@ export default function SettingsPage() {
           </TabsContent>
         </Tabs>
       )}
-    </div>
+    </PageFrame>
   );
 }

@@ -1,6 +1,6 @@
 # v3 scope — DACH + medspa + allied health + enterprise
 
-**Status:** Lock-soft (2026-05-07). Target ship: 2028–2029. Speculative — confidence rating MEDIUM. Acceptance: v2 → v3 graduation in `v2-scope.md` + the additions below.
+**Status:** Lock-soft (2026-05-07), **expanded 2026-05-22** (experience + booking continuity). **Active delivery:** [`../product/V3-EXECUTION-PROGRAM.md`](../product/V3-EXECUTION-PROGRAM.md). Calendar 2028–2029 is a **target**, not a deferral. Acceptance: v2 → v3 graduation in `v2-scope.md` + the additions below.
 
 ## v3 promise (one sentence)
 
@@ -11,6 +11,8 @@ Livia is the operator-as-a-service for **European appointment-based service busi
 ### Verticals added
 - **Medspa** — informed-consent workflows; medical-grade documentation; regulated treatment compliance per market.
 - **Allied health adjacency** — dental hygienist, physiotherapy, mental-health-adjacent (talk therapy, coaching, nutritionist). Each with appropriate consent/intake/regulatory layer.
+- **Pet grooming** — `pet-grooming` pack; pet profiles (`pets` + `booking_pets`); breed/temperament continuity templates.
+- **Automotive detailing** — `automotive-detailing` pack; vehicle-detail intake via booking continuity thread.
 
 We are explicit: **we do not enter regulated medical/mental health primary practice.** We adjacency the support roles. The line is "appointment-based service business with health adjacency" not "primary clinical care."
 
@@ -28,7 +30,17 @@ We are explicit: **we do not enter regulated medical/mental health primary pract
 
 Per-locale character lead, eval set, brand-of-Liv localisation. Significant investment — each locale ~€60k+ to do at quality.
 
+### Experience & continuity (v3 expansion — 2026-05-22)
+
+- **Alive product standard** — motion tokens, emotional beats, reduced-motion/sound gates on all seven surfaces ([`V3-EXPERIENCE-SPEC.md`](../product/V3-EXPERIENCE-SPEC.md)).
+- **`booking-continuity-bridge`** — after any booking, one canonical thread (SMS/WA/email primary; IG deep-link optional); no orphan “DM the stylist” step.
+- **`unified-conversation-thread`** — inbox shows channel badges, attachments, booking linkage; ops trace is one story.
+- **`style-intake-on-confirm`** — post-book prompt for reference images in-thread (hair, tattoo; counsel-gated for medspa).
+- **`stuck-booking-queue`** — web booked, no continuity reply within SLA → owner/manager queue.
+- **Real-world scenario catalog** — 20+ pains → blocks ([`V3-REAL-WORLD-SCENARIOS.md`](../product/V3-REAL-WORLD-SCENARIOS.md)).
+
 ### Workflows added
+- `booking-continuity-bridge` — see above (P0).
 - `medspa-informed-consent` — per-procedure consent flow with statutory-compliance per market.
 - `medical-intake-comprehensive` — medication list, allergies, conditions, prior procedures.
 - `regulatory-export` — per-market regulatory reporting (e.g., DE BMG-related obligations for medspa).
@@ -37,6 +49,8 @@ Per-locale character lead, eval set, brand-of-Liv localisation. Significant inve
 - `byok-key-rotation` — tenant-managed encryption key lifecycle.
 
 ### Features added
+- **`continuity-templates`** — per-vertical/locale outbound copy after book (DE formal tone, hair style prompt, medspa calm).
+- **`booking-media-gallery`** — attachments from threads on booking + customer profile.
 - **`brand-shell-white-label`** — partner can co-brand Liv as their character within their portal (regulated; brand-of-Liv stewards approve each).
 - **`enterprise-audit-export`** — per-period regulatory export for enterprise customers (SOC2/ISO27001 evidence packs).
 - **`byok-encryption-control-panel`** — tenant-managed key visibility + rotation.
@@ -89,6 +103,8 @@ These remain off the roadmap regardless of scale. From F7 narrowing and F9/F10:
 ## Acceptance criteria for v3 ship
 
 1. v2 acceptance continues to hold.
+1b. **Booking continuity:** design partner completes web book → thread reply → stylist sees attachments on booking without manual IG hunt (Scenario 01).
+1c. **Experience:** hair vs medspa demo shows distinct motion/copy on same codebase; `/b` confirm includes Next steps panel.
 2. ≥1 paying enterprise tier customer operational for 60 days.
 3. SOC2 Type 2 audit complete (Type 1 from launch-plan; Type 2 from sustained operation).
 4. Each new locale has ≥10 paying tenants AND eval-pass rate ≥97% per persona × cell × locale.

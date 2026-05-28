@@ -7,6 +7,7 @@ import { requireAuth, requireRole } from "../lib/auth";
 import { getBusinessById } from "../services/businesses.service";
 import { getAvailableSlots } from "../services/slots.service";
 
+import { sendError } from "../lib/http-errors";
 const router: IRouter = Router();
 const getBizId = (param: string | string[]) => Array.isArray(param) ? param[0] : param;
 
@@ -18,7 +19,7 @@ router.get(
     const businessId = getBizId(req.params.businessId);
     const { serviceId, date, staffId } = req.query;
     if (!serviceId || !date) {
-      res.status(400).json({ error: "serviceId and date are required" }); return;
+      sendError(res, req, 400, "serviceId and date are required"); return;
     }
     const biz = await getBusinessById(businessId);
     const slots = await getAvailableSlots({

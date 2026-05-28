@@ -7,20 +7,55 @@
 
 import { Router, type IRouter } from "express";
 import { requireAuth, requireRole } from "../lib/auth";
+import { requireEntitlement } from "../lib/entitlements-gate";
+import { recordMeter } from "../lib/metering-recorder";
 import { getBusinessById, updateBusiness } from "../services/businesses.service";
 import { createTwilioClient } from "@workspace/integrations-twilio";
 import { sendAiSms, sendAiEmail } from "../services/ai-outbound.service";
 import { createConversation } from "../services/conversations.service";
 import { getTransportStatus } from "../lib/transports";
+import { getMessagingChannels, updateMessagingChannels } from "../services/messaging-channels.service";
+import { isMetaConfigured } from "../services/ai-outbound.service";
+import {
+  getJurisdictionPack,
+  guardChannelPackForProduction,
+  messagingChannelsSchema,
+  resolveChannelPack,
+} from "@workspace/policy";
 
+import { sendError } from "../lib/http-errors";
 const router: IRouter = Router();
 const getBizId = (param: string | string[]) =>
   Array.isArray(param) ? param[0] : param;
 
-function smsWebhookUrl(): string | null {
+function publicApiBase(): string | null {
   const base = process.env["PUBLIC_BASE_URL"];
   if (!base) return null;
-  return `${base.replace(/\/+$/, "")}/api/channels/sms/inbound`;
+  return base.replace(/\/+$/, "");
+}
+
+function smsWebhookUrl(): string | null {
+  const base = publicApiBase();
+  if (!base) return null;
+  return `${base}/api/channels/sms/inbound`;
+}
+
+function voiceWebhookUrl(): string | null {
+  const base = publicApiBase();
+  if (!base) return null;
+  return `${base}/api/channels/voice/inbound`;
+}
+
+function voiceStatusWebhookUrl(): string | null {
+  const base = publicApiBase();
+  if (!base) return null;
+  return `${base}/api/channels/voice/status`;
+}
+
+function metaWebhookUrl(): string | null {
+  const base = publicApiBase();
+  if (!base) return null;
+  return `${base}/api/channels/meta`;
 }
 
 router.get(
@@ -30,9 +65,11 @@ router.get(
   async (req, res): Promise<void> => {
     const id = getBizId(req.params.businessId);
     const biz = await getBusinessById(id);
-    if (!biz) { res.status(404).json({ error: "Business not found" }); return; }
+    if (!biz) { sendError(res, req, 404, "Business not found"); return; }
 
     const status = getTransportStatus();
+    const jurisdiction = getJurisdictionPack(biz.country);
+    const channelPack = guardChannelPackForProduction(resolveChannelPack(jurisdiction.code));
     res.json({
       twilioPhoneNumber: biz.twilioPhoneNumber,
       twilioPhoneSid: biz.twilioPhoneSid,
@@ -43,7 +80,32 @@ router.get(
         emailDefaultFrom: status.resendDefaultFrom,
       },
       smsWebhookUrl: smsWebhookUrl(),
+      voiceWebhookUrl: voiceWebhookUrl(),
+      voiceStatusWebhookUrl: voiceStatusWebhookUrl(),
+      metaWebhookUrl: metaWebhookUrl(),
+      messagingChannels: await getMessagingChannels(id),
+      metaConfigured: isMetaConfigured(),
+      metaDevSimulate: process.env["META_DEV_SIMULATE"] === "true",
+      jurisdiction: jurisdiction.code,
+      jurisdictionLabel: jurisdiction.label,
+      channelPack,
     });
+  },
+);
+
+router.put(
+  "/businesses/:businessId/communications/messaging-channels",
+  requireAuth,
+  requireRole("ADMIN"),
+  async (req, res): Promise<void> => {
+    const id = getBizId(req.params.businessId);
+    const parsed = messagingChannelsSchema.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      sendError(res, req, 400, "Invalid messaging channel config");
+      return;
+    }
+    const updated = await updateMessagingChannels(id, parsed.data);
+    res.json({ messagingChannels: updated });
   },
 );
 
@@ -55,10 +117,7 @@ router.get(
     const sid = process.env["TWILIO_ACCOUNT_SID"];
     const token = process.env["TWILIO_AUTH_TOKEN"];
     if (!sid || !token) {
-      res.status(503).json({
-        error: "Twilio is not configured for this environment yet.",
-        code: "TWILIO_NOT_CONFIGURED",
-      });
+      sendError(res, req, 503, "Twilio is not configured for this environment yet.", { code: "TWILIO_NOT_CONFIGURED", });
       return;
     }
     const country = (req.query["countryCode"] as string | undefined) ?? "IE";
@@ -70,10 +129,7 @@ router.get(
       });
       res.json({ numbers });
     } catch (err) {
-      res.status(502).json({
-        error: err instanceof Error ? err.message : "Twilio search failed",
-        code: "TWILIO_SEARCH_FAILED",
-      });
+      sendError(res, req, 502, err instanceof Error ? err.message : "Twilio search failed", { code: "TWILIO_SEARCH_FAILED", });
     }
   },
 );
@@ -82,34 +138,26 @@ router.post(
   "/businesses/:businessId/communications/sms/provision-number",
   requireAuth,
   requireRole("ADMIN"),
+  requireEntitlement("sms_outbound"),
   async (req, res): Promise<void> => {
     const id = getBizId(req.params.businessId);
     const sid = process.env["TWILIO_ACCOUNT_SID"];
     const token = process.env["TWILIO_AUTH_TOKEN"];
     if (!sid || !token) {
-      res.status(503).json({
-        error: "Twilio is not configured for this environment yet.",
-        code: "TWILIO_NOT_CONFIGURED",
-      });
+      sendError(res, req, 503, "Twilio is not configured for this environment yet.", { code: "TWILIO_NOT_CONFIGURED", });
       return;
     }
     const webhook = smsWebhookUrl();
     if (!webhook) {
-      res.status(503).json({
-        error: "PUBLIC_BASE_URL must be set so Twilio knows where to deliver inbound SMS.",
-        code: "PUBLIC_BASE_URL_MISSING",
-      });
+      sendError(res, req, 503, "PUBLIC_BASE_URL must be set so Twilio knows where to deliver inbound SMS.", { code: "PUBLIC_BASE_URL_MISSING", });
       return;
     }
 
     const biz = await getBusinessById(id);
-    if (!biz) { res.status(404).json({ error: "Business not found" }); return; }
+    if (!biz) { sendError(res, req, 404, "Business not found"); return; }
     if (biz.twilioPhoneSid) {
-      res.status(409).json({
-        error: "This shop already has a number provisioned. Release it first.",
-        code: "ALREADY_PROVISIONED",
-        twilioPhoneNumber: biz.twilioPhoneNumber,
-      });
+      sendError(res, req, 409, "This shop already has a number provisioned. Release it first.", { code: "ALREADY_PROVISIONED",
+        twilioPhoneNumber: biz.twilioPhoneNumber, });
       return;
     }
 
@@ -133,8 +181,14 @@ router.post(
         }
         phoneNumber = candidates[0].phoneNumber;
       }
+      const voiceUrl = voiceWebhookUrl();
+      const voiceStatus = voiceStatusWebhookUrl();
       const purchased = await twilio.purchasePhoneNumber({
-        phoneNumber, smsUrl: webhook, friendlyName: `Livia · ${biz.name}`,
+        phoneNumber,
+        smsUrl: webhook,
+        voiceUrl: voiceUrl ?? undefined,
+        voiceStatusCallback: voiceStatus ?? undefined,
+        friendlyName: `Livia · ${biz.name}`,
       });
       await updateBusiness(id, {
         twilioPhoneNumber: purchased.phoneNumber,
@@ -144,12 +198,11 @@ router.post(
         twilioPhoneNumber: purchased.phoneNumber,
         twilioPhoneSid: purchased.sid,
         smsWebhookUrl: webhook,
+        voiceWebhookUrl: voiceUrl,
+        voiceStatusWebhookUrl: voiceStatus,
       });
     } catch (err) {
-      res.status(502).json({
-        error: err instanceof Error ? err.message : "Twilio purchase failed",
-        code: "TWILIO_PURCHASE_FAILED",
-      });
+      sendError(res, req, 502, err instanceof Error ? err.message : "Twilio purchase failed", { code: "TWILIO_PURCHASE_FAILED", });
     }
   },
 );
@@ -162,7 +215,7 @@ router.delete(
     const id = getBizId(req.params.businessId);
     const biz = await getBusinessById(id);
     if (!biz?.twilioPhoneSid) {
-      res.status(404).json({ error: "No number provisioned" }); return;
+      sendError(res, req, 404, "No number provisioned"); return;
     }
     const sid = process.env["TWILIO_ACCOUNT_SID"];
     const token = process.env["TWILIO_AUTH_TOKEN"];
@@ -198,7 +251,7 @@ router.post(
   async (req, res): Promise<void> => {
     const id = getBizId(req.params.businessId);
     const biz = await getBusinessById(id);
-    if (!biz) { res.status(404).json({ error: "Business not found" }); return; }
+    if (!biz) { sendError(res, req, 404, "Business not found"); return; }
 
     const channel = req.body?.channel as "SMS" | "EMAIL" | undefined;
     const to = (req.body?.to as string | undefined)?.trim();
@@ -206,10 +259,10 @@ router.post(
       ?? "Hi — this is a Livia test message. Reply OK if you received it.";
 
     if (channel !== "SMS" && channel !== "EMAIL") {
-      res.status(400).json({ error: "channel must be 'SMS' or 'EMAIL'" }); return;
+      sendError(res, req, 400, "channel must be 'SMS' or 'EMAIL'"); return;
     }
     if (!to) {
-      res.status(400).json({ error: "to is required" }); return;
+      sendError(res, req, 400, "to is required"); return;
     }
 
     if (channel === "SMS") {
@@ -221,6 +274,9 @@ router.post(
         customerPhone: to, content: message,
         fromPhone: biz.twilioPhoneNumber ?? null,
       });
+      if (result.status === "SENT") {
+        await recordMeter(biz.id, "sms_message_outbound", 1, { conversationId: convo.id });
+      }
       res.json({ channel, status: result.status, body: result.body, conversationId: convo.id });
       return;
     }

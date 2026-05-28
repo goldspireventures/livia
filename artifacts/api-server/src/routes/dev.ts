@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { requireAuth, getUserId } from "../lib/auth";
+import { buildSimToken, getSimOwnerForBusiness } from "../lib/sim-auth";
 import { getOrCreateUser } from "../services/users.service";
 import { createBusiness, getBusinessesForUser } from "../services/businesses.service";
 import { createStaff } from "../services/staff.service";
@@ -14,7 +15,10 @@ import {
 } from "@workspace/db";
 import { eq, inArray } from "drizzle-orm";
 import { generateId } from "../lib/id";
+import { getMessagingChannels, updateMessagingChannels } from "../services/messaging-channels.service";
+import { processInboundMetaMessage } from "../services/meta-inbound.service";
 
+import { sendError } from "../lib/http-errors";
 const router: IRouter = Router();
 
 type BookingStatus = "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED" | "NO_SHOW";
@@ -100,7 +104,7 @@ async function seedBookings(
 // Only available in non-production environments
 router.post("/dev/seed", requireAuth, async (req, res): Promise<void> => {
   if (process.env.NODE_ENV === "production") {
-    res.status(403).json({ error: "Seed not available in production" });
+    sendError(res, req, 403, "Seed not available in production");
     return;
   }
 
@@ -327,16 +331,16 @@ router.post("/dev/seed", requireAuth, async (req, res): Promise<void> => {
   res.json({
     message: "Demo workspace seeded successfully — 3 businesses created",
     businesses: [
-      { name: salon.name,  slug: salon.slug,  category: "Hair & Wellness", staff: 3, services: 5, customers: 8,  bookings: 15 },
-      { name: tattoo.name, slug: tattoo.slug, category: "Tattoo Studio",   staff: 2, services: 5, customers: 6,  bookings: 12 },
-      { name: gym.name,    slug: gym.slug,    category: "Personal Training",staff: 2, services: 5, customers: 6,  bookings: 14 },
+      { id: salon.id, name: salon.name, slug: salon.slug, category: "Hair & Wellness", staff: 3, services: 5, customers: 8, bookings: 15 },
+      { id: tattoo.id, name: tattoo.name, slug: tattoo.slug, category: "Tattoo Studio", staff: 2, services: 5, customers: 6, bookings: 12 },
+      { id: gym.id, name: gym.name, slug: gym.slug, category: "Personal Training", staff: 2, services: 5, customers: 6, bookings: 14 },
     ],
   });
 });
 
 router.delete("/dev/seed", requireAuth, async (req, res): Promise<void> => {
   if (process.env.NODE_ENV === "production") {
-    res.status(403).json({ error: "Wipe not available in production" });
+    sendError(res, req, 403, "Wipe not available in production");
     return;
   }
 
@@ -357,6 +361,89 @@ router.delete("/dev/seed", requireAuth, async (req, res): Promise<void> => {
     message: `Wiped ${businessIds.length} business${businessIds.length === 1 ? "" : "es"} and all related data`,
     deleted: businessIds.length,
   });
+});
+
+/**
+ * Issue a short-lived sim bearer token for a demo business.
+ * Only works in development. Requires the business to have a seeded owner.
+ */
+router.post("/dev/sim-token", async (req, res): Promise<void> => {
+  if (process.env.NODE_ENV !== "development") {
+    res.status(404).json({ error: "Not available" });
+    return;
+  }
+  const businessId = (req.body?.businessId as string | undefined)?.trim();
+  if (!businessId) {
+    res.status(400).json({ error: "businessId required" });
+    return;
+  }
+  const userId = await getSimOwnerForBusiness(businessId);
+  if (!userId) {
+    res.status(404).json({ error: "No owner found for business" });
+    return;
+  }
+  const token = buildSimToken(userId, businessId);
+  res.json({ token, userId, businessId });
+});
+
+router.post("/dev/meta/inbound", requireAuth, async (req, res): Promise<void> => {
+  if (process.env.NODE_ENV === "production" && process.env["META_DEV_SIMULATE"] !== "true") {
+    sendError(res, req, 404, "Not available");
+    return;
+  }
+  const businessId = (req.body?.businessId as string | undefined)?.trim();
+  const channel = (req.body?.channel as string | undefined) ?? "WHATSAPP";
+  const from = (req.body?.from as string | undefined)?.trim() ?? "+353871234567";
+  const text = (req.body?.text as string | undefined)?.trim() ?? "Hello";
+  const displayName = (req.body?.displayName as string | undefined)?.trim();
+
+  if (!businessId) {
+    sendError(res, req, 400, "businessId required");
+    return;
+  }
+
+  const [biz] = await db.select().from(businessesTable).where(eq(businessesTable.id, businessId)).limit(1);
+  if (!biz) {
+    sendError(res, req, 404, "Business not found");
+    return;
+  }
+
+  const ch = await getMessagingChannels(businessId);
+  if (channel === "WHATSAPP" && !ch.whatsapp?.phoneNumberId) {
+    await updateMessagingChannels(businessId, {
+      whatsapp: { phoneNumberId: "dev_wa_phone_id", displayPhone: "+353 87 123 4567" },
+    });
+  }
+  if (channel === "INSTAGRAM" && !ch.instagram?.pageId) {
+    await updateMessagingChannels(businessId, {
+      instagram: { pageId: "dev_ig_page_id" },
+    });
+  }
+
+  const refreshed = await getMessagingChannels(businessId);
+
+  const inbound =
+    channel === "INSTAGRAM"
+      ? {
+          channel: "INSTAGRAM" as const,
+          businessLookup: { instagramPageId: refreshed.instagram!.pageId },
+          externalParticipantId: from,
+          externalMessageId: `sim_ig_${Date.now()}`,
+          text,
+          displayName,
+        }
+      : {
+          channel: "WHATSAPP" as const,
+          businessLookup: { whatsappPhoneNumberId: refreshed.whatsapp!.phoneNumberId },
+          externalParticipantId: from.replace(/\D/g, ""),
+          externalMessageId: `sim_wa_${Date.now()}`,
+          text,
+          displayName,
+        };
+
+  process.env["META_DEV_SIMULATE"] = "true";
+  const result = await processInboundMetaMessage(inbound);
+  res.json(result);
 });
 
 export default router;

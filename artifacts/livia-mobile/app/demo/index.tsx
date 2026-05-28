@@ -10,6 +10,7 @@
 
 import { Feather } from "@expo/vector-icons";
 import { Link } from "expo-router";
+import { asHref } from "@/lib/navigation";
 import React from "react";
 import {
   Pressable,
@@ -19,6 +20,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { AuroraHalo } from "@/components/brand/AuroraHalo";
 import { aurora } from "@/constants/colors";
 import { fonts, type } from "@/constants/typography";
 import { useColors } from "@/hooks/useColors";
@@ -33,13 +35,11 @@ interface PersonaCard {
 }
 
 const PERSONAS: PersonaCard[] = [
-  { id: "founder",      displayName: "Aoife Brennan",    roleLabel: "Founder · 3 salons",    tease: "Three salons before the first coffee. One glance.", accent: "#d9c39a", icon: "star" },
-  { id: "owner",        displayName: "Sarah Kavanagh",   roleLabel: "Owner · single salon",  tease: "The cockpit. Your day, alive in one screen.",       accent: aurora.cyan,  icon: "grid" },
+  { id: "org_admin",    displayName: "Aoife Brennan",    roleLabel: "Org admin · 3 locations", tease: "Every location before the first coffee. One glance.", accent: "#d9c39a", icon: "star" },
+  { id: "owner",        displayName: "Sarah Kavanagh",   roleLabel: "Single-shop owner",  tease: "The cockpit. Your day, alive in one screen.",       accent: aurora.cyan,  icon: "grid" },
   { id: "manager",      displayName: "Áine Connolly",    roleLabel: "Manager · ADMIN",       tease: "Approvals queue. No money, just judgement calls.",  accent: aurora.violet,icon: "shield" },
-  { id: "staff-senior", displayName: "Lara McCarthy",    roleLabel: "Senior stylist",        tease: "Your day. Just yours. Countdown to the next chair.", accent: aurora.mint,  icon: "sun" },
-  { id: "staff-junior", displayName: "Tomás Ó Briain",   roleLabel: "Junior stylist",        tease: "Quiet Tuesday. We've got you — walk-ins on the way.", accent: "#fbbf24",   icon: "feather" },
+  { id: "staff",        displayName: "Lara McCarthy",    roleLabel: "Staff · your chair",    tease: "Your day. Just yours. Countdown to the next chair.", accent: aurora.mint,  icon: "sun" },
   { id: "receptionist", displayName: "Bríd Murphy",      roleLabel: "Front desk",            tease: "The desk view. Every chair, every staff, one wall.", accent: "#818cf8",   icon: "headphones" },
-  { id: "customer",     displayName: "Sinéad Walsh",     roleLabel: "Customer · regular",    tease: "What your customer sees. Booking, wallet pass, reminder.", accent: "#fb7185", icon: "heart" },
 ];
 
 export default function MobileDemoLauncher() {
@@ -47,13 +47,13 @@ export default function MobileDemoLauncher() {
   const insets = useSafeAreaInsets();
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]} testID="mobile-demo-launcher">
+      <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
+        <AuroraHalo tone="primary" size={440} intensity={0.8} style={{ top: -100, left: -60 }} />
+      </View>
       <ScrollView
         contentContainerStyle={{ paddingTop: insets.top + 24, paddingBottom: insets.bottom + 32, paddingHorizontal: 20 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Aurora ambience tucked behind the cards */}
-        <View pointerEvents="none" style={[styles.halo, { backgroundColor: aurora.violet, opacity: 0.18 }]} />
-        <View pointerEvents="none" style={[styles.halo2, { backgroundColor: aurora.cyan, opacity: 0.15 }]} />
 
         {/* Hero */}
         <View style={[styles.tag, { borderColor: colors.border, backgroundColor: colors.card }]}>
@@ -74,7 +74,7 @@ export default function MobileDemoLauncher() {
         {/* Cards */}
         <View style={{ gap: 12, marginTop: 28 }}>
           {PERSONAS.map((p) => (
-            <Link key={p.id} href={`/demo/${p.id}` as any} asChild>
+            <Link key={p.id} href={asHref(`/demo/${p.id}`)} asChild>
               <Pressable
                 testID={`mobile-demo-card-${p.id}`}
                 style={({ pressed }) => [

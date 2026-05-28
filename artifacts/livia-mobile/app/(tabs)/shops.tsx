@@ -1,116 +1,289 @@
 import { Feather } from "@expo/vector-icons";
-import React from "react";
-import { Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useRouter } from "expo-router";
+import React, { useCallback } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AuroraHalo } from "@/components/brand/AuroraHalo";
-import { LiviaWordmark } from "@/components/brand/LiviaWordmark";
+import { ChainPulseBadge, ChainPulseReason } from "@/components/ChainPulseBadge";
+import { EmptyState } from "@/components/EmptyState";
+import { OperationalScreen } from "@/components/OperationalScreen";
 import { aurum } from "@/constants/colors";
 import { elevation } from "@/constants/elevation";
 import { fonts, type } from "@/constants/typography";
 import { useBusiness } from "@/contexts/BusinessContext";
+import { useChainRollup } from "@/hooks/useChainRollup";
 import { useColors } from "@/hooks/useColors";
+import { useContentInsets } from "@/hooks/useContentInsets";
+import { useHaptics } from "@/hooks/useHaptics";
+import { asHref } from "@/lib/navigation";
+import type { ChainShopRollup } from "@/lib/chain-rollup";
 
-const SHOP_DEMO = [
-  { name: "Aoife & Co. — Dublin", city: "Dublin 2", today: 18, revenue: "€1,240", util: "86%", trend: "up" as const },
-  { name: "Aoife & Co. — Cork", city: "Cork City", today: 12, revenue: "€880", util: "71%", trend: "flat" as const },
-  { name: "Aoife & Co. — Galway", city: "Galway", today: 9, revenue: "€540", util: "58%", trend: "down" as const },
-];
+function ShopRollupCard({
+  shop,
+  isActive,
+  onOpen,
+}: {
+  shop: ChainShopRollup;
+  isActive: boolean;
+  onOpen: () => void;
+}) {
+  const colors = useColors();
+  return (
+    <Pressable
+      onPress={onOpen}
+      style={({ pressed }) => [
+        styles.card,
+        {
+          backgroundColor: colors.card,
+          borderColor: isActive ? aurum.champagne + "55" : colors.border,
+        },
+        elevation.resting,
+        pressed && { opacity: 0.92 },
+      ]}
+      accessibilityRole="button"
+      accessibilityLabel={`Open ${shop.name}`}
+      testID={`shop-card-${shop.businessId}`}
+    >
+      <View style={{ flex: 1, gap: 6 }}>
+        <View style={styles.cardTop}>
+          <Text style={[styles.cardName, { color: colors.foreground }]} numberOfLines={1}>
+            {shop.name}
+          </Text>
+          <ChainPulseBadge status={shop.pulseStatus} />
+        </View>
+        {shop.city ? (
+          <Text style={[styles.cardMeta, { color: colors.mutedForeground }]}>{shop.city}</Text>
+        ) : null}
+        <Text style={[styles.cardStats, { color: colors.mutedForeground }]}>
+          {shop.todayBookings} today · {shop.pendingBookings} pending · {shop.openConversations} inbox
+        </Text>
+        <ChainPulseReason reason={shop.pulseReason} />
+      </View>
+      {isActive ? (
+        <Text style={[styles.activePill, { color: aurum.champagne }]}>Active</Text>
+      ) : (
+        <Feather name="arrow-right" size={18} color={aurum.champagne} />
+      )}
+    </Pressable>
+  );
+}
 
 export default function ShopsScreen() {
   const colors = useColors();
+  const router = useRouter();
   const insets = useSafeAreaInsets();
+  const haptics = useHaptics();
+  const { horizontalPad, maxContentWidth } = useContentInsets();
   const { businesses, currentBusiness, setCurrentBusiness } = useBusiness();
-  const topPad = Platform.OS === "web" ? 67 : insets.top;
+  const useRollup = businesses.length >= 2;
+  const { rollup, loading, reload } = useChainRollup(useRollup);
 
-  const realRows = businesses.length > 0 ? businesses : null;
+  const openShop = useCallback(
+    (businessId: string) => {
+      const biz = businesses.find((b) => b.id === businessId);
+      if (biz) setCurrentBusiness(biz);
+      haptics.selection();
+      router.push(asHref("/"));
+    },
+    [businesses, haptics, router, setCurrentBusiness],
+  );
+
+  const shops = rollup?.shops ?? [];
+  const briefing = rollup?.founderBriefingLine;
 
   return (
-    <ScrollView
-      style={[styles.root, { backgroundColor: colors.background }]}
-      contentContainerStyle={[styles.content, { paddingTop: topPad + 12 }]}
-      showsVerticalScrollIndicator={false}
+    <OperationalScreen
+      eyebrow="Your rooms"
+      title="Glance"
+      subtitle={
+        briefing ??
+        (businesses.length > 0
+          ? `${businesses.length} location${businesses.length === 1 ? "" : "s"} on this account`
+          : "When you add locations, pulse and inbox load appear here.")
+      }
+      refreshing={loading}
+      onRefresh={
+        useRollup
+          ? () => {
+              haptics.tap();
+              void reload();
+            }
+          : undefined
+      }
+      contentStyle={{
+        paddingHorizontal: horizontalPad,
+        maxWidth: maxContentWidth,
+        alignSelf: maxContentWidth ? "center" : undefined,
+        width: maxContentWidth ? "100%" : undefined,
+        paddingBottom: 140,
+        gap: 12,
+      }}
     >
-      <View pointerEvents="none" style={styles.glowWrap}>
-        <AuroraHalo tone="ambient" size={420} style={{ top: -160, left: -100 }} intensity={0.7} />
-      </View>
 
-      <View style={styles.headerBlock}>
-        <LiviaWordmark size="sm" color={colors.foreground} />
-        <Text style={[styles.eyebrow, { color: colors.mutedForeground }]}>Your rooms</Text>
-        <Text style={[styles.title, { color: colors.foreground }]}>Shops</Text>
-        <Text style={[styles.sub, { color: colors.mutedForeground }]}>
-          {realRows ? `${realRows.length} business${realRows.length === 1 ? "" : "es"}` : "Three rooms, one quiet read."}
-        </Text>
-      </View>
+      {rollup && rollup.shopsNeedingAttention > 0 ? (
+        <View
+          style={[
+            styles.banner,
+            { backgroundColor: colors.destructive + "14", borderColor: colors.destructive + "33" },
+          ]}
+        >
+          <Feather name="alert-circle" size={16} color={colors.destructive} />
+          <Text style={[styles.bannerText, { color: colors.foreground }]}>
+            {rollup.shopsNeedingAttention} shop{rollup.shopsNeedingAttention === 1 ? "" : "s"} need
+            attention
+          </Text>
+        </View>
+      ) : null}
 
-      {realRows
-        ? realRows.map((b) => {
+      {(rollup?.alerts?.length ?? 0) > 0 ? (
+        <View style={[styles.alertsBlock, { borderColor: colors.destructive + "44" }]}>
+          <Text style={[styles.alertsTitle, { color: colors.foreground }]}>Cross-shop alerts</Text>
+          {rollup!.alerts!.map((a, i) => (
+            <Pressable
+              key={`${a.businessId}-${a.code}`}
+              onPress={() => openShop(a.businessId)}
+              style={[
+                styles.alertRow,
+                i > 0 ? { borderTopWidth: StyleSheet.hairlineWidth, borderColor: colors.border } : null,
+              ]}
+            >
+              <Text style={[styles.alertShop, { color: colors.foreground }]}>{a.shopName}</Text>
+              <Text style={[styles.alertMsg, { color: colors.mutedForeground }]} numberOfLines={2}>
+                {a.message}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
+
+      {rollup ? (
+        <View style={[styles.summaryRow, { borderColor: colors.border }]}>
+          <Text style={[styles.summaryStat, { color: colors.foreground }]}>
+            {rollup.bookingsThisWeek}
+          </Text>
+          <Text style={[styles.summaryLabel, { color: colors.mutedForeground }]}>bookings this week</Text>
+          <Text style={[styles.summaryDot, { color: colors.mutedForeground }]}>·</Text>
+          <Text style={[styles.summaryStat, { color: colors.foreground }]}>
+            {rollup.completedThisWeek}
+          </Text>
+          <Text style={[styles.summaryLabel, { color: colors.mutedForeground }]}>completed</Text>
+        </View>
+      ) : null}
+
+      {loading && useRollup && !rollup ? (
+        <ActivityIndicator color={colors.primary} style={{ marginTop: 24 }} />
+      ) : null}
+
+      {useRollup && shops.length > 0
+        ? shops.map((shop) => (
+            <ShopRollupCard
+              key={shop.businessId}
+              shop={shop}
+              isActive={shop.businessId === currentBusiness?.id}
+              onOpen={() => openShop(shop.businessId)}
+            />
+          ))
+        : null}
+
+      {!useRollup && businesses.length === 0 ? (
+        <EmptyState
+          icon="grid"
+          title="No businesses yet"
+          subtitle="Finish onboarding or accept an invite to see your locations here."
+        />
+      ) : null}
+
+      {!useRollup
+        ? businesses.map((b) => {
             const isActive = b.id === currentBusiness?.id;
             return (
               <View
                 key={b.id}
                 style={[
                   styles.card,
-                  { backgroundColor: colors.card, borderColor: isActive ? aurum.champagne + "55" : colors.border },
+                  {
+                    backgroundColor: colors.card,
+                    borderColor: isActive ? aurum.champagne + "55" : colors.border,
+                  },
                   elevation.resting,
                 ]}
               >
-                <View style={[styles.dot, { backgroundColor: isActive ? aurum.champagne : colors.mutedForeground }]} />
+                <View
+                  style={[
+                    styles.dot,
+                    { backgroundColor: isActive ? aurum.champagne : colors.mutedForeground },
+                  ]}
+                />
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.cardName, { color: colors.foreground }]} numberOfLines={1}>
                     {b.name}
                   </Text>
                   {b.slug ? (
-                    <Text style={[styles.cardSub, { color: colors.mutedForeground }]}>livia.io/b/{b.slug}</Text>
+                    <Text style={[styles.cardMeta, { color: colors.mutedForeground }]}>
+                      livia.io/b/{b.slug}
+                    </Text>
                   ) : null}
                 </View>
                 {!isActive ? (
-                  <Feather name="arrow-right" size={18} color={aurum.champagne} onPress={() => setCurrentBusiness(b)} />
+                  <Pressable onPress={() => setCurrentBusiness(b)} hitSlop={8}>
+                    <Feather name="arrow-right" size={18} color={aurum.champagne} />
+                  </Pressable>
                 ) : (
                   <Text style={[styles.activePill, { color: aurum.champagne }]}>Active</Text>
                 )}
               </View>
             );
           })
-        : SHOP_DEMO.map((s) => (
-            <View
-              key={s.name}
-              style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }, elevation.resting]}
-            >
-              <View style={[styles.dot, { backgroundColor: aurum.champagne }]} />
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.cardName, { color: colors.foreground }]} numberOfLines={1}>
-                  {s.name}
-                </Text>
-                <Text style={[styles.cardSub, { color: colors.mutedForeground }]}>
-                  {s.city} · {s.today} today · {s.revenue} · {s.util} util
-                </Text>
-              </View>
-              <Feather
-                name={s.trend === "up" ? "trending-up" : s.trend === "down" ? "trending-down" : "minus"}
-                size={16}
-                color={s.trend === "up" ? "#34d399" : s.trend === "down" ? "#fb7185" : colors.mutedForeground}
-              />
-            </View>
-          ))}
-
-      {!realRows ? (
-        <Text style={[styles.footnote, { color: colors.mutedForeground }]}>
-          Demo data shown — sign in as a real founder with multi-shop memberships to see live numbers.
-        </Text>
-      ) : null}
-    </ScrollView>
+        : null}
+    </OperationalScreen>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  content: { paddingHorizontal: 16, paddingBottom: 140, gap: 12 },
+  content: { paddingBottom: 140, gap: 12 },
   glowWrap: { position: "absolute", top: 0, left: 0, right: 0, height: 320, overflow: "hidden" },
-  headerBlock: { gap: 4, marginBottom: 4 },
-  eyebrow: { ...type.eyebrow, fontSize: 11 },
-  title: { fontFamily: fonts.serifMedium, fontSize: 38, lineHeight: 44, letterSpacing: -0.6 },
-  sub: { ...type.body, fontSize: 14, marginTop: 2 },
+  banner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 12,
+  },
+  bannerText: { ...type.body, fontSize: 14, flex: 1 },
+  alertsBlock: {
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 12,
+    gap: 8,
+    marginBottom: 4,
+  },
+  alertsTitle: { fontFamily: fonts.bodySemi, fontSize: 14 },
+  alertRow: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: 8,
+    gap: 2,
+  },
+  alertShop: { fontFamily: fonts.bodySemi, fontSize: 13 },
+  alertMsg: { ...type.caption, fontSize: 12 },
+  summaryRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "baseline",
+    gap: 6,
+    paddingVertical: 8,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    marginBottom: 4,
+  },
+  summaryStat: { fontFamily: fonts.bodySemi, fontSize: 18 },
+  summaryLabel: { ...type.caption, fontSize: 12 },
+  summaryDot: { fontSize: 14 },
   card: {
     flexDirection: "row",
     alignItems: "center",
@@ -119,9 +292,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 14,
   },
+  cardTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
   dot: { width: 8, height: 8, borderRadius: 8 },
-  cardName: { fontFamily: fonts.bodySemi, fontSize: 15 },
-  cardSub: { ...type.caption, fontSize: 12, marginTop: 2 },
+  cardName: { fontFamily: fonts.bodySemi, fontSize: 15, flex: 1 },
+  cardMeta: { ...type.caption, fontSize: 12 },
+  cardStats: { ...type.caption, fontSize: 12 },
   activePill: { ...type.eyebrow, fontSize: 10, letterSpacing: 0.6 },
-  footnote: { ...type.caption, fontSize: 11, textAlign: "center", marginTop: 16, opacity: 0.7 },
 });

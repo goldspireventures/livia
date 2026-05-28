@@ -12,7 +12,7 @@ import {
 import { db, businessesTable, type Business, type Booking } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { sendAiEmail } from "./ai-outbound.service";
-import { AI_DISCLOSURE } from "@workspace/ai-disclosure";
+import { policiesFromBusiness } from "./policies.service";
 import { logger } from "../lib/logger";
 
 interface EnrichedBooking extends Booking {
@@ -51,6 +51,7 @@ function buildContext(args: {
   // Plain body — sendAiEmail() runs composeAiEmailBody() once on this
   // text before persisting / sending so the Art. 50 disclosure is added
   // exactly once. Pre-composing here would double-print the disclosure.
+  const policies = policiesFromBusiness(business);
   const bodyText = `Hi ${customerFirstName(booking.customer)},\n\nYour booking with ${business.name} is set:\n${booking.service.name}${booking.staff ? ` with ${booking.staff.displayName}` : ""}\n${startAtFormatted} · ${booking.service.durationMinutes} min`;
   return {
     businessName: business.name,
@@ -64,7 +65,7 @@ function buildContext(args: {
       : null,
     manageUrl: manageUrl(business, booking),
     bodyText,
-    disclosureLine: AI_DISCLOSURE.emailBlock(business.name),
+    disclosureLine: policies.aiDisclosure.emailBlock(business.name),
   };
 }
 

@@ -12,6 +12,7 @@ import {
 } from "../services/invitations.service";
 import { logger } from "../lib/logger";
 
+import { sendError } from "../lib/http-errors";
 const router: IRouter = Router();
 const getBizId = (param: string | string[]) =>
   Array.isArray(param) ? param[0] : param;
@@ -23,29 +24,32 @@ router.post(
   async (req, res): Promise<void> => {
     const userId = getUserId(req);
     const businessId = getBizId(req.params.businessId);
-    const { email, role, redirectUrl } = req.body ?? {};
+    const { email, role, deskRole, redirectUrl } = req.body ?? {};
 
     if (!email || typeof email !== "string") {
-      res.status(400).json({ error: "email is required" });
+      sendError(res, req, 400, "email is required");
       return;
     }
     if (role !== "ADMIN" && role !== "STAFF") {
-      res.status(400).json({ error: "role must be 'ADMIN' or 'STAFF'" });
+      sendError(res, req, 400, "role must be 'ADMIN' or 'STAFF'");
       return;
     }
 
     const biz = await getBusinessById(businessId);
     if (!biz) {
-      res.status(404).json({ error: "Business not found" });
+      sendError(res, req, 404, "Business not found");
       return;
     }
 
     try {
+      const desk =
+        deskRole === "reception" || deskRole === "manager" ? deskRole : undefined;
       const inv = await createInvitation({
         businessId,
         businessName: biz.name,
         email: email.trim().toLowerCase(),
         role: role as InvitableRole,
+        deskRole: role === "ADMIN" ? desk ?? "manager" : desk,
         inviterUserId: userId,
         redirectUrl,
       });
@@ -53,14 +57,11 @@ router.post(
     } catch (err) {
       const e = err as Error & { code?: string; status?: number };
       if (e.code === "CLERK_NOT_CONFIGURED") {
-        res.status(503).json({ error: e.message, code: e.code });
+        sendError(res, req, 503, e.message, { code: e.code });
         return;
       }
       logger.error({ err, businessId, email }, "createInvitation failed");
-      res.status(502).json({
-        error: e.message ?? "Could not create invitation",
-        code: "INVITATION_FAILED",
-      });
+      sendError(res, req, 502, e.message ?? "Could not create invitation", { code: "INVITATION_FAILED", });
     }
   },
 );

@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import {
   ACCENT_CLASSES,
-  FOUNDER_SHOPS,
+  ORG_ADMIN_SHOPS,
   OWNER_TODAY,
   STAFF_SENIOR_TODAY,
   STAFF_JUNIOR_TODAY,
@@ -156,10 +156,10 @@ function StatusDot({ status }: { status: PersonaBooking["status"] }) {
 
 // ────────────────────────── per-persona surfaces ──────────────────────────
 
-function FounderSurface({ persona }: { persona: Persona }) {
-  const totalToday = FOUNDER_SHOPS.reduce((s, x) => s + x.todayBookings, 0);
-  const totalRev = FOUNDER_SHOPS.reduce((s, x) => s + x.todayRevenueEur, 0);
-  const totalPending = FOUNDER_SHOPS.reduce((s, x) => s + x.pendingCount, 0);
+function OrgAdminSurface({ persona }: { persona: Persona }) {
+  const totalToday = ORG_ADMIN_SHOPS.reduce((s, x) => s + x.todayBookings, 0);
+  const totalRev = ORG_ADMIN_SHOPS.reduce((s, x) => s + x.todayRevenueEur, 0);
+  const totalPending = ORG_ADMIN_SHOPS.reduce((s, x) => s + x.pendingCount, 0);
   return (
     <ShowcaseFrame persona={persona}>
       <Hero persona={persona} />
@@ -178,7 +178,7 @@ function FounderSurface({ persona }: { persona: Persona }) {
         Three rooms · one quiet read
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {FOUNDER_SHOPS.map((s) => (
+        {ORG_ADMIN_SHOPS.map((s) => (
           <ShopGlanceCard key={s.id} shop={s} />
         ))}
       </div>
@@ -645,7 +645,7 @@ export default function Showcase() {
   }
 
   switch (persona.id) {
-    case "founder":      return <FounderSurface persona={persona} />;
+    case "org_admin":    return <OrgAdminSurface persona={persona} />;
     case "owner":        return <OwnerSurface persona={persona} />;
     case "manager":      return <ManagerSurface persona={persona} />;
     case "staff-senior": return <StaffSeniorSurface persona={persona} />;

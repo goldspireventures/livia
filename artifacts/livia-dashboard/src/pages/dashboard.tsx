@@ -11,27 +11,38 @@ import {
 } from "@workspace/api-client-react";
 import { useBusiness } from "@/lib/business-context";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatTime } from "@/lib/format";
+import { useFormat } from "@/lib/use-format";
 import {
-  AlarmClockOff,
-  Briefcase,
   Calendar,
-  CalendarCheck,
-  CalendarPlus,
-  CalendarX,
   Check,
-  CheckCircle2,
   Clock,
   Sparkles,
-  UserCog,
-  UserPlus,
   Users,
-  Wrench,
   X,
   Zap,
   type LucideIcon,
 } from "lucide-react";
+import { getActivityEventMeta } from "@/lib/activity-labels";
 import DemoDataControls from "@/components/demo-data-controls";
+import { PersonaRitualHeader } from "@/components/ritual/persona-ritual-header";
+import { OperatorMaturityBanner } from "@/components/operator-maturity-banner";
+import { RunningLateSheet } from "@/components/ops/running-late-sheet";
+import { LifecycleNudges } from "@/components/lifecycle/lifecycle-nudges";
+import { VerticalTodayInsights } from "@/components/vertical-today-insights";
+import { LivProposalsPanel } from "@/components/liv-proposals-panel";
+import { AccountantPreviewCard } from "@/components/accountant-preview-card";
+import { LivMomentsStrip } from "@/components/ritual/liv-moments-strip";
+import { LivIncidentsStrip } from "@/components/ritual/liv-incidents-strip";
+import { LivCommandHub } from "@/components/liv/liv-command-hub";
+import { VerticalHomeModules } from "@/components/dashboard/vertical-home-modules";
+import { PublicBookingIntakePanel } from "@/components/dashboard/public-booking-intake-panel";
+import { VisitFeedbackStrip } from "@/components/dashboard/visit-feedback-strip";
+import { LazyMount } from "@/components/lazy-mount";
+import { isDemoLoginEnabled, usePersona } from "@/lib/persona";
+import { useUser } from "@clerk/clerk-react";
+import { timeGreeting } from "@/lib/persona-rituals";
+import { invalidateOperationalState } from "@/lib/operational-cache";
+import { ActivationWelcome } from "@/components/activation/activation-welcome";
 
 // ------------ helpers ------------
 
@@ -53,14 +64,6 @@ function isSameDay(a: Date, b: Date): boolean {
   );
 }
 
-function formatHeaderDate(d: Date): string {
-  return new Intl.DateTimeFormat("en-US", {
-    weekday: "long",
-    month: "short",
-    day: "numeric",
-  }).format(d);
-}
-
 function customerName(c: { firstName?: string | null; lastName?: string | null; displayName?: string | null }): string {
   return (
     c.displayName ||
@@ -78,39 +81,14 @@ function initials(name: string): string {
     .join("");
 }
 
-interface EventMeta {
-  label: string;
-  Icon: LucideIcon;
-  color: string;
-}
-
-const EVENT_META: Record<string, EventMeta> = {
-  BOOKING_CREATED:    { label: "New booking created",         Icon: CalendarPlus,  color: "text-primary" },
-  BOOKING_CONFIRMED:  { label: "Booking confirmed",           Icon: CalendarCheck, color: "text-[hsl(var(--chart-2))]" },
-  BOOKING_CANCELLED:  { label: "Booking cancelled",           Icon: CalendarX,     color: "text-destructive" },
-  BOOKING_COMPLETED:  { label: "Booking completed",           Icon: CheckCircle2,  color: "text-[hsl(var(--chart-3))]" },
-  BOOKING_NO_SHOW:    { label: "Customer no-show",            Icon: CalendarX,     color: "text-muted-foreground" },
-  CUSTOMER_CREATED:   { label: "New customer added",          Icon: UserPlus,      color: "text-[hsl(var(--chart-1))]" },
-  CUSTOMER_UPDATED:   { label: "Customer profile updated",    Icon: UserCog,       color: "text-muted-foreground" },
-  STAFF_CREATED:      { label: "Staff member added",          Icon: UserPlus,      color: "text-primary" },
-  STAFF_UPDATED:      { label: "Staff member updated",        Icon: UserCog,       color: "text-muted-foreground" },
-  STAFF_DEACTIVATED:  { label: "Staff member deactivated",    Icon: UserCog,       color: "text-destructive" },
-  SERVICE_CREATED:    { label: "New service created",         Icon: Briefcase,     color: "text-primary" },
-  SERVICE_UPDATED:    { label: "Service updated",             Icon: Briefcase,     color: "text-muted-foreground" },
-  SERVICE_DEACTIVATED:{ label: "Service deactivated",         Icon: Briefcase,     color: "text-destructive" },
-  AVAILABILITY_UPDATED:{ label: "Availability schedule updated", Icon: Wrench,     color: "text-muted-foreground" },
-  TIME_OFF_CREATED:   { label: "Time off scheduled",          Icon: AlarmClockOff, color: "text-[hsl(var(--chart-4))]" },
-  TIME_OFF_REMOVED:   { label: "Time off removed",            Icon: AlarmClockOff, color: "text-muted-foreground" },
-};
-
-function getEventMeta(type: string): EventMeta {
-  return (
-    EVENT_META[type] ?? {
-      label: type.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()),
-      Icon: Clock,
-      color: "text-muted-foreground",
-    }
-  );
+function collapseActivityFeed<T extends { id: string; type: string }>(items: T[]): T[] {
+  const out: T[] = [];
+  for (const item of items) {
+    const prev = out[out.length - 1];
+    if (prev?.type === "BUSINESS_UPDATED" && item.type === "BUSINESS_UPDATED") continue;
+    out.push(item);
+  }
+  return out;
 }
 
 // Status → token-based color tuple. Uses chart vars so light/dark both work.
@@ -127,8 +105,6 @@ const STATUS_STYLE: Record<string, { dot: string; text: string; bg: string; bord
 const TL_START_HOUR = 8;
 const TL_END_HOUR = 20;
 const TL_HOURS = TL_END_HOUR - TL_START_HOUR; // 12 hours
-const TL_PX_PER_HOUR = 96;
-const TL_TRACK_WIDTH = TL_HOURS * TL_PX_PER_HOUR; // 1152px
 
 function pctForDate(d: Date): number {
   const h = d.getHours() + d.getMinutes() / 60;
@@ -141,8 +117,19 @@ function durationMinutes(start: Date, end: Date): number {
 
 // ------------ page ------------
 
+function shopScopedGreeting(firstName: string | null | undefined, shopName: string): string {
+  const t = timeGreeting();
+  const prefix =
+    t === "morning" ? "Good morning" : t === "afternoon" ? "Good afternoon" : "Good evening";
+  const name = firstName?.trim() || "there";
+  return `${prefix}, ${name} — here's ${shopName} today.`;
+}
+
 export default function DashboardPage() {
+  const { user } = useUser();
   const { business } = useBusiness();
+  const { kind: persona } = usePersona();
+  const { formatTime, formatHeaderDate } = useFormat();
   const qc = useQueryClient();
 
   const businessId = business?.id ?? "";
@@ -162,8 +149,7 @@ export default function DashboardPage() {
     mutation: {
       onSuccess: () => {
         if (!businessId) return;
-        qc.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey(businessId) });
-        qc.invalidateQueries({ queryKey: getListBookingsQueryKey(businessId) });
+        invalidateOperationalState(qc, businessId);
         qc.invalidateQueries({ queryKey: getGetActivityFeedQueryKey(businessId) });
       },
     },
@@ -210,6 +196,11 @@ export default function DashboardPage() {
   const pendingBookings = useMemo(
     () => todaysBookings.filter((b) => b.status === "PENDING").slice(0, 5),
     [todaysBookings]
+  );
+
+  const activityRows = useMemo(
+    () => collapseActivityFeed((activityFeed ?? []) as Array<{ id: string; type: string; createdAt: string }>),
+    [activityFeed],
   );
 
   // Group today's bookings by staff member to derive "Staff on shift"
@@ -318,26 +309,28 @@ export default function DashboardPage() {
           </p>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-card to-[hsl(var(--chart-1))]/10 p-8">
-            <div className="absolute -top-12 -right-12 h-48 w-48 rounded-full bg-primary/20 blur-3xl" />
-            <div className="relative">
-              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-[hsl(var(--chart-1))] mb-4 shadow-lg shadow-primary/30">
-                <Sparkles className="h-5 w-5 text-primary-foreground" />
+        <div className={`grid grid-cols-1 gap-4 ${isDemoLoginEnabled ? "lg:grid-cols-2" : ""}`}>
+          {isDemoLoginEnabled ? (
+            <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-card to-[hsl(var(--chart-1))]/10 p-8">
+              <div className="absolute -top-12 -right-12 h-48 w-48 rounded-full bg-primary/20 blur-3xl" />
+              <div className="relative">
+                <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-[hsl(var(--chart-1))] mb-4 shadow-lg shadow-primary/30">
+                  <Sparkles className="h-5 w-5 text-primary-foreground" />
+                </div>
+                <h2 className="text-xl font-semibold mb-2">See Livia in 5 seconds</h2>
+                <p className="text-sm text-muted-foreground mb-6 max-w-md">
+                  Load a demo workspace — hair, beauty, wellness, tattoo, and barber examples
+                  studio, and a personal training gym — pre-loaded with staff, services,
+                  customers, and 40+ bookings. Click around, take it apart, and break things
+                  freely.
+                </p>
+                <DemoDataControls variant="primary" />
+                <p className="text-[11px] text-muted-foreground mt-3 font-mono">
+                  Tip: try the public booking link in /settings → and chat with the AI.
+                </p>
               </div>
-              <h2 className="text-xl font-semibold mb-2">See Livia in 5 seconds</h2>
-              <p className="text-sm text-muted-foreground mb-6 max-w-md">
-                Load a demo workspace with 3 example businesses — a hair salon, a tattoo
-                studio, and a personal training gym — pre-loaded with staff, services,
-                customers, and 40+ bookings. Click around, take it apart, and break things
-                freely.
-              </p>
-              <DemoDataControls variant="primary" />
-              <p className="text-[11px] text-muted-foreground mt-3 font-mono">
-                Tip: try the public booking link in /settings → and chat with the AI.
-              </p>
             </div>
-          </div>
+          ) : null}
 
           <div className="rounded-2xl border border-border bg-card p-8">
             <h2 className="text-base font-semibold mb-4">Or build it yourself</h2>
@@ -368,7 +361,8 @@ export default function DashboardPage() {
                     </span>
                   </Link>
                   <p className="text-xs text-muted-foreground">
-                    Pick your URL slug, add a description, configure the AI assistant.
+                    Share <code className="text-[10px] bg-muted px-1 rounded">/b/{business?.slug}</code> on
+                    socials — customers book on your page, not a marketplace.
                   </p>
                 </div>
               </li>
@@ -377,7 +371,7 @@ export default function DashboardPage() {
                   3
                 </span>
                 <div>
-                  <Link href="/bookings/new">
+                  <Link href="/bookings?create=1">
                     <span className="font-medium hover:text-primary cursor-pointer">
                       Take your first booking
                     </span>
@@ -396,20 +390,95 @@ export default function DashboardPage() {
 
   return (
     <div
-      className={`flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 ${
+      className={`flex w-full min-w-0 max-w-6xl flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 ${
         showWelcomeSweep ? "welcome-sweep" : ""
       }`}
       style={{ fontFamily: "var(--app-font-sans)" }}
     >
-      {/* ============== Page header ============== */}
+      <ActivationWelcome />
+      <OperatorMaturityBanner />
+
+      {(persona === "owner" || persona === "manager" || persona === "org_admin") && (
+        <PersonaRitualHeader
+          variant="home"
+          showActions={persona !== "org_admin"}
+          showAlert={persona !== "org_admin"}
+          greeting={
+            persona === "org_admin"
+              ? shopScopedGreeting(
+                  user?.firstName ?? user?.fullName?.split(" ")[0],
+                  business?.name ?? "this shop",
+                )
+              : undefined
+          }
+          title={
+            persona === "org_admin"
+              ? `Today · ${business?.name ?? "this shop"}`
+              : persona === "owner"
+                ? "Today"
+                : `Today · ${business?.name ?? "this shop"}`
+          }
+          subtitle={
+            persona === "org_admin"
+              ? "This location's floor — switch shops from Glance when you need the chain view."
+              : undefined
+          }
+        />
+      )}
+
+      {(persona === "owner" || persona === "org_admin") && <LifecycleNudges compact />}
+
+      {(persona === "owner" || persona === "manager" || persona === "org_admin") && (
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <LivProposalsPanel />
+            <VerticalTodayInsights />
+          </div>
+          {(persona === "owner" || persona === "org_admin") && business?.id ? (
+            <PublicBookingIntakePanel businessId={business.id} />
+          ) : null}
+        </>
+      )}
+
+      {(persona === "owner" || persona === "manager" || persona === "org_admin") && (
+        <LivMomentsStrip />
+      )}
+
+      {(persona === "owner" || persona === "manager" || persona === "org_admin") && (
+        <LivIncidentsStrip />
+      )}
+
+      {(persona === "owner" || persona === "manager" || persona === "org_admin") && (
+        <div className="flex flex-wrap gap-2">
+          <RunningLateSheet />
+        </div>
+      )}
+
+      {(persona === "owner" || persona === "org_admin") && <AccountantPreviewCard />}
+
+      {/* Command hub stays available on /toolkit; dashboard keeps focus on operations. */}
+
+      {(persona === "owner" || persona === "manager" || persona === "org_admin") && (
+        <LazyMount minHeight={160}>
+          <VerticalHomeModules />
+        </LazyMount>
+      )}
+
+      {(persona === "owner" || persona === "manager" || persona === "org_admin") && (
+        <LazyMount minHeight={80}>
+          <VisitFeedbackStrip />
+        </LazyMount>
+      )}
+
+      {/* ============== Operational cockpit ============== */}
       <header className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between relative z-10">
         <div className="flex items-center gap-3 flex-wrap">
-          <h1
+          <h2
             className="text-base font-semibold tracking-tight"
             style={{ fontFamily: "var(--app-font-display)" }}
           >
-            Today's flight plan
-          </h1>
+            Flight plan
+          </h2>
           <span className="hidden md:inline-block w-1 h-1 rounded-full bg-border" />
           <span className="text-xs text-muted-foreground font-mono">
             {formatHeaderDate(now)} · {todayTotal} today · {summary?.pendingCount ?? 0} to confirm
@@ -431,7 +500,7 @@ export default function DashboardPage() {
 
       {/* ============== KPI strip + Action Queue ============== */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="lg:col-span-2 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
           <KpiTile
             label="Today's Bookings"
             value={summary?.todayBookings ?? 0}
@@ -463,6 +532,20 @@ export default function DashboardPage() {
             label="Total Customers"
             value={summary?.totalCustomers ?? 0}
             sub={`${summary?.weekBookings ?? 0} bookings this wk`}
+            loading={isLoadingSummary}
+          />
+          <KpiTile
+            label="Voice recovered"
+            value={
+              summary && (summary.voiceRecoveredValueEurCents ?? 0) > 0
+                ? `€${((summary.voiceRecoveredValueEurCents ?? 0) / 100).toFixed(0)}`
+                : "—"
+            }
+            sub={
+              summary
+                ? `${summary.voiceBookingsThisWeek ?? 0} voice bookings · €${((summary.voiceOutcomeShareEurCents ?? 0) / 100).toFixed(0)} share est.`
+                : "Liv answers your line"
+            }
             loading={isLoadingSummary}
           />
         </div>
@@ -545,20 +628,16 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div
-            className="relative overflow-x-auto bg-background/40"
+            className="relative w-full min-w-0 bg-background/40"
             style={{ height: `${64 + blocksAreaHeightPx + 16}px` }}
           >
-            <div
-              className="relative h-full"
-              style={{ width: `${TL_TRACK_WIDTH}px`, minWidth: "100%" }}
-            >
+            <div className="relative h-full w-full min-w-0">
               {/* Hour grid */}
               <div className="absolute inset-0 flex">
                 {Array.from({ length: TL_HOURS + 1 }).map((_, i) => (
                   <div
                     key={i}
-                    className="border-r border-dashed border-border/70 relative h-full"
-                    style={{ width: `${TL_PX_PER_HOUR}px`, flexShrink: 0 }}
+                    className="relative h-full min-w-0 flex-1 border-r border-dashed border-border/70"
                   >
                     <div className="absolute top-2 -left-3 text-[10px] font-mono text-muted-foreground bg-card px-1 z-10">
                       {String(TL_START_HOUR + i).padStart(2, "0")}:00
@@ -642,12 +721,16 @@ export default function DashboardPage() {
                 <Skeleton key={i} className="h-10 w-full" />
               ))}
             </div>
-          ) : !activityFeed || activityFeed.length === 0 ? (
+          ) : activityRows.length === 0 ? (
             <EmptyState icon={Clock} text="No recent activity yet." />
           ) : (
             <div className="flex flex-col">
-              {activityFeed.map((a) => {
-                const meta = getEventMeta(a.type);
+              {activityRows.map((a) => {
+                const meta = getActivityEventMeta(
+                  a.type,
+                  (business as { vertical?: string } | undefined)?.vertical,
+                  business?.category,
+                );
                 return (
                   <div
                     key={a.id}

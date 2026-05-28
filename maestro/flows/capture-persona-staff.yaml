@@ -1,0 +1,20 @@
+appId: ${MAESTRO_APP_ID}
+env:
+  PERSONA: staff
+---
+- runFlow: sign-in-demo.yaml
+- runFlow: helpers/switch-persona.yaml
+- takeScreenshot: e2e/visual-captures/mobile/staff-my-chair
+- tapOn: "Appointments"
+- takeScreenshot: e2e/visual-captures/mobile/staff-appointments
+- tapOn: "Clients"
+- takeScreenshot: e2e/visual-captures/mobile/staff-clients
+- tapOn: "More"
+- takeScreenshot: e2e/visual-captures/mobile/staff-more
+- tapOn:
+    id: "menu-settings"
+- takeScreenshot: e2e/visual-captures/mobile/staff-settings
+- back
+- tapOn:
+    id: "menu-request leave"
+- takeScreenshot: e2e/visual-captures/mobile/staff-time-off

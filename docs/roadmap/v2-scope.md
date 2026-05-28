@@ -1,6 +1,8 @@
 # v2 scope — verticals + UK + Nordics open
 
-**Status:** Lock-soft (2026-05-07). Target ship: 2027 H2 → 2028 H1. Acceptance: v1.5 → v2 graduation criteria in `v1.5-scope.md` + the additions below.
+**Status:** **Engineering closed** (2026-05-22) — commercial acceptance still requires founder proof. Target commercial ship: 2027 H2 → 2028 H1.
+
+> **Scope ledger:** [`../product/V2-EXPANDED-SCOPE.md`](../product/V2-EXPANDED-SCOPE.md) · **Close certificate:** [`../product/V2-ENGINEERING-CLOSED.md`](../product/V2-ENGINEERING-CLOSED.md) · **Boundary:** [ADR 0020](../adr/0020-v2-engineering-close-boundary.md) · **Your lane:** [`../product/FOUNDER-SHIP-LANE.md`](../product/FOUNDER-SHIP-LANE.md)
 
 ## v2 promise (one sentence)
 

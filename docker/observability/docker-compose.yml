@@ -1,0 +1,33 @@
+# Local Loki + Grafana for api-server JSON logs.
+# Usage (repo root):
+#   docker compose -f docker/observability/docker-compose.yml up -d
+#   LOKI_PUSH_URL=http://127.0.0.1:3100/loki/api/v1/push pnpm dev:api
+#
+# Grafana: http://127.0.0.1:3000 (admin / admin) — add Loki datasource http://loki:3100
+
+services:
+  loki:
+    image: grafana/loki:3.4.2
+    command: -config.file=/etc/loki/local-config.yaml
+    ports:
+      - "3100:3100"
+    volumes:
+      - loki-data:/loki
+
+  grafana:
+    image: grafana/grafana:11.5.2
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/provisioning/dashboards/json:/etc/grafana/provisioning/dashboards/json
+    depends_on:
+      - loki
+
+volumes:
+  loki-data:

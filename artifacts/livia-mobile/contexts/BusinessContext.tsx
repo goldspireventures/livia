@@ -2,6 +2,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useGetMyBusinesses } from "@workspace/api-client-react";
 import type { Business } from "@workspace/api-client-react";
 import { useSegments } from "expo-router";
+import { businessAllowedForDemo, getDemoSession, type DemoSession } from "@/lib/demo-session";
+import { isDemoRoute } from "@/lib/navigation";
 import React, {
   ReactNode,
   createContext,
@@ -16,13 +18,16 @@ interface BusinessContextValue {
   currentBusiness: Business | null;
   isLoading: boolean;
   isError: boolean;
+  /** Set when signed in via demo ticket (demo-*@livia.io). */
+  demoSession: DemoSession | null;
+  isDemoAccount: boolean;
   setCurrentBusiness: (business: Business) => void;
-  refetch: () => void;
+  refetch: () => Promise<{ data: Business[] | undefined }>;
 }
 
 const BusinessContext = createContext<BusinessContextValue | null>(null);
 // ADR 0010 — unified key across web + mobile. Web uses the same string in
-// `artifacts/livia-dashboard/src/lib/business-context.tsx` so a founder who
+// `artifacts/livia-dashboard/src/lib/business-context.tsx` so an org admin who
 // switches business on her phone sees the change reflected next time she
 // logs into the dashboard (and vice versa). Two legacy keys are migrated.
 const STORAGE_KEY = "livia.currentBusinessId";
@@ -32,6 +37,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
   const [currentBusinessId, setCurrentBusinessId] = useState<string | null>(
     null
   );
+  const [demoSession, setDemoSession] = useState<DemoSession | null>(null);
 
   // The /demo surface is a public, mocked walk-through (the "hotel principle"
   // showcase). It must not hit any tenant-aware endpoint, otherwise an
@@ -39,16 +45,24 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
   // boundary out of the demo. Disable the query while the user is inside the
   // demo route tree.
   const segments = useSegments();
-  const inDemo = segments[0] === "demo";
+  const inDemo = isDemoRoute(segments);
 
   const {
-    data: businesses = [],
+    data,
     isLoading,
     isError,
     refetch,
-  } = useGetMyBusinesses({ query: { enabled: !inDemo } } as Parameters<
-    typeof useGetMyBusinesses
-  >[0]);
+  } = useGetMyBusinesses({ query: { enabled: !inDemo } as never });
+
+  const rawBusinesses: Business[] = data ?? [];
+  const businesses = useMemo(() => {
+    if (!demoSession?.businessSlugs?.length) return rawBusinesses;
+    return rawBusinesses.filter((b) => businessAllowedForDemo(b.slug, demoSession));
+  }, [rawBusinesses, demoSession]);
+
+  useEffect(() => {
+    void getDemoSession().then(setDemoSession);
+  }, []);
 
   useEffect(() => {
     // One-shot migration: walk the legacy keys (in priority order) and copy
@@ -74,12 +88,26 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (businesses.length > 0 && !currentBusinessId) {
-      const first = businesses[0];
-      setCurrentBusinessId(first.id);
-      AsyncStorage.setItem(STORAGE_KEY, first.id);
+    if (businesses.length === 0) return;
+    const preferred: Business | undefined =
+      (demoSession?.businessId
+        ? businesses.find((b) => b.id === demoSession.businessId)
+        : undefined) ??
+      (demoSession?.primaryBusinessSlug
+        ? businesses.find((b) => b.slug === demoSession.primaryBusinessSlug)
+        : undefined) ??
+      businesses[0];
+    if (!preferred) return;
+    if (!currentBusinessId) {
+      setCurrentBusinessId(preferred.id);
+      AsyncStorage.setItem(STORAGE_KEY, preferred.id);
+      return;
     }
-  }, [businesses, currentBusinessId]);
+    if (!businesses.some((b) => b.id === currentBusinessId)) {
+      setCurrentBusinessId(preferred.id);
+      AsyncStorage.setItem(STORAGE_KEY, preferred.id);
+    }
+  }, [businesses, currentBusinessId, demoSession]);
 
   const currentBusiness = useMemo(
     () => businesses.find((b) => b.id === currentBusinessId) ?? businesses[0] ?? null,
@@ -91,16 +119,23 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     AsyncStorage.setItem(STORAGE_KEY, business.id);
   };
 
+  const refetchBusinesses = async () => {
+    const result = await refetch();
+    return { data: result.data };
+  };
+
   const value = useMemo(
     () => ({
       businesses,
       currentBusiness,
       isLoading,
       isError,
+      demoSession,
+      isDemoAccount: !!demoSession,
       setCurrentBusiness,
-      refetch,
+      refetch: refetchBusinesses,
     }),
-    [businesses, currentBusiness, isLoading, isError, refetch]
+    [businesses, currentBusiness, isLoading, isError, demoSession, refetch]
   );
 
   return (

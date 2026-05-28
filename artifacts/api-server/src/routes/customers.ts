@@ -17,7 +17,10 @@ import {
 } from "../services/customers.service";
 import { logEvent } from "../services/events.service";
 import { EventType } from "@workspace/db";
+import { mergeChannelIdentity } from "../services/channel-identities.service";
+import { appendHumanAudit } from "../lib/audit";
 
+import { sendError } from "../lib/http-errors";
 const router: IRouter = Router();
 const getBizId = (param: string | string[]) => Array.isArray(param) ? param[0] : param;
 
@@ -84,13 +87,13 @@ router.get(
         ? await isCustomerServedByStaff(businessId, customerId, ctx.actingStaffId)
         : false;
       if (!ok) {
-        res.status(404).json({ error: "Customer not found" });
+        sendError(res, req, 404, "Customer not found");
         return;
       }
     }
 
     const c = await getCustomerDetail(businessId, customerId);
-    if (!c) { res.status(404).json({ error: "Customer not found" }); return; }
+    if (!c) { sendError(res, req, 404, "Customer not found"); return; }
     res.json(c);
   },
 );
@@ -106,9 +109,131 @@ router.patch(
     const businessId = getBizId(req.params.businessId);
     const customerId = getBizId(req.params.customerId);
     const c = await updateCustomer(businessId, customerId, req.body);
-    if (!c) { res.status(404).json({ error: "Customer not found" }); return; }
+    if (!c) { sendError(res, req, 404, "Customer not found"); return; }
     await logEvent({ type: EventType.CUSTOMER_UPDATED, businessId, userId, entityType: "customer", entityId: customerId });
     res.json(c);
+  },
+);
+
+router.post(
+  "/businesses/:businessId/customers/:customerId/merge-identity",
+  requireAuth,
+  requireRole("ADMIN"),
+  async (req, res): Promise<void> => {
+    const userId = getUserId(req);
+    const businessId = getBizId(req.params.businessId);
+    const customerId = getBizId(req.params.customerId);
+    const identityId = String(req.body?.identityId ?? "");
+    if (!identityId) {
+      sendError(res, req, 400, "identityId is required");
+      return;
+    }
+    const result = await mergeChannelIdentity({
+      businessId,
+      identityId,
+      targetCustomerId: customerId,
+    });
+    if (!result.ok) {
+      sendError(res, req, 400, result.error ?? "Merge failed");
+      return;
+    }
+    await appendHumanAudit(
+      businessId,
+      userId,
+      "human.customer.merge_identity",
+      "customer",
+      customerId,
+      { identityId },
+    );
+    const c = await getCustomerDetail(businessId, customerId);
+    res.json(c);
+  },
+);
+
+router.get(
+  "/businesses/:businessId/customers/:customerId/pets",
+  requireAuth,
+  requireRole("STAFF"),
+  async (req, res): Promise<void> => {
+    const businessId = getBizId(req.params.businessId);
+    const customerId = getBizId(req.params.customerId);
+    const { listPetsForCustomer } = await import("../services/pets.service");
+    const pets = await listPetsForCustomer(businessId, customerId);
+    res.json({ pets });
+  },
+);
+
+router.post(
+  "/businesses/:businessId/customers/:customerId/pets",
+  requireAuth,
+  requireRole("STAFF"),
+  async (req, res): Promise<void> => {
+    const businessId = getBizId(req.params.businessId);
+    const customerId = getBizId(req.params.customerId);
+    const { name, species, breed, behaviourNotes, allergyNotes, vaccinationNotes } = req.body;
+    if (!name || typeof name !== "string") {
+      sendError(res, req, 400, "name is required");
+      return;
+    }
+    const { createPet } = await import("../services/pets.service");
+    const pet = await createPet(businessId, customerId, {
+      name,
+      species,
+      breed,
+      behaviourNotes,
+      allergyNotes,
+      vaccinationNotes,
+    });
+    res.status(201).json(pet);
+  },
+);
+
+router.get(
+  "/businesses/:businessId/customers/:customerId/liv-memory",
+  requireAuth,
+  requireRole("STAFF"),
+  async (req, res): Promise<void> => {
+    const businessId = getBizId(req.params.businessId);
+    const customerId = getBizId(req.params.customerId);
+    const { listLivMemoryForEntity } = await import("../services/liv-memory.service");
+    res.json({
+      data: await listLivMemoryForEntity({
+        businessId,
+        entityType: "customer",
+        entityId: customerId,
+      }),
+    });
+  },
+);
+
+router.post(
+  "/businesses/:businessId/customers/:customerId/liv-memory",
+  requireAuth,
+  requireRole("ADMIN"),
+  async (req, res): Promise<void> => {
+    const userId = getUserId(req);
+    const businessId = getBizId(req.params.businessId);
+    const customerId = getBizId(req.params.customerId);
+    const content = String(req.body?.content ?? "").trim();
+    const kind = (req.body?.kind as string) ?? "note";
+    if (!content) {
+      sendError(res, req, 400, "content is required");
+      return;
+    }
+    const { appendLivMemory } = await import("../services/liv-memory.service");
+    const row = await appendLivMemory({
+      businessId,
+      entityType: "customer",
+      entityId: customerId,
+      kind: kind === "preference" || kind === "ritual" ? kind : "note",
+      content,
+      createdBy: "staff",
+    });
+    await appendHumanAudit(businessId, userId, "human.liv.memory.append", "customer", customerId, {
+      memoryId: row.id,
+      kind: row.kind,
+    });
+    res.status(201).json(row);
   },
 );
 

@@ -1,7 +1,8 @@
 import { useListBookings, useUpdateBooking } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   FlatList,
@@ -20,7 +21,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BookingCard } from "@/components/BookingCard";
-import { LiviaWordmark } from "@/components/brand/LiviaWordmark";
+import { OperationalScreen } from "@/components/OperationalScreen";
 import { EmptyState } from "@/components/EmptyState";
 import { QuickActionsSheet, type QuickAction } from "@/components/QuickActionsSheet";
 import { SwipeableRow } from "@/components/SwipeableRow";
@@ -30,8 +31,12 @@ import { fonts, type } from "@/constants/typography";
 import { useBusiness } from "@/contexts/BusinessContext";
 import { useColors } from "@/hooks/useColors";
 import { useHaptics } from "@/hooks/useHaptics";
+import { notifyBookingRunningLate, promptRunningLateMinutes } from "@/lib/running-late";
+import { invalidateOperationalState } from "@/lib/operational-cache";
+import { verticalPackUi } from "@/lib/vertical-pack-ui";
 
 type Filter = "day" | "week" | "month";
+type StatusFilter = "all" | "PENDING";
 
 function getDateParams(filter: Filter) {
   const now = new Date();
@@ -59,8 +64,19 @@ export default function BookingsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const haptics = useHaptics();
+  const qc = useQueryClient();
   const { currentBusiness } = useBusiness();
+  const pack = verticalPackUi(
+    (currentBusiness as { vertical?: string } | undefined)?.vertical,
+    currentBusiness?.category,
+  );
+  const params = useLocalSearchParams<{ status?: string }>();
   const [filter, setFilter] = useState<Filter>("day");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+
+  useEffect(() => {
+    if (params.status === "PENDING") setStatusFilter("PENDING");
+  }, [params.status]);
 
   const indicator = useSharedValue({ x: 0, w: 0 });
   const [layouts, setLayouts] = useState<Record<Filter, { x: number; w: number }>>(
@@ -108,6 +124,7 @@ export default function BookingsScreen() {
         bookingId,
         data: { status: next as "CONFIRMED" | "COMPLETED" },
       });
+      invalidateOperationalState(qc, currentBusiness.id);
       haptics.success();
     } catch (err: unknown) {
       const e = err as { message?: string };
@@ -124,6 +141,7 @@ export default function BookingsScreen() {
         bookingId,
         data: { status: "CANCELLED" },
       });
+      invalidateOperationalState(qc, currentBusiness.id);
       haptics.success();
     } catch (err: unknown) {
       const e = err as { message?: string };
@@ -134,79 +152,109 @@ export default function BookingsScreen() {
 
   const { data, isLoading, refetch, isRefetching } = useListBookings(
     currentBusiness?.id ?? "",
-    { ...getDateParams(filter), limit: 50 },
+    {
+      ...getDateParams(filter),
+      limit: 50,
+      ...(statusFilter === "PENDING" ? { status: "PENDING" as const } : {}),
+    },
     { query: { enabled: !!currentBusiness?.id } as any },
   );
 
   const bookings = data?.data ?? [];
-  const topPad = Platform.OS === "web" ? 67 : insets.top;
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { paddingTop: topPad + 8 }]}>
-        <View style={styles.headerTop}>
-          <LiviaWordmark size="sm" color={colors.foreground} />
-          <Pressable
-            onPress={() => {
-              haptics.impact();
-              router.push("/booking/new");
-            }}
-            testID="add-booking-button"
-            style={({ pressed }) => [
-              styles.addBtn,
-              {
-                backgroundColor: colors.primary,
-                transform: [{ scale: pressed ? 0.96 : 1 }],
-              },
-              elevation.floating,
+    <OperationalScreen
+      scroll={false}
+      title="Bookings"
+      subtitle={
+        statusFilter === "PENDING"
+          ? "Showing bookings that need confirmation"
+          : "Swipe right to advance status · left to reschedule"
+      }
+      actions={
+        <Pressable
+          onPress={() => {
+            haptics.impact();
+            router.push("/booking/new");
+          }}
+          testID="add-booking-button"
+          style={({ pressed }) => [
+            styles.addBtn,
+            {
+              backgroundColor: colors.primary,
+              transform: [{ scale: pressed ? 0.96 : 1 }],
+            },
+            elevation.floating,
+          ]}
+        >
+          <Feather name="plus" size={14} color={colors.primaryForeground} />
+          <Text style={[styles.addBtnText, { color: colors.primaryForeground }]}>New</Text>
+        </Pressable>
+      }
+      headerExtra={
+        <>
+          <View style={styles.statusRow}>
+            {(["all", "PENDING"] as const).map((s) => (
+              <Pressable
+                key={s}
+                onPress={() => {
+                  haptics.selection();
+                  setStatusFilter(s);
+                }}
+                style={[
+                  styles.statusChip,
+                  {
+                    borderColor: statusFilter === s ? colors.primary : colors.border,
+                    backgroundColor: statusFilter === s ? colors.primary + "18" : colors.card,
+                  },
+                ]}
+              >
+                <Text style={{ color: colors.foreground, fontFamily: fonts.bodySemi, fontSize: 13 }}>
+                  {s === "all" ? "All statuses" : "Pending only"}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
+          <View
+            style={[
+              styles.segWrap,
+              { backgroundColor: colors.muted, borderColor: colors.border },
             ]}
           >
-            <Feather name="plus" size={14} color={colors.primaryForeground} />
-            <Text style={[styles.addBtnText, { color: colors.primaryForeground }]}>
-              New
-            </Text>
-          </Pressable>
-        </View>
-        <Text style={[styles.title, { color: colors.foreground }]}>Bookings</Text>
-      </View>
-
-      <View
-        style={[
-          styles.segWrap,
-          { backgroundColor: colors.muted, borderColor: colors.border },
-        ]}
-      >
-        <Animated.View
-          style={[
-            styles.segIndicator,
-            {
-              backgroundColor: colors.card,
-              borderColor: colors.primary + "44",
-              shadowColor: colors.primary,
-            },
-            indicatorStyle,
-          ]}
-        />
-        {FILTERS.map((f) => (
-          <Pressable
-            key={f.key}
-            style={styles.segChip}
-            onPress={() => selectFilter(f.key)}
-            onLayout={onChipLayout(f.key)}
-            testID={`filter-${f.key}`}
-          >
-            <Text
+            <Animated.View
               style={[
-                styles.segText,
-                { color: filter === f.key ? colors.foreground : colors.mutedForeground },
+                styles.segIndicator,
+                {
+                  backgroundColor: colors.card,
+                  borderColor: colors.primary + "44",
+                  shadowColor: colors.primary,
+                },
+                indicatorStyle,
               ]}
-            >
-              {f.label}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-
+            />
+            {FILTERS.map((f) => (
+              <Pressable
+                key={f.key}
+                style={styles.segChip}
+                onPress={() => selectFilter(f.key)}
+                onLayout={onChipLayout(f.key)}
+                testID={`filter-${f.key}`}
+              >
+                <Text
+                  style={[
+                    styles.segText,
+                    { color: filter === f.key ? colors.foreground : colors.mutedForeground },
+                  ]}
+                >
+                  {f.label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </>
+      }
+    >
       <FlatList
         data={bookings}
         keyExtractor={(b) => b.id}
@@ -230,6 +278,7 @@ export default function BookingsScreen() {
             >
               <BookingCard
                 booking={item}
+                timeZone={currentBusiness?.timezone}
                 showDate={filter !== "day"}
                 index={index}
                 onPress={() => router.push(`/booking/${item.id}`)}
@@ -247,8 +296,14 @@ export default function BookingsScreen() {
         ListEmptyComponent={
           <EmptyState
             icon="calendar"
-            title={isLoading ? "Loading…" : "Nothing here"}
-            subtitle={isLoading ? undefined : "Try a different filter, or add one above."}
+            title={isLoading ? "Loading…" : "No appointments in this view"}
+            subtitle={
+              isLoading
+                ? undefined
+                : statusFilter === "PENDING"
+                  ? "Nothing waiting for approval — Liv will queue edge cases here."
+                  : `No ${pack.serviceNoun.toLowerCase()}s for this period. Try week view or tap + to book.`
+            }
             isLoading={isLoading}
           />
         }
@@ -272,23 +327,38 @@ export default function BookingsScreen() {
                 onAdvance: () => advanceStatus(actionsFor.id, actionsFor.status),
                 onOpen: () => router.push(`/booking/${actionsFor.id}`),
                 onCancel: () => cancelBooking(actionsFor.id),
+                onRunningLate:
+                  actionsFor.status === "CONFIRMED" && currentBusiness?.id
+                    ? () =>
+                        promptRunningLateMinutes((m) =>
+                          void notifyBookingRunningLate(currentBusiness.id, actionsFor.id, m),
+                        )
+                    : undefined,
               })
             : []
         }
       />
-    </View>
+    </OperationalScreen>
   );
 }
 
 function buildBookingQuickActions(
   ctx: { id: string; status: string; name: string },
-  fns: { onAdvance: () => void; onOpen: () => void; onCancel: () => void },
+  fns: {
+    onAdvance: () => void;
+    onOpen: () => void;
+    onCancel: () => void;
+    onRunningLate?: () => void;
+  },
 ): QuickAction[] {
   const actions: QuickAction[] = [];
   if (ctx.status === "PENDING") {
     actions.push({ id: "confirm", label: "Confirm booking", icon: "check-circle", tone: "primary", onPress: fns.onAdvance });
   } else if (ctx.status === "CONFIRMED") {
     actions.push({ id: "complete", label: "Mark complete", icon: "check-circle", tone: "primary", onPress: fns.onAdvance });
+    if (fns.onRunningLate) {
+      actions.push({ id: "late", label: "Running late", icon: "clock", onPress: fns.onRunningLate });
+    }
   }
   actions.push({ id: "open", label: "Open details", icon: "chevron-right", onPress: fns.onOpen });
   if (ctx.status !== "CANCELLED" && ctx.status !== "COMPLETED") {
@@ -317,6 +387,9 @@ const styles = StyleSheet.create({
     letterSpacing: -0.6,
     lineHeight: 42,
   },
+  pendingHint: { ...type.caption, fontSize: 12 },
+  statusRow: { flexDirection: "row", gap: 8, marginBottom: 8 },
+  statusChip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, borderWidth: 1 },
   addBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -332,7 +405,6 @@ const styles = StyleSheet.create({
   },
   segWrap: {
     flexDirection: "row",
-    marginHorizontal: 16,
     marginBottom: 12,
     padding: SEG_PAD_H,
     borderRadius: 14,
@@ -361,6 +433,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     letterSpacing: 0.2,
   },
-  list: { paddingHorizontal: 16, paddingBottom: 140 },
+  list: { paddingHorizontal: 20, paddingBottom: 140 },
   listEmpty: { flex: 1 },
 });

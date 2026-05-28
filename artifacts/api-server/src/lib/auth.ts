@@ -2,6 +2,9 @@ import { getAuth } from "@clerk/express";
 import type { Request, Response, NextFunction, RequestHandler } from "express";
 import { db, businessesTable, businessMembershipsTable, staffTable } from "@workspace/db";
 import { and, eq } from "drizzle-orm";
+import { appendHumanAudit } from "./audit";
+import { resolveTenantContext } from "./tenant-context";
+import { tenantContextStore } from "@workspace/tenant-context";
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -26,8 +29,14 @@ export interface RoleContext {
 // ─── Auth ─────────────────────────────────────────────────────────────────
 
 export function requireAuth(req: Request, res: Response, next: NextFunction): void {
+  // Dev sim bypass — simAuthMiddleware injected __simUserId before Clerk ran.
+  if (process.env.NODE_ENV === "development" && (req as any).__simUserId) {
+    (req as any).userId = (req as any).__simUserId;
+    next();
+    return;
+  }
   const auth = getAuth(req);
-  const userId = auth?.sessionClaims?.userId as string | undefined || auth?.userId;
+  const userId = auth.userId;
   if (!userId) {
     res.status(401).json({ error: "Unauthorized" });
     return;
@@ -156,7 +165,34 @@ export function requireRole(min: Role): RequestHandler {
 
     const ctx: RoleContext = { role, effectiveRole, actingStaffId };
     (req as any).roleContext = ctx;
-    next();
+
+    if (isImpersonating) {
+      void appendHumanAudit(businessId, userId, "human.persona.view", "membership", null, {
+        as: asParam ?? "staff",
+        actingStaffId,
+        method: req.method,
+        path: (req.url ?? "").split("?")[0],
+      }).catch(() => {
+        /* audit failure must not block the request */
+      });
+    }
+
+    const resolved = await resolveTenantContext(userId, businessId, ctx);
+    if (!resolved) {
+      res.status(404).json({ error: "Business not found" });
+      return;
+    }
+    req.resolvedTenant = resolved;
+    tenantContextStore.run(
+      {
+        businessId: resolved.businessId,
+        membershipId: resolved.membershipId,
+        capabilityToken: resolved.capabilityToken,
+        region: resolved.region,
+        locale: resolved.locale,
+      },
+      () => next(),
+    );
   };
 }
 

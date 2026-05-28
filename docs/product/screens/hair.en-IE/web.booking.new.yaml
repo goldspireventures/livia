@@ -1,0 +1,61 @@
+# Screen card — New booking (web)
+# Status: Designed (paper) | Repo: Scaffolded (wizard S2)
+
+id: web.booking.new
+vertical: [hair, beauty]
+locale: [en-IE, en-GB]
+persona: [owner, manager, reception]
+modality: web
+route: /bookings/new
+
+purpose: >
+  Let front-of-house staff book an appointment in under 60 seconds without
+  assigning the wrong service or stylist.
+
+scenario: >
+  Tuesday 14:10. Receptionist Síobhan has a regular on the phone who wants
+  balayage with Sarah next Thursday. The floor is busy; she cannot ask Sarah
+  which slots are real.
+
+must_do:
+  - Search or pick client (paginated roster)
+  - Pick service (duration visible)
+  - Pick stylist filtered to those assigned to that service, or "first available"
+  - Pick date and see only valid slots (respects hours + time off + conflicts)
+  - Add notes (colour formula reference)
+  - Confirm and land on booking detail with confirmation sent
+
+liv:
+  proactive: Suggest last stylist for returning client when detectable
+  on_screen: None required; optional "Ask Liv" chip v1.5
+
+differentiation:
+  vertical:
+    hair: { terms: { staff: stylist }, show_formula_notes: true }
+    beauty: { terms: { staff: tech }, patch_test_gate: true }
+  persona:
+    reception: default entry from bookings nav
+    owner: same wizard; may prefill from client profile link
+  locale:
+    en-IE: EUR not shown on internal book; time 24h or 12h per business setting
+    en-GB: same flow; bank holidays UK
+
+api:
+  - GET /customers?search&limit&offset
+  - GET /services?isActive=true
+  - GET /staff?serviceId&isActive=true
+  - GET /slots?serviceId&date&staffId
+  - POST /bookings
+  - Error STAFF_NOT_ASSIGNED_TO_SERVICE human message
+
+acceptance:
+  - Demo script step books balayage with correct stylist only
+  - Empty staff list shows assign-services help link to /staff
+  - Slot conflict returns recoverable toast
+
+repo_status: Scaffolded
+gaps:
+  - No patch-test block for beauty-first-visit
+  - No "last stylist" Liv suggestion
+  - No formula quick-insert from client profile
+  - Confirm step lacks service/staff/time summary density for phone-side read-back

@@ -1,6 +1,7 @@
-# Design partner programme — F9
+# Design partner programme
 
-**Status:** F9 (2026-05-07).
+**Status:** F9 (2026-05-07).  
+**Onboarding pack:** [`OPERATOR-READY-PACK.md`](./OPERATOR-READY-PACK.md) — share with every design partner at kickoff.
 
 ## The 10 Dublin partners
 

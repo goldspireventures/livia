@@ -1,6 +1,7 @@
 import { db, servicesTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { generateId } from "../lib/id";
+import { getBusinessById } from "./businesses.service";
 
 export async function listServices(businessId: string, isActive?: boolean) {
   const conditions = [eq(servicesTable.businessId, businessId)];
@@ -31,6 +32,12 @@ export async function createService(
     sortOrder?: number;
   },
 ) {
+  let currency = data.currency;
+  if (!currency) {
+    const biz = await getBusinessById(businessId);
+    currency = biz?.currency ?? "EUR";
+  }
+
   const [s] = await db
     .insert(servicesTable)
     .values({
@@ -43,7 +50,7 @@ export async function createService(
       bufferBeforeMinutes: data.bufferBeforeMinutes ?? 0,
       bufferAfterMinutes: data.bufferAfterMinutes ?? 0,
       priceMinor: data.priceMinor ?? 0,
-      currency: data.currency ?? "GBP",
+      currency,
       imageUrl: data.imageUrl,
       sortOrder: data.sortOrder ?? 0,
     })

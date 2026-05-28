@@ -22,6 +22,9 @@ interface ChatWidgetProps {
   slug: string;
   businessName: string;
   greeting?: string;
+  /** Jurisdiction pack copy; falls back to @workspace/ai-disclosure defaults. */
+  disclosureFirstMessage?: string;
+  disclosureFooterLine?: string;
   initialName?: string;
   initialEmail?: string;
   initialPhone?: string;
@@ -32,11 +35,16 @@ export default function ChatWidget({
   slug,
   businessName,
   greeting,
+  disclosureFirstMessage,
+  disclosureFooterLine,
   initialName,
   initialEmail,
   initialPhone,
   onBooked,
 }: ChatWidgetProps) {
+  const firstMessage =
+    disclosureFirstMessage ?? AI_DISCLOSURE.chatFirstMessage(businessName);
+  const footerLine = disclosureFooterLine ?? AI_DISCLOSURE.chatFooterLine;
   const [open, setOpen] = useState(false);
   const [conversationId, setConversationId] = useState<string | undefined>();
   const [input, setInput] = useState("");
@@ -54,7 +62,7 @@ export default function ChatWidget({
         {
           id: "disclosure",
           role: "assistant",
-          content: AI_DISCLOSURE.chatFirstMessage(businessName),
+          content: firstMessage,
         },
       ];
       const customGreeting = greeting?.trim();
@@ -232,6 +240,7 @@ export default function ChatWidget({
           <Button
             type="submit"
             size="icon"
+            aria-label="Send message"
             disabled={!input.trim() || sendMessage.isPending}
             data-testid="button-send-chat"
             className="bg-gradient-to-br from-primary to-[hsl(var(--chart-1))]"
@@ -245,7 +254,7 @@ export default function ChatWidget({
           data-testid="chat-disclosure-footer"
           className="px-3 py-1.5 text-[10px] text-center text-muted-foreground border-t border-border bg-muted/30 sm:rounded-b-2xl"
         >
-          {AI_DISCLOSURE.chatFooterLine}
+          {footerLine}
         </div>
       </div>
     </div>

@@ -1,0 +1,231 @@
+import { defineConfig, devices } from "@playwright/test";
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const rootEnv = path.resolve(__dirname, "..", ".env");
+if (existsSync(rootEnv)) {
+  for (const line of readFileSync(rootEnv, "utf8").split("\n")) {
+    const m = line.match(/^\s*([^#=]+)=(.*)$/);
+    if (m && process.env[m[1].trim()] === undefined) {
+      process.env[m[1].trim()] = m[2].trim().replace(/^["']|["']$/g, "");
+    }
+  }
+}
+const founderAuth = path.join(__dirname, ".auth", "founder.json");
+
+const apiBase = process.env.E2E_API_BASE ?? "http://127.0.0.1:3000";
+const dashboardBase = process.env.E2E_DASHBOARD_BASE ?? "http://127.0.0.1:5173";
+const marketingBase = process.env.E2E_MARKETING_URL ?? "http://127.0.0.1:5174";
+const demoSlug = process.env.E2E_DEMO_SLUG ?? "luxe-salon-spa";
+
+export default defineConfig({
+  testDir: "./tests",
+  timeout: 60_000,
+  expect: { timeout: 15_000 },
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 1 : 0,
+  workers: process.env.CI ? 2 : undefined,
+  reporter: process.env.CI ? "github" : "list",
+  use: {
+    trace: "on-first-retry",
+  },
+  projects: [
+    {
+      name: "api",
+      testMatch:
+        /(api-gate|phase10-gate|integrations-gate|meta-channels|demo-channels-stack|booking-continuity|v3-preflight-api|tenant-experience-api|full-platform-demo)\.spec\.ts/,
+      use: {
+        baseURL: apiBase,
+      },
+    },
+    {
+      name: "dashboard",
+      testMatch:
+        /(dashboard-gate|eu-owner-self-onboard|prod-onboarding-notifications|demo-owner-flow)\.spec\.ts/,
+      testIgnore: /v3-preflight\.spec\.ts/,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+      },
+    },
+    {
+      name: "platform",
+      testMatch: /eu-full-platform\.spec\.ts/,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+      },
+    },
+    {
+      name: "v3-preflight-ui",
+      testMatch: /v3-preflight\.spec\.ts/,
+      testIgnore: /v3-preflight-auth\.spec\.ts/,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+      },
+    },
+    {
+      name: "v3-preflight-auth",
+      testMatch: /v3-preflight-auth\.spec\.ts/,
+      dependencies: ["founder-auth-setup"],
+      timeout: 120_000,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+        storageState: founderAuth,
+      },
+    },
+    {
+      name: "internal",
+      testMatch: /internal-gate\.spec\.ts|internal-monitoring-gate\.spec\.ts/,
+      use: {
+        baseURL: apiBase,
+      },
+    },
+    {
+      name: "marketing",
+      testMatch: /marketing-gate\.spec\.ts/,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: marketingBase,
+      },
+    },
+    {
+      name: "marketing-platform",
+      testMatch: /marketing-platform-smoke\.spec\.ts/,
+      timeout: 120_000,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: marketingBase,
+      },
+    },
+    {
+      name: "marketing-visual",
+      testMatch: /marketing-visual-capture\.spec\.ts/,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: marketingBase,
+      },
+    },
+    {
+      name: "visual-capture",
+      testMatch: /visual-audit-capture\.spec\.ts/,
+      dependencies: ["founder-auth-setup"],
+      timeout: 180_000,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+      },
+    },
+    {
+      name: "founder-auth-setup",
+      testMatch: /auth\.setup\.ts/,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+      },
+    },
+    {
+      name: "founder-checklist",
+      testMatch: /founder-checklist-visual\.spec\.ts/,
+      dependencies: ["founder-auth-setup"],
+      timeout: 120_000,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+        storageState: founderAuth,
+      },
+    },
+    {
+      name: "contextual-web",
+      testMatch: /contextual-audit-web\.spec\.ts/,
+      timeout: 300_000,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+      },
+    },
+    {
+      name: "full-visual-audit",
+      testMatch: /full-platform-visual-audit\.spec\.ts/,
+      timeout: 600_000,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+      },
+    },
+    {
+      name: "internal-visual",
+      testMatch: /internal-visual-capture\.spec\.ts/,
+      timeout: 120_000,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: process.env.E2E_INTERNAL_BASE ?? "http://127.0.0.1:5175",
+      },
+    },
+    {
+      name: "mobile-viewport",
+      testMatch: /mobile-viewport-web-capture\.spec\.ts/,
+      timeout: 180_000,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: 390, height: 844 },
+        isMobile: true,
+        hasTouch: true,
+        baseURL: dashboardBase,
+      },
+    },
+    {
+      name: "ux-quality-gate",
+      testMatch: /ux-quality-gate\.spec\.ts/,
+      timeout: 300_000,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+      },
+    },
+    {
+      name: "all-verticals-smoke",
+      testMatch: /all-verticals-smoke\.spec\.ts/,
+      timeout: 600_000,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+      },
+    },
+    {
+      name: "public-booking-quality",
+      testMatch: /public-booking-quality\.spec\.ts/,
+      timeout: 300_000,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+      },
+    },
+    {
+      name: "internal-ops-smoke",
+      testMatch: /internal-ops-smoke\.spec\.ts/,
+      timeout: 120_000,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: process.env.E2E_INTERNAL_BASE ?? "http://127.0.0.1:5175",
+      },
+    },
+  ],
+  metadata: {
+    demoSlug,
+    apiBase,
+    dashboardBase,
+  },
+});

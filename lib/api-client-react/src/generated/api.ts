@@ -18,37 +18,55 @@ import type {
 
 import type {
   ActivityItem,
+  AuditLogSearchResponse,
   AvailabilityRule,
   BadRequestResponse,
+  BillingState,
   Booking,
   BookingDetail,
   BookingListResponse,
   Business,
   BusinessCommunications,
+  ChainRollup,
+  ClearDevWorkspace200,
   ConflictResponse,
   ConversationDetail,
   ConversationListItem,
+  ConversationMessage,
+  CreateBillingCheckoutSession200,
+  CreateBillingCheckoutSessionBody,
   CreateBookingBody,
   CreateBusinessBody,
   CreateCustomerBody,
   CreateInvitationBody,
   CreateMarketingLeadBody,
+  CreatePeerInsightsCheckout200,
   CreatePublicBookingBody,
   CreateServiceBody,
   CreateStaffBody,
+  CreateSupportTicketBody,
   CreateTimeOffBody,
   CronSendReminders200,
   Customer,
   CustomerDetail,
   CustomerListResponse,
   DashboardSummary,
+  DeviceToken,
+  EntitlementRequiredError,
   FeatureFlag,
   ForbiddenResponse,
   GetActivityFeedParams,
   GetAvailableSlotsParams,
   GetMyDayParams,
+  GetMyNotificationUnreadCount200,
+  GetMyNotificationUnreadCountParams,
   GetPublicSlotsParams,
+  GetVoiceStatus200,
   HealthStatus,
+  InAppNotificationList,
+  InternalSupportContext,
+  InternalTenantDetail,
+  InternalTenantSearchResponse,
   Invitation,
   ListAvailabilityRulesParams,
   ListAvailableSmsNumbers200,
@@ -56,28 +74,50 @@ import type {
   ListBookingsParams,
   ListConversationsParams,
   ListCustomersParams,
+  ListMyNotificationsParams,
+  ListPartnerBookingsParams,
   ListServicesParams,
   ListStaffParams,
+  ListSupportTicketsParams,
   ListTimeOffParams,
+  MarkAllMyNotificationsRead200,
+  MarkAllMyNotificationsReadBody,
+  MarkMyNotificationRead200,
   MarketingLeadAck,
   Membership,
   MyDay,
   NotFoundResponse,
+  OnboardingCatalogResponse,
+  OnboardingDefaults,
+  OnboardingPreviewBody,
+  OptInPeerInsights200,
+  PartnerBookingsResponse,
+  PeerInsights,
   ProvisionSmsNumber201,
   ProvisionSmsNumberBody,
   PublicBookingConfirmation,
   PublicBusiness,
   PublicChatBody,
   PublicChatResponse,
+  RegisterDeviceTokenBody,
+  SearchAuditLogParams,
+  SearchInternalTenantsParams,
+  SeedDevWorkspace200,
+  SendConversationMessageBody,
   Service,
   SetAvailabilityRulesBody,
   SetStaffServicesBody,
   SlotListResponse,
   Staff,
+  SupportTicket,
   TestSendCommunication200,
   TestSendCommunicationBody,
   TimeOff,
   TwilioSmsInboundBody,
+  TwilioVoiceGatherBody,
+  TwilioVoiceGatherParams,
+  TwilioVoiceInboundBody,
+  TwilioVoiceStatusBody,
   UnauthorizedResponse,
   UpdateBookingBody,
   UpdateBusinessBody,
@@ -400,6 +440,81 @@ export function useGetMyBusinesses<
 }
 
 /**
+ * @summary Multi-shop KPI rollup for the authenticated owner (RFC 0010)
+ */
+export const getGetMyChainRollupUrl = () => {
+  return `/api/me/chain-rollup`;
+};
+
+export const getMyChainRollup = async (
+  options?: RequestInit,
+): Promise<ChainRollup> => {
+  return customFetch<ChainRollup>(getGetMyChainRollupUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMyChainRollupQueryKey = () => {
+  return [`/api/me/chain-rollup`] as const;
+};
+
+export const getGetMyChainRollupQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMyChainRollup>>,
+  TError = ErrorType<UnauthorizedResponse>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getMyChainRollup>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMyChainRollupQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getMyChainRollup>>
+  > = ({ signal }) => getMyChainRollup({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMyChainRollup>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMyChainRollupQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMyChainRollup>>
+>;
+export type GetMyChainRollupQueryError = ErrorType<UnauthorizedResponse>;
+
+/**
+ * @summary Multi-shop KPI rollup for the authenticated owner (RFC 0010)
+ */
+
+export function useGetMyChainRollup<
+  TData = Awaited<ReturnType<typeof getMyChainRollup>>,
+  TError = ErrorType<UnauthorizedResponse>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getMyChainRollup>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMyChainRollupQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
  * @summary Get caller's role + staff link inside a business
  */
 export const getGetMyMembershipUrl = (businessId: string) => {
@@ -488,6 +603,482 @@ export function useGetMyMembership<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary In-app notification feed for the signed-in user (persona-targeted at delivery)
+ */
+export const getListMyNotificationsUrl = (
+  params?: ListMyNotificationsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/me/notifications?${stringifiedParams}`
+    : `/api/me/notifications`;
+};
+
+export const listMyNotifications = async (
+  params?: ListMyNotificationsParams,
+  options?: RequestInit,
+): Promise<InAppNotificationList> => {
+  return customFetch<InAppNotificationList>(getListMyNotificationsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListMyNotificationsQueryKey = (
+  params?: ListMyNotificationsParams,
+) => {
+  return [`/api/me/notifications`, ...(params ? [params] : [])] as const;
+};
+
+export const getListMyNotificationsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listMyNotifications>>,
+  TError = ErrorType<UnauthorizedResponse>,
+>(
+  params?: ListMyNotificationsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listMyNotifications>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListMyNotificationsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listMyNotifications>>
+  > = ({ signal }) =>
+    listMyNotifications(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listMyNotifications>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListMyNotificationsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listMyNotifications>>
+>;
+export type ListMyNotificationsQueryError = ErrorType<UnauthorizedResponse>;
+
+/**
+ * @summary In-app notification feed for the signed-in user (persona-targeted at delivery)
+ */
+
+export function useListMyNotifications<
+  TData = Awaited<ReturnType<typeof listMyNotifications>>,
+  TError = ErrorType<UnauthorizedResponse>,
+>(
+  params?: ListMyNotificationsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listMyNotifications>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListMyNotificationsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Unread in-app notification count
+ */
+export const getGetMyNotificationUnreadCountUrl = (
+  params?: GetMyNotificationUnreadCountParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/me/notifications/unread-count?${stringifiedParams}`
+    : `/api/me/notifications/unread-count`;
+};
+
+export const getMyNotificationUnreadCount = async (
+  params?: GetMyNotificationUnreadCountParams,
+  options?: RequestInit,
+): Promise<GetMyNotificationUnreadCount200> => {
+  return customFetch<GetMyNotificationUnreadCount200>(
+    getGetMyNotificationUnreadCountUrl(params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetMyNotificationUnreadCountQueryKey = (
+  params?: GetMyNotificationUnreadCountParams,
+) => {
+  return [
+    `/api/me/notifications/unread-count`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getGetMyNotificationUnreadCountQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMyNotificationUnreadCount>>,
+  TError = ErrorType<UnauthorizedResponse>,
+>(
+  params?: GetMyNotificationUnreadCountParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMyNotificationUnreadCount>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetMyNotificationUnreadCountQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getMyNotificationUnreadCount>>
+  > = ({ signal }) =>
+    getMyNotificationUnreadCount(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMyNotificationUnreadCount>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMyNotificationUnreadCountQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMyNotificationUnreadCount>>
+>;
+export type GetMyNotificationUnreadCountQueryError =
+  ErrorType<UnauthorizedResponse>;
+
+/**
+ * @summary Unread in-app notification count
+ */
+
+export function useGetMyNotificationUnreadCount<
+  TData = Awaited<ReturnType<typeof getMyNotificationUnreadCount>>,
+  TError = ErrorType<UnauthorizedResponse>,
+>(
+  params?: GetMyNotificationUnreadCountParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMyNotificationUnreadCount>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMyNotificationUnreadCountQueryOptions(
+    params,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Mark all in-app notifications read
+ */
+export const getMarkAllMyNotificationsReadUrl = () => {
+  return `/api/me/notifications/read-all`;
+};
+
+export const markAllMyNotificationsRead = async (
+  markAllMyNotificationsReadBody: MarkAllMyNotificationsReadBody,
+  options?: RequestInit,
+): Promise<MarkAllMyNotificationsRead200> => {
+  return customFetch<MarkAllMyNotificationsRead200>(
+    getMarkAllMyNotificationsReadUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(markAllMyNotificationsReadBody),
+    },
+  );
+};
+
+export const getMarkAllMyNotificationsReadMutationOptions = <
+  TError = ErrorType<UnauthorizedResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof markAllMyNotificationsRead>>,
+    TError,
+    { data: BodyType<MarkAllMyNotificationsReadBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof markAllMyNotificationsRead>>,
+  TError,
+  { data: BodyType<MarkAllMyNotificationsReadBody> },
+  TContext
+> => {
+  const mutationKey = ["markAllMyNotificationsRead"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof markAllMyNotificationsRead>>,
+    { data: BodyType<MarkAllMyNotificationsReadBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return markAllMyNotificationsRead(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type MarkAllMyNotificationsReadMutationResult = NonNullable<
+  Awaited<ReturnType<typeof markAllMyNotificationsRead>>
+>;
+export type MarkAllMyNotificationsReadMutationBody =
+  BodyType<MarkAllMyNotificationsReadBody>;
+export type MarkAllMyNotificationsReadMutationError =
+  ErrorType<UnauthorizedResponse>;
+
+/**
+ * @summary Mark all in-app notifications read
+ */
+export const useMarkAllMyNotificationsRead = <
+  TError = ErrorType<UnauthorizedResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof markAllMyNotificationsRead>>,
+    TError,
+    { data: BodyType<MarkAllMyNotificationsReadBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof markAllMyNotificationsRead>>,
+  TError,
+  { data: BodyType<MarkAllMyNotificationsReadBody> },
+  TContext
+> => {
+  return useMutation(getMarkAllMyNotificationsReadMutationOptions(options));
+};
+
+/**
+ * @summary Mark one in-app notification read
+ */
+export const getMarkMyNotificationReadUrl = (notificationId: string) => {
+  return `/api/me/notifications/${notificationId}/read`;
+};
+
+export const markMyNotificationRead = async (
+  notificationId: string,
+  options?: RequestInit,
+): Promise<MarkMyNotificationRead200> => {
+  return customFetch<MarkMyNotificationRead200>(
+    getMarkMyNotificationReadUrl(notificationId),
+    {
+      ...options,
+      method: "PATCH",
+    },
+  );
+};
+
+export const getMarkMyNotificationReadMutationOptions = <
+  TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof markMyNotificationRead>>,
+    TError,
+    { notificationId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof markMyNotificationRead>>,
+  TError,
+  { notificationId: string },
+  TContext
+> => {
+  const mutationKey = ["markMyNotificationRead"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof markMyNotificationRead>>,
+    { notificationId: string }
+  > = (props) => {
+    const { notificationId } = props ?? {};
+
+    return markMyNotificationRead(notificationId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type MarkMyNotificationReadMutationResult = NonNullable<
+  Awaited<ReturnType<typeof markMyNotificationRead>>
+>;
+
+export type MarkMyNotificationReadMutationError = ErrorType<
+  UnauthorizedResponse | NotFoundResponse
+>;
+
+/**
+ * @summary Mark one in-app notification read
+ */
+export const useMarkMyNotificationRead = <
+  TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof markMyNotificationRead>>,
+    TError,
+    { notificationId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof markMyNotificationRead>>,
+  TError,
+  { notificationId: string },
+  TContext
+> => {
+  return useMutation(getMarkMyNotificationReadMutationOptions(options));
+};
+
+/**
+ * @summary Register Expo push token for the signed-in user
+ */
+export const getRegisterDeviceTokenUrl = () => {
+  return `/api/me/device-tokens`;
+};
+
+export const registerDeviceToken = async (
+  registerDeviceTokenBody: RegisterDeviceTokenBody,
+  options?: RequestInit,
+): Promise<DeviceToken> => {
+  return customFetch<DeviceToken>(getRegisterDeviceTokenUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(registerDeviceTokenBody),
+  });
+};
+
+export const getRegisterDeviceTokenMutationOptions = <
+  TError = ErrorType<UnauthorizedResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof registerDeviceToken>>,
+    TError,
+    { data: BodyType<RegisterDeviceTokenBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof registerDeviceToken>>,
+  TError,
+  { data: BodyType<RegisterDeviceTokenBody> },
+  TContext
+> => {
+  const mutationKey = ["registerDeviceToken"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof registerDeviceToken>>,
+    { data: BodyType<RegisterDeviceTokenBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return registerDeviceToken(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RegisterDeviceTokenMutationResult = NonNullable<
+  Awaited<ReturnType<typeof registerDeviceToken>>
+>;
+export type RegisterDeviceTokenMutationBody = BodyType<RegisterDeviceTokenBody>;
+export type RegisterDeviceTokenMutationError = ErrorType<UnauthorizedResponse>;
+
+/**
+ * @summary Register Expo push token for the signed-in user
+ */
+export const useRegisterDeviceToken = <
+  TError = ErrorType<UnauthorizedResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof registerDeviceToken>>,
+    TError,
+    { data: BodyType<RegisterDeviceTokenBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof registerDeviceToken>>,
+  TError,
+  { data: BodyType<RegisterDeviceTokenBody> },
+  TContext
+> => {
+  return useMutation(getRegisterDeviceTokenMutationOptions(options));
+};
 
 /**
  * @summary Staff-scoped "my day" slate (today's bookings, next-up, my customers)
@@ -696,6 +1287,388 @@ export const useCreateInvitation = <
 };
 
 /**
+ * @summary Jurisdiction and vertical catalog for onboarding
+ */
+export const getGetOnboardingCatalogUrl = () => {
+  return `/api/onboarding/catalog`;
+};
+
+export const getOnboardingCatalog = async (
+  options?: RequestInit,
+): Promise<OnboardingCatalogResponse> => {
+  return customFetch<OnboardingCatalogResponse>(getGetOnboardingCatalogUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetOnboardingCatalogQueryKey = () => {
+  return [`/api/onboarding/catalog`] as const;
+};
+
+export const getGetOnboardingCatalogQueryOptions = <
+  TData = Awaited<ReturnType<typeof getOnboardingCatalog>>,
+  TError = ErrorType<UnauthorizedResponse>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getOnboardingCatalog>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetOnboardingCatalogQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getOnboardingCatalog>>
+  > = ({ signal }) => getOnboardingCatalog({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getOnboardingCatalog>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetOnboardingCatalogQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getOnboardingCatalog>>
+>;
+export type GetOnboardingCatalogQueryError = ErrorType<UnauthorizedResponse>;
+
+/**
+ * @summary Jurisdiction and vertical catalog for onboarding
+ */
+
+export function useGetOnboardingCatalog<
+  TData = Awaited<ReturnType<typeof getOnboardingCatalog>>,
+  TError = ErrorType<UnauthorizedResponse>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getOnboardingCatalog>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetOnboardingCatalogQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Preview pack defaults before creating a business
+ */
+export const getPreviewOnboardingUrl = () => {
+  return `/api/onboarding/preview`;
+};
+
+export const previewOnboarding = async (
+  onboardingPreviewBody: OnboardingPreviewBody,
+  options?: RequestInit,
+): Promise<OnboardingDefaults> => {
+  return customFetch<OnboardingDefaults>(getPreviewOnboardingUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(onboardingPreviewBody),
+  });
+};
+
+export const getPreviewOnboardingMutationOptions = <
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof previewOnboarding>>,
+    TError,
+    { data: BodyType<OnboardingPreviewBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof previewOnboarding>>,
+  TError,
+  { data: BodyType<OnboardingPreviewBody> },
+  TContext
+> => {
+  const mutationKey = ["previewOnboarding"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof previewOnboarding>>,
+    { data: BodyType<OnboardingPreviewBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return previewOnboarding(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PreviewOnboardingMutationResult = NonNullable<
+  Awaited<ReturnType<typeof previewOnboarding>>
+>;
+export type PreviewOnboardingMutationBody = BodyType<OnboardingPreviewBody>;
+export type PreviewOnboardingMutationError = ErrorType<
+  BadRequestResponse | UnauthorizedResponse
+>;
+
+/**
+ * @summary Preview pack defaults before creating a business
+ */
+export const usePreviewOnboarding = <
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof previewOnboarding>>,
+    TError,
+    { data: BodyType<OnboardingPreviewBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof previewOnboarding>>,
+  TError,
+  { data: BodyType<OnboardingPreviewBody> },
+  TContext
+> => {
+  return useMutation(getPreviewOnboardingMutationOptions(options));
+};
+
+/**
+ * @summary Report an issue or feature request
+ */
+export const getCreateSupportTicketUrl = (businessId: string) => {
+  return `/api/businesses/${businessId}/support/tickets`;
+};
+
+export const createSupportTicket = async (
+  businessId: string,
+  createSupportTicketBody: CreateSupportTicketBody,
+  options?: RequestInit,
+): Promise<SupportTicket> => {
+  return customFetch<SupportTicket>(getCreateSupportTicketUrl(businessId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createSupportTicketBody),
+  });
+};
+
+export const getCreateSupportTicketMutationOptions = <
+  TError = ErrorType<
+    BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+  >,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createSupportTicket>>,
+    TError,
+    { businessId: string; data: BodyType<CreateSupportTicketBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createSupportTicket>>,
+  TError,
+  { businessId: string; data: BodyType<CreateSupportTicketBody> },
+  TContext
+> => {
+  const mutationKey = ["createSupportTicket"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createSupportTicket>>,
+    { businessId: string; data: BodyType<CreateSupportTicketBody> }
+  > = (props) => {
+    const { businessId, data } = props ?? {};
+
+    return createSupportTicket(businessId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateSupportTicketMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createSupportTicket>>
+>;
+export type CreateSupportTicketMutationBody = BodyType<CreateSupportTicketBody>;
+export type CreateSupportTicketMutationError = ErrorType<
+  BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+>;
+
+/**
+ * @summary Report an issue or feature request
+ */
+export const useCreateSupportTicket = <
+  TError = ErrorType<
+    BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+  >,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createSupportTicket>>,
+    TError,
+    { businessId: string; data: BodyType<CreateSupportTicketBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createSupportTicket>>,
+  TError,
+  { businessId: string; data: BodyType<CreateSupportTicketBody> },
+  TContext
+> => {
+  return useMutation(getCreateSupportTicketMutationOptions(options));
+};
+
+/**
+ * @summary List support tickets for the business (owner/admin)
+ */
+export const getListSupportTicketsUrl = (
+  businessId: string,
+  params?: ListSupportTicketsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/businesses/${businessId}/support/tickets?${stringifiedParams}`
+    : `/api/businesses/${businessId}/support/tickets`;
+};
+
+export const listSupportTickets = async (
+  businessId: string,
+  params?: ListSupportTicketsParams,
+  options?: RequestInit,
+): Promise<SupportTicket[]> => {
+  return customFetch<SupportTicket[]>(
+    getListSupportTicketsUrl(businessId, params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListSupportTicketsQueryKey = (
+  businessId: string,
+  params?: ListSupportTicketsParams,
+) => {
+  return [
+    `/api/businesses/${businessId}/support/tickets`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getListSupportTicketsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listSupportTickets>>,
+  TError = ErrorType<
+    UnauthorizedResponse | ForbiddenResponse | NotFoundResponse
+  >,
+>(
+  businessId: string,
+  params?: ListSupportTicketsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listSupportTickets>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListSupportTicketsQueryKey(businessId, params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listSupportTickets>>
+  > = ({ signal }) =>
+    listSupportTickets(businessId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!businessId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listSupportTickets>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListSupportTicketsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listSupportTickets>>
+>;
+export type ListSupportTicketsQueryError = ErrorType<
+  UnauthorizedResponse | ForbiddenResponse | NotFoundResponse
+>;
+
+/**
+ * @summary List support tickets for the business (owner/admin)
+ */
+
+export function useListSupportTickets<
+  TData = Awaited<ReturnType<typeof listSupportTickets>>,
+  TError = ErrorType<
+    UnauthorizedResponse | ForbiddenResponse | NotFoundResponse
+  >,
+>(
+  businessId: string,
+  params?: ListSupportTicketsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listSupportTickets>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListSupportTicketsQueryOptions(
+    businessId,
+    params,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
  * @summary Create a new business
  */
 export const getCreateBusinessUrl = () => {
@@ -786,6 +1759,127 @@ export const useCreateBusiness = <
 > => {
   return useMutation(getCreateBusinessMutationOptions(options));
 };
+
+/**
+ * @summary Search hash-chained audit log for a tenant (owner)
+ */
+export const getSearchAuditLogUrl = (
+  businessId: string,
+  params?: SearchAuditLogParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/businesses/${businessId}/audit-log?${stringifiedParams}`
+    : `/api/businesses/${businessId}/audit-log`;
+};
+
+export const searchAuditLog = async (
+  businessId: string,
+  params?: SearchAuditLogParams,
+  options?: RequestInit,
+): Promise<AuditLogSearchResponse> => {
+  return customFetch<AuditLogSearchResponse>(
+    getSearchAuditLogUrl(businessId, params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getSearchAuditLogQueryKey = (
+  businessId: string,
+  params?: SearchAuditLogParams,
+) => {
+  return [
+    `/api/businesses/${businessId}/audit-log`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getSearchAuditLogQueryOptions = <
+  TData = Awaited<ReturnType<typeof searchAuditLog>>,
+  TError = ErrorType<UnauthorizedResponse | ForbiddenResponse>,
+>(
+  businessId: string,
+  params?: SearchAuditLogParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof searchAuditLog>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getSearchAuditLogQueryKey(businessId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof searchAuditLog>>> = ({
+    signal,
+  }) => searchAuditLog(businessId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!businessId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof searchAuditLog>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type SearchAuditLogQueryResult = NonNullable<
+  Awaited<ReturnType<typeof searchAuditLog>>
+>;
+export type SearchAuditLogQueryError = ErrorType<
+  UnauthorizedResponse | ForbiddenResponse
+>;
+
+/**
+ * @summary Search hash-chained audit log for a tenant (owner)
+ */
+
+export function useSearchAuditLog<
+  TData = Awaited<ReturnType<typeof searchAuditLog>>,
+  TError = ErrorType<UnauthorizedResponse | ForbiddenResponse>,
+>(
+  businessId: string,
+  params?: SearchAuditLogParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof searchAuditLog>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getSearchAuditLogQueryOptions(
+    businessId,
+    params,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary Get a business by ID
@@ -4519,6 +5613,128 @@ export const useUpdateConversation = <
 };
 
 /**
+ * @summary Send a staff reply on a conversation thread
+ */
+export const getSendConversationMessageUrl = (
+  businessId: string,
+  conversationId: string,
+) => {
+  return `/api/businesses/${businessId}/conversations/${conversationId}/messages`;
+};
+
+export const sendConversationMessage = async (
+  businessId: string,
+  conversationId: string,
+  sendConversationMessageBody: SendConversationMessageBody,
+  options?: RequestInit,
+): Promise<ConversationMessage> => {
+  return customFetch<ConversationMessage>(
+    getSendConversationMessageUrl(businessId, conversationId),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(sendConversationMessageBody),
+    },
+  );
+};
+
+export const getSendConversationMessageMutationOptions = <
+  TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sendConversationMessage>>,
+    TError,
+    {
+      businessId: string;
+      conversationId: string;
+      data: BodyType<SendConversationMessageBody>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof sendConversationMessage>>,
+  TError,
+  {
+    businessId: string;
+    conversationId: string;
+    data: BodyType<SendConversationMessageBody>;
+  },
+  TContext
+> => {
+  const mutationKey = ["sendConversationMessage"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof sendConversationMessage>>,
+    {
+      businessId: string;
+      conversationId: string;
+      data: BodyType<SendConversationMessageBody>;
+    }
+  > = (props) => {
+    const { businessId, conversationId, data } = props ?? {};
+
+    return sendConversationMessage(
+      businessId,
+      conversationId,
+      data,
+      requestOptions,
+    );
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SendConversationMessageMutationResult = NonNullable<
+  Awaited<ReturnType<typeof sendConversationMessage>>
+>;
+export type SendConversationMessageMutationBody =
+  BodyType<SendConversationMessageBody>;
+export type SendConversationMessageMutationError = ErrorType<
+  UnauthorizedResponse | NotFoundResponse
+>;
+
+/**
+ * @summary Send a staff reply on a conversation thread
+ */
+export const useSendConversationMessage = <
+  TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sendConversationMessage>>,
+    TError,
+    {
+      businessId: string;
+      conversationId: string;
+      data: BodyType<SendConversationMessageBody>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof sendConversationMessage>>,
+  TError,
+  {
+    businessId: string;
+    conversationId: string;
+    data: BodyType<SendConversationMessageBody>;
+  },
+  TContext
+> => {
+  return useMutation(getSendConversationMessageMutationOptions(options));
+};
+
+/**
  * @summary Create a booking from the public booking page
  */
 export const getCreatePublicBookingUrl = (slug: string) => {
@@ -4694,6 +5910,739 @@ export const useCreateMarketingLead = <
   TContext
 > => {
   return useMutation(getCreateMarketingLeadMutationOptions(options));
+};
+
+/**
+ * @summary Plan, entitlements, period usage, and voice outcome estimate
+ */
+export const getGetBusinessBillingUrl = (businessId: string) => {
+  return `/api/businesses/${businessId}/billing`;
+};
+
+export const getBusinessBilling = async (
+  businessId: string,
+  options?: RequestInit,
+): Promise<BillingState> => {
+  return customFetch<BillingState>(getGetBusinessBillingUrl(businessId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetBusinessBillingQueryKey = (businessId: string) => {
+  return [`/api/businesses/${businessId}/billing`] as const;
+};
+
+export const getGetBusinessBillingQueryOptions = <
+  TData = Awaited<ReturnType<typeof getBusinessBilling>>,
+  TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+>(
+  businessId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getBusinessBilling>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetBusinessBillingQueryKey(businessId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getBusinessBilling>>
+  > = ({ signal }) =>
+    getBusinessBilling(businessId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!businessId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getBusinessBilling>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetBusinessBillingQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getBusinessBilling>>
+>;
+export type GetBusinessBillingQueryError = ErrorType<
+  UnauthorizedResponse | NotFoundResponse
+>;
+
+/**
+ * @summary Plan, entitlements, period usage, and voice outcome estimate
+ */
+
+export function useGetBusinessBilling<
+  TData = Awaited<ReturnType<typeof getBusinessBilling>>,
+  TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+>(
+  businessId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getBusinessBilling>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetBusinessBillingQueryOptions(businessId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Start Stripe Checkout (Solo, Studio, Chain, Host)
+ */
+export const getCreateBillingCheckoutSessionUrl = (businessId: string) => {
+  return `/api/businesses/${businessId}/billing/checkout-session`;
+};
+
+export const createBillingCheckoutSession = async (
+  businessId: string,
+  createBillingCheckoutSessionBody: CreateBillingCheckoutSessionBody,
+  options?: RequestInit,
+): Promise<CreateBillingCheckoutSession200> => {
+  return customFetch<CreateBillingCheckoutSession200>(
+    getCreateBillingCheckoutSessionUrl(businessId),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(createBillingCheckoutSessionBody),
+    },
+  );
+};
+
+export const getCreateBillingCheckoutSessionMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createBillingCheckoutSession>>,
+    TError,
+    { businessId: string; data: BodyType<CreateBillingCheckoutSessionBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createBillingCheckoutSession>>,
+  TError,
+  { businessId: string; data: BodyType<CreateBillingCheckoutSessionBody> },
+  TContext
+> => {
+  const mutationKey = ["createBillingCheckoutSession"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createBillingCheckoutSession>>,
+    { businessId: string; data: BodyType<CreateBillingCheckoutSessionBody> }
+  > = (props) => {
+    const { businessId, data } = props ?? {};
+
+    return createBillingCheckoutSession(businessId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateBillingCheckoutSessionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createBillingCheckoutSession>>
+>;
+export type CreateBillingCheckoutSessionMutationBody =
+  BodyType<CreateBillingCheckoutSessionBody>;
+export type CreateBillingCheckoutSessionMutationError = ErrorType<void>;
+
+/**
+ * @summary Start Stripe Checkout (Solo, Studio, Chain, Host)
+ */
+export const useCreateBillingCheckoutSession = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createBillingCheckoutSession>>,
+    TError,
+    { businessId: string; data: BodyType<CreateBillingCheckoutSessionBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createBillingCheckoutSession>>,
+  TError,
+  { businessId: string; data: BodyType<CreateBillingCheckoutSessionBody> },
+  TContext
+> => {
+  return useMutation(getCreateBillingCheckoutSessionMutationOptions(options));
+};
+
+/**
+ * @summary Anonymized peer benchmarks (k≥10, opt-in, add-on)
+ */
+export const getGetPeerInsightsUrl = (businessId: string) => {
+  return `/api/businesses/${businessId}/peer-insights`;
+};
+
+export const getPeerInsights = async (
+  businessId: string,
+  options?: RequestInit,
+): Promise<PeerInsights> => {
+  return customFetch<PeerInsights>(getGetPeerInsightsUrl(businessId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetPeerInsightsQueryKey = (businessId: string) => {
+  return [`/api/businesses/${businessId}/peer-insights`] as const;
+};
+
+export const getGetPeerInsightsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getPeerInsights>>,
+  TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+>(
+  businessId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getPeerInsights>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetPeerInsightsQueryKey(businessId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getPeerInsights>>> = ({
+    signal,
+  }) => getPeerInsights(businessId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!businessId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getPeerInsights>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetPeerInsightsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getPeerInsights>>
+>;
+export type GetPeerInsightsQueryError = ErrorType<
+  UnauthorizedResponse | NotFoundResponse
+>;
+
+/**
+ * @summary Anonymized peer benchmarks (k≥10, opt-in, add-on)
+ */
+
+export function useGetPeerInsights<
+  TData = Awaited<ReturnType<typeof getPeerInsights>>,
+  TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+>(
+  businessId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getPeerInsights>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetPeerInsightsQueryOptions(businessId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Opt in to cross-tenant intelligence for this shop
+ */
+export const getOptInPeerInsightsUrl = (businessId: string) => {
+  return `/api/businesses/${businessId}/peer-insights/opt-in`;
+};
+
+export const optInPeerInsights = async (
+  businessId: string,
+  options?: RequestInit,
+): Promise<OptInPeerInsights200> => {
+  return customFetch<OptInPeerInsights200>(
+    getOptInPeerInsightsUrl(businessId),
+    {
+      ...options,
+      method: "POST",
+    },
+  );
+};
+
+export const getOptInPeerInsightsMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof optInPeerInsights>>,
+    TError,
+    { businessId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof optInPeerInsights>>,
+  TError,
+  { businessId: string },
+  TContext
+> => {
+  const mutationKey = ["optInPeerInsights"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof optInPeerInsights>>,
+    { businessId: string }
+  > = (props) => {
+    const { businessId } = props ?? {};
+
+    return optInPeerInsights(businessId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type OptInPeerInsightsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof optInPeerInsights>>
+>;
+
+export type OptInPeerInsightsMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Opt in to cross-tenant intelligence for this shop
+ */
+export const useOptInPeerInsights = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof optInPeerInsights>>,
+    TError,
+    { businessId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof optInPeerInsights>>,
+  TError,
+  { businessId: string },
+  TContext
+> => {
+  return useMutation(getOptInPeerInsightsMutationOptions(options));
+};
+
+/**
+ * @summary Stripe Checkout for Peer Insights add-on (€49/mo)
+ */
+export const getCreatePeerInsightsCheckoutUrl = (businessId: string) => {
+  return `/api/businesses/${businessId}/billing/checkout-peer-insights`;
+};
+
+export const createPeerInsightsCheckout = async (
+  businessId: string,
+  options?: RequestInit,
+): Promise<CreatePeerInsightsCheckout200> => {
+  return customFetch<CreatePeerInsightsCheckout200>(
+    getCreatePeerInsightsCheckoutUrl(businessId),
+    {
+      ...options,
+      method: "POST",
+    },
+  );
+};
+
+export const getCreatePeerInsightsCheckoutMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createPeerInsightsCheckout>>,
+    TError,
+    { businessId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createPeerInsightsCheckout>>,
+  TError,
+  { businessId: string },
+  TContext
+> => {
+  const mutationKey = ["createPeerInsightsCheckout"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createPeerInsightsCheckout>>,
+    { businessId: string }
+  > = (props) => {
+    const { businessId } = props ?? {};
+
+    return createPeerInsightsCheckout(businessId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreatePeerInsightsCheckoutMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createPeerInsightsCheckout>>
+>;
+
+export type CreatePeerInsightsCheckoutMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Stripe Checkout for Peer Insights add-on (€49/mo)
+ */
+export const useCreatePeerInsightsCheckout = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createPeerInsightsCheckout>>,
+    TError,
+    { businessId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createPeerInsightsCheckout>>,
+  TError,
+  { businessId: string },
+  TContext
+> => {
+  return useMutation(getCreatePeerInsightsCheckoutMutationOptions(options));
+};
+
+/**
+ * @summary Read-only bookings by public slug (partner API key)
+ */
+export const getListPartnerBookingsUrl = (
+  slug: string,
+  params?: ListPartnerBookingsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/partner/v1/businesses/${slug}/bookings?${stringifiedParams}`
+    : `/api/partner/v1/businesses/${slug}/bookings`;
+};
+
+export const listPartnerBookings = async (
+  slug: string,
+  params?: ListPartnerBookingsParams,
+  options?: RequestInit,
+): Promise<PartnerBookingsResponse> => {
+  return customFetch<PartnerBookingsResponse>(
+    getListPartnerBookingsUrl(slug, params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListPartnerBookingsQueryKey = (
+  slug: string,
+  params?: ListPartnerBookingsParams,
+) => {
+  return [
+    `/api/partner/v1/businesses/${slug}/bookings`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getListPartnerBookingsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listPartnerBookings>>,
+  TError = ErrorType<void>,
+>(
+  slug: string,
+  params?: ListPartnerBookingsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listPartnerBookings>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListPartnerBookingsQueryKey(slug, params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listPartnerBookings>>
+  > = ({ signal }) =>
+    listPartnerBookings(slug, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!slug,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listPartnerBookings>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListPartnerBookingsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listPartnerBookings>>
+>;
+export type ListPartnerBookingsQueryError = ErrorType<void>;
+
+/**
+ * @summary Read-only bookings by public slug (partner API key)
+ */
+
+export function useListPartnerBookings<
+  TData = Awaited<ReturnType<typeof listPartnerBookings>>,
+  TError = ErrorType<void>,
+>(
+  slug: string,
+  params?: ListPartnerBookingsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listPartnerBookings>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListPartnerBookingsQueryOptions(
+    slug,
+    params,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Voice receptionist status (requires voice_receptionist entitlement)
+ */
+export const getGetVoiceStatusUrl = (businessId: string) => {
+  return `/api/businesses/${businessId}/voice/status`;
+};
+
+export const getVoiceStatus = async (
+  businessId: string,
+  options?: RequestInit,
+): Promise<GetVoiceStatus200> => {
+  return customFetch<GetVoiceStatus200>(getGetVoiceStatusUrl(businessId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetVoiceStatusQueryKey = (businessId: string) => {
+  return [`/api/businesses/${businessId}/voice/status`] as const;
+};
+
+export const getGetVoiceStatusQueryOptions = <
+  TData = Awaited<ReturnType<typeof getVoiceStatus>>,
+  TError = ErrorType<EntitlementRequiredError>,
+>(
+  businessId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getVoiceStatus>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetVoiceStatusQueryKey(businessId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getVoiceStatus>>> = ({
+    signal,
+  }) => getVoiceStatus(businessId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!businessId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getVoiceStatus>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetVoiceStatusQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getVoiceStatus>>
+>;
+export type GetVoiceStatusQueryError = ErrorType<EntitlementRequiredError>;
+
+/**
+ * @summary Voice receptionist status (requires voice_receptionist entitlement)
+ */
+
+export function useGetVoiceStatus<
+  TData = Awaited<ReturnType<typeof getVoiceStatus>>,
+  TError = ErrorType<EntitlementRequiredError>,
+>(
+  businessId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getVoiceStatus>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetVoiceStatusQueryOptions(businessId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Stripe Billing webhooks (raw body; no auth)
+ */
+export const getStripeWebhookUrl = () => {
+  return `/api/webhooks/stripe`;
+};
+
+export const stripeWebhook = async (options?: RequestInit): Promise<void> => {
+  return customFetch<void>(getStripeWebhookUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getStripeWebhookMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof stripeWebhook>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof stripeWebhook>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["stripeWebhook"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof stripeWebhook>>,
+    void
+  > = () => {
+    return stripeWebhook(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type StripeWebhookMutationResult = NonNullable<
+  Awaited<ReturnType<typeof stripeWebhook>>
+>;
+
+export type StripeWebhookMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Stripe Billing webhooks (raw body; no auth)
+ */
+export const useStripeWebhook = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof stripeWebhook>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof stripeWebhook>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getStripeWebhookMutationOptions(options));
 };
 
 /**
@@ -5374,6 +7323,608 @@ export const useTwilioSmsInbound = <
 };
 
 /**
+ * Twilio POSTs CallSid, From, To. Responds with TwiML Say + Gather.
+No call recording in v1. Requires voice_receptionist entitlement on tenant.
+
+ * @summary Twilio inbound voice webhook (English-IE gather loop)
+ */
+export const getTwilioVoiceInboundUrl = () => {
+  return `/api/channels/voice/inbound`;
+};
+
+export const twilioVoiceInbound = async (
+  twilioVoiceInboundBody: TwilioVoiceInboundBody,
+  options?: RequestInit,
+): Promise<string> => {
+  const formUrlEncoded = new URLSearchParams();
+  formUrlEncoded.append(`CallSid`, twilioVoiceInboundBody.CallSid);
+  formUrlEncoded.append(`From`, twilioVoiceInboundBody.From);
+  formUrlEncoded.append(`To`, twilioVoiceInboundBody.To);
+
+  return customFetch<string>(getTwilioVoiceInboundUrl(), {
+    ...options,
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      ...options?.headers,
+    },
+    body: formUrlEncoded,
+  });
+};
+
+export const getTwilioVoiceInboundMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof twilioVoiceInbound>>,
+    TError,
+    { data: BodyType<TwilioVoiceInboundBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof twilioVoiceInbound>>,
+  TError,
+  { data: BodyType<TwilioVoiceInboundBody> },
+  TContext
+> => {
+  const mutationKey = ["twilioVoiceInbound"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof twilioVoiceInbound>>,
+    { data: BodyType<TwilioVoiceInboundBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return twilioVoiceInbound(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type TwilioVoiceInboundMutationResult = NonNullable<
+  Awaited<ReturnType<typeof twilioVoiceInbound>>
+>;
+export type TwilioVoiceInboundMutationBody = BodyType<TwilioVoiceInboundBody>;
+export type TwilioVoiceInboundMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Twilio inbound voice webhook (English-IE gather loop)
+ */
+export const useTwilioVoiceInbound = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof twilioVoiceInbound>>,
+    TError,
+    { data: BodyType<TwilioVoiceInboundBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof twilioVoiceInbound>>,
+  TError,
+  { data: BodyType<TwilioVoiceInboundBody> },
+  TContext
+> => {
+  return useMutation(getTwilioVoiceInboundMutationOptions(options));
+};
+
+/**
+ * @summary Twilio speech gather callback for Liv voice turns
+ */
+export const getTwilioVoiceGatherUrl = (params: TwilioVoiceGatherParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/channels/voice/gather?${stringifiedParams}`
+    : `/api/channels/voice/gather`;
+};
+
+export const twilioVoiceGather = async (
+  twilioVoiceGatherBody: TwilioVoiceGatherBody,
+  params: TwilioVoiceGatherParams,
+  options?: RequestInit,
+): Promise<string> => {
+  const formUrlEncoded = new URLSearchParams();
+  formUrlEncoded.append(`CallSid`, twilioVoiceGatherBody.CallSid);
+  if (twilioVoiceGatherBody.SpeechResult !== undefined) {
+    formUrlEncoded.append(`SpeechResult`, twilioVoiceGatherBody.SpeechResult);
+  }
+
+  return customFetch<string>(getTwilioVoiceGatherUrl(params), {
+    ...options,
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      ...options?.headers,
+    },
+    body: formUrlEncoded,
+  });
+};
+
+export const getTwilioVoiceGatherMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof twilioVoiceGather>>,
+    TError,
+    { data: BodyType<TwilioVoiceGatherBody>; params: TwilioVoiceGatherParams },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof twilioVoiceGather>>,
+  TError,
+  { data: BodyType<TwilioVoiceGatherBody>; params: TwilioVoiceGatherParams },
+  TContext
+> => {
+  const mutationKey = ["twilioVoiceGather"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof twilioVoiceGather>>,
+    { data: BodyType<TwilioVoiceGatherBody>; params: TwilioVoiceGatherParams }
+  > = (props) => {
+    const { data, params } = props ?? {};
+
+    return twilioVoiceGather(data, params, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type TwilioVoiceGatherMutationResult = NonNullable<
+  Awaited<ReturnType<typeof twilioVoiceGather>>
+>;
+export type TwilioVoiceGatherMutationBody = BodyType<TwilioVoiceGatherBody>;
+export type TwilioVoiceGatherMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Twilio speech gather callback for Liv voice turns
+ */
+export const useTwilioVoiceGather = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof twilioVoiceGather>>,
+    TError,
+    { data: BodyType<TwilioVoiceGatherBody>; params: TwilioVoiceGatherParams },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof twilioVoiceGather>>,
+  TError,
+  { data: BodyType<TwilioVoiceGatherBody>; params: TwilioVoiceGatherParams },
+  TContext
+> => {
+  return useMutation(getTwilioVoiceGatherMutationOptions(options));
+};
+
+/**
+ * @summary Twilio call status callback (meters voice_minute_inbound)
+ */
+export const getTwilioVoiceStatusUrl = () => {
+  return `/api/channels/voice/status`;
+};
+
+export const twilioVoiceStatus = async (
+  twilioVoiceStatusBody: TwilioVoiceStatusBody,
+  options?: RequestInit,
+): Promise<void> => {
+  const formUrlEncoded = new URLSearchParams();
+  if (twilioVoiceStatusBody.CallSid !== undefined) {
+    formUrlEncoded.append(`CallSid`, twilioVoiceStatusBody.CallSid);
+  }
+  if (twilioVoiceStatusBody.CallStatus !== undefined) {
+    formUrlEncoded.append(`CallStatus`, twilioVoiceStatusBody.CallStatus);
+  }
+  if (twilioVoiceStatusBody.CallDuration !== undefined) {
+    formUrlEncoded.append(`CallDuration`, twilioVoiceStatusBody.CallDuration);
+  }
+
+  return customFetch<void>(getTwilioVoiceStatusUrl(), {
+    ...options,
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      ...options?.headers,
+    },
+    body: formUrlEncoded,
+  });
+};
+
+export const getTwilioVoiceStatusMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof twilioVoiceStatus>>,
+    TError,
+    { data: BodyType<TwilioVoiceStatusBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof twilioVoiceStatus>>,
+  TError,
+  { data: BodyType<TwilioVoiceStatusBody> },
+  TContext
+> => {
+  const mutationKey = ["twilioVoiceStatus"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof twilioVoiceStatus>>,
+    { data: BodyType<TwilioVoiceStatusBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return twilioVoiceStatus(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type TwilioVoiceStatusMutationResult = NonNullable<
+  Awaited<ReturnType<typeof twilioVoiceStatus>>
+>;
+export type TwilioVoiceStatusMutationBody = BodyType<TwilioVoiceStatusBody>;
+export type TwilioVoiceStatusMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Twilio call status callback (meters voice_minute_inbound)
+ */
+export const useTwilioVoiceStatus = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof twilioVoiceStatus>>,
+    TError,
+    { data: BodyType<TwilioVoiceStatusBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof twilioVoiceStatus>>,
+  TError,
+  { data: BodyType<TwilioVoiceStatusBody> },
+  TContext
+> => {
+  return useMutation(getTwilioVoiceStatusMutationOptions(options));
+};
+
+/**
+ * @summary Search tenant directory (cross-tenant, read-only)
+ */
+export const getSearchInternalTenantsUrl = (
+  params?: SearchInternalTenantsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/internal/ops/tenants?${stringifiedParams}`
+    : `/api/internal/ops/tenants`;
+};
+
+export const searchInternalTenants = async (
+  params?: SearchInternalTenantsParams,
+  options?: RequestInit,
+): Promise<InternalTenantSearchResponse> => {
+  return customFetch<InternalTenantSearchResponse>(
+    getSearchInternalTenantsUrl(params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getSearchInternalTenantsQueryKey = (
+  params?: SearchInternalTenantsParams,
+) => {
+  return [`/api/internal/ops/tenants`, ...(params ? [params] : [])] as const;
+};
+
+export const getSearchInternalTenantsQueryOptions = <
+  TData = Awaited<ReturnType<typeof searchInternalTenants>>,
+  TError = ErrorType<UnauthorizedResponse>,
+>(
+  params?: SearchInternalTenantsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof searchInternalTenants>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getSearchInternalTenantsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof searchInternalTenants>>
+  > = ({ signal }) =>
+    searchInternalTenants(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof searchInternalTenants>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type SearchInternalTenantsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof searchInternalTenants>>
+>;
+export type SearchInternalTenantsQueryError = ErrorType<UnauthorizedResponse>;
+
+/**
+ * @summary Search tenant directory (cross-tenant, read-only)
+ */
+
+export function useSearchInternalTenants<
+  TData = Awaited<ReturnType<typeof searchInternalTenants>>,
+  TError = ErrorType<UnauthorizedResponse>,
+>(
+  params?: SearchInternalTenantsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof searchInternalTenants>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getSearchInternalTenantsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Tenant health card with Stripe / Clerk deep links
+ */
+export const getGetInternalTenantUrl = (businessId: string) => {
+  return `/api/internal/ops/tenants/${businessId}`;
+};
+
+export const getInternalTenant = async (
+  businessId: string,
+  options?: RequestInit,
+): Promise<InternalTenantDetail> => {
+  return customFetch<InternalTenantDetail>(
+    getGetInternalTenantUrl(businessId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetInternalTenantQueryKey = (businessId: string) => {
+  return [`/api/internal/ops/tenants/${businessId}`] as const;
+};
+
+export const getGetInternalTenantQueryOptions = <
+  TData = Awaited<ReturnType<typeof getInternalTenant>>,
+  TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+>(
+  businessId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getInternalTenant>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetInternalTenantQueryKey(businessId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getInternalTenant>>
+  > = ({ signal }) =>
+    getInternalTenant(businessId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!businessId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getInternalTenant>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetInternalTenantQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getInternalTenant>>
+>;
+export type GetInternalTenantQueryError = ErrorType<
+  UnauthorizedResponse | NotFoundResponse
+>;
+
+/**
+ * @summary Tenant health card with Stripe / Clerk deep links
+ */
+
+export function useGetInternalTenant<
+  TData = Awaited<ReturnType<typeof getInternalTenant>>,
+  TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+>(
+  businessId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getInternalTenant>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetInternalTenantQueryOptions(businessId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Impersonation policy reminder for support (read-only)
+ */
+export const getGetInternalTenantSupportContextUrl = (businessId: string) => {
+  return `/api/internal/ops/tenants/${businessId}/support-context`;
+};
+
+export const getInternalTenantSupportContext = async (
+  businessId: string,
+  options?: RequestInit,
+): Promise<InternalSupportContext> => {
+  return customFetch<InternalSupportContext>(
+    getGetInternalTenantSupportContextUrl(businessId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetInternalTenantSupportContextQueryKey = (
+  businessId: string,
+) => {
+  return [`/api/internal/ops/tenants/${businessId}/support-context`] as const;
+};
+
+export const getGetInternalTenantSupportContextQueryOptions = <
+  TData = Awaited<ReturnType<typeof getInternalTenantSupportContext>>,
+  TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+>(
+  businessId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getInternalTenantSupportContext>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getGetInternalTenantSupportContextQueryKey(businessId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getInternalTenantSupportContext>>
+  > = ({ signal }) =>
+    getInternalTenantSupportContext(businessId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!businessId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getInternalTenantSupportContext>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetInternalTenantSupportContextQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getInternalTenantSupportContext>>
+>;
+export type GetInternalTenantSupportContextQueryError = ErrorType<
+  UnauthorizedResponse | NotFoundResponse
+>;
+
+/**
+ * @summary Impersonation policy reminder for support (read-only)
+ */
+
+export function useGetInternalTenantSupportContext<
+  TData = Awaited<ReturnType<typeof getInternalTenantSupportContext>>,
+  TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+>(
+  businessId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getInternalTenantSupportContext>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetInternalTenantSupportContextQueryOptions(
+    businessId,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
  * Header-protected by `X-Internal-Cron-Secret`. Sends reminder
 emails for CONFIRMED/PENDING bookings starting in [now+23h, now+25h),
 deduped via notificationLogs.templateKey = "booking-reminder-t24".
@@ -5456,4 +8007,170 @@ export const useCronSendReminders = <
   TContext
 > => {
   return useMutation(getCronSendRemindersMutationOptions(options));
+};
+
+/**
+ * **Development only** — returns 403 when `NODE_ENV=production`.
+Creates sample businesses, staff, services, and bookings for local demos.
+
+ * @summary Seed demo businesses for the authenticated user
+ */
+export const getSeedDevWorkspaceUrl = () => {
+  return `/api/dev/seed`;
+};
+
+export const seedDevWorkspace = async (
+  options?: RequestInit,
+): Promise<SeedDevWorkspace200> => {
+  return customFetch<SeedDevWorkspace200>(getSeedDevWorkspaceUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getSeedDevWorkspaceMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof seedDevWorkspace>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof seedDevWorkspace>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["seedDevWorkspace"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof seedDevWorkspace>>,
+    void
+  > = () => {
+    return seedDevWorkspace(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SeedDevWorkspaceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof seedDevWorkspace>>
+>;
+
+export type SeedDevWorkspaceMutationError = ErrorType<void>;
+
+/**
+ * @summary Seed demo businesses for the authenticated user
+ */
+export const useSeedDevWorkspace = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof seedDevWorkspace>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof seedDevWorkspace>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getSeedDevWorkspaceMutationOptions(options));
+};
+
+/**
+ * Development only — returns 403 in production.
+ * @summary Remove seeded demo data for the authenticated user
+ */
+export const getClearDevWorkspaceUrl = () => {
+  return `/api/dev/seed`;
+};
+
+export const clearDevWorkspace = async (
+  options?: RequestInit,
+): Promise<ClearDevWorkspace200> => {
+  return customFetch<ClearDevWorkspace200>(getClearDevWorkspaceUrl(), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getClearDevWorkspaceMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof clearDevWorkspace>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof clearDevWorkspace>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["clearDevWorkspace"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof clearDevWorkspace>>,
+    void
+  > = () => {
+    return clearDevWorkspace(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ClearDevWorkspaceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof clearDevWorkspace>>
+>;
+
+export type ClearDevWorkspaceMutationError = ErrorType<void>;
+
+/**
+ * @summary Remove seeded demo data for the authenticated user
+ */
+export const useClearDevWorkspace = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof clearDevWorkspace>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof clearDevWorkspace>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getClearDevWorkspaceMutationOptions(options));
 };

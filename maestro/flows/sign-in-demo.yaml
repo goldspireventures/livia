@@ -1,0 +1,9 @@
+appId: ${MAESTRO_APP_ID}
+---
+# Optional demo sign-in — skip when already authenticated
+- launchApp
+- runFlow:
+    when:
+      visible:
+        id: "email-input"
+    file: sign-in-demo-steps.yaml

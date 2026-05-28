@@ -1,12 +1,11 @@
 import { defineConfig } from "drizzle-kit";
-import path from "path";
 
-// Migrations always go through the session pooler (5432) — the transaction
-// pooler (6543) does not support DDL session state.
+// Prefer pooler URLs (resolve on Windows). DIRECT (db.*.supabase.co) often ENOTFOUND locally.
+// Session pooler (5432) supports DDL; transaction pooler (6543) does not.
 const url =
-  process.env.SUPABASE_DATABASE_URL_DIRECT ??
   process.env.SUPABASE_DATABASE_URL ??
-  process.env.DATABASE_URL;
+  process.env.DATABASE_URL ??
+  process.env.SUPABASE_DATABASE_URL_DIRECT;
 
 if (!url) {
   throw new Error(
@@ -16,10 +15,11 @@ if (!url) {
 }
 
 export default defineConfig({
+  // Folder globs (not index.ts barrels) — drizzle-kit must see pgTable definitions directly.
   schema: [
-    path.join(__dirname, "./src/schema/index.ts"),
-    path.join(__dirname, "../audit-log/src/schema.ts"),
-    path.join(__dirname, "../eval/src/schema.ts"),
+    "./src/schema",
+    "../audit-log/src/schema.ts",
+    "../eval/src/schema.ts",
   ],
   dialect: "postgresql",
   dbCredentials: {

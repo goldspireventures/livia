@@ -3,6 +3,7 @@ import { CreateMarketingLeadBody } from "@workspace/api-zod";
 import { createMarketingLead } from "../services/marketing-leads.service";
 import { logger } from "../lib/logger";
 
+import { sendError } from "../lib/http-errors";
 const router: IRouter = Router();
 
 type Bucket = { count: number; reset: number };
@@ -44,13 +45,13 @@ router.post("/public/marketing/leads", async (req, res): Promise<void> => {
   const limit = rateLimitOk(ip);
   if (!limit.ok) {
     res.setHeader("Retry-After", String(limit.retryAfter ?? 60));
-    res.status(429).json({ error: "Too many requests. Please try again later." });
+    sendError(res, req, 429, "Too many requests. Please try again later.");
     return;
   }
 
   const parsed = CreateMarketingLeadBody.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: "Invalid lead payload" });
+    sendError(res, req, 400, "Invalid lead payload");
     return;
   }
 
@@ -69,7 +70,7 @@ router.post("/public/marketing/leads", async (req, res): Promise<void> => {
     res.status(201).json({ ok: true });
   } catch (err) {
     logger.error({ err }, "marketing_lead_capture_failed");
-    res.status(500).json({ error: "Failed to record lead" });
+    sendError(res, req, 500, "Failed to record lead");
   }
 });
 

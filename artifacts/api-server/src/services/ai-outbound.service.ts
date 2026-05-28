@@ -12,6 +12,9 @@ import {
 import { generateId } from "../lib/id";
 import { AI_DISCLOSURE } from "@workspace/ai-disclosure";
 import { appendMessage } from "./conversations.service";
+import { getPoliciesForBusinessId } from "./policies.service";
+import { createMetaClient, isMetaConfigured } from "@workspace/integrations-meta";
+import { getMessagingChannels } from "./messaging-channels.service";
 
 export type SmsTransport = (args: {
   to: string;
@@ -50,15 +53,46 @@ export function setEmailTransport(t: EmailTransport): void {
   emailTransport = t;
 }
 
+/** Outbound SMS without a conversation thread (e.g. premises tenant menu). */
+export async function sendDirectSms(args: {
+  to: string;
+  body: string;
+  from?: string;
+}): Promise<void> {
+  await smsTransport({ to: args.to, body: args.body, from: args.from });
+}
+
+export async function sendDirectWhatsapp(args: {
+  phoneNumberId: string;
+  to: string;
+  body: string;
+}): Promise<void> {
+  const token = metaAccessToken();
+  if (!token) {
+    if (process.env["META_DEV_SIMULATE"] !== "true") {
+      throw new Error("META_NOT_CONFIGURED");
+    }
+    return;
+  }
+  const meta = createMetaClient({ accessToken: token });
+  await meta.sendWhatsAppText({
+    phoneNumberId: args.phoneNumberId,
+    to: args.to,
+    body: args.body,
+  });
+}
+
 // Pure prefix-once decision. Exposed for unit tests so we can prove the
 // "prefix exactly once per thread" semantic without touching the DB.
 export function applySmsPrefix(args: {
   isFirstOnThread: boolean;
   businessName: string;
   content: string;
+  smsPrefix?: (businessName: string) => string;
 }): string {
+  const prefix = args.smsPrefix ?? AI_DISCLOSURE.smsPrefix;
   return args.isFirstOnThread
-    ? `${AI_DISCLOSURE.smsPrefix(args.businessName)}${args.content}`
+    ? `${prefix(args.businessName)}${args.content}`
     : args.content;
 }
 
@@ -92,10 +126,12 @@ export async function sendAiSms(args: {
   fromPhone?: string | null;
 }): Promise<{ body: string; status: "PENDING" | "SENT" | "FAILED" }> {
   const isFirstOnThread = await isFirstAssistantSmsOnConversation(args.conversationId);
+  const policies = await getPoliciesForBusinessId(args.businessId);
   const body = applySmsPrefix({
     isFirstOnThread,
     businessName: args.businessName,
     content: args.content,
+    smsPrefix: policies?.aiDisclosure.smsPrefix,
   });
 
   await appendMessage({
@@ -171,8 +207,9 @@ export function composeAiEmailBody(args: {
   businessName: string;
   body: string;
   signature?: string;
+  emailBlock?: (businessName: string) => string;
 }): string {
-  const disclosure = AI_DISCLOSURE.emailBlock(args.businessName);
+  const disclosure = (args.emailBlock ?? AI_DISCLOSURE.emailBlock)(args.businessName);
   const sig = args.signature?.trim();
   const parts = [args.body.trim(), "---", disclosure];
   if (sig) parts.push("", sig);
@@ -197,10 +234,12 @@ export async function sendAiEmail(args: {
   fromAddress?: string | null;
   replyTo?: string;
 }): Promise<{ body: string; status: "PENDING" | "SENT" | "FAILED" }> {
+  const policies = await getPoliciesForBusinessId(args.businessId);
   const composed = composeAiEmailBody({
     businessName: args.businessName,
     body: args.body,
     signature: args.signature,
+    emailBlock: policies?.aiDisclosure.emailBlock,
   });
 
   const notifId = generateId();
@@ -254,3 +293,165 @@ export async function sendAiEmail(args: {
     return { body: composed, status: "FAILED" };
   }
 }
+
+function metaAccessToken(): string | null {
+  return (
+    process.env["META_ACCESS_TOKEN"]?.trim() ??
+    process.env["WHATSAPP_ACCESS_TOKEN"]?.trim() ??
+    null
+  );
+}
+
+async function appendAssistantChannelMessage(args: {
+  conversationId: string;
+  businessId: string;
+  businessName: string;
+  customerId?: string | null;
+  channel: "WHATSAPP" | "INSTAGRAM" | "MESSENGER";
+  content: string;
+  toolName: string;
+}) {
+  const policies = await getPoliciesForBusinessId(args.businessId);
+  const isFirst = await isFirstAssistantSmsOnConversation(args.conversationId);
+  const body = applySmsPrefix({
+    isFirstOnThread: isFirst,
+    businessName: args.businessName,
+    content: args.content,
+    smsPrefix: policies?.aiDisclosure.smsPrefix,
+  });
+
+  await appendMessage({
+    conversationId: args.conversationId,
+    role: "ASSISTANT",
+    content: body,
+    toolName: args.toolName,
+  });
+
+  await db.insert(messageLogsTable).values({
+    id: generateId(),
+    businessId: args.businessId,
+    customerId: args.customerId ?? null,
+    channelType: args.channel,
+    direction: "OUTBOUND",
+    content: body,
+    metadata: { authoredBy: "liv", conversationId: args.conversationId },
+  });
+
+  return body;
+}
+
+export async function sendAiWhatsapp(args: {
+  conversationId: string;
+  businessId: string;
+  businessName: string;
+  customerId?: string | null;
+  customerPhone: string;
+  content: string;
+}): Promise<{ body: string; status: "PENDING" | "SENT" | "FAILED" }> {
+  const body = await appendAssistantChannelMessage({
+    conversationId: args.conversationId,
+    businessId: args.businessId,
+    businessName: args.businessName,
+    customerId: args.customerId,
+    channel: "WHATSAPP",
+    content: args.content,
+    toolName: "whatsapp",
+  });
+
+  const channels = await getMessagingChannels(args.businessId);
+  const phoneNumberId = channels.whatsapp?.phoneNumberId;
+  const token = metaAccessToken();
+
+  if (!phoneNumberId || !token) {
+    if (process.env["META_DEV_SIMULATE"] === "true") {
+      return { body, status: "SENT" };
+    }
+    return { body, status: "FAILED" };
+  }
+
+  try {
+    const meta = createMetaClient({ accessToken: token });
+    await meta.sendWhatsAppText({
+      phoneNumberId,
+      to: args.customerPhone,
+      body,
+    });
+    return { body, status: "SENT" };
+  } catch {
+    return { body, status: "FAILED" };
+  }
+}
+
+export async function sendAiInstagram(args: {
+  conversationId: string;
+  businessId: string;
+  businessName: string;
+  customerId?: string | null;
+  recipientId: string;
+  content: string;
+}): Promise<{ body: string; status: "PENDING" | "SENT" | "FAILED" }> {
+  const body = await appendAssistantChannelMessage({
+    conversationId: args.conversationId,
+    businessId: args.businessId,
+    businessName: args.businessName,
+    customerId: args.customerId,
+    channel: "INSTAGRAM",
+    content: args.content,
+    toolName: "instagram",
+  });
+
+  const channels = await getMessagingChannels(args.businessId);
+  const pageId = channels.instagram?.pageId;
+  const token = metaAccessToken();
+
+  if (!pageId || !token) {
+    if (process.env["META_DEV_SIMULATE"] === "true") return { body, status: "SENT" };
+    return { body, status: "FAILED" };
+  }
+
+  try {
+    const meta = createMetaClient({ accessToken: token });
+    await meta.sendPageMessage({ pageId, recipientId: args.recipientId, body });
+    return { body, status: "SENT" };
+  } catch {
+    return { body, status: "FAILED" };
+  }
+}
+
+export async function sendAiMessenger(args: {
+  conversationId: string;
+  businessId: string;
+  businessName: string;
+  customerId?: string | null;
+  recipientId: string;
+  content: string;
+}): Promise<{ body: string; status: "PENDING" | "SENT" | "FAILED" }> {
+  const body = await appendAssistantChannelMessage({
+    conversationId: args.conversationId,
+    businessId: args.businessId,
+    businessName: args.businessName,
+    customerId: args.customerId,
+    channel: "MESSENGER",
+    content: args.content,
+    toolName: "messenger",
+  });
+
+  const channels = await getMessagingChannels(args.businessId);
+  const pageId = channels.messenger?.pageId ?? channels.instagram?.pageId;
+  const token = metaAccessToken();
+
+  if (!pageId || !token) {
+    if (process.env["META_DEV_SIMULATE"] === "true") return { body, status: "SENT" };
+    return { body, status: "FAILED" };
+  }
+
+  try {
+    const meta = createMetaClient({ accessToken: token });
+    await meta.sendPageMessage({ pageId, recipientId: args.recipientId, body });
+    return { body, status: "SENT" };
+  } catch {
+    return { body, status: "FAILED" };
+  }
+}
+
+export { isMetaConfigured };

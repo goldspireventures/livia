@@ -1,4 +1,15 @@
-import { db, businessesTable, businessMembershipsTable, staffTable, servicesTable, staffServicesTable, customersTable, bookingsTable, availabilityRulesTable } from "@workspace/db";
+import {
+  db,
+  usersTable,
+  businessesTable,
+  businessMembershipsTable,
+  staffTable,
+  servicesTable,
+  staffServicesTable,
+  customersTable,
+  bookingsTable,
+  availabilityRulesTable,
+} from "@workspace/db";
 import { eq } from "drizzle-orm";
 
 function generateId(): string {
@@ -18,10 +29,22 @@ async function main() {
 
   console.log("Seeding demo workspace...");
 
+  // 0. Placeholder owner (businesses.owner_id FK)
+  await db
+    .insert(usersTable)
+    .values({
+      id: USER_PLACEHOLDER,
+      email: "seed-demo@livia.local",
+      fullName: "Demo Seed Owner",
+      role: "OWNER",
+    })
+    .onConflictDoNothing();
+
   // 1. Business
   const bizId = generateId();
   const [biz] = await db.insert(businessesTable).values({
     id: bizId,
+    ownerId: USER_PLACEHOLDER,
     name: "Luxe Salon & Spa",
     slug: SLUG,
     description: "Premium hair, beauty and wellness services in the heart of the city.",
@@ -32,6 +55,18 @@ async function main() {
     city: "London",
     country: "GB",
   }).returning();
+
+  await db
+    .insert(businessMembershipsTable)
+    .values({
+      id: generateId(),
+      businessId: bizId,
+      userId: USER_PLACEHOLDER,
+      role: "OWNER",
+      roleV2: "OWN",
+      status: "ACTIVE",
+    })
+    .onConflictDoNothing({ target: [businessMembershipsTable.businessId, businessMembershipsTable.userId] });
 
   // 2. Staff
   const makeStaff = (firstName: string, lastName: string, email: string, color: string) => ({

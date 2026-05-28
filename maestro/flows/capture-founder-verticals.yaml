@@ -1,0 +1,29 @@
+appId: ${MAESTRO_APP_ID}
+env:
+  PERSONA: founder
+---
+- runFlow: sign-in-demo.yaml
+- runFlow: helpers/switch-persona.yaml
+- tapOn: "Shops"
+- takeScreenshot: e2e/visual-captures/mobile/founder-glance-list
+# Open each vertical showcase shop → Today reflects vertical accent
+- tapOn: "Bloom Beauty Dublin"
+- takeScreenshot: e2e/visual-captures/mobile/founder-vertical-beauty-today
+- tapOn: "Shops"
+- tapOn: "Harbour Wellness Cork"
+- takeScreenshot: e2e/visual-captures/mobile/founder-vertical-wellness-today
+- tapOn: "Shops"
+- tapOn: "Ink & Anchor Galway"
+- takeScreenshot: e2e/visual-captures/mobile/founder-vertical-body-art-today
+- tapOn: "Shops"
+- tapOn: "Paws Parlour Dublin"
+- takeScreenshot: e2e/visual-captures/mobile/founder-vertical-pet-today
+- tapOn: "Shops"
+- tapOn: "Clarity Medspa Dublin"
+- takeScreenshot: e2e/visual-captures/mobile/founder-vertical-medspa-today
+- tapOn: "Shops"
+- tapOn: "Motion Physio Cork"
+- takeScreenshot: e2e/visual-captures/mobile/founder-vertical-allied-health-today
+- tapOn: "Shops"
+- tapOn: "Peak Fitness Dublin"
+- takeScreenshot: e2e/visual-captures/mobile/founder-vertical-fitness-today

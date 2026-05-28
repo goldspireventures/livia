@@ -16,6 +16,8 @@ export const fonts = {
   bodyMed: "Inter_500Medium",
   bodySemi: "Inter_600SemiBold",
   bodyBold: "Inter_700Bold",
+  /** Uppercase labels / demo tags (Inter semibold; no separate mono face loaded). */
+  mono: "Inter_600SemiBold",
 } as const;
 
 export const type = {

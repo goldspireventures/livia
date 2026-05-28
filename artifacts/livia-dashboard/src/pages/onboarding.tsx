@@ -1,259 +1,187 @@
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useCreateBusiness } from "@workspace/api-client-react";
+import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useBusiness } from "@/lib/business-context";
+import { apiFetch } from "@/lib/api-fetch";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Loader2, Sparkles } from "lucide-react";
+import { OnboardingWizard, type OnboardingStatePayload } from "@/components/onboarding/onboarding-wizard";
+import { OnboardingWelcomePanel } from "@/components/onboarding-welcome-panel";
+import type { OnboardingActId } from "@/lib/onboarding-acts";
+import { isDemoLoginEnabled } from "@/lib/persona";
+import { afterBusinessCreatedState } from "@workspace/policy";
+import { OnboardingExperienceShell } from "@/components/onboarding/onboarding-experience-shell";
 
-const formSchema = z.object({
-  name: z.string().min(2, "Business name must be at least 2 characters"),
-  slug: z.string().min(2, "Slug must be at least 2 characters").regex(/^[a-z0-9-]+$/, "Slug can only contain lowercase letters, numbers, and hyphens"),
-  category: z.string().min(1, "Please select a category"),
-  timezone: z.string().min(1, "Please select a timezone"),
-});
+type BusinessRow = {
+  id: string;
+  slug: string;
+  onboardingState?: OnboardingStatePayload | null;
+};
 
-type FormValues = z.infer<typeof formSchema>;
+function readOnboardingIntent(): { secondShop?: boolean } {
+  if (typeof window === "undefined") return {};
+  const params = new URLSearchParams(window.location.search);
+  return params.get("intent") === "second-shop" ? { secondShop: true } : {};
+}
 
 export default function OnboardingPage() {
+  const intent = readOnboardingIntent();
+  const { businesses } = useBusiness();
+  const parentBusinessId =
+    intent.secondShop && businesses.length > 0 ? businesses[0]!.id : undefined;
   const { toast } = useToast();
-  const createBusiness = useCreateBusiness();
   const [seedLoading, setSeedLoading] = useState(false);
+  const [businessId, setBusinessId] = useState<string | null>(null);
+  const [businessSlug, setBusinessSlug] = useState<string | null>(null);
+  const [onboardingState, setOnboardingState] = useState<OnboardingStatePayload | null>(null);
+  const [previewVertical, setPreviewVertical] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema as any),
-    defaultValues: {
-      name: "",
-      slug: "",
-      category: "",
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    },
-  });
-
-  const generateSlug = (name: string) => {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)+/g, "");
-  };
-
-  const watchName = form.watch("name");
-  const isSlugTouched = form.formState.dirtyFields.slug;
-
-  if (watchName && !isSlugTouched && form.getValues("slug") !== generateSlug(watchName)) {
-    form.setValue("slug", generateSlug(watchName));
-  }
-
-  const onSubmit = (values: FormValues) => {
-    createBusiness.mutate(
-      { data: values },
-      {
-        onSuccess: () => {
-          toast({
-            title: "Business created",
-            description: "Welcome to Livia!",
-          });
-          window.location.href = "/dashboard";
-        },
-        onError: (error) => {
-          toast({
-            title: "Failed to create business",
-            description: (error as any).error || "An unexpected error occurred",
-            variant: "destructive",
-          });
-        },
-      }
-    );
-  };
+  useEffect(() => {
+    // Second location = new business row — do not resume the first shop's onboarding.
+    if (intent.secondShop) {
+      setLoading(false);
+      return;
+    }
+    apiFetch<BusinessRow[]>("/me/businesses")
+      .then((businesses) => {
+        const latest = businesses[0];
+        if (latest) {
+          setBusinessId(latest.id);
+          setBusinessSlug(latest.slug);
+          const v = (latest as { vertical?: string }).vertical;
+          if (v) setPreviewVertical(v);
+          const raw = latest.onboardingState;
+          if (raw && typeof raw === "object" && "currentAct" in raw) {
+            setOnboardingState(raw as OnboardingStatePayload);
+          } else {
+            setOnboardingState({
+              currentAct: "a2_shop_profile",
+              completedActs: ["a1_create_business"],
+              percentComplete: 8,
+            });
+          }
+        }
+      })
+      .catch((err: unknown) => {
+        toast({
+          title: "Could not load your setup progress",
+          description: err instanceof Error ? err.message : "Try refreshing the page.",
+          variant: "destructive",
+        });
+      })
+      .finally(() => setLoading(false));
+  }, [intent.secondShop, toast]);
 
   const loadDemoData = async () => {
     setSeedLoading(true);
     try {
-      const res = await fetch("/api/dev/seed", { method: "POST" });
-      const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Seed failed");
+      await apiFetch("/demo/provision", { method: "POST" });
       toast({
-        title: "Demo workspace ready!",
-        description: `${body.business?.name ?? "Luxe Salon & Spa"} — 3 staff, 5 services, 8 clients, 15 bookings loaded.`,
+        title: "Full Livia demo ready",
+        description: "Opening demo gateway…",
       });
-      window.location.href = "/dashboard";
-    } catch (err: any) {
+      window.location.href = "/demo";
+    } catch (err: unknown) {
       toast({
         title: "Could not load demo data",
-        description: err.message,
+        description: err instanceof Error ? err.message : "Seed failed",
         variant: "destructive",
       });
       setSeedLoading(false);
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex min-h-[100dvh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  const themeVertical =
+    previewVertical ??
+    (businessId ? undefined : "hair");
+
   return (
-    <div className="flex min-h-[100dvh] w-full items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-lg">
-        <CardHeader>
-          <CardTitle className="text-2xl">Set up your business</CardTitle>
-          <CardDescription>
-            Let's get your command center ready. You can change these details later.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
+    <OnboardingExperienceShell vertical={themeVertical} country="IE">
+    <div className="flex min-h-[100dvh] w-full flex-col items-center justify-center bg-background p-4 py-12">
+      <div className="w-full max-w-2xl space-y-8">
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-serif tracking-tight">
+            {intent.secondShop ? "Add a location" : "Welcome to Livia"}
+          </h1>
+          <p className="text-muted-foreground text-sm max-w-md mx-auto">
+            {intent.secondShop
+              ? "Chain tools activate when you own two shops."
+              : "Self-serve setup for EU appointment businesses — about 15 minutes to go live."}
+          </p>
+        </div>
 
-          {/* ── Demo shortcut ─────────────────────────────────────────── */}
-          <div className="rounded-lg border border-dashed border-muted-foreground/30 bg-muted/30 p-4 space-y-2">
-            <p className="text-sm font-medium flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-violet-400" />
-              Just exploring? Load a demo workspace instantly.
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Creates <strong>3 businesses</strong> across different industries — a hair salon, a tattoo studio, and a personal training gym — each with real staff, services, clients, and bookings so you can explore every feature.
-            </p>
-            <Button
-              type="button"
-              variant="secondary"
-              className="w-full mt-1"
-              onClick={loadDemoData}
-              disabled={seedLoading || createBusiness.isPending}
-            >
-              {seedLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Loading demo data…
-                </>
-              ) : (
-                <>
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Load demo workspace
-                </>
-              )}
-            </Button>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Separator className="flex-1" />
-            <span className="text-xs text-muted-foreground">or set up your own</span>
-            <Separator className="flex-1" />
-          </div>
-
-          {/* ── Manual setup form ─────────────────────────────────────── */}
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Business Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Acme Studio" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="slug"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Booking URL</FormLabel>
-                    <FormControl>
-                      <div className="flex items-center">
-                        <span className="text-muted-foreground bg-muted px-3 py-2 text-sm border border-r-0 border-input rounded-l-md">
-                          livia.io/b/
-                        </span>
-                        <Input className="rounded-l-none" placeholder="acme-studio" {...field} />
-                      </div>
-                    </FormControl>
-                    <FormDescription>
-                      This is the link you'll share with clients.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a category" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="barbershop">Barbershop</SelectItem>
-                        <SelectItem value="salon">Hair Salon</SelectItem>
-                        <SelectItem value="tattoo">Tattoo Studio</SelectItem>
-                        <SelectItem value="massage">Massage Therapy</SelectItem>
-                        <SelectItem value="fitness">Personal Training</SelectItem>
-                        <SelectItem value="medical">Medical Spa</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="timezone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Timezone</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a timezone" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="America/New_York">Eastern Time (US &amp; Canada)</SelectItem>
-                        <SelectItem value="America/Chicago">Central Time (US &amp; Canada)</SelectItem>
-                        <SelectItem value="America/Denver">Mountain Time (US &amp; Canada)</SelectItem>
-                        <SelectItem value="America/Los_Angeles">Pacific Time (US &amp; Canada)</SelectItem>
-                        <SelectItem value="Europe/London">London</SelectItem>
-                        <SelectItem value="Europe/Paris">Paris</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <Button type="submit" className="w-full" disabled={createBusiness.isPending || seedLoading}>
-                {createBusiness.isPending ? (
+        {!businessId && isDemoLoginEnabled ? (
+          <Card className="border-dashed border-muted-foreground/30 bg-muted/20">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-violet-400" />
+                Just exploring?
+              </CardTitle>
+              <CardDescription>Load a full demo workspace with inbox, bookings, and staff.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full"
+                onClick={loadDemoData}
+                disabled={seedLoading}
+              >
+                {seedLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating…
+                    Loading demo…
                   </>
                 ) : (
-                  "Create Business"
+                  "Load full Livia demo"
                 )}
               </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {!businessId && isDemoLoginEnabled ? (
+          <div className="flex items-center gap-3">
+            <Separator className="flex-1" />
+            <span className="text-xs text-muted-foreground">or set up your shop</span>
+            <Separator className="flex-1" />
+          </div>
+        ) : null}
+
+        <OnboardingWelcomePanel />
+
+        <OnboardingWizard
+          businessId={businessId}
+          businessSlug={businessSlug}
+          parentBusinessId={parentBusinessId}
+          initialState={onboardingState}
+          businessVertical={previewVertical}
+          onVerticalPreview={setPreviewVertical}
+          onBusinessCreated={(id, slug) => {
+            setBusinessId(id);
+            setBusinessSlug(slug);
+            setOnboardingState(afterBusinessCreatedState() as OnboardingStatePayload);
+          }}
+          onComplete={() => {
+            window.location.href = intent.secondShop
+              ? "/lifecycle#chain"
+              : businessSlug
+                ? `/bookings?create=1`
+                : "/dashboard";
+          }}
+        />
+      </div>
     </div>
+    </OnboardingExperienceShell>
   );
 }

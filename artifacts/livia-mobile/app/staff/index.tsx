@@ -11,13 +11,19 @@ import {
   View,
 } from "react-native";
 import { EmptyState } from "@/components/EmptyState";
+import { asHref } from "@/lib/navigation";
 import { useBusiness } from "@/contexts/BusinessContext";
 import { useColors } from "@/hooks/useColors";
+import { useMembership } from "@/hooks/useMembership";
+import { useHaptics } from "@/hooks/useHaptics";
 
 export default function StaffListScreen() {
   const colors = useColors();
   const router = useRouter();
+  const haptics = useHaptics();
+  const { role } = useMembership();
   const { currentBusiness } = useBusiness();
+  const canInvite = role === "OWNER" || role === "ADMIN";
 
   const { data: staff, isLoading, refetch, isRefetching } = useListStaff(
     currentBusiness?.id ?? "",
@@ -28,6 +34,21 @@ export default function StaffListScreen() {
   return (
     <FlatList
       style={{ backgroundColor: colors.background }}
+      ListHeaderComponent={
+        canInvite ? (
+          <TouchableOpacity
+            style={[styles.inviteRow, { backgroundColor: colors.primary + "18", borderColor: colors.primary + "55" }]}
+            onPress={() => {
+              haptics.tap();
+              router.push(asHref("/staff/invite"));
+            }}
+            activeOpacity={0.8}
+          >
+            <Feather name="user-plus" size={18} color={colors.primary} />
+            <Text style={[styles.inviteText, { color: colors.primary }]}>Invite teammate</Text>
+          </TouchableOpacity>
+        ) : null
+      }
       data={staff ?? []}
       keyExtractor={(s) => s.id}
       renderItem={({ item }) => {
@@ -94,4 +115,14 @@ const styles = StyleSheet.create({
   sub: { fontSize: 13, fontFamily: "Inter_400Regular" },
   inactiveBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
   inactiveText: { fontSize: 11, fontFamily: "Inter_500Medium" },
+  inviteRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 12,
+  },
+  inviteText: { fontSize: 15, fontFamily: "Inter_600SemiBold" },
 });

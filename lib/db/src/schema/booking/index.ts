@@ -3,3 +3,7 @@ export * from "./customers";
 export * from "./bookings";
 export * from "./availability";
 export * from "./time-off-requests";
+export * from "./staff-shifts";
+export * from "./hiring";
+export * from "./booking-guest-access";
+export * from "./visit-feedback";

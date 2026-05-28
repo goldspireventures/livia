@@ -1,7 +1,7 @@
 # Marketing-promise vs product-truth audit
 
 - **Owner:** founder
-- **Last audited:** 2026-05-06 (Task #49)
+- **Last audited:** 2026-05-20 (Phase 9 re-audit)
 - **Cadence:** weekly Monday review (see `docs/operating-cadence.md` → "Promise integrity")
 - **Gating power:** A row in state `build-before-G2` blocks Gate 2. A row in state `build-before-G3` blocks Gate 3 (see `docs/launch-plan.md`).
 
@@ -48,6 +48,29 @@ The audit's job is to keep `livia.io` honest. Every claim on the marketing surfa
 - `build-before-G3` (gates public launch): rows 2b/8b (#58), 4b/9b (existing Stripe billing task), 6b (#57). All four linked.
 
 Gate 2 cannot be declared until rows 3 and 5b flip to ✅. Gate 3 cannot be declared until 2b/4b/6b flip to ✅.
+
+---
+
+## Phase 9 re-audit (2026-05-20) — product shipped since May 6
+
+| Row | Prior state | Current reality | Updated decision |
+|-----|-------------|-----------------|------------------|
+| 3 | `build-before-G2` — cron not scheduled | T-24h reminders via Inngest (`booking-reminder-t24`) + cron fallback | **✅ Resolved** — mark G2 row 3 done when Inngest enabled in prod |
+| 4b / 9b | `build-before-G3` — Stripe Billing not live | `GET /billing`, Checkout session, webhooks, Settings → Billing tab (Phase 2) | **✅ Resolved** — Stripe still needs production keys + first paid sub (Gate 3 ops) |
+| 5b | `build-before-G2` — widget footer unverified | `lib/ai-disclosure` + chat first message + SMS prefix + voice opening line | **✅ Resolved** for chat/SMS/voice; visual widget footer verify in QA |
+| E12 (launch-plan) | N+1 cockpit | `enrichBookingsBatch` (Phase 6) | **✅ Resolved** |
+| E10 | rate limit | `public_chat_rate_limits` DB-backed (Phase 4) | **✅ Resolved** |
+| Voice wedge | not in original audit | English-IE Twilio gather → Liv (Phase 7) | Marketing must not claim WhatsApp/IG voice; SMS+voice only |
+
+**Remaining `build-before-G3` blockers for public launch:**
+
+| Row | Claim | Still required |
+|-----|-------|----------------|
+| 2b / 8b | Deposits / Stripe Connect for shop money | Connect onboarding + deposit flows (#58 / launch-plan L6) |
+| 6b | EU production residency codified | ADR + deploy region pin (#57) |
+| 1 | WhatsApp / Instagram inbound | Remove or defer claims (unchanged) |
+
+**Gate 3 ops (not code):** first paid Stripe subscriber, App/Play live, `livia.io` live, legal pages, SOC 2 kickoff — see `docs/launch-plan.md` and `docs/compliance/soc2-type1-kickoff-checklist.md`.
 
 ---
 

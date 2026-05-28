@@ -1,6 +1,8 @@
 # Mobile roadmap — to flagship and back
 
-**Status:** v1 (2026-05-06)
+**Status:** v1 (2026-05-06) — **Phases B–C are v1, not deferred** per [`product/OPERATION-SOLIDIFY.md`](./product/OPERATION-SOLIDIFY.md) Track 3.
+
+> **Canonical bar:** Mobile is the **flagship** operator surface. “Edit on web” is the exception, not the default. Target **≥ 90%** owner daily surfaces on device before Gate 2 declare.
 **Anchors:** ADR 0008 (motion + materiality), ADR 0011 (mobile is the flagship), `docs/personas.md` (the hotel principle), `docs/demo-gateway.md`.
 
 This roadmap takes the mobile app from "30% parity, zero native goodies, ambiguous theme" (where it is today) to "the surface Livia is alive in" (the north star locked in ADR 0011). It is phased so each phase is independently demoable and each phase delivers at least one wow moment.

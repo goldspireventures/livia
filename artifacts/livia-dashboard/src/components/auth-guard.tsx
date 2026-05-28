@@ -1,13 +1,17 @@
 import { useAuth } from "@clerk/clerk-react";
 import { Redirect, useLocation } from "wouter";
 import { useGetMyBusinesses } from "@workspace/api-client-react";
-import { BusinessProvider } from "@/lib/business-context";
+import { BusinessProvider, normalizeBusinessList, useBusiness } from "@/lib/business-context";
 import { MembershipProvider, useMembership } from "@/lib/membership-context";
-import { usePersona, PERSONA_LANDING } from "@/lib/persona";
+import { usePersona } from "@/lib/persona";
+import { PERSONA_RITUALS } from "@/lib/persona-rituals";
 import { Spinner } from "@/components/ui/spinner";
 import { ReactNode, useEffect } from "react";
 import { apiFetch } from "@/lib/api-fetch";
 import { useQuery } from "@tanstack/react-query";
+import { PlatformLegalGate } from "@/components/platform-legal-gate";
+import { isDemoTenantSlug } from "@/lib/demo-tenant";
+import { isOnboardingAppUnlocked, type OnboardingState } from "@workspace/policy";
 
 // On first authenticated load, sweep up any pending Clerk invitations
 // and turn them into business_memberships rows. Idempotent + cheap, so
@@ -42,10 +46,24 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     return <Redirect to={`/sign-in?redirect_url=${encodeURIComponent(location)}`} />;
   }
 
-  return <BusinessDataLoader>{children}</BusinessDataLoader>;
+  if (location === "/legal-acceptance") {
+    return <BusinessDataLoader skipLegalGate>{children}</BusinessDataLoader>;
+  }
+
+  return (
+    <PlatformLegalGate>
+      <BusinessDataLoader>{children}</BusinessDataLoader>
+    </PlatformLegalGate>
+  );
 }
 
-function BusinessDataLoader({ children }: { children: ReactNode }) {
+function BusinessDataLoader({
+  children,
+  skipLegalGate,
+}: {
+  children: ReactNode;
+  skipLegalGate?: boolean;
+}) {
   const { data: businesses, isLoading } = useGetMyBusinesses();
   const [location] = useLocation();
 
@@ -57,20 +75,59 @@ function BusinessDataLoader({ children }: { children: ReactNode }) {
     );
   }
 
-  const list = businesses ?? [];
+  const list = normalizeBusinessList(businesses);
   const hasAny = list.length > 0;
 
-  if (!hasAny && location !== "/onboarding") {
+  if (!hasAny && location !== "/onboarding" && location !== "/legal-acceptance") {
     return <Redirect to="/onboarding" />;
+  }
+
+  if (
+    !skipLegalGate &&
+    hasAny &&
+    location === "/legal-acceptance"
+  ) {
+    return <Redirect to="/dashboard" />;
   }
 
   return (
     <BusinessProvider businesses={list} isLoading={isLoading}>
       <MembershipProvider>
-        <RoleGate>{children}</RoleGate>
+        <OnboardingGate>
+          <RoleGate>{children}</RoleGate>
+        </OnboardingGate>
       </MembershipProvider>
     </BusinessProvider>
   );
+}
+
+const ONBOARDING_EXEMPT_PREFIXES = [
+  "/onboarding",
+  "/legal-acceptance",
+  "/sign-in",
+  "/demo",
+  "/b/",
+];
+
+/** Production owners finish onboarding; demo tenants skip via provisioned state. */
+function OnboardingGate({ children }: { children: ReactNode }) {
+  const { business } = useBusiness();
+  const { effectiveRole } = useMembership();
+  const [location] = useLocation();
+
+  if (!business || isDemoTenantSlug(business.slug)) return <>{children}</>;
+  if (effectiveRole !== "OWNER") return <>{children}</>;
+
+  const onboardingState = (business as { onboardingState?: OnboardingState })
+    .onboardingState;
+  if (isOnboardingAppUnlocked(onboardingState)) return <>{children}</>;
+
+  if (ONBOARDING_EXEMPT_PREFIXES.some((p) => location === p || location.startsWith(p))) {
+    return <>{children}</>;
+  }
+  if (location.startsWith("/settings")) return <>{children}</>;
+
+  return <Redirect to="/onboarding" />;
 }
 
 // Owner/admin landing routes that we want to redirect STAFF away from.
@@ -84,18 +141,35 @@ const STAFF_BLOCKED_LANDING = new Set([
 function RoleGate({ children }: { children: ReactNode }) {
   const { effectiveRole, isLoading } = useMembership();
   const { kind: persona, isLoading: personaLoading } = usePersona();
+  const { businesses } = useBusiness();
   const [location, navigate] = useLocation();
 
   useEffect(() => {
     if (isLoading || personaLoading) return;
-    if ((location === "/" || location === "") && persona !== "customer") {
-      navigate(PERSONA_LANDING[persona], { replace: true });
+
+    let home = PERSONA_RITUALS[persona].homePath;
+    if (persona === "org_admin" && businesses.length < 2) {
+      home = "/dashboard";
+    }
+
+    if (location === "/" || location === "") {
+      navigate(home, { replace: true });
+      return;
+    }
+    if (persona === "org_admin" && businesses.length < 2 && location === "/chain") {
+      navigate("/dashboard", { replace: true });
       return;
     }
     if (effectiveRole === "STAFF" && STAFF_BLOCKED_LANDING.has(location)) {
       navigate("/my-day", { replace: true });
     }
-  }, [effectiveRole, isLoading, location, navigate, persona, personaLoading]);
+    if (persona === "staff" && location === "/dashboard") {
+      navigate("/my-day", { replace: true });
+    }
+    if (persona === "receptionist" && location === "/dashboard") {
+      navigate("/bookings", { replace: true });
+    }
+  }, [effectiveRole, isLoading, location, navigate, persona, personaLoading, businesses.length]);
 
   return <>{children}</>;
 }

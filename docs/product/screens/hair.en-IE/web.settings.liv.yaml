@@ -1,0 +1,17 @@
+id: web.settings.liv
+vertical: [hair, beauty, wellness]
+locale: [en-IE, en-GB]
+persona: [owner, founder, manager]
+modality: web
+route: /settings?tab=liv
+
+purpose: >
+  Configure Liv — enable, tone, greeting, knowledge, direct booking permission.
+
+must_do:
+  - AI disclosure copy visible when enabling
+  - Manager can edit per persona matrix
+  - aiEnabled false = public chat returns disabled
+
+api:
+  - PATCH /businesses/{id} (aiEnabled, aiTone, aiGreeting, aiKnowledge)

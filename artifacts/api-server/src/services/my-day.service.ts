@@ -9,13 +9,14 @@
 
 import { db, bookingsTable, customersTable } from "@workspace/db";
 import { and, eq, gte, lte, inArray, sql, desc } from "drizzle-orm";
-import { enrichBooking } from "./bookings.service";
+import { enrichBookingsBatch } from "./bookings.service";
 
 export async function getMyDay(businessId: string, staffId: string | null) {
   if (!staffId) {
     return {
       staffId: null,
       today: [],
+      week: [],
       next: null,
       myCustomers: [],
       todayCount: 0,
@@ -44,7 +45,25 @@ export async function getMyDay(businessId: string, staffId: string | null) {
     )
     .orderBy(bookingsTable.startAt);
 
-  const today = await Promise.all(todayRaw.map(enrichBooking));
+  const weekStart = new Date(todayEnd.getTime() + 1);
+  const weekRaw = await db
+    .select()
+    .from(bookingsTable)
+    .where(
+      and(
+        eq(bookingsTable.businessId, businessId),
+        eq(bookingsTable.staffId, staffId),
+        gte(bookingsTable.startAt, weekStart),
+        lte(bookingsTable.startAt, weekEnd),
+        inArray(bookingsTable.status, ["PENDING", "CONFIRMED"]),
+      ),
+    )
+    .orderBy(bookingsTable.startAt)
+    .limit(12);
+
+  const enriched = await enrichBookingsBatch([...todayRaw, ...weekRaw]);
+  const today = enriched.slice(0, todayRaw.length);
+  const week = enriched.slice(todayRaw.length);
 
   const next =
     today.find(
@@ -94,6 +113,7 @@ export async function getMyDay(businessId: string, staffId: string | null) {
   return {
     staffId,
     today,
+    week,
     next,
     myCustomers,
     todayCount: today.length,

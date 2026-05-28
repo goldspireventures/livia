@@ -14,7 +14,7 @@ export const membershipRoleEnum = pgEnum("membership_role", ["OWNER", "ADMIN", "
 //   REC        — Receptionist (read + booking ops; no money/staffing).
 //   OWNER_HOST — Owner-Host (chair-rental / multi-vertical landlord at v1.5+).
 export const membershipRoleV2Enum = pgEnum("membership_role_v2", [
-  "OWN", "ADM", "ADM-D", "STA", "REC", "OWNER_HOST",
+  "OWN", "ADM", "ADM-D", "STA", "REC", "OWNER_HOST", "OPS",
 ]);
 
 export const membershipStatusEnum = pgEnum("membership_status", [
@@ -22,14 +22,28 @@ export const membershipStatusEnum = pgEnum("membership_status", [
 ]);
 
 export const businessVerticalEnum = pgEnum("business_vertical", [
-  "hair", "beauty", "body-art", "wellness", "fitness", "medspa", "allied-health",
+  "hair",
+  "beauty",
+  "body-art",
+  "wellness",
+  "fitness",
+  "medspa",
+  "allied-health",
+  "pet-grooming",
+  "automotive-detailing",
 ]);
 
 export const businessTierEnum = pgEnum("business_tier", [
-  "solo", "studio", "chain", "chair-host", "white-label",
+  "solo", "studio", "chain", "mid-chain", "franchise", "chair-host", "white-label",
 ]);
 
 export const businessEuRegionEnum = pgEnum("business_eu_region", ["fra", "dub"]);
+
+export const businessStructureKindEnum = pgEnum("business_structure_kind", [
+  "standalone",
+  "location",
+  "brand_entity",
+]);
 
 export const businessesTable = pgTable(
   "businesses",
@@ -70,6 +84,29 @@ export const businessesTable = pgTable(
     twilioPhoneNumber: text("twilio_phone_number"),
     twilioPhoneSid: text("twilio_phone_sid"),
     resendFromAddress: text("resend_from_address"),
+    /** Plan catalogue id (solo, studio, trial, …). Defaults from tier when unset. */
+    planId: text("plan_id"),
+    stripeCustomerId: text("stripe_customer_id"),
+    stripeSubscriptionId: text("stripe_subscription_id"),
+    stripeSubscriptionStatus: text("stripe_subscription_status"),
+    /** Start of current Stripe billing period (for usage rollups). */
+    billingPeriodStart: timestamp("billing_period_start", { withTimezone: true }),
+    /** Entitlement keys explicitly removed from the plan (e.g. trial without voice). */
+    entitlementDenylist: jsonb("entitlement_denylist").$type<string[]>().default([]),
+    /** Extra entitlements beyond plan (e.g. peer_set_insights add-on). */
+    entitlementGrants: jsonb("entitlement_grants").$type<string[]>().default([]),
+    designPartnerEndsAt: timestamp("design_partner_ends_at", { withTimezone: true }),
+    /** Wizard progress (acts A1–A12). See @workspace/policy onboarding-state. */
+    onboardingState: jsonb("onboarding_state").$type<Record<string, unknown>>(),
+    /** Self-declared entity type at onboarding — not KYB-verified */
+    tenantAttestation: jsonb("tenant_attestation").$type<Record<string, unknown>>(),
+    /** Meta WA / IG / Messenger connection — see docs/product/CHANNELS-EU-MESSAGING.md */
+    messagingChannels: jsonb("messaging_channels").$type<Record<string, unknown>>(),
+    /** Deposit, buffers, strikes — see @workspace/policy operational-policy */
+    operationalPolicy: jsonb("operational_policy").$type<Record<string, unknown>>(),
+    parentBusinessId: text("parent_business_id"),
+    structureKind: businessStructureKindEnum("structure_kind").notNull().default("standalone"),
+    livPackConfig: jsonb("liv_pack_config").$type<Record<string, unknown>>(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

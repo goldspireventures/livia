@@ -56,6 +56,10 @@ export function setAuthTokenGetter(getter: AuthTokenGetter | null): void {
   _authTokenGetter = getter;
 }
 
+export function getAuthTokenGetter(): AuthTokenGetter | null {
+  return _authTokenGetter;
+}
+
 function isRequest(input: RequestInfo | URL): input is Request {
   return typeof Request !== "undefined" && input instanceof Request;
 }
@@ -199,10 +203,17 @@ function buildErrorMessage(response: Response, data: unknown): string {
 
   if (title && detail) return `${prefix}: ${title} — ${detail}`;
   if (detail) return `${prefix}: ${detail}`;
-  if (message) return `${prefix}: ${message}`;
+  if (message) {
+    const rid = getStringField(data, "requestId") ?? getStringField(data, "request_id");
+    return rid ? `${prefix}: ${message} (ref ${rid})` : `${prefix}: ${message}`;
+  }
   if (title) return `${prefix}: ${title}`;
 
   return prefix;
+}
+
+export function getRequestIdFromErrorData(data: unknown): string | undefined {
+  return getStringField(data, "requestId") ?? getStringField(data, "request_id");
 }
 
 export class ApiError<T = unknown> extends Error {
@@ -395,7 +406,12 @@ export async function customFetch<T = unknown>(
 
   const requestInfo = { method, url: resolveUrl(input) };
 
-  const response = await fetch(input, { ...init, method, headers });
+  // Avoid stale 304 empty bodies breaking React Query (booking detail "not found").
+  if (method === "GET" && !headers.has("cache-control")) {
+    headers.set("cache-control", "no-cache");
+  }
+
+  const response = await fetch(input, { ...init, method, headers, cache: "no-store" });
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response, method);

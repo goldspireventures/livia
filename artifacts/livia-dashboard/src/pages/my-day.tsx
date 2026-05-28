@@ -12,6 +12,11 @@ import { useMembership, personaQuery } from "@/lib/membership-context";
 import { apiFetch } from "@/lib/api-fetch";
 import { Link } from "wouter";
 import { Calendar, Users, Clock, ArrowRight } from "lucide-react";
+import { PersonaRitualHeader } from "@/components/ritual/persona-ritual-header";
+import { PageFrame } from "@/components/ui/page-frame";
+import { RunningLateSheet } from "@/components/ops/running-late-sheet";
+import { OPERATIONAL_REFETCH_MS } from "@/lib/operational-cache";
+import { usePersona } from "@/lib/persona";
 
 interface MyDayResponse {
   staffId: string | null;
@@ -47,6 +52,7 @@ function timeUntil(iso: string): string {
 
 export default function MyDayPage() {
   const { business } = useBusiness();
+  const { kind: persona } = usePersona();
   const { effectiveRole, viewingAsStaffId, ownStaffId } = useMembership();
   const bid = business?.id ?? "";
 
@@ -56,37 +62,42 @@ export default function MyDayPage() {
       apiFetch<MyDayResponse>(`/businesses/${bid}/my-day${personaQuery(viewingAsStaffId)}`),
     enabled: !!bid,
     staleTime: 30_000,
+    refetchInterval: OPERATIONAL_REFETCH_MS,
   });
 
   if (isLoading || !data) {
     return (
-      <div className="space-y-6 max-w-5xl">
+      <PageFrame width="full">
         <Skeleton className="h-10 w-64" />
         <Skeleton className="h-32 w-full" />
         <Skeleton className="h-64 w-full" />
-      </div>
+      </PageFrame>
     );
   }
 
   const isViewingAs = effectiveRole === "STAFF" && viewingAsStaffId !== null;
 
+  const emptyChair =
+    data.todayCount === 0 &&
+    (persona === "staff" || effectiveRole === "STAFF");
+
   return (
-    <div className="space-y-6 max-w-5xl">
-      <header className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">My Day</h1>
-          <p className="text-muted-foreground mt-1">
-            {data.todayCount === 0
-              ? "Nothing on the books today — go take a breather."
-              : `${data.todayCount} appointment${data.todayCount === 1 ? "" : "s"} today · ${data.weekCount} more this week`}
-          </p>
-        </div>
-        {isViewingAs ? (
-          <Badge variant="outline" className="text-xs">
-            Viewing as staff (read-only)
-          </Badge>
-        ) : null}
-      </header>
+    <PageFrame width="full">
+      <PersonaRitualHeader
+        variant="page"
+        subtitle={
+          data.todayCount === 0
+            ? emptyChair
+              ? "Your chair is open — here's how walk-ins work: check the floor calendar or ask front desk."
+              : "Nothing on the books today."
+            : `${data.todayCount} appointment${data.todayCount === 1 ? "" : "s"} today · ${data.weekCount} more this week`
+        }
+      />
+      {isViewingAs ? (
+        <Badge variant="outline" className="text-xs -mt-4">
+          Viewing as staff (read-only)
+        </Badge>
+      ) : null}
 
       {data.next ? (
         <Card className="border-primary/40 bg-primary/5">
@@ -111,6 +122,14 @@ export default function MyDayPage() {
                 <div className="text-xs text-muted-foreground">{timeUntil(data.next.startAt)}</div>
               </div>
             </div>
+            {data.next.status === "CONFIRMED" ? (
+              <div className="mt-4">
+                <RunningLateSheet
+                  bookingId={data.next.id}
+                  customerName={data.next.customer?.displayName ?? undefined}
+                />
+              </div>
+            ) : null}
           </CardContent>
         </Card>
       ) : null}
@@ -191,6 +210,6 @@ export default function MyDayPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </PageFrame>
   );
 }

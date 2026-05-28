@@ -15,6 +15,7 @@
  * v1.5+: extractable as a hosted product for other AI agent builders.
  */
 export * from "./schema";
+export { PRE_MERGE_GOLDEN_CHECKS, type GoldenCheck } from "./golden";
 
 export interface EvalRubricScore {
   rubricKey: string;

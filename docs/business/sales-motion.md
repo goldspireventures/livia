@@ -1,6 +1,7 @@
 # Sales motion — F9
 
-**Status:** F9 (2026-05-07).
+**Status:** F9 (2026-05-07), OS alignment 2026-05-25.  
+**Onboarding collateral:** [`OPERATOR-READY-PACK.md`](./OPERATOR-READY-PACK.md) — week-zero checklist + copy-paste templates for policies, leave, running late, team invite.
 
 ## Buyer vs user vs influencer per persona
 
@@ -29,7 +30,7 @@
 
 - Founder still leads sales calls. First sales hire begins shadowing.
 - Script repeatable from Stage 1 learnings.
-- Onboarding: hybrid concierge/self-serve; concierge for Phorest/Fresha/Booksy migrations; self-serve for greenfield (paper-and-Excel).
+- Onboarding: hybrid concierge/self-serve; concierge for Phorest/Fresha/Booksy migrations; self-serve for greenfield (paper-and-Excel). Hand customers the **operator ready pack** so policy/leave/running-late copy is not blank on day one.
 - Cadence: weekly cohort office hours; Slack community.
 
 ### Stage 3 — First 200 customers (small sales/CS team, concierge onboarding)

@@ -1,4 +1,4 @@
-import { db, customersTable, bookingsTable } from "@workspace/db";
+import { db, customersTable, bookingsTable, channelIdentitiesTable } from "@workspace/db";
 import { eq, and, or, ilike, sql, desc, inArray } from "drizzle-orm";
 import { generateId } from "../lib/id";
 
@@ -143,12 +143,31 @@ export async function getCustomerDetail(businessId: string, customerId: string) 
       ),
     );
 
+  const channelIdentities = await db
+    .select()
+    .from(channelIdentitiesTable)
+    .where(
+      and(
+        eq(channelIdentitiesTable.businessId, businessId),
+        eq(channelIdentitiesTable.customerId, customerId),
+      ),
+    );
+
   return {
     ...customer,
     recentBookings,
     totalBookings: countResult?.count ?? 0,
-    noShowCount: noShowResult?.count ?? 0,
+    noShowCount: customer.noShowCount ?? noShowResult?.count ?? 0,
+    channelIdentities,
   };
+}
+
+export async function lookupCustomersForLiv(
+  businessId: string,
+  query: string,
+  limit = 8,
+) {
+  return listCustomers(businessId, { search: query, limit, offset: 0 });
 }
 
 export async function findOrCreateCustomer(

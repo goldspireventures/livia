@@ -9,7 +9,8 @@
 
 import { Feather } from "@expo/vector-icons";
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
-import React from "react";
+import { asHref } from "@/lib/navigation";
+import React, { useEffect } from "react";
 import {
   Pressable,
   ScrollView,
@@ -39,8 +40,8 @@ interface PersonaSpec {
 }
 
 const SPECS: Record<string, PersonaSpec> = {
-  founder: {
-    id: "founder", displayName: "Aoife Brennan", roleLabel: "Founder · 3 salons", accent: "#d9c39a",
+  org_admin: {
+    id: "org_admin", displayName: "Aoife Brennan", roleLabel: "Org admin · 3 locations", accent: "#d9c39a",
     welcomeLine: "Good morning, Aoife.",
     welcomeSub: "Three rooms, one quiet read.",
     ritualLine: "The morning glance — what's healthy, what needs a hand.",
@@ -51,7 +52,7 @@ const SPECS: Record<string, PersonaSpec> = {
     nativeMomentIcon: "smartphone",
   },
   owner: {
-    id: "owner", displayName: "Sarah Kavanagh", roleLabel: "Owner · single salon", accent: aurora.cyan,
+    id: "owner", displayName: "Sarah Kavanagh", roleLabel: "Single-shop owner", accent: aurora.cyan,
     welcomeLine: "Today's flight plan, Sarah.",
     welcomeSub: "Nine bookings · two waiting on you.",
     ritualLine: "Confirm what's pending. Watch the timeline. Trust Liv with the rest.",
@@ -72,27 +73,21 @@ const SPECS: Record<string, PersonaSpec> = {
     nativeMomentBody: "Approvals reach you the moment they're raised — never an open browser tab away.",
     nativeMomentIcon: "bell",
   },
-  "staff-senior": {
-    id: "staff-senior", displayName: "Lara McCarthy", roleLabel: "Senior stylist", accent: aurora.mint,
+  staff: {
+    id: "staff",
+    displayName: "Lara McCarthy",
+    roleLabel: "Staff · your chair",
+    accent: aurora.mint,
     welcomeLine: "Hey Lara — next up at 10:30.",
     welcomeSub: "Sinéad's balayage, your favourite kind of morning.",
     ritualLine: "One countdown. One chair. One person at a time.",
     alertText: "Sinéad confirmed her 10:30. She mentioned her wedding is Saturday — small note saved.",
-    alertLabel: "Customer note", alertIcon: "heart",
+    alertLabel: "Customer note",
+    alertIcon: "heart",
     nativeMomentTitle: "Live Activity · countdown",
-    nativeMomentBody: "Your Lock Screen knows when Sinéad's chair starts — no app to open, no clock to check.",
+    nativeMomentBody:
+      "Your Lock Screen knows when the next chair starts — no app to open, no clock to check.",
     nativeMomentIcon: "clock",
-  },
-  "staff-junior": {
-    id: "staff-junior", displayName: "Tomás Ó Briain", roleLabel: "Junior stylist · week 3", accent: "#fbbf24",
-    welcomeLine: "It's quiet, Tomás. That's normal in week three.",
-    welcomeSub: "Two booked. Liv is opening walk-in windows behind the scenes.",
-    ritualLine: "Take a breath. Watch the door. Liv will call you.",
-    alertText: "A walk-in just tapped your link from Google Maps — 4 minutes away.",
-    alertLabel: "Heads up", alertIcon: "map-pin",
-    nativeMomentTitle: "Apple Watch · gentle tap",
-    nativeMomentBody: "A pulse on your wrist when the door's about to open. No alarm, no anxiety.",
-    nativeMomentIcon: "watch",
   },
   receptionist: {
     id: "receptionist", displayName: "Bríd Murphy", roleLabel: "Front desk", accent: "#818cf8",
@@ -105,32 +100,40 @@ const SPECS: Record<string, PersonaSpec> = {
     nativeMomentBody: "Drag a chair to a new staff member. The colour-coded grid never lies.",
     nativeMomentIcon: "tablet",
   },
-  customer: {
-    id: "customer", displayName: "Sinéad Walsh", roleLabel: "Customer · regular", accent: "#fb7185",
-    welcomeLine: "Your appointment is at 10:30, Sinéad.",
-    welcomeSub: "Lara's chair, as always. The kettle's on at 10:25.",
-    ritualLine: "One link. One tap. One reminder when it matters.",
-    alertText: "Sarah just sent you a small note: 'Bringing the lavender tea you liked last time.'",
-    alertLabel: "From Sarah", alertIcon: "message-circle",
-    nativeMomentTitle: "Apple Wallet · pass added",
-    nativeMomentBody: "Your booking sits in Wallet next to your boarding passes. The reminder is the lock screen.",
-    nativeMomentIcon: "credit-card",
-  },
 };
 
-const ORDER = ["founder", "owner", "manager", "staff-senior", "staff-junior", "receptionist", "customer"];
+const ORDER = ["org_admin", "owner", "manager", "staff", "receptionist"];
+
+function resolveDemoPersonaSlug(raw: string): string | null {
+  if (SPECS[raw]) return raw;
+  // Legacy route alias
+  if (raw === "founder") return "org_admin";
+  if (raw === "staff-senior" || raw === "staff-junior") return "staff";
+  if (raw === "customer") return null;
+  return null;
+}
 
 export default function MobilePersonaShowcase() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const params = useLocalSearchParams<{ persona: string }>();
-  const personaId = params.persona as string;
-  const spec = SPECS[personaId];
+  const rawSlug = params.persona as string;
+  const personaId = resolveDemoPersonaSlug(rawSlug);
 
-  if (!spec) {
-    // Unknown persona — bounce to launcher.
-    router.replace("/demo");
+  useEffect(() => {
+    if (!personaId) {
+      router.replace(asHref("/demo"));
+      return;
+    }
+    if (rawSlug !== personaId) {
+      router.replace(asHref(`/demo/${personaId}`));
+    }
+  }, [personaId, rawSlug, router]);
+
+  const spec = personaId ? SPECS[personaId] : undefined;
+
+  if (!spec || !personaId) {
     return null;
   }
 
@@ -148,7 +151,7 @@ export default function MobilePersonaShowcase() {
         <View pointerEvents="none" style={[styles.halo, { backgroundColor: spec.accent, opacity: 0.18 }]} />
 
         {/* Back to gateway */}
-        <Link href="/demo" asChild>
+        <Link href={asHref("/demo")} asChild>
           <Pressable
             testID="mobile-demo-back"
             style={[styles.backPill, { borderColor: spec.accent + "55", backgroundColor: colors.card }]}
@@ -204,12 +207,12 @@ export default function MobilePersonaShowcase() {
 
       {/* Persona switcher chip — fixed bottom */}
       <View style={[styles.chipBar, { paddingBottom: insets.bottom + 12, borderTopColor: colors.border, backgroundColor: colors.background + "ee" }]}>
-        <Link href={`/demo/${prev}` as any} asChild>
+        <Link href={asHref(`/demo/${prev}`)} asChild>
           <Pressable testID="mobile-demo-prev" style={[styles.chipArrow, { borderColor: colors.border }]}>
             <Feather name="chevron-left" size={18} color={colors.mutedForeground} />
           </Pressable>
         </Link>
-        <Link href="/demo" asChild>
+        <Link href={asHref("/demo")} asChild>
           <Pressable
             testID="mobile-demo-switch"
             style={[styles.chipMain, { borderColor: spec.accent + "55", backgroundColor: spec.accent + "1a" }]}
@@ -220,7 +223,7 @@ export default function MobilePersonaShowcase() {
             <Text style={[styles.chipMuted, { color: colors.mutedForeground }]}>Switch persona</Text>
           </Pressable>
         </Link>
-        <Link href={`/demo/${next}` as any} asChild>
+        <Link href={asHref(`/demo/${next}`)} asChild>
           <Pressable testID="mobile-demo-next" style={[styles.chipArrow, { borderColor: colors.border }]}>
             <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
           </Pressable>

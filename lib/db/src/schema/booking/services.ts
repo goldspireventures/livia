@@ -2,6 +2,7 @@ import { pgTable, text, timestamp, boolean, integer, index } from "drizzle-orm/p
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { businessesTable } from "../identity/businesses";
+import { bookingResourcesTable } from "./booking-resources";
 
 export const servicesTable = pgTable(
   "services",
@@ -17,10 +18,13 @@ export const servicesTable = pgTable(
     bufferBeforeMinutes: integer("buffer_before_minutes").notNull().default(0),
     bufferAfterMinutes: integer("buffer_after_minutes").notNull().default(0),
     priceMinor: integer("price_minor").notNull().default(0),
-    currency: text("currency").notNull().default("GBP"),
+    currency: text("currency").notNull().default("EUR"),
     imageUrl: text("image_url"),
     isActive: boolean("is_active").notNull().default(true),
     sortOrder: integer("sort_order").notNull().default(0),
+    requiredResourceId: text("required_resource_id").references(() => bookingResourcesTable.id, {
+      onDelete: "set null",
+    }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

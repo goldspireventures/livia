@@ -48,6 +48,9 @@ export const UpdateMeResponse = zod.object({
 /**
  * @summary Get all businesses the authenticated user belongs to
  */
+export const getMyBusinessesResponseOnboardingStatePercentCompleteMin = 0;
+export const getMyBusinessesResponseOnboardingStatePercentCompleteMax = 100;
+
 export const GetMyBusinessesResponseItem = zod.object({
   id: zod.string(),
   ownerId: zod.string(),
@@ -61,6 +64,16 @@ export const GetMyBusinessesResponseItem = zod.object({
   city: zod.string().nullish(),
   country: zod.string().nullish(),
   timezone: zod.string(),
+  locale: zod
+    .string()
+    .optional()
+    .describe(
+      "BCP-47 locale for customer-facing copy and formatting (e.g. en-IE)",
+    ),
+  currency: zod
+    .string()
+    .optional()
+    .describe("ISO 4217 currency code (e.g. EUR)"),
   logoUrl: zod.string().nullish(),
   coverImageUrl: zod.string().nullish(),
   instagramHandle: zod.string().nullish(),
@@ -71,8 +84,99 @@ export const GetMyBusinessesResponseItem = zod.object({
   aiCanBookDirectly: zod.string().optional(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
+  onboardingState: zod
+    .object({
+      currentAct: zod.enum([
+        "a1_create_business",
+        "a2_shop_profile",
+        "a3_service_menu",
+        "a4_team",
+        "a5_hours",
+        "a6_liv",
+        "a7_channels",
+        "a8_public_link",
+        "a9_billing",
+        "a10_invite_team",
+        "a11_migration",
+        "a12_go_live",
+      ]),
+      completedActs: zod.array(
+        zod.enum([
+          "a1_create_business",
+          "a2_shop_profile",
+          "a3_service_menu",
+          "a4_team",
+          "a5_hours",
+          "a6_liv",
+          "a7_channels",
+          "a8_public_link",
+          "a9_billing",
+          "a10_invite_team",
+          "a11_migration",
+          "a12_go_live",
+        ]),
+      ),
+      percentComplete: zod
+        .number()
+        .min(getMyBusinessesResponseOnboardingStatePercentCompleteMin)
+        .max(getMyBusinessesResponseOnboardingStatePercentCompleteMax),
+      checklist: zod
+        .object({
+          testBooking: zod.boolean().optional(),
+          livEnabled: zod.boolean().optional(),
+          publicLinkShared: zod.boolean().optional(),
+          smsOrVoiceConnected: zod.boolean().optional(),
+          teamInvited: zod.boolean().optional(),
+          billingStarted: zod.boolean().optional(),
+          servicesConfirmed: zod.boolean().optional(),
+          hoursConfirmed: zod.boolean().optional(),
+        })
+        .optional(),
+      updatedAt: zod.coerce.date().optional(),
+    })
+    .optional()
+    .describe("Self-serve wizard progress (acts A1–A12)"),
 });
 export const GetMyBusinessesResponse = zod.array(GetMyBusinessesResponseItem);
+
+/**
+ * @summary Multi-shop KPI rollup for the authenticated owner (RFC 0010)
+ */
+export const GetMyChainRollupResponse = zod.object({
+  shopCount: zod.number(),
+  bookingsThisWeek: zod.number(),
+  completedThisWeek: zod.number(),
+  shopsNeedingAttention: zod.number(),
+  founderBriefingLine: zod.string(),
+  alerts: zod.array(
+    zod.object({
+      businessId: zod.string(),
+      shopName: zod.string(),
+      severity: zod.enum(["watch", "act"]),
+      code: zod.enum(["handed_off", "time_off", "inbox", "pending_bookings"]),
+      message: zod.string(),
+    }),
+  ),
+  shops: zod.array(
+    zod.object({
+      businessId: zod.string(),
+      name: zod.string(),
+      slug: zod.string(),
+      planId: zod.string().nullish(),
+      tier: zod.string(),
+      city: zod.string().nullish(),
+      bookingsThisWeek: zod.number(),
+      completedThisWeek: zod.number(),
+      todayBookings: zod.number(),
+      pendingBookings: zod.number(),
+      openConversations: zod.number(),
+      handedOffConversations: zod.number(),
+      pendingTimeOff: zod.number(),
+      pulseStatus: zod.enum(["ok", "watch", "act"]),
+      pulseReason: zod.string().nullish(),
+    }),
+  ),
+});
 
 /**
  * @summary Get caller's role + staff link inside a business
@@ -85,6 +189,94 @@ export const GetMyMembershipResponse = zod.object({
   businessId: zod.string(),
   role: zod.enum(["OWNER", "ADMIN", "STAFF"]),
   staffId: zod.string().nullish(),
+  isReception: zod
+    .boolean()
+    .optional()
+    .describe("Heuristic from staff title\/bio (reception\/front-desk hint)"),
+  tenureDays: zod
+    .number()
+    .optional()
+    .describe("Days since the linked staff row was created"),
+});
+
+/**
+ * @summary In-app notification feed for the signed-in user (persona-targeted at delivery)
+ */
+export const listMyNotificationsQueryLimitDefault = 40;
+
+export const ListMyNotificationsQueryParams = zod.object({
+  businessId: zod.coerce.string().optional(),
+  unreadOnly: zod.coerce.boolean().optional(),
+  limit: zod.coerce.number().default(listMyNotificationsQueryLimitDefault),
+});
+
+export const ListMyNotificationsResponse = zod.object({
+  data: zod.array(
+    zod.object({
+      id: zod.string(),
+      businessId: zod.string().nullish(),
+      kind: zod.string(),
+      priority: zod.enum(["info", "watch", "act"]),
+      personaHint: zod.string().nullish(),
+      title: zod.string(),
+      body: zod.string(),
+      href: zod.string().nullish(),
+      mobileHref: zod.string().nullish(),
+      resourceKind: zod.string().nullish(),
+      resourceId: zod.string().nullish(),
+      readAt: zod.coerce.date().nullish(),
+      createdAt: zod.coerce.date(),
+    }),
+  ),
+  unreadCount: zod.number(),
+});
+
+/**
+ * @summary Unread in-app notification count
+ */
+export const GetMyNotificationUnreadCountQueryParams = zod.object({
+  businessId: zod.coerce.string().optional(),
+});
+
+export const GetMyNotificationUnreadCountResponse = zod.object({
+  count: zod.number(),
+});
+
+/**
+ * @summary Mark all in-app notifications read
+ */
+export const MarkAllMyNotificationsReadBody = zod.object({
+  businessId: zod.string().optional(),
+});
+
+export const MarkAllMyNotificationsReadResponse = zod.object({
+  updated: zod.number().optional(),
+});
+
+/**
+ * @summary Mark one in-app notification read
+ */
+export const MarkMyNotificationReadParams = zod.object({
+  notificationId: zod.coerce.string(),
+});
+
+export const MarkMyNotificationReadResponse = zod.object({
+  ok: zod.boolean().optional(),
+});
+
+/**
+ * @summary Register Expo push token for the signed-in user
+ */
+export const RegisterDeviceTokenBody = zod.object({
+  token: zod.string().describe("Expo push token (ExponentPushToken[...])"),
+  platform: zod.enum(["IOS", "ANDROID", "WEB"]),
+});
+
+export const RegisterDeviceTokenResponse = zod.object({
+  id: zod.string(),
+  platform: zod.enum(["IOS", "ANDROID", "WEB"]),
+  token: zod.string(),
+  isActive: zod.boolean(),
 });
 
 /**
@@ -104,40 +296,8 @@ export const GetMyDayQueryParams = zod.object({
 export const GetMyDayResponse = zod.object({
   staffId: zod.string().nullish(),
   today: zod.array(
-    zod.object({
-      id: zod.string(),
-      businessId: zod.string(),
-      staffId: zod.string().nullish(),
-      serviceId: zod.string(),
-      customerId: zod.string(),
-      channelType: zod.enum([
-        "WEB",
-        "APP",
-        "WHATSAPP",
-        "SMS",
-        "INSTAGRAM",
-        "SNAPCHAT",
-        "EMAIL",
-      ]),
-      startAt: zod.coerce.date(),
-      endAt: zod.coerce.date(),
-      status: zod.enum([
-        "PENDING",
-        "CONFIRMED",
-        "CANCELLED",
-        "COMPLETED",
-        "NO_SHOW",
-      ]),
-      notes: zod.string().nullish(),
-      internalNotes: zod.string().nullish(),
-      cancellationReason: zod.string().nullish(),
-      createdAt: zod.coerce.date(),
-      updatedAt: zod.coerce.date(),
-    }),
-  ),
-  next: zod
-    .union([
-      zod.object({
+    zod
+      .object({
         id: zod.string(),
         businessId: zod.string(),
         staffId: zod.string().nullish(),
@@ -161,12 +321,267 @@ export const GetMyDayResponse = zod.object({
           "COMPLETED",
           "NO_SHOW",
         ]),
+        pendingReason: zod
+          .string()
+          .nullish()
+          .describe(
+            "Machine reason while status is PENDING (awaiting_staff_confirm, awaiting_deposit, etc.)",
+          ),
         notes: zod.string().nullish(),
         internalNotes: zod.string().nullish(),
         cancellationReason: zod.string().nullish(),
         createdAt: zod.coerce.date(),
         updatedAt: zod.coerce.date(),
-      }),
+      })
+      .and(
+        zod.object({
+          service: zod.object({
+            id: zod.string(),
+            businessId: zod.string(),
+            name: zod.string(),
+            description: zod.string().nullish(),
+            category: zod.string().nullish(),
+            durationMinutes: zod.number(),
+            bufferBeforeMinutes: zod.number(),
+            bufferAfterMinutes: zod.number(),
+            priceMinor: zod.number(),
+            currency: zod.string(),
+            imageUrl: zod.string().nullish(),
+            isActive: zod.boolean(),
+            sortOrder: zod.number(),
+            createdAt: zod.coerce.date(),
+            updatedAt: zod.coerce.date(),
+          }),
+          customer: zod.object({
+            id: zod.string(),
+            businessId: zod.string(),
+            firstName: zod.string().nullish(),
+            lastName: zod.string().nullish(),
+            displayName: zod.string().nullish(),
+            email: zod.string().nullish(),
+            phone: zod.string().nullish(),
+            notes: zod.string().nullish(),
+            tags: zod.array(zod.string()).nullish(),
+            isBlocked: zod.boolean(),
+            createdAt: zod.coerce.date(),
+            updatedAt: zod.coerce.date(),
+          }),
+          staff: zod
+            .union([
+              zod.object({
+                id: zod.string(),
+                businessId: zod.string(),
+                userId: zod.string().nullish(),
+                firstName: zod.string(),
+                lastName: zod.string().nullish(),
+                displayName: zod.string(),
+                email: zod.string().nullish(),
+                phone: zod.string().nullish(),
+                photoUrl: zod.string().nullish(),
+                bio: zod.string().nullish(),
+                color: zod.string().nullish(),
+                isActive: zod.boolean(),
+                createdAt: zod.coerce.date(),
+                updatedAt: zod.coerce.date(),
+              }),
+              zod.null(),
+            ])
+            .optional(),
+        }),
+      ),
+  ),
+  week: zod
+    .array(
+      zod
+        .object({
+          id: zod.string(),
+          businessId: zod.string(),
+          staffId: zod.string().nullish(),
+          serviceId: zod.string(),
+          customerId: zod.string(),
+          channelType: zod.enum([
+            "WEB",
+            "APP",
+            "WHATSAPP",
+            "SMS",
+            "INSTAGRAM",
+            "SNAPCHAT",
+            "EMAIL",
+          ]),
+          startAt: zod.coerce.date(),
+          endAt: zod.coerce.date(),
+          status: zod.enum([
+            "PENDING",
+            "CONFIRMED",
+            "CANCELLED",
+            "COMPLETED",
+            "NO_SHOW",
+          ]),
+          pendingReason: zod
+            .string()
+            .nullish()
+            .describe(
+              "Machine reason while status is PENDING (awaiting_staff_confirm, awaiting_deposit, etc.)",
+            ),
+          notes: zod.string().nullish(),
+          internalNotes: zod.string().nullish(),
+          cancellationReason: zod.string().nullish(),
+          createdAt: zod.coerce.date(),
+          updatedAt: zod.coerce.date(),
+        })
+        .and(
+          zod.object({
+            service: zod.object({
+              id: zod.string(),
+              businessId: zod.string(),
+              name: zod.string(),
+              description: zod.string().nullish(),
+              category: zod.string().nullish(),
+              durationMinutes: zod.number(),
+              bufferBeforeMinutes: zod.number(),
+              bufferAfterMinutes: zod.number(),
+              priceMinor: zod.number(),
+              currency: zod.string(),
+              imageUrl: zod.string().nullish(),
+              isActive: zod.boolean(),
+              sortOrder: zod.number(),
+              createdAt: zod.coerce.date(),
+              updatedAt: zod.coerce.date(),
+            }),
+            customer: zod.object({
+              id: zod.string(),
+              businessId: zod.string(),
+              firstName: zod.string().nullish(),
+              lastName: zod.string().nullish(),
+              displayName: zod.string().nullish(),
+              email: zod.string().nullish(),
+              phone: zod.string().nullish(),
+              notes: zod.string().nullish(),
+              tags: zod.array(zod.string()).nullish(),
+              isBlocked: zod.boolean(),
+              createdAt: zod.coerce.date(),
+              updatedAt: zod.coerce.date(),
+            }),
+            staff: zod
+              .union([
+                zod.object({
+                  id: zod.string(),
+                  businessId: zod.string(),
+                  userId: zod.string().nullish(),
+                  firstName: zod.string(),
+                  lastName: zod.string().nullish(),
+                  displayName: zod.string(),
+                  email: zod.string().nullish(),
+                  phone: zod.string().nullish(),
+                  photoUrl: zod.string().nullish(),
+                  bio: zod.string().nullish(),
+                  color: zod.string().nullish(),
+                  isActive: zod.boolean(),
+                  createdAt: zod.coerce.date(),
+                  updatedAt: zod.coerce.date(),
+                }),
+                zod.null(),
+              ])
+              .optional(),
+          }),
+        ),
+    )
+    .describe("Upcoming bookings for the rest of this week (after today)"),
+  next: zod
+    .union([
+      zod
+        .object({
+          id: zod.string(),
+          businessId: zod.string(),
+          staffId: zod.string().nullish(),
+          serviceId: zod.string(),
+          customerId: zod.string(),
+          channelType: zod.enum([
+            "WEB",
+            "APP",
+            "WHATSAPP",
+            "SMS",
+            "INSTAGRAM",
+            "SNAPCHAT",
+            "EMAIL",
+          ]),
+          startAt: zod.coerce.date(),
+          endAt: zod.coerce.date(),
+          status: zod.enum([
+            "PENDING",
+            "CONFIRMED",
+            "CANCELLED",
+            "COMPLETED",
+            "NO_SHOW",
+          ]),
+          pendingReason: zod
+            .string()
+            .nullish()
+            .describe(
+              "Machine reason while status is PENDING (awaiting_staff_confirm, awaiting_deposit, etc.)",
+            ),
+          notes: zod.string().nullish(),
+          internalNotes: zod.string().nullish(),
+          cancellationReason: zod.string().nullish(),
+          createdAt: zod.coerce.date(),
+          updatedAt: zod.coerce.date(),
+        })
+        .and(
+          zod.object({
+            service: zod.object({
+              id: zod.string(),
+              businessId: zod.string(),
+              name: zod.string(),
+              description: zod.string().nullish(),
+              category: zod.string().nullish(),
+              durationMinutes: zod.number(),
+              bufferBeforeMinutes: zod.number(),
+              bufferAfterMinutes: zod.number(),
+              priceMinor: zod.number(),
+              currency: zod.string(),
+              imageUrl: zod.string().nullish(),
+              isActive: zod.boolean(),
+              sortOrder: zod.number(),
+              createdAt: zod.coerce.date(),
+              updatedAt: zod.coerce.date(),
+            }),
+            customer: zod.object({
+              id: zod.string(),
+              businessId: zod.string(),
+              firstName: zod.string().nullish(),
+              lastName: zod.string().nullish(),
+              displayName: zod.string().nullish(),
+              email: zod.string().nullish(),
+              phone: zod.string().nullish(),
+              notes: zod.string().nullish(),
+              tags: zod.array(zod.string()).nullish(),
+              isBlocked: zod.boolean(),
+              createdAt: zod.coerce.date(),
+              updatedAt: zod.coerce.date(),
+            }),
+            staff: zod
+              .union([
+                zod.object({
+                  id: zod.string(),
+                  businessId: zod.string(),
+                  userId: zod.string().nullish(),
+                  firstName: zod.string(),
+                  lastName: zod.string().nullish(),
+                  displayName: zod.string(),
+                  email: zod.string().nullish(),
+                  phone: zod.string().nullish(),
+                  photoUrl: zod.string().nullish(),
+                  bio: zod.string().nullish(),
+                  color: zod.string().nullish(),
+                  isActive: zod.boolean(),
+                  createdAt: zod.coerce.date(),
+                  updatedAt: zod.coerce.date(),
+                }),
+                zod.null(),
+              ])
+              .optional(),
+          }),
+        ),
       zod.null(),
     ])
     .optional(),
@@ -209,6 +624,136 @@ export const CreateInvitationBody = zod.object({
 });
 
 /**
+ * @summary Jurisdiction and vertical catalog for onboarding
+ */
+export const GetOnboardingCatalogResponse = zod.object({
+  jurisdictions: zod.array(
+    zod.object({
+      jurisdiction: zod.string().optional(),
+      label: zod.string().optional(),
+      currency: zod.string().optional(),
+      defaultTimezone: zod.string().optional(),
+    }),
+  ),
+  verticals: zod.array(
+    zod.object({
+      vertical: zod
+        .enum([
+          "hair",
+          "beauty",
+          "body-art",
+          "wellness",
+          "fitness",
+          "medspa",
+          "allied-health",
+        ])
+        .optional(),
+      label: zod.string().optional(),
+    }),
+  ),
+  tiers: zod.array(
+    zod.enum(["solo", "studio", "chain", "chair-host", "white-label"]),
+  ),
+});
+
+/**
+ * @summary Preview pack defaults before creating a business
+ */
+export const PreviewOnboardingBody = zod.object({
+  name: zod.string(),
+  country: zod.string().optional(),
+  category: zod.string().optional(),
+  vertical: zod
+    .enum([
+      "hair",
+      "beauty",
+      "body-art",
+      "wellness",
+      "fitness",
+      "medspa",
+      "allied-health",
+    ])
+    .optional(),
+  tier: zod
+    .enum(["solo", "studio", "chain", "chair-host", "white-label"])
+    .optional(),
+  jurisdiction: zod.enum(["IE", "GB", "DE", "ES", "IT", "NL", "PL"]).optional(),
+});
+
+export const PreviewOnboardingResponse = zod.object({
+  country: zod.string().optional(),
+  currency: zod.string().optional(),
+  locale: zod.string().optional(),
+  timezone: zod.string().optional(),
+  euRegion: zod.enum(["fra", "dub"]).optional(),
+  vertical: zod
+    .enum([
+      "hair",
+      "beauty",
+      "body-art",
+      "wellness",
+      "fitness",
+      "medspa",
+      "allied-health",
+    ])
+    .optional(),
+  tier: zod
+    .enum(["solo", "studio", "chain", "chair-host", "white-label"])
+    .optional(),
+  category: zod.string().optional(),
+  aiGreeting: zod.string().optional(),
+});
+
+/**
+ * @summary Report an issue or feature request
+ */
+export const CreateSupportTicketParams = zod.object({
+  businessId: zod.coerce.string(),
+});
+
+export const createSupportTicketBodyDescriptionMin = 10;
+
+export const createSupportTicketBodyConsentLogsAccessDefault = false;
+
+export const CreateSupportTicketBody = zod.object({
+  category: zod.enum(["bug", "billing", "liv_error", "feature", "other"]),
+  severity: zod.enum(["blocking", "annoying", "nice_to_have"]).optional(),
+  description: zod.string().min(createSupportTicketBodyDescriptionMin),
+  context: zod.record(zod.string(), zod.unknown()).optional(),
+  consentLogsAccess: zod
+    .boolean()
+    .default(createSupportTicketBodyConsentLogsAccessDefault),
+});
+
+/**
+ * @summary List support tickets for the business (owner/admin)
+ */
+export const ListSupportTicketsParams = zod.object({
+  businessId: zod.coerce.string(),
+});
+
+export const ListSupportTicketsQueryParams = zod.object({
+  status: zod.enum(["open", "triaged", "resolved", "closed"]).optional(),
+});
+
+export const ListSupportTicketsResponseItem = zod.object({
+  id: zod.string(),
+  businessId: zod.string(),
+  userId: zod.string(),
+  category: zod.enum(["bug", "billing", "liv_error", "feature", "other"]),
+  severity: zod.enum(["blocking", "annoying", "nice_to_have"]),
+  description: zod.string(),
+  status: zod.enum(["open", "triaged", "resolved", "closed"]),
+  context: zod.record(zod.string(), zod.unknown()).optional(),
+  consentLogsAccess: zod.string().optional(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+export const ListSupportTicketsResponse = zod.array(
+  ListSupportTicketsResponseItem,
+);
+
+/**
  * @summary Create a new business
  */
 export const CreateBusinessBody = zod.object({
@@ -221,8 +766,73 @@ export const CreateBusinessBody = zod.object({
   timezone: zod.string().optional(),
   city: zod.string().optional(),
   country: zod.string().optional(),
+  jurisdiction: zod
+    .enum(["IE", "GB", "DE", "ES", "IT", "NL", "PL"])
+    .optional()
+    .describe("ISO jurisdiction pack code (IE, GB, DE, ES, IT, NL, PL)"),
+  vertical: zod
+    .enum([
+      "hair",
+      "beauty",
+      "body-art",
+      "wellness",
+      "fitness",
+      "medspa",
+      "allied-health",
+    ])
+    .optional(),
+  tier: zod
+    .enum(["solo", "studio", "chain", "chair-host", "white-label"])
+    .optional(),
+  seedDefaults: zod
+    .boolean()
+    .optional()
+    .describe(
+      "When true (default), seed services and staff from the vertical pack",
+    ),
   logoUrl: zod.string().optional(),
   instagramHandle: zod.string().optional(),
+});
+
+/**
+ * @summary Search hash-chained audit log for a tenant (owner)
+ */
+export const SearchAuditLogParams = zod.object({
+  businessId: zod.coerce.string(),
+});
+
+export const searchAuditLogQueryLimitDefault = 50;
+export const searchAuditLogQueryOffsetDefault = 0;
+
+export const SearchAuditLogQueryParams = zod.object({
+  q: zod.coerce
+    .string()
+    .optional()
+    .describe("Free-text search across action, resource, actor, and payload"),
+  actionClass: zod.coerce.string().optional(),
+  resourceKind: zod.coerce.string().optional(),
+  from: zod.date().optional(),
+  to: zod.date().optional(),
+  limit: zod.coerce.number().default(searchAuditLogQueryLimitDefault),
+  offset: zod.coerce.number().default(searchAuditLogQueryOffsetDefault),
+});
+
+export const SearchAuditLogResponse = zod.object({
+  data: zod.array(
+    zod.object({
+      id: zod.string(),
+      businessId: zod.string(),
+      occurredAt: zod.coerce.date(),
+      actorKind: zod.string(),
+      actorId: zod.string(),
+      onBehalfOfId: zod.string().nullish(),
+      actionClass: zod.string(),
+      resourceKind: zod.string(),
+      resourceId: zod.string().nullish(),
+      payload: zod.record(zod.string(), zod.unknown()).optional(),
+    }),
+  ),
+  total: zod.number(),
 });
 
 /**
@@ -231,6 +841,9 @@ export const CreateBusinessBody = zod.object({
 export const GetBusinessParams = zod.object({
   businessId: zod.coerce.string(),
 });
+
+export const getBusinessResponseOnboardingStatePercentCompleteMin = 0;
+export const getBusinessResponseOnboardingStatePercentCompleteMax = 100;
 
 export const GetBusinessResponse = zod.object({
   id: zod.string(),
@@ -245,6 +858,16 @@ export const GetBusinessResponse = zod.object({
   city: zod.string().nullish(),
   country: zod.string().nullish(),
   timezone: zod.string(),
+  locale: zod
+    .string()
+    .optional()
+    .describe(
+      "BCP-47 locale for customer-facing copy and formatting (e.g. en-IE)",
+    ),
+  currency: zod
+    .string()
+    .optional()
+    .describe("ISO 4217 currency code (e.g. EUR)"),
   logoUrl: zod.string().nullish(),
   coverImageUrl: zod.string().nullish(),
   instagramHandle: zod.string().nullish(),
@@ -255,6 +878,58 @@ export const GetBusinessResponse = zod.object({
   aiCanBookDirectly: zod.string().optional(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
+  onboardingState: zod
+    .object({
+      currentAct: zod.enum([
+        "a1_create_business",
+        "a2_shop_profile",
+        "a3_service_menu",
+        "a4_team",
+        "a5_hours",
+        "a6_liv",
+        "a7_channels",
+        "a8_public_link",
+        "a9_billing",
+        "a10_invite_team",
+        "a11_migration",
+        "a12_go_live",
+      ]),
+      completedActs: zod.array(
+        zod.enum([
+          "a1_create_business",
+          "a2_shop_profile",
+          "a3_service_menu",
+          "a4_team",
+          "a5_hours",
+          "a6_liv",
+          "a7_channels",
+          "a8_public_link",
+          "a9_billing",
+          "a10_invite_team",
+          "a11_migration",
+          "a12_go_live",
+        ]),
+      ),
+      percentComplete: zod
+        .number()
+        .min(getBusinessResponseOnboardingStatePercentCompleteMin)
+        .max(getBusinessResponseOnboardingStatePercentCompleteMax),
+      checklist: zod
+        .object({
+          testBooking: zod.boolean().optional(),
+          livEnabled: zod.boolean().optional(),
+          publicLinkShared: zod.boolean().optional(),
+          smsOrVoiceConnected: zod.boolean().optional(),
+          teamInvited: zod.boolean().optional(),
+          billingStarted: zod.boolean().optional(),
+          servicesConfirmed: zod.boolean().optional(),
+          hoursConfirmed: zod.boolean().optional(),
+        })
+        .optional(),
+      updatedAt: zod.coerce.date().optional(),
+    })
+    .optional()
+    .describe("Self-serve wizard progress (acts A1–A12)"),
 });
 
 /**
@@ -263,6 +938,9 @@ export const GetBusinessResponse = zod.object({
 export const UpdateBusinessParams = zod.object({
   businessId: zod.coerce.string(),
 });
+
+export const updateBusinessBodyOnboardingStatePercentCompleteMin = 0;
+export const updateBusinessBodyOnboardingStatePercentCompleteMax = 100;
 
 export const UpdateBusinessBody = zod.object({
   name: zod.string().optional(),
@@ -283,7 +961,62 @@ export const UpdateBusinessBody = zod.object({
   aiGreeting: zod.string().optional(),
   aiKnowledge: zod.string().optional(),
   aiCanBookDirectly: zod.string().optional(),
+  onboardingState: zod
+    .object({
+      currentAct: zod.enum([
+        "a1_create_business",
+        "a2_shop_profile",
+        "a3_service_menu",
+        "a4_team",
+        "a5_hours",
+        "a6_liv",
+        "a7_channels",
+        "a8_public_link",
+        "a9_billing",
+        "a10_invite_team",
+        "a11_migration",
+        "a12_go_live",
+      ]),
+      completedActs: zod.array(
+        zod.enum([
+          "a1_create_business",
+          "a2_shop_profile",
+          "a3_service_menu",
+          "a4_team",
+          "a5_hours",
+          "a6_liv",
+          "a7_channels",
+          "a8_public_link",
+          "a9_billing",
+          "a10_invite_team",
+          "a11_migration",
+          "a12_go_live",
+        ]),
+      ),
+      percentComplete: zod
+        .number()
+        .min(updateBusinessBodyOnboardingStatePercentCompleteMin)
+        .max(updateBusinessBodyOnboardingStatePercentCompleteMax),
+      checklist: zod
+        .object({
+          testBooking: zod.boolean().optional(),
+          livEnabled: zod.boolean().optional(),
+          publicLinkShared: zod.boolean().optional(),
+          smsOrVoiceConnected: zod.boolean().optional(),
+          teamInvited: zod.boolean().optional(),
+          billingStarted: zod.boolean().optional(),
+          servicesConfirmed: zod.boolean().optional(),
+          hoursConfirmed: zod.boolean().optional(),
+        })
+        .optional(),
+      updatedAt: zod.coerce.date().optional(),
+    })
+    .optional()
+    .describe("Self-serve wizard progress (acts A1–A12)"),
 });
+
+export const updateBusinessResponseOnboardingStatePercentCompleteMin = 0;
+export const updateBusinessResponseOnboardingStatePercentCompleteMax = 100;
 
 export const UpdateBusinessResponse = zod.object({
   id: zod.string(),
@@ -298,6 +1031,16 @@ export const UpdateBusinessResponse = zod.object({
   city: zod.string().nullish(),
   country: zod.string().nullish(),
   timezone: zod.string(),
+  locale: zod
+    .string()
+    .optional()
+    .describe(
+      "BCP-47 locale for customer-facing copy and formatting (e.g. en-IE)",
+    ),
+  currency: zod
+    .string()
+    .optional()
+    .describe("ISO 4217 currency code (e.g. EUR)"),
   logoUrl: zod.string().nullish(),
   coverImageUrl: zod.string().nullish(),
   instagramHandle: zod.string().nullish(),
@@ -308,6 +1051,58 @@ export const UpdateBusinessResponse = zod.object({
   aiCanBookDirectly: zod.string().optional(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
+  onboardingState: zod
+    .object({
+      currentAct: zod.enum([
+        "a1_create_business",
+        "a2_shop_profile",
+        "a3_service_menu",
+        "a4_team",
+        "a5_hours",
+        "a6_liv",
+        "a7_channels",
+        "a8_public_link",
+        "a9_billing",
+        "a10_invite_team",
+        "a11_migration",
+        "a12_go_live",
+      ]),
+      completedActs: zod.array(
+        zod.enum([
+          "a1_create_business",
+          "a2_shop_profile",
+          "a3_service_menu",
+          "a4_team",
+          "a5_hours",
+          "a6_liv",
+          "a7_channels",
+          "a8_public_link",
+          "a9_billing",
+          "a10_invite_team",
+          "a11_migration",
+          "a12_go_live",
+        ]),
+      ),
+      percentComplete: zod
+        .number()
+        .min(updateBusinessResponseOnboardingStatePercentCompleteMin)
+        .max(updateBusinessResponseOnboardingStatePercentCompleteMax),
+      checklist: zod
+        .object({
+          testBooking: zod.boolean().optional(),
+          livEnabled: zod.boolean().optional(),
+          publicLinkShared: zod.boolean().optional(),
+          smsOrVoiceConnected: zod.boolean().optional(),
+          teamInvited: zod.boolean().optional(),
+          billingStarted: zod.boolean().optional(),
+          servicesConfirmed: zod.boolean().optional(),
+          hoursConfirmed: zod.boolean().optional(),
+        })
+        .optional(),
+      updatedAt: zod.coerce.date().optional(),
+    })
+    .optional()
+    .describe("Self-serve wizard progress (acts A1–A12)"),
 });
 
 /**
@@ -724,6 +1519,12 @@ export const GetCustomerResponse = zod
             "COMPLETED",
             "NO_SHOW",
           ]),
+          pendingReason: zod
+            .string()
+            .nullish()
+            .describe(
+              "Machine reason while status is PENDING (awaiting_staff_confirm, awaiting_deposit, etc.)",
+            ),
           notes: zod.string().nullish(),
           internalNotes: zod.string().nullish(),
           cancellationReason: zod.string().nullish(),
@@ -819,6 +1620,12 @@ export const ListBookingsResponse = zod.object({
           "COMPLETED",
           "NO_SHOW",
         ]),
+        pendingReason: zod
+          .string()
+          .nullish()
+          .describe(
+            "Machine reason while status is PENDING (awaiting_staff_confirm, awaiting_deposit, etc.)",
+          ),
         notes: zod.string().nullish(),
         internalNotes: zod.string().nullish(),
         cancellationReason: zod.string().nullish(),
@@ -940,6 +1747,12 @@ export const GetBookingResponse = zod
       "COMPLETED",
       "NO_SHOW",
     ]),
+    pendingReason: zod
+      .string()
+      .nullish()
+      .describe(
+        "Machine reason while status is PENDING (awaiting_staff_confirm, awaiting_deposit, etc.)",
+      ),
     notes: zod.string().nullish(),
     internalNotes: zod.string().nullish(),
     cancellationReason: zod.string().nullish(),
@@ -1044,6 +1857,12 @@ export const UpdateBookingResponse = zod.object({
     "COMPLETED",
     "NO_SHOW",
   ]),
+  pendingReason: zod
+    .string()
+    .nullish()
+    .describe(
+      "Machine reason while status is PENDING (awaiting_staff_confirm, awaiting_deposit, etc.)",
+    ),
   notes: zod.string().nullish(),
   internalNotes: zod.string().nullish(),
   cancellationReason: zod.string().nullish(),
@@ -1243,6 +2062,12 @@ export const GetDashboardSummaryResponse = zod.object({
           "COMPLETED",
           "NO_SHOW",
         ]),
+        pendingReason: zod
+          .string()
+          .nullish()
+          .describe(
+            "Machine reason while status is PENDING (awaiting_staff_confirm, awaiting_deposit, etc.)",
+          ),
         notes: zod.string().nullish(),
         internalNotes: zod.string().nullish(),
         cancellationReason: zod.string().nullish(),
@@ -1306,6 +2131,17 @@ export const GetDashboardSummaryResponse = zod.object({
         }),
       ),
   ),
+  voiceBookingsThisWeek: zod
+    .number()
+    .describe("Bookings with source=voice created in the last 7 days"),
+  voiceRecoveredValueEurCents: zod
+    .number()
+    .describe("Sum of service prices for voice-sourced bookings this week"),
+  voiceOutcomeShareEurCents: zod
+    .number()
+    .describe(
+      "Estimated voice outcome share this billing period (from meters)",
+    ),
 });
 
 /**
@@ -1368,6 +2204,15 @@ export const GetPublicBusinessResponse = zod.object({
   coverImageUrl: zod.string().nullish(),
   instagramHandle: zod.string().nullish(),
   timezone: zod.string(),
+  aiEnabled: zod.string().optional(),
+  aiGreeting: zod.string().nullish(),
+  aiDisclosureChatFirstMessage: zod
+    .string()
+    .optional()
+    .describe("Jurisdiction-localized first message for public Liv chat"),
+  aiDisclosureFooterLine: zod.string().optional(),
+  bookingTermsBlock: zod.string().optional(),
+  depositPolicySummary: zod.string().optional(),
   services: zod.array(
     zod.object({
       id: zod.string(),
@@ -1522,6 +2367,10 @@ export const GetConversationResponse = zod.object({
       content: zod.string(),
       toolName: zod.string().nullish(),
       bookingId: zod.string().nullish(),
+      authorUserId: zod
+        .string()
+        .nullish()
+        .describe("Clerk user id when sent by staff from dashboard"),
       createdAt: zod.coerce.date(),
     }),
   ),
@@ -1556,6 +2405,18 @@ export const UpdateConversationResponse = zod.object({
   createdAt: zod.coerce.date(),
   messageCount: zod.number(),
   bookingCount: zod.number(),
+});
+
+/**
+ * @summary Send a staff reply on a conversation thread
+ */
+export const SendConversationMessageParams = zod.object({
+  businessId: zod.coerce.string(),
+  conversationId: zod.coerce.string(),
+});
+
+export const SendConversationMessageBody = zod.object({
+  content: zod.string(),
 });
 
 /**
@@ -1594,6 +2455,134 @@ export const CreateMarketingLeadBody = zod.object({
 });
 
 /**
+ * @summary Plan, entitlements, period usage, and voice outcome estimate
+ */
+export const GetBusinessBillingParams = zod.object({
+  businessId: zod.coerce.string(),
+});
+
+export const GetBusinessBillingResponse = zod.object({
+  businessId: zod.string(),
+  planId: zod.string(),
+  planName: zod.string(),
+  tier: zod.string().optional(),
+  baseEurCentsPerMonth: zod.number().optional(),
+  seatEurCentsPerMonth: zod.number().nullish(),
+  activeStaffSeats: zod.number().optional(),
+  entitlements: zod.array(zod.string()),
+  usage: zod.record(zod.string(), zod.number()),
+  voiceOutcomeShareEurCents: zod.number(),
+  voiceOutcomeCapEurCents: zod.number().nullish(),
+  voiceOutcomeShareRate: zod.number().optional(),
+  stripeSubscriptionStatus: zod.string().nullish(),
+  designPartnerActive: zod.boolean().optional(),
+});
+
+/**
+ * @summary Start Stripe Checkout (Solo, Studio, Chain, Host)
+ */
+export const CreateBillingCheckoutSessionParams = zod.object({
+  businessId: zod.coerce.string(),
+});
+
+export const CreateBillingCheckoutSessionBody = zod.object({
+  planId: zod.enum(["solo", "studio", "chain", "chair-host"]).optional(),
+  shopCount: zod
+    .number()
+    .optional()
+    .describe("Chain tier — shops billed (min 2)"),
+  renterCount: zod.number().optional().describe("Host tier — renter seats"),
+});
+
+export const CreateBillingCheckoutSessionResponse = zod.record(
+  zod.string(),
+  zod.unknown(),
+);
+
+/**
+ * @summary Anonymized peer benchmarks (k≥10, opt-in, add-on)
+ */
+export const GetPeerInsightsParams = zod.object({
+  businessId: zod.coerce.string(),
+});
+
+export const GetPeerInsightsResponse = zod.object({
+  available: zod.boolean(),
+  peerCount: zod.number().optional(),
+  required: zod.number().optional(),
+  vertical: zod.string(),
+  country: zod.string(),
+  message: zod.string().optional(),
+  disclaimer: zod.string().optional(),
+  benchmarks: zod
+    .object({
+      avgBookingsPerWeek: zod.number().optional(),
+      noShowRatePct: zod.number().optional(),
+      voiceBookingSharePct: zod.number().optional(),
+    })
+    .optional(),
+});
+
+/**
+ * @summary Opt in to cross-tenant intelligence for this shop
+ */
+export const OptInPeerInsightsParams = zod.object({
+  businessId: zod.coerce.string(),
+});
+
+export const OptInPeerInsightsResponse = zod.object({
+  optedIn: zod.boolean().optional(),
+});
+
+/**
+ * @summary Stripe Checkout for Peer Insights add-on (€49/mo)
+ */
+export const CreatePeerInsightsCheckoutParams = zod.object({
+  businessId: zod.coerce.string(),
+});
+
+export const CreatePeerInsightsCheckoutResponse = zod.record(
+  zod.string(),
+  zod.unknown(),
+);
+
+/**
+ * @summary Read-only bookings by public slug (partner API key)
+ */
+export const ListPartnerBookingsParams = zod.object({
+  slug: zod.coerce.string(),
+});
+
+export const ListPartnerBookingsQueryParams = zod.object({
+  from: zod.date().optional(),
+  to: zod.date().optional(),
+});
+
+export const ListPartnerBookingsResponse = zod.object({
+  slug: zod.string(),
+  from: zod.coerce.date(),
+  to: zod.coerce.date(),
+  bookings: zod.array(
+    zod.object({
+      id: zod.string().optional(),
+      status: zod.string().optional(),
+      startAt: zod.coerce.date().optional(),
+      endAt: zod.coerce.date().optional(),
+      serviceId: zod.string().nullish(),
+    }),
+  ),
+});
+
+/**
+ * @summary Voice receptionist status (requires voice_receptionist entitlement)
+ */
+export const GetVoiceStatusParams = zod.object({
+  businessId: zod.coerce.string(),
+});
+
+export const GetVoiceStatusResponse = zod.record(zod.string(), zod.unknown());
+
+/**
  * @summary Read provisioned Twilio number + Resend from-address + provider status
  */
 export const GetBusinessCommunicationsParams = zod.object({
@@ -1605,6 +2594,8 @@ export const GetBusinessCommunicationsResponse = zod.object({
   twilioPhoneSid: zod.string().nullable(),
   resendFromAddress: zod.string().nullable(),
   smsWebhookUrl: zod.string().nullable(),
+  voiceWebhookUrl: zod.string().nullish(),
+  voiceStatusWebhookUrl: zod.string().nullish(),
   providerStatus: zod.object({
     smsProvider: zod.enum(["twilio", "noop"]),
     emailProvider: zod.enum(["resend", "noop"]),
@@ -1705,6 +2696,103 @@ export const TestSendCommunicationResponse = zod.object({
 });
 
 /**
+ * @summary Twilio speech gather callback for Liv voice turns
+ */
+export const TwilioVoiceGatherQueryParams = zod.object({
+  conversationId: zod.coerce.string().optional(),
+  slug: zod.coerce.string(),
+});
+
+/**
+ * @summary Search tenant directory (cross-tenant, read-only)
+ */
+export const searchInternalTenantsQueryLimitDefault = 25;
+export const searchInternalTenantsQueryOffsetDefault = 0;
+
+export const SearchInternalTenantsQueryParams = zod.object({
+  q: zod.coerce
+    .string()
+    .optional()
+    .describe("Name, slug, owner email, Stripe customer id, or Clerk user id"),
+  limit: zod.coerce.number().default(searchInternalTenantsQueryLimitDefault),
+  offset: zod.coerce.number().default(searchInternalTenantsQueryOffsetDefault),
+});
+
+export const SearchInternalTenantsResponse = zod.object({
+  data: zod.array(
+    zod.object({
+      id: zod.string(),
+      name: zod.string(),
+      slug: zod.string(),
+      ownerId: zod.string(),
+      ownerEmail: zod.string().nullish(),
+      planId: zod.string().nullish(),
+      stripeSubscriptionStatus: zod.string().nullish(),
+      createdAt: zod.coerce.date(),
+      lastBookingAt: zod.coerce.date().nullish(),
+    }),
+  ),
+  total: zod.number(),
+});
+
+/**
+ * @summary Tenant health card with Stripe / Clerk deep links
+ */
+export const GetInternalTenantParams = zod.object({
+  businessId: zod.coerce.string(),
+});
+
+export const GetInternalTenantResponse = zod
+  .object({
+    id: zod.string(),
+    name: zod.string(),
+    slug: zod.string(),
+    ownerId: zod.string(),
+    ownerEmail: zod.string().nullish(),
+    planId: zod.string().nullish(),
+    stripeSubscriptionStatus: zod.string().nullish(),
+    createdAt: zod.coerce.date(),
+    lastBookingAt: zod.coerce.date().nullish(),
+  })
+  .and(
+    zod.object({
+      email: zod.string().nullish(),
+      phone: zod.string().nullish(),
+      timezone: zod.string(),
+      tier: zod.string(),
+      vertical: zod.string(),
+      aiEnabled: zod.boolean(),
+      voiceProvisioned: zod.boolean(),
+      stripeCustomerId: zod.string().nullish(),
+      stripeSubscriptionId: zod.string().nullish(),
+      twilioPhoneNumber: zod.string().nullish(),
+      activeStaffCount: zod.number(),
+      bookingCount: zod.number(),
+      lastInboundSmsAt: zod.coerce.date().nullish(),
+      voiceReceptionistEntitled: zod.boolean(),
+      deepLinks: zod.object({
+        stripeCustomer: zod.string().nullable(),
+        clerkUser: zod.string().nullable(),
+        tenantDashboard: zod.string().nullable(),
+        publicBooking: zod.string().nullable(),
+      }),
+    }),
+  );
+
+/**
+ * @summary Impersonation policy reminder for support (read-only)
+ */
+export const GetInternalTenantSupportContextParams = zod.object({
+  businessId: zod.coerce.string(),
+});
+
+export const GetInternalTenantSupportContextResponse = zod.object({
+  businessId: zod.string(),
+  impersonationPolicy: zod.string(),
+  note: zod.string(),
+});
+
+/**
  * Header-protected by `X-Internal-Cron-Secret`. Sends reminder
 emails for CONFIRMED/PENDING bookings starting in [now+23h, now+25h),
 deduped via notificationLogs.templateKey = "booking-reminder-t24".
@@ -1720,3 +2808,20 @@ export const CronSendRemindersResponse = zod.object({
   sent: zod.number(),
   skipped: zod.number(),
 });
+
+/**
+ * **Development only** — returns 403 when `NODE_ENV=production`.
+Creates sample businesses, staff, services, and bookings for local demos.
+
+ * @summary Seed demo businesses for the authenticated user
+ */
+export const SeedDevWorkspaceResponse = zod.record(zod.string(), zod.unknown());
+
+/**
+ * Development only — returns 403 in production.
+ * @summary Remove seeded demo data for the authenticated user
+ */
+export const ClearDevWorkspaceResponse = zod.record(
+  zod.string(),
+  zod.unknown(),
+);

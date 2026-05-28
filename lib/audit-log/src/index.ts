@@ -95,7 +95,7 @@ export function verifyChain(
     };
     const expectedRow = computeRowHash(expectedPrev, input, row.occurredAt);
     if (!row.rowHash.equals(expectedRow)) return row.id;
-    expectedPrev = row.rowHash;
+    expectedPrev = Buffer.from(row.rowHash);
   }
   return null;
 }

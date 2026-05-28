@@ -10,6 +10,7 @@ import {
 import { logEvent } from "../services/events.service";
 import { EventType } from "@workspace/db";
 
+import { sendError } from "../lib/http-errors";
 const router: IRouter = Router();
 const getBizId = (param: string | string[]) => Array.isArray(param) ? param[0] : param;
 
@@ -36,7 +37,7 @@ router.put(
     const businessId = getBizId(req.params.businessId);
     const { rules, staffId } = req.body;
     if (!Array.isArray(rules)) {
-      res.status(400).json({ error: "rules must be an array" }); return;
+      sendError(res, req, 400, "rules must be an array"); return;
     }
     const updated = await setAvailabilityRules(businessId, rules, staffId);
     await logEvent({ type: EventType.AVAILABILITY_UPDATED, businessId, userId });
@@ -70,7 +71,7 @@ router.post(
     const businessId = getBizId(req.params.businessId);
     const { staffId, startsAt, endsAt, reason } = req.body;
     if (!startsAt || !endsAt) {
-      res.status(400).json({ error: "startsAt and endsAt are required" }); return;
+      sendError(res, req, 400, "startsAt and endsAt are required"); return;
     }
     const t = await createTimeOff(businessId, { staffId, startsAt, endsAt, reason });
     await logEvent({ type: EventType.TIME_OFF_CREATED, businessId, userId, entityType: "time_off", entityId: t.id });
@@ -88,7 +89,7 @@ router.delete(
     const businessId = getBizId(req.params.businessId);
     const timeOffId = getBizId(req.params.timeOffId);
     const t = await deleteTimeOff(businessId, timeOffId);
-    if (!t) { res.status(404).json({ error: "Time off not found" }); return; }
+    if (!t) { sendError(res, req, 404, "Time off not found"); return; }
     await logEvent({ type: EventType.TIME_OFF_REMOVED, businessId, userId, entityType: "time_off", entityId: timeOffId });
     res.sendStatus(204);
   },

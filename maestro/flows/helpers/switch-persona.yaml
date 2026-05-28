@@ -1,0 +1,16 @@
+appId: ${MAESTRO_APP_ID}
+---
+- runFlow:
+    when:
+      visible:
+        id: "switch-persona-button"
+    commands:
+      - tapOn:
+          id: "switch-persona-button"
+      - tapOn:
+          id: "persona-row-${PERSONA}"
+      - tapOn:
+          id: "persona-row-auto"
+      - extendedWaitUntil:
+          visible: "More"
+          timeout: 20000

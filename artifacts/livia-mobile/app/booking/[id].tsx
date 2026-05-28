@@ -7,13 +7,12 @@ import {
   Alert,
   Platform,
   Pressable,
-  ScrollView,
+  Share,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { AuroraHalo } from "@/components/brand/AuroraHalo";
 import { aurora } from "@/constants/colors";
 import { EmptyState } from "@/components/EmptyState";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -22,15 +21,23 @@ import { fonts, type } from "@/constants/typography";
 import { useBusiness } from "@/contexts/BusinessContext";
 import { useColors } from "@/hooks/useColors";
 import { useHaptics } from "@/hooks/useHaptics";
+import { useBusinessTimezone } from "@/hooks/useBusinessTimezone";
+import { pendingReasonLabel } from "@/lib/booking-pending";
+import { BookingTimelineCard } from "@/components/BookingTimelineCard";
+import { notifyBookingRunningLate, promptRunningLateMinutes } from "@/lib/running-late";
+import { OperationalScreen } from "@/components/OperationalScreen";
+import { invalidateOperationalState } from "@/lib/operational-cache";
+import { useQueryClient } from "@tanstack/react-query";
 
-function formatDateTime(iso: string) {
-  return new Date(iso).toLocaleString("en-US", {
+function formatDateTime(iso: string, timeZone: string) {
+  return new Date(iso).toLocaleString(undefined, {
     weekday: "long",
     month: "long",
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
+    timeZone,
   });
 }
 
@@ -42,19 +49,37 @@ function formatDuration(startAt: string, endAt: string) {
   return m ? `${h}h ${m}m` : `${h}h`;
 }
 
-const STATUS_ACTIONS: Record<string, Array<{ label: string; next: string; danger?: boolean }>> = {
-  PENDING:   [{ label: "Confirm", next: "CONFIRMED" }, { label: "Cancel", next: "CANCELLED", danger: true }],
-  CONFIRMED: [{ label: "Mark complete", next: "COMPLETED" }, { label: "No-show", next: "NO_SHOW" }, { label: "Cancel", next: "CANCELLED", danger: true }],
+const STATUS_ACTIONS: Record<
+  string,
+  Array<{
+    label: string;
+    next: string;
+    danger?: boolean;
+    icon: keyof typeof Feather.glyphMap;
+  }>
+> = {
+  PENDING: [
+    { label: "Confirm", next: "CONFIRMED", icon: "check" },
+    { label: "Cancel", next: "CANCELLED", danger: true, icon: "x-circle" },
+  ],
+  CONFIRMED: [
+    { label: "Mark complete", next: "COMPLETED", icon: "check-circle" },
+    { label: "No-show", next: "NO_SHOW", icon: "user-x" },
+    { label: "Cancel", next: "CANCELLED", danger: true, icon: "x-circle" },
+  ],
   COMPLETED: [],
   CANCELLED: [],
-  NO_SHOW:   [],
+  NO_SHOW: [],
 };
 
 export default function BookingDetailScreen() {
   const colors = useColors();
   const haptics = useHaptics();
+  const router = useRouter();
+  const qc = useQueryClient();
   const { id, intent } = useLocalSearchParams<{ id: string; intent?: string }>();
   const { currentBusiness } = useBusiness();
+  const { timeZone: tz } = useBusinessTimezone();
 
   const { data: booking, isLoading, refetch } = useGetBooking(
     currentBusiness?.id ?? "",
@@ -74,6 +99,7 @@ export default function BookingDetailScreen() {
       })
         .then(() => {
           haptics.success();
+          invalidateOperationalState(qc, currentBusiness.id);
           refetch();
         })
         .catch((err: unknown) => {
@@ -121,29 +147,59 @@ export default function BookingDetailScreen() {
   const service = detail.service;
   const customerName = customer?.displayName ?? customer?.firstName ?? "Walk-in";
 
+  const onShareBooking = async () => {
+    haptics.tap();
+    const when = formatDateTime(booking.startAt, tz);
+    const svc = service?.name ?? "Appointment";
+    const shop = currentBusiness?.name ?? "the shop";
+    const bookUrl = currentBusiness?.slug
+      ? `https://livia.io/b/${currentBusiness.slug}`
+      : undefined;
+    const message = `${customerName} — ${svc} at ${shop}\n${when}${bookUrl ? `\nBook: ${bookUrl}` : ""}`;
+    await Share.share({ message, title: `${svc} booking` });
+  };
+
   return (
-    <ScrollView
-      style={[styles.root, { backgroundColor: colors.background }]}
-      contentContainerStyle={styles.content}
-      contentInsetAdjustmentBehavior="automatic"
+    <OperationalScreen
+      title="Booking"
+      subtitle={`${customerName} · ${service?.name ?? "Appointment"}`}
+      contentStyle={styles.content}
+      actions={
+        <Pressable onPress={() => router.back()} hitSlop={12} accessibilityRole="button">
+          <Feather name="arrow-left" size={18} color={colors.foreground} />
+        </Pressable>
+      }
     >
-      {/* Single soft halo behind hero */}
-      <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, height: 240, overflow: "hidden" }}>
-        <AuroraHalo tone="primary" size={360} intensity={0.6} style={{ top: -120, left: -60 }} />
-      </View>
 
       {intent === "reschedule" ? (
-        <View
-          style={[
+        <Pressable
+          onPress={() => {
+            haptics.tap();
+            router.push({
+              pathname: "/booking/new",
+              params: {
+                customerId: booking.customerId,
+                serviceId: booking.serviceId,
+                staffId: booking.staffId ?? "",
+                noteSeed: booking.notes
+                  ? `Rescheduled from ${formatDateTime(booking.startAt, tz)}. ${booking.notes}`
+                  : `Rescheduled from ${formatDateTime(booking.startAt, tz)}.`,
+              },
+            });
+          }}
+          style={({ pressed }) => [
             styles.intentBanner,
             { backgroundColor: aurora.cyan + "1c", borderColor: aurora.cyan + "55" },
+            pressed && { opacity: 0.9 },
           ]}
         >
           <Feather name="calendar" size={14} color={aurora.cyan} />
-          <Text style={[styles.intentText, { color: aurora.cyan }]}>
-            Rescheduling — pick a new time below.
+          <Text style={[styles.intentText, { color: aurora.cyan, flex: 1 }]}>
+            Book a replacement slot with the same client and service, then cancel this booking if
+            you no longer need it.
           </Text>
-        </View>
+          <Feather name="chevron-right" size={16} color={aurora.cyan} />
+        </Pressable>
       ) : null}
 
       <View
@@ -155,12 +211,17 @@ export default function BookingDetailScreen() {
       >
         <View style={styles.cardHeader}>
           <StatusBadge status={booking.status} />
+          {booking.status === "PENDING" && (booking as { pendingReason?: string }).pendingReason ? (
+            <Text style={[type.caption, { color: colors.mutedForeground, marginTop: 6 }]}>
+              {pendingReasonLabel((booking as { pendingReason?: string }).pendingReason)}
+            </Text>
+          ) : null}
           <Text style={[styles.time, { color: colors.mutedForeground }]}>
             {formatDuration(booking.startAt, booking.endAt)}
           </Text>
         </View>
-        <Text style={[styles.dateTime, { color: colors.foreground }]}>
-          {formatDateTime(booking.startAt)}
+          <Text style={[styles.dateTime, { color: colors.foreground }]}>
+          {formatDateTime(booking.startAt, tz)}
         </Text>
         {/*
           Hero handoff. Reanimated 4 removed the legacy `sharedTransitionTag`
@@ -177,6 +238,10 @@ export default function BookingDetailScreen() {
           {customerName}
         </Animated.Text>
       </View>
+
+      {currentBusiness?.id ? (
+        <BookingTimelineCard businessId={currentBusiness.id} bookingId={booking.id} />
+      ) : null}
 
       {customer && (
         <View
@@ -215,6 +280,38 @@ export default function BookingDetailScreen() {
         )}
       </View>
 
+      {booking.status === "CONFIRMED" && currentBusiness?.id ? (
+        <Pressable
+          onPress={() =>
+            promptRunningLateMinutes((m) =>
+              void notifyBookingRunningLate(currentBusiness!.id, booking.id, m),
+            )
+          }
+          style={({ pressed }) => [
+            styles.shareRow,
+            { borderColor: colors.border, backgroundColor: colors.card },
+            pressed && { opacity: 0.85 },
+          ]}
+        >
+          <Feather name="clock" size={18} color={colors.primary} />
+          <Text style={[styles.shareText, { color: colors.primary }]}>Running late — notify client</Text>
+        </Pressable>
+      ) : null}
+
+      {Platform.OS !== "web" ? (
+        <Pressable
+          onPress={() => void onShareBooking()}
+          style={({ pressed }) => [
+            styles.shareRow,
+            { borderColor: colors.border, backgroundColor: colors.card },
+            pressed && { opacity: 0.85 },
+          ]}
+        >
+          <Feather name="share" size={18} color={colors.primary} />
+          <Text style={[styles.shareText, { color: colors.primary }]}>Share booking details</Text>
+        </Pressable>
+      ) : null}
+
       {booking.notes ? (
         <View
           style={[
@@ -250,7 +347,11 @@ export default function BookingDetailScreen() {
                 <ActivityIndicator color={a.danger ? "#fff" : colors.primaryForeground} />
               ) : (
                 <>
-                  {!a.danger && <Feather name="check" size={16} color={colors.primaryForeground} />}
+                  <Feather
+                    name={a.icon}
+                    size={16}
+                    color={a.danger ? "#fff" : colors.primaryForeground}
+                  />
                   <Text
                     style={[
                       styles.actionText,
@@ -265,7 +366,7 @@ export default function BookingDetailScreen() {
           ))}
         </View>
       )}
-    </ScrollView>
+    </OperationalScreen>
   );
 }
 
@@ -276,8 +377,8 @@ const styles = StyleSheet.create({
   intentBanner: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    paddingVertical: 10,
+    gap: 10,
+    paddingVertical: 12,
     paddingHorizontal: 14,
     borderRadius: 12,
     borderWidth: 1,
@@ -317,4 +418,13 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
   },
   actionText: { fontSize: 15, fontFamily: fonts.bodySemi, letterSpacing: 0.3 },
+  shareRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  shareText: { fontFamily: fonts.bodySemi, fontSize: 15 },
 });

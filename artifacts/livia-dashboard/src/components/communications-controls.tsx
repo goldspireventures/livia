@@ -4,12 +4,28 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Phone, Mail, Send, Trash2, MessageSquare } from "lucide-react";
+import { SocialChannelsControls } from "@/components/social-channels-controls";
+import { SettingsDisclosure } from "@/components/ui/settings-disclosure";
 
 interface CommsConfig {
   twilioPhoneNumber: string | null;
   twilioPhoneSid: string | null;
   resendFromAddress: string | null;
   smsWebhookUrl: string | null;
+  metaWebhookUrl?: string | null;
+  messagingChannels?: Record<string, unknown>;
+  metaConfigured?: boolean;
+  metaDevSimulate?: boolean;
+  jurisdiction?: string;
+  jurisdictionLabel?: string;
+  channelPack?: {
+    sms: boolean;
+    webChat: boolean;
+    whatsapp: boolean;
+    instagram: boolean;
+    messenger: boolean;
+    voice: boolean;
+  };
   providerStatus: {
     smsProvider: "twilio" | "noop";
     emailProvider: "resend" | "noop";
@@ -46,6 +62,7 @@ export default function CommunicationsControls({ businessId }: { businessId: str
   const { toast } = useToast();
   const [config, setConfig] = useState<CommsConfig | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<"auth" | "generic" | null>(null);
 
   // Provisioning UI state
   const [country, setCountry] = useState("IE");
@@ -69,12 +86,24 @@ export default function CommunicationsControls({ businessId }: { businessId: str
   const [lastResult, setLastResult] = useState<{ status: string; body: string } | null>(null);
 
   async function refresh() {
+    setLoadError(null);
     try {
       const c = await api<CommsConfig>(`/businesses/${businessId}/communications`);
       setConfig(c);
       setFromAddress(c.resendFromAddress ?? "");
     } catch (e) {
-      toast({ title: "Could not load communications config", description: String(e), variant: "destructive" });
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg.includes("401") || /unauthorized/i.test(msg)) {
+        setLoadError("auth");
+        setConfig(null);
+      } else {
+        setLoadError("generic");
+        toast({
+          title: "Could not load communications",
+          description: msg,
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -183,14 +212,61 @@ export default function CommunicationsControls({ businessId }: { businessId: str
       </div>
     );
   }
-  if (!config) return null;
+
+  if (loadError === "auth") {
+    return (
+      <div
+        className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm space-y-2"
+        data-testid="comms-auth-error"
+      >
+        <p className="font-medium text-destructive">Session expired or not signed in</p>
+        <p className="text-muted-foreground">
+          Refresh the page and sign in again to manage SMS, email, and social channels.
+        </p>
+      </div>
+    );
+  }
+
+  if (loadError === "generic" || !config) {
+    return (
+      <div
+        className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground space-y-2"
+        data-testid="comms-load-error"
+      >
+        <p>Communications settings could not be loaded for this shop.</p>
+        <Button type="button" variant="outline" size="sm" onClick={() => void refresh()}>
+          Retry
+        </Button>
+      </div>
+    );
+  }
 
   const sms = config.providerStatus.smsProvider;
   const email = config.providerStatus.emailProvider;
+  const pack = config.channelPack;
 
   return (
     <div className="space-y-6">
       <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground space-y-1">
+        {config.jurisdictionLabel ? (
+          <div>
+            <b>Market:</b> {config.jurisdictionLabel} ({config.jurisdiction})
+            {pack ? (
+              <span className="ml-1">
+                · channels:{" "}
+                {[
+                  pack.sms && "SMS",
+                  pack.whatsapp && "WhatsApp",
+                  pack.instagram && "Instagram",
+                  pack.messenger && "Messenger",
+                  pack.voice && "Voice",
+                ]
+                  .filter(Boolean)
+                  .join(", ") || "web only"}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
         <div>
           <b>SMS provider:</b>{" "}
           {sms === "twilio"
@@ -209,6 +285,8 @@ export default function CommunicationsControls({ businessId }: { businessId: str
           </div>
         )}
       </div>
+
+      <SocialChannelsControls businessId={businessId} comms={config} onRefresh={() => void refresh()} />
 
       {/* SMS number block */}
       <section className="space-y-3">
@@ -229,41 +307,42 @@ export default function CommunicationsControls({ businessId }: { businessId: str
             </Button>
           </div>
         ) : (
-          <div className="space-y-3">
-            <div className="text-xs text-muted-foreground">
-              Pick a local number for your shop. Customers can text it to book or ask
-              questions; Liv answers automatically with the EU AI Act disclosure prefix.
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              <div className="space-y-1">
-                <Label className="text-xs">Country</Label>
-                <Input value={country} onChange={(e) => setCountry(e.target.value.toUpperCase())} maxLength={2} placeholder="IE" />
+          <SettingsDisclosure
+            title="Get a shop SMS number"
+            description="Search Twilio inventory by country — Liv answers with AI disclosure."
+          >
+            <div className="space-y-3 pt-2">
+              <div className="grid grid-cols-3 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-xs">Country</Label>
+                  <Input value={country} onChange={(e) => setCountry(e.target.value.toUpperCase())} maxLength={2} placeholder="IE" />
+                </div>
+                <div className="space-y-1 col-span-2">
+                  <Label className="text-xs">Area code (optional)</Label>
+                  <Input value={areaCode} onChange={(e) => setAreaCode(e.target.value)} placeholder="e.g. 1 for Dublin" />
+                </div>
               </div>
-              <div className="space-y-1 col-span-2">
-                <Label className="text-xs">Area code (optional)</Label>
-                <Input value={areaCode} onChange={(e) => setAreaCode(e.target.value)} placeholder="e.g. 1 for Dublin" />
-              </div>
+              <Button onClick={searchNumbers} disabled={searching} variant="secondary">
+                {searching ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <MessageSquare className="h-4 w-4 mr-2" />}
+                Search available numbers
+              </Button>
+              {available.length > 0 && (
+                <ul className="space-y-2">
+                  {available.map((n) => (
+                    <li key={n.phoneNumber} className="flex items-center justify-between rounded-md border p-2 text-sm">
+                      <div>
+                        <span className="font-mono">{n.phoneNumber}</span>
+                        <span className="text-xs text-muted-foreground ml-2">{n.friendlyName} · {n.isoCountry}</span>
+                      </div>
+                      <Button size="sm" onClick={() => purchase(n.phoneNumber)} disabled={purchasing !== null}>
+                        {purchasing === n.phoneNumber ? <Loader2 className="h-4 w-4 animate-spin" /> : "Get this number"}
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-            <Button onClick={searchNumbers} disabled={searching} variant="secondary">
-              {searching ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <MessageSquare className="h-4 w-4 mr-2" />}
-              Search available numbers
-            </Button>
-            {available.length > 0 && (
-              <ul className="space-y-2">
-                {available.map((n) => (
-                  <li key={n.phoneNumber} className="flex items-center justify-between rounded-md border p-2 text-sm">
-                    <div>
-                      <span className="font-mono">{n.phoneNumber}</span>
-                      <span className="text-xs text-muted-foreground ml-2">{n.friendlyName} · {n.isoCountry}</span>
-                    </div>
-                    <Button size="sm" onClick={() => purchase(n.phoneNumber)} disabled={purchasing !== null}>
-                      {purchasing === n.phoneNumber ? <Loader2 className="h-4 w-4 animate-spin" /> : "Get this number"}
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+          </SettingsDisclosure>
         )}
       </section>
 
@@ -278,7 +357,7 @@ export default function CommunicationsControls({ businessId }: { businessId: str
             <Input
               value={fromAddress}
               onChange={(e) => setFromAddress(e.target.value)}
-              placeholder={config.providerStatus.emailDefaultFrom ?? "Acme Salon <hi@acme.salon>"}
+              placeholder={config.providerStatus.emailDefaultFrom ?? "Acme Studio <hi@acme.studio>"}
             />
             <Button onClick={saveFrom} disabled={savingFrom} variant="secondary">
               {savingFrom ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
@@ -291,49 +370,58 @@ export default function CommunicationsControls({ businessId }: { businessId: str
         </div>
       </section>
 
-      {/* Test send */}
-      <section className="space-y-3">
-        <h3 className="text-sm font-semibold flex items-center gap-2">
-          <Send className="h-4 w-4" /> Test send
-        </h3>
-        <div className="grid grid-cols-3 gap-2">
-          <div className="space-y-1">
-            <Label className="text-xs">Channel</Label>
-            <select
-              className="border rounded-md h-9 px-2 text-sm w-full bg-background"
-              value={testChannel}
-              onChange={(e) => setTestChannel(e.target.value as "SMS" | "EMAIL")}
-            >
-              <option value="EMAIL">Email</option>
-              <option value="SMS">SMS</option>
-            </select>
-          </div>
-          <div className="space-y-1 col-span-2">
-            <Label className="text-xs">{testChannel === "SMS" ? "Phone (E.164)" : "Email address"}</Label>
-            <Input
-              value={testTo}
-              onChange={(e) => setTestTo(e.target.value)}
-              placeholder={testChannel === "SMS" ? "+35315551234" : "you@example.com"}
-            />
-          </div>
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs">Message</Label>
-          <Input value={testMessage} onChange={(e) => setTestMessage(e.target.value)} />
-        </div>
-        <Button onClick={testSend} disabled={sending}>
-          {sending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
-          Send test
-        </Button>
-        {lastResult && (
-          <div className="rounded-md border p-3 text-xs space-y-1">
-            <div>
-              <b>Status:</b> {lastResult.status}
-            </div>
-            <pre className="whitespace-pre-wrap text-muted-foreground">{lastResult.body}</pre>
-          </div>
-        )}
+      <section className="space-y-2 rounded-md border p-4 bg-muted/30">
+        <h3 className="text-sm font-semibold">Phone receptionist (UK)</h3>
+        <p className="text-xs text-muted-foreground">
+          For UK shops, inbound call handling stays off until you turn it on here and we attach a UK Twilio number.
+          Online booking and Liv chat are unaffected. Callers hear the required disclosure before any recording.
+        </p>
+        <p className="text-xs">
+          Needs the <code>voice_receptionist</code> add-on on your plan — set your numbers above when you are ready to go live.
+        </p>
       </section>
+
+      <SettingsDisclosure title="Test SMS or email" description="Verify delivery before you go live.">
+        <div className="space-y-3 pt-2">
+          <div className="grid grid-cols-3 gap-2">
+            <div className="space-y-1">
+              <Label className="text-xs">Channel</Label>
+              <select
+                className="border rounded-md h-9 px-2 text-sm w-full bg-background"
+                value={testChannel}
+                onChange={(e) => setTestChannel(e.target.value as "SMS" | "EMAIL")}
+              >
+                <option value="EMAIL">Email</option>
+                <option value="SMS">SMS</option>
+              </select>
+            </div>
+            <div className="space-y-1 col-span-2">
+              <Label className="text-xs">{testChannel === "SMS" ? "Phone (E.164)" : "Email address"}</Label>
+              <Input
+                value={testTo}
+                onChange={(e) => setTestTo(e.target.value)}
+                placeholder={testChannel === "SMS" ? "+35315551234" : "you@example.com"}
+              />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Message</Label>
+            <Input value={testMessage} onChange={(e) => setTestMessage(e.target.value)} />
+          </div>
+          <Button onClick={testSend} disabled={sending}>
+            {sending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+            Send test
+          </Button>
+          {lastResult && (
+            <div className="rounded-md border p-3 text-xs space-y-1">
+              <div>
+                <b>Status:</b> {lastResult.status}
+              </div>
+              <pre className="whitespace-pre-wrap text-muted-foreground">{lastResult.body}</pre>
+            </div>
+          )}
+        </div>
+      </SettingsDisclosure>
     </div>
   );
 }

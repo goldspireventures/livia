@@ -57,7 +57,7 @@ create index audit_log_tenant_time on audit_log (business_id, occurred_at desc);
 - **Staff**: read for their own actions and actions affecting them.
 - **Customer**: read for actions affecting their own bookings/data.
 - **Liv**: read-write (write is the only common operation; read is for self-explanation surfaces).
-- **Replit-Livia ops** (us): read only via documented break-glass with disclosure to the Owner. Every break-glass read is itself an audit_log entry.
+- **Livia platform ops** (us): read only via documented break-glass with disclosure to the Owner. Every break-glass read is itself an audit_log entry.
 
 ### EU residency
 

@@ -1,0 +1,95 @@
+/**
+ * Shared inbox queue lenses — web dashboard + mobile (E-03).
+ * Matches manager ritual: what Liv handled vs what needs you.
+ */
+
+export type InboxQueueLens =
+  | "needs_you"
+  | "liv_handling"
+  | "taken_over"
+  | "closed"
+  | "all";
+
+export type InboxQueueConversation = {
+  status: string;
+  aiHandled: boolean;
+};
+
+export function matchesInboxQueueLens(
+  c: InboxQueueConversation,
+  lens: InboxQueueLens,
+): boolean {
+  switch (lens) {
+    case "needs_you":
+      return c.status === "OPEN" && !c.aiHandled;
+    case "liv_handling":
+      return c.status === "OPEN" && c.aiHandled;
+    case "taken_over":
+      return c.status === "HANDED_OFF";
+    case "closed":
+      return c.status === "CLOSED";
+    case "all":
+      return true;
+    default:
+      return true;
+  }
+}
+
+export function countByInboxQueueLens(
+  threads: InboxQueueConversation[],
+): Record<InboxQueueLens, number> {
+  const lenses: InboxQueueLens[] = [
+    "needs_you",
+    "liv_handling",
+    "taken_over",
+    "closed",
+    "all",
+  ];
+  const out = {} as Record<InboxQueueLens, number>;
+  for (const lens of lenses) {
+    out[lens] =
+      lens === "all"
+        ? threads.length
+        : threads.filter((t) => matchesInboxQueueLens(t, lens)).length;
+  }
+  return out;
+}
+
+export const INBOX_QUEUE_LENS_LABELS: Record<
+  InboxQueueLens,
+  { short: string; description: string }
+> = {
+  needs_you: {
+    short: "Needs you",
+    description: "Open threads waiting for a human — Liv is paused or not assigned.",
+  },
+  liv_handling: {
+    short: "Liv on",
+    description: "Open threads Liv is handling — take over anytime.",
+  },
+  taken_over: {
+    short: "Taken over",
+    description: "You paused Liv on these threads.",
+  },
+  closed: {
+    short: "Closed",
+    description: "Archived conversations.",
+  },
+  all: {
+    short: "All",
+    description: "Every thread.",
+  },
+};
+
+/** Default lens for manager ritual; owners see Liv handling first. */
+export function defaultInboxQueueLens(persona: string): InboxQueueLens {
+  if (persona === "manager") return "needs_you";
+  if (persona === "receptionist") return "needs_you";
+  return "liv_handling";
+}
+
+export function inboxScreenTitle(persona: string): string {
+  if (persona === "manager" || persona === "founder") return "Queue";
+  if (persona === "receptionist") return "Messages";
+  return "Inbox";
+}

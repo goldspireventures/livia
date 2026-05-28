@@ -1,0 +1,20 @@
+id: web.inbox
+vertical: [hair, beauty, barber]
+locale: [en-IE, en-GB]
+persona: [owner, manager, receptionist]
+modality: web
+route: /inbox
+
+purpose: >
+  Review Liv-handled conversations; take over; report Liv errors; close threads.
+
+must_do:
+  - List conversations with channel + AI/handoff badges
+  - Take over / resume AI / mark resolved
+  - Report Liv opens support ticket (liv_error)
+
+api:
+  - GET /conversations
+  - GET /conversations/{id}
+  - PATCH /conversations/{id}
+  - POST /businesses/{id}/support/tickets

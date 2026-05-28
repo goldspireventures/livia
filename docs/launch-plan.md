@@ -11,6 +11,12 @@ This is the single authoritative document that sequences Livia from "we can demo
 
 The plan is organised as **five lanes** running in parallel, gated by **three release gates**. Each gate has explicit, non-negotiable acceptance criteria. No gate is "passed" by feel — only by criteria check.
 
+**Founder “done” (2026-05):** **Platform-Ready** = product/engineering/design can serve the wedge without embarrassing gaps — see [`docs/product/LIVIA-IDEA-TO-REALITY.md` Part V](./product/LIVIA-IDEA-TO-REALITY.md). **Acceptable delays after that** = Lane 4 **Launch ops** + Lane 3 **Compliance** sign-off (Stripe Dashboard, store listings, counsel, DNS) — not another core CRUD sprint. Gates 2/3 below still apply for *public* launch; they mix platform criteria with ops criteria — use Part V to separate what blocks *serving* vs what blocks *charging in prod*.
+
+---
+
+**EU product truth & build sequence:** [`docs/product/LIVIA-COMPLETE-SYSTEM-SPEC.md`](product/LIVIA-COMPLETE-SYSTEM-SPEC.md) · [`docs/product/LIVIA-FINAL-EXECUTION-PLAN.md`](product/LIVIA-FINAL-EXECUTION-PLAN.md)
+
 ---
 
 ## The five lanes
@@ -92,7 +98,7 @@ Sizing: **S** ≤ one focused day · **M** 2-5 days · **L** > 1 week. Target ga
 
 | # | Item | Size | Gate |
 |---|---|---|---|
-| B1 | `livia.io` marketing site v1 — hero, three pillars, pricing, FAQ, signup CTA. Astro or Next static build, hosted on Replit Deployments. | L | 3 |
+| B1 | `livia.io` marketing site v1 — hero, three pillars, pricing, FAQ, signup CTA. Vite static build, EU CDN/hosting. | L | 3 |
 | B2 | Brand voice doc — `docs/brand/voice.md` — tone rules, do / don't lexicon, sample copy for empty states + success toasts + AI moments. | M | 2 |
 | B3 | Logo + wordmark asset library (`docs/brand/assets/`): SVG + PNG @1x/2x/3x for mark, wordmark, app icon, favicon, social cards. | M | 2 |
 | B4 | Open Graph image generator for public booking pages (per-shop `og:image`). | M | 3 |
@@ -134,7 +140,7 @@ Sizing: **S** ≤ one focused day · **M** 2-5 days · **L** > 1 week. Target ga
 | L8 | Sentry projects (api / web / mobile), source maps uploaded on build. | S | 2 |
 | L9 | Statuspage / Better Stack components + automated incident creation from Sentry P0s. | S | 3 |
 | L10 | Plausible (privacy-first) analytics on `livia.io` + dashboard; PostHog optional for funnel work. | S | 3 |
-| L11 | Production deploy pipeline — `pnpm build` → Replit Deployments → smoke test ping. | M | 2 |
+| L11 | Production deploy pipeline — `pnpm build` → EU hosting (API + static) → smoke test ping. | M | 2 |
 | L12 | DNS for `livia.io`, `app.livia.io`, `status.livia.io`, `b.livia.io` (public booking hostname). | S | 2 |
 
 ### Lane 5 — GTM

@@ -2,6 +2,8 @@
 
 **Status:** F10 (2026-05-07). The foundation map. New hires read this on day 1.
 
+**Company + product spine (2026):** [`../LIVIA-ALIGNMENT.md`](../LIVIA-ALIGNMENT.md) · **Active build program:** [`../product/SYSTEM-REALIGNMENT-PROGRAM.md`](../product/SYSTEM-REALIGNMENT-PROGRAM.md)
+
 ## What "the foundation" is
 
 The foundation is the set of strategic + architectural + brand + operating commitments that everything else (product, marketing, hiring, sales) is built on. It's organised by phase (F1–F10).
@@ -70,6 +72,9 @@ When in doubt, read in this order: F7 → F3 → F1 → F4 → F5 → F6 → F8 
 - [`docs/business/regulatory-and-legal.md`](../business/regulatory-and-legal.md).
 - [`docs/business/competitive-response-wargame.md`](../business/competitive-response-wargame.md).
 
+### Operations (Livia Inc — L7)
+- [`docs/operations/README.md`](../operations/README.md) — support runbook, incident links, internal ops index.
+
 ### F10 — Company, hiring, brand
 - [`docs/company/brand-of-livia-and-liv.md`](../company/brand-of-livia-and-liv.md).
 - [`docs/company/hiring-plan.md`](../company/hiring-plan.md).
@@ -135,6 +140,14 @@ When in doubt, read in this order: F7 → F3 → F1 → F4 → F5 → F6 → F8 
 - [`docs/foundation/cross-cutting-commitments.md`](./cross-cutting-commitments.md) — **the alignment matrix.**
 - [`docs/foundation/glossary.md`](./glossary.md) — every term that recurs across the foundation.
 - [`docs/changelog.md`](../changelog.md) — customer-visible release notes feed.
+
+### Product spine (paper design — vision vs ship, surfaces, internal ops)
+- [`docs/product/README.md`](../product/README.md) — index + governance rule for scope changes.
+- [`docs/product/BUSINESS-RULES-REGISTRY.md`](../product/BUSINESS-RULES-REGISTRY.md) — where platform + tenant rules live in code.
+- [`docs/product/OPEN-ITEMS-DEFERRED.md`](../product/OPEN-ITEMS-DEFERRED.md) — what is intentionally not closed in-repo (G2/G3/external).
+- [`docs/product/LIVIA_MASTER_DESIGN.md`](../product/LIVIA_MASTER_DESIGN.md) — constituencies, surfaces, Liv capabilities (incl. scheduling), multi-app decision, phasing.
+- [`docs/product/TARGET-STATE-VS-SHIP-SCOPE.md`](../product/TARGET-STATE-VS-SHIP-SCOPE.md) — **product vision vs `v1-scope` ledger**; RFC required to widen launch.
+- [`docs/company/livia-internal-portal-spec.md`](../company/livia-internal-portal-spec.md) — **Livia Inc** operator portal (founder/support; not tenant product).
 
 ### Operational records
 - [`docs/postmortems/README.md`](../postmortems/README.md) — template + index.

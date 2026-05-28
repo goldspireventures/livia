@@ -1,10 +1,11 @@
-import { useState } from "react";
-import { Link } from "wouter";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link, useLocation } from "wouter";
 import { useBusiness } from "@/lib/business-context";
 import {
   useListBookings,
   getListBookingsQueryKey,
   useUpdateBooking,
+  listBookings,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDateTime } from "@/lib/format";
@@ -13,7 +14,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CalendarPlus, Search, Calendar, ChevronRight } from "lucide-react";
+import { CalendarPlus, Search, Calendar, ChevronRight, Loader2 } from "lucide-react";
+import { usePersona } from "@/lib/persona";
+import { OPERATIONAL_REFETCH_MS } from "@/lib/operational-cache";
+import { BookingCreateDialog } from "@/components/booking/booking-create-dialog";
+import { pendingReasonLabel } from "@/lib/booking-pending";
+import { BookingRowActions } from "@/components/booking/booking-row-actions";
+import { OperationalPageShell } from "@/components/layout/operational-page-shell";
+
+const PAGE_SIZE = 40;
 
 const STATUS_COLORS: Record<string, string> = {
   PENDING: "bg-[hsl(var(--chart-4))]/10 text-[hsl(var(--chart-4))] border-[hsl(var(--chart-4))]/20",
@@ -24,44 +33,124 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function BookingsPage() {
+  const { kind: persona } = usePersona();
   const { business } = useBusiness();
   const qc = useQueryClient();
+  const [, setLocation] = useLocation();
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [search, setSearch] = useState("");
+  const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
+  const [offset, setOffset] = useState(0);
+  const [accumulated, setAccumulated] = useState<any[]>([]);
 
+  const bid = business?.id ?? "";
   const statusParam = statusFilter !== "ALL" ? (statusFilter as any) : undefined;
 
-  const { data, isLoading } = useListBookings(
-    business?.id ?? "",
-    { status: statusParam, limit: 50 },
-    { query: { enabled: !!business?.id } as any }
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("create") === "1") {
+      setBookingDialogOpen(true);
+      params.delete("create");
+      const qs = params.toString();
+      window.history.replaceState(null, "", qs ? `/bookings?${qs}` : "/bookings");
+    }
+  }, []);
+
+  useEffect(() => {
+    setOffset(0);
+    setAccumulated([]);
+  }, [statusFilter, bid]);
+
+  const { data, isLoading, isFetching } = useListBookings(
+    bid,
+    { status: statusParam, limit: PAGE_SIZE, offset },
+    { query: { enabled: !!bid, refetchInterval: OPERATIONAL_REFETCH_MS } as any },
   );
+
+  const page = useMemo(() => {
+    const raw = data as { data?: unknown[]; total?: number } | unknown[] | undefined;
+    if (Array.isArray(raw)) return { data: raw, total: raw.length };
+    return { data: (raw?.data ?? []) as any[], total: raw?.total };
+  }, [data]);
+
+  useEffect(() => {
+    if (!bid || isLoading) return;
+    setAccumulated((prev) => {
+      if (offset === 0) return page.data;
+      const ids = new Set(prev.map((b: { id: string }) => b.id));
+      return [...prev, ...page.data.filter((b: { id: string }) => !ids.has(b.id))];
+    });
+  }, [page.data, offset, bid, isLoading]);
+
+  const total = page.total;
+  const hasMore =
+    total !== undefined ? accumulated.length < total : page.data.length === PAGE_SIZE;
+
+  const loadMore = useCallback(async () => {
+    if (!bid || !hasMore || isFetching) return;
+    const nextOffset = offset + PAGE_SIZE;
+    const more = await listBookings(bid, {
+      status: statusParam,
+      limit: PAGE_SIZE,
+      offset: nextOffset,
+    });
+    const rows = (more as { data?: any[] }).data ?? [];
+    setOffset(nextOffset);
+    setAccumulated((prev) => {
+      const ids = new Set(prev.map((b: { id: string }) => b.id));
+      return [...prev, ...(rows ?? []).filter((b: { id: string }) => !ids.has(b.id))];
+    });
+  }, [bid, hasMore, isFetching, offset, statusParam]);
 
   const updateBooking = useUpdateBooking();
 
-  const bookings = (data as any)?.data ?? data ?? [];
   const filtered = search
-    ? bookings.filter((b: any) => {
+    ? accumulated.filter((b: any) => {
         const name = `${b.customer?.firstName ?? ""} ${b.customer?.lastName ?? ""}`.toLowerCase();
         const svc = (b.service?.name ?? "").toLowerCase();
         return name.includes(search.toLowerCase()) || svc.includes(search.toLowerCase());
       })
-    : bookings;
+    : accumulated;
+
+  const listLoading = isLoading && offset === 0;
+
+  const showRitual = persona === "receptionist" || persona === "manager" || persona === "owner";
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Bookings</h1>
-          <p className="text-muted-foreground">Manage appointments and reservations</p>
-        </div>
-        <Link href="/bookings/new">
-          <Button data-testid="button-new-booking">
+    <OperationalPageShell
+      title={
+        showRitual
+          ? persona === "receptionist"
+            ? "The floor"
+            : `Bookings · ${business?.name ?? "this shop"}`
+          : "Bookings"
+      }
+      subtitle={
+        showRitual
+          ? "Calendar and walk-ins — add a booking without leaving the list."
+          : "Manage appointments and reservations"
+      }
+      width="full"
+      actions={
+        <div className="flex gap-2">
+          <Link href="/bookings/new">
+            <Button variant="outline" data-testid="button-new-booking-full">
+              Full booking
+            </Button>
+          </Link>
+          <Button data-testid="button-new-booking" onClick={() => setBookingDialogOpen(true)}>
             <CalendarPlus className="h-4 w-4 mr-2" />
-            New Booking
+            Quick booking
           </Button>
-        </Link>
-      </div>
+        </div>
+      }
+    >
+
+      <BookingCreateDialog
+        open={bookingDialogOpen}
+        onOpenChange={setBookingDialogOpen}
+        onCreated={(id) => setLocation(`/bookings/${id}`)}
+      />
 
       <div className="flex gap-3">
         <div className="relative flex-1 max-w-sm">
@@ -75,7 +164,7 @@ export default function BookingsPage() {
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-40" data-testid="select-status-filter">
+          <SelectTrigger className="w-40" aria-label="Filter by status" data-testid="select-status-filter">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -91,7 +180,7 @@ export default function BookingsPage() {
 
       <Card>
         <CardContent className="p-0">
-          {isLoading ? (
+          {listLoading ? (
             <div className="divide-y divide-border">
               {[1, 2, 3, 4, 5].map((i) => (
                 <div key={i} className="flex items-center gap-4 p-4">
@@ -114,15 +203,14 @@ export default function BookingsPage() {
                   : "Create your first booking to get started"}
               </p>
               {!search && statusFilter === "ALL" && (
-                <Link href="/bookings/new">
-                  <Button className="mt-4" variant="outline">
-                    <CalendarPlus className="h-4 w-4 mr-2" />
-                    New Booking
-                  </Button>
-                </Link>
+                <Button className="mt-4" variant="outline" onClick={() => setBookingDialogOpen(true)}>
+                  <CalendarPlus className="h-4 w-4 mr-2" />
+                  New booking
+                </Button>
               )}
             </div>
           ) : (
+            <>
             <div className="divide-y divide-border">
               {filtered.map((booking: any) => (
                 <Link key={booking.id} href={`/bookings/${booking.id}`}>
@@ -144,22 +232,56 @@ export default function BookingsPage() {
                     </div>
                     <div className="flex flex-col items-end gap-1 shrink-0">
                       <span className="text-sm font-medium">{formatDateTime(booking.startAt)}</span>
-                      <span
-                        className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
-                          STATUS_COLORS[booking.status] ?? ""
-                        }`}
-                      >
-                        {booking.status}
-                      </span>
+                      <div className="flex flex-col items-end gap-0.5">
+                        <span
+                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                            STATUS_COLORS[booking.status] ?? ""
+                          }`}
+                        >
+                          {booking.status}
+                        </span>
+                        {booking.status === "PENDING" && booking.pendingReason ? (
+                          <span className="text-[9px] text-muted-foreground max-w-[140px] truncate text-right">
+                            {pendingReasonLabel(booking.pendingReason)}
+                          </span>
+                        ) : null}
+                      </div>
                     </div>
+                    <BookingRowActions
+                      bookingId={booking.id}
+                      status={booking.status}
+                      customerFirstName={booking.customer?.firstName}
+                      customerLastName={booking.customer?.lastName}
+                    />
                     <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                   </div>
                 </Link>
               ))}
             </div>
+            {!search && hasMore && (
+              <div className="p-4 border-t flex justify-center">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void loadMore()}
+                  disabled={isFetching}
+                  data-testid="button-load-more-bookings"
+                >
+                  {isFetching ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Loading…
+                    </>
+                  ) : (
+                    "Load more"
+                  )}
+                </Button>
+              </div>
+            )}
+            </>
           )}
         </CardContent>
       </Card>
-    </div>
+    </OperationalPageShell>
   );
 }

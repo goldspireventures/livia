@@ -5,7 +5,6 @@ import React, { useState } from "react";
 import {
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -13,32 +12,16 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BottomSheet } from "@/components/BottomSheet";
 import { LiviaWordmark } from "@/components/brand/LiviaWordmark";
+import { OperationalScreen } from "@/components/OperationalScreen";
 import { aurum } from "@/constants/colors";
 import { elevation } from "@/constants/elevation";
 import { fonts, type } from "@/constants/typography";
 import { useBusiness } from "@/contexts/BusinessContext";
 import { useColors } from "@/hooks/useColors";
 import { useHaptics } from "@/hooks/useHaptics";
-import {
-  ALL_PERSONAS,
-  PERSONA_ACCENT,
-  PERSONA_LABEL,
-  isDemoLoginEnabled,
-  setDevPersonaOverride,
-  usePersona,
-  type PersonaKind,
-} from "@/hooks/usePersona";
-
-interface MenuItem {
-  icon: keyof typeof Feather.glyphMap;
-  label: string;
-  route: string;
-}
-
-const MENU_ITEMS: MenuItem[] = [
-  { icon: "users", label: "Staff", route: "/staff/" },
-  { icon: "briefcase", label: "Services", route: "/services/" },
-];
+import { PERSONA_LABEL, usePersona } from "@/hooks/usePersona";
+import { canViewDayPackages, canViewPremises } from "@/lib/settings-persona";
+import { menuItemsForPersona } from "@/lib/mobile-menu";
 
 export default function MoreScreen() {
   const colors = useColors();
@@ -47,31 +30,41 @@ export default function MoreScreen() {
   const haptics = useHaptics();
   const { businesses, currentBusiness, setCurrentBusiness } = useBusiness();
   const { signOut } = useAuth();
-  const { kind: currentPersona, override } = usePersona();
-  const topPad = Platform.OS === "web" ? 67 : insets.top;
+  const { kind: currentPersona } = usePersona();
+  const tier = (currentBusiness as { tier?: string } | undefined)?.tier;
+  const vertical = (currentBusiness as { vertical?: string } | undefined)?.vertical;
+  const menuItems = menuItemsForPersona({
+    persona: currentPersona,
+    vertical,
+    tier,
+    businessCount: businesses.length,
+    showPremises: canViewPremises(currentPersona, {
+      tier: (currentBusiness as { tier?: string } | undefined)?.tier,
+      premisesSharing: (currentBusiness as { premisesSharing?: boolean } | undefined)
+        ?.premisesSharing,
+    }),
+    showDayPackages:
+      canViewDayPackages(currentPersona) &&
+      (vertical === "wellness" || vertical === "medspa"),
+    isDemo: false,
+  });
   const [switcherOpen, setSwitcherOpen] = useState(false);
-  const [personaSheetOpen, setPersonaSheetOpen] = useState(false);
-
-  const handlePickPersona = async (p: PersonaKind | null) => {
-    haptics.selection();
-    await setDevPersonaOverride(p);
-    setPersonaSheetOpen(false);
-    router.replace("/" as never);
-  };
+  const [founderTapCount, setFounderTapCount] = useState(0);
+  const [founderTapAt, setFounderTapAt] = useState<number | null>(null);
 
   const otherBusinesses = businesses.filter((b) => b.id !== currentBusiness?.id);
   const hasOthers = otherBusinesses.length > 0;
 
   return (
-    <ScrollView
-      style={[styles.root, { backgroundColor: colors.background }]}
-      contentContainerStyle={[styles.content, { paddingTop: topPad + 8 }]}
-      contentInsetAdjustmentBehavior="automatic"
+    <OperationalScreen
+      title="More"
+      subtitle={
+        currentBusiness?.name
+          ? `${currentBusiness.name} · ${PERSONA_LABEL[currentPersona]}`
+          : PERSONA_LABEL[currentPersona]
+      }
+      contentStyle={{ paddingBottom: 140 }}
     >
-      <View style={styles.headerTop}>
-        <LiviaWordmark size="sm" color={colors.foreground} />
-      </View>
-      <Text style={[styles.title, { color: colors.foreground }]}>More</Text>
 
       {/* Current business card — tappable when there are others to switch to */}
       {currentBusiness && (
@@ -180,12 +173,12 @@ export default function MoreScreen() {
           elevation.resting,
         ]}
       >
-        {MENU_ITEMS.map((item, index) => (
+        {menuItems.map((item, index) => (
           <Pressable
-            key={item.route}
+            key={`${item.section ?? "m"}-${item.route}`}
             style={({ pressed }) => [
               styles.menuItem,
-              index < MENU_ITEMS.length - 1 && [
+              index < menuItems.length - 1 && [
                 styles.menuItemBorder,
                 { borderBottomColor: colors.border },
               ],
@@ -198,118 +191,13 @@ export default function MoreScreen() {
             testID={`menu-${item.label.toLowerCase()}`}
           >
             <View style={[styles.menuIcon, { backgroundColor: colors.primary + "1a" }]}>
-              <Feather name={item.icon} size={18} color={colors.primary} />
+              <Feather name={item.icon as keyof typeof Feather.glyphMap} size={18} color={colors.primary} />
             </View>
             <Text style={[styles.menuLabel, { color: colors.foreground }]}>{item.label}</Text>
             <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
           </Pressable>
         ))}
       </View>
-
-      {/* Dev: switch persona */}
-      {isDemoLoginEnabled ? (
-        <View
-          style={[
-            styles.section,
-            { backgroundColor: colors.card, borderColor: colors.border },
-            elevation.resting,
-          ]}
-        >
-          <Pressable
-            style={({ pressed }) => [
-              styles.menuItem,
-              pressed && { backgroundColor: colors.primary + "0c" },
-            ]}
-            onPress={() => {
-              haptics.tap();
-              setPersonaSheetOpen(true);
-            }}
-            testID="switch-persona-button"
-          >
-            <View
-              style={[
-                styles.menuIcon,
-                { backgroundColor: PERSONA_ACCENT[currentPersona] + "1f" },
-              ]}
-            >
-              <Feather name="users" size={18} color={PERSONA_ACCENT[currentPersona]} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.menuLabel, { color: colors.foreground }]}>Switch persona</Text>
-              <Text style={[styles.bizSlug, { color: colors.mutedForeground }]}>
-                {override ? `Override: ${PERSONA_LABEL[currentPersona]}` : `Auto: ${PERSONA_LABEL[currentPersona]}`}
-              </Text>
-            </View>
-            <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
-          </Pressable>
-        </View>
-      ) : null}
-
-      <BottomSheet visible={personaSheetOpen} onClose={() => setPersonaSheetOpen(false)}>
-        <Text style={[styles.sheetTitle, { color: colors.foreground }]}>Switch persona</Text>
-        <Text style={[styles.sheetSub, { color: colors.mutedForeground }]}>
-          Dev-only. The data you see is your own; only the app shell flips.
-        </Text>
-        <View style={{ marginTop: 14, paddingBottom: 8 }}>
-          {ALL_PERSONAS.map((p) => {
-            const isCurrent = p === currentPersona;
-            const accent = PERSONA_ACCENT[p];
-            return (
-              <Pressable
-                key={p}
-                onPress={() => handlePickPersona(p)}
-                style={({ pressed }) => [
-                  styles.sheetRow,
-                  pressed && { backgroundColor: colors.muted },
-                ]}
-                testID={`persona-row-${p}`}
-              >
-                <View
-                  style={[
-                    styles.sheetAvatar,
-                    { backgroundColor: accent + "1c", borderColor: accent + "55" },
-                  ]}
-                >
-                  <Text style={[styles.switchInitial, { color: accent }]}>{p[0]?.toUpperCase()}</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.menuLabel, { color: colors.foreground }]} numberOfLines={1}>
-                    {PERSONA_LABEL[p]}
-                  </Text>
-                </View>
-                {isCurrent ? (
-                  <Text style={[styles.activePillText, { color: accent }]}>Active</Text>
-                ) : (
-                  <Feather name="arrow-right" size={16} color={accent} />
-                )}
-              </Pressable>
-            );
-          })}
-          <Pressable
-            onPress={() => handlePickPersona(null)}
-            style={({ pressed }) => [
-              styles.sheetRow,
-              pressed && { backgroundColor: colors.muted },
-            ]}
-            testID="persona-row-auto"
-          >
-            <View
-              style={[
-                styles.sheetAvatar,
-                { backgroundColor: colors.muted, borderColor: colors.border },
-              ]}
-            >
-              <Feather name="refresh-ccw" size={14} color={colors.mutedForeground} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.menuLabel, { color: colors.foreground }]}>Reset to auto-detect</Text>
-              <Text style={[styles.bizSlug, { color: colors.mutedForeground }]}>
-                Use the persona derived from your real role.
-              </Text>
-            </View>
-          </Pressable>
-        </View>
-      </BottomSheet>
 
       {/* Sign out */}
       <View
@@ -337,10 +225,27 @@ export default function MoreScreen() {
         </Pressable>
       </View>
 
-      <Text style={[styles.version, { color: colors.mutedForeground }]}>
-        Livia · v1.0.0
-      </Text>
-    </ScrollView>
+      <Pressable
+        onPress={() => {
+          const now = Date.now();
+          const within = founderTapAt ? now - founderTapAt < 2500 : false;
+          const nextCount = within ? founderTapCount + 1 : 1;
+          setFounderTapAt(now);
+          setFounderTapCount(nextCount);
+          if (nextCount >= 7) {
+            haptics.selection();
+            setFounderTapCount(0);
+            setFounderTapAt(null);
+            router.push("/founder/cockpit" as never);
+          }
+        }}
+        style={{ paddingVertical: 6, alignItems: "center" }}
+        accessibilityLabel="App version"
+        testID="app-version"
+      >
+        <Text style={[styles.version, { color: colors.mutedForeground }]}>Livia · v1.0.0</Text>
+      </Pressable>
+    </OperationalScreen>
   );
 }
 

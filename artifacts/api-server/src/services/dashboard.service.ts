@@ -1,7 +1,9 @@
-import { db, bookingsTable, customersTable, eventsTable } from "@workspace/db";
+import { db, bookingsTable, customersTable, conversationsTable, eventsTable } from "@workspace/db";
 import { eq, and, gte, lte, sql, inArray } from "drizzle-orm";
-import { enrichBooking } from "./bookings.service";
+import { enrichBookingsBatch } from "./bookings.service";
 import { desc } from "drizzle-orm";
+import { getVoiceDigestForBusiness } from "./voice-call.service";
+import { resolveBillingState } from "./billing.service";
 
 export async function getDashboardSummary(businessId: string) {
   const now = new Date();
@@ -38,6 +40,16 @@ export async function getDashboardSummary(businessId: string) {
     .from(bookingsTable)
     .where(
       and(eq(bookingsTable.businessId, businessId), eq(bookingsTable.status, "PENDING")),
+    );
+
+  const [handedOffCount] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(conversationsTable)
+    .where(
+      and(
+        eq(conversationsTable.businessId, businessId),
+        eq(conversationsTable.status, "HANDED_OFF"),
+      ),
     );
 
   const [confirmedCount] = await db
@@ -94,17 +106,26 @@ export async function getDashboardSummary(businessId: string) {
     .orderBy(bookingsTable.startAt)
     .limit(40);
 
-  const upcomingBookings = await Promise.all(upcomingRaw.map(enrichBooking));
+  const upcomingBookings = await enrichBookingsBatch(upcomingRaw);
+
+  const [voiceDigest, billing] = await Promise.all([
+    getVoiceDigestForBusiness(businessId),
+    resolveBillingState(businessId).catch(() => null),
+  ]);
 
   return {
     todayBookings: todayCount?.count ?? 0,
     weekBookings: weekCount?.count ?? 0,
     pendingCount: pendingCount?.count ?? 0,
+    handedOffCount: handedOffCount?.count ?? 0,
     confirmedCount: confirmedCount?.count ?? 0,
     completedTodayCount: completedToday?.count ?? 0,
     noShowTodayCount: noShowToday?.count ?? 0,
     totalCustomers: totalCustomers?.count ?? 0,
     upcomingBookings,
+    voiceBookingsThisWeek: voiceDigest.voiceBookingsThisWeek,
+    voiceRecoveredValueEurCents: voiceDigest.voiceRecoveredValueEurCents,
+    voiceOutcomeShareEurCents: billing?.voiceOutcomeShareEurCents ?? 0,
   };
 }
 

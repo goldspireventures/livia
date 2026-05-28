@@ -83,7 +83,10 @@ BEGIN
         USING (app_bypass_rls() OR id = app_business_id())
         WITH CHECK (app_bypass_rls() OR id = app_business_id())
       $p$, tbl, tbl);
-    ELSE
+    ELSIF EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public' AND table_name = tbl AND column_name = 'business_id'
+    ) THEN
       -- Standard: business_id column carries the tenant identity.
       EXECUTE format($p$
         CREATE POLICY %I_tenant_isolation ON public.%I
@@ -91,6 +94,9 @@ BEGIN
         USING (app_bypass_rls() OR business_id = app_business_id())
         WITH CHECK (app_bypass_rls() OR business_id = app_business_id())
       $p$, tbl, tbl);
+    ELSE
+      -- Junction / child rows (e.g. staff_services, conversation_messages, device_tokens).
+      RAISE NOTICE 'RLS skip: public.% has no business_id — enable RLS only (add policy when schema adds tenant column)', tbl;
     END IF;
   END LOOP;
 END$$;

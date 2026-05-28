@@ -39,10 +39,26 @@ tags:
     description: Public marketing site (livia.io) lead capture
   - name: communications
     description: Per-shop Twilio number + Resend from-address provisioning (owner/admin)
+  - name: billing
+    description: Plan, entitlements, usage meters, and Stripe checkout
+  - name: insights
+    description: Cross-tenant peer benchmarks (k-anonymity gated)
+  - name: partner
+    description: Read-only partner API (X-Partner-Api-Key)
+  - name: voice
+    description: Voice receptionist (entitlement-gated)
   - name: channels
     description: Inbound channel webhooks (Twilio SMS)
   - name: internal
-    description: Internal scheduler-callable routes (header-secret protected)
+    description: Internal routes (cron sweeps + Livia Inc ops API, header-secret protected)
+  - name: internal-ops
+    description: Livia Inc tenant directory (X-Internal-Ops-Secret)
+  - name: dev
+    description: Development-only workspace seeding (disabled in production)
+  - name: onboarding
+    description: Self-serve business onboarding catalog and preview
+  - name: support
+    description: In-app help, bugs, and feature requests (tenant → Livia Inc)
 
 paths:
   /healthz:
@@ -113,6 +129,22 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
+  /me/chain-rollup:
+    get:
+      operationId: getMyChainRollup
+      tags: [me]
+      summary: Multi-shop KPI rollup for the authenticated owner (RFC 0010)
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Chain rollup
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChainRollup"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
   /me/businesses/{businessId}/membership:
     get:
       operationId: getMyMembership
@@ -132,6 +164,127 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
+
+  /me/notifications:
+    get:
+      operationId: listMyNotifications
+      tags: [me]
+      summary: In-app notification feed for the signed-in user (persona-targeted at delivery)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: businessId
+          in: query
+          schema: { type: string }
+        - name: unreadOnly
+          in: query
+          schema: { type: boolean }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 40 }
+      responses:
+        "200":
+          description: Notifications + unread count
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InAppNotificationList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /me/notifications/unread-count:
+    get:
+      operationId: getMyNotificationUnreadCount
+      tags: [me]
+      summary: Unread in-app notification count
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: businessId
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Count
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [count]
+                properties:
+                  count: { type: integer }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /me/notifications/read-all:
+    post:
+      operationId: markAllMyNotificationsRead
+      tags: [me]
+      summary: Mark all in-app notifications read
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                businessId: { type: string }
+      responses:
+        "200":
+          description: Updated count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updated: { type: integer }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /me/notifications/{notificationId}/read:
+    patch:
+      operationId: markMyNotificationRead
+      tags: [me]
+      summary: Mark one in-app notification read
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /me/device-tokens:
+    post:
+      operationId: registerDeviceToken
+      tags: [me]
+      summary: Register Expo push token for the signed-in user
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterDeviceTokenBody"
+      responses:
+        "200":
+          description: Token registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceToken"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /businesses/{businessId}/my-day:
     get:
@@ -190,6 +343,101 @@ paths:
         "503":
           description: Clerk integration not configured
 
+  # ─── Onboarding ───────────────────────────────────────────────────────────
+  /onboarding/catalog:
+    get:
+      operationId: getOnboardingCatalog
+      tags: [onboarding]
+      summary: Jurisdiction and vertical catalog for onboarding
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Catalog entries
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnboardingCatalogResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /onboarding/preview:
+    post:
+      operationId: previewOnboarding
+      tags: [onboarding]
+      summary: Preview pack defaults before creating a business
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OnboardingPreviewBody"
+      responses:
+        "200":
+          description: Resolved defaults
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnboardingDefaults"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /businesses/{businessId}/support/tickets:
+    post:
+      operationId: createSupportTicket
+      tags: [support]
+      summary: Report an issue or feature request
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSupportTicketBody"
+      responses:
+        "201":
+          description: Ticket created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportTicket"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    get:
+      operationId: listSupportTickets
+      tags: [support]
+      summary: List support tickets for the business (owner/admin)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/SupportTicketStatus"
+      responses:
+        "200":
+          description: Tickets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SupportTicket"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
   # ─── Businesses ───────────────────────────────────────────────────────────
   /businesses:
     post:
@@ -216,6 +464,48 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "409":
           $ref: "#/components/responses/Conflict"
+
+  /businesses/{businessId}/audit-log:
+    get:
+      operationId: searchAuditLog
+      tags: [audit-log]
+      summary: Search hash-chained audit log for a tenant (owner)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - name: q
+          in: query
+          schema: { type: string }
+          description: Free-text search across action, resource, actor, and payload
+        - name: actionClass
+          in: query
+          schema: { type: string }
+        - name: resourceKind
+          in: query
+          schema: { type: string }
+        - name: from
+          in: query
+          schema: { type: string, format: date-time }
+        - name: to
+          in: query
+          schema: { type: string, format: date-time }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50 }
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0 }
+      responses:
+        "200":
+          description: Audit log search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditLogSearchResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /businesses/{businessId}:
     get:
@@ -1163,6 +1453,41 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /businesses/{businessId}/conversations/{conversationId}/messages:
+    post:
+      operationId: sendConversationMessage
+      tags: [conversations]
+      summary: Send a staff reply on a conversation thread
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+              required: [content]
+      responses:
+        "201":
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConversationMessage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
   /public/b/{slug}/book:
     post:
       operationId: createPublicBooking
@@ -1215,6 +1540,180 @@ paths:
                 $ref: "#/components/schemas/MarketingLeadAck"
         "400":
           $ref: "#/components/responses/BadRequest"
+
+  # ─── Billing & monetisation (Phase 2) ─────────────────────────────────────
+  /businesses/{businessId}/billing:
+    get:
+      operationId: getBusinessBilling
+      tags: [billing]
+      summary: Plan, entitlements, period usage, and voice outcome estimate
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+      responses:
+        "200":
+          description: Billing snapshot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillingState"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /businesses/{businessId}/billing/checkout-session:
+    post:
+      operationId: createBillingCheckoutSession
+      tags: [billing]
+      summary: Start Stripe Checkout (Solo, Studio, Chain, Host)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                planId:
+                  type: string
+                  enum: [solo, studio, chain, chair-host]
+                shopCount:
+                  type: integer
+                  description: Chain tier — shops billed (min 2)
+                renterCount:
+                  type: integer
+                  description: Host tier — renter seats
+      responses:
+        "200":
+          description: Checkout URL or dev-mode plan applied
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "503":
+          description: Stripe not configured
+
+  /businesses/{businessId}/peer-insights:
+    get:
+      operationId: getPeerInsights
+      tags: [insights]
+      summary: Anonymized peer benchmarks (k≥10, opt-in, add-on)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+      responses:
+        "200":
+          description: Peer insights or gating message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PeerInsights"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /businesses/{businessId}/peer-insights/opt-in:
+    post:
+      operationId: optInPeerInsights
+      tags: [insights]
+      summary: Opt in to cross-tenant intelligence for this shop
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+      responses:
+        "200":
+          description: Opted in
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  optedIn:
+                    type: boolean
+
+  /businesses/{businessId}/billing/checkout-peer-insights:
+    post:
+      operationId: createPeerInsightsCheckout
+      tags: [billing]
+      summary: Stripe Checkout for Peer Insights add-on (€49/mo)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+      responses:
+        "200":
+          description: Checkout URL
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /partner/v1/businesses/{slug}/bookings:
+    get:
+      operationId: listPartnerBookings
+      tags: [partner]
+      summary: Read-only bookings by public slug (partner API key)
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: Booking list (no PII)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PartnerBookingsResponse"
+        "401":
+          description: Invalid API key
+
+  /businesses/{businessId}/voice/status:
+    get:
+      operationId: getVoiceStatus
+      tags: [voice]
+      summary: Voice receptionist status (requires voice_receptionist entitlement)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+      responses:
+        "200":
+          description: Voice status
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "403":
+          description: Entitlement required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EntitlementRequiredError"
+
+  /webhooks/stripe:
+    post:
+      operationId: stripeWebhook
+      tags: [billing]
+      summary: Stripe Billing webhooks (raw body; no auth)
+      responses:
+        "200":
+          description: Received
 
   # ─── Communications (Task #28) ────────────────────────────────────────────
   /businesses/{businessId}/communications:
@@ -1415,6 +1914,153 @@ paths:
         "403":
           description: Signature validation failed
 
+  /channels/voice/inbound:
+    post:
+      operationId: twilioVoiceInbound
+      tags: [channels, voice]
+      summary: Twilio inbound voice webhook (English-IE gather loop)
+      description: |
+        Twilio POSTs CallSid, From, To. Responds with TwiML Say + Gather.
+        No call recording in v1. Requires voice_receptionist entitlement on tenant.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [CallSid, From, To]
+              properties:
+                CallSid: { type: string }
+                From: { type: string }
+                To: { type: string }
+      responses:
+        "200":
+          description: TwiML voice response
+          content:
+            text/xml: { schema: { type: string } }
+
+  /channels/voice/gather:
+    post:
+      operationId: twilioVoiceGather
+      tags: [channels, voice]
+      summary: Twilio speech gather callback for Liv voice turns
+      parameters:
+        - name: conversationId
+          in: query
+          schema: { type: string }
+        - name: slug
+          in: query
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [CallSid]
+              properties:
+                CallSid: { type: string }
+                SpeechResult: { type: string }
+      responses:
+        "200":
+          description: TwiML voice response
+          content:
+            text/xml: { schema: { type: string } }
+
+  /channels/voice/status:
+    post:
+      operationId: twilioVoiceStatus
+      tags: [channels, voice]
+      summary: Twilio call status callback (meters voice_minute_inbound)
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                CallSid: { type: string }
+                CallStatus: { type: string }
+                CallDuration: { type: string }
+      responses:
+        "200":
+          description: ACK
+
+  # ─── Internal ops (Livia Inc) ────────────────────────────────────────────
+  /internal/ops/tenants:
+    get:
+      operationId: searchInternalTenants
+      tags: [internal-ops]
+      summary: Search tenant directory (cross-tenant, read-only)
+      security: [{ internalOpsSecret: [] }]
+      parameters:
+        - name: q
+          in: query
+          schema: { type: string }
+          description: Name, slug, owner email, Stripe customer id, or Clerk user id
+        - name: limit
+          in: query
+          schema: { type: integer, default: 25 }
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0 }
+      responses:
+        "200":
+          description: Tenant search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InternalTenantSearchResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /internal/ops/tenants/{businessId}:
+    get:
+      operationId: getInternalTenant
+      tags: [internal-ops]
+      summary: Tenant health card with Stripe / Clerk deep links
+      security: [{ internalOpsSecret: [] }]
+      parameters:
+        - name: businessId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Tenant detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InternalTenantDetail"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /internal/ops/tenants/{businessId}/support-context:
+    get:
+      operationId: getInternalTenantSupportContext
+      tags: [internal-ops]
+      summary: Impersonation policy reminder for support (read-only)
+      security: [{ internalOpsSecret: [] }]
+      parameters:
+        - name: businessId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Support context
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InternalSupportContext"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
   # ─── Internal cron ───────────────────────────────────────────────────────
   /internal/cron/send-reminders:
     post:
@@ -1445,12 +2091,55 @@ paths:
         "401":
           description: Missing or invalid cron secret
 
+  /dev/seed:
+    post:
+      operationId: seedDevWorkspace
+      tags: [dev]
+      summary: Seed demo businesses for the authenticated user
+      description: |
+        **Development only** — returns 403 when `NODE_ENV=production`.
+        Creates sample businesses, staff, services, and bookings for local demos.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Seed result (or already-seeded notice)
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "403":
+          description: Not available in production
+    delete:
+      operationId: clearDevWorkspace
+      tags: [dev]
+      summary: Remove seeded demo data for the authenticated user
+      description: Development only — returns 403 in production.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Cleared
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "403":
+          description: Not available in production
+
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    internalOpsSecret:
+      type: apiKey
+      in: header
+      name: X-Internal-Ops-Secret
+      description: Livia Inc operator secret (INTERNAL_OPS_SECRET or INTERNAL_CRON_SECRET fallback)
 
   parameters:
     BusinessId:
@@ -1525,6 +2214,8 @@ components:
         twilioPhoneSid: { type: string, nullable: true }
         resendFromAddress: { type: string, nullable: true }
         smsWebhookUrl: { type: string, nullable: true }
+        voiceWebhookUrl: { type: string, nullable: true }
+        voiceStatusWebhookUrl: { type: string, nullable: true }
         providerStatus:
           type: object
           required: [smsProvider, emailProvider, emailDefaultFrom]
@@ -1546,6 +2237,154 @@ components:
         error:
           type: string
       required: [error]
+
+    AuditLogEntry:
+      type: object
+      required:
+        - id
+        - businessId
+        - occurredAt
+        - actorKind
+        - actorId
+        - actionClass
+        - resourceKind
+      properties:
+        id: { type: string }
+        businessId: { type: string }
+        occurredAt: { type: string, format: date-time }
+        actorKind: { type: string }
+        actorId: { type: string }
+        onBehalfOfId: { type: string, nullable: true }
+        actionClass: { type: string }
+        resourceKind: { type: string }
+        resourceId: { type: string, nullable: true }
+        payload:
+          type: object
+          additionalProperties: true
+
+    AuditLogSearchResponse:
+      type: object
+      required: [data, total]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditLogEntry"
+        total: { type: integer }
+
+    InternalTenantListItem:
+      type: object
+      required: [id, name, slug, ownerId, createdAt]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        slug: { type: string }
+        ownerId: { type: string }
+        ownerEmail: { type: string, nullable: true }
+        planId: { type: string, nullable: true }
+        stripeSubscriptionStatus: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        lastBookingAt: { type: string, format: date-time, nullable: true }
+
+    InternalTenantSearchResponse:
+      type: object
+      required: [data, total]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/InternalTenantListItem"
+        total: { type: integer }
+
+    InternalTenantDeepLinks:
+      type: object
+      required: [stripeCustomer, clerkUser, tenantDashboard, publicBooking]
+      properties:
+        stripeCustomer: { type: string, nullable: true }
+        clerkUser: { type: string, nullable: true }
+        tenantDashboard: { type: string, nullable: true }
+        publicBooking: { type: string, nullable: true }
+
+    InternalTenantDetail:
+      allOf:
+        - $ref: "#/components/schemas/InternalTenantListItem"
+        - type: object
+          required:
+            - timezone
+            - tier
+            - vertical
+            - aiEnabled
+            - voiceProvisioned
+            - activeStaffCount
+            - bookingCount
+            - voiceReceptionistEntitled
+            - deepLinks
+          properties:
+            email: { type: string, nullable: true }
+            phone: { type: string, nullable: true }
+            timezone: { type: string }
+            tier: { type: string }
+            vertical: { type: string }
+            aiEnabled: { type: boolean }
+            voiceProvisioned: { type: boolean }
+            stripeCustomerId: { type: string, nullable: true }
+            stripeSubscriptionId: { type: string, nullable: true }
+            twilioPhoneNumber: { type: string, nullable: true }
+            activeStaffCount: { type: integer }
+            bookingCount: { type: integer }
+            lastInboundSmsAt: { type: string, format: date-time, nullable: true }
+            voiceReceptionistEntitled: { type: boolean }
+            deepLinks:
+              $ref: "#/components/schemas/InternalTenantDeepLinks"
+
+    InternalSupportContext:
+      type: object
+      required: [businessId, impersonationPolicy, note]
+      properties:
+        businessId: { type: string }
+        impersonationPolicy: { type: string }
+        note: { type: string }
+
+    EntitlementRequiredError:
+      type: object
+      required: [error, code, entitlement, planId]
+      properties:
+        error: { type: string }
+        code:
+          type: string
+          enum: [ENTITLEMENT_REQUIRED]
+        entitlement: { type: string }
+        planId: { type: string }
+        planName: { type: string }
+
+    BillingState:
+      type: object
+      required:
+        - businessId
+        - planId
+        - planName
+        - entitlements
+        - usage
+        - voiceOutcomeShareEurCents
+      properties:
+        businessId: { type: string }
+        planId: { type: string }
+        planName: { type: string }
+        tier: { type: string }
+        baseEurCentsPerMonth: { type: integer }
+        seatEurCentsPerMonth: { type: ["integer", "null"] }
+        activeStaffSeats: { type: integer }
+        entitlements:
+          type: array
+          items: { type: string }
+        usage:
+          type: object
+          additionalProperties: { type: integer }
+        voiceOutcomeShareEurCents: { type: integer }
+        voiceOutcomeCapEurCents: { type: ["integer", "null"] }
+        voiceOutcomeShareRate: { type: number }
+        stripeSubscriptionStatus: { type: ["string", "null"] }
+        designPartnerActive: { type: boolean }
 
     # ── Users ──
     User:
@@ -1606,6 +2445,12 @@ components:
           type: ["string", "null"]
         timezone:
           type: string
+        locale:
+          type: string
+          description: BCP-47 locale for customer-facing copy and formatting (e.g. en-IE)
+        currency:
+          type: string
+          description: ISO 4217 currency code (e.g. EUR)
         logoUrl:
           type: ["string", "null"]
         coverImageUrl:
@@ -1628,7 +2473,109 @@ components:
         updatedAt:
           type: string
           format: date-time
+        onboardingState:
+          $ref: "#/components/schemas/OnboardingState"
       required: [id, ownerId, name, slug, timezone, createdAt, updatedAt]
+
+    OnboardingState:
+      type: object
+      description: Self-serve wizard progress (acts A1–A12)
+      properties:
+        currentAct:
+          $ref: "#/components/schemas/OnboardingActId"
+        completedActs:
+          type: array
+          items:
+            $ref: "#/components/schemas/OnboardingActId"
+        percentComplete:
+          type: integer
+          minimum: 0
+          maximum: 100
+        checklist:
+          $ref: "#/components/schemas/OnboardingChecklist"
+        updatedAt:
+          type: string
+          format: date-time
+      required: [currentAct, completedActs, percentComplete]
+
+    OnboardingActId:
+      type: string
+      enum:
+        - a1_create_business
+        - a2_shop_profile
+        - a3_service_menu
+        - a4_team
+        - a5_hours
+        - a6_liv
+        - a7_channels
+        - a8_public_link
+        - a9_billing
+        - a10_invite_team
+        - a11_migration
+        - a12_go_live
+
+    OnboardingChecklist:
+      type: object
+      properties:
+        testBooking: { type: boolean }
+        livEnabled: { type: boolean }
+        publicLinkShared: { type: boolean }
+        smsOrVoiceConnected: { type: boolean }
+        teamInvited: { type: boolean }
+        billingStarted: { type: boolean }
+        servicesConfirmed: { type: boolean }
+        hoursConfirmed: { type: boolean }
+
+    SupportTicketCategory:
+      type: string
+      enum: [bug, billing, liv_error, feature, other]
+
+    SupportTicketSeverity:
+      type: string
+      enum: [blocking, annoying, nice_to_have]
+
+    SupportTicketStatus:
+      type: string
+      enum: [open, triaged, resolved, closed]
+
+    SupportTicket:
+      type: object
+      properties:
+        id: { type: string }
+        businessId: { type: string }
+        userId: { type: string }
+        category:
+          $ref: "#/components/schemas/SupportTicketCategory"
+        severity:
+          $ref: "#/components/schemas/SupportTicketSeverity"
+        description: { type: string }
+        status:
+          $ref: "#/components/schemas/SupportTicketStatus"
+        context:
+          type: object
+          additionalProperties: true
+        consentLogsAccess: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      required: [id, businessId, userId, category, severity, description, status, createdAt, updatedAt]
+
+    CreateSupportTicketBody:
+      type: object
+      properties:
+        category:
+          $ref: "#/components/schemas/SupportTicketCategory"
+        severity:
+          $ref: "#/components/schemas/SupportTicketSeverity"
+        description:
+          type: string
+          minLength: 10
+        context:
+          type: object
+          additionalProperties: true
+        consentLogsAccess:
+          type: boolean
+          default: false
+      required: [category, description]
 
     CreateBusinessBody:
       type: object
@@ -1651,11 +2598,102 @@ components:
           type: string
         country:
           type: string
+        jurisdiction:
+          type: string
+          description: ISO jurisdiction pack code (IE, GB, DE, ES, IT, NL, PL)
+          enum: [IE, GB, DE, ES, IT, NL, PL]
+        vertical:
+          $ref: "#/components/schemas/BusinessVertical"
+        tier:
+          $ref: "#/components/schemas/BusinessTier"
+        seedDefaults:
+          type: boolean
+          description: When true (default), seed services and staff from the vertical pack
         logoUrl:
           type: string
         instagramHandle:
           type: string
       required: [name, slug]
+
+    BusinessVertical:
+      type: string
+      enum: [hair, beauty, body-art, wellness, fitness, medspa, allied-health]
+
+    BusinessTier:
+      type: string
+      enum: [solo, studio, chain, chair-host, white-label]
+
+    OnboardingCatalogResponse:
+      type: object
+      properties:
+        jurisdictions:
+          type: array
+          items:
+            type: object
+            properties:
+              jurisdiction:
+                type: string
+              label:
+                type: string
+              currency:
+                type: string
+              defaultTimezone:
+                type: string
+        verticals:
+          type: array
+          items:
+            type: object
+            properties:
+              vertical:
+                $ref: "#/components/schemas/BusinessVertical"
+              label:
+                type: string
+        tiers:
+          type: array
+          items:
+            $ref: "#/components/schemas/BusinessTier"
+      required: [jurisdictions, verticals, tiers]
+
+    OnboardingPreviewBody:
+      type: object
+      properties:
+        name:
+          type: string
+        country:
+          type: string
+        category:
+          type: string
+        vertical:
+          $ref: "#/components/schemas/BusinessVertical"
+        tier:
+          $ref: "#/components/schemas/BusinessTier"
+        jurisdiction:
+          type: string
+          enum: [IE, GB, DE, ES, IT, NL, PL]
+      required: [name]
+
+    OnboardingDefaults:
+      type: object
+      properties:
+        country:
+          type: string
+        currency:
+          type: string
+        locale:
+          type: string
+        timezone:
+          type: string
+        euRegion:
+          type: string
+          enum: [fra, dub]
+        vertical:
+          $ref: "#/components/schemas/BusinessVertical"
+        tier:
+          $ref: "#/components/schemas/BusinessTier"
+        category:
+          type: string
+        aiGreeting:
+          type: string
 
     UpdateBusinessBody:
       type: object
@@ -1697,6 +2735,8 @@ components:
           type: string
         aiCanBookDirectly:
           type: string
+        onboardingState:
+          $ref: "#/components/schemas/OnboardingState"
 
     # ── Staff ──
     Membership:
@@ -1709,19 +2749,78 @@ components:
           enum: [OWNER, ADMIN, STAFF]
         staffId:
           type: ["string", "null"]
+        isReception:
+          type: boolean
+          description: Heuristic from staff title/bio (reception/front-desk hint)
+        tenureDays:
+          type: integer
+          description: Days since the linked staff row was created
+
+    InAppNotification:
+      type: object
+      required: [id, kind, priority, title, body, createdAt]
+      properties:
+        id: { type: string }
+        businessId: { type: ["string", "null"] }
+        kind: { type: string }
+        priority: { type: string, enum: [info, watch, act] }
+        personaHint: { type: ["string", "null"] }
+        title: { type: string }
+        body: { type: string }
+        href: { type: ["string", "null"] }
+        mobileHref: { type: ["string", "null"] }
+        resourceKind: { type: ["string", "null"] }
+        resourceId: { type: ["string", "null"] }
+        readAt: { type: ["string", "null"], format: date-time }
+        createdAt: { type: string, format: date-time }
+
+    InAppNotificationList:
+      type: object
+      required: [data, unreadCount]
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/InAppNotification" }
+        unreadCount: { type: integer }
+
+    RegisterDeviceTokenBody:
+      type: object
+      required: [token, platform]
+      properties:
+        token:
+          type: string
+          description: Expo push token (ExponentPushToken[...])
+        platform:
+          type: string
+          enum: [IOS, ANDROID, WEB]
+
+    DeviceToken:
+      type: object
+      required: [id, platform, token, isActive]
+      properties:
+        id: { type: string }
+        platform:
+          type: string
+          enum: [IOS, ANDROID, WEB]
+        token: { type: string }
+        isActive: { type: boolean }
 
     MyDay:
       type: object
-      required: [today, myCustomers, todayCount, weekCount, role, effectiveRole]
+      required: [today, week, myCustomers, todayCount, weekCount, role, effectiveRole]
       properties:
         staffId:
           type: ["string", "null"]
         today:
           type: array
-          items: { $ref: "#/components/schemas/Booking" }
+          items: { $ref: "#/components/schemas/BookingDetail" }
+        week:
+          type: array
+          items: { $ref: "#/components/schemas/BookingDetail" }
+          description: Upcoming bookings for the rest of this week (after today)
         next:
           oneOf:
-            - { $ref: "#/components/schemas/Booking" }
+            - { $ref: "#/components/schemas/BookingDetail" }
             - { type: "null" }
         myCustomers:
           type: array
@@ -2071,6 +3170,9 @@ components:
         status:
           type: string
           enum: [PENDING, CONFIRMED, CANCELLED, COMPLETED, NO_SHOW]
+        pendingReason:
+          type: ["string", "null"]
+          description: Machine reason while status is PENDING (awaiting_staff_confirm, awaiting_deposit, etc.)
         notes:
           type: ["string", "null"]
         internalNotes:
@@ -2293,7 +3395,16 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/BookingDetail"
-      required: [todayBookings, weekBookings, pendingCount, confirmedCount, completedTodayCount, noShowTodayCount, totalCustomers, upcomingBookings]
+        voiceBookingsThisWeek:
+          type: integer
+          description: Bookings with source=voice created in the last 7 days
+        voiceRecoveredValueEurCents:
+          type: integer
+          description: Sum of service prices for voice-sourced bookings this week
+        voiceOutcomeShareEurCents:
+          type: integer
+          description: Estimated voice outcome share this billing period (from meters)
+      required: [todayBookings, weekBookings, pendingCount, confirmedCount, completedTodayCount, noShowTodayCount, totalCustomers, upcomingBookings, voiceBookingsThisWeek, voiceRecoveredValueEurCents, voiceOutcomeShareEurCents]
 
     ActivityItem:
       type: object
@@ -2361,6 +3472,19 @@ components:
         instagramHandle:
           type: ["string", "null"]
         timezone:
+          type: string
+        aiEnabled:
+          type: string
+        aiGreeting:
+          type: ["string", "null"]
+        aiDisclosureChatFirstMessage:
+          type: string
+          description: Jurisdiction-localized first message for public Liv chat
+        aiDisclosureFooterLine:
+          type: string
+        bookingTermsBlock:
+          type: string
+        depositPolicySummary:
           type: string
         services:
           type: array
@@ -2482,6 +3606,9 @@ components:
           type: ["string", "null"]
         bookingId:
           type: ["string", "null"]
+        authorUserId:
+          type: ["string", "null"]
+          description: Clerk user id when sent by staff from dashboard
         createdAt:
           type: string
           format: date-time
@@ -2552,3 +3679,108 @@ components:
         ok:
           type: boolean
       required: [ok]
+
+    ChainShopRollup:
+      type: object
+      properties:
+        businessId: { type: string }
+        name: { type: string }
+        slug: { type: string }
+        planId: { type: ["string", "null"] }
+        tier: { type: string }
+        city: { type: ["string", "null"] }
+        bookingsThisWeek: { type: integer }
+        completedThisWeek: { type: integer }
+        todayBookings: { type: integer }
+        pendingBookings: { type: integer }
+        openConversations: { type: integer }
+        handedOffConversations: { type: integer }
+        pendingTimeOff: { type: integer }
+        pulseStatus: { type: string, enum: [ok, watch, act] }
+        pulseReason: { type: ["string", "null"] }
+      required:
+        - businessId
+        - name
+        - slug
+        - tier
+        - bookingsThisWeek
+        - completedThisWeek
+        - todayBookings
+        - pendingBookings
+        - openConversations
+        - handedOffConversations
+        - pendingTimeOff
+        - pulseStatus
+
+    ChainAlert:
+      type: object
+      properties:
+        businessId: { type: string }
+        shopName: { type: string }
+        severity: { type: string, enum: [watch, act] }
+        code:
+          type: string
+          enum: [handed_off, time_off, inbox, pending_bookings]
+        message: { type: string }
+      required: [businessId, shopName, severity, code, message]
+
+    ChainRollup:
+      type: object
+      properties:
+        shopCount: { type: integer }
+        bookingsThisWeek: { type: integer }
+        completedThisWeek: { type: integer }
+        shopsNeedingAttention: { type: integer }
+        founderBriefingLine: { type: string }
+        alerts:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChainAlert"
+        shops:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChainShopRollup"
+      required:
+        - shopCount
+        - bookingsThisWeek
+        - completedThisWeek
+        - shopsNeedingAttention
+        - founderBriefingLine
+        - alerts
+        - shops
+
+    PeerInsights:
+      type: object
+      properties:
+        available: { type: boolean }
+        peerCount: { type: integer }
+        required: { type: integer }
+        vertical: { type: string }
+        country: { type: string }
+        message: { type: string }
+        disclaimer: { type: string }
+        benchmarks:
+          type: object
+          properties:
+            avgBookingsPerWeek: { type: number }
+            noShowRatePct: { type: number }
+            voiceBookingSharePct: { type: number }
+      required: [available, vertical, country]
+
+    PartnerBookingsResponse:
+      type: object
+      properties:
+        slug: { type: string }
+        from: { type: string, format: date-time }
+        to: { type: string, format: date-time }
+        bookings:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              status: { type: string }
+              startAt: { type: string, format: date-time }
+              endAt: { type: string, format: date-time }
+              serviceId: { type: ["string", "null"] }
+      required: [slug, from, to, bookings]

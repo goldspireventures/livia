@@ -18,6 +18,11 @@ export const AI_DISCLOSURE = {
   emailBlock(businessName: string): string {
     return `This message was drafted by Liv, an AI assistant for ${businessName}. Reply to this email and a human will respond.`;
   },
+
+  /** Spoken at call start (English-IE). No call recording in v1 — disclosure only. */
+  voiceOpeningLine(businessName: string): string {
+    return `Hi, I'm Liv, an AI assistant for ${businessName}. This call may be handled by AI to help you book. Say what you'd like, or ask for a person.`;
+  },
 } as const;
 
 export type AiDisclosure = typeof AI_DISCLOSURE;

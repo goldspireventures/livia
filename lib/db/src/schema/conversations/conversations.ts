@@ -10,7 +10,9 @@ export const conversationChannelEnum = pgEnum("conversation_channel", [
   "SMS",
   "INSTAGRAM",
   "WHATSAPP",
+  "MESSENGER",
   "EMAIL",
+  "VOICE",
 ]);
 
 export const conversationStatusEnum = pgEnum("conversation_status", [
@@ -43,6 +45,14 @@ export const conversationsTable = pgTable(
     customerPhone: text("customer_phone"),
     aiHandled: boolean("ai_handled").notNull().default(true),
     summary: text("summary"),
+    /** Booking this thread is about (refund, reschedule, etc.). */
+    linkedBookingId: text("linked_booking_id").references(() => bookingsTable.id, {
+      onDelete: "set null",
+    }),
+    /** e.g. refund_request, reschedule, general */
+    caseIntent: text("case_intent"),
+    /** Outcome when resolved: { outcome, refundMinor?, bookingStatus?, at } */
+    resolution: jsonb("resolution").$type<Record<string, unknown>>(),
     lastMessageAt: timestamp("last_message_at", { withTimezone: true }).notNull().defaultNow(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -69,6 +79,8 @@ export const conversationMessagesTable = pgTable(
     bookingId: text("booking_id").references(() => bookingsTable.id, {
       onDelete: "set null",
     }),
+    /** Clerk user id when a staff member sent this message (outbound human reply). */
+    authorUserId: text("author_user_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

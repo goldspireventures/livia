@@ -1,0 +1,66 @@
+appId: ${MAESTRO_APP_ID}
+---
+- runFlow: sign-in-demo.yaml
+- runFlow:
+    when:
+      visible:
+        id: "switch-persona-button"
+    commands:
+      - tapOn:
+          id: "switch-persona-button"
+      - tapOn:
+          id: "persona-row-owner"
+      - tapOn:
+          id: "persona-row-auto"
+- takeScreenshot: e2e/visual-captures/mobile/owner-today
+- tapOn: "Bookings"
+- takeScreenshot: e2e/visual-captures/mobile/owner-bookings
+- tapOn: "Clients"
+- takeScreenshot: e2e/visual-captures/mobile/owner-customers
+- tapOn: "Inbox"
+- takeScreenshot: e2e/visual-captures/mobile/owner-inbox
+- tapOn: "More"
+- takeScreenshot: e2e/visual-captures/mobile/owner-more
+- tapOn:
+    id: "menu-settings"
+- takeScreenshot: e2e/visual-captures/mobile/owner-settings
+- back
+- tapOn:
+    id: "menu-staff"
+- takeScreenshot: e2e/visual-captures/mobile/owner-staff
+- back
+- tapOn:
+    id: "menu-services"
+- takeScreenshot: e2e/visual-captures/mobile/owner-services
+- back
+- runFlow:
+    when:
+      visible:
+        id: "menu-shared premises"
+    commands:
+      - tapOn:
+          id: "menu-shared premises"
+      - takeScreenshot: e2e/visual-captures/mobile/owner-premises
+      - back
+- runFlow:
+    when:
+      visible:
+        id: "menu-day packages"
+    commands:
+      - tapOn:
+          id: "menu-day packages"
+      - takeScreenshot: e2e/visual-captures/mobile/owner-day-packages
+      - back
+- tapOn:
+    id: "menu-audit log"
+- takeScreenshot: e2e/visual-captures/mobile/owner-audit
+- back
+- runFlow:
+    when:
+      visible:
+        id: "new-booking-button"
+    commands:
+      - tapOn: "Today"
+      - tapOn:
+          id: "new-booking-button"
+      - takeScreenshot: e2e/visual-captures/mobile/owner-new-booking

@@ -10,8 +10,8 @@ We ship in numbered versions, not in continuous date-based releases. Each versio
 |---|---|---|---|---|
 | **v1** | The wedge. | 2026 H2 (Gate 3 of `launch-plan.md`) | P2b solo Hair English-IE; P2a single-shop with Manager Hair-IE; first 10 design partners | [`v1-scope.md`](./v1-scope.md) |
 | **v1.5** | Heartland + chair-rental + multi-brand | 2027 H1 | + P2b host C10; + P1 small chain C7; + P2a + P4 sr-w-admin C6; + multi-brand C13 | [`v1.5-scope.md`](./v1.5-scope.md) |
-| **v2** | Verticals + UK + Nordics open | 2027 H2 → 2028 H1 | + Beauty + Body art + Fitness verticals; + UK; + Nordics; class-booking; tattoo proof workflow | [`v2-scope.md`](./v2-scope.md) |
-| **v3** | DACH + medspa + allied health | 2028–2029 | + DACH locale + voice; + medspa informed-consent; + allied-health adjacency; enterprise tier | [`v3-scope.md`](./v3-scope.md) |
+| **v2** | UK scale + Nordics + fitness/body-art/franchise | Eng closed 2026-05-22 | [`../product/V2-ENGINEERING-CLOSED.md`](../product/V2-ENGINEERING-CLOSED.md) · Founder: [`../product/FOUNDER-SHIP-LANE.md`](../product/FOUNDER-SHIP-LANE.md) | [`v2-scope.md`](./v2-scope.md) |
+| **v3** | Alive UX + booking continuity + platform + DACH + medspa + enterprise | Accelerated | Whole-product every release; Phase 1 = M+N | [`../product/V3-EXECUTION-PROGRAM.md`](../product/V3-EXECUTION-PROGRAM.md) · [`../product/V3-EXPERIENCE-SPEC.md`](../product/V3-EXPERIENCE-SPEC.md) · [`v3-scope.md`](./v3-scope.md) |
 
 ## Versions are gated, not scheduled
 
@@ -27,6 +27,7 @@ The "no" list per F7 narrowing reflection is durable. Re-stated in `v3-scope.md`
 
 ## Read order for new hires
 
+0. [`../product/LIVIA-MASTER-PLAN.md`](../product/LIVIA-MASTER-PLAN.md) — orchestration bow (waves, sprints, lifecycle, money).
 1. `v1-scope.md` — what we are actually shipping right now.
 2. `release-calendar.md` — when, with confidence ratings.
 3. `feature-flags-and-rollout.md` — how features land per tenant.

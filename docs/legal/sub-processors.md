@@ -1,20 +1,22 @@
 # Sub-processors
 
-**Status:** v1 (2026-05-07). Always-current. Subprocessor changes notified to customers 30 days in advance per DPA § 5.
+**Status:** v1.1 (2026-05-24). Always-current. Subprocessor changes notified to customers 30 days in advance per DPA § 5.
 
 This list mirrors the operational subprocessor map in `docs/policy/data-residency.md`. The two are kept in sync.
+
+**Production data plane:** Postgres and file storage on **Supabase (EU region)**. Application compute and static frontends on **EU-hosted** providers selected at deploy time (see `docs/product/LIVIA-PRODUCTION-READY.md`).
 
 ## Active sub-processors
 
 | Sub-processor | Purpose | Personal data processed | Region | Sign-up date | DPA / SCCs |
 |---|---|---|---|---|---|
-| **Replit Deployments** | Compute, hosting | All tenant data on disk + at runtime | EU (Frankfurt) | 2025-11 | Replit DPA + EU SCCs |
-| **Replit Object Storage** | File storage (logos, photos) | Customer photos, brand assets | EU | 2025-11 | Replit DPA |
-| **Postgres (Replit-managed)** | Tenant database | All tenant data | EU | 2025-11 | Replit DPA |
+| **Supabase** | Postgres (tenant database) + Storage (logos, customer photos) | All tenant relational data; uploaded media | EU (project region pinned at provisioning) | 2026-05 | Supabase DPA + EU SCCs |
+| **Application hosting (EU)** | API + dashboard + marketing runtime | Tenant data in memory at request time; no long-term store beyond Supabase | EU | 2026-05 | Provider DPA (per chosen host) |
 | **Clerk** | Authentication, sessions, invitations | Email, name, avatar, OAuth tokens, `publicMetadata.livia` | EU production tenant | 2025-12 | Clerk DPA + EU SCCs |
 | **Resend** | Transactional email | Recipient email, message body, attachment metadata | EU | 2026-01 | Resend DPA |
 | **Twilio** | SMS + voice (per-shop numbers) | Phone numbers, message bodies, A2P registration | Twilio EU | 2026-02 | Twilio DPA |
-| **Anthropic** (via Replit AI Integrations) | LLM inference for Liv + AI training generation | Conversation context (prompts), system prompts, tool-call payloads | Anthropic default region | 2026-02 | Anthropic Commercial Terms (zero-retention) + Replit pass-through DPA |
+| **Anthropic** | LLM inference for Liv + training generation | Conversation context (prompts), system prompts, tool-call payloads | Anthropic default region; zero-retention API tier | 2026-02 | Anthropic Commercial Terms |
+| **Inngest** | Durable workflows (reminders, continuity, digests) | Event payloads (booking ids, business ids — no full PII dumps in events) | EU/US per Inngest cloud region config | 2026-05 | Inngest DPA |
 | **Sentry** | Error monitoring | Stack traces, sanitised request metadata, user id | EU | 2026-03 | Sentry DPA |
 | **Plausible** | First-party analytics on `livia.io` + dashboard | Anonymised visit counts (no PII; no cookies) | EU | 2026-04 | Plausible DPA |
 | **Stripe** | Subscription billing + Stripe Connect | Salon legal entity data, billing metadata, deposit/tip transactions | Stripe Ireland Ltd | 2026-04 | Stripe DPA + Ireland-based |
@@ -55,7 +57,7 @@ When a new sub-processor is added or an existing one's role substantively change
 
 ## Annual review
 
-Reviewed at every quarterly foundation audit. Major review at year-end. Last updated: 2026-05-07.
+Reviewed at every quarterly foundation audit. Major review at year-end. Last updated: 2026-05-24.
 
 ## How to read this list
 

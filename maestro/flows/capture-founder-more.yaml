@@ -1,0 +1,34 @@
+appId: ${MAESTRO_APP_ID}
+---
+- runFlow: sign-in-demo.yaml
+- runFlow:
+    when:
+      visible:
+        id: "switch-persona-button"
+    commands:
+      - tapOn:
+          id: "switch-persona-button"
+      - tapOn:
+          id: "persona-row-founder"
+      - tapOn:
+          id: "persona-row-auto"
+- tapOn: "Shops"
+- takeScreenshot: e2e/visual-captures/mobile/founder-shops
+- tapOn: "More"
+- takeScreenshot: e2e/visual-captures/mobile/founder-more
+- tapOn:
+    id: "menu-lifecycle"
+- takeScreenshot: e2e/visual-captures/mobile/founder-lifecycle
+- back
+- tapOn: "Today"
+- takeScreenshot: e2e/visual-captures/mobile/founder-today
+- tapOn: "Approvals"
+- takeScreenshot: e2e/visual-captures/mobile/founder-approvals
+- tapOn: "Inbox"
+- takeScreenshot: e2e/visual-captures/mobile/founder-inbox
+- tapOn: "Who's working"
+- takeScreenshot: e2e/visual-captures/mobile/founder-rota
+- back
+- tapOn:
+    id: "menu-audit log"
+- takeScreenshot: e2e/visual-captures/mobile/founder-audit

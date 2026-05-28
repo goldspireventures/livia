@@ -10,6 +10,7 @@ import {
 import { logEvent } from "../services/events.service";
 import { EventType } from "@workspace/db";
 
+import { sendError } from "../lib/http-errors";
 const router: IRouter = Router();
 const getBizId = (param: string | string[]) => Array.isArray(param) ? param[0] : param;
 
@@ -35,7 +36,7 @@ router.post(
     const businessId = getBizId(req.params.businessId);
     const { name, durationMinutes } = req.body;
     if (!name || !durationMinutes) {
-      res.status(400).json({ error: "name and durationMinutes are required" }); return;
+      sendError(res, req, 400, "name and durationMinutes are required"); return;
     }
     const s = await createService(businessId, req.body);
     await logEvent({ type: EventType.SERVICE_CREATED, businessId, userId, entityType: "service", entityId: s.id });
@@ -52,7 +53,7 @@ router.get(
     const businessId = getBizId(req.params.businessId);
     const serviceId = getBizId(req.params.serviceId);
     const s = await getServiceById(businessId, serviceId);
-    if (!s) { res.status(404).json({ error: "Service not found" }); return; }
+    if (!s) { sendError(res, req, 404, "Service not found"); return; }
     res.json(s);
   },
 );
@@ -67,7 +68,7 @@ router.patch(
     const businessId = getBizId(req.params.businessId);
     const serviceId = getBizId(req.params.serviceId);
     const s = await updateService(businessId, serviceId, req.body);
-    if (!s) { res.status(404).json({ error: "Service not found" }); return; }
+    if (!s) { sendError(res, req, 404, "Service not found"); return; }
     await logEvent({ type: EventType.SERVICE_UPDATED, businessId, userId, entityType: "service", entityId: serviceId });
     res.json(s);
   },
@@ -83,7 +84,7 @@ router.delete(
     const businessId = getBizId(req.params.businessId);
     const serviceId = getBizId(req.params.serviceId);
     const s = await deactivateService(businessId, serviceId);
-    if (!s) { res.status(404).json({ error: "Service not found" }); return; }
+    if (!s) { sendError(res, req, 404, "Service not found"); return; }
     await logEvent({ type: EventType.SERVICE_DEACTIVATED, businessId, userId, entityType: "service", entityId: serviceId });
     res.sendStatus(204);
   },

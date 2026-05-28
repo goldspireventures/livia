@@ -1,0 +1,18 @@
+id: web.settings.shop
+vertical: [hair, beauty, wellness]
+locale: [en-IE, en-GB]
+persona: [owner, founder]
+modality: web
+route: /settings?tab=shop
+
+purpose: >
+  Owner edits shop identity — name, slug, timezone, phone, city, description.
+
+must_do:
+  - RBAC: only owner/founder edit
+  - Save via PATCH /businesses/{id}
+  - Timezone drives all slot display
+
+api:
+  - GET /businesses/{id}
+  - PATCH /businesses/{id}

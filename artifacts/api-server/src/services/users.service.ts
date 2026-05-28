@@ -23,7 +23,14 @@ export async function getUserById(id: string) {
   return user ?? null;
 }
 
-export async function updateUser(id: string, data: { fullName?: string; avatarUrl?: string }) {
+export async function updateUser(
+  id: string,
+  data: {
+    fullName?: string;
+    avatarUrl?: string;
+    platformLegal?: Record<string, unknown>;
+  },
+) {
   const [updated] = await db
     .update(usersTable)
     .set({ ...data, updatedAt: new Date() })

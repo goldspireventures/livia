@@ -8,5 +8,11 @@
   },
   "dependencies": {
     "zod": "catalog:"
+  },
+  "peerDependencies": {
+    "inngest": ">=3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "inngest": { "optional": true }
   }
 }

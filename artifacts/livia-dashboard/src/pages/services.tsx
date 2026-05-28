@@ -19,6 +19,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge";
 import { Scissors, Plus, Clock, DollarSign } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { invalidateOperationalState } from "@/lib/operational-cache";
+import { OperationalPageShell } from "@/components/layout/operational-page-shell";
 
 interface ServiceForm {
   name: string;
@@ -33,6 +35,7 @@ export default function ServicesPage() {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
   const [showInactive, setShowInactive] = useState(false);
 
   const bid = business?.id ?? "";
@@ -49,6 +52,45 @@ export default function ServicesPage() {
     defaultValues: { currency: "USD", durationMinutes: 60 },
   });
 
+  const svcList = (services as { id: string; name: string; description?: string; durationMinutes: number; priceMinor: number; currency?: string; isActive?: boolean }[]) ?? [];
+
+  function openEdit(svc: (typeof svcList)[number]) {
+    setEditId(svc.id);
+    reset({
+      name: svc.name,
+      description: svc.description ?? "",
+      durationMinutes: svc.durationMinutes,
+      priceMinor: svc.priceMinor,
+      currency: svc.currency || "EUR",
+    });
+  }
+
+  function saveEdit(vals: ServiceForm) {
+    if (!bid || !editId) return;
+    updateService.mutate(
+      {
+        businessId: bid,
+        serviceId: editId,
+        data: {
+          name: vals.name,
+          description: vals.description || undefined,
+          durationMinutes: Number(vals.durationMinutes),
+          priceMinor: Number(vals.priceMinor),
+          currency: vals.currency || "EUR",
+        },
+      },
+      {
+        onSuccess: () => {
+          invalidateOperationalState(qc, bid);
+          qc.invalidateQueries({ queryKey: getListServicesQueryKey(bid) });
+          toast({ title: "Service updated" });
+          setEditId(null);
+        },
+        onError: () => toast({ title: "Failed to update service", variant: "destructive" }),
+      },
+    );
+  }
+
   function onSubmit(vals: ServiceForm) {
     if (!bid) return;
     createService.mutate(
@@ -64,6 +106,7 @@ export default function ServicesPage() {
       },
       {
         onSuccess: () => {
+          invalidateOperationalState(qc, bid);
           qc.invalidateQueries({ queryKey: getListServicesQueryKey(bid) });
           toast({ title: "Service created" });
           reset();
@@ -80,6 +123,7 @@ export default function ServicesPage() {
       { businessId: bid, serviceId, data: { isActive: !isActive } },
       {
         onSuccess: () => {
+          invalidateOperationalState(qc, bid);
           qc.invalidateQueries({ queryKey: getListServicesQueryKey(bid) });
           toast({ title: isActive ? "Service deactivated" : "Service activated" });
         },
@@ -87,15 +131,12 @@ export default function ServicesPage() {
     );
   }
 
-  const svcList = (services as any[]) ?? [];
-
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Services</h1>
-          <p className="text-muted-foreground">Manage your service catalog</p>
-        </div>
+    <OperationalPageShell
+      title="Services"
+      subtitle="Your catalog — duration and price drive availability and Liv's booking suggestions."
+      width="full"
+      actions={
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => setShowInactive(!showInactive)}>
             {showInactive ? "Hide Inactive" : "Show All"}
@@ -176,7 +217,43 @@ export default function ServicesPage() {
             </DialogContent>
           </Dialog>
         </div>
-      </div>
+      }
+    >
+      <Dialog open={!!editId} onOpenChange={(o) => !o && setEditId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit service</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit(saveEdit)} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Service name *</Label>
+              <Input {...register("name", { required: true })} />
+            </div>
+            <div className="space-y-2">
+              <Label>Description</Label>
+              <Textarea {...register("description")} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Duration (min)</Label>
+                <Input type="number" min={5} {...register("durationMinutes", { required: true })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Price (cents)</Label>
+                <Input type="number" min={0} {...register("priceMinor", { required: true })} />
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button type="button" variant="outline" onClick={() => setEditId(null)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={updateService.isPending}>
+                {updateService.isPending ? "Saving…" : "Save service"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {isLoading ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -221,21 +298,32 @@ export default function ServicesPage() {
                     {formatCurrency(svc.priceMinor, svc.currency)}
                   </span>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => toggleActive(svc.id, svc.isActive)}
-                  disabled={updateService.isPending}
-                  data-testid={`button-toggle-service-${svc.id}`}
-                >
-                  {svc.isActive ? "Deactivate" : "Activate"}
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => openEdit(svc)}
+                    data-testid={`button-edit-service-${svc.id}`}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => toggleActive(svc.id, svc.isActive)}
+                    disabled={updateService.isPending}
+                    data-testid={`button-toggle-service-${svc.id}`}
+                  >
+                    {svc.isActive ? "Deactivate" : "Activate"}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
-    </div>
+    </OperationalPageShell>
   );
 }

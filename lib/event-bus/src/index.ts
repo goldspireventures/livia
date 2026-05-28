@@ -22,7 +22,7 @@ export const eventRegistry = {
     customerId: z.string(),
     serviceId: z.string(),
     staffId: z.string().nullable(),
-    source: z.enum(["voice", "whatsapp", "sms", "web", "walk-in", "owner-manual"]),
+    source: z.enum(["voice", "whatsapp", "sms", "web", "walk-in", "owner-manual", "partner-api"]),
     sourceConversationId: z.string().nullable(),
     startAt: z.string().datetime(),
   }),
@@ -34,6 +34,19 @@ export const eventRegistry = {
   }),
   "booking.completed": z.object({ businessId: z.string(), bookingId: z.string() }),
   "booking.no-show": z.object({ businessId: z.string(), bookingId: z.string() }),
+
+  // Conversations / inbox
+  "conversation.created": z.object({
+    businessId: z.string(),
+    conversationId: z.string(),
+    channel: z.string(),
+  }),
+  "conversation.updated": z.object({
+    businessId: z.string(),
+    conversationId: z.string(),
+    status: z.enum(["OPEN", "HANDED_OFF", "CLOSED"]),
+    aiHandled: z.boolean(),
+  }),
 
   // Voice
   "voice.call.received": z.object({
@@ -70,6 +83,12 @@ export const eventRegistry = {
   "peer-set.aggregate.computed": z.object({
     aggregateKey: z.string(),
     contributingTenantCount: z.number().int().min(10),
+  }),
+
+  "morning.briefing.ready": z.object({
+    businessId: z.string(),
+    briefingDate: z.string(),
+    briefingId: z.string(),
   }),
 
   // Eval / rollback

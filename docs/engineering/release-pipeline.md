@@ -30,10 +30,10 @@ Every PR requires:
 
 | Environment | Purpose | Data | Access |
 |---|---|---|---|
-| **`local`** | Developer laptops + Replit workspace. | Synthetic seed; never real customer data. | Engineers. |
+| **`local`** | Developer laptops (`docs/LOCAL_DEV.md`). | Synthetic seed; never real customer data. | Engineers. |
 | **`preview`** | Per-PR ephemeral preview deployment. | Synthetic seed + the PR's branch code. | Engineers + design partners with link. |
 | **`staging`** | Integration testing. Long-lived. | Synthetic seed + selected anonymised production samples. | Engineers + CS + ops. |
-| **`production`** | Live customer environment. | Real customer data. EU-resident. | Customers + read-only Replit-Livia ops with break-glass + audit log. |
+| **`production`** | Live customer environment (Supabase EU + EU app hosting). | Real customer data. EU-resident. | Customers + read-only Livia platform ops with break-glass + audit log. |
 
 Production has **no direct dev access.** Changes flow only through the deploy pipeline. Break-glass is documented + audit-logged per ADR 0015.
 
@@ -75,6 +75,33 @@ On merge to `main`:
 - **Database migrations:** never auto-rollback. Forward-fix only. Backwards-compatible policy keeps old code working during forward-fix.
 - **Liv decisions** rollback per ADR 0016 (auto-rollback class + human-approved rollback class).
 
+## Whole-product release rule
+
+**Policy (v3+):** Livia is one product. Every **production** semver release must account for **all** customer-facing surfaces — not only the artifact the PR author touched.
+
+### Surface sweep (required before tag)
+
+| Surface | Artifact | If no code change |
+|---------|----------|-------------------|
+| API + DB | `artifacts/api-server`, `lib/db` | State “N/A” + confirm migrations backward-compatible |
+| Tenant web | `artifacts/livia-dashboard` | Smoke or E2E note |
+| Tenant mobile | `artifacts/livia-mobile` | OTA eligibility note |
+| Marketing | `artifacts/livia-marketing` | Changelog / claim check if API or copy-relevant |
+| Public booking | `/b/{slug}` on dashboard | Quick Liv/disclosure smoke if kernel/Liv changed |
+| Internal ops | `artifacts/livia-internal` | Version string or N/A |
+| Policy / Liv | `lib/policy`, `lib/liv-runtime` | Pack version bump if behaviour changed |
+
+### Release artifacts (every tag)
+
+1. Entry in [`docs/changelog.md`](../changelog.md) (customer-facing summary).
+2. Row in [`docs/product/V3-SURFACE-MATRIX.md`](../product/V3-SURFACE-MATRIX.md) or release notes in PR.
+3. If any new customer claim: row in [`docs/audits/marketing-vs-reality.md`](../audits/marketing-vs-reality.md).
+4. Program reference: [`docs/product/V3-EXECUTION-PROGRAM.md`](../product/V3-EXECUTION-PROGRAM.md) Block R.
+
+**Hotfixes:** may narrow scope to failing surface only; post-mortem must record sweep debt if skipped.
+
+---
+
 ## Versioning
 
 - **Product version (v1, v1.5, v2, v3):** marketing-facing; gated by `docs/roadmap/`.
@@ -95,7 +122,7 @@ For SEV1 production issues:
 
 ## Secrets management
 
-- Secrets in environment variables; managed via Replit secrets store + (in production) cloud-provider secret manager.
+- Secrets in environment variables; managed via the production secret manager (never committed to git).
 - No secret in git. Pre-commit hook + CI scan (truffleHog or equivalent) enforces.
 - Rotation per `docs/policy/access-control.md`.
 

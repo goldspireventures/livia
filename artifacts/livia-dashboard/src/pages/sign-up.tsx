@@ -19,13 +19,23 @@ export default function SignUpPage() {
 
       <main className="relative z-10 flex flex-1 items-center justify-center px-4 pb-16">
         <div className="w-full max-w-md">
-          <div className="mb-10 text-center">
+          <div className="mb-10 text-left sm:text-center">
             <h1 className="font-serif text-4xl md:text-5xl font-normal leading-[1.1] tracking-tight">
               Start booking
               <span className="block mt-1 italic text-muted-foreground/90">smarter.</span>
             </h1>
-            <p className="mt-5 text-sm text-muted-foreground">
-              Create your account in under a minute.
+            <p className="mt-3 text-sm text-aurum-champagne/80 font-serif italic">
+              Her name is Liv.
+            </p>
+            <p className="mt-4 text-sm text-muted-foreground">
+              Create your account in under a minute. You will accept platform terms before creating a shop.
+            </p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Closed beta may be invite-only — see{" "}
+              <a href="https://livia.io/#waitlist" className="text-primary hover:underline">
+                livia.io waitlist
+              </a>
+              .
             </p>
           </div>
           <SignUp

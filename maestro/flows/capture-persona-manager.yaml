@@ -1,0 +1,30 @@
+appId: ${MAESTRO_APP_ID}
+env:
+  PERSONA: manager
+---
+- runFlow: sign-in-demo.yaml
+- runFlow: helpers/switch-persona.yaml
+- takeScreenshot: e2e/visual-captures/mobile/manager-queue
+- tapOn: "Floor"
+- takeScreenshot: e2e/visual-captures/mobile/manager-floor
+- tapOn: "Clients"
+- takeScreenshot: e2e/visual-captures/mobile/manager-clients
+- tapOn: "Messages"
+- takeScreenshot: e2e/visual-captures/mobile/manager-messages
+- tapOn: "More"
+- takeScreenshot: e2e/visual-captures/mobile/manager-more
+- tapOn:
+    id: "menu-settings"
+- takeScreenshot: e2e/visual-captures/mobile/manager-settings
+- back
+- tapOn:
+    id: "menu-my chair preview"
+- takeScreenshot: e2e/visual-captures/mobile/manager-chair-preview
+- back
+- tapOn:
+    id: "menu-request leave"
+- takeScreenshot: e2e/visual-captures/mobile/manager-time-off
+- back
+- tapOn:
+    id: "menu-audit log"
+- takeScreenshot: e2e/visual-captures/mobile/manager-audit

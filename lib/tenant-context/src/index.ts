@@ -47,3 +47,5 @@ export function requireTenantContext(provider: TenantContextProvider): TenantCon
   }
   return ctx;
 }
+
+export { tenantContextStore } from "./store";

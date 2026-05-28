@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Platform, StyleSheet, Text, TextInput, View } from "react-native";
+import { Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import Animated, {
   Easing,
   useAnimatedProps,
@@ -23,6 +23,8 @@ interface StatsCardProps {
   subtitle?: string;
   index?: number;
   variant?: "default" | "hero";
+  onPress?: () => void;
+  hint?: string;
 }
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
@@ -34,6 +36,8 @@ export function StatsCard({
   subtitle,
   index = 0,
   variant = "default",
+  onPress,
+  hint,
 }: StatsCardProps) {
   const colors = useColors();
   const accent = color ?? colors.primary;
@@ -80,13 +84,13 @@ export function StatsCard({
     transform: [{ scale: dotScale.value }],
   }));
 
-  return (
+  const inner = (
     <Animated.View
       style={[
         styles.card,
         {
           backgroundColor: colors.card,
-          borderColor: variant === "hero" ? accent + "55" : colors.border,
+          borderColor: variant === "hero" ? accent + "55" : onPress ? accent + "44" : colors.border,
         },
         Platform.OS !== "web" && elevation.resting,
         cardStyle,
@@ -115,18 +119,38 @@ export function StatsCard({
           {subtitle}
         </Text>
       ) : null}
+      {hint ? (
+        <Text style={[styles.hint, { color: colors.mutedForeground }]} numberOfLines={1}>
+          {hint}
+        </Text>
+      ) : null}
     </Animated.View>
+  );
+
+  if (!onPress) return inner;
+
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${label}, ${value}`}
+      style={({ pressed }) => [{ flex: 1, minWidth: 0, opacity: pressed ? 0.92 : 1 }]}
+    >
+      {inner}
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
     flex: 1,
+    flexBasis: 0,
+    minWidth: 0,
     borderRadius: 16,
     borderWidth: 1,
     padding: 14,
     gap: 6,
-    minWidth: 100,
+    minHeight: 108,
   },
   dot: {
     width: 26,
@@ -145,4 +169,5 @@ const styles = StyleSheet.create({
   valueInput: { padding: 0, margin: 0, height: 32 },
   label: { ...type.label, fontSize: 12 },
   subtitle: { ...type.caption, fontSize: 11 },
+  hint: { ...type.caption, fontSize: 10, marginTop: 2 },
 });

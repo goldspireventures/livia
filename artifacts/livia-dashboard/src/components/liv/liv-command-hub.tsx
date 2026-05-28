@@ -1,0 +1,91 @@
+import { Link } from "wouter";
+import { useBusiness } from "@/lib/business-context";
+import { useToast } from "@/hooks/use-toast";
+import { apiFetch } from "@/lib/api-fetch";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Sparkles, Inbox, LayoutGrid, Settings, ExternalLink, RefreshCw } from "lucide-react";
+import { StuckContinuityCard } from "@/components/stuck-continuity-card";
+import { LivMomentsStrip } from "@/components/ritual/liv-moments-strip";
+
+/**
+ * Liv as the visible centre of the owner/org-admin day — briefing, inbox, toolkit, public preview.
+ */
+export function LivCommandHub({ compact }: { compact?: boolean }) {
+  const { business } = useBusiness();
+  const { toast } = useToast();
+  const bid = business?.id ?? "";
+  const slug = business?.slug ?? "";
+
+  async function regenerateBriefing() {
+    if (!bid) return;
+    try {
+      await apiFetch(`/businesses/${bid}/morning-briefing/generate`, { method: "POST" });
+      toast({ title: "Liv refreshed your morning briefing" });
+      window.dispatchEvent(new CustomEvent("livia:morning-briefing-refresh"));
+    } catch {
+      toast({ title: "Briefing refresh failed", variant: "destructive" });
+    }
+  }
+
+  const publicUrl = slug ? `/b/${slug}` : null;
+
+  return (
+    <Card
+      className="border-primary/25 bg-gradient-to-br from-primary/10 via-transparent to-transparent overflow-hidden"
+      data-testid="liv-command-hub"
+    >
+      <CardHeader className={compact ? "pb-2" : undefined}>
+        <CardTitle className="text-base flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-primary" />
+          Liv — your operating brain
+        </CardTitle>
+        <CardDescription>
+          She reads your calendar, inbox, and policy — then acts through registered tools, never guesswork.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="default" asChild>
+            <Link href="/inbox">
+              <Inbox className="h-3.5 w-3.5 mr-1.5" />
+              Open queue
+            </Link>
+          </Button>
+          <Button size="sm" variant="outline" asChild>
+            <Link href="/toolkit">
+              <LayoutGrid className="h-3.5 w-3.5 mr-1.5" />
+              Liv command
+            </Link>
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => void regenerateBriefing()} disabled={!bid}>
+            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+            Refresh briefing
+          </Button>
+          <Button size="sm" variant="ghost" asChild>
+            <Link href="/settings?tab=liv">
+              <Settings className="h-3.5 w-3.5 mr-1.5" />
+              Tune Liv
+            </Link>
+          </Button>
+          {publicUrl ? (
+            <Button size="sm" variant="ghost" asChild>
+              <a href={publicUrl} target="_blank" rel="noreferrer">
+                <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                Preview customer Liv
+              </a>
+            </Button>
+          ) : null}
+        </div>
+        {!compact ? (
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            In inbox, use <strong className="text-foreground">Ask Liv</strong> on any open thread — she drafts with
+            morning context, booking tools, and your tone pack.
+          </p>
+        ) : null}
+        {!compact ? <StuckContinuityCard /> : null}
+        {!compact ? <LivMomentsStrip /> : null}
+      </CardContent>
+    </Card>
+  );
+}

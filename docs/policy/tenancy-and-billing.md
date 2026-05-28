@@ -44,7 +44,7 @@ Three rules, no exceptions in v1:
 
 ## Subprocessors — per-business contract reality
 
-For each business, the subprocessor list is the same (Clerk, Resend, Twilio, Anthropic, Replit/Replit Object Storage, Sentry — see `docs/policy/data-residency.md`). Each business signs the same DPA template at `livia.io/legal/dpa`. We don't issue per-business subprocessor variations in v1.
+For each business, the subprocessor list is the same (Clerk, Resend, Twilio, Anthropic, Supabase, Inngest, Sentry — see `docs/policy/data-residency.md`). Each business signs the same DPA template at `livia.io/legal/dpa`. We don't issue per-business subprocessor variations in v1.
 
 ## Deletion cascading (the rule)
 

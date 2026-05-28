@@ -19,6 +19,8 @@ import { useForm, Controller } from "react-hook-form";
 import { useMembership } from "@/lib/membership-context";
 import { apiFetch, ApiFetchError } from "@/lib/api-fetch";
 import { useMutation } from "@tanstack/react-query";
+import { invalidateOperationalState } from "@/lib/operational-cache";
+import { OperationalPageShell } from "@/components/layout/operational-page-shell";
 import {
   Select,
   SelectContent,
@@ -147,6 +149,7 @@ export default function StaffPage() {
       { businessId: bid, data: vals },
       {
         onSuccess: () => {
+          invalidateOperationalState(qc, bid);
           qc.invalidateQueries({ queryKey: getListStaffQueryKey(bid) });
           toast({ title: "Staff member added" });
           reset();
@@ -159,69 +162,68 @@ export default function StaffPage() {
 
   const members = (staff as any[]) ?? [];
 
-  return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Staff</h1>
-          <p className="text-muted-foreground">Manage your team members</p>
-        </div>
-        <div className="flex items-center gap-2">
-          {canManage && bid ? <InviteDialog businessId={bid} /> : null}
-          {canManage ? (
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button data-testid="button-add-staff">
-              <UserPlus className="h-4 w-4 mr-2" />
-              Add Staff
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add Staff Member</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>First Name *</Label>
-                  <Input {...register("firstName", { required: true })} data-testid="input-first-name" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Last Name</Label>
-                  <Input {...register("lastName")} data-testid="input-last-name" />
-                </div>
+  const headerActions = canManage ? (
+    <>
+      {bid ? <InviteDialog businessId={bid} /> : null}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogTrigger asChild>
+          <Button data-testid="button-add-staff">
+            <UserPlus className="h-4 w-4 mr-2" />
+            Add Staff
+          </Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Staff Member</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>First Name *</Label>
+                <Input {...register("firstName", { required: true })} data-testid="input-first-name" />
               </div>
               <div className="space-y-2">
-                <Label>Display Name *</Label>
-                <Input
-                  {...register("displayName", { required: true })}
-                  placeholder="Name shown to customers"
-                  data-testid="input-display-name"
-                />
+                <Label>Last Name</Label>
+                <Input {...register("lastName")} data-testid="input-last-name" />
               </div>
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input type="email" {...register("email")} data-testid="input-email" />
-              </div>
-              <div className="space-y-2">
-                <Label>Phone</Label>
-                <Input type="tel" {...register("phone")} data-testid="input-phone" />
-              </div>
-              <div className="flex gap-2 justify-end">
-                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={createStaff.isPending} data-testid="button-submit-staff">
-                  {createStaff.isPending ? "Adding..." : "Add Staff"}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-          ) : null}
-        </div>
-      </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Display Name *</Label>
+              <Input
+                {...register("displayName", { required: true })}
+                placeholder="Name shown to customers"
+                data-testid="input-display-name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Email</Label>
+              <Input type="email" {...register("email")} data-testid="input-email" />
+            </div>
+            <div className="space-y-2">
+              <Label>Phone</Label>
+              <Input type="tel" {...register("phone")} data-testid="input-phone" />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={createStaff.isPending} data-testid="button-submit-staff">
+                {createStaff.isPending ? "Adding..." : "Add Staff"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
+  ) : null;
 
+  return (
+    <OperationalPageShell
+      title="Staff"
+      subtitle="Your roster — invite teammates and assign services from each profile."
+      width="full"
+      actions={headerActions}
+    >
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
@@ -278,6 +280,6 @@ export default function StaffPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </OperationalPageShell>
   );
 }

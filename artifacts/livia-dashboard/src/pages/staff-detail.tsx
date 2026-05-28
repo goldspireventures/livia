@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { useParams, Link } from "wouter";
+import React, { useEffect, useState } from "react";
+import { Link } from "wouter";
+import { usePathId } from "@/lib/detail-route-params";
 import { useBusiness } from "@/lib/business-context";
 import {
   useGetStaff,
@@ -12,12 +13,11 @@ import {
   useListAvailabilityRules,
   getListAvailabilityRulesQueryKey,
   useSetAvailabilityRules,
-  useListTimeOff,
-  getListTimeOffQueryKey,
-  useCreateTimeOff,
-  useDeleteTimeOff,
   getListStaffQueryKey,
 } from "@workspace/api-client-react";
+import { TimeOffRequestsPanel } from "@/components/staff/time-off-requests-panel";
+import { verticalPackUi } from "@/lib/vertical-pack-ui";
+import { useMembership } from "@/lib/membership-context";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,26 +28,38 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { EntityDetailStates } from "@/components/entity-detail-states";
+import { OperationalPageShell } from "@/components/layout/operational-page-shell";
+import { invalidateOperationalState } from "@/lib/operational-cache";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export default function StaffDetailPage() {
-  const { staffId } = useParams<{ staffId: string }>();
-  const { business } = useBusiness();
+  const staffId = usePathId("staff");
+  const { business, isLoading: businessLoading } = useBusiness();
   const { toast } = useToast();
   const qc = useQueryClient();
 
   const bid = business?.id ?? "";
   const sid = staffId ?? "";
 
-  const { data: member, isLoading } = useGetStaff(
-    bid,
-    sid,
-    { query: { enabled: !!bid && !!sid } as any }
-  );
+  const {
+    data: member,
+    isLoading,
+    isError,
+    refetch,
+  } = useGetStaff(bid, sid, { query: { enabled: !!bid && !!sid } as never });
+
+  const hasMember = !!member && typeof member === "object" && "id" in (member as object);
 
   const updateStaff = useUpdateStaff();
+  const { effectiveRole } = useMembership();
+  const vocab = verticalPackUi(
+    (business as { vertical?: string } | null)?.vertical,
+    business?.category,
+  );
+  const canApproveLeave = effectiveRole === "OWNER" || effectiveRole === "ADMIN";
 
   function toggleActive() {
     if (!bid || !sid || !member) return;
@@ -55,6 +67,7 @@ export default function StaffDetailPage() {
       { businessId: bid, staffId: sid, data: { isActive: !(member as any).isActive } },
       {
         onSuccess: () => {
+          invalidateOperationalState(qc, bid);
           qc.invalidateQueries({ queryKey: getGetStaffQueryKey(bid, sid) });
           qc.invalidateQueries({ queryKey: getListStaffQueryKey(bid) });
           toast({ title: (member as any).isActive ? "Staff deactivated" : "Staff activated" });
@@ -64,52 +77,69 @@ export default function StaffDetailPage() {
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-2xl">
-      <div className="flex items-center gap-3">
-        <Link href="/staff">
-          <Button variant="ghost" size="icon" data-testid="button-back">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            {isLoading ? <Skeleton className="h-8 w-48 inline-block" /> : (member as any)?.displayName ?? "Staff Member"}
-          </h1>
-          <p className="text-muted-foreground">Manage staff details and schedule</p>
-        </div>
-      </div>
+    <EntityDetailStates
+      isLoading={businessLoading || !bid || isLoading}
+      isError={isError}
+      hasData={hasMember}
+      backHref="/staff"
+      entityLabel="team member"
+      businessName={business?.name}
+      onRetry={() => void refetch()}
+    >
+      <OperationalPageShell
+        title={(member as { displayName?: string })?.displayName ?? "Team member"}
+        subtitle={`Profile, ${vocab.serviceNoun.toLowerCase()}s, hours, and leave requests`}
+        width="lg"
+        actions={
+          <Link href="/staff">
+            <Button variant="outline" size="sm" data-testid="button-back">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Button>
+          </Link>
+        }
+      >
+        <div className="space-y-6">
+          {hasMember && (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Status</p>
+                    <p
+                      className={`font-medium ${
+                        (member as any).isActive ? "text-[hsl(var(--chart-3))]" : "text-muted-foreground"
+                      }`}
+                    >
+                      {(member as any).isActive ? "Active" : "Inactive"}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      {(member as any).isActive ? "Active" : "Inactive"}
+                    </span>
+                    <Switch
+                      checked={(member as any).isActive}
+                      onCheckedChange={toggleActive}
+                      data-testid="switch-active"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-      {!isLoading && member && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Status</p>
-                <p className={`font-medium ${(member as any).isActive ? "text-[hsl(var(--chart-3))]" : "text-muted-foreground"}`}>
-                  {(member as any).isActive ? "Active" : "Inactive"}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">
-                  {(member as any).isActive ? "Active" : "Inactive"}
-                </span>
-                <Switch
-                  checked={(member as any).isActive}
-                  onCheckedChange={toggleActive}
-                  data-testid="switch-active"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      <Tabs defaultValue="services">
-        <TabsList className="w-full">
-          <TabsTrigger value="services" className="flex-1">Services</TabsTrigger>
-          <TabsTrigger value="availability" className="flex-1">Availability</TabsTrigger>
-          <TabsTrigger value="time-off" className="flex-1">Time Off</TabsTrigger>
+          <Tabs defaultValue="profile">
+        <TabsList className="w-full grid grid-cols-4">
+          <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="services">{vocab.serviceNoun}s</TabsTrigger>
+          <TabsTrigger value="availability">Hours</TabsTrigger>
+          <TabsTrigger value="time-off">Leave</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="profile" className="mt-4">
+          <StaffProfileTab businessId={bid} staffId={sid} member={member} />
+        </TabsContent>
 
         <TabsContent value="services" className="mt-4">
           <StaffServicesTab businessId={bid} staffId={sid} />
@@ -120,10 +150,136 @@ export default function StaffDetailPage() {
         </TabsContent>
 
         <TabsContent value="time-off" className="mt-4">
-          <StaffTimeOffTab businessId={bid} staffId={sid} />
+          <TimeOffRequestsPanel
+            businessId={bid}
+            staffId={sid}
+            staffDisplayName={(member as { displayName?: string })?.displayName}
+            showApprovals={canApproveLeave}
+            compact
+          />
         </TabsContent>
-      </Tabs>
-    </div>
+          </Tabs>
+        </div>
+      </OperationalPageShell>
+    </EntityDetailStates>
+  );
+}
+
+function StaffProfileTab({
+  businessId,
+  staffId,
+  member,
+}: {
+  businessId: string;
+  staffId: string;
+  member: unknown;
+}) {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const updateStaff = useUpdateStaff();
+  const m = member as {
+    firstName?: string;
+    lastName?: string;
+    displayName?: string;
+    email?: string;
+    phone?: string;
+    color?: string;
+  } | null;
+
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [email, setEmail] = useState("");
+  const [color, setColor] = useState("#22d3ee");
+
+  React.useEffect(() => {
+    if (!m) return;
+    setFirstName(m.firstName ?? "");
+    setLastName(m.lastName ?? "");
+    setDisplayName(m.displayName ?? "");
+    setEmail(m.email ?? "");
+    setColor(m.color ?? "#22d3ee");
+  }, [m?.displayName, m?.firstName, m?.lastName, m?.email, m?.color]);
+
+  function saveProfile(e: React.FormEvent) {
+    e.preventDefault();
+    if (!displayName.trim()) {
+      toast({ title: "Display name is required", variant: "destructive" });
+      return;
+    }
+    updateStaff.mutate(
+      {
+        businessId,
+        staffId,
+        data: {
+          firstName: firstName.trim() || undefined,
+          lastName: lastName.trim() || undefined,
+          displayName: displayName.trim(),
+          email: email.trim() || undefined,
+          color: color || undefined,
+        },
+      },
+      {
+        onSuccess: () => {
+          invalidateOperationalState(qc, businessId);
+          qc.invalidateQueries({ queryKey: getGetStaffQueryKey(businessId, staffId) });
+          qc.invalidateQueries({ queryKey: getListStaffQueryKey(businessId) });
+          toast({ title: "Profile saved" });
+        },
+        onError: () => toast({ title: "Could not save profile", variant: "destructive" }),
+      },
+    );
+  }
+
+  if (!m) return <Skeleton className="h-48" />;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Team member</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={saveProfile} className="space-y-4">
+          <div className="space-y-2">
+            <Label>Display name *</Label>
+            <Input
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              data-testid="input-display-name"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>First name</Label>
+              <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Last name</Label>
+              <Input value={lastName} onChange={(e) => setLastName(e.target.value)} />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Email</Label>
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>Calendar colour</Label>
+            <div className="flex items-center gap-3">
+              <Input
+                type="color"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                className="h-10 w-16 p-1"
+              />
+              <span className="text-sm text-muted-foreground">Shown on My Day and bookings</span>
+            </div>
+          </div>
+          <Button type="submit" disabled={updateStaff.isPending} data-testid="button-save-staff-profile">
+            {updateStaff.isPending ? "Saving…" : "Save profile"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -156,6 +312,7 @@ function StaffServicesTab({ businessId, staffId }: { businessId: string; staffId
       { businessId, staffId, data: { serviceIds: next } },
       {
         onSuccess: () => {
+          invalidateOperationalState(qc, businessId);
           qc.invalidateQueries({ queryKey: getGetStaffServicesQueryKey(businessId, staffId) });
           toast({ title: "Services updated" });
         },
@@ -211,12 +368,15 @@ function StaffAvailabilityTab({ businessId, staffId }: { businessId: string; sta
     { query: { enabled: !!businessId && !!staffId } as any }
   );
 
-  if (!initialized && rules) {
+  useEffect(() => {
+    if (!rules || initialized) return;
     const map = new Map<number, { startTime: string; endTime: string }>();
-    (rules as any[]).forEach((r: any) => map.set(r.dayOfWeek, { startTime: r.startTime, endTime: r.endTime }));
+    (rules as { dayOfWeek: number; startTime: string; endTime: string }[]).forEach((r) =>
+      map.set(r.dayOfWeek, { startTime: r.startTime, endTime: r.endTime }),
+    );
     setLocalRules(map);
     setInitialized(true);
-  }
+  }, [rules, initialized]);
 
   const setRules = useSetAvailabilityRules();
 
@@ -248,6 +408,7 @@ function StaffAvailabilityTab({ businessId, staffId }: { businessId: string; sta
       { businessId, data: { rules: rulesArray, staffId } },
       {
         onSuccess: () => {
+          invalidateOperationalState(qc, businessId);
           qc.invalidateQueries({ queryKey: getListAvailabilityRulesQueryKey(businessId, { staffId }) });
           toast({ title: "Availability saved" });
         },
@@ -315,137 +476,3 @@ function StaffAvailabilityTab({ businessId, staffId }: { businessId: string; sta
   );
 }
 
-function StaffTimeOffTab({ businessId, staffId }: { businessId: string; staffId: string }) {
-  const { toast } = useToast();
-  const qc = useQueryClient();
-  const [startsAt, setStartsAt] = useState("");
-  const [endsAt, setEndsAt] = useState("");
-  const [reason, setReason] = useState("");
-
-  const { data: timeOffs, isLoading } = useListTimeOff(
-    businessId,
-    { staffId },
-    { query: { enabled: !!businessId && !!staffId } as any }
-  );
-
-  const createTimeOff = useCreateTimeOff();
-  const deleteTimeOff = useDeleteTimeOff();
-
-  function handleCreate(e: React.FormEvent) {
-    e.preventDefault();
-    if (!startsAt || !endsAt) return;
-    createTimeOff.mutate(
-      {
-        businessId,
-        data: { staffId, startsAt, endsAt, reason: reason || undefined },
-      },
-      {
-        onSuccess: () => {
-          qc.invalidateQueries({ queryKey: getListTimeOffQueryKey(businessId, { staffId }) });
-          toast({ title: "Time off added" });
-          setStartsAt("");
-          setEndsAt("");
-          setReason("");
-        },
-        onError: () => toast({ title: "Failed to add time off", variant: "destructive" }),
-      }
-    );
-  }
-
-  function handleDelete(timeOffId: string) {
-    deleteTimeOff.mutate(
-      { businessId, timeOffId },
-      {
-        onSuccess: () => {
-          qc.invalidateQueries({ queryKey: getListTimeOffQueryKey(businessId, { staffId }) });
-          toast({ title: "Time off removed" });
-        },
-      }
-    );
-  }
-
-  const timeOffList = (timeOffs as any[]) ?? [];
-
-  return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Add Time Off</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleCreate} className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label className="text-xs">Start</Label>
-                <Input
-                  type="datetime-local"
-                  value={startsAt}
-                  onChange={(e) => setStartsAt(e.target.value)}
-                  data-testid="input-starts-at"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">End</Label>
-                <Input
-                  type="datetime-local"
-                  value={endsAt}
-                  onChange={(e) => setEndsAt(e.target.value)}
-                  data-testid="input-ends-at"
-                />
-              </div>
-            </div>
-            <Input
-              placeholder="Reason (optional)"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              data-testid="input-reason"
-            />
-            <Button
-              type="submit"
-              disabled={!startsAt || !endsAt || createTimeOff.isPending}
-              className="w-full"
-              data-testid="button-add-time-off"
-            >
-              {createTimeOff.isPending ? "Adding..." : "Add Time Off"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Scheduled Time Off</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="p-4 space-y-2">{[1, 2].map((i) => <Skeleton key={i} className="h-12" />)}</div>
-          ) : timeOffList.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">No time off scheduled</p>
-          ) : (
-            <div className="divide-y divide-border">
-              {timeOffList.map((t: any) => (
-                <div key={t.id} className="flex items-center justify-between px-4 py-3">
-                  <div>
-                    <p className="text-sm font-medium">
-                      {new Date(t.startsAt).toLocaleDateString()} —{" "}
-                      {new Date(t.endsAt).toLocaleDateString()}
-                    </p>
-                    {t.reason && <p className="text-xs text-muted-foreground">{t.reason}</p>}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDelete(t.id)}
-                    data-testid={`button-delete-time-off-${t.id}`}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
-}

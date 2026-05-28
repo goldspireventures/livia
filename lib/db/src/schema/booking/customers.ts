@@ -1,10 +1,10 @@
-import { pgTable, text, timestamp, boolean, jsonb, index, pgEnum, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, jsonb, index, pgEnum, uniqueIndex, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { businessesTable } from "../identity/businesses";
 
 export const channelTypeEnum = pgEnum("channel_type", [
-  "WEB", "APP", "WHATSAPP", "SMS", "INSTAGRAM", "SNAPCHAT", "EMAIL",
+  "WEB", "APP", "WHATSAPP", "SMS", "INSTAGRAM", "SNAPCHAT", "EMAIL", "VOICE",
 ]);
 
 // Customer's preferred way of being reached for outbound by Liv (per data-model.md).
@@ -30,8 +30,12 @@ export const customersTable = pgTable(
     email: text("email"),
     phone: text("phone"),
     notes: text("notes"),
+    avatarUrl: text("avatar_url"),
     tags: text("tags").array(),
     isBlocked: boolean("is_blocked").notNull().default(false),
+    trustedClient: boolean("trusted_client").notNull().default(false),
+    noShowCount: integer("no_show_count").notNull().default(0),
+    strikeCount: integer("strike_count").notNull().default(0),
     // Composable monetisation: customer-shape primitives Liv reads on every interaction.
     preferredModality: preferredModalityEnum("preferred_modality").notNull().default("ANY"),
     preferredStaffId: text("preferred_staff_id"),

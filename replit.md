@@ -1,13 +1,15 @@
-# Livia
+# Livia — engineering notes
 
-Premium AI-native multi-tenant OS for appointment-based service businesses (beauty/wellness/barber/tattoo/dental). Beachhead: EU/Ireland. AI character is **Liv**.
+> **Prefer:** [`README.md`](./README.md) and [`docs/LOCAL_DEV.md`](./docs/LOCAL_DEV.md) for how to run the stack. This file is legacy shorthand; kept for bookmarked links.
 
-**Front door for engineers:** [`README.md`](./README.md) (repo map + run locally). Deep onboarding: [`docs/onboarding-engineer.md`](./docs/onboarding-engineer.md). Architectural decisions: [`docs/adr/`](./docs/adr/).
+Premium multi-tenant OS for appointment-based service businesses. Beachhead: EU/Ireland. AI colleague is **Liv**.
+
+**Onboarding:** [`docs/onboarding-engineer.md`](./docs/onboarding-engineer.md) · **ADRs:** [`docs/adr/`](./docs/adr/)
 
 ## Run & Operate
 
 - `pnpm run typecheck` · `pnpm run build` · `pnpm --filter @workspace/api-spec run codegen` · `pnpm --filter @workspace/db run push`
-- **Required env:** `CLERK_*`, `DATABASE_URL`, `AI_INTEGRATIONS_ANTHROPIC_*`.
+- **Required env:** `CLERK_*`, `DATABASE_URL`. **Liv AI:** `ANTHROPIC_API_KEY` (optional in dev).
 - **Optional:** `SENTRY_DSN_*`, `LOG_LEVEL`, `TWILIO_*`, `RESEND_*`, `PUBLIC_BASE_URL`, `INTERNAL_CRON_SECRET`. Transports degrade to PENDING-only writes when secrets are absent — no boot failure.
 
 ## Stack

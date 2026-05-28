@@ -1,5 +1,8 @@
 # B02 — Time-off request
 
+**Product UI (Phase A):** Staff submit on **profile → Leave** or **My chair**; managers **approve on Rota** (not job board, not manager-submitted forms).  
+**Business template:** [`../business/templates/leave-and-rota.md`](../business/templates/leave-and-rota.md)
+
 **Initiator.** STA / ADM-D / ADM (any internal staff).
 **Participants.** Initiator · approver per `reports_to` · ADM-D (if scoped) · ADM · OWN (if exceeds ADM threshold) · affected customers · waitlist (potentially).
 **Configurations needed in.** All except Solo.

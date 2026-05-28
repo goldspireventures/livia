@@ -2,7 +2,7 @@
 
 Salons change shape. Solo becomes single-shop; single-shop becomes chain; partnership splits or buys out; chain franchises. Each transition has data, billing, permissions, and team implications. If Livia handles graduation gracefully, owners stay through their growth. If clumsily, they leave at exactly the moment they were ready to deepen the relationship.
 
-## The 6 graduations Livia must handle
+## The graduations Livia must handle (G1–G8)
 
 ### G1 — Solo → Single-shop with first hire (C2/C3 → C4)
 
@@ -63,6 +63,26 @@ Salons change shape. Solo becomes single-shop; single-shop becomes chain; partne
 **Workflow surfaces.** I04 multi-brand-specific activates.
 **Billing.** Per-brand subscription; multi-brand discount per F9 pricing.
 **Onboarding.** Concierge — emphasis on isolation walkthrough.
+
+### G8 — Ownership succession (manager or partner takes keys) (C5/C6/C12)
+
+**Trigger.** Owner sells the salon, retires, or promotes a manager to legal owner at the same tenant.
+
+**Data.** Same `businessId`; `businesses.owner_id` changes; memberships updated (incoming → OWNER; outgoing → STAFF, ADMIN, or revoked).
+
+**Permissions.** Incoming OWNER gains billing + AI + invite authority. Outgoing loses OWNER (unless retained as ADMIN/STAFF).
+
+**Liv's posture.** Incoming owner sees **Keys changed** ritual (billing, cap ladder, team). Liv does not announce to customers or staff without human approval.
+
+**Workflow surfaces.** `tenant.ownership_transferred` audit event; Stripe billing contact update when connected.
+
+**Billing.** Subscription stays on tenant; payer identity updated in Stripe.
+
+**Onboarding.** Concierge recommended for emotional weight (sale/retirement); self-serve wizard in Settings → Ownership for v1.
+
+**Product.** `POST /businesses/:id/transfer-ownership`; dashboard `/lifecycle` + Settings tab.
+
+---
 
 ### G7 — Partnership → split (one partner buys out, partnership dissolves) (C12 → C5/C6)
 
