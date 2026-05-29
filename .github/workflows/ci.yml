@@ -8,6 +8,24 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: livia
+          POSTGRES_PASSWORD: livia
+          POSTGRES_DB: livia
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U livia"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://livia:livia@localhost:5432/livia
+      SUPABASE_DATABASE_URL: postgresql://livia:livia@localhost:5432/livia
+      LIVIA_SKIP_PRODUCTION_ENV_CHECK: "true"
     steps:
       - uses: actions/checkout@v4
 
@@ -19,6 +37,9 @@ jobs:
           cache: "pnpm"
 
       - run: pnpm install --frozen-lockfile
+
+      - name: Schema + SQL migrations
+        run: bash scripts/deploy-migrate.sh
 
       - name: OpenAPI codegen in sync
         run: bash scripts/check-codegen.sh
