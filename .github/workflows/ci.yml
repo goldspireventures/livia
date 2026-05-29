@@ -147,7 +147,7 @@ jobs:
         run: pnpm --filter @workspace/e2e exec playwright install chromium --with-deps
 
       - name: Playwright API Gate smoke
-        run: pnpm --filter @workspace/e2e run test:api
+        run: pnpm --filter @workspace/e2e run test:api:ci
 
   staging-smoke:
     runs-on: ubuntu-latest

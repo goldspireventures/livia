@@ -79,35 +79,37 @@ if (level === "full") {
     ),
   );
 } else {
-  // CI-safe: run the Playwright API gate (expects api-server already running).
+  // CI-safe: API gate only (no Clerk-backed full demo provision).
   report.steps.push(
     Object.assign(
       { id: "e2e-api", label: "playwright api gate" },
-      run("Playwright API gate smoke", "pnpm", ["--filter", "@workspace/e2e", "run", "test:api"]),
+      run("Playwright API gate smoke", "pnpm", ["--filter", "@workspace/e2e", "run", "test:api:ci"]),
     ),
   );
 }
 
-// 3) Wargame sim — always, but scale down in CI.
-const apiBase = process.env.E2E_API_BASE ?? "http://127.0.0.1:3001";
-const tenants = level === "ci" ? 3 : 6;
-const days = level === "ci" ? 3 : 14;
-const conc = level === "ci" ? 10 : 20;
-report.steps.push(
-  Object.assign(
-    {
-      id: "wargame",
-      label: "wargame sim",
-      config: { apiBase, tenants, days, concurrency: conc },
-    },
-    run(
-      "Wargame sim",
-      "node",
-      ["scripts/wargame-sim.mjs", apiBase, String(tenants), String(days), String(conc)],
-      { env: { E2E_API_BASE: apiBase } },
+// 3) Wargame sim — local full runs only (needs Clerk demo provision).
+if (level !== "ci") {
+  const apiBase = process.env.E2E_API_BASE ?? "http://127.0.0.1:3001";
+  const tenants = 6;
+  const days = 14;
+  const conc = 20;
+  report.steps.push(
+    Object.assign(
+      {
+        id: "wargame",
+        label: "wargame sim",
+        config: { apiBase, tenants, days, concurrency: conc },
+      },
+      run(
+        "Wargame sim",
+        "node",
+        ["scripts/wargame-sim.mjs", apiBase, String(tenants), String(days), String(conc)],
+        { env: { E2E_API_BASE: apiBase } },
+      ),
     ),
-  ),
-);
+  );
+}
 
 report.ok = report.steps.every((s) => s.ok);
 

@@ -10,11 +10,14 @@ if ! command -v rg >/dev/null 2>&1; then
   exit 1
 fi
 
-# Demo seed customer name in dev route only.
+# Demo seed customer name in dev route only. Meta docs explain the taboo (not product usage).
 ALLOW=(
   'artifacts/api-server/src/routes/dev.ts'
   'docs/'
   '.local/'
+  'README.md'
+  'replit.md'
+  'scripts/check-naming-taboo.sh'
 )
 
 ARGS=()

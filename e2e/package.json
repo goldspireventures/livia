@@ -6,6 +6,7 @@
   "scripts": {
     "test": "playwright test",
     "test:api": "playwright test tests/api-gate.spec.ts tests/meta-channels.spec.ts tests/full-platform-demo.spec.ts",
+    "test:api:ci": "playwright test tests/api-gate.spec.ts tests/meta-channels.spec.ts",
     "test:platform": "playwright test --project=platform",
     "test:marketing": "playwright test --project=marketing",
     "test:visual-capture": "playwright test --project=visual-capture",
