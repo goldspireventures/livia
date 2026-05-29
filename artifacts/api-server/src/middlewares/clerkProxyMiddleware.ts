@@ -68,7 +68,11 @@ export function clerkProxyMiddleware(): RequestHandler {
       proxyReq: (proxyReq, req) => {
         const protocol = req.headers["x-forwarded-proto"] || "https";
         const host = getClerkProxyHost(req) || "";
-        const proxyUrl = `${protocol}://${host}${CLERK_PROXY_PATH}`;
+        // When Vercel rewrites /api → api.livia-hq.com, Host may be the API hostname.
+        // Set CLERK_PROXY_URL=https://app.livia-hq.com/api/__clerk on Railway.
+        const proxyUrl =
+          process.env.CLERK_PROXY_URL?.trim() ||
+          `${protocol}://${host}${CLERK_PROXY_PATH}`;
 
         proxyReq.setHeader("Clerk-Proxy-Url", proxyUrl);
         proxyReq.setHeader("Clerk-Secret-Key", secretKey);
