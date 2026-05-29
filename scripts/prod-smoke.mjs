@@ -83,6 +83,9 @@ await check("Clerk publishable key in Vercel bundle", async () => {
 });
 
 await check("Clerk Frontend API (CNAME clerk.*)", async () => {
+  if (clerkKeyMode === "test" || appBase.includes(".staging.")) {
+    return "skipped — pk_test_ / staging uses Clerk CDN (custom clerk.* CNAME optional)";
+  }
   const clerkHost = appBase.replace(/^https?:\/\/app\./, "https://clerk.");
   const { res, text } = await fetchText(`${clerkHost}/v1/environment`);
   if (text.includes("host_invalid")) {
