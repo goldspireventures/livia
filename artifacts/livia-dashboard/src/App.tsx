@@ -72,9 +72,15 @@ if (!PUBLISHABLE_KEY) {
   throw new Error("Missing Publishable Key");
 }
 
-/** Clerk Frontend API proxy only works with production instance keys (pk_live_). */
+/**
+ * Optional Frontend API proxy (/api/__clerk → Railway).
+ * Default off: production uses Clerk CNAME `clerk.livia-hq.com` (Domains → DNS).
+ * Only set VITE_CLERK_USE_PROXY=true if you are NOT using the CNAME.
+ */
 const CLERK_PROXY_URL =
-  import.meta.env.PROD && PUBLISHABLE_KEY.startsWith("pk_live_")
+  import.meta.env.VITE_CLERK_USE_PROXY === "true" &&
+  import.meta.env.PROD &&
+  PUBLISHABLE_KEY.startsWith("pk_live_")
     ? `${window.location.origin}/api/__clerk`
     : undefined;
 
@@ -224,7 +230,7 @@ function ClerkProviderWithTheme({ children }: { children: React.ReactNode }) {
       publishableKey={PUBLISHABLE_KEY}
       routerPush={(to) => window.history.pushState(null, "", to)}
       routerReplace={(to) => window.history.replaceState(null, "", to)}
-      {...(import.meta.env.PROD ? { proxyUrl: window.location.origin + "/api/__clerk" } : {})}
+      {...(CLERK_PROXY_URL ? { proxyUrl: CLERK_PROXY_URL } : {})}
       signInFallbackRedirectUrl="/dashboard"
       signUpFallbackRedirectUrl="/legal-acceptance"
       appearance={{
