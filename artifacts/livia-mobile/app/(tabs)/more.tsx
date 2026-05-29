@@ -237,7 +237,7 @@ export default function MoreScreen() {
             haptics.selection();
             setFounderTapCount(0);
             setFounderTapAt(null);
-            router.push("/founder/cockpit" as never);
+            router.push("/_internal/desk" as never);
           }
         }}
         style={{ paddingVertical: 6, alignItems: "center" }}

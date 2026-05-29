@@ -14,6 +14,7 @@ import { eq } from "drizzle-orm";
 import { sendAiEmail } from "./ai-outbound.service";
 import { policiesFromBusiness } from "./policies.service";
 import { logger } from "../lib/logger";
+import { getMarketingUrl } from "../lib/public-urls.js";
 
 interface EnrichedBooking extends Booking {
   service: { name: string; durationMinutes: number };
@@ -38,8 +39,7 @@ function customerFirstName(c: EnrichedBooking["customer"]): string {
 }
 
 function manageUrl(business: Business, _booking: Booking): string {
-  const base = process.env["PUBLIC_BASE_URL"] ?? "https://livia.io";
-  return `${base.replace(/\/+$/, "")}/b/${business.slug}`;
+  return `${getMarketingUrl()}/b/${business.slug}`;
 }
 
 function buildContext(args: {

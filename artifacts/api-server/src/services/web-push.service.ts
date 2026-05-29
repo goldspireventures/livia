@@ -17,7 +17,7 @@ function ensureConfigured(): boolean {
   if (configured) return true;
   if (!isWebPushConfigured()) return false;
   webpush.setVapidDetails(
-    process.env["VAPID_SUBJECT"]?.trim() || "mailto:support@livia.io",
+    process.env["VAPID_SUBJECT"]?.trim() || "mailto:support@livia-hq.com",
     process.env["VAPID_PUBLIC_KEY"]!.trim(),
     process.env["VAPID_PRIVATE_KEY"]!.trim(),
   );

@@ -55,6 +55,8 @@ export default function SignInPage() {
             }}
             routing="path"
             path="/sign-in"
+            signUpUrl="/sign-up"
+            fallbackRedirectUrl="/dashboard"
           />
           <p className="mt-5 text-center text-xs text-muted-foreground">
             New here? Use{" "}

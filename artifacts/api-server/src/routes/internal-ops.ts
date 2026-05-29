@@ -62,6 +62,7 @@ import {
   internalSsoStatus,
 } from "../services/internal-impersonation.service";
 import { getOrgAdminCockpitSnapshot } from "../services/internal-founder-cockpit.service";
+import { runExecAutomation } from "../services/founder-cockpit-automations.service";
 import { logRouteError, safeClientMessage, sendError } from "../lib/http-errors";
 
 const router: IRouter = Router();
@@ -195,11 +196,36 @@ router.get("/internal/ops/platform-health", async (_req, res): Promise<void> => 
   res.json(await getInternalPlatformHealth());
 });
 
+/** Exec command center — prefer this path; unguessable surface for solo operator. */
+router.get(
+  "/internal/ops/exec/snapshot",
+  requireInternalOpsMutation("exec"),
+  async (_req, res): Promise<void> => {
+    res.json(await getOrgAdminCockpitSnapshot());
+  },
+);
+
+/** @deprecated Do not link in UI — returns 404 in production. */
 router.get(
   "/internal/ops/org-admin/cockpit",
   requireInternalOpsMutation("exec"),
   async (_req, res): Promise<void> => {
+    if (process.env.NODE_ENV === "production") {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
     res.json(await getOrgAdminCockpitSnapshot());
+  },
+);
+
+router.post(
+  "/internal/ops/exec/automations/:automationId/run",
+  requireInternalOpsMutation("exec"),
+  async (req, res): Promise<void> => {
+    const id = String(req.params.automationId ?? "").trim();
+    const confirm = req.body?.confirm === true || req.query.confirm === "true";
+    const result = await runExecAutomation(id, { confirm });
+    res.status(result.ok ? 200 : 400).json(result);
   },
 );
 

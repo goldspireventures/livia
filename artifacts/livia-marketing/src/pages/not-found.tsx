@@ -28,7 +28,7 @@ export default function NotFound() {
           href="/"
           className="inline-flex items-center gap-2 text-aurora-cyan font-medium min-h-[44px] hover:text-white transition-colors"
         >
-          Back to livia.io
+          Back to home
           <ArrowRight className="w-4 h-4" />
         </Link>
       </main>

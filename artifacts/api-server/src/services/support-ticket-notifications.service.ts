@@ -2,7 +2,7 @@ import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { sendOperationalEmail } from "./transactional-email.service";
 
-const SUPPORT_INBOX = process.env["SUPPORT_INBOX_EMAIL"] ?? "support@livia.io";
+const SUPPORT_INBOX = process.env["SUPPORT_INBOX_EMAIL"] ?? "support@livia-hq.com";
 
 function slaLine(severity: string): string {
   if (severity === "blocking") {

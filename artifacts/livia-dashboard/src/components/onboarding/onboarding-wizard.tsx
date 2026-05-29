@@ -1,8 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   ONBOARDING_ACT_IDS,
   ONBOARDING_ACT_LABELS,
@@ -11,6 +11,26 @@ import {
 import { OnboardingCreateBusinessStep } from "./onboarding-create-business-step";
 import { OnboardingInlinePanel } from "./onboarding-inline-panel";
 import { OnboardingActForms } from "./onboarding-act-forms";
+import { OnboardingChapterSpine } from "./onboarding-chapter-spine";
+import { OnboardingPublicLinkSplit } from "./onboarding-public-link-split";
+import { OnboardingPortalLayout } from "./onboarding-portal-layout";
+import { OnboardingCockpitTease } from "./onboarding-cockpit-tease";
+import {
+  OnboardingArrivalOverlay,
+  ONBOARDING_ARRIVAL_STORAGE_KEY,
+} from "./onboarding-arrival-overlay";
+import { playCelebrationChime } from "@/lib/celebrate";
+import { isOnboardingPortalExperienceEnabled } from "@/lib/onboarding-portal-enabled";
+import { ONBOARDING_PREVIEW_SHOP_NAME } from "@/lib/onboarding-preview-fixtures";
+import { onboardingLivHostLine } from "@/lib/onboarding-portal-copy";
+import {
+  nextPortalNavAct,
+  portalAutoCompleteActs,
+  portalVisibleStepInChapter,
+  prevPortalNavAct,
+  resolvePortalCurrentAct,
+  type PortalChapterId,
+} from "@/lib/onboarding-portal-chapters";
 import { apiFetch, ApiFetchError } from "@/lib/api-fetch";
 import { useToast } from "@/hooks/use-toast";
 import { verticalPackUi } from "@/lib/vertical-pack-ui";
@@ -38,6 +58,13 @@ type Props = {
   onVerticalPreview?: (vertical: string | null) => void;
   onBusinessCreated: (businessId: string, slug: string) => void;
   onComplete: () => void;
+  /** Dev `/dev/onboarding-preview` — local state only, no API. */
+  previewMode?: boolean;
+  onPreviewStateChange?: (next: OnboardingStatePayload) => void;
+  /** Full-bleed portal shell (default). Set false to opt out. */
+  portalMode?: boolean;
+  /** Cold open / welcome block above chapter spine (e.g. video). */
+  arrivalSlot?: ReactNode;
 };
 
 function actHints(
@@ -110,19 +137,70 @@ export function OnboardingWizard({
   onVerticalPreview,
   onBusinessCreated,
   onComplete,
+  previewMode = false,
+  onPreviewStateChange,
+  portalMode = isOnboardingPortalExperienceEnabled({ previewMode }),
+  arrivalSlot,
 }: Props) {
   const { toast } = useToast();
   const [state, setState] = useState<OnboardingStatePayload | null>(initialState);
   const [saving, setSaving] = useState(false);
   const [publicSlug, setPublicSlug] = useState<string | null>(businessSlug ?? null);
+  const [businessName, setBusinessName] = useState<string>("");
+  const [celebrate, setCelebrate] = useState(false);
+  const [arrivalOpen, setArrivalOpen] = useState(() => {
+    if (!portalMode || previewMode) return false;
+    try {
+      return !localStorage.getItem(ONBOARDING_ARRIVAL_STORAGE_KEY);
+    } catch {
+      return true;
+    }
+  });
+
+  const dismissArrival = () => {
+    setArrivalOpen(false);
+    try {
+      localStorage.setItem(ONBOARDING_ARRIVAL_STORAGE_KEY, "1");
+    } catch {
+      /* ignore */
+    }
+  };
+
+  useEffect(() => {
+    if (previewMode && initialState) setState(initialState);
+  }, [previewMode, initialState]);
+
+  useEffect(() => {
+    if (businessId) setArrivalOpen(false);
+  }, [businessId]);
+
+  useEffect(() => {
+    if (!businessId) return;
+    if (previewMode) {
+      setBusinessName(ONBOARDING_PREVIEW_SHOP_NAME);
+      if (businessSlug) setPublicSlug(businessSlug);
+      return;
+    }
+    void apiFetch<{ name?: string; slug?: string }>(`/businesses/${businessId}`)
+      .then((b) => {
+        if (b.name) setBusinessName(String(b.name));
+        if (b.slug) setPublicSlug(String(b.slug));
+      })
+      .catch(() => {});
+  }, [businessId, previewMode, businessSlug]);
   const { data: tenantExperience } = useTenantExperience(businessId ?? undefined);
   const vocab = verticalPackUi(businessVertical ?? tenantExperience?.vertical ?? "hair");
   const hints = actHints(vocab);
 
-  const currentAct: OnboardingActId = useMemo(() => {
+  const rawCurrentAct: OnboardingActId = useMemo(() => {
     if (!businessId) return "a1_create_business";
     return state?.currentAct ?? "a2_shop_profile";
   }, [businessId, state]);
+
+  const currentAct: OnboardingActId = useMemo(() => {
+    if (!portalMode) return rawCurrentAct;
+    return resolvePortalCurrentAct(rawCurrentAct);
+  }, [portalMode, rawCurrentAct]);
 
   const stepIndex = actIndex(currentAct);
   const tourPercent = state?.percentComplete ?? (businessId ? 8 : 0);
@@ -143,6 +221,11 @@ export function OnboardingWizard({
 
   const persistState = async (next: OnboardingStatePayload) => {
     if (!businessId) return;
+    if (previewMode) {
+      setState(next);
+      onPreviewStateChange?.(next);
+      return;
+    }
     setSaving(true);
     try {
       await apiFetch(`/businesses/${businessId}`, {
@@ -166,6 +249,18 @@ export function OnboardingWizard({
     }
   };
 
+  useEffect(() => {
+    if (!portalMode || !businessId || !state) return;
+    if (rawCurrentAct === currentAct) return;
+    void persistState({
+      currentAct,
+      completedActs: state.completedActs ?? [],
+      percentComplete: state.percentComplete ?? percent,
+      checklist: state.checklist,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- snap when resuming on a skipped act
+  }, [portalMode, businessId, rawCurrentAct, currentAct]);
+
   const updateChecklist = (checklist: OnboardingStatePayload["checklist"]) => {
     if (!businessId) return;
     void persistState({
@@ -186,19 +281,24 @@ export function OnboardingWizard({
       });
       return;
     }
-    const completed = [...new Set([...(state?.completedActs ?? []), act])];
-    const idx = actIndex(act);
-    const nextAct =
-      idx >= 0 && idx < ONBOARDING_ACT_IDS.length - 1 ? ONBOARDING_ACT_IDS[idx + 1]! : act;
+    const autoDone = portalMode ? portalAutoCompleteActs(act) : [];
+    const completed = [...new Set([...(state?.completedActs ?? []), act, ...autoDone])];
+    const nextAct = portalMode
+      ? (nextPortalNavAct(act) ?? act)
+      : actIndex(act) >= 0 && actIndex(act) < ONBOARDING_ACT_IDS.length - 1
+        ? ONBOARDING_ACT_IDS[actIndex(act) + 1]!
+        : act;
     const next: OnboardingStatePayload = {
-      currentAct: currentAct === act ? nextAct : (state?.currentAct ?? nextAct),
+      currentAct: nextAct,
       completedActs: completed,
       percentComplete: Math.min(100, Math.round((completed.length / ONBOARDING_ACT_IDS.length) * 100)),
       checklist: state?.checklist,
     };
     await persistState(next);
     if (act === "a12_go_live") {
-      onComplete();
+      playCelebrationChime();
+      setCelebrate(true);
+      window.setTimeout(() => onComplete(), 900);
     }
   };
 
@@ -211,14 +311,34 @@ export function OnboardingWizard({
   ];
   const INLINE_PREVIEW_ACTS: OnboardingActId[] = ["a3_service_menu", "a4_team", "a9_billing"];
 
+  const jumpToAct = (act: OnboardingActId) => {
+    if (!businessId) return;
+    const target = portalMode ? resolvePortalCurrentAct(act) : act;
+    const idx = actIndex(target);
+    const curIdx = actIndex(currentAct);
+    const done = state?.completedActs?.includes(target);
+    if (!done && idx > curIdx) return;
+    void persistState({
+      currentAct: target,
+      completedActs: state?.completedActs ?? [],
+      percentComplete: state?.percentComplete ?? percent,
+      checklist: state?.checklist,
+    });
+  };
+
   const goBack = () => {
-    if (stepIndex <= 0) return;
-    let prev = ONBOARDING_ACT_IDS[stepIndex - 1]!;
-    // Business already exists — never navigate back to create-business (no UI / dead end).
-    if (businessId && prev === "a1_create_business") {
-      if (stepIndex <= 1) return;
-      prev = ONBOARDING_ACT_IDS[stepIndex - 2]!;
-    }
+    const prev = portalMode
+      ? prevPortalNavAct(currentAct, !!businessId)
+      : (() => {
+          if (stepIndex <= 0) return null;
+          let p = ONBOARDING_ACT_IDS[stepIndex - 1]!;
+          if (businessId && p === "a1_create_business") {
+            if (stepIndex <= 1) return null;
+            p = ONBOARDING_ACT_IDS[stepIndex - 2]!;
+          }
+          return p;
+        })();
+    if (!prev) return;
     void persistState({
       currentAct: prev,
       completedActs: state?.completedActs ?? [],
@@ -227,155 +347,203 @@ export function OnboardingWizard({
     });
   };
 
+  const jumpToChapter = (_chapterId: PortalChapterId, targetAct: OnboardingActId) => {
+    jumpToAct(targetAct);
+  };
+
   const hint = hints[currentAct];
+  const chapterMicro = portalMode ? portalVisibleStepInChapter(currentAct) : null;
+  const canGoBack = portalMode
+    ? !!prevPortalNavAct(currentAct, !!businessId)
+    : stepIndex > 0 && !(businessId && stepIndex === 1);
   const packLabel = tenantExperience?.vocabulary.label ?? vocab.label;
+  const wideStep = currentAct === "a6_liv" || currentAct === "a8_public_link";
+  const livMessage = onboardingLivHostLine(currentAct, vocab, businessName);
+  const checklistTicks = state?.checklist
+    ? Object.values(state.checklist).filter(Boolean).length
+    : 0;
 
-  return (
-    <div className="w-full max-w-2xl mx-auto space-y-6">
-      <div className="space-y-2">
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>
-            Step {Math.max(1, stepIndex + 1)} of {ONBOARDING_ACT_IDS.length}
-          </span>
-          <span>
-            {blockingPct}% essentials · {tourPercent}% tour
-          </span>
-        </div>
-        <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-          <div
-            className="h-full bg-primary transition-all duration-300"
-            style={{ width: `${percent}%` }}
-          />
-        </div>
+  const preBusinessProgress = !businessId ? (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <span>
+          {portalMode
+            ? "Chapter 1 of 3 · Your shop"
+            : `Step ${Math.max(1, stepIndex + 1)} of ${ONBOARDING_ACT_IDS.length}`}
+        </span>
+        <span>
+          {blockingPct}% essentials · {tourPercent}% tour
+        </span>
       </div>
+      <div className="h-1.5 w-full rounded-full bg-muted/80 overflow-hidden">
+        <div
+          className="h-full bg-primary transition-all duration-500"
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+    </div>
+  ) : null;
 
-      {businessId && packLabel ? (
-        <p className="text-xs text-muted-foreground border rounded-md px-3 py-2 bg-muted/30">
-          <span className="font-medium text-foreground">{packLabel}</span>
-          {tenantExperience?.vocabulary.hint ? (
-            <span> · {tenantExperience.vocabulary.hint}</span>
-          ) : null}
-        </p>
+  const stepBody = (
+    <>
+      {currentAct === "a1_create_business" && !businessId ? (
+        <OnboardingCreateBusinessStep
+          onVerticalPreview={onVerticalPreview}
+          parentBusinessId={
+            parentBusinessId ??
+            (typeof window !== "undefined"
+              ? new URLSearchParams(window.location.search).get("parentBusinessId") ?? undefined
+              : undefined)
+          }
+          defaultStructureKind={
+            typeof window !== "undefined" &&
+            new URLSearchParams(window.location.search).get("intent") === "second-shop"
+              ? "location"
+              : "standalone"
+          }
+          onCreated={(id, slug) => {
+            setPublicSlug(slug);
+            onBusinessCreated(id, slug);
+          }}
+        />
       ) : null}
 
-      <Card className="border-primary/10 shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-2xl font-serif tracking-tight">
-            {ONBOARDING_ACT_LABELS[currentAct]}
-          </CardTitle>
-          <CardDescription>
-            {currentAct === "a1_create_business"
-              ? `Tell us about your ${vocab.locationNoun.toLowerCase()} — we'll seed ${vocab.serviceNoun.toLowerCase()}s and policies for your market.`
-              : (hint?.body ?? "Complete this step, then continue.")}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {currentAct === "a1_create_business" && !businessId ? (
-            <OnboardingCreateBusinessStep
-              onVerticalPreview={onVerticalPreview}
-              parentBusinessId={
-                parentBusinessId ??
-                (typeof window !== "undefined"
-                  ? new URLSearchParams(window.location.search).get("parentBusinessId") ?? undefined
-                  : undefined)
-              }
-              defaultStructureKind={
-                typeof window !== "undefined" &&
-                new URLSearchParams(window.location.search).get("intent") === "second-shop"
-                  ? "location"
-                  : "standalone"
-              }
-              onCreated={(id, slug) => {
-                setPublicSlug(slug);
-                onBusinessCreated(id, slug);
-              }}
-            />
-          ) : null}
+      {currentAct === "a8_public_link" && publicSlug ? (
+        <OnboardingPublicLinkSplit slug={publicSlug} businessName={businessName} />
+      ) : null}
 
-          {currentAct === "a8_public_link" && publicSlug ? (
-            <a
-              href={`/b/${publicSlug}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-aurora-cyan hover:underline"
-            >
-              Open your booking page
-              <ExternalLink className="h-4 w-4" />
-            </a>
-          ) : null}
+      {businessId && INLINE_FORM_ACTS.includes(currentAct) ? (
+        <OnboardingActForms
+          act={currentAct}
+          businessId={businessId}
+          checklist={state?.checklist}
+          onChecklistChange={updateChecklist}
+          previewMode={previewMode}
+        />
+      ) : null}
 
-          {businessId && INLINE_FORM_ACTS.includes(currentAct) ? (
-            <OnboardingActForms
-              act={currentAct}
-              businessId={businessId}
-              checklist={state?.checklist}
-              onChecklistChange={updateChecklist}
-            />
+      {currentAct === "a12_go_live" && businessId ? (
+        <>
+          <OnboardingCockpitTease readyCount={Math.min(3, Math.floor(checklistTicks / 2))} />
+          {portalMode ? (
+            <p className="text-xs text-muted-foreground">
+              Billing, team invites, and client import are in Settings — we marked them done so you can
+              launch now.
+            </p>
           ) : null}
+        </>
+      ) : null}
 
-          {businessId && INLINE_PREVIEW_ACTS.includes(currentAct) ? (
-            <OnboardingInlinePanel act={currentAct} businessId={businessId} />
-          ) : null}
+      {businessId && INLINE_PREVIEW_ACTS.includes(currentAct) ? (
+        previewMode ? (
+          <p className="text-sm text-muted-foreground rounded-lg border bg-muted/30 p-4">
+            Inline preview for this step uses live data — open signed-in onboarding to test.
+          </p>
+        ) : (
+          <OnboardingInlinePanel act={currentAct} businessId={businessId} />
+        )
+      ) : null}
 
-          {hint?.href &&
-          currentAct !== "a1_create_business" &&
-          !INLINE_PREVIEW_ACTS.includes(currentAct) ? (
-            <Button variant="outline" asChild>
-              <Link href={hint.href}>{hint.cta ?? "Open"}</Link>
-            </Button>
-          ) : null}
+      {hint?.href &&
+      !previewMode &&
+      currentAct !== "a1_create_business" &&
+      !INLINE_PREVIEW_ACTS.includes(currentAct) ? (
+        <Button variant="outline" asChild>
+          <Link href={hint.href}>{hint.cta ?? "Open"}</Link>
+        </Button>
+      ) : null}
+    </>
+  );
 
-          {currentAct !== "a1_create_business" ? (
-            <div className="flex flex-col gap-3 pt-2">
-              {appUnlocked ? (
-                <Button variant="secondary" className="w-full" asChild>
-                  <Link href="/dashboard">Enter Livia — finish the rest later</Link>
-                </Button>
-              ) : null}
-              <div className="flex items-center justify-between gap-3">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  disabled={stepIndex <= 0 || saving || !businessId}
-                  onClick={goBack}
-                >
-                  <ChevronLeft className="h-4 w-4 mr-1" />
-                  Back
-                </Button>
-                <Button
-                  type="button"
-                  disabled={saving || !businessId}
-                  onClick={() => void completeAct(currentAct)}
-                >
-                  {currentAct === "a12_go_live" ? "Finish setup" : "Continue"}
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
-            </div>
-          ) : null}
-        </CardContent>
-      </Card>
+  const footerNav =
+    currentAct !== "a1_create_business" ? (
+      <div className="flex flex-col gap-3">
+        {appUnlocked ? (
+          <Button variant="secondary" className="w-full" asChild>
+            <Link href="/dashboard">Enter Livia — finish the rest later</Link>
+          </Button>
+        ) : null}
+        <div className="flex items-center justify-between gap-3">
+          <Button
+            type="button"
+            variant="ghost"
+            disabled={!canGoBack || saving || !businessId}
+            onClick={goBack}
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Back
+          </Button>
+          <Button
+            type="button"
+            disabled={saving || !businessId}
+            onClick={() => void completeAct(currentAct)}
+          >
+            {currentAct === "a12_go_live" ? "Open your cockpit" : "Continue"}
+            <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
+        </div>
+      </div>
+    ) : null;
 
-      <details className="text-xs text-muted-foreground">
-        <summary className="cursor-pointer hover:text-foreground">All setup steps ({ONBOARDING_ACT_IDS.length})</summary>
-        <nav className="mt-2 grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {ONBOARDING_ACT_IDS.map((act) => {
-            const done = state?.completedActs?.includes(act);
-            const active = act === currentAct;
-            return (
-              <div
-                key={act}
-                className={`rounded-md border px-2 py-1.5 truncate ${
-                  active ? "border-primary/40 bg-primary/5 text-foreground" : "border-transparent"
-                }`}
-              >
-                {done ? "✓ " : ""}
-                {ONBOARDING_ACT_LABELS[act]}
-              </div>
-            );
-          })}
-        </nav>
-      </details>
-    </div>
+  if (!portalMode) {
+    return (
+      <div className="w-full max-w-2xl mx-auto space-y-6">
+        {businessId ? (
+          <OnboardingChapterSpine
+            currentAct={currentAct}
+            completedActs={(state?.completedActs ?? []) as OnboardingActId[]}
+            onJump={jumpToAct}
+          />
+        ) : (
+          preBusinessProgress
+        )}
+        <Card className="border-primary/10 shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-2xl font-serif tracking-tight">
+              {ONBOARDING_ACT_LABELS[currentAct]}
+            </CardTitle>
+            <CardDescription>
+              {currentAct === "a1_create_business"
+                ? `Tell us about your ${vocab.locationNoun.toLowerCase()} — we'll seed ${vocab.serviceNoun.toLowerCase()}s and policies for your market.`
+                : (hint?.body ?? "Complete this step, then continue.")}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {stepBody}
+            {footerNav}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {arrivalOpen ? <OnboardingArrivalOverlay onEnter={dismissArrival} /> : null}
+      <OnboardingPortalLayout
+        livMessage={livMessage}
+        currentAct={currentAct}
+        completedActs={(state?.completedActs ?? []) as OnboardingActId[]}
+        onJumpChapter={businessId ? jumpToChapter : undefined}
+        chapterStepHint={
+          chapterMicro
+            ? `${chapterMicro.label} · ${chapterMicro.index} of ${chapterMicro.total} in this chapter`
+            : null
+        }
+        showChapterSpine={!!businessId}
+        packLabel={packLabel}
+        wide={wideStep}
+        celebrate={celebrate}
+        topSlot={
+          <>
+            {arrivalSlot}
+            {preBusinessProgress}
+          </>
+        }
+        footer={footerNav}
+      >
+        {stepBody}
+      </OnboardingPortalLayout>
+    </>
   );
 }

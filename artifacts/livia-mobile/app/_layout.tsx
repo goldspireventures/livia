@@ -13,7 +13,8 @@ import {
 } from "@expo-google-fonts/cormorant-garamond";
 import { StatusBar } from "expo-status-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
+import { ClerkProvider, useAuth, useUser } from "@clerk/clerk-expo";
+import { isPlatformExecEmail } from "@/lib/platform-exec";
 import {
   setAuthTokenGetter,
   setBaseUrl,
@@ -65,12 +66,17 @@ function ClerkAuthBridge() {
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { isSignedIn, isLoaded } = useAuth();
+  const { user } = useUser();
   const router = useRouter();
   const segments = useSegments();
+
+  const execEmail =
+    user?.primaryEmailAddress?.emailAddress ?? user?.emailAddresses?.[0]?.emailAddress;
 
   useEffect(() => {
     if (!isLoaded) return;
     const onSignIn = segments[0] === "sign-in";
+    const onExecDesk = segments[0] === "_internal";
     // ADR 0010 / docs/demo-gateway.md — `/demo` is a public showcase. It must
     // not require Clerk so a prospect can tap a link and step inside any of
     // the seven persona doors without an account.
@@ -87,11 +93,17 @@ function AuthGate({ children }: { children: React.ReactNode }) {
       router.replace("/sign-in");
     } else if (isSignedIn && onSignIn) {
       void (async () => {
+        if (isPlatformExecEmail(execEmail)) {
+          router.replace("/_internal/desk" as never);
+          return;
+        }
         const home = await consumeMobileHomeRoute();
         router.replace((home ?? "/(tabs)") as never);
       })();
+    } else if (isSignedIn && isPlatformExecEmail(execEmail) && !onExecDesk && !onDemo && !onPublicBook) {
+      router.replace("/_internal/desk" as never);
     }
-  }, [isSignedIn, isLoaded, segments, router]);
+  }, [isSignedIn, isLoaded, segments, router, execEmail]);
 
   return <>{children}</>;
 }
@@ -136,7 +148,8 @@ function RootLayoutNav() {
           <Stack.Screen name="services/index" options={{ title: "Services" }} />
           <Stack.Screen name="service/new" options={{ title: "New Service" }} />
           <Stack.Screen name="settings" options={{ title: "Settings" }} />
-          <Stack.Screen name="founder/cockpit" options={{ title: "Founder cockpit" }} />
+          <Stack.Screen name="_internal/desk" options={{ title: "Overview", headerShown: false }} />
+          <Stack.Screen name="founder/cockpit" options={{ headerShown: false }} />
           <Stack.Screen name="plan" options={{ title: "Plan" }} />
           <Stack.Screen name="design-proofs" options={{ title: "Design proofs" }} />
           <Stack.Screen name="clinical-hub" options={{ title: "Clinical hub" }} />

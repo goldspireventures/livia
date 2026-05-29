@@ -15,11 +15,13 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Sparkles } from "lucide-react";
+import { Check } from "lucide-react";
 import { ChannelSetupWizard } from "@/components/channel-setup-wizard";
+import { OnboardingLivReplyStep } from "@/components/onboarding/onboarding-liv-reply-step";
 import type { OnboardingActId } from "@/lib/onboarding-acts";
 import type { OnboardingStatePayload } from "./onboarding-wizard";
 import { getVerticalOnboardingExtras } from "@workspace/policy";
+import { ONBOARDING_PREVIEW_SHOP_NAME } from "@/lib/onboarding-preview-fixtures";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -43,12 +45,14 @@ export function OnboardingActForms({
   checklist,
   onChecklistChange,
   onSaved,
+  previewMode = false,
 }: {
   act: OnboardingActId;
   businessId: string;
   checklist?: OnboardingStatePayload["checklist"];
   onChecklistChange: (next: OnboardingStatePayload["checklist"]) => void;
   onSaved?: () => void;
+  previewMode?: boolean;
 }) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -75,6 +79,17 @@ export function OnboardingActForms({
 
   useEffect(() => {
     if (!businessId || !["a2_shop_profile", "a6_liv"].includes(act)) return;
+    if (previewMode) {
+      setName(ONBOARDING_PREVIEW_SHOP_NAME);
+      setPhone("+353 1 234 5678");
+      setCity("Dublin");
+      setDescription("Hair, colour, and spa — preview data.");
+      setAiEnabled(true);
+      setAiTone("FRIENDLY");
+      setAiGreeting("Hi! I'm Liv at Luxe Salon — how can I help you book today?");
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     apiFetch<Record<string, unknown>>(`/businesses/${businessId}`)
       .then((b) => {
@@ -89,19 +104,33 @@ export function OnboardingActForms({
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [businessId, act]);
+  }, [businessId, act, previewMode]);
 
   useEffect(() => {
     if (act !== "a5_hours" || !businessId) return;
+    if (previewMode) {
+      setAvail([
+        { dayOfWeek: 1, startTime: "09:00", endTime: "18:00" },
+        { dayOfWeek: 2, startTime: "09:00", endTime: "18:00" },
+        { dayOfWeek: 3, startTime: "09:00", endTime: "18:00" },
+      ]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     apiFetch<AvailRule[]>(`/businesses/${businessId}/availability`)
       .then(setAvail)
       .catch(() => setAvail([]))
       .finally(() => setLoading(false));
-  }, [act, businessId]);
+  }, [act, businessId, previewMode]);
 
   useEffect(() => {
     if (act !== "a7_channels" || !businessId) return;
+    if (previewMode) {
+      setCommsPhone("+353 …");
+      setCommsFull({ metaDevSimulate: true });
+      return;
+    }
     apiFetch<{
       twilioPhoneNumber?: string | null;
       metaWebhookUrl?: string | null;
@@ -127,6 +156,10 @@ export function OnboardingActForms({
   }, [act, businessId]);
 
   async function saveShop() {
+    if (previewMode) {
+      toast({ title: "Preview only", description: "Shop profile was not saved." });
+      return;
+    }
     setSaving(true);
     try {
       await apiFetch(`/businesses/${businessId}`, {
@@ -143,6 +176,10 @@ export function OnboardingActForms({
   }
 
   async function saveLiv() {
+    if (previewMode) {
+      toast({ title: "Preview only", description: "Liv settings were not saved." });
+      return;
+    }
     setSaving(true);
     try {
       await apiFetch(`/businesses/${businessId}`, {
@@ -241,41 +278,29 @@ export function OnboardingActForms({
 
   if (act === "a6_liv") {
     return (
-      <div className="space-y-4 rounded-lg border border-primary/20 bg-primary/5 p-4" data-testid="onboarding-liv-form">
-        <div className="flex items-center gap-2 text-sm font-medium">
-          <Sparkles className="h-4 w-4 text-primary" />
-          Meet Liv
-        </div>
-        <div className="flex items-center justify-between">
-          <Label>Liv enabled</Label>
-          <Switch checked={aiEnabled} onCheckedChange={setAiEnabled} />
-        </div>
-        <div className="space-y-2">
-          <Label>Tone</Label>
-          <Select value={aiTone} onValueChange={setAiTone}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="FRIENDLY">Friendly</SelectItem>
-              <SelectItem value="PROFESSIONAL">Professional</SelectItem>
-              <SelectItem value="PLAYFUL">Playful</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label>Greeting (first message)</Label>
-          <Textarea
-            value={aiGreeting}
-            onChange={(e) => setAiGreeting(e.target.value)}
-            placeholder="Hi! I'm Liv, the assistant for …"
-            rows={2}
-          />
-        </div>
-        <Button onClick={() => void saveLiv()} disabled={saving}>
-          Save Liv
-        </Button>
-      </div>
+      <OnboardingLivReplyStep
+        businessName={name}
+        aiEnabled={aiEnabled}
+        aiTone={aiTone}
+        aiGreeting={aiGreeting}
+        saving={saving}
+        onEnabledChange={setAiEnabled}
+        onToneChange={setAiTone}
+        onGreetingChange={setAiGreeting}
+        onSave={() => void saveLiv()}
+      />
+    );
+  }
+
+  if (act === "a7_channels" && previewMode) {
+    return (
+      <p className="text-sm text-muted-foreground rounded-lg border bg-muted/30 p-4" data-testid="onboarding-channels-preview">
+        Channel setup needs the real app. Use{" "}
+        <a href="/onboarding" className="text-primary underline">
+          signed-in onboarding
+        </a>{" "}
+        or preview A6 / A8 here.
+      </p>
     );
   }
 

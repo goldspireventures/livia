@@ -7,6 +7,7 @@
     "dev": "EXPO_PACKAGER_PROXY_URL=https://$REPLIT_EXPO_DEV_DOMAIN EXPO_PUBLIC_DOMAIN=$REPLIT_DEV_DOMAIN EXPO_PUBLIC_REPL_ID=$REPL_ID REACT_NATIVE_PACKAGER_HOSTNAME=$REPLIT_DEV_DOMAIN pnpm exec expo start --localhost --port $PORT",
     "dev:local": "cross-env EXPO_OFFLINE=1 EXPO_PUBLIC_API_BASE_URL=http://localhost:3000 EXPO_PUBLIC_DOMAIN=localhost:3000 REACT_NATIVE_PACKAGER_HOSTNAME=localhost pnpm exec expo start --port 8083",
     "dev:device": "node scripts/dev-device.js",
+    "dev:staging": "cross-env EXPO_PUBLIC_API_BASE_URL=https://api.staging.livia-hq.com EXPO_PUBLIC_DASHBOARD_URL=https://app.staging.livia-hq.com EXPO_PUBLIC_MARKETING_URL=https://staging.livia-hq.com EXPO_OFFLINE=1 pnpm exec expo start --port 8083",
     "dev:device:clean": "node scripts/dev-device.js --clear",
     "build": "node scripts/build.js",
     "serve": "node server/serve.js",

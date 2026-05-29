@@ -372,6 +372,26 @@
   .celebrate-shimmer::before { display: none; }
 }
 
+/* Onboarding portal — chapter change */
+@keyframes onboarding-chapter-in {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+.onboarding-chapter-enter {
+  animation: onboarding-chapter-in 0.38s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .onboarding-chapter-enter {
+    animation: none;
+  }
+}
+
 /* ============================================================
    WELCOME SWEEP — one-shot aurora wash on first cockpit load.
    Used by the dashboard header on first sign-in / per-session.

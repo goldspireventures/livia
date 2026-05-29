@@ -2,6 +2,7 @@ import { db, businessesTable, businessMembershipsTable, usersTable } from "@work
 import { and, eq, lt } from "drizzle-orm";
 import { onboardingStateSchema } from "@workspace/policy";
 import { logger } from "../lib/logger";
+import { getDashboardUrl } from "../lib/public-urls.js";
 import { sendOperationalEmail } from "./transactional-email.service";
 
 const STUCK_HOURS = 48;
@@ -69,7 +70,7 @@ export async function sendOnboardingStuckNudges(): Promise<{
   failed: number;
 }> {
   const stuck = await findStuckOnboardingBusinesses();
-  const dashboardBase = (process.env["PUBLIC_BASE_URL"] ?? "https://app.livia.io").replace(/\/+$/, "");
+  const dashboardBase = getDashboardUrl();
   let emailed = 0;
   let skipped = 0;
   let failed = 0;

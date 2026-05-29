@@ -4,7 +4,7 @@ import { Menu } from "lucide-react";
 import { LiviaWordmark } from "@/components/brand/LiviaMark";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { LEGAL_FOOTER_LINE } from "@/lib/company";
-import { dashboardDemoUrl, dashboardSignInUrl, legalBase } from "@/lib/marketing-links";
+import { dashboardDemoUrl, dashboardSignInUrl, dashboardSignUpUrl, legalBase } from "@/lib/marketing-links";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -69,8 +69,14 @@ export function MarketingLayout({
               Sign in
             </a>
             <a
+              href={dashboardSignUpUrl}
+              className="hidden sm:inline text-sm font-medium text-aurora-cyan hover:text-white transition-colors min-h-[44px] items-center"
+            >
+              Get started
+            </a>
+            <a
               href={`${homeHref}#waitlist`}
-              className="text-sm font-medium text-aurora-cyan hover:text-white transition-colors min-h-[44px] inline-flex items-center px-1"
+              className="text-sm font-medium text-muted-foreground hover:text-white transition-colors min-h-[44px] inline-flex items-center px-1"
             >
               Join beta
             </a>
@@ -103,6 +109,13 @@ export function MarketingLayout({
                     onClick={() => setMenuOpen(false)}
                   >
                     Sign in
+                  </a>
+                  <a
+                    href={dashboardSignUpUrl}
+                    className="min-h-[44px] inline-flex items-center text-sm text-aurora-cyan hover:text-white"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Get started
                   </a>
                 </div>
               </SheetContent>

@@ -14,3 +14,5 @@ Company operator UI for **Livia Inc** (cross-tenant). Not for salon owners.
 5. Search by slug (e.g. `aurora-studio`) — health card shows last booking + Stripe/Clerk links.
 
 Optional env (`artifacts/livia-internal/.env`): `VITE_DASHBOARD_URL` for founder cockpit links (matches API `DASHBOARD_URL`).
+
+**Exec command center** (secret path — see [`docs/operations/EXEC-COMMAND-CENTER.md`](../../docs/operations/EXEC-COMMAND-CENTER.md)): hats, automations, prod smoke, support, tenants. Runbook: [`docs/operations/FOUNDER-RELEASE-RUNBOOK.md`](../../docs/operations/FOUNDER-RELEASE-RUNBOOK.md).

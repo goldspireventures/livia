@@ -12,6 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { PlatformLegalGate } from "@/components/platform-legal-gate";
 import { isDemoTenantSlug } from "@/lib/demo-tenant";
 import { isOnboardingAppUnlocked, type OnboardingState } from "@workspace/policy";
+import { PlatformExecHandoff } from "@/components/platform-exec-handoff";
 
 // On first authenticated load, sweep up any pending Clerk invitations
 // and turn them into business_memberships rows. Idempotent + cheap, so
@@ -80,14 +81,16 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     return <Redirect to={`/sign-in?redirect_url=${encodeURIComponent(location)}`} />;
   }
 
-  if (location === "/legal-acceptance") {
-    return <BusinessDataLoader skipLegalGate>{children}</BusinessDataLoader>;
-  }
-
   return (
-    <PlatformLegalGate>
-      <BusinessDataLoader>{children}</BusinessDataLoader>
-    </PlatformLegalGate>
+    <PlatformExecHandoff>
+      {location === "/legal-acceptance" ? (
+        <BusinessDataLoader skipLegalGate>{children}</BusinessDataLoader>
+      ) : (
+        <PlatformLegalGate>
+          <BusinessDataLoader>{children}</BusinessDataLoader>
+        </PlatformLegalGate>
+      )}
+    </PlatformExecHandoff>
   );
 }
 

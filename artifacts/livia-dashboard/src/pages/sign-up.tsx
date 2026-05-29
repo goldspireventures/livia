@@ -4,6 +4,8 @@ import { useTheme } from "next-themes";
 import { LiviaWordmark } from "@/components/brand/LiviaMark";
 import { getMarketingOrigin } from "@/lib/surface-urls";
 
+const signUpRedirect = `${window.location.origin}/legal-acceptance`;
+
 export default function SignUpPage() {
   const { theme } = useTheme();
 
@@ -29,7 +31,8 @@ export default function SignUpPage() {
               Her name is Liv.
             </p>
             <p className="mt-4 text-sm text-muted-foreground">
-              Create your account in under a minute. You will accept platform terms before creating a shop.
+              Create your account in under a minute — email or Google. Next you accept platform terms, then
+              set up your shop.
             </p>
             <p className="mt-2 text-xs text-muted-foreground">
               Closed beta may be invite-only — see{" "}
@@ -50,6 +53,9 @@ export default function SignUpPage() {
             }}
             routing="path"
             path="/sign-up"
+            signInUrl="/sign-in"
+            forceRedirectUrl={signUpRedirect}
+            fallbackRedirectUrl="/legal-acceptance"
           />
         </div>
       </main>

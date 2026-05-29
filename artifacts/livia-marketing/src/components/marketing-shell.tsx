@@ -164,7 +164,7 @@ export function DeContactBand({ locale }: { locale: MarketingLocale }) {
         <h2 className="font-serif text-2xl md:text-3xl tracking-tight mb-3">{contact.title}</h2>
         <p className="editorial-measure text-muted-foreground leading-relaxed mb-6">{contact.body}</p>
         <a
-          href={`mailto:hello@livia.app?subject=${encodeURIComponent(contact.mailSubject)}`}
+          href={`mailto:hello@livia-hq.com?subject=${encodeURIComponent(contact.mailSubject)}`}
           className="inline-flex items-center gap-2 text-aurora-cyan font-medium min-h-[44px]"
         >
           {contact.cta}

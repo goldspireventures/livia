@@ -2,6 +2,7 @@ import type React from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { buttonStyle } from "../styles/ops-ui";
 import type { InternalOpsRole } from "../lib/api";
+import { getExecHomePath } from "../lib/exec-path";
 
 type NavItem = { to: string; label: string; kind?: "primary" | "meta" };
 
@@ -27,9 +28,11 @@ export function InternalShell({
   role?: InternalOpsRole;
   children?: React.ReactNode;
 }) {
-  const nav: NavItem[] = role === "exec"
-    ? [{ to: "/cockpit", label: "Founder cockpit", kind: "primary" }, ...navBase]
-    : navBase;
+  const execHome = getExecHomePath();
+  const nav: NavItem[] =
+    role === "exec"
+      ? [{ to: execHome, label: "Overview", kind: "primary" }, ...navBase]
+      : navBase;
 
   return (
     <div

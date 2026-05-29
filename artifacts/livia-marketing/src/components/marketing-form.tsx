@@ -31,7 +31,7 @@ export function MarketingForm({ locale = "en" }: { locale?: MarketingLocale }) {
   });
 
   function onSubmit(values: FormValues) {
-    const source = locale === "de" ? "livia.io/de" : "livia.io";
+    const source = locale === "de" ? "livia-hq.com/de" : "livia-hq.com";
     createLead.mutate(
       { data: { email: values.email, source } },
       {

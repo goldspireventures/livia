@@ -12,10 +12,10 @@ export default function ContactPage() {
         />
         <p className="text-sm text-muted-foreground mb-10 -mt-6">
           <a
-            href="mailto:hello@livia.io"
+            href="mailto:hello@livia-hq.com"
             className="text-aurora-cyan hover:text-white min-h-[44px] inline-flex items-center"
           >
-            hello@livia.io
+            hello@livia-hq.com
           </a>
         </p>
         <MarketingForm />

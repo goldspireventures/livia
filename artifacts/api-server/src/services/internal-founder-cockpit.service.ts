@@ -5,6 +5,14 @@ import { getPlatformObservability } from "./internal-observability.service";
 import { listVerticalCoverageForOps } from "./persona-reports.service";
 import { listInternalSupportTickets } from "./internal-support-tickets.service";
 import { listInternalFeatureFlags } from "./internal-feature-flags.service";
+import {
+  buildFounderCommandCenterLinks,
+  buildFounderReleaseChecklist,
+  buildFounderStagingPrep,
+  runFounderProductionChecks,
+} from "./founder-cockpit-command-center.service.js";
+import { EXEC_AUTOMATIONS } from "./founder-cockpit-automations.service.js";
+import { buildExecHatPanels } from "./founder-cockpit-hats.service.js";
 
 function hoursBetween(aIso: string, bIso: string): number {
   const a = new Date(aIso).getTime();
@@ -51,14 +59,32 @@ export async function getOrgAdminCockpitSnapshot(): Promise<{
     founderGate: unknown | null;
     wargameReport: unknown | null;
   };
+  commandCenter: ReturnType<typeof buildFounderCommandCenterLinks>;
+  production: Awaited<ReturnType<typeof runFounderProductionChecks>>;
+  release: ReturnType<typeof buildFounderReleaseChecklist>;
+  stagingPrep: ReturnType<typeof buildFounderStagingPrep>;
+  hats: ReturnType<typeof buildExecHatPanels>;
+  automations: typeof EXEC_AUTOMATIONS;
 }> {
-  const [platformHealth, observability, verticalCoverage, openTickets, flags] = await Promise.all([
+  const [
+    platformHealth,
+    observability,
+    verticalCoverage,
+    openTickets,
+    flags,
+    production,
+  ] = await Promise.all([
     getInternalPlatformHealth(),
     getPlatformObservability(),
     listVerticalCoverageForOps(),
     listInternalSupportTickets({ status: "open,triaged", limit: 200 }),
     listInternalFeatureFlags({ globalOnly: true }),
+    runFounderProductionChecks(),
   ]);
+
+  const commandCenter = buildFounderCommandCenterLinks();
+  const release = buildFounderReleaseChecklist(production.allRequiredOk);
+  const stagingPrep = buildFounderStagingPrep();
 
   const nowIso = new Date().toISOString();
   const urgent = openTickets.data
@@ -104,6 +130,23 @@ export async function getOrgAdminCockpitSnapshot(): Promise<{
       globalEnabled: enabledGlobal,
     },
     gate: { founderGate, wargameReport },
+    commandCenter,
+    production,
+    release,
+    stagingPrep,
+    hats: buildExecHatPanels({
+      observability,
+      platformHealth,
+      support: {
+        openTotal: openTickets.total,
+        urgentOpen: urgent.length,
+        oldestOpenHours: oldest ? Math.round(hoursBetween(oldest, nowIso) * 10) / 10 : null,
+      },
+      production,
+      release,
+      rollouts: { globalEnabled: enabledGlobal },
+    }),
+    automations: EXEC_AUTOMATIONS,
   };
 }
 

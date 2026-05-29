@@ -44,7 +44,7 @@ export default function OnboardingContinueScreen() {
   }, [bid, getToken]);
 
   const dashboardUrl =
-    process.env.EXPO_PUBLIC_DASHBOARD_URL?.replace(/\/+$/, "") ?? "https://app.livia.io";
+    process.env.EXPO_PUBLIC_DASHBOARD_URL?.replace(/\/+$/, "") ?? "https://app.livia-hq.com";
 
   const steps = experience?.onboarding.activationSteps ?? [];
   const appUnlocked = isOnboardingAppUnlocked(state);

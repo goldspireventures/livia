@@ -48,6 +48,7 @@ import NotFound from "@/pages/not-found";
 import SignInPage from "@/pages/sign-in";
 import SignUpPage from "@/pages/sign-up";
 import OnboardingPage from "@/pages/onboarding";
+import OnboardingPreviewPage from "@/pages/dev/onboarding-preview";
 import LegalAcceptancePage from "@/pages/legal-acceptance";
 import DashboardPage from "@/pages/dashboard";
 import PublicBookingPage from "@/pages/public-booking";
@@ -56,6 +57,7 @@ import PublicPremisesPage from "@/pages/public-premises";
 import DemoLauncher from "@/pages/demo/Launcher";
 import { DemoProvider } from "@/lib/demo/demo-context";
 import { isProductionCustomerSurface } from "@/lib/production-surface";
+import { isOnboardingPreviewRouteEnabled } from "@/lib/onboarding-preview-route";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -165,6 +167,13 @@ function AppRouter() {
     <Switch>
       <Route path="/sign-in" component={SignInPage} />
       <Route path="/sign-up" component={SignUpPage} />
+
+      {isOnboardingPreviewRouteEnabled() ? (
+        <>
+          <Route path="/onboarding-preview" component={OnboardingPreviewPage} />
+          <Route path="/dev/onboarding-preview" component={OnboardingPreviewPage} />
+        </>
+      ) : null}
       <Route path="/b/:slug/visit/:token" component={PublicVisitPage} />
       <Route path="/b/:slug" component={PublicBookingPage} />
       <Route path="/p/:slug" component={PublicPremisesPage} />

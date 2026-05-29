@@ -30,6 +30,7 @@ import {
   markInAppNotificationRead,
 } from "../services/in-app-notifications.service";
 import { getTenantExperienceForBusiness } from "../services/tenant-experience.service";
+import { getOpsPortalUrl, isPlatformExecEmail } from "../lib/platform-exec";
 
 import { sendError } from "../lib/http-errors";
 const router: IRouter = Router();
@@ -47,6 +48,7 @@ router.get("/me", requireAuth, async (req, res): Promise<void> => {
     await updateUser(userId, { platformLegal: buildPlatformLegalAcceptance("demo-backfill") });
     user = (await getUserById(userId)) ?? user;
   }
+  const platformExec = isPlatformExecEmail(user.email);
   res.json({
     ...user,
     platformLegalCurrent: {
@@ -55,6 +57,18 @@ router.get("/me", requireAuth, async (req, res): Promise<void> => {
     },
     platformLegalAccepted: isLegalGateSkipped() || hasCurrentPlatformLegal(user.platformLegal),
     betaSignupMode: getBetaSignupMode(),
+    platformExec,
+    opsPortalUrl: platformExec ? getOpsPortalUrl() : null,
+  });
+});
+
+router.get("/me/operator-surface", requireAuth, async (req, res): Promise<void> => {
+  const userId = getUserId(req);
+  const user = await getOrCreateUser(userId);
+  const platformExec = isPlatformExecEmail(user.email);
+  res.json({
+    platformExec,
+    opsPortalUrl: platformExec ? getOpsPortalUrl() : null,
   });
 });
 

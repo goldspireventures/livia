@@ -200,6 +200,50 @@ export type FounderCockpitSnapshot = {
     founderGate: unknown | null;
     wargameReport: unknown | null;
   };
+  commandCenter: {
+    links: Array<{
+      id: string;
+      label: string;
+      href: string;
+      description?: string;
+      kind: "customer" | "internal" | "external";
+    }>;
+    internalPortalBase: string;
+  };
+  production: {
+    checkedAt: string;
+    dashboardUrl: string;
+    apiUrl: string;
+    allRequiredOk: boolean;
+    checks: Array<{ name: string; ok: boolean; detail: string; required: boolean }>;
+  };
+  release: {
+    mode: string;
+    betaSignupMode: string;
+    demoEnabled: boolean;
+    steps: Array<{ id: string; label: string; done: boolean; hint?: string }>;
+  };
+  stagingPrep: {
+    status: "not_provisioned" | "partial";
+    note: string;
+    checklist: readonly string[];
+  };
+  hats: Array<{
+    id: string;
+    role: string;
+    mandate: string;
+    status: "ok" | "watch" | "action";
+    metrics: Array<{ label: string; value: string }>;
+    actions: Array<{ label: string; internalPath?: string; href?: string }>;
+    focus: string;
+  }>;
+  automations: Array<{
+    id: string;
+    label: string;
+    description: string;
+    role: string;
+    destructive?: boolean;
+  }>;
 };
 
 function internalHeaders(extra?: HeadersInit): HeadersInit {
@@ -254,8 +298,24 @@ export async function pingInternalApi(): Promise<{ ok: boolean; message: string 
   }
 }
 
+export async function getExecSnapshot(): Promise<FounderCockpitSnapshot> {
+  return internalFetch<FounderCockpitSnapshot>("/internal/ops/exec/snapshot");
+}
+
+/** @deprecated */
 export async function getOpsCockpit(): Promise<FounderCockpitSnapshot> {
-  return internalFetch<FounderCockpitSnapshot>("/internal/ops/org-admin/cockpit");
+  return getExecSnapshot();
+}
+
+export async function runExecAutomation(
+  automationId: string,
+  opts?: { confirm?: boolean },
+): Promise<{ ok: boolean; summary: string; detail?: unknown }> {
+  return internalFetch(`/internal/ops/exec/automations/${encodeURIComponent(automationId)}/run`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ confirm: opts?.confirm === true }),
+  });
 }
 
 async function internalFetch<T>(path: string, init?: RequestInit): Promise<T> {

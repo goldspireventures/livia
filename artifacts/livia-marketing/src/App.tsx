@@ -15,6 +15,7 @@ import DeHomePage from "@/pages/de";
 import EuropePage from "@/pages/europe";
 import EuAiPage from "@/pages/eu-ai";
 import VerticalsIndexPage from "@/pages/verticals-index";
+import { LegalDpaPage, LegalPrivacyPage, LegalTosPage } from "@/pages/legal";
 import { useEffect, useRef } from "react";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,9 @@ function Router() {
       <Route path="/contact" component={ContactPage} />
       <Route path="/changelog" component={ChangelogPage} />
       <Route path="/status" component={StatusPage} />
+      <Route path="/legal/privacy" component={LegalPrivacyPage} />
+      <Route path="/legal/tos" component={LegalTosPage} />
+      <Route path="/legal/dpa" component={LegalDpaPage} />
       <Route component={NotFound} />
     </Switch>
   );

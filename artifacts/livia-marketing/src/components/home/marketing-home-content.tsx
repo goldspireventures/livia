@@ -5,6 +5,7 @@ import { DeContactBand } from "@/components/marketing-shell";
 import { Link } from "wouter";
 import { ArrowRight } from "lucide-react";
 import { editorialCopy, type MarketingLocale } from "@/lib/marketing-editorial-i18n";
+import { dashboardSignUpUrl } from "@/lib/marketing-links";
 
 type MarketingHomeContentProps = {
   locale: MarketingLocale;
@@ -54,6 +55,12 @@ export function MarketingHomeContent({ locale }: MarketingHomeContentProps) {
                 {t.nav.joinBeta}
                 <ArrowRight className="w-4 h-4" />
               </button>
+              <a
+                href={dashboardSignUpUrl}
+                className="inline-flex items-center justify-center rounded-lg border border-white/15 px-5 py-3 text-sm text-muted-foreground hover:text-foreground min-h-[44px]"
+              >
+                Get started
+              </a>
               <Link
                 href="/how-it-works"
                 className="inline-flex items-center justify-center rounded-lg border border-white/15 px-5 py-3 text-sm text-muted-foreground hover:text-foreground min-h-[44px]"

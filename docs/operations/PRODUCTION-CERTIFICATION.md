@@ -62,7 +62,7 @@ Use this as the stack-wide audit gate. Pair with [`logging-and-correlation.md`](
 NODE_ENV=production
 LOG_LEVEL=info
 TRUST_PROXY=true
-CORS_ALLOWED_ORIGINS=https://app.livia.io,https://livia.io
+CORS_ALLOWED_ORIGINS=https://app.livia-hq.com,https://livia-hq.com
 INTERNAL_OPS_SECRET=<unique-long>
 INTERNAL_CRON_SECRET=<different-long>
 META_APP_SECRET=<set>

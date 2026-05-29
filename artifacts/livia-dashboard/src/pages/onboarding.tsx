@@ -4,14 +4,13 @@ import { useBusiness } from "@/lib/business-context";
 import { apiFetch } from "@/lib/api-fetch";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Loader2, Sparkles } from "lucide-react";
 import { OnboardingWizard, type OnboardingStatePayload } from "@/components/onboarding/onboarding-wizard";
-import { OnboardingWelcomePanel } from "@/components/onboarding-welcome-panel";
-import type { OnboardingActId } from "@/lib/onboarding-acts";
 import { isDemoLoginEnabled } from "@/lib/persona";
 import { afterBusinessCreatedState } from "@workspace/policy";
 import { OnboardingExperienceShell } from "@/components/onboarding/onboarding-experience-shell";
+import { OnboardingWelcomePanel } from "@/components/onboarding-welcome-panel";
+import { isOnboardingPortalExperienceEnabled } from "@/lib/onboarding-portal-enabled";
 
 type BusinessRow = {
   id: string;
@@ -105,83 +104,89 @@ export default function OnboardingPage() {
     previewVertical ??
     (businessId ? undefined : "hair");
 
+  const portalExperience = isOnboardingPortalExperienceEnabled();
+
+  const arrivalSlot = (
+    <>
+      {!businessId && isDemoLoginEnabled ? (
+        <Card className="border-dashed border-muted-foreground/30 bg-background/40 backdrop-blur-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-violet-400" />
+              Just exploring?
+            </CardTitle>
+            <CardDescription>Load a full demo workspace with inbox, bookings, and staff.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              type="button"
+              variant="secondary"
+              className="w-full"
+              onClick={loadDemoData}
+              disabled={seedLoading}
+            >
+              {seedLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Loading demo…
+                </>
+              ) : (
+                "Load full Livia demo"
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
+    </>
+  );
+
+  const wizard = (
+    <OnboardingWizard
+      portalMode={portalExperience}
+      businessId={businessId}
+      businessSlug={businessSlug}
+      parentBusinessId={parentBusinessId}
+      initialState={onboardingState}
+      businessVertical={previewVertical}
+      onVerticalPreview={setPreviewVertical}
+      arrivalSlot={arrivalSlot}
+      onBusinessCreated={(id, slug) => {
+        setBusinessId(id);
+        setBusinessSlug(slug);
+        setOnboardingState(afterBusinessCreatedState() as OnboardingStatePayload);
+      }}
+      onComplete={() => {
+        window.location.href = intent.secondShop
+          ? "/lifecycle#chain"
+          : businessSlug
+            ? `/bookings?create=1`
+            : "/dashboard";
+      }}
+    />
+  );
+
   return (
     <OnboardingExperienceShell vertical={themeVertical} country="IE">
-    <div className="flex min-h-[100dvh] w-full flex-col items-center justify-center bg-background p-4 py-12">
-      <div className="w-full max-w-2xl space-y-8">
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-serif tracking-tight">
-            {intent.secondShop ? "Add a location" : "Welcome to Livia"}
-          </h1>
-          <p className="text-muted-foreground text-sm max-w-md mx-auto">
-            {intent.secondShop
-              ? "Chain tools activate when you own two shops."
-              : "Self-serve setup for EU appointment businesses — about 15 minutes to go live."}
-          </p>
-        </div>
-
-        {!businessId && isDemoLoginEnabled ? (
-          <Card className="border-dashed border-muted-foreground/30 bg-muted/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-violet-400" />
-                Just exploring?
-              </CardTitle>
-              <CardDescription>Load a full demo workspace with inbox, bookings, and staff.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                type="button"
-                variant="secondary"
-                className="w-full"
-                onClick={loadDemoData}
-                disabled={seedLoading}
-              >
-                {seedLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Loading demo…
-                  </>
-                ) : (
-                  "Load full Livia demo"
-                )}
-              </Button>
-            </CardContent>
-          </Card>
-        ) : null}
-
-        {!businessId && isDemoLoginEnabled ? (
-          <div className="flex items-center gap-3">
-            <Separator className="flex-1" />
-            <span className="text-xs text-muted-foreground">or set up your shop</span>
-            <Separator className="flex-1" />
+      {portalExperience ? (
+        wizard
+      ) : (
+        <div className="flex min-h-[100dvh] w-full flex-col items-center justify-center p-4 py-12">
+          <div className="w-full max-w-2xl space-y-8">
+            <div className="text-center space-y-2">
+              <h1 className="text-3xl font-serif tracking-tight">
+                {intent.secondShop ? "Add a location" : "Welcome to Livia"}
+              </h1>
+              <p className="text-muted-foreground text-sm max-w-md mx-auto">
+                {intent.secondShop
+                  ? "Chain tools activate when you own two shops."
+                  : "Self-serve setup — about 15 minutes to go live."}
+              </p>
+            </div>
+            {!businessId && !intent.secondShop ? <OnboardingWelcomePanel /> : null}
+            {wizard}
           </div>
-        ) : null}
-
-        <OnboardingWelcomePanel />
-
-        <OnboardingWizard
-          businessId={businessId}
-          businessSlug={businessSlug}
-          parentBusinessId={parentBusinessId}
-          initialState={onboardingState}
-          businessVertical={previewVertical}
-          onVerticalPreview={setPreviewVertical}
-          onBusinessCreated={(id, slug) => {
-            setBusinessId(id);
-            setBusinessSlug(slug);
-            setOnboardingState(afterBusinessCreatedState() as OnboardingStatePayload);
-          }}
-          onComplete={() => {
-            window.location.href = intent.secondShop
-              ? "/lifecycle#chain"
-              : businessSlug
-                ? `/bookings?create=1`
-                : "/dashboard";
-          }}
-        />
-      </div>
-    </div>
+        </div>
+      )}
     </OnboardingExperienceShell>
   );
 }

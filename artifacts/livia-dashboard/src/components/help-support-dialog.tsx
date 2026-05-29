@@ -71,7 +71,7 @@ export function HelpSupportDialog({
       });
       toast({
         title: "Message sent",
-        description: "We'll respond via email. For emergencies, email support@livia.io",
+        description: "We'll respond via email. For emergencies, email support@livia-hq.com",
       });
       setDescription("");
       setOpen(false);

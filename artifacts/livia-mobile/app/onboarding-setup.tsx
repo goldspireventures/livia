@@ -25,6 +25,8 @@ import { useHaptics } from "@/hooks/useHaptics";
 import { fetchTenantExperience } from "@/lib/tenant-experience";
 import { verticalAccentHex } from "@/lib/vertical-theme";
 import { verticalPackUi } from "@/lib/vertical-pack-ui";
+import { getDashboardBaseUrl } from "@/lib/dashboard-url";
+import { getPublicBookingUrl } from "@/lib/public-booking-url";
 import {
   blockingOnboardingPercent,
   isOnboardingAppUnlocked,
@@ -82,9 +84,7 @@ export default function OnboardingSetupScreen() {
   const blockingPct = blockingOnboardingPercent(state?.completedActs ?? []);
   const appUnlocked = isOnboardingAppUnlocked(state);
 
-  const dashboardUrl =
-    process.env.EXPO_PUBLIC_DASHBOARD_URL?.replace(/\/+$/, "") ?? "https://app.livia.io";
-  const publicUrl = slug ? `${dashboardUrl}/b/${slug}` : null;
+  const publicUrl = slug ? getPublicBookingUrl(slug) : null;
 
   useEffect(() => {
     if (!bid) return;
@@ -357,7 +357,7 @@ export default function OnboardingSetupScreen() {
       {!appUnlocked ? (
         <Pressable
           style={{ marginTop: 20 }}
-          onPress={() => void Linking.openURL(`${dashboardUrl}/onboarding`)}
+          onPress={() => void Linking.openURL(`${getDashboardBaseUrl()}/onboarding`)}
         >
           <Text style={{ color: colors.mutedForeground, textAlign: "center", fontSize: 13 }}>
             Prefer the full wizard? Continue on web

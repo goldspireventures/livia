@@ -15,6 +15,10 @@ export const dashboardSignInUrl =
   (import.meta.env.VITE_DASHBOARD_SIGN_IN_URL as string | undefined)?.replace(/\/+$/, "") ??
   `${dashboardOrigin}/sign-in`;
 
+export const dashboardSignUpUrl =
+  (import.meta.env.VITE_DASHBOARD_SIGN_UP_URL as string | undefined)?.replace(/\/+$/, "") ??
+  `${dashboardOrigin}/sign-up`;
+
 export const apiBaseUrl =
   (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/+$/, "") ??
   "http://127.0.0.1:3001";

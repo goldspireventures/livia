@@ -89,7 +89,7 @@ No `VITE_API_BASE_URL` in production — uses `/api` rewrite to Railway.
 
 ## Marketing (Vercel)
 
-Second Vercel project: root directory = repo root, config = `artifacts/livia-marketing/vercel.json`, domain `livia-hq.com`.
+Second Vercel project: **Root Directory** = `artifacts/livia-marketing`, domain `livia-hq.com`. Step-by-step: [`VERCEL-PRODUCTION-SETUP.md`](./VERCEL-PRODUCTION-SETUP.md).
 
 | Variable | Example |
 |----------|---------|
@@ -97,6 +97,43 @@ Second Vercel project: root directory = repo root, config = `artifacts/livia-mar
 | `VITE_MARKETING_URL` | `https://livia-hq.com` |
 | `VITE_API_BASE_URL` | `https://api.livia-hq.com` |
 | `VITE_LEGAL_BASE_URL` | `https://livia-hq.com/legal` (optional; defaults from `VITE_MARKETING_URL`) |
+
+---
+
+## Platform exec (`projectlazarus@livia.io`)
+
+| Variable | Where | Example |
+|----------|-------|---------|
+| `LIVIA_PLATFORM_EXEC_EMAILS` | Railway API | `projectlazarus@livia.io` |
+| `INTERNAL_PORTAL_URL` | Railway API | `https://ops.livia-hq.com` |
+| `INTERNAL_EXEC_PATH` | Railway API + Internal Vite | `l7-random-slug` |
+| `VITE_INTERNAL_PORTAL_URL` | Dashboard + Internal Vite | same as portal |
+| `VITE_INTERNAL_EXEC_PATH` | Dashboard + Internal Vite | same slug |
+| `VITE_PLATFORM_EXEC_EMAILS` | Dashboard Vite | `projectlazarus@livia.io` |
+| `EXPO_PUBLIC_PLATFORM_EXEC_EMAILS` | Mobile EAS | same |
+
+Sign-in at app with exec email → redirect to ops portal. See [`EXEC-COMMAND-CENTER.md`](./EXEC-COMMAND-CENTER.md).
+
+---
+
+## Founder cockpit (optional deep links)
+
+| Variable | Example |
+|----------|---------|
+| `FOUNDER_GITHUB_URL` | `https://github.com/goldspire-global/livia` |
+| `FOUNDER_VERCEL_URL` | Vercel project dashboard |
+| `FOUNDER_RAILWAY_URL` | Railway project dashboard |
+| `API_STAGING_URL` | Set when staging exists (cockpit staging status) |
+
+### Staging stack (separate deploys)
+
+Full runbook: [`STAGING-SETUP.md`](./STAGING-SETUP.md). Templates: `railway.env.staging.example`, `artifacts/livia-dashboard/.env.staging.example`, `artifacts/livia-mobile/.env.staging.example`.
+
+| Variable | Staging dashboard |
+|----------|-------------------|
+| `VITE_LIVIA_DEPLOY_ENV` | `staging` |
+| `VITE_ONBOARDING_PORTAL_EXPERIENCE` | `true` (optional; staging defaults portal on) |
+| `VITE_DEMO_LOGIN` | `true` |
 
 ---
 

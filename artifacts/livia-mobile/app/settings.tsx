@@ -39,12 +39,9 @@ import { asHref } from "@/lib/navigation";
 import { CommsChannelsBlock } from "@/components/CommsChannelsBlock";
 import { HelpSupportSheet } from "@/components/HelpSupportSheet";
 import { getPublicBookingLabel } from "@/lib/public-booking-url";
+import { dpaUrl, privacyPolicyUrl, termsOfServiceUrl } from "@/lib/marketing-legal-urls";
 import { LivCapabilitiesCard } from "@/components/LivCapabilitiesCard";
 import { BillingSummaryCard } from "@/components/BillingSummaryCard";
-
-const PRIVACY_URL = "https://livia.io/legal/privacy";
-const TERMS_URL = "https://livia.io/legal/tos";
-const DPA_URL = "https://livia.io/legal/dpa";
 
 function aiEnabledFromBusiness(v: string | undefined): boolean {
   return v !== "false" && v !== "0";
@@ -61,9 +58,9 @@ const PERSONA_HINT: Record<string, string> = {
 
 function LegalBlock({ colors }: { colors: ReturnType<typeof useColors> }) {
   const links = [
-    { label: "Privacy", url: PRIVACY_URL },
-    { label: "Terms", url: TERMS_URL },
-    { label: "DPA", url: DPA_URL },
+    { label: "Privacy", url: privacyPolicyUrl() },
+    { label: "Terms", url: termsOfServiceUrl() },
+    { label: "DPA", url: dpaUrl() },
   ];
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -261,11 +258,11 @@ export default function SettingsScreen() {
               </Text>
               <HelpSupportSheet />
               <Pressable
-                onPress={() => void Linking.openURL("mailto:support@livia.io?subject=Livia%20mobile%20help")}
+                onPress={() => void Linking.openURL("mailto:support@livia-hq.com?subject=Livia%20mobile%20help")}
                 style={styles.linkRow}
               >
                 <Feather name="mail" size={16} color={colors.primary} />
-                <Text style={[styles.linkText, { color: colors.primary }]}>support@livia.io</Text>
+                <Text style={[styles.linkText, { color: colors.primary }]}>support@livia-hq.com</Text>
               </Pressable>
             </View>
 

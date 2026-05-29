@@ -70,7 +70,8 @@ export default function LegalAcceptancePage() {
             <CardTitle className="font-serif text-2xl">Before you set up your shop</CardTitle>
             <CardDescription>
               Livia is a business platform for salons, studios, and clinics — not a personal consumer app.
-              You need to accept our platform terms to create a location.
+              You need to accept our platform terms to create a location. Same path whether you signed up
+              with email or Google.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">

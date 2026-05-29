@@ -20,20 +20,24 @@ import { FeatureFlagsView } from "./views/FeatureFlagsView";
 import { WeeklyReportView } from "./views/WeeklyReportView";
 import { ImpersonationView } from "./views/ImpersonationView";
 import { FounderCockpitView } from "./views/FounderCockpitView";
+import { getExecHomePath } from "./lib/exec-path";
 import { buttonStyle, inputStyle } from "./styles/ops-ui";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { InternalShell } from "./layout/InternalShell";
 import { SupportPage } from "./pages/SupportPage";
 import { KnowledgePage } from "./pages/KnowledgePage";
 import { TenantsPage } from "./pages/TenantsPage";
+import { OnboardingExperiencePickerView } from "./views/OnboardingExperiencePickerView";
+
+const ONBOARDING_PICKER_PATH = "/experience/onboarding-picker";
 
 export function App() {
+  const location = useLocation();
   const [secret, setSecretState] = useState(() => getOpsSecret());
   const [activeTicketCount, setActiveTicketCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [apiPing, setApiPing] = useState<{ ok: boolean; message: string } | null>(null);
   const navigate = useNavigate();
-  const location = useLocation();
   const role = useMemo(() => getOpsRole(), [secret]);
 
   const isOnSupport = useMemo(() => location.pathname === "/" || location.pathname.startsWith("/support"), [location.pathname]);
@@ -75,6 +79,10 @@ export function App() {
     });
   }, [secret, reloadTickets, navigate, isOnSupport]);
 
+  if (import.meta.env.DEV && location.pathname === ONBOARDING_PICKER_PATH) {
+    return <OnboardingExperiencePickerView />;
+  }
+
   if (!secret) {
     return (
       <InternalShell>
@@ -106,8 +114,8 @@ export function App() {
           <input
             name="operator"
             type="email"
-            placeholder="you@livia.io"
-            defaultValue={getOpsOperator()}
+            placeholder="projectlazarus@livia.io"
+            defaultValue={getOpsOperator() || "projectlazarus@livia.io"}
             style={{ ...inputStyle, width: "100%", marginBottom: 8 }}
             required
           />
@@ -162,11 +170,23 @@ export function App() {
       ) : null}
 
       <Routes>
-        <Route path="/" element={<Navigate to="/cockpit" replace />} />
         <Route
-          path="/cockpit"
-          element={role === "exec" ? <FounderCockpitView /> : <Navigate to="/support" replace />}
+          path="/"
+          element={
+            role === "exec" && getExecHomePath() === "/" ? (
+              <FounderCockpitView />
+            ) : (
+              <Navigate to="/support" replace />
+            )
+          }
         />
+        {getExecHomePath() !== "/" ? (
+          <Route
+            path={getExecHomePath()}
+            element={role === "exec" ? <FounderCockpitView /> : <Navigate to="/support" replace />}
+          />
+        ) : null}
+        <Route path="/cockpit" element={<Navigate to="/support" replace />} />
 
         <Route
           path="/support"
@@ -200,7 +220,12 @@ export function App() {
         <Route path="/reports" element={<WeeklyReportView />} />
         <Route path="/access" element={<ImpersonationView />} />
 
-        <Route path="*" element={<Navigate to="/cockpit" replace />} />
+        <Route
+          path="*"
+          element={
+            <Navigate to={role === "exec" ? getExecHomePath() : "/support"} replace />
+          }
+        />
       </Routes>
     </InternalShell>
   );

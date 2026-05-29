@@ -114,7 +114,7 @@ export async function getLaunchReadiness(): Promise<{
       track: "compliance",
       label: "Legal pages (ToS, Privacy, DPA)",
       status: "ops",
-      detail: "Publish at livia.io/legal — counsel review",
+      detail: "Publish at livia-hq.com/legal — counsel review",
     },
     {
       id: "eu-residency",

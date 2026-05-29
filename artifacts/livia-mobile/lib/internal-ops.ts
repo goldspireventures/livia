@@ -48,6 +48,30 @@ export type FounderCockpitSnapshot = {
   };
   gate: { founderGate: unknown | null; wargameReport: unknown | null };
   verticalCoverage: unknown;
+  hats?: Array<{
+    id: string;
+    role: string;
+    status: string;
+    focus: string;
+  }>;
+  automations?: Array<{
+    id: string;
+    label: string;
+    destructive?: boolean;
+  }>;
+  production?: {
+    checkedAt: string;
+    allRequiredOk: boolean;
+    checks: Array<{ name: string; ok: boolean; detail: string; required: boolean }>;
+  };
+  commandCenter?: {
+    links: Array<{ id: string; label: string; href: string; description?: string }>;
+  };
+  release?: {
+    betaSignupMode: string;
+    demoEnabled: boolean;
+    steps: Array<{ id: string; label: string; done: boolean; hint?: string }>;
+  };
 };
 
 export async function getFounderOpsSecret(): Promise<string | null> {
@@ -70,12 +94,12 @@ export async function setFounderOperatorEmail(email: string): Promise<void> {
   await SecureStore.setItemAsync(OPS_OPERATOR_KEY, email.trim().toLowerCase());
 }
 
-export async function fetchFounderCockpit(): Promise<FounderCockpitSnapshot> {
+async function fetchExecSnapshotInternal(): Promise<FounderCockpitSnapshot> {
   const secret = await getFounderOpsSecret();
   if (!secret) throw new Error("Set INTERNAL_OPS_SECRET on this device first.");
   const operator = (await getFounderOperatorEmail()) ?? "founder@livia.io";
 
-  const res = await fetch(`${getApiBaseUrl()}/api/internal/ops/org-admin/cockpit`, {
+  const res = await fetch(`${getApiBaseUrl()}/api/internal/ops/exec/snapshot`, {
     headers: {
       Accept: "application/json",
       "X-Internal-Ops-Secret": secret,
@@ -93,5 +117,48 @@ export async function fetchFounderCockpit(): Promise<FounderCockpitSnapshot> {
     }
   }
   return JSON.parse(text) as FounderCockpitSnapshot;
+}
+
+export async function fetchExecSnapshot(): Promise<FounderCockpitSnapshot> {
+  return fetchExecSnapshotInternal();
+}
+
+/** @deprecated */
+export async function fetchFounderCockpit(): Promise<FounderCockpitSnapshot> {
+  return fetchExecSnapshot();
+}
+
+export async function runExecAutomation(
+  automationId: string,
+  opts?: { confirm?: boolean },
+): Promise<{ ok: boolean; summary: string }> {
+  const secret = await getFounderOpsSecret();
+  if (!secret) throw new Error("Set INTERNAL_OPS_SECRET first.");
+  const operator = (await getFounderOperatorEmail()) ?? "founder@livia.io";
+
+  const res = await fetch(
+    `${getApiBaseUrl()}/api/internal/ops/exec/automations/${encodeURIComponent(automationId)}/run`,
+    {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "X-Internal-Ops-Secret": secret,
+        "X-Internal-Ops-Operator": operator,
+        "X-Internal-Ops-Role": "exec",
+      },
+      body: JSON.stringify({ confirm: opts?.confirm === true }),
+    },
+  );
+  const text = await res.text();
+  if (!res.ok) {
+    try {
+      const j = JSON.parse(text) as { summary?: string; error?: string };
+      throw new Error(j.summary || j.error || `Failed (${res.status})`);
+    } catch {
+      throw new Error(text || `Failed (${res.status})`);
+    }
+  }
+  return JSON.parse(text) as { ok: boolean; summary: string };
 }
 

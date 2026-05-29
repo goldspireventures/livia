@@ -226,7 +226,7 @@ const EN: EditorialCopy = {
       },
       {
         q: "GDPR and EU AI Act?",
-        a: "GDPR-first. Art. 50 disclosure on customer surfaces. Legal at livia.io/legal.",
+        a: "GDPR-first. Art. 50 disclosure on customer surfaces. Legal at livia-hq.com/legal.",
       },
       {
         q: "Pricing and VAT?",
@@ -382,7 +382,7 @@ const DE: EditorialCopy = {
       },
       {
         q: "DSGVO und EU AI Act?",
-        a: "DSGVO-first. Art.-50 auf Kundenoberflächen. Legal unter livia.io/legal.",
+        a: "DSGVO-first. Art.-50 auf Kundenoberflächen. Legal unter livia-hq.com/legal.",
       },
       {
         q: "Preise und MwSt.?",

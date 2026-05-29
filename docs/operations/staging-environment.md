@@ -1,12 +1,12 @@
 # Staging environment
 
-**Status:** L7 (2026-05-21)
+**Status:** Runbook — [`STAGING-SETUP.md`](./STAGING-SETUP.md) (provision + test web/mobile). Prep checklist — [`staging-prep-livia-hq.md`](./staging-prep-livia-hq.md).
 
 | Env | API | Dashboard | Mobile | DB |
 |-----|-----|-----------|--------|-----|
-| **Local** | `:3001` | `:5173` | Expo | Supabase dev branch |
-| **Staging** | `api.staging.livia.io` | `app.staging.livia.io` | TestFlight internal | Supabase staging project |
-| **Production** | `api.livia.io` | `app.livia.io` | Stores | Supabase prod (EU region) |
+| **Local** | `:3000` / `:3001` | `:5173` | Expo | Supabase dev |
+| **Staging** | `api.staging.livia-hq.com` *(not live)* | `app.staging.livia-hq.com` | TestFlight internal | Supabase staging project |
+| **Production** | `api.livia-hq.com` | `app.livia-hq.com` | Stores / EAS | Supabase prod (EU) |
 
 **Secrets:** repo-root `.env` local; staging/prod in vault — never commit.
 
