@@ -21,6 +21,14 @@ This is how operator surfaces stay beautiful, fluid, and context-aware — not a
 | Context | Below header or inline | Vertical insights, proposals (only when relevant) |
 | Deep | Drawer / secondary route | Audit, billing, integrations |
 
+## Surface-adaptive zones
+
+On **phone**, Work is single column; Context collapses into stack push or bottom sheet.  
+On **tablet**, Work + Context may split 50/50 (inbox, proof desk).  
+On **desktop**, optional third **rail** for entity detail.
+
+Breakpoints and module morph: [`SURFACE-AND-BREAKPOINTS.md`](./SURFACE-AND-BREAKPOINTS.md).
+
 ## Static vs dynamic
 
 - **Static**: nav shell, typography, spacing tokens, brand gradient on Home ritual only.

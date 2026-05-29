@@ -5,6 +5,7 @@
  * Presentation (colors, density, layout chrome) comes from preset + brand overrides.
  *
  * @see docs/design/PRESENTATION-PRESETS-AND-ROLLOUT.md
+ * @see docs/design/SURFACE-AND-BREAKPOINTS.md — layout morph (phone/tablet/desktop) is separate from preset tokens
  */
 import type { BusinessVertical } from "./types";
 
@@ -40,7 +41,31 @@ export type PresentationPreset = {
   cssPreset: string;
 };
 
-export const PRESENTATION_PRESETS: Record<BusinessVertical, PresentationPreset[]> = {
+/** Shared id — classic Aurora Livia chrome; available in every vertical pack. */
+export const PLATFORM_DEFAULT_PRESET_ID = "platform-default";
+
+function platformDefaultPreset(vertical: BusinessVertical): PresentationPreset {
+  return {
+    id: PLATFORM_DEFAULT_PRESET_ID,
+    vertical,
+    label: "Platform Default",
+    description:
+      "Classic Livia — Aurora cyan and violet, glass surfaces, Liv glow on command moments.",
+    isDefault: false,
+    tokens: {
+      colorMode: "system",
+      density: "comfortable",
+      display: "sans",
+      layout: "cards",
+      shell: "aurora",
+      radius: "xl",
+      motion: "crisp",
+    },
+    cssPreset: "platform-default",
+  };
+}
+
+const BASE_PRESENTATION_PRESETS: Record<BusinessVertical, PresentationPreset[]> = {
   hair: [
     {
       id: "hair-warm-chair",
@@ -519,6 +544,17 @@ export const PRESENTATION_PRESETS: Record<BusinessVertical, PresentationPreset[]
     },
   ],
 };
+
+/** Four presets per vertical: Platform Default (Aurora) + three vertical-native skins. */
+export const PRESENTATION_PRESETS: Record<BusinessVertical, PresentationPreset[]> = (
+  Object.keys(BASE_PRESENTATION_PRESETS) as BusinessVertical[]
+).reduce(
+  (acc, vertical) => {
+    acc[vertical] = [platformDefaultPreset(vertical), ...BASE_PRESENTATION_PRESETS[vertical]];
+    return acc;
+  },
+  {} as Record<BusinessVertical, PresentationPreset[]>,
+);
 
 export function listPresentationPresets(vertical: BusinessVertical): PresentationPreset[] {
   return PRESENTATION_PRESETS[vertical];

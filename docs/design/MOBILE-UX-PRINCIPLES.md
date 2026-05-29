@@ -57,9 +57,11 @@ Rule: if a screen needs more than two form columns or a data table, prefer **mob
 ## Layout
 
 - **Phone:** 16px horizontal padding; cards stack; max one stats row + one list per screen.
-- **Tablet (≥600dp):** 24px padding, content capped at ~560px centered — readable without stretching thumb reach.
+- **Tablet (≥600dp):** 24px padding, content capped at ~560px centered — readable without stretching thumb reach. **Split pane** for inbox, proof desk, reception calendar where [`SURFACE-AND-BREAKPOINTS.md`](./SURFACE-AND-BREAKPOINTS.md) specifies.
 - **Bottom tabs:** max 5 visible per persona; overflow lives in More (never a sixth tab).
 - **Safe area:** tab bar floats above home indicator; scroll content `paddingBottom: 140` on tab screens.
+
+**Canonical surface spec:** [`SURFACE-AND-BREAKPOINTS.md`](./SURFACE-AND-BREAKPOINTS.md).
 
 ---
 

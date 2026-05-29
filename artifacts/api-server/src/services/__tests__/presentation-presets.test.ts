@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import {
   isValidPresentationPreset,
   listPresentationPresets,
+  PLATFORM_DEFAULT_PRESET_ID,
   presentationPresetsEnabled,
   resolvePresentationPreset,
 } from "@workspace/policy";
@@ -20,13 +21,17 @@ const verticals = [
 
 for (const vertical of verticals) {
   const presets = listPresentationPresets(vertical);
-  assert.equal(presets.length, 3, `${vertical} should have 3 presets`);
+  assert.equal(presets.length, 4, `${vertical} should have 4 presets`);
   assert.equal(
     presets.filter((p) => p.isDefault).length,
     1,
-    `${vertical} should have one default`,
+    `${vertical} should have one vertical-native default`,
   );
+  assert.equal(presets[0]!.id, PLATFORM_DEFAULT_PRESET_ID, `${vertical} lists platform default first`);
 }
+
+assert.equal(resolvePresentationPreset("body-art", PLATFORM_DEFAULT_PRESET_ID).cssPreset, "platform-default");
+assert.equal(resolvePresentationPreset("body-art", PLATFORM_DEFAULT_PRESET_ID).tokens.shell, "aurora");
 
 assert.equal(resolvePresentationPreset("body-art", null).id, "body-art-studio-dark");
 assert.equal(resolvePresentationPreset("body-art", null).tokens.layout, "pipeline");

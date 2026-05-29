@@ -29,3 +29,7 @@ Clients (dashboard, mobile, public, internal)
 | Liv | `liv-runtime`, `ai-chat.service`, prompts | Agent loop |
 
 Support and ops: `livia-internal` + `internal/ops/*` routes.
+
+**Evolution discipline (hub-and-spoke):** [`COMPOSABLE-EVOLUTION.md`](./COMPOSABLE-EVOLUTION.md)  
+**Investigation (surfaceId, tickets):** [`../operations/SUPPORT-POINTS-AND-INVESTIGATION.md`](../operations/SUPPORT-POINTS-AND-INVESTIGATION.md)  
+**Program + master todo:** [`../product/PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md`](../product/PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md)

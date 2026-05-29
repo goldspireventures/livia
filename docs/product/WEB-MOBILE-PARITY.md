@@ -5,7 +5,20 @@
 
 This doc tracks **tenant product** surfaces (not marketing site, not internal ops portal).
 
-**Mobile UX rules:** [`design/MOBILE-UX-PRINCIPLES.md`](../design/MOBILE-UX-PRINCIPLES.md)
+**Mobile UX rules:** [`design/MOBILE-UX-PRINCIPLES.md`](../design/MOBILE-UX-PRINCIPLES.md)  
+**Surface / breakpoint morph:** [`design/SURFACE-AND-BREAKPOINTS.md`](../design/SURFACE-AND-BREAKPOINTS.md)
+
+---
+
+## Surface model (phone · tablet · desktop)
+
+| Class | Web | Native mobile |
+|-------|-----|---------------|
+| Phone | `<640px` | default |
+| Tablet | `640–1023px` | shortest side `≥600dp` |
+| Desktop | `≥1024px` | web handoff |
+
+Same feature, different **shape** — not a zoomed-out desktop. Module morph tables: [`SURFACE-AND-BREAKPOINTS.md` Part III](../design/SURFACE-AND-BREAKPOINTS.md#part-iii--layout-morph-by-vertical-module).
 
 ---
 
@@ -58,6 +71,7 @@ Web uses sidebar ritual nav; mobile uses bottom tabs + **More** for staff/servic
 | Running late | Today + booking detail sheet | Today quick actions + booking (CONFIRMED) | **OK** (2026-05-25) |
 | Leave request | Staff profile → Leave; manager Rota | More → Request leave (`/time-off`) | **OK** (2026-05-25) |
 | Vertical accent (Today) | `vertical-theme.ts` on app shell | Today vertical line uses `verticalAccentHex` | **OK** (2026-05-25) |
+| Presentation preset + surface morph | `data-presentation` + `data-surface` (staging) | Preset accent + phone/tablet layout | **Planned** — [`SURFACE-AND-BREAKPOINTS.md`](../design/SURFACE-AND-BREAKPOINTS.md) |
 | Public booking theme | `/b/:slug` vertical hero | Same web surface (mobile browser) | **OK** (2026-05-25) |
 | Guest visit link (late, feedback, receipt) | `/b/:slug/visit/:token` | Web only (SMS link) | **OK** (2026-05-25) |
 | Visit feedback on Today | `VisitFeedbackStrip` | `VisitFeedbackCard` on Today | **OK** (2026-05-25) |

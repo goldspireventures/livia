@@ -12,7 +12,7 @@ Every owner-facing surface receives **`TenantExperience`** from one resolver (`r
 |-------|--------|
 | `vocabulary` | `businessVocabulary()` |
 | `playbook` | `getVerticalPlaybook()` — wedge, home modules, public CTA |
-| `skin` | `resolveTenantExperienceSkin()` — shell, display, market, accentHex; **staging+:** `presetId`, `cssPreset`, `colorMode`, `density`, `layout` ([`../design/PRESENTATION-PRESETS-AND-ROLLOUT.md`](../design/PRESENTATION-PRESETS-AND-ROLLOUT.md)) |
+| `skin` | `resolveTenantExperienceSkin()` — shell, display, market, accentHex; **staging+:** `presetId` (`platform-default` = Aurora), `cssPreset`, `colorMode`, `density`, `layout` ([`../design/PRESENTATION-PRESETS-AND-ROLLOUT.md`](../design/PRESENTATION-PRESETS-AND-ROLLOUT.md)) |
 | `onboardingExtras` | `getVerticalOnboardingExtras()` |
 | `onboarding.appUnlocked` | `isOnboardingAppUnlocked()` — blocking acts complete |
 | `onboarding.activationSteps` | Post-go-live checklist (not a hard app lock) |
@@ -40,6 +40,8 @@ Test booking is an **activation** step, not an app-store hard lock.
 | Mobile setup | `onboarding-continue` + tenant experience |
 | Public booking | `experienceSkin` from API (unchanged) |
 
+Presentation preset + surface morph (staging): [`../design/SURFACE-AND-BREAKPOINTS.md`](../design/SURFACE-AND-BREAKPOINTS.md).
+
 ## CI
 
 - `artifacts/api-server/src/services/__tests__/vocabulary-leak.test.ts`
@@ -49,6 +51,7 @@ Test booking is an **activation** step, not an app-store hard lock.
 
 - Release: [`docs/operations/APP-STORE-PRODUCTION-CHECKLIST.md`](../operations/APP-STORE-PRODUCTION-CHECKLIST.md)
 - “Really possible” criteria: [`docs/operations/APP-STORE-READINESS.md`](../operations/APP-STORE-READINESS.md)
+- Changing this contract: [`engineering/COMPOSABLE-EVOLUTION.md`](../engineering/COMPOSABLE-EVOLUTION.md) §5.1–5.2
 
 ## Anti-patterns (do not add)
 

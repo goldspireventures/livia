@@ -7,7 +7,8 @@ export type VerticalShellKind =
   | "soft"
   | "bold"
   | "playful"
-  | "industrial";
+  | "industrial"
+  | "aurora";
 
 /** Per-vertical design tokens — applied on `html[data-vertical]`. */
 export const VERTICAL_THEMES: Record<

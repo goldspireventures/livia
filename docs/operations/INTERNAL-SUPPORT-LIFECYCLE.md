@@ -1,5 +1,8 @@
 # Internal support ticket lifecycle
 
+**Investigation architecture (surfaceId, registry, target UX):** [`SUPPORT-POINTS-AND-INVESTIGATION.md`](./SUPPORT-POINTS-AND-INVESTIGATION.md)  
+**Program backlog:** [`product/PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md`](../product/PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md)
+
 ## Intake (tenant)
 
 Dashboard → **Report issue** → `POST /businesses/:id/support/tickets`
@@ -65,6 +68,9 @@ Production: operator headers required; dev defaults to `dev-operator@livia.io` +
 
 ## What is not built yet
 
+- `surfaceId` on all Help submits + support-point registry (`lib/policy`) — see SUPPORT-POINTS-AND-INVESTIGATION
+- Internal **Investigate** panel (paste `requestId` → log/Sentry hints)
+- Ticket detail **Likely code paths** from registry
 - Workforce SSO (second Clerk app)
 - Linear/Intercom sync
 - Impersonation from internal UI

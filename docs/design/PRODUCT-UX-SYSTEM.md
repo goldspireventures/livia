@@ -10,12 +10,13 @@
 
 | Layer | Rule |
 |-------|------|
-| **Visual system** | Single Aurora theme (`index.css`, shadcn/ui, cyan primary, serif headlines). |
+| **Visual system** | Aurora baseline (`index.css`) — exposed as **Platform Default** preset; vertical-native skins override tokens. |
 | **Persona** | Same components; different **home route**, nav order, ritual header accent (`PERSONA_ACCENT`). See [`../product/PERSONA-UX.md`](../product/PERSONA-UX.md). |
 | **Vertical** | Same shell; **tone class** + vocabulary (`verticalPackUi`, `VerticalBadge`) so hair vs medspa vs pet reads clearly without a different app. |
-| **Presentation preset** | Tenant picks 1 of 3 skins **within** their vertical (staging rollout). Same features; different density/colour/layout chrome. See [`PRESENTATION-PRESETS-AND-ROLLOUT.md`](./PRESENTATION-PRESETS-AND-ROLLOUT.md). |
+| **Presentation preset** | Tenant picks 1 of **4** skins **within** their vertical (Platform Default + 3 native; staging rollout). Same features; different density/colour chrome. See [`PRESENTATION-PRESETS-AND-ROLLOUT.md`](./PRESENTATION-PRESETS-AND-ROLLOUT.md). |
+| **Surface** | Phone / tablet / desktop **layout morph** on top of preset — same data, different shape. See [`SURFACE-AND-BREAKPOINTS.md`](./SURFACE-AND-BREAKPOINTS.md). |
 
-We do **not** ship separate apps per vertical. We ship **one kernel** with vertical capability packs and optional presentation presets (plus honest vertical cues: label, tone, copy).
+We do **not** ship separate apps per vertical. We ship **one kernel** with vertical capability packs, optional presentation presets, and surface-adaptive layouts (plus honest vertical cues: label, tone, copy).
 
 ---
 
@@ -43,9 +44,10 @@ Avoid animation on data tables that update every second.
 ## Responsive
 
 - Mobile-first padding; `sm:` grids for forms.
+- **Surface classes:** phone `<640px`, tablet `640–1023px`, desktop `≥1024px` — layout morph per [`SURFACE-AND-BREAKPOINTS.md`](./SURFACE-AND-BREAKPOINTS.md).
 - Native tenant app: [`MOBILE-UX-PRINCIPLES.md`](./MOBILE-UX-PRINCIPLES.md) (tabs vs More vs web handoff).
-- Public booking: full viewport height chat; `100dvh` where needed.
-- Chain / premises: stack cards on narrow screens; `sm:grid-cols-*` for KPI rows.
+- Public booking: full viewport height chat; `100dvh` where needed; tablet 2-col service grid where applicable.
+- Chain / premises: stack cards on narrow screens; `sm:grid-cols-*` for KPI rows; desktop multi-pane for inbox.
 
 ---
 

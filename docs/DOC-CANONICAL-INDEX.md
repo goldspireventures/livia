@@ -1,7 +1,7 @@
 # Documentation canonical index
 
 **Purpose:** When two docs disagree, **this table wins**.  
-**Updated:** 2026-05-22 (realignment program)
+**Updated:** 2026-05-29 (platform evolution + experience architecture + support points program)
 
 ---
 
@@ -54,6 +54,10 @@
 | **Business operator pack** | `business/OPERATOR-READY-PACK.md` | `business/templates/*` |
 | **UX audit (2026-05-24)** | `testing/UX-FULL-PLATFORM-AUDIT-2026-05-24.md` | — |
 | **Internal support** | `operations/SUPPORT-RUNBOOK.md` | `company/livia-internal-portal-spec.md` |
+| **Composable evolution (hub-and-spoke)** | `engineering/COMPOSABLE-EVOLUTION.md` | `product/TENANT-EXPERIENCE-CONTRACT.md`, ADR 0018 |
+| **Experience architecture (five layers)** | `design/EXPERIENCE-ARCHITECTURE.md` | `design/PRESENTATION-PRESETS-AND-ROLLOUT.md`, `design/SURFACE-AND-BREAKPOINTS.md`, `design/PERSONA-VERTICAL-SURFACE-MATRIX.md`, `design/CHANNEL-UX-CONTRACT.md` |
+| **Support points / investigation** | `operations/SUPPORT-POINTS-AND-INVESTIGATION.md` | `operations/INTERNAL-SUPPORT-LIFECYCLE.md` |
+| **Evolution + ops program (master plan)** | `product/PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md` | `operations/PLATFORM-BACKLOG.md` |
 | **Beta showcase / mandate** | `product/BETA-SHOWCASE-PROGRAM.md` | `product/LIV-OPERATING-SYSTEM.md` |
 | **Vertical vocabulary (code)** | `lib/policy` + `vocabulary.ts` | `vertical-pack-ui.ts` in apps |
 | **Liv architecture target** | `product/LIV-OPERATING-SYSTEM.md` | `LIV-EXECUTION-PLAN.md` |
@@ -74,8 +78,9 @@
 | **EU onboarding + manual E2E gate** | `testing/EU-ONBOARDING-READY.md` | `testing/FULL-VISUAL-AUDIT-WEB-MOBILE.md` |
 | **UX system (eng)** | `design/PRODUCT-UX-SYSTEM.md` | `product/PERSONA-UX.md`, `design/motion-tokens.md` |
 | **Presentation presets (vertical × skin × staging rollout)** | `design/PRESENTATION-PRESETS-AND-ROLLOUT.md` | `lib/policy/src/presentation-presets.ts`, `product/TENANT-EXPERIENCE-CONTRACT.md` |
+| **Surface / breakpoints (phone · tablet · desktop)** | `design/SURFACE-AND-BREAKPOINTS.md` | `PRESENTATION-PRESETS-AND-ROLLOUT.md`, `WEB-MOBILE-PARITY.md` |
 | **Env template** | `../.env.example` | `artifacts/*/\.env.example` (dashboard, marketing, internal, mobile) |
-| **Platform backlog (todo)** | `operations/PLATFORM-BACKLOG.md` | `audits/PLATFORM-PRODUCTION-READINESS-AUDIT.md` |
+| **Platform backlog (todo)** | `operations/PLATFORM-BACKLOG.md` | `product/PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md`, `audits/PLATFORM-PRODUCTION-READINESS-AUDIT.md` |
 | **ADRs** | `adr/` | Immutable decisions |
 | **Legal (draft)** | `legal/*` | G3 counsel |
 

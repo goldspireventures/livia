@@ -77,8 +77,13 @@ SLA targets (beta):
 
 ### 7) What’s next (implementation roadmap)
 
+Canonical sequencing: [`product/PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md`](../product/PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md) Tracks B–C · [`SUPPORT-POINTS-AND-INVESTIGATION.md`](./SUPPORT-POINTS-AND-INVESTIGATION.md).
+
+- **Support points v1**: `surfaceId` on tickets, `lib/policy` registry, triage from registry, Sentry `surface` tag
+- **Investigate panel**: paste `requestId` → log/Sentry hints (internal portal)
 - **UI overhaul**: ticket detail becomes a 3-column workspace (queue / summary / timeline)
+- **Likely code paths**: registry-driven file list on ticket detail
 - **Timeline**: unify “messages + workflow events + audit + traces” into one chronological view
-- **Runbook surfacing**: dynamic runbook suggestions per tag/category
+- **Runbook surfacing**: dynamic runbook suggestions per tag/category/**surfaceId**
 - **Postmortem-lite**: on close, require root cause + prevention checkbox
 

@@ -6,7 +6,7 @@ Welcome. This is the only doc you have to read before your first PR. Everything 
 
 Livia is a premium AI-native **operating system for appointment-based service businesses** globally (hair, beauty, tattoo, wellness, fitness, medspa, allied health, and more). **Ireland / EN-IE** is the first market we prove; **hair/barber** is the first vertical pack, not the product definition. The product is **Livia**; the AI colleague is **Liv**.
 
-**Read first:** [`docs/LIVIA-ALIGNMENT.md`](./LIVIA-ALIGNMENT.md) · **Active program:** [`docs/product/SYSTEM-REALIGNMENT-PROGRAM.md`](./product/SYSTEM-REALIGNMENT-PROGRAM.md)
+**Read first:** [`docs/LIVIA-ALIGNMENT.md`](./LIVIA-ALIGNMENT.md) · **Active build:** [`docs/product/OPERATION-SOLIDIFY.md`](./product/OPERATION-SOLIDIFY.md) · **Platform evolution + ops:** [`docs/product/PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md`](./product/PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md)
 
 ## What's shipped
 
@@ -66,6 +66,18 @@ See [ADR 0007](./adr/0007-aurora-tokens-and-gradient-discipline.md) for the full
 - Brand layer is silent on "AI" — no "AI-powered" badges in marketing.
 - Disclosure shows up where it legally must: chat widget first message (EU AI Act Art. 50), Privacy + ToS (GDPR Art. 22), Anthropic AUP footer on the public booking page.
 - Liv's behaviour is configured per-business via the 5 AI columns on `businesses` — no global hardcoded persona.
+
+## Product rules and troubleshooting (read before hub or support changes)
+
+| Topic | Doc |
+|-------|-----|
+| Tenant bundle (copy, skin, onboarding gates) | [`product/TENANT-EXPERIENCE-CONTRACT.md`](./product/TENANT-EXPERIENCE-CONTRACT.md) |
+| Changing onboarding / presets / vertical copy | [`engineering/COMPOSABLE-EVOLUTION.md`](./engineering/COMPOSABLE-EVOLUTION.md) — follow the change playbooks (§5) |
+| Experience architecture (presets, surface, channels) | [`design/EXPERIENCE-ARCHITECTURE.md`](./design/EXPERIENCE-ARCHITECTURE.md) · rollout [`design/PRESENTATION-PRESETS-AND-ROLLOUT.md`](./design/PRESENTATION-PRESETS-AND-ROLLOUT.md) |
+| Support tickets, `requestId`, `surfaceId` | [`operations/SUPPORT-POINTS-AND-INVESTIGATION.md`](./operations/SUPPORT-POINTS-AND-INVESTIGATION.md) |
+| Master todo for evolution + investigation | [`product/PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md`](./product/PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md) · [`operations/PLATFORM-BACKLOG.md`](./operations/PLATFORM-BACKLOG.md) |
+
+**Observability today:** `x-request-id` on every API call (logs + Sentry + error JSON). Dashboard Help → `POST .../support/tickets` with route and entity ids in `context`. Internal portal: `pnpm dev:internal` → Support queue ([`operations/INTERNAL-SUPPORT-LIFECYCLE.md`](./operations/INTERNAL-SUPPORT-LIFECYCLE.md)).
 
 ## EU compliance posture
 

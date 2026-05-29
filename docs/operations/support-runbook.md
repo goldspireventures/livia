@@ -3,6 +3,7 @@
 **Portal:** `pnpm dev:internal` → http://localhost:5175  
 **Operating model (SLAs, escalation, macros):** [`CUSTOMER-SUPPORT-OPERATING-MODEL.md`](./CUSTOMER-SUPPORT-OPERATING-MODEL.md)  
 **Lifecycle:** [`INTERNAL-SUPPORT-LIFECYCLE.md`](./INTERNAL-SUPPORT-LIFECYCLE.md)  
+**Investigation (surfaceId, registry):** [`SUPPORT-POINTS-AND-INVESTIGATION.md`](./SUPPORT-POINTS-AND-INVESTIGATION.md)  
 **Spec:** [`../company/livia-internal-portal-spec.md`](../company/livia-internal-portal-spec.md)  
 **Tenant report issue:** Dashboard → **Report issue** → `POST /support/tickets`
 
@@ -14,7 +15,7 @@
 |-------|-----|
 | Category | bug · liv_error · billing · feature · other |
 | Severity | blocking · annoying · nice_to_have |
-| Context | route, bookingId, vertical, userAgent (auto) |
+| Context | route, `requestId` (server), bookingId, conversationId (when applicable); **`surfaceId`** (target — auto from route map) |
 
 **First response SLA (target):** blocking 4h business hours; annoying 2 business days.
 
@@ -23,11 +24,14 @@
 ## Triage checklist
 
 1. Identify **tenant** (slug, business id) in internal portal.  
-2. Open **health card** — last booking, SMS, subscription.  
-3. Reproduce on **demo tenant** same vertical if possible (`/demo` → Open as owner).  
-4. Check **audit log** (tenant) for booking/policy changes.  
-5. **Liv errors** — review conversation id + prompt pack in Settings → Liv.  
-6. **Do not** use removed **Hiring** APIs — team issues = invitations / Clerk.
+2. Copy **`requestId`** from ticket context → logs (`request_id=`) / Sentry.  
+3. Read **`surfaceId`** when present → [`SUPPORT-POINTS-AND-INVESTIGATION.md`](./SUPPORT-POINTS-AND-INVESTIGATION.md) §5 registry (or §4.2 catalog until registry ships).  
+4. Open **health card** — last booking, SMS, subscription.  
+5. Reproduce on **demo tenant** same vertical if possible (`/demo` → Open as owner).  
+6. Check **audit log** (tenant) for booking/policy changes.  
+7. **Liv errors** — review conversation id + prompt pack in Settings → Liv.  
+8. **Do not** use removed **Hiring** APIs — team issues = invitations / Clerk.  
+9. Code fix in the correct **ring** — policy/API/UI — see [`COMPOSABLE-EVOLUTION.md`](../engineering/COMPOSABLE-EVOLUTION.md).
 
 ---
 

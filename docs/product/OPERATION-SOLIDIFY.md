@@ -12,6 +12,8 @@
 - [`../design/MOBILE-UX-PRINCIPLES.md`](../design/MOBILE-UX-PRINCIPLES.md) — mobile flagship rules  
 - [`CHANNELS-EU-MESSAGING.md`](./CHANNELS-EU-MESSAGING.md) — WA / IG / Messenger  
 - [`../operations/INTERNAL-SUPPORT-SYSTEM-DESIGN.md`](../operations/INTERNAL-SUPPORT-SYSTEM-DESIGN.md) — internal cockpit  
+- [`PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md`](./PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md) — composable evolution + support-point investigation (master todo)  
+- [`../engineering/COMPOSABLE-EVOLUTION.md`](../engineering/COMPOSABLE-EVOLUTION.md) · [`../operations/SUPPORT-POINTS-AND-INVESTIGATION.md`](../operations/SUPPORT-POINTS-AND-INVESTIGATION.md)  
 
 **Founder / legal / field (unchanged):** [`../company/FOUNDER-BACKLOG.md`](../company/FOUNDER-BACKLOG.md)
 

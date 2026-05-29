@@ -27,6 +27,8 @@
 | Reception | `/bookings` | Floor calendar, walk-ins, messages |
 | Customer | `/b/:slug` | Book + chat, no login |
 
+**Surface morph:** same routes reshape on phone / tablet / desktop — [`design/SURFACE-AND-BREAKPOINTS.md`](../design/SURFACE-AND-BREAKPOINTS.md). Native mobile uses phone-class layouts; reception/proof workflows target tablet split where available.
+
 ## Implementation map
 
 - Ritual config: `artifacts/livia-dashboard/src/lib/persona-rituals.ts`
