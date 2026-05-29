@@ -98,6 +98,7 @@ jobs:
       DASHBOARD_URL: http://127.0.0.1:5173
       MARKETING_URL: http://127.0.0.1:5174
       API_PUBLIC_URL: http://127.0.0.1:3001
+      PORT: "3001"
       LIVIA_SKIP_PRODUCTION_ENV_CHECK: "true"
     steps:
       - uses: actions/checkout@v4
@@ -121,8 +122,9 @@ jobs:
         run: pnpm --filter @workspace/api-server run build
 
       - name: Start api-server
+        working-directory: artifacts/api-server
         run: |
-          pnpm --filter @workspace/api-server run start &
+          node --enable-source-maps ./dist/index.mjs &
           for i in $(seq 1 30); do
             curl -sf http://127.0.0.1:3001/api/healthz && break
             sleep 2

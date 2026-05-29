@@ -25,6 +25,7 @@ try {
   assert.doesNotThrow(() => assertProductionEnvAtBoot());
 
   process.env.NODE_ENV = "production";
+  delete process.env.LIVIA_SKIP_PRODUCTION_ENV_CHECK;
   delete process.env.DASHBOARD_URL;
   delete process.env.MARKETING_URL;
   delete process.env.API_PUBLIC_URL;
