@@ -23,6 +23,7 @@ import { useColors } from "@/hooks/useColors";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useBusinessTimezone } from "@/hooks/useBusinessTimezone";
 import { pendingReasonLabel } from "@/lib/booking-pending";
+import { getPublicBookingUrl } from "@/lib/public-booking-url";
 import { BookingTimelineCard } from "@/components/BookingTimelineCard";
 import { notifyBookingRunningLate, promptRunningLateMinutes } from "@/lib/running-late";
 import { OperationalScreen } from "@/components/OperationalScreen";
@@ -153,7 +154,7 @@ export default function BookingDetailScreen() {
     const svc = service?.name ?? "Appointment";
     const shop = currentBusiness?.name ?? "the shop";
     const bookUrl = currentBusiness?.slug
-      ? `https://livia.io/b/${currentBusiness.slug}`
+      ? getPublicBookingUrl(currentBusiness.slug)
       : undefined;
     const message = `${customerName} — ${svc} at ${shop}\n${when}${bookUrl ? `\nBook: ${bookUrl}` : ""}`;
     await Share.share({ message, title: `${svc} booking` });

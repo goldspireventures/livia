@@ -8,14 +8,17 @@ Use before shipping **livia-mobile** to TestFlight / App Store and **app.livia-h
 |----------|--------|---------|
 | `DATABASE_URL` | API | Postgres (Supabase pooler 5432) |
 | `CLERK_SECRET_KEY` / `CLERK_PUBLISHABLE_KEY` | API + dashboard + mobile | Auth |
+| `VITE_CLERK_PUBLISHABLE_KEY` | Vercel (dashboard) | Same `pk_` as API |
 | `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` | Mobile | Same `pk_` as dashboard |
-| `EXPO_PUBLIC_API_BASE_URL` | Mobile | Production API, e.g. `https://api.livia.io` |
-| `EXPO_PUBLIC_DASHBOARD_URL` | Mobile | Web onboarding link, e.g. `https://app.livia.io` |
-| `DASHBOARD_BASE_URL` | API | Email/deep links |
-| `CORS_ALLOWED_ORIGINS` | API | `https://app.livia.io`, `https://livia.io` |
+| `EXPO_PUBLIC_API_BASE_URL` | Mobile | `https://api.livia-hq.com` |
+| `EXPO_PUBLIC_DASHBOARD_URL` | Mobile | `https://app.livia-hq.com` |
+| `DASHBOARD_URL` | Railway (API) | Owner app — emails, Clerk proxy, deep links |
+| `MARKETING_URL` | Railway (API) | `https://livia-hq.com` |
+| `API_PUBLIC_URL` | Railway (API) | `https://api.livia-hq.com` (uploads/webhooks) |
+| `CORS_ALLOWED_ORIGINS` | Railway (API) | `https://app.livia-hq.com,https://livia-hq.com` |
 | `NODE_ENV=production` | API | Security + compression |
 
-Copy from repo root [`.env.example`](../../.env.example) and [`artifacts/livia-mobile/.env.example`](../../artifacts/livia-mobile/.env.example).
+Copy from [`railway.env.example`](../../railway.env.example) (API), [`.env.example`](../../.env.example) (local), and [`docs/operations/ENV-VARIABLES.md`](./ENV-VARIABLES.md).
 
 ## 2. Verify staging (smoke)
 

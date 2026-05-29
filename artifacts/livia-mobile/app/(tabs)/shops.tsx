@@ -22,6 +22,7 @@ import { useContentInsets } from "@/hooks/useContentInsets";
 import { useHaptics } from "@/hooks/useHaptics";
 import { asHref } from "@/lib/navigation";
 import type { ChainShopRollup } from "@/lib/chain-rollup";
+import { getPublicBookingLabel } from "@/lib/public-booking-url";
 
 function ShopRollupCard({
   shop,
@@ -225,7 +226,7 @@ export default function ShopsScreen() {
                   </Text>
                   {b.slug ? (
                     <Text style={[styles.cardMeta, { color: colors.mutedForeground }]}>
-                      livia.io/b/{b.slug}
+                      {getPublicBookingLabel(b.slug)}
                     </Text>
                   ) : null}
                 </View>

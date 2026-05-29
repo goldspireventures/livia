@@ -3,7 +3,8 @@ import { Link } from "wouter";
 import { Menu, ArrowRight } from "lucide-react";
 import { LiviaWordmark } from "@/components/brand/LiviaMark";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { dashboardDemoUrl } from "@/lib/marketing-links";
+import { LEGAL_FOOTER_LINE } from "@/lib/company";
+import { dashboardDemoUrl, legalBase } from "@/lib/marketing-links";
 import { editorialCopy, type MarketingLocale } from "@/lib/marketing-editorial-i18n";
 
 type MarketingShellProps = {
@@ -117,7 +118,7 @@ export function MarketingShell({ locale, children, onJoinBeta }: MarketingShellP
               <Link href={homeHref}>
                 <LiviaWordmark size="sm" className="opacity-80 hover:opacity-100 transition-opacity" />
               </Link>
-              <span className="text-muted-foreground">© 2026 Livia</span>
+              <span className="text-muted-foreground text-xs">{LEGAL_FOOTER_LINE}</span>
             </div>
             <div className="flex flex-wrap gap-x-6 gap-y-2 text-muted-foreground">
               <Link href="/changelog" className="hover:text-foreground transition-colors min-h-[44px] inline-flex items-center">
@@ -129,10 +130,10 @@ export function MarketingShell({ locale, children, onJoinBeta }: MarketingShellP
               <Link href="/for/chair-rental" className="hover:text-foreground transition-colors min-h-[44px] inline-flex items-center">
                 Chair rental
               </Link>
-              <a href="https://livia.io/legal/privacy" className="hover:text-foreground transition-colors min-h-[44px] inline-flex items-center">
+              <a href={`${legalBase}/privacy`} className="hover:text-foreground transition-colors min-h-[44px] inline-flex items-center" rel="noopener noreferrer">
                 Privacy
               </a>
-              <a href="https://livia.io/legal/tos" className="hover:text-foreground transition-colors min-h-[44px] inline-flex items-center">
+              <a href={`${legalBase}/tos`} className="hover:text-foreground transition-colors min-h-[44px] inline-flex items-center" rel="noopener noreferrer">
                 Terms
               </a>
               <Link href="/pricing" className="hover:text-foreground transition-colors min-h-[44px] inline-flex items-center">

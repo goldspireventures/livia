@@ -22,6 +22,7 @@ import { useHaptics } from "@/hooks/useHaptics";
 import { PERSONA_LABEL, usePersona } from "@/hooks/usePersona";
 import { canViewDayPackages, canViewPremises } from "@/lib/settings-persona";
 import { menuItemsForPersona } from "@/lib/mobile-menu";
+import { getPublicBookingLabel } from "@/lib/public-booking-url";
 
 export default function MoreScreen() {
   const colors = useColors();
@@ -98,7 +99,7 @@ export default function MoreScreen() {
             </Text>
             {currentBusiness.slug && (
               <Text style={[styles.bizSlug, { color: colors.mutedForeground }]}>
-                livia.io/b/{currentBusiness.slug}
+                {getPublicBookingLabel(currentBusiness.slug)}
               </Text>
             )}
           </View>

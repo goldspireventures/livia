@@ -12,6 +12,7 @@ import {
   priceIdForPeerInsightsAddon,
 } from "../lib/stripe";
 import { getBusinessById, updateBusiness } from "../services/businesses.service";
+import { getDashboardUrl } from "../lib/public-urls";
 import { getOrCreateUser } from "../services/users.service";
 import type { EntitlementKey } from "@workspace/entitlements";
 
@@ -102,7 +103,7 @@ router.post(
     }
 
     const baseUrl =
-      process.env.DASHBOARD_BASE_URL?.replace(/\/+$/, "") ?? "http://localhost:5173";
+      getDashboardUrl();
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",

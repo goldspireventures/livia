@@ -13,4 +13,4 @@ Company operator UI for **Livia Inc** (cross-tenant). Not for salon owners.
 4. `pnpm dev:internal` → open http://localhost:5175, paste **`INTERNAL_OPS_SECRET`** from repo-root `.env` (not Clerk).
 5. Search by slug (e.g. `aurora-studio`) — health card shows last booking + Stripe/Clerk links.
 
-Optional env (repo root or `artifacts/livia-internal/.env`): `TENANT_DASHBOARD_URL`, `CLERK_DASHBOARD_USER_URL` for deep links.
+Optional env (`artifacts/livia-internal/.env`): `VITE_DASHBOARD_URL` for founder cockpit links (matches API `DASHBOARD_URL`).

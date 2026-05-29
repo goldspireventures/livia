@@ -1,6 +1,7 @@
 import { db, staffTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { getBusinessesForUser } from "./businesses.service";
+import { getDashboardUrl, getInternalUrl, getMarketingUrl } from "../lib/public-urls";
 
 export type ExperienceStaff = {
   id: string;
@@ -28,12 +29,9 @@ export type ExperienceMap = {
 };
 
 export async function getExperienceMapForUser(userId: string): Promise<ExperienceMap> {
-  const dashboardBase =
-    process.env.DASHBOARD_BASE_URL?.replace(/\/+$/, "") ?? "http://localhost:5173";
-  const internalBase =
-    process.env.INTERNAL_APP_BASE_URL?.replace(/\/+$/, "") ?? "http://localhost:5175";
-  const marketingBase =
-    process.env.MARKETING_BASE_URL?.replace(/\/+$/, "") ?? "http://localhost:5174";
+  const dashboardBase = getDashboardUrl();
+  const internalBase = getInternalUrl();
+  const marketingBase = getMarketingUrl();
 
   const businesses = await getBusinessesForUser(userId);
   const enriched: ExperienceBusiness[] = [];

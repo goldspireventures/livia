@@ -1,5 +1,6 @@
 import { Loader2 } from "lucide-react";
 import { LiviaWordmark } from "@/components/brand/LiviaMark";
+import { getMarketingOrigin } from "@/lib/surface-urls";
 
 /** Shared loading / error chrome for B2C public surfaces (/b, /visit, /p). */
 export function PublicSurfaceHalo() {
@@ -32,7 +33,7 @@ export function PublicSurfaceNotFound({
     <div className="relative min-h-screen bg-background flex flex-col px-4 sm:px-6 py-10">
       <PublicSurfaceHalo />
       <header className="relative z-10 mb-12">
-        <a href="https://livia.io" className="inline-block opacity-80 hover:opacity-100">
+        <a href={getMarketingOrigin()} className="inline-block opacity-80 hover:opacity-100">
           <LiviaWordmark size="sm" />
         </a>
       </header>
@@ -42,8 +43,8 @@ export function PublicSurfaceNotFound({
         </p>
         <h1 className="font-serif text-3xl tracking-tight leading-tight mb-2">{title}</h1>
         <p className="text-muted-foreground text-sm mb-6 leading-relaxed">{detail}</p>
-        <a href="https://livia.io" className="text-aurora-cyan text-sm font-medium hover:text-white min-h-[44px] inline-flex items-center">
-          livia.io →
+        <a href={getMarketingOrigin()} className="text-aurora-cyan text-sm font-medium hover:text-white min-h-[44px] inline-flex items-center">
+          {getMarketingOrigin().replace(/^https?:\/\//, "")} →
         </a>
       </main>
     </div>
@@ -54,12 +55,12 @@ export function PublicSurfaceFooter() {
   return (
     <footer className="mt-16 pt-8 border-t border-border/40 pb-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <a href="https://livia.io" className="opacity-70 hover:opacity-100 transition-opacity">
+        <a href={getMarketingOrigin()} className="opacity-70 hover:opacity-100 transition-opacity">
           <LiviaWordmark size="sm" />
         </a>
         <p className="text-[11px] text-muted-foreground font-mono">
           Bookings powered by{" "}
-          <a href="https://livia.io" className="text-aurora-cyan/90 hover:text-aurora-cyan">
+          <a href={getMarketingOrigin()} className="text-aurora-cyan/90 hover:text-aurora-cyan">
             Livia
           </a>
         </p>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, type ReactNode } from "react";
 import { Link } from "wouter";
 import { useBusiness } from "@/lib/business-context";
+import { legalUrl } from "@/lib/surface-urls";
 import {
   useGetBusiness,
   getGetBusinessQueryKey,
@@ -659,7 +660,7 @@ export default function SettingsPage() {
                     </Link>
                   </div>
                   <a
-                    href="https://livia.io/legal/privacy"
+                    href={legalUrl("privacy")}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary hover:underline block"
@@ -667,7 +668,7 @@ export default function SettingsPage() {
                     Privacy policy
                   </a>
                   <a
-                    href="https://livia.io/legal/tos"
+                    href={legalUrl("tos")}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary hover:underline block"
@@ -675,7 +676,7 @@ export default function SettingsPage() {
                     Terms of service
                   </a>
                   <a
-                    href="https://livia.io/legal/dpa"
+                    href={legalUrl("dpa")}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary hover:underline block"

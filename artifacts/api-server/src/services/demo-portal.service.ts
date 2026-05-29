@@ -57,6 +57,7 @@ import { ensureDemoOperationalCases } from "./demo-operational-cases.seed";
 import { seedVerticalDemoExtras } from "./demo-vertical-extras.seed";
 import { seedCountryDepthOnMarketShops } from "./demo-country-depth.seed";
 import { seedDemoHierarchyLinks } from "./demo-hierarchy.seed";
+import { getDashboardUrl, getInternalUrl, getMarketingUrl } from "../lib/public-urls";
 
 function getClerk() {
   const secretKey = process.env.CLERK_SECRET_KEY;
@@ -830,12 +831,9 @@ export async function getDemoPortalStatus(): Promise<{
   const founderSlugs = new Set(orgAdminDef?.businessSlugs ?? []);
   const orgAdminEmail = orgAdminDef?.email ?? "org-admin@livia.io";
   const parentSlugById = new Map(rows.map((r) => [r.id, r.slug]));
-  const dashboardBase =
-    process.env.DASHBOARD_PUBLIC_URL?.replace(/\/$/, "") || "http://localhost:5173";
-  const internalBase =
-    process.env.INTERNAL_PUBLIC_URL?.replace(/\/$/, "") || "http://localhost:5175";
-  const marketingBase =
-    process.env.MARKETING_PUBLIC_URL?.replace(/\/$/, "") || "http://localhost:5174";
+  const dashboardBase = getDashboardUrl();
+  const internalBase = getInternalUrl();
+  const marketingBase = getMarketingUrl();
   return {
     provisioned:
       rows.some((r) => r.slug === "aurora-studio") &&
@@ -877,7 +875,7 @@ export function getDemoCatalog() {
       requiresClerk: p.requiresClerk,
       publicBookingUrl:
         p.id === "customer"
-          ? `${process.env.DASHBOARD_PUBLIC_URL?.replace(/\/$/, "") || "http://localhost:5173"}/b/aurora-studio`
+          ? `${getDashboardUrl()}/b/aurora-studio`
           : null,
     })),
     scenarioAccounts: DEMO_SCENARIO_ACCOUNTS.map((p) => ({

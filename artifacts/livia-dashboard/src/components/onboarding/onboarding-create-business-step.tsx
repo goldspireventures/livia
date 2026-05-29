@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/api-fetch";
+import { publicBookingSlugPrefix } from "@/lib/surface-urls";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -245,7 +246,7 @@ export function OnboardingCreateBusinessStep({
               <FormControl>
                 <div className="flex items-center">
                   <span className="text-muted-foreground bg-muted px-3 py-2 text-sm border border-r-0 border-input rounded-l-md">
-                    livia.io/b/
+                    {publicBookingSlugPrefix()}
                   </span>
                   <Input className="rounded-l-none" placeholder="acme-studio" {...field} />
                 </div>

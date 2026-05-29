@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LiviaWordmark } from "@/components/brand/LiviaMark";
 import { apiFetch } from "@/lib/api-fetch";
+import { legalUrl } from "@/lib/surface-urls";
 import { Loader2 } from "lucide-react";
 
-const TOS_URL = "https://livia.io/legal/tos";
-const PRIVACY_URL = "https://livia.io/legal/privacy";
-const DPA_URL = "https://livia.io/legal/dpa";
+const TOS_URL = legalUrl("tos");
+const PRIVACY_URL = legalUrl("privacy");
+const DPA_URL = legalUrl("dpa");
 
 type MeLegal = {
   platformLegalAccepted?: boolean;

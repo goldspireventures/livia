@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { invalidateOperationalState } from "@/lib/operational-cache";
 import { CreditCard, Mic, TrendingUp, Shield } from "lucide-react";
 import { useBusiness } from "@/lib/business-context";
+import { getMarketingOrigin, marketingPricingUrl } from "@/lib/surface-urls";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -292,12 +293,12 @@ export default function BillingControls() {
           <CardDescription>
             Matches{" "}
             <a
-              href="https://livia.io/pricing"
+              href={marketingPricingUrl()}
               className="text-primary hover:underline"
               target="_blank"
               rel="noreferrer"
             >
-              livia.io/pricing
+              {getMarketingOrigin().replace(/^https?:\/\//, "")}/pricing
             </a>
             . API returns 403 with code <code className="text-xs">ENTITLEMENT_REQUIRED</code> when a
             feature is not on your plan.
@@ -319,8 +320,8 @@ export default function BillingControls() {
           </p>
           <p className="text-xs">
             Nordic locale pack, enterprise SSO, and audit export — on Chain and custom plans. See{" "}
-            <a href="https://livia.io/pricing" className="text-primary hover:underline" target="_blank" rel="noreferrer">
-              livia.io/pricing
+            <a href={marketingPricingUrl()} className="text-primary hover:underline" target="_blank" rel="noreferrer">
+              {getMarketingOrigin().replace(/^https?:\/\//, "")}/pricing
             </a>
           </p>
         </CardContent>

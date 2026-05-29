@@ -13,6 +13,7 @@ import {
 } from "../services/billing.service";
 
 import { getBusinessById, updateBusiness } from "../services/businesses.service";
+import { getDashboardUrl } from "../lib/public-urls";
 
 import { getOrCreateUser } from "../services/users.service";
 
@@ -177,7 +178,7 @@ router.post(
 
     const baseUrl =
 
-      process.env.DASHBOARD_BASE_URL?.replace(/\/+$/, "") ?? "http://localhost:5173";
+      getDashboardUrl();
 
 
 

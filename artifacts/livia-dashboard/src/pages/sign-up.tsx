@@ -2,6 +2,7 @@ import { SignUp } from "@clerk/clerk-react";
 import { dark } from "@clerk/themes";
 import { useTheme } from "next-themes";
 import { LiviaWordmark } from "@/components/brand/LiviaMark";
+import { getMarketingOrigin } from "@/lib/surface-urls";
 
 export default function SignUpPage() {
   const { theme } = useTheme();
@@ -32,8 +33,8 @@ export default function SignUpPage() {
             </p>
             <p className="mt-2 text-xs text-muted-foreground">
               Closed beta may be invite-only — see{" "}
-              <a href="https://livia.io/#waitlist" className="text-primary hover:underline">
-                livia.io waitlist
+              <a href={`${getMarketingOrigin()}/#waitlist`} className="text-primary hover:underline">
+                {getMarketingOrigin().replace(/^https?:\/\//, "")} waitlist
               </a>
               .
             </p>

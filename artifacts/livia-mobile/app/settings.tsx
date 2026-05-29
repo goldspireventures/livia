@@ -38,6 +38,7 @@ import { useBusinessTimezone } from "@/hooks/useBusinessTimezone";
 import { asHref } from "@/lib/navigation";
 import { CommsChannelsBlock } from "@/components/CommsChannelsBlock";
 import { HelpSupportSheet } from "@/components/HelpSupportSheet";
+import { getPublicBookingLabel } from "@/lib/public-booking-url";
 import { LivCapabilitiesCard } from "@/components/LivCapabilitiesCard";
 import { BillingSummaryCard } from "@/components/BillingSummaryCard";
 
@@ -170,7 +171,7 @@ export default function SettingsScreen() {
                 Public booking
               </Text>
               <Text style={[styles.rowValue, { color: colors.foreground }]}>
-                {currentBusiness?.slug ? `livia.io/b/${currentBusiness.slug}` : "—"}
+                {currentBusiness?.slug ? getPublicBookingLabel(currentBusiness.slug) : "—"}
               </Text>
               {currentBusiness?.slug ? (
                 <Pressable

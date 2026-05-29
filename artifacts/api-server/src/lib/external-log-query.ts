@@ -2,6 +2,7 @@
  * Query external log backends for internal ops (Loki LogQL, OpenObserve SQL).
  * Push is handled by log-transport.ts; this module is read-only search.
  */
+import { getGrafanaUrl, getLokiQueryBaseUrl } from "./env-config";
 
 export type ExternalLogLine = {
   timestamp: string;
@@ -18,12 +19,7 @@ export type ExternalLogQueryResult = {
 };
 
 export function getLokiQueryBase(): string | null {
-  const explicit = process.env.LOKI_QUERY_BASE_URL?.trim();
-  if (explicit) return explicit.replace(/\/+$/, "");
-  const push = process.env.LOKI_PUSH_URL?.trim();
-  if (!push) return null;
-  const base = push.replace(/\/loki\/api\/v1\/push\/?$/i, "");
-  return base || null;
+  return getLokiQueryBaseUrl() ?? null;
 }
 
 /** Field contract for OpenObserve / Elasticsearch-style indexes (api-server JSON logs). */
@@ -73,9 +69,7 @@ export function getLogBackendStatus(): {
     lokiPush: Boolean(process.env.LOKI_PUSH_URL?.trim()),
     lokiQuery: Boolean(getLokiQueryBase()),
     openObserve: Boolean(process.env.OPENOBSERVE_URL?.trim()),
-    grafanaLocalUrl:
-      process.env.GRAFANA_LOCAL_URL?.trim() ||
-      (getLokiQueryBase() ? "http://127.0.0.1:3000" : null),
+    grafanaLocalUrl: getGrafanaUrl() ?? (getLokiQueryBase() ? "http://127.0.0.1:3000" : null),
   };
 }
 

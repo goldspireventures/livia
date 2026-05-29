@@ -6,7 +6,7 @@ export function getDashboardBaseUrl(): string {
   if (explicit) return explicit;
   const api = getApiBaseUrl().replace(/\/+$/, "");
   if (api.includes(":3000")) return api.replace(":3000", ":5173");
-  return "https://app.livia.io";
+  return "https://app.livia-hq.com";
 }
 
 export function dashboardSettingsUrl(tab: string, businessId?: string): string {

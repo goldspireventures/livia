@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { Menu } from "lucide-react";
 import { LiviaWordmark } from "@/components/brand/LiviaMark";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { LEGAL_FOOTER_LINE } from "@/lib/company";
 import { dashboardDemoUrl, dashboardSignInUrl, legalBase } from "@/lib/marketing-links";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -116,7 +117,7 @@ export function MarketingLayout({
             <Link href={homeHref}>
               <LiviaWordmark size="sm" className="opacity-80 mb-2" />
             </Link>
-            <p className="text-muted-foreground text-xs">© 2026 Livia · Dublin, EU</p>
+            <p className="text-muted-foreground text-xs">{LEGAL_FOOTER_LINE}</p>
           </div>
           <div className="flex flex-wrap gap-x-6 gap-y-2 text-muted-foreground">
             <Link href="/pricing" className="hover:text-white min-h-[44px] inline-flex items-center">

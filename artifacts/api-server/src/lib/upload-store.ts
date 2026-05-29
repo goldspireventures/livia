@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { getApiPublicUrl } from "./public-urls";
 
 const ALLOWED_MIME = new Set([
   "image/jpeg",
@@ -27,7 +28,7 @@ export function resolveUploadDir(): string {
 }
 
 export function publicUploadBaseUrl(): string {
-  const base = (process.env.PUBLIC_BASE_URL ?? "http://localhost:3000").replace(/\/+$/, "");
+  const base = getApiPublicUrl();
   return `${base}/uploads`;
 }
 

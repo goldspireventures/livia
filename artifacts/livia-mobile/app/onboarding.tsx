@@ -57,6 +57,7 @@ import {
   type OnboardingCatalog,
 } from "@/lib/onboarding-catalog";
 import { fetchOnboardingPreview } from "@/lib/onboarding-preview";
+import { getPublicBookingLabel } from "@/lib/public-booking-url";
 import { verticalAccentHex } from "@/lib/vertical-theme";
 import { getVerticalPlaybook } from "@workspace/policy";
 
@@ -636,7 +637,7 @@ function FormSlide({
             <Text style={[styles.label, { color: colors.mutedForeground }]}>
               URL slug{" "}
               <Text style={{ color: colors.primary, fontSize: 11, fontFamily: fonts.bodyMed }}>
-                livia.io/b/{slug || "your-slug"}
+                {getPublicBookingLabel(slug || "your-slug")}
               </Text>
             </Text>
             <TextInput

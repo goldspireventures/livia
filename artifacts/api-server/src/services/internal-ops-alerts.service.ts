@@ -13,6 +13,11 @@ import { sql, eq, and, gte, desc, isNull } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { getPlatformObservability } from "./internal-observability.service";
 import { getLogBackendStatus } from "../lib/external-log-query";
+import { getGrafanaUrl } from "../lib/env-config";
+
+function grafanaConfiguredBase(): string | null {
+  return getGrafanaUrl() ?? getLogBackendStatus().grafanaLocalUrl;
+}
 
 const DEFAULT_RULES: Array<{
   name: string;
@@ -228,11 +233,7 @@ function resolveDefaultGrafanaPanels(): typeof DEFAULT_GRAFANA_PANELS {
 async function ensureDefaultGrafanaPanels(): Promise<void> {
   // Grafana is intentionally optional. If there is no configured base URL,
   // we do not seed any Grafana panel rows (built-in Monitoring is the source of truth).
-  const configuredBase =
-    process.env.GRAFANA_EMBED_BASE_URL?.trim() ||
-    process.env.GRAFANA_LOCAL_URL?.trim() ||
-    process.env.INTERNAL_GRAFANA_URL?.trim() ||
-    getLogBackendStatus().grafanaLocalUrl;
+  const configuredBase = grafanaConfiguredBase();
   if (!configuredBase) return;
 
   const existing = await db.select({ id: internalOpsGrafanaPanelsTable.id }).from(internalOpsGrafanaPanelsTable).limit(1);
@@ -467,11 +468,7 @@ export function buildGrafanaEmbedUrl(panel: { embedPath: string; panelType: stri
   if (panel.embedPath.startsWith("http://") || panel.embedPath.startsWith("https://")) {
     return panel.embedPath;
   }
-  const base =
-    process.env.GRAFANA_EMBED_BASE_URL?.trim() ||
-    process.env.GRAFANA_LOCAL_URL?.trim() ||
-    process.env.INTERNAL_GRAFANA_URL?.trim() ||
-    getLogBackendStatus().grafanaLocalUrl;
+  const base = grafanaConfiguredBase();
   if (!base) return null;
   const root = base.replace(/\/+$/, "");
   const path = panel.embedPath.startsWith("/") ? panel.embedPath : `/${panel.embedPath}`;
@@ -486,11 +483,7 @@ export function buildGrafanaEmbedUrl(panel: { embedPath: string; panelType: stri
 }
 
 export async function listGrafanaPanels() {
-  const configuredBase =
-    process.env.GRAFANA_EMBED_BASE_URL?.trim() ||
-    process.env.GRAFANA_LOCAL_URL?.trim() ||
-    process.env.INTERNAL_GRAFANA_URL?.trim() ||
-    getLogBackendStatus().grafanaLocalUrl;
+  const configuredBase = grafanaConfiguredBase();
   if (!configuredBase) return [];
 
   await ensureDefaultGrafanaPanels();

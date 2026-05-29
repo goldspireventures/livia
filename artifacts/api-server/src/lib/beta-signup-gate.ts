@@ -1,3 +1,5 @@
+import { getMarketingUrl } from "./public-urls.js";
+
 /**
  * Closed-beta signup control. Marketing copy promises invite-only batches;
  * this gate aligns product behaviour with ops (Clerk can still allow sign-up — we block shop creation).
@@ -45,12 +47,13 @@ export function evaluateBetaSignup(email: string | null | undefined): BetaSignup
 
   if (normalized.endsWith("@livia.io")) return { allowed: true };
 
+  const marketingHost = getMarketingUrl().replace(/^https?:\/\//, "");
+
   if (mode === "closed") {
     return {
       allowed: false,
       code: "BETA_SIGNUP_CLOSED",
-      message:
-        "New sign-ups are paused for the closed beta. Join the waitlist at livia.io — we invite studios in batches.",
+      message: `New sign-ups are paused for the closed beta. Join the waitlist at ${marketingHost} — we invite studios in batches.`,
     };
   }
 
@@ -60,7 +63,6 @@ export function evaluateBetaSignup(email: string | null | undefined): BetaSignup
   return {
     allowed: false,
     code: "BETA_SIGNUP_INVITE_ONLY",
-    message:
-      "This email is not on the beta invite list yet. Request access via the waitlist at livia.io or reply to your invite email.",
+    message: `This email is not on the beta invite list yet. Request access via the waitlist at ${marketingHost} or reply to your invite email.`,
   };
 }

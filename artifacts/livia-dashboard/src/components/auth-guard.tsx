@@ -6,7 +6,7 @@ import { MembershipProvider, useMembership } from "@/lib/membership-context";
 import { usePersona } from "@/lib/persona";
 import { PERSONA_RITUALS } from "@/lib/persona-rituals";
 import { Spinner } from "@/components/ui/spinner";
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api-fetch";
 import { useQuery } from "@tanstack/react-query";
 import { PlatformLegalGate } from "@/components/platform-legal-gate";
@@ -26,6 +26,44 @@ function useAcceptPendingInvites(enabled: boolean) {
   });
 }
 
+const CLERK_LOAD_TIMEOUT_MS = 20_000;
+
+function ClerkLoadingScreen() {
+  const [timedOut, setTimedOut] = useState(false);
+
+  useEffect(() => {
+    const t = window.setTimeout(() => setTimedOut(true), CLERK_LOAD_TIMEOUT_MS);
+    return () => window.clearTimeout(t);
+  }, []);
+
+  if (timedOut) {
+    return (
+      <div className="flex h-screen w-full flex-col items-center justify-center gap-4 bg-background px-6 text-center">
+        <p className="text-lg font-medium text-foreground">Sign-in could not load</p>
+        <p className="max-w-md text-sm text-muted-foreground">
+          Clerk auth did not finish loading. Run{" "}
+          <code className="rounded bg-muted px-1 py-0.5 text-xs">pnpm prod:smoke</code> and
+          fix Railway <code className="rounded bg-muted px-1 py-0.5 text-xs">DASHBOARD_URL</code>{" "}
+          (see docs/operations/ENV-VARIABLES.md). Check DevTools → Network for failed{" "}
+          <code className="rounded bg-muted px-1 py-0.5 text-xs">clerk</code> requests.
+        </p>
+        <a
+          href="/sign-in"
+          className="text-sm font-medium text-primary underline underline-offset-2"
+        >
+          Retry sign-in
+        </a>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-screen w-full items-center justify-center bg-background">
+      <Spinner className="h-8 w-8 text-primary" />
+    </div>
+  );
+}
+
 export function AuthGuard({ children }: { children: ReactNode }) {
   const { isLoaded, isSignedIn } = useAuth();
   const [location] = useLocation();
@@ -35,11 +73,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
   useAcceptPendingInvites(!!isLoaded && !!isSignedIn);
 
   if (!isLoaded) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-background">
-        <Spinner className="h-8 w-8 text-primary" />
-      </div>
-    );
+    return <ClerkLoadingScreen />;
   }
 
   if (!isSignedIn) {

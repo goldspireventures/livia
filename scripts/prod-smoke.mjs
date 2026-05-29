@@ -73,8 +73,11 @@ await check("Clerk publishable key in Vercel bundle", async () => {
     throw new Error("no pk_ key in bundle — set VITE_CLERK_PUBLISHABLE_KEY on Vercel and redeploy");
   }
   clerkKeyMode = embedded[1] === "live" ? "live" : "test";
+  const usesProxy = js.includes("/api/__clerk");
   if (clerkKeyMode === "live") {
-    return "pk_live_ — browser uses /api/__clerk proxy";
+    return usesProxy
+      ? "pk_live_ + /api/__clerk proxy (optional)"
+      : "pk_live_ + Clerk CNAME (recommended)";
   }
   return "pk_test_ — browser talks to Clerk CDN (not /api/__clerk)";
 });

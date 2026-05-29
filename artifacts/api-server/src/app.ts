@@ -20,6 +20,7 @@ import router from "./routes";
 import inngestServe from "./routes/inngest-serve";
 import { logger } from "./lib/logger";
 import { Sentry } from "./lib/sentry";
+import { getClerkPublishableKey } from "./lib/env-config";
 
 const app: Express = express();
 
@@ -156,9 +157,7 @@ app.use(simAuthMiddleware);
 // your real pk_test_* key and will 401 if the API verifies with the wrong key.
 app.use(
   clerkMiddleware((req) => {
-    const fromEnv =
-      process.env.CLERK_PUBLISHABLE_KEY?.trim() ||
-      process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim();
+    const fromEnv = getClerkPublishableKey();
     const publishableKey =
       fromEnv ||
       publishableKeyFromHost(getClerkProxyHost(req) ?? "", undefined);

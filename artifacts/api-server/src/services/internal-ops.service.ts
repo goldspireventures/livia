@@ -8,6 +8,7 @@ import {
 } from "@workspace/db";
 import { and, desc, eq, ilike, or, sql } from "drizzle-orm";
 import { tenantHasEntitlementForBusiness } from "./billing.service";
+import { getDashboardUrl } from "../lib/public-urls";
 
 export type InternalTenantListItem = {
   id: string;
@@ -46,10 +47,8 @@ export type InternalTenantDetail = InternalTenantListItem & {
   supportDocLinks: Array<{ label: string; path: string }>;
 };
 
-function tenantDashboardBase(): string | null {
-  const url = process.env["TENANT_DASHBOARD_URL"] ?? process.env["PUBLIC_BASE_URL"];
-  if (!url) return null;
-  return url.replace(/\/+$/, "");
+function tenantDashboardBase(): string {
+  return getDashboardUrl();
 }
 
 function clerkUserDeepLink(clerkUserId: string): string | null {

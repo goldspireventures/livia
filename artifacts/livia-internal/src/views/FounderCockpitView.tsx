@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { getOpsCockpit, type FounderCockpitSnapshot } from "../lib/api";
+import { getDashboardUrl } from "../lib/dashboard-url";
 
 export function FounderCockpitView() {
   const [data, setData] = useState<FounderCockpitSnapshot | null>(null);
@@ -159,7 +160,7 @@ export function FounderCockpitView() {
                       <td style={{ padding: "6px 8px" }}>{r.vertical}</td>
                       <td style={{ padding: "6px 8px" }}>
                         <a
-                          href={`${process.env.DASHBOARD_PUBLIC_URL ?? "http://localhost:5173"}/b/${r.demoSlug}`}
+                          href={`${getDashboardUrl()}/b/${r.demoSlug}`}
                           target="_blank"
                           rel="noreferrer"
                           style={{ color: "#38bdf8" }}
