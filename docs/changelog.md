@@ -35,7 +35,7 @@ Every entry:
 
 ## 2026-05-06 — pre-v1 — repo + brand
 
-- **Changed**: Codename Bliq renamed to Livia across the repo. Surviving `bliq` strings are intentional legacy (mobile URL scheme, AsyncStorage migration shim, archived mockups).
+- **Changed**: Codename renamed to Livia across the repo (Task #38). May 2026: final product-code cleanup — legacy codename strings removed; CI guards reintroduction.
 - **Added**: Demo readiness pass (Task #23). Demo flow ready end-to-end.
 
 ---

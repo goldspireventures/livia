@@ -11,7 +11,7 @@ Three options were on the table: Clerk, Replit Auth (built-in OIDC), and rolling
 
 ## Decision
 
-**Clerk** — for web and mobile, with Google as the primary sign-up path. Web uses `@clerk/clerk-react` with Clerk-hosted UI components. Mobile uses a **custom sign-in screen** built against `@clerk/clerk-expo` (Clerk's hosted UI is not premium enough for our brand) with Google OAuth via `livia-mobile://oauth-callback` (and `bliq-mobile://` retained as a second redirect URI for in-flight OAuth — see ADR 0001).
+**Clerk** — for web and mobile, with Google as the primary sign-up path. Web uses `@clerk/clerk-react` with Clerk-hosted UI components. Mobile uses a **custom sign-in screen** built against `@clerk/clerk-expo` (Clerk's hosted UI is not premium enough for our brand) with Google OAuth via `livia-mobile://oauth-callback`.
 
 ## Consequences
 

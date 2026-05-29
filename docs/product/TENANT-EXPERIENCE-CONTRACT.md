@@ -12,7 +12,7 @@ Every owner-facing surface receives **`TenantExperience`** from one resolver (`r
 |-------|--------|
 | `vocabulary` | `businessVocabulary()` |
 | `playbook` | `getVerticalPlaybook()` — wedge, home modules, public CTA |
-| `skin` | `resolveTenantExperienceSkin()` — shell, display, market, accentHex |
+| `skin` | `resolveTenantExperienceSkin()` — shell, display, market, accentHex; **staging+:** `presetId`, `cssPreset`, `colorMode`, `density`, `layout` ([`../design/PRESENTATION-PRESETS-AND-ROLLOUT.md`](../design/PRESENTATION-PRESETS-AND-ROLLOUT.md)) |
 | `onboardingExtras` | `getVerticalOnboardingExtras()` |
 | `onboarding.appUnlocked` | `isOnboardingAppUnlocked()` — blocking acts complete |
 | `onboarding.activationSteps` | Post-go-live checklist (not a hard app lock) |

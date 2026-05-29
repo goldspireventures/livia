@@ -540,7 +540,7 @@ flowchart LR
 - [x] Playwright API Gate smoke in CI (`@workspace/e2e`, `e2e-api` job).
 - [x] `scripts/gate3-smoke.mjs` + dashboard shell tests (sign-in, `/b/:slug`, `/demo`).
 - [x] `scripts/deploy-migrate.sh` (SQL + drizzle push); `post-merge.sh` uses it.
-- [x] `scripts/check-naming-taboo.sh` in CI (Olivia / Bliq).
+- [x] `scripts/check-naming-taboo.sh` in CI (Olivia + legacy codename guard).
 - [x] Phase 9 re-audit in `docs/audits/marketing-vs-reality.md` (billing/voice/reminders resolved in code).
 - [x] `docs/compliance/soc2-type1-kickoff-checklist.md`.
 - [ ] Remaining `build-before-G3` product rows: deposits/Connect (2b/8b), EU residency pin (6b).

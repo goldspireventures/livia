@@ -13,8 +13,9 @@
 | **Visual system** | Single Aurora theme (`index.css`, shadcn/ui, cyan primary, serif headlines). |
 | **Persona** | Same components; different **home route**, nav order, ritual header accent (`PERSONA_ACCENT`). See [`../product/PERSONA-UX.md`](../product/PERSONA-UX.md). |
 | **Vertical** | Same shell; **tone class** + vocabulary (`verticalPackUi`, `VerticalBadge`) so hair vs medspa vs pet reads clearly without a different app. |
+| **Presentation preset** | Tenant picks 1 of 3 skins **within** their vertical (staging rollout). Same features; different density/colour/layout chrome. See [`PRESENTATION-PRESETS-AND-ROLLOUT.md`](./PRESENTATION-PRESETS-AND-ROLLOUT.md). |
 
-We do **not** ship separate designs per vertical. We ship **one design** with honest vertical cues (label, tone, copy).
+We do **not** ship separate apps per vertical. We ship **one kernel** with vertical capability packs and optional presentation presets (plus honest vertical cues: label, tone, copy).
 
 ---
 

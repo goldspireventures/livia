@@ -14,12 +14,10 @@ Full repo rename `bliq` → `livia`. Every artifact, package, file path, ENV var
 ## Consequences
 
 - All `bliq-*` artifact directories, package names, and workflow names became `livia-*`.
-- Brand assets, wordmark, logo, and `livia.io` domain consolidated under one identity.
-- Three deliberate `bliq` strings survive — each is documented in code:
-  1. `livia-mobile/app.json` retains `bliq-mobile://` as a second URL scheme so OAuth flows started before the rename can complete.
-  2. `LEGACY_STORAGE_KEY` in mobile drives a one-shot AsyncStorage migration.
-  3. Historical brand-exploration mockups under `artifacts/mockup-sandbox/src/components/mockups/brand-explorations/` are archive material.
-- A CI guard (Compliance lane C12) fails the build if "Olivia" is reintroduced anywhere — separate naming taboo, founder-private.
+- Brand assets, wordmark, logo, and `livia-hq.com` domain consolidated under one identity.
+- **May 2026:** final product-code cleanup — no `bliq` strings remain outside this ADR and other historical docs under `docs/`.
+- A CI guard (Compliance lane C12) fails the build if the legacy codename is reintroduced in product code.
+- A separate CI guard fails the build if "Olivia" is reintroduced anywhere — founder-private naming taboo.
 - Stale "Bliq"-era plans (`.local/tasks/RELEASE-PLAN.md` and 12 legacy task files) were folded into `docs/launch-plan.md` v1 and marked CANCELLED — superseded.
 
 ## Alternatives considered

@@ -80,6 +80,25 @@ Set on Railway staging API: `LIVIA_DEPLOY_ENV=staging`
 
 ---
 
+## P1 — Presentation presets (staging only)
+
+**Spec:** [`design/PRESENTATION-PRESETS-AND-ROLLOUT.md`](../design/PRESENTATION-PRESETS-AND-ROLLOUT.md) · **Catalog:** `lib/policy/src/presentation-presets.ts`
+
+- [x] Policy catalog (9 verticals × 3 presets)
+- [x] Staging rollout plan (Phases 0–8)
+- [ ] Phase 1 — `TenantExperience` + preset resolver + tests
+- [ ] Phase 2 — DB `presentation_preset_id` + API PATCH (staging gate)
+- [ ] Phase 3 — Dashboard CSS bundles + Appearance settings
+- [ ] Phase 4 — Mobile parity
+- [ ] Phase 5 — Public `/b` preset skin
+- [ ] Phase 6 — Vertical ritual homes (body-art pipeline P0)
+- [ ] Phase 7 — Staging QA matrix (27 presets smoke)
+- [ ] Phase 8 — Staging sign-off → prod promotion gate
+
+Env (staging): `LIVIA_PRESENTATION_PRESETS=true` or `LIVIA_ENV=staging`.
+
+---
+
 ## P2 — Anti-patchwork (remaining)
 
 - [ ] Onboarding catalog dedupe → `/api/onboarding/catalog` only

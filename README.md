@@ -83,7 +83,7 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md). Short version:
 - **Never edit `lib/db/src/schema/*` without a migration**, and **never edit `lib/api-spec/openapi.yaml` without re-running `pnpm codegen`** — there is a CI guard for the latter (`scripts/check-codegen.sh`).
 - Architectural changes start with a new ADR in `docs/adr/`. ADRs are immutable once accepted; new decisions get new files (with `Supersedes: 0003` if they replace one).
 - Brand discipline is non-negotiable — see `docs/adr/0004-marketing-site-as-brand-bible.md` and `docs/adr/0007-aurora-tokens-and-gradient-discipline.md`.
-- Two project-wide naming taboos enforced in CI: never reintroduce **"Bliq"** in user-facing copy or new code (the rename happened in Task #38 — see `docs/adr/0001-codename-bliq-renamed-to-livia.md`); never use **"Olivia"** anywhere (founder's daughter's name; CI guard fails the build).
+- Two project-wide naming taboos enforced in CI: never reintroduce the **legacy codename** in user-facing copy or new code (see [`docs/adr/0001-codename-bliq-renamed-to-livia.md`](docs/adr/0001-codename-bliq-renamed-to-livia.md)); never use **"Olivia"** anywhere (founder's daughter's name; CI guard fails the build).
 
 ## Who to ask
 

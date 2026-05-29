@@ -29,9 +29,9 @@ const BusinessContext = createContext<BusinessContextValue | null>(null);
 // ADR 0010 — unified key across web + mobile. Web uses the same string in
 // `artifacts/livia-dashboard/src/lib/business-context.tsx` so an org admin who
 // switches business on her phone sees the change reflected next time she
-// logs into the dashboard (and vice versa). Two legacy keys are migrated.
+// logs into the dashboard (and vice versa). One legacy key is migrated.
 const STORAGE_KEY = "livia.currentBusinessId";
-const LEGACY_KEYS = ["livia_current_business_id", "bliq_current_business_id"];
+const LEGACY_KEYS = ["livia_current_business_id"];
 
 export function BusinessProvider({ children }: { children: ReactNode }) {
   const [currentBusinessId, setCurrentBusinessId] = useState<string | null>(

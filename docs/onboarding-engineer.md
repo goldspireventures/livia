@@ -75,7 +75,7 @@ See [ADR 0007](./adr/0007-aurora-tokens-and-gradient-discipline.md) for the full
 
 ## Things to never do
 
-- **Never reintroduce the name "Bliq" in user-facing copy or new code.** See [ADR 0001](./adr/0001-codename-bliq-renamed-to-livia.md). Three deliberate `bliq` strings survive (mobile URL scheme, AsyncStorage migration shim, archived brand mockups) — each is documented in its own file.
+- **Never reintroduce the legacy codename in user-facing copy or new code.** See [ADR 0001](./adr/0001-codename-bliq-renamed-to-livia.md). Product code is clean; CI fails on reintroduction.
 - **Never use the name "Olivia" anywhere** — in code, comments, copy, file names, UI strings, or commit messages. CI guard fails the build (lane Compliance C12).
 - **Never use Aurum for an action button.** See [ADR 0007](./adr/0007-aurora-tokens-and-gradient-discipline.md).
 - **Never edit `lib/db/src/schema/*` without a migration**, and never edit `lib/api-spec/openapi.yaml` without re-running `pnpm codegen` (CI guard: `scripts/check-codegen.sh`).

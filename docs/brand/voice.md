@@ -167,7 +167,7 @@ Engineering-side, the following are CI-blocked:
 - Sentence-length cap exceeded in Liv-mouth strings (configurable per surface).
 - "As an AI" string anywhere in Liv responses (refusal posture lint).
 - Emoji in customer-facing text strings (allowed in micro-interaction asset names but not in text).
-- "Bliq" (legacy codename) — already enforced per launch-plan C12.
+- Legacy pre-Livia codename — enforced per launch-plan C12; must not appear in product code or copy.
 
 ## Open questions
 

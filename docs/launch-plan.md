@@ -5,7 +5,7 @@
 **Cadence:** revisited every Monday (see `docs/operating-cadence.md`)
 **Last reviewed:** 2026-05-06 — founder (v1 lock)
 
-This is the single authoritative document that sequences Livia from "we can demo this" to "real shops are paying us in production." It supersedes earlier "Bliq"-era plans, which were removed during the May 6 cleanup pass.
+This is the single authoritative document that sequences Livia from "we can demo this" to "real shops are paying us in production." It supersedes earlier pre-Livia plans, which were removed during the May 6 cleanup pass.
 
 **Strategy anchors (added 2026-05-06, Task #59):** the multi-tenant + persona model is locked in [ADR 0010](./adr/0010-multi-tenant-and-persona-model.md). Mobile is the flagship surface per [ADR 0011](./adr/0011-mobile-flagship.md). The personas this product serves are catalogued in [`docs/personas.md`](./personas.md) (read the *hotel principle* section first — it's the experience tenet every persona is judged against). Policy back-stop in [`docs/policy/`](./policy/). Mobile execution sequence in [`docs/mobile-roadmap.md`](./mobile-roadmap.md). Per-persona demo experience spec in [`docs/demo-gateway.md`](./demo-gateway.md).
 
@@ -107,7 +107,7 @@ Sizing: **S** ≤ one focused day · **M** 2-5 days · **L** > 1 week. Target ga
 | B7 | Social presence seeded: X/@liviaio, LinkedIn page, Instagram (handle parked at minimum). | S | 3 |
 | B8 | Press kit at `livia.io/press` — one-pager, founder photo, screenshots, logo zip. | S | 3 |
 | B9 | First eight founder posts written + scheduled (Linear or a Notion calendar). | M | 3 |
-| B10 | ✅ Brand audit complete (Task #38, May 6 2026): full repo rename `bliq` → `livia`. Surviving `bliq` strings are the legacy mobile URL scheme retained for in-flight OAuth (`livia-mobile/app.json`), the `LEGACY_STORAGE_KEY` AsyncStorage migration shim, and historical brand-exploration mockups. | M | 2 |
+| B10 | ✅ Brand audit complete (Task #38, May 6 2026): full repo rename to **Livia**. Final product-code cleanup May 2026 — no legacy codename strings outside historical docs. | M | 2 |
 
 ### Lane 3 — Compliance
 

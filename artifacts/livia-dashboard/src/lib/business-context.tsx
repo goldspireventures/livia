@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { Business } from "@workspace/api-client-react";
 
 const STORAGE_KEY = "livia.currentBusinessId";
-const LEGACY_KEYS = ["livia_current_business_id", "bliq_current_business_id"];
+const LEGACY_KEYS = ["livia_current_business_id"];
 
 interface BusinessContextType {
   business: Business | null;

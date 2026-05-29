@@ -73,6 +73,7 @@
 | **Testing / beta walkthrough** | `testing/MANUAL-WALKTHROUGH-BETA.md` | `testing/E2E-RUNBOOK.md`, `FOUNDER-FIRST-LOGIN.md` |
 | **EU onboarding + manual E2E gate** | `testing/EU-ONBOARDING-READY.md` | `testing/FULL-VISUAL-AUDIT-WEB-MOBILE.md` |
 | **UX system (eng)** | `design/PRODUCT-UX-SYSTEM.md` | `product/PERSONA-UX.md`, `design/motion-tokens.md` |
+| **Presentation presets (vertical × skin × staging rollout)** | `design/PRESENTATION-PRESETS-AND-ROLLOUT.md` | `lib/policy/src/presentation-presets.ts`, `product/TENANT-EXPERIENCE-CONTRACT.md` |
 | **Env template** | `../.env.example` | `artifacts/*/\.env.example` (dashboard, marketing, internal, mobile) |
 | **Platform backlog (todo)** | `operations/PLATFORM-BACKLOG.md` | `audits/PLATFORM-PRODUCTION-READINESS-AUDIT.md` |
 | **ADRs** | `adr/` | Immutable decisions |

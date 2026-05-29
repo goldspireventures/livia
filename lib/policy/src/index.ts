@@ -22,6 +22,7 @@ export * from "./vertical-onboarding";
 export * from "./vertical-playbooks";
 export * from "./onboarding-program";
 export * from "./tenant-experience";
+export * from "./presentation-presets";
 export * from "./liv-mandate";
 export * from "./vertical-coverage";
 export * from "./persona-reports";

@@ -40,13 +40,13 @@ Aurora cyan `#06b6d4` = primary action; violet `#8b5cf6` = Liv/AI moments; mint 
 
 - Always `pnpm run typecheck` before declaring done.
 - Aurum is brand-only; cyan is the action colour.
-- Never reintroduce "Bliq" or use "Olivia" — both are CI-guarded.
+- Never reintroduce the legacy codename or use "Olivia" — both are CI-guarded.
 - React Native Web `shadow*` / `pointerEvents` deprecation warnings are expected.
 
 ## Demo gateway (the "hotel principle")
 
 - Public route `/demo` (dashboard + mobile, mounted **outside** AuthGuard) — 7 hand-crafted persona surfaces (founder · owner · manager · staff-senior · staff-junior · receptionist · customer), all mock data, no API calls. Registry: `artifacts/livia-dashboard/src/lib/demo/personas.ts`. Mobile `BusinessProvider` short-circuits `useGetMyBusinesses` when `useSegments()[0] === "demo"`.
-- Multi-business switcher persists `livia.currentBusinessId` (web + mobile, same key — ADR 0010). Mobile migrates from legacy `livia_current_business_id` and `bliq_current_business_id`.
+- Multi-business switcher persists `livia.currentBusinessId` (web + mobile, same key — ADR 0010). Mobile migrates from legacy `livia_current_business_id`.
 - Mobile `useColors()` is hard-coded to dark; Aurora-Midnight is the only sanctioned palette across web + mobile + marketing.
 
 ## Pointers

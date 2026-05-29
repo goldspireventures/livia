@@ -311,7 +311,7 @@ Platform kernel reliability, tenant safety, contract (OpenAPI), workflow durabil
 - Workflow engine (Inngest): booking-reminder, no-show, liv-was-wrong, booking-continuity, waitlist, etc.
 - Entitlements gate, metering, partner auth scaffolding — enterprise-shaped.
 - Graceful transport degradation — production thinking.
-- CI: typecheck graph, codegen guard, brand guards (Bliq/Olivia).
+- CI: typecheck graph, codegen guard, brand guards (legacy codename / Olivia).
 - Phase 9 audit: reminders, billing API, rate limits, batch cockpit — engineering closed many G2 items.
 
 **Gaps & risks**
