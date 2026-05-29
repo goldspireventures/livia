@@ -13,6 +13,7 @@ import {
 } from "./founder-cockpit-command-center.service.js";
 import { EXEC_AUTOMATIONS } from "./founder-cockpit-automations.service.js";
 import { buildExecHatPanels } from "./founder-cockpit-hats.service.js";
+import { listCockpitWorkforceAccessGrants } from "./workforce-access-grants.service.js";
 
 function hoursBetween(aIso: string, bIso: string): number {
   const a = new Date(aIso).getTime();
@@ -65,6 +66,7 @@ export async function getOrgAdminCockpitSnapshot(): Promise<{
   stagingPrep: ReturnType<typeof buildFounderStagingPrep>;
   hats: ReturnType<typeof buildExecHatPanels>;
   automations: typeof EXEC_AUTOMATIONS;
+  workforceAccess: Awaited<ReturnType<typeof listCockpitWorkforceAccessGrants>>;
 }> {
   const [
     platformHealth,
@@ -73,6 +75,7 @@ export async function getOrgAdminCockpitSnapshot(): Promise<{
     openTickets,
     flags,
     production,
+    workforceAccess,
   ] = await Promise.all([
     getInternalPlatformHealth(),
     getPlatformObservability(),
@@ -80,6 +83,7 @@ export async function getOrgAdminCockpitSnapshot(): Promise<{
     listInternalSupportTickets({ status: "open,triaged", limit: 200 }),
     listInternalFeatureFlags({ globalOnly: true }),
     runFounderProductionChecks(),
+    listCockpitWorkforceAccessGrants(),
   ]);
 
   const commandCenter = buildFounderCommandCenterLinks();
@@ -147,6 +151,7 @@ export async function getOrgAdminCockpitSnapshot(): Promise<{
       rollouts: { globalEnabled: enabledGlobal },
     }),
     automations: EXEC_AUTOMATIONS,
+    workforceAccess,
   };
 }
 

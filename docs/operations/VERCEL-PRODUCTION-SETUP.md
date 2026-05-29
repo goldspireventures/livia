@@ -28,7 +28,7 @@ Already wired via root `vercel.json`:
 | `VITE_MARKETING_URL` | `https://livia-hq.com` |
 | `VITE_INTERNAL_PORTAL_URL` | `https://ops.livia-hq.com` (when ops is live) |
 | `VITE_INTERNAL_EXEC_PATH` | same slug as Railway `INTERNAL_EXEC_PATH` |
-| `VITE_PLATFORM_EXEC_EMAILS` | `projectlazarus@livia.io` |
+| `VITE_PLATFORM_EXEC_EMAILS` | `projectlazarus@livia-hq.com` |
 
 Redeploy after env changes.
 
@@ -93,7 +93,7 @@ Founder/exec console only — not linked from marketing.
 | `VITE_DASHBOARD_URL` | `https://app.livia-hq.com` |
 | `VITE_INTERNAL_PORTAL_URL` | `https://ops.livia-hq.com` |
 | `VITE_INTERNAL_EXEC_PATH` | long random slug (not `/cockpit`) |
-| `VITE_PLATFORM_EXEC_EMAILS` | `projectlazarus@livia.io` |
+| `VITE_PLATFORM_EXEC_EMAILS` | `projectlazarus@livia-hq.com` |
 
 4. **Railway API** (same slug + portal URL):
 
@@ -101,7 +101,7 @@ Founder/exec console only — not linked from marketing.
 INTERNAL_PORTAL_URL=https://ops.livia-hq.com
 INTERNAL_EXEC_PATH=<same-slug>
 INTERNAL_URL=https://ops.livia-hq.com
-LIVIA_PLATFORM_EXEC_EMAILS=projectlazarus@livia.io
+LIVIA_PLATFORM_EXEC_EMAILS=projectlazarus@livia-hq.com
 ```
 
 5. Paste `INTERNAL_OPS_SECRET` in the ops UI on first load (never commit).
@@ -114,7 +114,7 @@ LIVIA_PLATFORM_EXEC_EMAILS=projectlazarus@livia.io
 
 - Production instance: `app.livia-hq.com`, `livia-hq.com` allowed origins if needed.
 - CNAME `clerk.livia-hq.com` (preferred) — dashboard **without** `/api/__clerk` proxy unless you must.
-- User `projectlazarus@livia.io` exists; Google OAuth if you use it on app sign-in.
+- User `projectlazarus@livia-hq.com` exists; Google OAuth if you use it on app sign-in.
 
 ---
 

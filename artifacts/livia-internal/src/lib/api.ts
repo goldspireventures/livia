@@ -244,6 +244,25 @@ export type FounderCockpitSnapshot = {
     role: string;
     destructive?: boolean;
   }>;
+  workforceAccess: {
+    goldspireDomain: string;
+    grants: WorkforceAccessGrant[];
+  };
+};
+
+export type WorkforceAccessGrant = {
+  id: string;
+  email: string;
+  tier: "restricted" | "full";
+  notes: string | null;
+  grantedBy: string;
+  grantedAt: string;
+};
+
+export type WorkforceAccessSelf = {
+  email: string;
+  tier: "none" | "restricted" | "full";
+  goldspireRequiresCockpitGrant: boolean;
 };
 
 function internalHeaders(extra?: HeadersInit): HeadersInit {
@@ -252,7 +271,7 @@ function internalHeaders(extra?: HeadersInit): HeadersInit {
   return {
     Accept: "application/json",
     "X-Internal-Ops-Secret": secret,
-    "X-Internal-Ops-Operator": getOpsOperator() || "dev-operator@livia.io",
+    "X-Internal-Ops-Operator": getOpsOperator() || "dev-operator@livia-hq.com",
     "X-Internal-Ops-Role": getOpsRole(),
     ...(extra ?? {}),
   };
@@ -315,6 +334,28 @@ export async function runExecAutomation(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ confirm: opts?.confirm === true }),
+  });
+}
+
+export async function getWorkforceAccessSelf(): Promise<WorkforceAccessSelf> {
+  return internalFetch<WorkforceAccessSelf>("/internal/ops/workforce-access/self");
+}
+
+export async function grantWorkforceAccess(args: {
+  email: string;
+  tier: "restricted" | "full";
+  notes?: string;
+}): Promise<{ ok: boolean }> {
+  return internalFetch("/internal/ops/exec/workforce-access", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(args),
+  });
+}
+
+export async function revokeWorkforceAccess(email: string): Promise<{ ok: boolean }> {
+  return internalFetch(`/internal/ops/exec/workforce-access/${encodeURIComponent(email)}`, {
+    method: "DELETE",
   });
 }
 

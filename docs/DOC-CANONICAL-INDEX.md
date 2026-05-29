@@ -68,11 +68,13 @@
 | **Web/mobile parity** | `product/WEB-MOBILE-PARITY.md` | `UX-CONTEXTUAL-REVIEW.md` |
 | **Mobile UX (tenant app)** | `design/MOBILE-UX-PRINCIPLES.md` | `artifacts/livia-mobile/.env.example` |
 | **Marketing truth** | `audits/marketing-vs-reality.md` | — |
+| **Platform / stg→prod drift** | `audits/PLATFORM-PRODUCTION-READINESS-AUDIT.md` | `audits/v1-scope-drift-audit.md` |
 | **Resilience** | `product/LIVIA-RESILIENCE-OPS-AND-TRUST.md` | `operations/disaster-recovery.md` |
 | **Testing / beta walkthrough** | `testing/MANUAL-WALKTHROUGH-BETA.md` | `testing/E2E-RUNBOOK.md`, `FOUNDER-FIRST-LOGIN.md` |
 | **EU onboarding + manual E2E gate** | `testing/EU-ONBOARDING-READY.md` | `testing/FULL-VISUAL-AUDIT-WEB-MOBILE.md` |
 | **UX system (eng)** | `design/PRODUCT-UX-SYSTEM.md` | `product/PERSONA-UX.md`, `design/motion-tokens.md` |
 | **Env template** | `../.env.example` | `artifacts/*/\.env.example` (dashboard, marketing, internal, mobile) |
+| **Platform backlog (todo)** | `operations/PLATFORM-BACKLOG.md` | `audits/PLATFORM-PRODUCTION-READINESS-AUDIT.md` |
 | **ADRs** | `adr/` | Immutable decisions |
 | **Legal (draft)** | `legal/*` | G3 counsel |
 

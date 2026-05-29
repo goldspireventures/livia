@@ -25,6 +25,7 @@ try {
 
   delete process.env.INTERNAL_OPS_SECRET;
   process.env.INTERNAL_CRON_SECRET = "cron-fallback";
+  process.env.NODE_ENV = "development";
   assert.equal(getInternalOpsSecret(), "cron-fallback");
   assert.equal(
     authorizeInternalOps({

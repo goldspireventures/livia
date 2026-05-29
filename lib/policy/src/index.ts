@@ -30,3 +30,4 @@ export * from "./country-locale-pack";
 export * from "./inbox-queue";
 export * from "./wedge-gate";
 export * from "./operational-wiring";
+export * from "./workforce-access";

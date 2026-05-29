@@ -100,17 +100,23 @@ Second Vercel project: **Root Directory** = `artifacts/livia-marketing`, domain 
 
 ---
 
-## Platform exec (`projectlazarus@livia.io`)
+## Platform exec (`projectlazarus@livia-hq.com`)
+
+Workforce domains and tiers: [`WORKFORCE-ONBOARDING.md`](./WORKFORCE-ONBOARDING.md).
 
 | Variable | Where | Example |
 |----------|-------|---------|
-| `LIVIA_PLATFORM_EXEC_EMAILS` | Railway API | `projectlazarus@livia.io` |
+| `LIVIA_STAFF_EMAIL_DOMAINS` | Railway API | `livia-hq.com` |
+| `GOLDSPIRE_STAFF_EMAIL_DOMAINS` | Railway API | `goldspireventures.com` (validation only; grants via cockpit) |
+| `LIVIA_PLATFORM_EXEC_EMAILS` | Railway API | `projectlazarus@livia-hq.com` |
 | `INTERNAL_PORTAL_URL` | Railway API | `https://ops.livia-hq.com` |
 | `INTERNAL_EXEC_PATH` | Railway API + Internal Vite | `l7-random-slug` |
 | `VITE_INTERNAL_PORTAL_URL` | Dashboard + Internal Vite | same as portal |
 | `VITE_INTERNAL_EXEC_PATH` | Dashboard + Internal Vite | same slug |
-| `VITE_PLATFORM_EXEC_EMAILS` | Dashboard Vite | `projectlazarus@livia.io` |
-| `EXPO_PUBLIC_PLATFORM_EXEC_EMAILS` | Mobile EAS | same |
+| `VITE_PLATFORM_EXEC_EMAILS` | Dashboard Vite | `projectlazarus@livia-hq.com` |
+| `VITE_LIVIA_STAFF_EMAIL_DOMAINS` | Dashboard + Internal Vite | mirror API |
+| `VITE_GOLDSPIRE_STAFF_EMAIL_DOMAINS` | Dashboard + Internal Vite | mirror API (UI hints) |
+| `EXPO_PUBLIC_PLATFORM_EXEC_EMAILS` | Mobile EAS | same as exec list |
 
 Sign-in at app with exec email → redirect to ops portal. See [`EXEC-COMMAND-CENTER.md`](./EXEC-COMMAND-CENTER.md).
 
@@ -124,6 +130,20 @@ Sign-in at app with exec email → redirect to ops portal. See [`EXEC-COMMAND-CE
 | `FOUNDER_VERCEL_URL` | Vercel project dashboard |
 | `FOUNDER_RAILWAY_URL` | Railway project dashboard |
 | `API_STAGING_URL` | Set when staging exists (cockpit staging status) |
+
+### Deploy label + beta gate (Railway API)
+
+Same artifact on staging and prod — **only env differs**.
+
+| Variable | Production | Staging |
+|----------|------------|---------|
+| `LIVIA_DEPLOY_ENV` | `production` | `staging` |
+| `LIVIA_BETA_SIGNUP_MODE` | `invite` (default if unset in prod code) | `open` |
+| `LIVIA_SKIP_PRODUCTION_ENV_CHECK` | **never** | optional for drills |
+
+Prod boot **requires** `DASHBOARD_URL`, `MARKETING_URL`, `API_PUBLIC_URL` (no localhost).
+
+Clients: `GET /api/me/platform-config` returns deploy env + public URLs.
 
 ### Staging stack (separate deploys)
 

@@ -6,6 +6,7 @@ import {
   type FounderCockpitSnapshot,
 } from "../lib/api";
 import { getDashboardUrl } from "../lib/dashboard-url";
+import { WorkforceAccessPanel } from "../components/WorkforceAccessPanel";
 
 function internalRoute(href: string, base: string): string | null {
   const b = base.replace(/\/+$/, "");
@@ -112,6 +113,12 @@ export function FounderCockpitView() {
           Same probes as <code>pnpm prod:smoke</code> — no need to open a terminal for routine deploys.
         </p>
       </section>
+
+      <WorkforceAccessPanel
+        goldspireDomain={data.workforceAccess.goldspireDomain}
+        grants={data.workforceAccess.grants}
+        onChanged={() => void load()}
+      />
 
       <section style={card}>
         <h2 style={h2}>Leadership hats</h2>

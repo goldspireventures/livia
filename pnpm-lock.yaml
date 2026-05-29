@@ -427,6 +427,9 @@ importers:
 
   artifacts/livia-internal:
     dependencies:
+      '@workspace/policy':
+        specifier: workspace:*
+        version: link:../../lib/policy
       react:
         specifier: 'catalog:'
         version: 19.1.0

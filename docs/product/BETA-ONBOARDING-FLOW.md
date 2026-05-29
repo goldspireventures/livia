@@ -11,7 +11,7 @@
 |--------|-------------------|-------------|
 | **Clerk account** | Anyone who can reach `/sign-up` can create a Clerk user (unless you restrict sign-ups in the Clerk Dashboard). | **Ops:** enable invite-only or allowlist in Clerk for production beta; app cannot replace Clerk. |
 | **Platform ToS / Privacy** | **Enforced** after sign-in: `/legal-acceptance` → `POST /me/platform-legal` before `POST /businesses`. | Bump versions in `@workspace/policy` `platform-legal.ts` when counsel publishes. |
-| **Closed beta invite** | **Enforced** when `LIVIA_BETA_SIGNUP_MODE=invite` — only `LIVIA_BETA_INVITE_EMAILS` + `@livia.io` demo accounts can create a shop. | Set on staging/prod; keep `open` locally. |
+| **Closed beta invite** | **Enforced** when `LIVIA_BETA_SIGNUP_MODE=invite` — `LIVIA_BETA_INVITE_EMAILS`, `@livia-hq.com` staff, cockpit-granted Goldspire, and `@demo.livia-hq.com` demo accounts can create a shop. Prod defaults to **invite** if env unset. | Set explicitly on staging/prod; keep `open` locally. |
 | **Business vs personal** | Livia is **B2B only** — no consumer/personal account type. Copy states “business platform”. | N/A |
 | **KYB / identity** | **Not performed** — sole trader / Ltd is **self-declared** (`tenant_attestation` on business). VAT optional, not VIES-checked. | Post-beta: Stripe Connect + optional KYB vendor. |
 | **Licences** (medspa, tattoo, financial) | **Not verified** — vertical packs + public medspa consent only. | Tenant responsibility + counsel per market. |

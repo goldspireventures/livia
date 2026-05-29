@@ -1,6 +1,6 @@
 import { getInternalUrl } from "./public-urls.js";
 
-const DEFAULT_PLATFORM_EXEC_EMAILS = ["projectlazarus@livia.io"];
+const DEFAULT_PLATFORM_EXEC_EMAILS = ["projectlazarus@livia-hq.com"];
 
 /** Clerk exec / Livia Inc operator inboxes — not salon tenants. */
 export function parsePlatformExecEmails(): Set<string> {

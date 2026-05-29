@@ -82,8 +82,8 @@ export default function SignInPage() {
                   <Link href="/demo" className="text-primary font-medium underline underline-offset-2 hover:text-primary/90">
                     /demo
                   </Link>
-                  . Per business: <code className="text-xs">owner-&#123;short&#125;@livia.io</code> (e.g.{" "}
-                  <code className="text-xs">owner-clarity@livia.io</code>) — or use{" "}
+                  . Per business: <code className="text-xs">owner-&#123;short&#125;@demo.livia-hq.com</code> (e.g.{" "}
+                  <code className="text-xs">owner-clarity@demo.livia-hq.com</code>) — or use{" "}
                   <Link href="/demo" className="text-primary underline underline-offset-2 hover:text-primary/90">
                     /demo → Open as owner
                   </Link>

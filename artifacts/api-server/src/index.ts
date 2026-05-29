@@ -4,11 +4,26 @@ initSentry();
 import app from "./app";
 import { logger } from "./lib/logger";
 import { initTransports } from "./lib/transports";
+import { assertProductionEnvAtBoot, warnIfProductionUsesDevUrls } from "./lib/production-env.js";
+import {
+  getApiPublicUrl,
+  getDashboardUrl,
+  getInternalUrl,
+  getMarketingUrl,
+} from "./lib/public-urls.js";
 
 // Wire Twilio + Resend transports if their secrets are present. Absent
 // secrets keep the queued-only no-op transports so notificationLogs still
 // captures every PENDING outbound message.
 initTransports();
+
+assertProductionEnvAtBoot();
+warnIfProductionUsesDevUrls({
+  dashboard: getDashboardUrl(),
+  marketing: getMarketingUrl(),
+  api: getApiPublicUrl(),
+  internal: getInternalUrl(),
+});
 
 if (process.env.NODE_ENV !== "test") {
   void import("./services/liv-tool-catalog.service")
@@ -21,6 +36,12 @@ if (process.env.NODE_ENV !== "test") {
     .then(({ seedInternalOpsMonitoringDefaults }) => seedInternalOpsMonitoringDefaults())
     .catch((err) => {
       logger.warn({ err }, "internal ops monitoring defaults seed failed");
+    });
+
+  void import("./services/workforce-access-grants.service")
+    .then(({ refreshCockpitWorkforceGrantsCache }) => refreshCockpitWorkforceGrantsCache())
+    .catch((err) => {
+      logger.warn({ err }, "workforce access grants cache load failed");
     });
 }
 

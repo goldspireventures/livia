@@ -1,9 +1,26 @@
 /**
- * Short @livia.io demo addresses — shared by API, mobile, and docs.
+ * Synthetic demo tenant addresses — not company staff (@livia-hq.com / cockpit Goldspire).
  * Password: LIVIA_DEMO_PASSWORD (default LiviaDemo2026!)
  */
 
+export const DEMO_EMAIL_DOMAIN = "demo.livia-hq.com";
+/** Legacy demo domain — still recognised until Clerk personas are reprovisioned. */
+export const LEGACY_DEMO_EMAIL_DOMAIN = "livia.io";
+
 export const DEMO_PASSWORD_HINT = "LiviaDemo2026!";
+
+function atDemoDomain(domain: string): boolean {
+  const d = domain.toLowerCase();
+  return d === DEMO_EMAIL_DOMAIN || d === LEGACY_DEMO_EMAIL_DOMAIN;
+}
+
+export function isDemoEmailDomain(email: string | null | undefined): boolean {
+  if (!email) return false;
+  const lower = email.trim().toLowerCase();
+  const at = lower.lastIndexOf("@");
+  if (at <= 0) return false;
+  return atDemoDomain(lower.slice(at + 1));
+}
 
 /** slug → local part after `owner-` */
 export const DEMO_OWNER_SHORT_BY_SLUG: Record<string, string> = {
@@ -34,22 +51,26 @@ const SHORT_TO_SLUG: Record<string, string> = Object.fromEntries(
   Object.entries(DEMO_OWNER_SHORT_BY_SLUG).map(([slug, short]) => [short, slug]),
 );
 
+function demoEmail(localPart: string): string {
+  return `${localPart}@${DEMO_EMAIL_DOMAIN}`;
+}
+
 /** Role + scenario accounts (not per-slug owners). */
 export const DEMO_ROLE_EMAILS = {
-  orgAdmin: "org-admin@livia.io",
-  ownerConor: "owner-conorcuts@livia.io",
-  manager: "manager@livia.io",
-  staffLara: "staff-lara@livia.io",
-  staffMo: "staff-mo@livia.io",
-  desk: "desk@livia.io",
-  customer: "customer@livia.io",
-  solo: "solo@livia.io",
-  chain: "chain@livia.io",
-  uk: "uk@livia.io",
-  de: "de@livia.io",
-  medspa: "medspa@livia.io",
-  pets: "pets@livia.io",
-  physio: "physio@livia.io",
+  orgAdmin: demoEmail("org-admin"),
+  ownerConor: demoEmail("owner-conorcuts"),
+  manager: demoEmail("manager"),
+  staffLara: demoEmail("staff-lara"),
+  staffMo: demoEmail("staff-mo"),
+  desk: demoEmail("desk"),
+  customer: demoEmail("customer"),
+  solo: demoEmail("solo"),
+  chain: demoEmail("chain"),
+  uk: demoEmail("uk"),
+  de: demoEmail("de"),
+  medspa: demoEmail("medspa"),
+  pets: demoEmail("pets"),
+  physio: demoEmail("physio"),
 } as const;
 
 export function demoOwnerShortForSlug(slug: string): string {
@@ -57,28 +78,35 @@ export function demoOwnerShortForSlug(slug: string): string {
 }
 
 export function demoOwnerEmailForSlug(slug: string): string {
-  return `owner-${demoOwnerShortForSlug(slug)}@livia.io`;
+  return demoEmail(`owner-${demoOwnerShortForSlug(slug)}`);
 }
 
-/** Resolve `owner-conorcuts@livia.io` or legacy `demo-owner-conors-cut-co@livia.io` → slug. */
+const OWNER_DEMO_RE = /^owner-([a-z0-9]+)@(demo\.livia-hq\.com|livia\.io)$/;
+const LEGACY_OWNER_DEMO_RE = /^demo-owner-([a-z0-9-]+)@(demo\.livia-hq\.com|livia\.io)$/;
+
+/** Resolve owner demo email → business slug. */
 export function slugFromOwnerDemoEmail(email: string): string | null {
   const lower = email.trim().toLowerCase();
-  const legacy = lower.match(/^demo-owner-([a-z0-9-]+)@livia\.io$/);
+  const legacy = lower.match(LEGACY_OWNER_DEMO_RE);
   if (legacy?.[1]) return legacy[1];
 
-  const modern = lower.match(/^owner-([a-z0-9]+)@livia\.io$/);
+  const modern = lower.match(OWNER_DEMO_RE);
   if (!modern?.[1]) return null;
   return SHORT_TO_SLUG[modern[1]] ?? null;
 }
 
+/** Demo persona inbox (synthetic tenants only — not workforce). */
 export function isDemoLiviaEmail(email: string | null | undefined): boolean {
-  if (!email) return false;
-  const lower = email.trim().toLowerCase();
-  if (!lower.endsWith("@livia.io")) return false;
+  if (!isDemoEmailDomain(email)) return false;
+  const lower = (email ?? "").trim().toLowerCase();
   const local = lower.split("@")[0] ?? "";
   if (local.startsWith("demo-")) return true;
   if (local.startsWith("owner-")) return true;
   if (Object.values(DEMO_ROLE_EMAILS).some((e) => e.toLowerCase() === lower)) return true;
+  // Legacy @livia.io role emails from docs before domain migration
+  if (lower.endsWith(`@${LEGACY_DEMO_EMAIL_DOMAIN}`)) {
+    if (local.startsWith("demo-") || local.startsWith("owner-")) return true;
+  }
   return false;
 }
 

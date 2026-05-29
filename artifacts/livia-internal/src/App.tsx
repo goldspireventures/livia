@@ -28,6 +28,7 @@ import { SupportPage } from "./pages/SupportPage";
 import { KnowledgePage } from "./pages/KnowledgePage";
 import { TenantsPage } from "./pages/TenantsPage";
 import { OnboardingExperiencePickerView } from "./views/OnboardingExperiencePickerView";
+import { WorkforceJoinView } from "./views/WorkforceJoinView";
 
 const ONBOARDING_PICKER_PATH = "/experience/onboarding-picker";
 
@@ -114,8 +115,8 @@ export function App() {
           <input
             name="operator"
             type="email"
-            placeholder="projectlazarus@livia.io"
-            defaultValue={getOpsOperator() || "projectlazarus@livia.io"}
+            placeholder="projectlazarus@livia-hq.com"
+            defaultValue={getOpsOperator() || "projectlazarus@livia-hq.com"}
             style={{ ...inputStyle, width: "100%", marginBottom: 8 }}
             required
           />
@@ -218,6 +219,7 @@ export function App() {
         <Route path="/voice" element={<VoiceCastView />} />
         <Route path="/flags" element={<FeatureFlagsView />} />
         <Route path="/reports" element={<WeeklyReportView />} />
+        <Route path="/join" element={<WorkforceJoinView role={role} />} />
         <Route path="/access" element={<ImpersonationView />} />
 
         <Route

@@ -82,3 +82,19 @@ export function isDashboardRouteAllowedForTenant(
 
   return true;
 }
+
+/** API path feature keys → allowed business verticals (mirrors dashboard ROUTE_VERTICALS). */
+export const API_FEATURE_VERTICALS: Record<string, readonly string[]> = {
+  medspa: ["medspa"],
+  "class-sessions": ["fitness"],
+  "design-proofs": ["body-art"],
+};
+
+export function isBusinessApiFeatureAllowed(
+  featureKey: string,
+  vertical: string | null | undefined,
+): boolean {
+  const allowed = API_FEATURE_VERTICALS[featureKey];
+  if (!allowed) return true;
+  return allowed.includes((vertical ?? "hair").toLowerCase());
+}

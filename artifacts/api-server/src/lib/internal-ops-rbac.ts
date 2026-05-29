@@ -33,7 +33,7 @@ export function parseInternalOpsOperator(req: Request): InternalOpsOperator | nu
   if (!email || !INTERNAL_OPS_ROLES.includes(roleRaw as InternalOpsRole)) {
     if (process.env.NODE_ENV !== "production") {
       return {
-        email: email || "dev-operator@livia.io",
+        email: email || "dev-operator@livia-hq.com",
         role: (INTERNAL_OPS_ROLES.includes(roleRaw as InternalOpsRole)
           ? roleRaw
           : "engineer") as InternalOpsRole,
@@ -76,7 +76,7 @@ export function requireInternalOpsMutation(minimum: InternalOpsRole): RequestHan
 export function getInternalOpsOperator(req: Request): InternalOpsOperator {
   const op = (req as Request & { internalOpsOperator?: InternalOpsOperator }).internalOpsOperator;
   if (!op) {
-    return parseInternalOpsOperator(req) ?? { email: "unknown@livia.io", role: "support_l1" };
+    return parseInternalOpsOperator(req) ?? { email: "unknown@livia-hq.com", role: "support_l1" };
   }
   return op;
 }

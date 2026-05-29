@@ -97,7 +97,7 @@ export async function setFounderOperatorEmail(email: string): Promise<void> {
 async function fetchExecSnapshotInternal(): Promise<FounderCockpitSnapshot> {
   const secret = await getFounderOpsSecret();
   if (!secret) throw new Error("Set INTERNAL_OPS_SECRET on this device first.");
-  const operator = (await getFounderOperatorEmail()) ?? "founder@livia.io";
+  const operator = (await getFounderOperatorEmail()) ?? "projectlazarus@livia-hq.com";
 
   const res = await fetch(`${getApiBaseUrl()}/api/internal/ops/exec/snapshot`, {
     headers: {
@@ -134,7 +134,7 @@ export async function runExecAutomation(
 ): Promise<{ ok: boolean; summary: string }> {
   const secret = await getFounderOpsSecret();
   if (!secret) throw new Error("Set INTERNAL_OPS_SECRET first.");
-  const operator = (await getFounderOperatorEmail()) ?? "founder@livia.io";
+  const operator = (await getFounderOperatorEmail()) ?? "projectlazarus@livia-hq.com";
 
   const res = await fetch(
     `${getApiBaseUrl()}/api/internal/ops/exec/automations/${encodeURIComponent(automationId)}/run`,

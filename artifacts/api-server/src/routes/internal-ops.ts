@@ -63,6 +63,12 @@ import {
 } from "../services/internal-impersonation.service";
 import { getOrgAdminCockpitSnapshot } from "../services/internal-founder-cockpit.service";
 import { runExecAutomation } from "../services/founder-cockpit-automations.service";
+import {
+  grantCockpitWorkforceAccess,
+  listCockpitWorkforceAccessGrants,
+  resolveWorkforceAccessTierForEmail,
+  revokeCockpitWorkforceAccess,
+} from "../services/workforce-access-grants.service";
 import { logRouteError, safeClientMessage, sendError } from "../lib/http-errors";
 
 const router: IRouter = Router();
@@ -228,6 +234,51 @@ router.post(
     res.status(result.ok ? 200 : 400).json(result);
   },
 );
+
+router.get(
+  "/internal/ops/exec/workforce-access",
+  requireInternalOpsMutation("exec"),
+  async (_req, res): Promise<void> => {
+    res.json(await listCockpitWorkforceAccessGrants());
+  },
+);
+
+router.post(
+  "/internal/ops/exec/workforce-access",
+  requireInternalOpsMutation("exec"),
+  async (req, res): Promise<void> => {
+    try {
+      const operator = getInternalOpsOperator(req).email;
+      const email = String(req.body?.email ?? "").trim();
+      const tier = req.body?.tier === "full" ? "full" : "restricted";
+      const notes = typeof req.body?.notes === "string" ? req.body.notes : undefined;
+      const row = await grantCockpitWorkforceAccess({ email, tier, grantedBy: operator, notes });
+      res.status(201).json({ ok: true, grant: row });
+    } catch (e) {
+      sendError(res, req, 400, safeClientMessage(e));
+    }
+  },
+);
+
+router.delete(
+  "/internal/ops/exec/workforce-access/:email",
+  requireInternalOpsMutation("exec"),
+  async (req, res): Promise<void> => {
+    try {
+      const operator = getInternalOpsOperator(req).email;
+      const email = decodeURIComponent(String(req.params.email ?? ""));
+      await revokeCockpitWorkforceAccess({ email, revokedBy: operator });
+      res.json({ ok: true });
+    } catch (e) {
+      sendError(res, req, 400, safeClientMessage(e));
+    }
+  },
+);
+
+router.get("/internal/ops/workforce-access/self", async (req, res): Promise<void> => {
+  const operator = getInternalOpsOperator(req).email;
+  res.json(await resolveWorkforceAccessTierForEmail(operator));
+});
 
 router.get("/internal/ops/observability", async (_req, res): Promise<void> => {
   res.json(await getPlatformObservability());

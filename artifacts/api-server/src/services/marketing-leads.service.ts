@@ -17,7 +17,7 @@ export async function createMarketingLead(
   await db.insert(marketingLeadsTable).values({
     id,
     email: input.email.trim().toLowerCase(),
-    source: input.source ?? "livia.io",
+    source: input.source ?? "livia-hq.com",
     referrer: input.referrer ?? null,
     utmSource: input.utmSource ?? null,
     utmMedium: input.utmMedium ?? null,

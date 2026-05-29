@@ -13,8 +13,8 @@ import {
 } from "@expo-google-fonts/cormorant-garamond";
 import { StatusBar } from "expo-status-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { ClerkProvider, useAuth, useUser } from "@clerk/clerk-expo";
-import { isPlatformExecEmail } from "@/lib/platform-exec";
+import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
+import { fetchOperatorSurface } from "@/lib/operator-surface";
 import {
   setAuthTokenGetter,
   setBaseUrl,
@@ -65,21 +65,14 @@ function ClerkAuthBridge() {
 }
 
 function AuthGate({ children }: { children: React.ReactNode }) {
-  const { isSignedIn, isLoaded } = useAuth();
-  const { user } = useUser();
+  const { isSignedIn, isLoaded, getToken } = useAuth();
   const router = useRouter();
   const segments = useSegments();
-
-  const execEmail =
-    user?.primaryEmailAddress?.emailAddress ?? user?.emailAddresses?.[0]?.emailAddress;
 
   useEffect(() => {
     if (!isLoaded) return;
     const onSignIn = segments[0] === "sign-in";
     const onExecDesk = segments[0] === "_internal";
-    // ADR 0010 / docs/demo-gateway.md — `/demo` is a public showcase. It must
-    // not require Clerk so a prospect can tap a link and step inside any of
-    // the seven persona doors without an account.
     const onDemo = isDemoRoute(segments);
     const onPublicBook = segments[0] === "public-book";
     const allowDemo =
@@ -93,17 +86,23 @@ function AuthGate({ children }: { children: React.ReactNode }) {
       router.replace("/sign-in");
     } else if (isSignedIn && onSignIn) {
       void (async () => {
-        if (isPlatformExecEmail(execEmail)) {
+        const surface = await fetchOperatorSurface(() => getToken());
+        if (surface?.platformExec) {
           router.replace("/_internal/desk" as never);
           return;
         }
         const home = await consumeMobileHomeRoute();
         router.replace((home ?? "/(tabs)") as never);
       })();
-    } else if (isSignedIn && isPlatformExecEmail(execEmail) && !onExecDesk && !onDemo && !onPublicBook) {
-      router.replace("/_internal/desk" as never);
+    } else if (isSignedIn && !onExecDesk && !onDemo && !onPublicBook) {
+      void (async () => {
+        const surface = await fetchOperatorSurface(() => getToken());
+        if (surface?.platformExec) {
+          router.replace("/_internal/desk" as never);
+        }
+      })();
     }
-  }, [isSignedIn, isLoaded, segments, router, execEmail]);
+  }, [isSignedIn, isLoaded, segments, router, getToken]);
 
   return <>{children}</>;
 }

@@ -7,6 +7,7 @@ import { getExecHomePath } from "../lib/exec-path";
 type NavItem = { to: string; label: string; kind?: "primary" | "meta" };
 
 const navBase: NavItem[] = [
+  { to: "/join", label: "Join / onboarding", kind: "primary" },
   { to: "/support", label: "Support", kind: "primary" },
   { to: "/knowledge", label: "Atlas (docs)", kind: "primary" },
   { to: "/tenants", label: "Tenants" },

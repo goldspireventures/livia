@@ -31,6 +31,8 @@ import {
 } from "../services/in-app-notifications.service";
 import { getTenantExperienceForBusiness } from "../services/tenant-experience.service";
 import { getOpsPortalUrl, isPlatformExecEmail } from "../lib/platform-exec";
+import { buildPlatformConfig, resolvePlatformPrincipal } from "../lib/platform-config.js";
+import { resolveWorkforceAccessTierForEmail } from "../services/workforce-access-grants.service";
 
 import { sendError } from "../lib/http-errors";
 const router: IRouter = Router();
@@ -49,6 +51,7 @@ router.get("/me", requireAuth, async (req, res): Promise<void> => {
     user = (await getUserById(userId)) ?? user;
   }
   const platformExec = isPlatformExecEmail(user.email);
+  const principal = resolvePlatformPrincipal(user.email);
   res.json({
     ...user,
     platformLegalCurrent: {
@@ -59,7 +62,18 @@ router.get("/me", requireAuth, async (req, res): Promise<void> => {
     betaSignupMode: getBetaSignupMode(),
     platformExec,
     opsPortalUrl: platformExec ? getOpsPortalUrl() : null,
+    platformPrincipal: principal,
   });
+});
+
+router.get("/me/platform-config", requireAuth, async (_req, res): Promise<void> => {
+  res.json(buildPlatformConfig());
+});
+
+router.get("/me/workforce-access", requireAuth, async (req, res): Promise<void> => {
+  const userId = getUserId(req);
+  const user = await getOrCreateUser(userId);
+  res.json(await resolveWorkforceAccessTierForEmail(user.email));
 });
 
 router.get("/me/operator-surface", requireAuth, async (req, res): Promise<void> => {

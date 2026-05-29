@@ -1,4 +1,5 @@
 import {
+  DEMO_ROLE_EMAILS,
   demoOwnerEmailFromSlugInput,
   isDemoLiviaEmail,
   slugFromOwnerDemoEmail,
@@ -76,14 +77,13 @@ export async function fetchDemoSignInTicket(
 export function normalizeDemoSignInIdentifier(raw: string): string {
   const v = raw.trim();
   const lower = v.toLowerCase();
-  if (lower === "org" || lower === "orgadmin" || lower === "org_admin" || lower === "hq") return "org-admin@livia.io";
-  // Legacy alias
-  if (lower === "founder") return "org-admin@livia.io";
-  if (lower === "owner" || lower === "conor") return "owner-conorcuts@livia.io";
-  if (lower === "solo") return "solo@livia.io";
-  if (lower === "manager") return "manager@livia.io";
-  if (lower === "staff") return "staff-lara@livia.io";
-  if (lower === "frontdesk" || lower === "reception") return "desk@livia.io";
+  if (lower === "org" || lower === "orgadmin" || lower === "org_admin" || lower === "hq") return DEMO_ROLE_EMAILS.orgAdmin;
+  if (lower === "founder") return DEMO_ROLE_EMAILS.orgAdmin;
+  if (lower === "owner" || lower === "conor") return DEMO_ROLE_EMAILS.ownerConor;
+  if (lower === "solo") return DEMO_ROLE_EMAILS.solo;
+  if (lower === "manager") return DEMO_ROLE_EMAILS.manager;
+  if (lower === "staff") return DEMO_ROLE_EMAILS.staffLara;
+  if (lower === "frontdesk" || lower === "reception") return DEMO_ROLE_EMAILS.desk;
   const fromSlug = demoOwnerEmailFromSlugInput(lower);
   if (fromSlug) return fromSlug;
   return v;

@@ -1,4 +1,8 @@
+import { isDemoLiviaEmail } from "@workspace/demo-logins";
+import { workforceAllowsBetaSignup } from "@workspace/policy";
 import { getMarketingUrl } from "./public-urls.js";
+import { getWorkforceAccessConfig } from "./workforce-access-env.js";
+import { getCockpitWorkforceGrantsSync } from "./workforce-access-grants-cache.js";
 
 /**
  * Closed-beta signup control. Marketing copy promises invite-only batches;
@@ -6,15 +10,16 @@ import { getMarketingUrl } from "./public-urls.js";
  *
  * Modes (LIVIA_BETA_SIGNUP_MODE):
  *   open    — default local/dev; any authenticated user can create a business
- *   invite  — email must be in LIVIA_BETA_INVITE_EMAILS or @livia.io (demo)
- *   closed  — no new businesses (existing tenants unaffected)
+ *   invite  — invite list, demo personas, @livia-hq.com staff, or cockpit-granted Goldspire
+ *   closed  — no new customer businesses; demo + Livia staff + cockpit Goldspire still allowed
  */
 
 export type BetaSignupMode = "open" | "invite" | "closed";
 
 export function getBetaSignupMode(): BetaSignupMode {
-  const raw = (process.env.LIVIA_BETA_SIGNUP_MODE ?? "open").trim().toLowerCase();
-  if (raw === "invite" || raw === "closed") return raw;
+  const raw = (process.env.LIVIA_BETA_SIGNUP_MODE ?? "").trim().toLowerCase();
+  if (raw === "invite" || raw === "closed" || raw === "open") return raw;
+  if (process.env.NODE_ENV === "production") return "invite";
   return "open";
 }
 
@@ -45,7 +50,12 @@ export function evaluateBetaSignup(email: string | null | undefined): BetaSignup
     };
   }
 
-  if (normalized.endsWith("@livia.io")) return { allowed: true };
+  if (isDemoLiviaEmail(normalized)) return { allowed: true };
+
+  const cockpitGrants = getCockpitWorkforceGrantsSync();
+  if (workforceAllowsBetaSignup(normalized, getWorkforceAccessConfig(), cockpitGrants)) {
+    return { allowed: true };
+  }
 
   const marketingHost = getMarketingUrl().replace(/^https?:\/\//, "");
 

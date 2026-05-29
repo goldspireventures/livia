@@ -1,30 +1,43 @@
 import { useEffect } from "react";
 import { useUser } from "@clerk/clerk-react";
+import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { getOpsPortalUrl, isPlatformExecEmail } from "@/lib/platform-exec";
+import { apiFetch } from "@/lib/api-fetch";
+
+type MeOperatorSurface = {
+  platformExec?: boolean;
+  opsPortalUrl?: string | null;
+};
 
 /**
  * Livia Inc operators — hand off to internal ops app instead of tenant onboarding.
- * Does not expose route names; uses env-configured portal URL only.
+ * Server is source of truth via GET /api/me (platformExec, opsPortalUrl).
  */
 export function PlatformExecHandoff({ children }: { children: React.ReactNode }) {
-  const { user, isLoaded } = useUser();
-  const email =
-    user?.primaryEmailAddress?.emailAddress ??
-    user?.emailAddresses?.[0]?.emailAddress ??
-    null;
+  const { isLoaded: clerkLoaded } = useUser();
+  const { data: me, isLoading: meLoading, isError } = useQuery({
+    queryKey: ["me-operator-surface"],
+    queryFn: () => apiFetch<MeOperatorSurface>("/me"),
+    enabled: clerkLoaded,
+    retry: false,
+    staleTime: 60_000,
+  });
 
-  const isExec = isLoaded && isPlatformExecEmail(email);
+  const isExec = clerkLoaded && !meLoading && !isError && me?.platformExec === true;
+  const opsUrl = me?.opsPortalUrl ?? null;
 
   useEffect(() => {
-    if (!isExec) return;
-    const target = getOpsPortalUrl();
-    if (typeof window !== "undefined" && window.location.origin !== new URL(target).origin) {
-      window.location.replace(target);
+    if (!isExec || !opsUrl) return;
+    try {
+      if (typeof window !== "undefined" && window.location.origin !== new URL(opsUrl).origin) {
+        window.location.replace(opsUrl);
+      }
+    } catch {
+      /* invalid ops URL — stay on tenant app */
     }
-  }, [isExec]);
+  }, [isExec, opsUrl]);
 
-  if (!isLoaded) {
+  if (!clerkLoaded || meLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -32,12 +45,12 @@ export function PlatformExecHandoff({ children }: { children: React.ReactNode })
     );
   }
 
-  if (isExec) {
+  if (isExec && opsUrl) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center gap-4 bg-background px-6 text-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
         <p className="text-sm text-muted-foreground">Opening Livia operator console…</p>
-        <a href={getOpsPortalUrl()} className="text-sm text-primary underline">
+        <a href={opsUrl} className="text-sm text-primary underline">
           Continue manually
         </a>
       </div>

@@ -76,7 +76,10 @@ jobs:
       INTERNAL_OPS_SECRET: ci-ops-secret
       PARTNER_API_KEY: ci-partner-key
       E2E_PARTNER_API_KEY: ci-partner-key
-      WORKFLOWS_DISABLED: "true"
+      DASHBOARD_URL: http://127.0.0.1:5173
+      MARKETING_URL: http://127.0.0.1:5174
+      API_PUBLIC_URL: http://127.0.0.1:3001
+      LIVIA_SKIP_PRODUCTION_ENV_CHECK: "true"
     steps:
       - uses: actions/checkout@v4
 
@@ -123,3 +126,20 @@ jobs:
 
       - name: Playwright API Gate smoke
         run: pnpm --filter @workspace/e2e run test:api
+
+  staging-smoke:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - name: Staging surface smoke (non-blocking)
+        run: pnpm smoke:staging

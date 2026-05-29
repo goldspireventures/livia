@@ -1,8 +1,10 @@
-# Founder release runbook (solo · pre-staging)
+# Founder release runbook (solo)
 
-**Use this until** `app.staging.livia-hq.com` exists. Your **command center** is **Livia Internal** exec overview (`pnpm dev:internal` → secret path in `.env` — see [`EXEC-COMMAND-CENTER.md`](./EXEC-COMMAND-CENTER.md)) or **mobile** → 7× tap on version label.
+**Command center:** **Livia Internal** exec overview (`pnpm dev:internal` → secret path in `.env` — see [`EXEC-COMMAND-CENTER.md`](./EXEC-COMMAND-CENTER.md)) or **mobile** → 7× tap on version label.
 
-Staging prep (no cost yet): [`staging-prep-livia-hq.md`](./staging-prep-livia-hq.md).
+**Staging:** [`STAGING-SETUP.md`](./STAGING-SETUP.md) · smoke: `pnpm smoke:staging` · workforce access: [`WORKFORCE-ONBOARDING.md`](./WORKFORCE-ONBOARDING.md).
+
+Staging prep checklist: [`staging-prep-livia-hq.md`](./staging-prep-livia-hq.md).
 
 ---
 
