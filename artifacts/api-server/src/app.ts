@@ -17,6 +17,7 @@ import {
   getClerkProxyHost,
 } from "./middlewares/clerkProxyMiddleware";
 import router from "./routes";
+import healthRouter from "./routes/health";
 import inngestServe from "./routes/inngest-serve";
 import { logger } from "./lib/logger";
 import { Sentry } from "./lib/sentry";
@@ -148,6 +149,9 @@ app.use("/api", uploadsRouter);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Liveness/readiness — no Clerk (Railway, CI curl, load balancers).
+app.use("/api", healthRouter);
 
 // Dev-only simulation auth bypass — must run before Clerk so simulated userId lands first.
 app.use(simAuthMiddleware);

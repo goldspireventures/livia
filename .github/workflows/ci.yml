@@ -56,6 +56,9 @@ jobs:
       - name: Production readiness gate (authoritative)
         run: node scripts/production-readiness-gate.mjs --skip-smoke
 
+      - name: Install ripgrep
+        run: sudo apt-get update && sudo apt-get install -y ripgrep
+
       - name: Naming taboo (Olivia / Bliq)
         run: bash scripts/check-naming-taboo.sh
 
@@ -89,8 +92,8 @@ jobs:
       E2E_API_BASE: http://127.0.0.1:3001
       E2E_DEMO_SLUG: luxe-salon-spa
       # Minimal env so api-server boots in CI without real vendors
-      CLERK_PUBLISHABLE_KEY: pk_test_ci_placeholder
-      CLERK_SECRET_KEY: sk_test_ci_placeholder
+      CLERK_PUBLISHABLE_KEY: pk_test_b25lLXdlYi5jbGVyay5hY2NvdW50cy5kZXYk
+      CLERK_SECRET_KEY: sk_test_ci_placeholder_not_for_auth
       INTERNAL_CRON_SECRET: ci-cron-secret
       INTERNAL_OPS_SECRET: ci-ops-secret
       PARTNER_API_KEY: ci-partner-key
