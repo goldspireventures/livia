@@ -14,7 +14,9 @@ echo "deploy-migrate: drizzle push"
 pnpm --filter @workspace/db run push
 
 echo "deploy-migrate: SQL migrations"
-if [[ -f "$ROOT/.env" ]]; then
+if [[ -n "${LIVIA_DB_TARGET:-}" ]]; then
+  node "$ROOT/scripts/apply-sql-migrations.mjs"
+elif [[ -f "$ROOT/.env" ]]; then
   node --env-file="$ROOT/.env" "$ROOT/scripts/apply-sql-migrations.mjs"
 else
   node "$ROOT/scripts/apply-sql-migrations.mjs"

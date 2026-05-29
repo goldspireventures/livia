@@ -45,6 +45,27 @@ There is no centralized “spinner” log until Sentry is wired. Railway will no
 
 ---
 
+## Local `.env` — staging vs production DB
+
+| Variable | Use |
+|----------|-----|
+| `DATABASE_URL` | **Default** for local ops — point at **staging** Supabase (session pooler `:5432` for DDL) |
+| `DATABASE_URL_PROD` | Production Supabase only — used when you pass `--prod` / `:prod` scripts |
+
+**Never** swap `DATABASE_URL` manually between environments. Use:
+
+```bash
+pnpm db:targets          # show host hints (no secrets printed)
+pnpm db:sync:staging     # db:push + SQL migrations → staging
+pnpm db:sync:prod        # db:push + SQL migrations → production
+pnpm db:push:prod        # schema only → production
+pnpm db:migrate:sql:prod # SQL only → production
+```
+
+Under the hood: `scripts/with-db-target.mjs` sets `LIVIA_DB_TARGET` so `drizzle-push` does not reload staging from `.env` while targeting prod.
+
+---
+
 ## Railway (API) — production minimum
 
 | Variable | Example | Notes |
