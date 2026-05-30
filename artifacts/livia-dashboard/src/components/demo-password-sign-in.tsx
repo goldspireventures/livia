@@ -63,6 +63,7 @@ export function DemoPasswordSignIn({ defaultEmail = "", devPasswordHint }: Props
     <form
       onSubmit={handleSubmit}
       className="mt-6 space-y-3 rounded-xl border border-primary/30 bg-primary/5 p-4 text-left"
+      data-testid="demo-password-sign-in"
     >
       <p className="text-xs font-mono uppercase tracking-wide text-muted-foreground">
         Demo account (direct sign-in)

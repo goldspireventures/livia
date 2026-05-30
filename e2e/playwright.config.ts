@@ -222,6 +222,16 @@ export default defineConfig({
         baseURL: process.env.E2E_INTERNAL_BASE ?? "http://127.0.0.1:5175",
       },
     },
+    {
+      name: "marketing-lifecycle",
+      testMatch: /marketing-lifecycle\.spec\.ts/,
+      timeout: 180_000,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: marketingBase,
+      },
+    },
   ],
   metadata: {
     demoSlug,

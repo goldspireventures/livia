@@ -7,13 +7,29 @@ import { trackEvent } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { editorialCopy, type MarketingLocale } from "@/lib/marketing-editorial-i18n";
+import { MARKETING_VERTICAL_LINKS } from "@/lib/marketing-verticals";
+
+const COUNTRY_OPTIONS = [
+  { value: "IE", label: "Ireland" },
+  { value: "GB", label: "United Kingdom" },
+  { value: "DE", label: "Germany" },
+] as const;
 
 function formSchema(locale: MarketingLocale) {
   const invalid =
     locale === "de" ? "Bitte eine gültige E-Mail-Adresse eingeben." : "Please enter a valid email address.";
   return z.object({
     email: z.string().email(invalid),
+    vertical: z.string().optional(),
+    country: z.string().optional(),
   });
 }
 
@@ -27,16 +43,27 @@ export function MarketingForm({ locale = "en" }: { locale?: MarketingLocale }) {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema as never),
-    defaultValues: { email: "" },
+    defaultValues: { email: "", vertical: "", country: "IE" },
   });
 
   function onSubmit(values: FormValues) {
     const source = locale === "de" ? "livia-hq.com/de" : "livia-hq.com";
     createLead.mutate(
-      { data: { email: values.email, source } },
+      {
+        data: {
+          email: values.email,
+          source,
+          utmSource: values.vertical?.trim() ? `vertical:${values.vertical}` : undefined,
+          utmMedium: values.country?.trim() || undefined,
+        },
+      },
       {
         onSuccess: () => {
-          trackEvent("lead_submit", { source });
+          trackEvent("lead_submit", {
+            source,
+            ...(values.vertical?.trim() ? { vertical: values.vertical } : {}),
+            ...(values.country?.trim() ? { country: values.country } : {}),
+          });
           setSubmitted(true);
         },
         onError: () => {
@@ -63,38 +90,88 @@ export function MarketingForm({ locale = "en" }: { locale?: MarketingLocale }) {
     );
   }
 
+  const verticalLabel = locale === "de" ? "Branche (optional)" : "Your trade (optional)";
+  const countryLabel = locale === "de" ? "Land" : "Country";
+
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col sm:flex-row gap-3 max-w-md w-full"
-      >
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem className="flex-1">
-              <FormControl>
-                <Input
-                  type="email"
-                  aria-label="Email"
-                  autoComplete="email"
-                  placeholder={t.placeholder}
-                  className="h-12 min-h-[44px] bg-background/50 border-white/10 text-white placeholder:text-muted-foreground focus-visible:ring-aurora-cyan"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage className="text-destructive font-medium text-xs mt-1" />
-            </FormItem>
-          )}
-        />
-        <Button
-          type="submit"
-          className="h-12 min-h-[44px] px-8 bg-aurora-cyan hover:bg-aurora-cyan/90 text-black font-medium shrink-0"
-          disabled={createLead.isPending}
-        >
-          {createLead.isPending ? (locale === "de" ? "Wird gesendet…" : "Joining…") : t.submit}
-        </Button>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-3 max-w-md w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <FormField
+            control={form.control}
+            name="vertical"
+            render={({ field }) => (
+              <FormItem>
+                <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                  <FormControl>
+                    <SelectTrigger className="min-h-[44px] bg-background/50 border-white/10" data-testid="waitlist-vertical">
+                      <SelectValue placeholder={verticalLabel} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {MARKETING_VERTICAL_LINKS.map((v) => (
+                      <SelectItem key={v.slug} value={v.slug}>
+                        {v.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="country"
+            render={({ field }) => (
+              <FormItem>
+                <Select value={field.value ?? "IE"} onValueChange={field.onChange}>
+                  <FormControl>
+                    <SelectTrigger className="min-h-[44px] bg-background/50 border-white/10" data-testid="waitlist-country">
+                      <SelectValue placeholder={countryLabel} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {COUNTRY_OPTIONS.map((c) => (
+                      <SelectItem key={c.value} value={c.value}>
+                        {c.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem className="flex-1">
+                <FormControl>
+                  <Input
+                    type="email"
+                    aria-label="Email"
+                    autoComplete="email"
+                    placeholder={t.placeholder}
+                    className="h-12 min-h-[44px] bg-background/50 border-white/10 text-white placeholder:text-muted-foreground focus-visible:ring-aurora-cyan"
+                    data-testid="waitlist-email"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage className="text-destructive font-medium text-xs mt-1" />
+              </FormItem>
+            )}
+          />
+          <Button
+            type="submit"
+            className="h-12 min-h-[44px] px-8 bg-aurora-cyan hover:bg-aurora-cyan/90 text-black font-medium shrink-0"
+            disabled={createLead.isPending}
+            data-testid="waitlist-submit"
+          >
+            {createLead.isPending ? (locale === "de" ? "Wird gesendet…" : "Joining…") : t.submit}
+          </Button>
+        </div>
       </form>
     </Form>
   );

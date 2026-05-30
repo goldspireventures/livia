@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "cross-env NODE_ENV=development pnpm run build && pnpm run start",
+    "dev": "cross-env NODE_ENV=development pnpm run build && cross-env NODE_ENV=development pnpm run start",
     "start": "cross-env DOTENV_CONFIG_PATH=../../.env PORT=3000 node --import dotenv/config --enable-source-maps ./dist/index.mjs",
     "build": "node ./build.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",

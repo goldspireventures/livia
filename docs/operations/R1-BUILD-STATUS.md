@@ -59,21 +59,21 @@ LIVIA FINAL BUILD PLAN (master)
 | # | Criterion | Status | Notes |
 |---|-----------|--------|-------|
 | E1 | G1-A wedge all verticals | **Done** | `/demo/wedge/:vertical` + policy |
-| E2 | M1-R2 + M2-A marketing on staging | **In progress** | M1-R2 story home wired wave 7 |
+| E2 | M1-R2 + M2-A marketing on staging | **In progress** | M2-A honest pricing + home teaser wired wave 8 |
 | E3 | `wedge-demo-stories.ts` + `guest-surfaces.ts` | **Done** | policy |
-| E4 | All 9 `/b/{demoSlug}` E2E | **Not verified** | need `pnpm test:e2e:verticals` green |
+| E4 | All 9 `/b/{demoSlug}` E2E | **Done (local)** | `pnpm test:e2e:verticals` 76/76 green 2026-05-30 (34 vertical + 12 booking + rest) |
 | E5 | Body-art proof guest page | **Done** | `/b/.../proof/:token` |
-| E6 | Visit token pages | **Partial** | route exists; 9-vertical smoke TBD |
-| E7 | Platform Default polish + preset picker | **Partial** | D2 + picker staging; UAT open |
-| E8 | I4 Thread 3-column shell | **Partial** | queue + nav stubs |
-| E9 | I2 Ship Lane + Hats | **Partial** | Ship Lane yes; Hats metrics thin |
+| E6 | Visit token pages | **Done (local)** | visit token smoke in verticals E2E wave 10 |
+| E7 | Platform Default polish + preset picker | **Partial** | D-R1 aurora wash wave 9; picker staging |
+| E8 | I4 Thread 3-column shell | **Done (local)** | queue \| thread \| context + Investigate wave 10 |
+| E9 | I2 Ship Lane + Hats | **Done (local)** | tab shell + hats river wave 10 |
 | E10 | Phone E.164 normalize | **Done** | customers + guest hub |
-| E11 | Signup → seed → `/b` headless | **Partial** | script exists; full path TBD |
+| E11 | Signup → seed → `/b` headless | **Partial** | headless visit API + marketing-lifecycle (wedge + sign-up gateway) wave 11 |
 | E12 | `presentation_preset_id` D2 | **Done** | migration 028 + API |
 | E13 | Continuity templates all verticals | **Done** | policy test |
 | E14 | typecheck clean | **Done** | CI |
 
-**R1 exit:** **~6/14 done · ~5/14 partial · ~3/14 open** → **not ready for full founder E2E yet**.
+**R1 exit:** **~11/14 done · ~3/14 partial** → **staging deploy + E2 verify remain before founder E2E**.
 
 ---
 
@@ -85,13 +85,13 @@ LIVIA FINAL BUILD PLAN (master)
 |----|------|--------|
 | F0 | PNG catalog + dev galleries | Done |
 | F1 | M0 aurora shell + EUR copy | Partial |
-| F2 | **M1 home + M2 pricing** | **In progress** | M1-R2 live wave 7 |
+| F2 | **M1 home + M2 pricing** | **In progress** | M2-A + home teaser + M9 vertical field wave 10 |
 | F3 | G1-A wedge + launcher | Done |
-| F4 | M3 how-it-works + M5 vertical links | Partial |
+| F4 | M3 how-it-works + M5 vertical links | **In progress** | M5 wedge CTAs on home + `/verticals` |
 | F5 | Ship Lane + sign-in gateway | Done |
 | F6 | I4 support thread + board/radar stubs | Partial |
 | F7 | M6–M12 utility pages | Open |
-| F8 | E2E marketing→demo→tenant | Open |
+| F8 | E2E marketing→demo→tenant | **Partial** | marketing-lifecycle Playwright wave 10 |
 
 ### Track G — Guest
 
@@ -102,7 +102,7 @@ LIVIA FINAL BUILD PLAN (master)
 | G2 | medspa/waitlist/pet polish | Open |
 | G3 | continuity + E2E | Partial |
 | G4 | phone normalize | Done |
-| G5 | public book mobile pass | Open |
+| G5 | public book mobile pass | **Done (local)** | sticky CTA + mobile E2E wave 9 |
 | G6 | guest hub `/my` | **Shell (R2)** |
 
 ### Track D — Presets (R1 minimal)
@@ -111,7 +111,7 @@ LIVIA FINAL BUILD PLAN (master)
 |------|--------|
 | D2 migration + API | Done |
 | D5 public `/b` skin | Partial |
-| D-R1 platform default polish | Open |
+| D-R1 platform default polish | **Partial** | tenant shell aurora wash wave 9 |
 
 ---
 
@@ -119,6 +119,10 @@ LIVIA FINAL BUILD PLAN (master)
 
 | Wave | Date | Focus | Staging URLs affected |
 |------|------|-------|---------------------|
+| 11 | 2026-05-30 | Headless lifecycle fix; staging E2E script; E11 sign-up gateway test | `pnpm test:e2e:staging` |
+| 10 | 2026-05-30 | E6 visit smoke; E8 support 3-col; E9 exec tabs; M9 waitlist; F8 browser E2E | internal `/support`, marketing waitlist |
+| 9 | 2026-05-30 | G5 public book mobile pass; E7/D-R1 platform-default shell wash | `/b/*` mobile, tenant app |
+| 8 | 2026-05-30 | E4 local green; M2-A pricing; M5 home wedge chips; headless lifecycle fix | marketing home + `/pricing` |
 | 7 | 2026-05-30 | M1-R2 story home wired + BUILD-PLAN-WIRE doc | [staging.livia-hq.com](https://staging.livia-hq.com/) |
 | 2 | 2026-05-30 | Guest proof `/b/.../proof/:token` | public `/b/*` |
 | 3 | 2026-05-30 | D2 presets, Ship Lane, M3 how-it-works, headless script | app settings, internal ops, marketing `/how-it-works` |
@@ -128,13 +132,12 @@ LIVIA FINAL BUILD PLAN (master)
 
 **Next waves (agent queue — R1 closeout):**
 
-1. **F2** — M1 story-scroll home + M2 pricing on [staging.livia-hq.com](https://staging.livia-hq.com/)
-2. **E4** — run + fix `pnpm test:e2e:verticals` on staging
+1. **Deploy** `release/r1` → staging; run `pnpm test:e2e:staging` (or `--full` with staging Clerk)
+2. **E2** — verify M1+M2 on [staging.livia-hq.com](https://staging.livia-hq.com/) *(staging still on pre-wave-8 build — no €79 yet)*
 3. **G5** — public book mobile visual pass
-4. **F8** — headless marketing→demo→tenant script
-5. **E7/E8/E9** — UAT polish (tenant default, support thread, hats)
-6. **Backlog sync** — mark done items in PLATFORM-BACKLOG.md
-7. **Founder E2E** — you test full matrix once row “R1 exit” hits 14/14
+4. **E7/E8/E9** — UAT polish (tenant default, support thread, hats)
+5. **Backlog sync** — mark done items in PLATFORM-BACKLOG.md
+6. **Founder E2E** — you test full matrix once row “R1 exit” hits 14/14
 
 ---
 

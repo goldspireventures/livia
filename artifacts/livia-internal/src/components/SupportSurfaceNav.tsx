@@ -4,6 +4,7 @@ const MODES = [
   { to: "/support", label: "Thread" },
   { to: "/support/board", label: "Board" },
   { to: "/support/radar", label: "Radar" },
+  { to: "/support/investigate", label: "Investigate" },
 ] as const;
 
 export function SupportSurfaceNav() {
@@ -20,13 +21,13 @@ export function SupportSurfaceNav() {
       data-testid="support-surface-nav"
     >
       {MODES.map((mode) => {
-        const active =
-          mode.to === "/support"
-            ? pathname === "/support" ||
-              (/^\/support\/[^/]+$/.test(pathname) &&
-                pathname !== "/support/board" &&
-                pathname !== "/support/radar")
-            : pathname.startsWith(mode.to);
+        const segment = pathname.replace(/^\/support\/?/, "").split("/")[0] ?? "";
+        const threadTicket =
+          pathname === "/support" ||
+          pathname === "/support/queue" ||
+          /^\/support\/tickets\//.test(pathname) ||
+          (segment.length > 0 && !["board", "radar", "investigate", "queue"].includes(segment));
+        const active = mode.to === "/support" ? threadTicket : pathname.startsWith(mode.to);
         return (
           <Link
             key={mode.to}

@@ -54,6 +54,7 @@ export function buildExecHatPanels(snapshot: ExecHatSnapshotInput): ExecHatPanel
       status: tenants > 0 ? "watch" : "action",
       metrics: [
         { label: "Live tenants", value: String(tenants) },
+        { label: "Production", value: prodOk ? "healthy" : "check failed" },
         { label: "Beta signup", value: release.betaSignupMode },
         { label: "Demo on API", value: release.demoEnabled ? "yes" : "no" },
       ],
@@ -120,6 +121,12 @@ export function buildExecHatPanels(snapshot: ExecHatSnapshotInput): ExecHatPanel
       mandate: "Tenant health, responses, Liv incidents",
       status: support.openTotal > 5 ? "watch" : "ok",
       metrics: [
+        { label: "Open tickets", value: String(support.openTotal) },
+        { label: "Urgent", value: String(support.urgentOpen) },
+        {
+          label: "Oldest open",
+          value: support.oldestOpenHours === null ? "—" : `${support.oldestOpenHours}h`,
+        },
         { label: "Open conversations", value: String(obs.traffic.conversationsOpen) },
         { label: "Msgs 24h (ok / fail)", value: `${obs.traffic.messagesLast24h} / ${obs.traffic.messagesFailed24h}` },
       ],

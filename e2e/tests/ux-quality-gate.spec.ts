@@ -11,7 +11,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const apiBase = process.env.E2E_API_BASE ?? "http://127.0.0.1:3000";
+import { apiBase, dismissLegalAcceptance, dismissPlatformTour, signInBusiness } from "../helpers/demo-auth";
+
 const demoSlug = process.env.E2E_DEMO_SLUG ?? "luxe-salon-spa";
 
 const ERROR_PATTERNS = [
@@ -57,33 +58,8 @@ function record(route: string, kind: Finding["kind"], detail: string) {
   findings.push({ route, kind, detail });
 }
 
-async function dismissPlatformTour(page: import("@playwright/test").Page) {
-  const skip = page.getByRole("button", { name: /skip tour/i });
-  if (await skip.isVisible().catch(() => false)) {
-    await skip.click();
-    await page.waitForTimeout(400);
-  }
-}
-
 async function signInOwner(page: import("@playwright/test").Page) {
-  await page.addInitScript(() => {
-    try {
-      window.localStorage.setItem("livia.platformTour.dismissed.v1", "1");
-    } catch {
-      /* ignore */
-    }
-  });
-  const res = await page.request.post(`${apiBase}/api/demo/sign-in`, { data: { persona: "owner" } });
-  if (!res.ok()) {
-    test.skip(true, `Clerk sign-in unavailable (${res.status()}) — skip authenticated wedge checks`);
-  }
-  const { token } = (await res.json()) as { token?: string };
-  if (!token) throw new Error("No clerk ticket");
-  await page.goto(`/sign-in?__clerk_ticket=${encodeURIComponent(token)}`, {
-    waitUntil: "networkidle",
-  });
-  await page.waitForURL(/\/(dashboard|chain|inbox)/, { timeout: 45_000 });
-  await dismissPlatformTour(page);
+  await signInBusiness(page, demoSlug);
 }
 
 async function scanRoute(
@@ -94,7 +70,10 @@ async function scanRoute(
 ) {
   await page.goto(route, { waitUntil: "domcontentloaded", timeout: 45_000 });
   await page.waitForTimeout(500);
-  if (opts?.signedIn) await dismissPlatformTour(page);
+  if (opts?.signedIn) {
+    await dismissLegalAcceptance(page);
+    await dismissPlatformTour(page);
+  }
 
   const body = await page.locator("body").innerText();
   const patterns =

@@ -44,9 +44,9 @@ test.describe("Internal ops smoke", () => {
     const internalBase = process.env.E2E_INTERNAL_BASE ?? "http://127.0.0.1:5175";
     await page.goto(internalBase, { waitUntil: "domcontentloaded" });
     await page.getByPlaceholder("X-Internal-Ops-Secret").fill(opsSecret);
-    await page.getByPlaceholder("you@livia.io").fill("e2e@livia.io");
+    await page.getByPlaceholder(/@livia-hq\.com|you@livia\.io/).fill("e2e@livia.io");
     await page.getByRole("button", { name: "Continue" }).click();
-    await expect(page.getByRole("button", { name: "Support", exact: true })).toBeVisible({
+    await expect(page.getByRole("link", { name: "Support", exact: true })).toBeVisible({
       timeout: 15_000,
     });
     await expect(page.getByTestId("api-connection-error")).not.toBeVisible({ timeout: 20_000 });

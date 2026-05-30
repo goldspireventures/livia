@@ -60,7 +60,10 @@ export function PublicSurfaceFooter() {
         </a>
         <p className="text-[11px] text-muted-foreground font-mono">
           Bookings powered by{" "}
-          <a href={getMarketingOrigin()} className="text-aurora-cyan/90 hover:text-aurora-cyan">
+          <a
+            href={getMarketingOrigin()}
+            className="font-medium text-foreground underline underline-offset-2 hover:text-aurora-cyan"
+          >
             Livia
           </a>
         </p>

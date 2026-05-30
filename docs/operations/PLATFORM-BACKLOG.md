@@ -99,7 +99,7 @@ Set on Railway staging API: `LIVIA_DEPLOY_ENV=staging`
 - [ ] **G2** Medspa consent, fitness waitlist, pet/automotive guest polish
 - [ ] **G3** Link-first continuity templates + 9-vertical hero E2E + support surfaceIds
 - [ ] **G4** Phone E.164 normalize in `findOrCreateCustomer` + `/b` validation — [`GUEST-CUSTOMER-IDENTITY.md`](../product/GUEST-CUSTOMER-IDENTITY.md)
-- [ ] **G5** Public book mobile pass (`now/` tier)
+- [ ] **G5** Public book mobile pass (`now/` tier) *(sticky CTA + touch targets wave 9)*
 - [ ] **G6 (R2)** Guest hub `my.livia-hq.com` — [`GUEST-CONTINUITY-HUB-SPEC.md`](../product/GUEST-CONTINUITY-HUB-SPEC.md)
 
 **Parallel:** Track D5 (public `/b`) · Track B1 (registry).
@@ -114,14 +114,14 @@ Set on Railway staging API: `LIVIA_DEPLOY_ENV=staging`
 
 - [x] **F0** M1-R2 locked · final gallery catalog (29 PNGs)
 - [ ] **F1** Marketing M0 aurora shell + logo components + EUR-only copy
-- [ ] **F2** M1 home + M2-A pricing + M9 waitlist vertical field + M4 index
-- [ ] **F3** G1-A: `wedge-demo-stories.ts` + `/demo/wedge/:vertical` + Launcher wiring
-- [ ] **F4** M5 vertical pages → demo deep links; M3 how-it-works
+- [ ] **F2** M1 home + M2-A pricing + M9 waitlist vertical field + M4 index *(M2-A honest tiers + home teaser done wave 8)*
+- [x] **F3** G1-A: `wedge-demo-stories.ts` + `/demo/wedge/:vertical` + Launcher wiring
+- [ ] **F4** M5 vertical pages → demo deep links; M3 how-it-works *(M5 wedge CTAs on home + `/verticals` wave 8)*
 - [ ] **F5** I2 Ship Lane collapse/expand + Hats (metrics panels); I0 token pass
 - [ ] **H** Exec workforce — work-event ledger, Hats River v2, Cursor bridge — [`INTERNAL-EXEC-COCKPIT-SPEC.md`](../product/INTERNAL-EXEC-COCKPIT-SPEC.md) §4.2b · program §7e
 - [ ] **F6** I4 support: `/support/queue`, `/tickets/:id`, `/board`, `/radar`, `/investigate`
 - [ ] **F7** M6–M12 marketing utility pages
-- [ ] **F8** E2E marketing→demo→tenant; marketing-vs-reality audit
+- [ ] **F8** E2E marketing→demo→tenant; marketing-vs-reality audit *(headless API path in `test:e2e:verticals` wave 8)*
 
 **Parallel:** Track D (tenant presets) · Tracks B/C (support registry for F6.5).
 

@@ -424,7 +424,7 @@ export default function PublicBookingPage() {
         className="public-booking-hero pointer-events-none absolute inset-x-0 top-0 h-48 -z-0"
         aria-hidden
       />
-      <main className="max-w-xl mx-auto px-4 py-8 pb-24 relative z-10">
+      <main className="max-w-xl mx-auto px-4 py-8 pb-6 md:pb-8 relative z-10">
         <PublicCustomerRitual
           businessName={b.name}
           city={b.city ? `${b.city}` : null}
@@ -647,7 +647,7 @@ export default function PublicBookingPage() {
             </div>
 
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label htmlFor="public-first-name">First name *</Label>
                   <Input

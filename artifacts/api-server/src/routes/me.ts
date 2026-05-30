@@ -39,12 +39,32 @@ const router: IRouter = Router();
 
 const RECEPTION_HINT = /(reception|front[ -]?desk|concierge)/i;
 
+function clerkProfileFromReq(req: Parameters<typeof getAuth>[0]): {
+  email?: string;
+  fullName?: string;
+} {
+  const auth = getAuth(req);
+  const email =
+    (auth.sessionClaims?.email as string | undefined) ??
+    (auth as { sessionClaims?: { primary_email_address?: string } }).sessionClaims
+      ?.primary_email_address;
+  const fullName =
+    [auth.sessionClaims?.first_name, auth.sessionClaims?.last_name]
+      .filter(Boolean)
+      .join(" ")
+      .trim() || undefined;
+  return { email, fullName };
+}
+
 router.get("/me", requireAuth, async (req, res): Promise<void> => {
   const userId = getUserId(req);
-  let user = await getOrCreateUser(userId);
+  const { email, fullName } = clerkProfileFromReq(req);
+  let user = await getOrCreateUser(userId, email, fullName);
+  const demoEmail = email?.trim().toLowerCase();
   if (
     process.env.NODE_ENV !== "production" &&
-    isDemoEmail(user.email) &&
+    demoEmail &&
+    isDemoEmail(demoEmail) &&
     !hasCurrentPlatformLegal(user.platformLegal)
   ) {
     await updateUser(userId, { platformLegal: buildPlatformLegalAcceptance("demo-backfill") });

@@ -1,0 +1,62 @@
+/**
+ * Marketing → demo wedge → public book (F8 / E11 browser path).
+ *
+ *   pnpm --filter @workspace/e2e exec playwright test --project=marketing-lifecycle
+ */
+import { test, expect } from "@playwright/test";
+
+const marketingBase = process.env.E2E_MARKETING_URL ?? "http://127.0.0.1:5174";
+const dashboardBase = process.env.E2E_DASHBOARD_BASE ?? "http://127.0.0.1:5173";
+const apiBase = process.env.E2E_API_BASE ?? "http://127.0.0.1:3000";
+const demoSlug = process.env.E2E_DEMO_SLUG ?? "luxe-salon-spa";
+
+test.describe("Marketing lifecycle", () => {
+  test.beforeAll(async ({ request }) => {
+    const st = await request.get(`${apiBase}/api/demo/status`);
+    if (st.ok() && (await st.json() as { provisioned?: boolean }).provisioned) return;
+    const prov = await request.post(`${apiBase}/api/demo/provision`, { timeout: 180_000 });
+    if (!prov.ok()) {
+      const retry = await request.get(`${apiBase}/api/demo/status`);
+      if (!retry.ok() || !(await retry.json() as { provisioned?: boolean }).provisioned) {
+        throw new Error(`Demo not provisioned (${prov.status()})`);
+      }
+    }
+  });
+
+  test("home vertical chip opens demo wedge", async ({ page }) => {
+    await page.goto(`${marketingBase}/`, { waitUntil: "domcontentloaded" });
+    const wedge = page.locator(`a[href*="${dashboardBase.replace(/\/+$/, "")}/demo/wedge/hair"]`).first();
+    await expect(wedge).toBeVisible();
+    await wedge.click();
+    await page.waitForURL(/\/demo\/wedge\/hair/, { timeout: 30_000 });
+    await expect(page.locator("body")).not.toContainText(/something went wrong/i);
+  });
+
+  test("wedge continues to demo launcher", async ({ page }) => {
+    await page.goto(`${dashboardBase}/demo/wedge/hair`, { waitUntil: "domcontentloaded" });
+    const enter = page.getByRole("link", { name: /enter demo|open demo|continue/i }).or(
+      page.getByRole("button", { name: /enter demo|open demo|continue/i }),
+    );
+    if ((await enter.count()) > 0) {
+      await enter.first().click();
+      await page.waitForURL(/\/demo/, { timeout: 30_000 });
+    }
+    await expect(page.locator("body")).toContainText(/demo/i);
+  });
+
+  test("public book surface loads from demo slug", async ({ page, request }) => {
+    const res = await request.get(`${apiBase}/api/public/b/${demoSlug}`);
+    if (!res.ok()) test.skip(true, `${demoSlug} missing`);
+    await page.goto(`${dashboardBase}/b/${demoSlug}`, { waitUntil: "domcontentloaded" });
+    await expect(page.getByTestId("text-business-name")).toBeVisible({ timeout: 45_000 });
+  });
+
+  test("Get started opens sign-up gateway", async ({ page }) => {
+    await page.goto(`${marketingBase}/pricing`, { waitUntil: "domcontentloaded" });
+    const cta = page.getByRole("link", { name: /get started/i }).first();
+    await expect(cta).toBeVisible();
+    await cta.click();
+    await page.waitForURL(/\/sign-up/, { timeout: 30_000 });
+    await expect(page.locator("body")).not.toContainText(/something went wrong/i);
+  });
+});

@@ -27,6 +27,7 @@ function restore() {
 
 try {
   delete process.env.LIVIA_BETA_SIGNUP_MODE;
+  process.env.NODE_ENV = "development";
   setCockpitWorkforceGrantsCacheForTest(new Map());
   resetWorkforceAccessConfigCache();
   assert.equal(getBetaSignupMode(), "open");

@@ -104,27 +104,15 @@ export default function PricingPage() {
 
           const card = planMarketingCard(id);
 
-          const highlight = id === "studio";
-
           return (
 
             <div
 
               key={id}
 
-              className={`rounded-sm border p-8 flex flex-col bg-[#0c0c10]/80 backdrop-blur-sm ${
-
-                highlight ? "border-aurora-cyan/40 ring-2 ring-aurora-cyan/30" : "border-white/10"
-
-              }`}
+              className="rounded-sm border border-white/10 p-8 flex flex-col bg-[#0c0c10]/80 backdrop-blur-sm"
 
             >
-
-              {highlight ? (
-
-                <span className="text-xs uppercase tracking-wider text-aurora-cyan mb-2">Recommended</span>
-
-              ) : null}
 
               <h2 className="text-xl font-serif">{card.name}</h2>
 

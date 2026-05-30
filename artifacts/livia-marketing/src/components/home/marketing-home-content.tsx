@@ -3,10 +3,12 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { MarketingForm } from "@/components/marketing-form";
 import { DeContactBand } from "@/components/marketing-shell";
 import { EditorialStory } from "@/components/home/editorial-story";
+import { EditorialPricingTeaser } from "@/components/home/editorial-pricing-teaser";
 import { Link } from "wouter";
 import { ArrowRight } from "lucide-react";
 import { editorialCopy, type MarketingLocale } from "@/lib/marketing-editorial-i18n";
 import { dashboardDemoUrl, dashboardWedgeUrl } from "@/lib/marketing-links";
+import { MARKETING_VERTICAL_LINKS } from "@/lib/marketing-verticals";
 
 type MarketingHomeContentProps = {
   locale: MarketingLocale;
@@ -83,6 +85,9 @@ export function MarketingHomeContent({ locale }: MarketingHomeContentProps) {
       {/* M1-R2 story scroll — chapters 1–3 + trust timeline */}
       <EditorialStory locale={locale} />
 
+      {/* M2-A pricing teaser — honest tiers, link to full /pricing */}
+      <EditorialPricingTeaser locale={locale} />
+
       {/* Trade worlds strip → demo wedge (G1-A entry from marketing) */}
       <section className="px-4 sm:px-6 py-12 md:py-14 border-y border-white/5 bg-[#0c0c10]/40">
         <div className="max-w-6xl mx-auto">
@@ -94,13 +99,13 @@ export function MarketingHomeContent({ locale }: MarketingHomeContentProps) {
             Pick a vertical — a short story, then enter the live demo. No sign-up until you&apos;re ready.
           </p>
           <div className="flex flex-wrap gap-2">
-            {(["hair-beauty", "barber", "body-art", "medspa", "wellness", "pet-grooming"] as const).map((v) => (
+            {MARKETING_VERTICAL_LINKS.map((v) => (
               <a
-                key={v}
-                href={dashboardWedgeUrl(v)}
-                className="rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-sm capitalize hover:border-aurora-cyan/40 hover:text-aurora-cyan transition-colors min-h-[44px] inline-flex items-center"
+                key={v.slug}
+                href={dashboardWedgeUrl(v.slug)}
+                className="rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-sm hover:border-aurora-cyan/40 hover:text-aurora-cyan transition-colors min-h-[44px] inline-flex items-center"
               >
-                {v.replace(/-/g, " ")}
+                {v.label}
               </a>
             ))}
             <Link

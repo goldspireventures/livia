@@ -23,6 +23,7 @@ export function FounderCockpitView() {
   const [busy, setBusy] = useState(false);
   const [autoBusy, setAutoBusy] = useState<string | null>(null);
   const [autoMsg, setAutoMsg] = useState<string | null>(null);
+  const [execTab, setExecTab] = useState<"exceptions" | "ship-lane" | "hats">("exceptions");
 
   const load = useCallback(async () => {
     setBusy(true);
@@ -99,6 +100,31 @@ export function FounderCockpitView() {
 
       {err ? <p style={{ color: "#f87171", fontSize: 13, margin: 0 }}>{err}</p> : null}
 
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }} data-testid="exec-cockpit-tabs">
+        {(
+          [
+            ["exceptions", "Exceptions"],
+            ["ship-lane", "Ship lane"],
+            ["hats", "Hats"],
+          ] as const
+        ).map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            style={{
+              ...btn,
+              borderColor: execTab === id ? "rgba(56, 189, 248, 0.5)" : undefined,
+              color: execTab === id ? "#38bdf8" : undefined,
+            }}
+            onClick={() => setExecTab(id)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {execTab === "exceptions" ? (
+        <>
       <section style={{ ...card, borderColor: prodOk ? "rgba(52, 211, 153, 0.35)" : "rgba(251, 191, 36, 0.45)" }}>
         <h2 style={h2}>Production health</h2>
         <p style={{ margin: "0 0 12px", fontSize: 13, color: prodOk ? "#6ee7b7" : "#fbbf24" }}>
@@ -120,62 +146,6 @@ export function FounderCockpitView() {
         grants={data.workforceAccess.grants}
         onChanged={() => void load()}
       />
-
-      <section style={card}>
-        <h2 style={h2}>Leadership hats</h2>
-        <p style={{ margin: "0 0 12px", fontSize: 12, color: "#94a3b8", lineHeight: 1.5 }}>
-          One surface, six mandates — depth without hopping apps. Status drives your daily order.
-        </p>
-        <div style={{ display: "grid", gap: 10 }}>
-          {data.hats.map((hat) => (
-            <div
-              key={hat.id}
-              style={{
-                border: "1px solid rgba(148, 163, 184, 0.2)",
-                borderRadius: 10,
-                padding: 12,
-                borderLeft: `3px solid ${hatStatusColor(hat.status)}`,
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
-                <strong style={{ color: "#e2e8f0", fontSize: 13 }}>{hat.role}</strong>
-                <span style={{ fontSize: 11, color: hatStatusColor(hat.status), textTransform: "uppercase" }}>
-                  {hat.status}
-                </span>
-              </div>
-              <p style={{ margin: "4px 0 8px", fontSize: 11, color: "#64748b" }}>{hat.mandate}</p>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 6 }}>
-                {hat.metrics.map((m) => (
-                  <div key={m.label} style={{ fontSize: 11 }}>
-                    <span style={{ color: "#64748b" }}>{m.label}: </span>
-                    <span style={{ color: "#cbd5e1" }}>{m.value}</span>
-                  </div>
-                ))}
-              </div>
-              <p style={{ margin: "8px 0", fontSize: 12, color: "#94a3b8", fontStyle: "italic" }}>{hat.focus}</p>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {hat.actions.map((a) =>
-                  a.internalPath ? (
-                    <Link key={a.label} to={a.internalPath} style={{ fontSize: 11, color: "#38bdf8" }}>
-                      {a.label} →
-                    </Link>
-                  ) : a.href ? (
-                    <a
-                      key={a.label}
-                      href={a.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ fontSize: 11, color: "#38bdf8" }}
-                    >
-                      {a.label} ↗
-                    </a>
-                  ) : null,
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
 
       <section style={card}>
         <h2 style={h2}>Automations</h2>
@@ -273,13 +243,6 @@ export function FounderCockpitView() {
           })}
         </div>
       </section>
-
-      <ShipLanePanel
-        steps={data.release.steps}
-        betaSignupMode={data.release.betaSignupMode}
-        demoEnabled={data.release.demoEnabled}
-        stagingRelaxations={data.release.stagingRelaxations}
-      />
 
       <section style={card}>
         <h2 style={h2}>Today at a glance</h2>
@@ -440,6 +403,82 @@ export function FounderCockpitView() {
           Monday business OKRs: <code>docs/company/NORTH-STAR-DASHBOARD.md</code>
         </p>
       </section>
+        </>
+      ) : null}
+
+      {execTab === "ship-lane" ? (
+        <ShipLanePanel
+          steps={data.release.steps}
+          betaSignupMode={data.release.betaSignupMode}
+          demoEnabled={data.release.demoEnabled}
+          stagingRelaxations={data.release.stagingRelaxations}
+        />
+      ) : null}
+
+      {execTab === "hats" ? (
+        <section style={card} data-testid="exec-hats-river">
+          <h2 style={h2}>Leadership hats</h2>
+          <p style={{ margin: "0 0 12px", fontSize: 12, color: "#94a3b8", lineHeight: 1.5 }}>
+            Six mandates — scan left to right for daily order.
+          </p>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+              gap: 12,
+            }}
+          >
+            {data.hats.map((hat) => (
+              <div
+                key={hat.id}
+                style={{
+                  border: "1px solid rgba(148, 163, 184, 0.2)",
+                  borderRadius: 10,
+                  padding: 12,
+                  borderTop: `3px solid ${hatStatusColor(hat.status)}`,
+                  minHeight: 200,
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+                  <strong style={{ color: "#e2e8f0", fontSize: 13 }}>{hat.role}</strong>
+                  <span style={{ fontSize: 11, color: hatStatusColor(hat.status), textTransform: "uppercase" }}>
+                    {hat.status}
+                  </span>
+                </div>
+                <p style={{ margin: "4px 0 8px", fontSize: 11, color: "#64748b" }}>{hat.mandate}</p>
+                <div style={{ display: "grid", gap: 4 }}>
+                  {hat.metrics.map((m) => (
+                    <div key={m.label} style={{ fontSize: 11 }}>
+                      <span style={{ color: "#64748b" }}>{m.label}: </span>
+                      <span style={{ color: "#cbd5e1", fontWeight: 600 }}>{m.value}</span>
+                    </div>
+                  ))}
+                </div>
+                <p style={{ margin: "8px 0", fontSize: 12, color: "#94a3b8", fontStyle: "italic" }}>{hat.focus}</p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {hat.actions.map((a) =>
+                    a.internalPath ? (
+                      <Link key={a.label} to={a.internalPath} style={{ fontSize: 11, color: "#38bdf8" }}>
+                        {a.label} →
+                      </Link>
+                    ) : a.href ? (
+                      <a
+                        key={a.label}
+                        href={a.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ fontSize: 11, color: "#38bdf8" }}
+                      >
+                        {a.label} ↗
+                      </a>
+                    ) : null,
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

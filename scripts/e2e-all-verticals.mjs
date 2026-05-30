@@ -90,6 +90,10 @@ ok =
 ok = run("pnpm", [...e2e, "--project=internal-ops-smoke", "--workers=1"], "Internal ops (:5175)") && ok;
 ok = run("pnpm", [...e2e, "--project=ux-quality-gate", "--workers=1"], "UX quality gate (hair wedge)") && ok;
 
+ok = run("pnpm", [...e2e, "--project=marketing-lifecycle", "--workers=1"], "Marketing lifecycle (wedge → demo → /b)") && ok;
+
+ok = run("node", ["scripts/headless-lifecycle-r1.mjs"], "Headless lifecycle (API wedge + /b)") && ok;
+
 if (withVisual) {
   ok = run("pnpm", [...e2e, "--project=full-visual-audit", "--workers=1"], "Visual: all routes × verticals") && ok;
 }

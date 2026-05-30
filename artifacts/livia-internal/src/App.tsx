@@ -27,6 +27,7 @@ import { InternalShell } from "./layout/InternalShell";
 import { SupportPage } from "./pages/SupportPage";
 import { SupportBoardView } from "./views/SupportBoardView";
 import { SupportRadarView } from "./views/SupportRadarView";
+import { SupportInvestigateView } from "./views/SupportInvestigateView";
 import { KnowledgePage } from "./pages/KnowledgePage";
 import { TenantsPage } from "./pages/TenantsPage";
 import { OnboardingExperiencePickerView } from "./views/OnboardingExperiencePickerView";
@@ -212,6 +213,29 @@ export function App() {
             <>
               <RequestTracePanel />
               <SupportPage />
+            </>
+          }
+        />
+
+        <Route
+          path="/support/queue"
+          element={<Navigate to="/support" replace />}
+        />
+        <Route
+          path="/support/tickets/:ticketId"
+          element={
+            <>
+              <RequestTracePanel />
+              <SupportPage />
+            </>
+          }
+        />
+        <Route
+          path="/support/investigate"
+          element={
+            <>
+              <RequestTracePanel />
+              <SupportInvestigateView />
             </>
           }
         />

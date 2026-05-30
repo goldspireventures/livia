@@ -88,7 +88,7 @@ export function PublicServiceCatalog({
                       <Button
                         type="button"
                         size="sm"
-                        className="shrink-0 w-full sm:w-auto"
+                        className="shrink-0 w-full sm:w-auto min-h-[44px]"
                         data-testid={`button-service-${svc.id}`}
                         onClick={() => onSelect(svc)}
                       >

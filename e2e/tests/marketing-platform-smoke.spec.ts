@@ -73,6 +73,7 @@ test.describe("livia.io — platform smoke", () => {
     await page.goto(`${marketingBase}/pricing`);
     await expect(page.getByRole("heading", { name: /pricing/i })).toBeVisible();
     await expect(page.getByText(/€79/)).toBeVisible();
+    await expect(page.getByText(/recommended|most popular/i)).toHaveCount(0);
   });
 
   test("status probes local API when configured", async ({ page }) => {

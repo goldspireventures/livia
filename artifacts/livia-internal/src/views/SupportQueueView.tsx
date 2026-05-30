@@ -176,13 +176,13 @@ export function SupportQueueView({
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "minmax(240px, 0.9fr) minmax(320px, 1.1fr) minmax(260px, 0.85fr)",
+        gridTemplateColumns: "240px minmax(0, 1fr) 320px",
         gap: 16,
         alignItems: "start",
       }}
       data-testid="support-cockpit"
     >
-      <section>
+      <section data-testid="support-queue-column">
         <h2 style={{ fontSize: 16, margin: "0 0 8px" }}>Support queue</h2>
         <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 8px", lineHeight: 1.45 }}>
           Queue · summary · timeline. Open a runbook in Knowledge:
@@ -322,11 +322,17 @@ export function SupportQueueView({
           })}
         </ul>
         {sorted.length === 0 ? (
-          <p style={{ color: "#94a3b8", fontSize: 13 }}>No tickets match filters.</p>
+          <p style={{ color: "#94a3b8", fontSize: 13 }}>
+            No tickets match filters.{" "}
+            <a href="/support/radar" style={{ color: "#38bdf8" }}>
+              Open radar →
+            </a>
+          </p>
         ) : null}
       </section>
 
       <section
+        data-testid="support-thread-column"
         style={{
           border: "1px solid #334155",
           borderRadius: 12,
@@ -339,6 +345,22 @@ export function SupportQueueView({
           <p style={{ color: "#94a3b8" }}>Select a ticket from the queue.</p>
         ) : (
           <>
+            {detail.triage?.priority === "urgent" ? (
+              <div
+                data-testid="support-p0-banner"
+                style={{
+                  marginBottom: 12,
+                  padding: "10px 12px",
+                  borderRadius: 8,
+                  background: "rgba(248, 113, 113, 0.12)",
+                  border: "1px solid rgba(248, 113, 113, 0.45)",
+                  fontSize: 12,
+                  color: "#fecaca",
+                }}
+              >
+                P0 urgent — respond within SLA. Oldest open tickets surface in Founder cockpit.
+              </div>
+            ) : null}
             <h3 style={{ margin: "0 0 4px", fontSize: 18 }}>{detail.businessName}</h3>
             <p style={{ margin: 0, fontSize: 12, color: "#94a3b8" }}>
               {detail.id} · {detail.status} · reporter {detail.reporterEmail ?? detail.userId}
@@ -483,20 +505,12 @@ export function SupportQueueView({
               </div>
             ) : null}
 
-            {tenantPreview ? (
-              <div style={{ fontSize: 12, color: "#64748b", marginTop: 12, lineHeight: 1.5 }}>
-                AI {tenantPreview.aiEnabled ? "on" : "off"} · {tenantPreview.bookingCount} bookings · last
-                booking {tenantPreview.lastBookingAt ?? "—"}
-                {bundle?.suggestedReplySnippets?.[0] ? (
-                  <p style={{ marginTop: 6, color: "#94a3b8" }}>Snippet: {bundle.suggestedReplySnippets[0]}</p>
-                ) : null}
-              </div>
-            ) : null}
           </>
         )}
       </section>
 
       <section
+        data-testid="support-context-column"
         style={{
           border: "1px solid #334155",
           borderRadius: 12,
@@ -504,9 +518,24 @@ export function SupportQueueView({
           background: "#0f172a",
           minHeight: 400,
         }}
-        aria-label="Ticket timeline"
+        aria-label="Tenant context and timeline"
       >
-        <h3 style={{ margin: "0 0 8px", fontSize: 14, color: "#fbbf24" }}>Timeline & identifiers</h3>
+        <h3 style={{ margin: "0 0 8px", fontSize: 14, color: "#fbbf24" }}>Context</h3>
+        {tenantPreview ? (
+          <div style={{ fontSize: 12, color: "#64748b", marginBottom: 12, lineHeight: 1.5 }}>
+            <strong style={{ color: "#e2e8f0" }}>{tenantPreview.name ?? "Tenant"}</strong>
+            <p style={{ margin: "6px 0 0" }}>
+              AI {tenantPreview.aiEnabled ? "on" : "off"} · {tenantPreview.bookingCount} bookings · last
+              booking {tenantPreview.lastBookingAt ?? "—"}
+            </p>
+            {bundle?.suggestedReplySnippets?.[0] ? (
+              <p style={{ marginTop: 6, color: "#94a3b8" }}>Snippet: {bundle.suggestedReplySnippets[0]}</p>
+            ) : null}
+          </div>
+        ) : (
+          <p style={{ color: "#64748b", fontSize: 12, marginBottom: 12 }}>Select a ticket for tenant health.</p>
+        )}
+        <h4 style={{ margin: "0 0 8px", fontSize: 13, color: "#94a3b8" }}>Timeline & identifiers</h4>
         {!detail ? (
           <p style={{ color: "#94a3b8", fontSize: 13 }}>Select a ticket to see the unified trace.</p>
         ) : (
