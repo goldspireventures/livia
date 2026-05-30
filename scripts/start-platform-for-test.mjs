@@ -9,6 +9,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { verifyLiviaApi } from "./lib/verify-livia-api.mjs";
+import { clerkAlignmentEnv, clerkInstanceLabel, readDashboardClerkPublishableKey } from "./lib/clerk-env-alignment.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const isWin = process.platform === "win32";
@@ -45,7 +46,7 @@ function start(script, extraEnv = {}) {
     detached: true,
     stdio: "ignore",
     shell: isWin,
-    env: { ...process.env, ...extraEnv },
+    env: { ...process.env, NODE_ENV: "development", ...extraEnv },
   });
   child.unref();
   return child.pid;
@@ -89,6 +90,11 @@ async function waitLiviaApi(attempts = 60) {
 }
 
 loadEnv();
+const clerkExtra = clerkAlignmentEnv();
+const dashPk = readDashboardClerkPublishableKey();
+if (dashPk) {
+  console.log(`Clerk instance (dashboard): ${clerkInstanceLabel(dashPk) ?? "unknown"}`);
+}
 console.log("\n══ Start Livia platform for testing ══\n");
 console.log("Clearing ports…");
 for (const p of ports) stopPort(p);
@@ -102,7 +108,7 @@ if (!preflight.ok) {
 
 console.log("Starting services…");
 // Ensure per-app ports are stable even if the parent shell has PORT set.
-start("dev:api");
+start("dev:api", clerkExtra);
 start("dev:dashboard", { PORT: "5173", BASE_PATH: "/" });
 start("dev:marketing", { PORT: "5174", BASE_PATH: "/" });
 start("dev:internal");

@@ -173,41 +173,46 @@ export async function signInBusiness(page: Page, slug: string) {
     }
   });
 
-  // Prefer demo launcher — ticket exchange runs inside the app Clerk context.
-  await page.goto("/demo", { waitUntil: "domcontentloaded", timeout: 60_000 });
-  const tenant = page.getByTestId(`demo-tenant-${slug}`);
-  if (await tenant.isVisible().catch(() => false)) {
-    const ownerBtn = tenant.getByRole("button", { name: /open as owner|open chain owner/i });
-    const signInWait = page.waitForResponse(
-      (r) =>
-        (r.url().includes("/api/demo/sign-in-business") || r.url().includes("/api/demo/sign-in")) &&
-        r.request().method() === "POST",
-      { timeout: 45_000 },
-    );
-    await ownerBtn.click();
-    const signInRes = await signInWait.catch(() => null);
-    if (signInRes?.ok()) {
-      await page.waitForURL(/\/(dashboard|inbox|chain|bookings|my-day|onboarding|settings)/, {
-        timeout: 90_000,
-      });
-      await dismissPlatformTour(page);
-      return;
-    }
+  const metaRes = await page.request.post(`${apiBase}/api/demo/sign-in-business`, { data: { slug } });
+  if (!metaRes.ok()) {
+    throw new Error(`sign-in-business ${slug}: ${metaRes.status()} ${(await metaRes.text()).slice(0, 200)}`);
   }
-
-  const res = await page.request.post(`${apiBase}/api/demo/sign-in-business`, {
-    data: { slug },
-  });
-  if (!res.ok()) {
-    throw new Error(`sign-in-business ${slug}: ${res.status()} ${(await res.text()).slice(0, 200)}`);
-  }
-  const { token, landingPath = "/dashboard", businessId, email } = (await res.json()) as {
-    token?: string;
+  const { email, landingPath = "/dashboard", businessId } = (await metaRes.json()) as {
+    email?: string;
     landingPath?: string;
     businessId?: string;
-    email?: string;
   };
-  if (!token) throw new Error(`No Clerk ticket for ${slug}`);
+  if (!email) throw new Error(`No demo email for ${slug}`);
+
+  // Demo direct sign-in form — ticket exchange inside app Clerk context (most reliable locally).
+  await page.goto("/sign-in", { waitUntil: "domcontentloaded", timeout: 60_000 });
+  const demoForm = page.getByTestId("demo-password-sign-in");
+  if ((await demoForm.count()) > 0) {
+    await demoForm.scrollIntoViewIfNeeded();
+    await page.locator("#demo-email").fill(email);
+    await page.locator("#demo-password").fill(DEMO_PASSWORD);
+    await page.getByRole("button", { name: "Sign in as demo" }).click();
+    await page.waitForURL(/\/(dashboard|inbox|chain|bookings|my-day|onboarding|settings)/, {
+      timeout: 90_000,
+    });
+    if (businessId) {
+      await page.evaluate((id) => {
+        window.localStorage.setItem("livia.currentBusinessId", id);
+      }, businessId);
+    }
+    await dismissPlatformTour(page);
+    return;
+  }
+
+  // Fallback: fresh ticket from sign-in-email (password verified server-side).
+  const emailRes = await page.request.post(`${apiBase}/api/demo/sign-in-email`, {
+    data: { email, password: DEMO_PASSWORD },
+  });
+  if (!emailRes.ok()) {
+    throw new Error(`sign-in-email ${email}: ${emailRes.status()} ${(await emailRes.text()).slice(0, 200)}`);
+  }
+  const { token } = (await emailRes.json()) as { token?: string };
+  if (!token) throw new Error(`No Clerk ticket for ${email}`);
   await clerkTicketSignIn(page, token, {
     businessId,
     landingPath,

@@ -6,6 +6,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
+import { clerkAlignmentEnv } from "./lib/clerk-env-alignment.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const envPath = resolve(root, ".env");
@@ -36,6 +37,8 @@ function run(cmd, cmdArgs, label) {
 console.log("\n══ Livia E2E prep ══\n");
 
 const hasEnv = loadEnv();
+clerkAlignmentEnv();
+run("node", ["scripts/ensure-clerk-keys-aligned.mjs"], "Clerk key alignment check");
 if (!hasEnv) {
   console.warn("⚠ No repo-root .env — copy .env.example to .env and fill DATABASE_URL + Clerk keys.\n");
 } else if (!process.env.DATABASE_URL && !process.env.SUPABASE_DATABASE_URL) {
@@ -53,6 +56,12 @@ if (!skipDb) {
   }
 } else {
   console.log("⊘ Skipping DB (--skip-db)");
+  run("node", ["scripts/provision-demo-if-needed.mjs"], "Ensure demo provisioned");
+  run(
+    "node",
+    ["-e", "fetch('http://127.0.0.1:3000/api/demo/sync-clerk',{method:'POST'}).then(r=>r.json()).then(j=>console.log('sync-clerk',j)).catch(()=>console.warn('sync-clerk skipped — start API first'))"],
+    "Sync demo Clerk users",
+  );
 }
 
 run("pnpm", ["run", "typecheck:libs"], "Typecheck shared libs");

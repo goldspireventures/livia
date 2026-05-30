@@ -92,12 +92,12 @@ async function signInFounderWithPassword(page: import("@playwright/test").Page) 
   const identifier = page.locator('input[name="identifier"], input[type="email"]').first();
   await expect(identifier).toBeVisible({ timeout: 20_000 });
   await identifier.fill(FOUNDER_EMAIL);
-  await page.getByRole("button", { name: /continue/i }).click();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
 
   const password = page.locator('input[name="password"], input[type="password"]').first();
   await expect(password).toBeVisible({ timeout: 20_000 });
   await password.fill(DEMO_PASSWORD);
-  await page.getByRole("button", { name: /continue/i }).click();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
 
   await page.waitForURL(/\/(chain|dashboard)/, { timeout: 45_000 });
   return true;

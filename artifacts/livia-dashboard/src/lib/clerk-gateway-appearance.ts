@@ -7,8 +7,12 @@ export function clerkGatewayAppearance(theme: string | undefined) {
     elements: {
       formButtonPrimary: "bg-primary hover:bg-primary/90 text-primary-foreground",
       card: "bg-card/80 backdrop-blur-xl border border-border shadow-xl",
-      socialButtonsRoot: "hidden",
-      dividerRow: "hidden",
+      socialButtonsRoot: "hidden !important",
+      socialButtons: "hidden !important",
+      socialButtonsBlockButton: "hidden !important",
+      socialButtonsIconButton: "hidden !important",
+      dividerRow: "hidden !important",
+      dividerText: "hidden !important",
     },
   };
 }
