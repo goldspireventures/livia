@@ -59,21 +59,21 @@ LIVIA FINAL BUILD PLAN (master)
 | # | Criterion | Status | Notes |
 |---|-----------|--------|-------|
 | E1 | G1-A wedge all verticals | **Done** | `/demo/wedge/:vertical` + policy |
-| E2 | M1-R2 + M2-A marketing on staging | **In progress** | M1-R2 story home wired wave 7 |
+| E2 | M1-R2 + M2-A marketing on staging | **In progress** | M2-A honest pricing + home teaser wired wave 8 |
 | E3 | `wedge-demo-stories.ts` + `guest-surfaces.ts` | **Done** | policy |
-| E4 | All 9 `/b/{demoSlug}` E2E | **Not verified** | need `pnpm test:e2e:verticals` green |
+| E4 | All 9 `/b/{demoSlug}` E2E | **Done (local)** | `pnpm test:e2e:verticals` 73/73 green 2026-05-30 |
 | E5 | Body-art proof guest page | **Done** | `/b/.../proof/:token` |
 | E6 | Visit token pages | **Partial** | route exists; 9-vertical smoke TBD |
 | E7 | Platform Default polish + preset picker | **Partial** | D2 + picker staging; UAT open |
 | E8 | I4 Thread 3-column shell | **Partial** | queue + nav stubs |
 | E9 | I2 Ship Lane + Hats | **Partial** | Ship Lane yes; Hats metrics thin |
 | E10 | Phone E.164 normalize | **Done** | customers + guest hub |
-| E11 | Signup → seed → `/b` headless | **Partial** | script exists; full path TBD |
+| E11 | Signup → seed → `/b` headless | **Partial** | `headless-lifecycle-r1.mjs` in verticals E2E; full signup path TBD |
 | E12 | `presentation_preset_id` D2 | **Done** | migration 028 + API |
 | E13 | Continuity templates all verticals | **Done** | policy test |
 | E14 | typecheck clean | **Done** | CI |
 
-**R1 exit:** **~6/14 done · ~5/14 partial · ~3/14 open** → **not ready for full founder E2E yet**.
+**R1 exit:** **~7/14 done · ~5/14 partial · ~2/14 open** → **not ready for full founder E2E yet** (staging deploy + E2/F8/G5 remain).
 
 ---
 
@@ -85,13 +85,13 @@ LIVIA FINAL BUILD PLAN (master)
 |----|------|--------|
 | F0 | PNG catalog + dev galleries | Done |
 | F1 | M0 aurora shell + EUR copy | Partial |
-| F2 | **M1 home + M2 pricing** | **In progress** | M1-R2 live wave 7 |
+| F2 | **M1 home + M2 pricing** | **In progress** | M2-A honest `/pricing` + home teaser wave 8 |
 | F3 | G1-A wedge + launcher | Done |
-| F4 | M3 how-it-works + M5 vertical links | Partial |
+| F4 | M3 how-it-works + M5 vertical links | **In progress** | M5 wedge CTAs on home + `/verticals` |
 | F5 | Ship Lane + sign-in gateway | Done |
 | F6 | I4 support thread + board/radar stubs | Partial |
 | F7 | M6–M12 utility pages | Open |
-| F8 | E2E marketing→demo→tenant | Open |
+| F8 | E2E marketing→demo→tenant | **Partial** | headless API path in `test:e2e:verticals` |
 
 ### Track G — Guest
 
@@ -119,6 +119,7 @@ LIVIA FINAL BUILD PLAN (master)
 
 | Wave | Date | Focus | Staging URLs affected |
 |------|------|-------|---------------------|
+| 8 | 2026-05-30 | E4 local green; M2-A pricing; M5 home wedge chips; headless lifecycle fix | marketing home + `/pricing` |
 | 7 | 2026-05-30 | M1-R2 story home wired + BUILD-PLAN-WIRE doc | [staging.livia-hq.com](https://staging.livia-hq.com/) |
 | 2 | 2026-05-30 | Guest proof `/b/.../proof/:token` | public `/b/*` |
 | 3 | 2026-05-30 | D2 presets, Ship Lane, M3 how-it-works, headless script | app settings, internal ops, marketing `/how-it-works` |
@@ -128,13 +129,12 @@ LIVIA FINAL BUILD PLAN (master)
 
 **Next waves (agent queue — R1 closeout):**
 
-1. **F2** — M1 story-scroll home + M2 pricing on [staging.livia-hq.com](https://staging.livia-hq.com/)
-2. **E4** — run + fix `pnpm test:e2e:verticals` on staging
+1. **Deploy** `release/r1` → staging; run `pnpm test:e2e:verticals` against staging URLs
+2. **E2** — verify M1+M2 on [staging.livia-hq.com](https://staging.livia-hq.com/)
 3. **G5** — public book mobile visual pass
-4. **F8** — headless marketing→demo→tenant script
-5. **E7/E8/E9** — UAT polish (tenant default, support thread, hats)
-6. **Backlog sync** — mark done items in PLATFORM-BACKLOG.md
-7. **Founder E2E** — you test full matrix once row “R1 exit” hits 14/14
+4. **E7/E8/E9** — UAT polish (tenant default, support thread, hats)
+5. **Backlog sync** — mark done items in PLATFORM-BACKLOG.md
+6. **Founder E2E** — you test full matrix once row “R1 exit” hits 14/14
 
 ---
 

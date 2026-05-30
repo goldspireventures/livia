@@ -2,18 +2,7 @@ import { Link } from "wouter";
 import { MarketingLayout } from "@/components/marketing-layout";
 import { EditorialPageHeader } from "@/components/editorial-page-header";
 import { EditorialArticle, EditorialChapterLabel } from "@/components/editorial-article";
-
-const VERTICAL_LINKS = [
-  { slug: "hair", label: "Hair & barbering" },
-  { slug: "beauty", label: "Beauty & nails" },
-  { slug: "wellness", label: "Wellness & therapy" },
-  { slug: "fitness", label: "Fitness & studios" },
-  { slug: "body-art", label: "Body art & piercing" },
-  { slug: "pet-grooming", label: "Pet grooming" },
-  { slug: "allied-health", label: "Allied health" },
-  { slug: "medspa", label: "Medspa & aesthetics" },
-  { slug: "automotive-detailing", label: "Automotive detailing" },
-] as const;
+import { MARKETING_VERTICAL_LINKS } from "@/lib/marketing-verticals";
 
 export default function VerticalsIndexPage() {
   return (
@@ -26,7 +15,7 @@ export default function VerticalsIndexPage() {
         />
 
         <ul className="grid sm:grid-cols-2 gap-3 mt-10">
-          {VERTICAL_LINKS.map((v) => (
+          {MARKETING_VERTICAL_LINKS.map((v) => (
             <li key={v.slug}>
               <Link
                 href={`/verticals/${v.slug}`}
