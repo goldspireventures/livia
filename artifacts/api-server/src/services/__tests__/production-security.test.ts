@@ -21,6 +21,13 @@ try {
   process.env.LIVIA_DEMO_ALLOW_IN_PRODUCTION = "true";
   assert.equal(isDemoPortalEnabled(), true);
 
+  delete process.env.LIVIA_DEMO_ALLOW_IN_PRODUCTION;
+  process.env.LIVIA_DEPLOY_ENV = "staging";
+  assert.equal(isDemoPortalEnabled(), true, "staging deploy env enables demo without prod allow flag");
+
+  delete process.env.LIVIA_DEPLOY_ENV;
+  assert.equal(isDemoPortalEnabled(), false, "prod without allow stays off");
+
   assert.equal(demoResponsesMayIncludeSecrets(), false);
 
   const dto = toPublicStaffDto({

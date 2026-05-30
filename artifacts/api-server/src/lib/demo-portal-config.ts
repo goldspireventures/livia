@@ -195,13 +195,17 @@ export function isDemoEmail(email: string | null | undefined): boolean {
 
 /** Demo routes are never enabled in production unless explicitly overridden (staging drills only). */
 export function isDemoPortalEnabled(): boolean {
+  if (process.env.LIVIA_DEMO_ENABLED === "false") return false;
   if (process.env.NODE_ENV === "production") {
+    // Staging Railway runs NODE_ENV=production — allow demo without prod-only flag.
+    if (process.env.LIVIA_DEPLOY_ENV === "staging" && process.env.LIVIA_DEMO_ENABLED === "true") {
+      return true;
+    }
     return (
       process.env.LIVIA_DEMO_ENABLED === "true" &&
       process.env.LIVIA_DEMO_ALLOW_IN_PRODUCTION === "true"
     );
   }
-  if (process.env.LIVIA_DEMO_ENABLED === "false") return false;
   return true;
 }
 

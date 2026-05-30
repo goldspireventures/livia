@@ -82,8 +82,8 @@ LIVIA FINAL BUILD PLAN (master)
 | `pnpm smoke:staging` | ✓ green |
 | CI `staging-smoke` on main | ✓ green |
 | `staging.livia-hq.com` wave 8 content (€79, wedge chips) | ✗ not live yet — Vercel marketing staging may need promote / branch hook |
-| `api.staging…/api/demo/*` | ✗ 404 — enable `LIVIA_DEMO_ENABLED` + demo seed on Railway staging |
-| `pnpm test:e2e:staging` | blocked until above two |
+| `api.staging…/api/demo/*` | ✗ 404 — fixed in code (LIVIA_DEPLOY_ENV=staging); Railway vars set, deploy pending |
+| `pnpm test:e2e:staging` | blocked until API redeploy + demo seed |
 
 ---
 

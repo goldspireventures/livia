@@ -163,3 +163,6 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Staging surface smoke (non-blocking)
         run: pnpm smoke:staging
+      - name: Staging readiness (demo + marketing bundles)
+        run: node scripts/staging-readiness.mjs --strict
+        continue-on-error: true
