@@ -50,4 +50,13 @@ test.describe("Marketing lifecycle", () => {
     await page.goto(`${dashboardBase}/b/${demoSlug}`, { waitUntil: "domcontentloaded" });
     await expect(page.getByTestId("text-business-name")).toBeVisible({ timeout: 45_000 });
   });
+
+  test("Get started opens sign-up gateway", async ({ page }) => {
+    await page.goto(`${marketingBase}/pricing`, { waitUntil: "domcontentloaded" });
+    const cta = page.getByRole("link", { name: /get started/i }).first();
+    await expect(cta).toBeVisible();
+    await cta.click();
+    await page.waitForURL(/\/sign-up/, { timeout: 30_000 });
+    await expect(page.locator("body")).not.toContainText(/something went wrong/i);
+  });
 });

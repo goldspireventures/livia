@@ -115,8 +115,8 @@ for (const slug of DEMO_SLUGS) {
 try {
   const bizRes = await fetch(`${apiBase}/api/public/b/luxe-salon-spa`, { signal: AbortSignal.timeout(12000) });
   if (bizRes.ok) {
-    const biz = (await bizRes.json()) as { services?: Array<{ id: string }> };
-    const serviceId = biz.services?.[0]?.id;
+    const biz = await bizRes.json();
+    const serviceId = biz?.services?.[0]?.id;
     if (serviceId) {
       const day = new Date();
       day.setDate(day.getDate() + 10);
@@ -126,8 +126,9 @@ try {
         { signal: AbortSignal.timeout(12000) },
       );
       if (slotsRes.ok) {
-        const { slots } = (await slotsRes.json()) as { slots?: Array<{ startAt: string; available: boolean }> };
-        const slot = slots?.find((s) => s.available);
+        const slotPayload = await slotsRes.json();
+        const slots = slotPayload?.slots;
+        const slot = Array.isArray(slots) ? slots.find((s) => s?.available) : undefined;
         if (slot?.startAt) {
           const book = await fetch(`${apiBase}/api/public/b/luxe-salon-spa/book`, {
             method: "POST",
@@ -142,8 +143,8 @@ try {
             signal: AbortSignal.timeout(30000),
           });
           if (book.ok) {
-            const booked = (await book.json()) as { guestToken?: string };
-            if (booked.guestToken) {
+            const booked = await book.json();
+            if (booked?.guestToken) {
               const visitPass = await check(
                 "Visit token API",
                 `${apiBase}/api/public/b/luxe-salon-spa/visit/${booked.guestToken}`,

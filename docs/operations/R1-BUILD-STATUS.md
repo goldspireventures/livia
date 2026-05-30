@@ -61,14 +61,14 @@ LIVIA FINAL BUILD PLAN (master)
 | E1 | G1-A wedge all verticals | **Done** | `/demo/wedge/:vertical` + policy |
 | E2 | M1-R2 + M2-A marketing on staging | **In progress** | M2-A honest pricing + home teaser wired wave 8 |
 | E3 | `wedge-demo-stories.ts` + `guest-surfaces.ts` | **Done** | policy |
-| E4 | All 9 `/b/{demoSlug}` E2E | **Done (local)** | `pnpm test:e2e:verticals` 73/73 green 2026-05-30 |
+| E4 | All 9 `/b/{demoSlug}` E2E | **Done (local)** | `pnpm test:e2e:verticals` 76/76 green 2026-05-30 (34 vertical + 12 booking + rest) |
 | E5 | Body-art proof guest page | **Done** | `/b/.../proof/:token` |
 | E6 | Visit token pages | **Done (local)** | visit token smoke in verticals E2E wave 10 |
 | E7 | Platform Default polish + preset picker | **Partial** | D-R1 aurora wash wave 9; picker staging |
 | E8 | I4 Thread 3-column shell | **Done (local)** | queue \| thread \| context + Investigate wave 10 |
 | E9 | I2 Ship Lane + Hats | **Done (local)** | tab shell + hats river wave 10 |
 | E10 | Phone E.164 normalize | **Done** | customers + guest hub |
-| E11 | Signup → seed → `/b` headless | **Partial** | headless + marketing-lifecycle E2E wave 10 |
+| E11 | Signup → seed → `/b` headless | **Partial** | headless visit API + marketing-lifecycle (wedge + sign-up gateway) wave 11 |
 | E12 | `presentation_preset_id` D2 | **Done** | migration 028 + API |
 | E13 | Continuity templates all verticals | **Done** | policy test |
 | E14 | typecheck clean | **Done** | CI |
@@ -119,6 +119,7 @@ LIVIA FINAL BUILD PLAN (master)
 
 | Wave | Date | Focus | Staging URLs affected |
 |------|------|-------|---------------------|
+| 11 | 2026-05-30 | Headless lifecycle fix; staging E2E script; E11 sign-up gateway test | `pnpm test:e2e:staging` |
 | 10 | 2026-05-30 | E6 visit smoke; E8 support 3-col; E9 exec tabs; M9 waitlist; F8 browser E2E | internal `/support`, marketing waitlist |
 | 9 | 2026-05-30 | G5 public book mobile pass; E7/D-R1 platform-default shell wash | `/b/*` mobile, tenant app |
 | 8 | 2026-05-30 | E4 local green; M2-A pricing; M5 home wedge chips; headless lifecycle fix | marketing home + `/pricing` |
@@ -131,8 +132,8 @@ LIVIA FINAL BUILD PLAN (master)
 
 **Next waves (agent queue — R1 closeout):**
 
-1. **Deploy** `release/r1` → staging; run `pnpm test:e2e:verticals` against staging URLs
-2. **E2** — verify M1+M2 on [staging.livia-hq.com](https://staging.livia-hq.com/)
+1. **Deploy** `release/r1` → staging; run `pnpm test:e2e:staging` (or `--full` with staging Clerk)
+2. **E2** — verify M1+M2 on [staging.livia-hq.com](https://staging.livia-hq.com/) *(staging still on pre-wave-8 build — no €79 yet)*
 3. **G5** — public book mobile visual pass
 4. **E7/E8/E9** — UAT polish (tenant default, support thread, hats)
 5. **Backlog sync** — mark done items in PLATFORM-BACKLOG.md
