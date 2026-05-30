@@ -55,6 +55,46 @@ export async function dismissPlatformTour(page: Page) {
   }
 }
 
+/** Demo accounts should skip legal gate — dismiss if middleware still routes here. */
+export async function dismissLegalAcceptance(page: Page) {
+  if (!page.url().includes("/legal-acceptance")) return;
+  await ensurePlatformLegalAccepted(page);
+  if (!page.url().includes("/legal-acceptance")) return;
+  await page.getByText(/I agree to the Livia Terms of Service/i).click();
+  const cont = page.getByRole("button", { name: /continue to setup/i });
+  await expect(cont).toBeEnabled({ timeout: 10_000 });
+  await cont.click();
+  await page.waitForURL(/\/(dashboard|inbox|chain|bookings|my-day|onboarding|settings)/, {
+    timeout: 30_000,
+  });
+}
+
+export async function ensurePlatformLegalAccepted(page: Page) {
+  await page.waitForFunction(
+    () =>
+      typeof (window as unknown as { Clerk?: { session?: { getToken?: () => Promise<string | null> } } })
+        .Clerk?.session?.getToken === "function",
+    { timeout: 30_000 },
+  );
+  const ok = await page.evaluate(async (api) => {
+    const clerk = (window as unknown as { Clerk?: { session?: { getToken: () => Promise<string | null> } } })
+      .Clerk;
+    const token = await clerk?.session?.getToken?.();
+    if (!token) return false;
+    const res = await fetch(`${api}/api/me/platform-legal`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ accept: true }),
+    });
+    return res.ok;
+  }, apiBase);
+  if (!ok) return;
+  await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
+  await page.waitForURL(/\/(dashboard|inbox|chain|bookings|my-day|onboarding|settings)/, {
+    timeout: 30_000,
+  });
+}
+
 const DEMO_PASSWORD = process.env.LIVIA_DEMO_PASSWORD ?? "LiviaDemo2026!";
 
 async function signInWithPassword(page: Page, email: string, landingPath = "/dashboard") {
@@ -152,16 +192,12 @@ export async function clerkTicketSignIn(
     timeout: 60_000,
   });
 
-  if (page.url().includes("/legal-acceptance")) {
-    const cont = page.getByRole("button", { name: /continue to setup/i });
-    if (await cont.isVisible().catch(() => false)) {
-      await cont.click();
-    }
-  }
+  await dismissLegalAcceptance(page);
 
   await page.waitForURL(/\/(dashboard|inbox|chain|bookings|my-day|onboarding|settings)/, {
     timeout: 60_000,
   });
+  await ensurePlatformLegalAccepted(page);
 }
 
 export async function signInBusiness(page: Page, slug: string) {
@@ -193,6 +229,7 @@ export async function signInBusiness(page: Page, slug: string) {
       devPersona: "owner",
       fallbackEmail: email,
     });
+    await ensurePlatformLegalAccepted(page);
     await dismissPlatformTour(page);
     return;
   }
@@ -236,6 +273,7 @@ export async function authedApiGet(page: Page, path: string) {
 }
 
 export async function assertHealthyPage(page: Page, route: string) {
+  await dismissLegalAcceptance(page);
   const body = await page.locator("body").innerText();
   for (const pat of ERROR_PATTERNS) {
     expect(body, `${route} should not match ${pat}`).not.toMatch(pat);

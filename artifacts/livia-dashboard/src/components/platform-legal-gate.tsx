@@ -12,7 +12,8 @@ export function PlatformLegalGate({ children }: { children: ReactNode }) {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["me-legal"],
     queryFn: () => apiFetch<MeLegal>("/me"),
-    staleTime: 60_000,
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   if (isLoading) {

@@ -11,7 +11,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-import { apiBase, clerkTicketSignIn, dismissPlatformTour } from "../helpers/demo-auth";
+import { apiBase, dismissLegalAcceptance, dismissPlatformTour, signInBusiness } from "../helpers/demo-auth";
 
 const demoSlug = process.env.E2E_DEMO_SLUG ?? "luxe-salon-spa";
 
@@ -59,44 +59,7 @@ function record(route: string, kind: Finding["kind"], detail: string) {
 }
 
 async function signInOwner(page: import("@playwright/test").Page) {
-  await page.addInitScript(() => {
-    try {
-      window.localStorage.setItem("livia.platformTour.dismissed.v1", "1");
-    } catch {
-      /* ignore */
-    }
-  });
-  const res = await page.request.post(`${apiBase}/api/demo/sign-in`, { data: { persona: "owner" } });
-  if (!res.ok()) {
-    test.skip(true, `Clerk sign-in unavailable (${res.status()}) — skip authenticated wedge checks`);
-  }
-  const { email, landingPath = "/dashboard", businessId } = (await res.json()) as {
-    email?: string;
-    landingPath?: string;
-    businessId?: string;
-  };
-  if (!email) throw new Error("No demo owner email");
-
-  await page.goto("/sign-in", { waitUntil: "domcontentloaded" });
-  const demoForm = page.getByTestId("demo-password-sign-in");
-  if ((await demoForm.count()) > 0) {
-    await demoForm.scrollIntoViewIfNeeded();
-    await page.locator("#demo-email").fill(email);
-    await page.locator("#demo-password").fill(process.env.LIVIA_DEMO_PASSWORD ?? "LiviaDemo2026!");
-    await page.getByRole("button", { name: "Sign in as demo" }).click();
-    await page.waitForURL(/\/(dashboard|inbox|chain|bookings|my-day|onboarding|settings)/, {
-      timeout: 90_000,
-    });
-  } else {
-    const emailRes = await page.request.post(`${apiBase}/api/demo/sign-in-email`, {
-      data: { email, password: process.env.LIVIA_DEMO_PASSWORD ?? "LiviaDemo2026!" },
-    });
-    if (!emailRes.ok()) test.skip(true, "demo sign-in-email unavailable");
-    const { token } = (await emailRes.json()) as { token?: string };
-    if (!token) throw new Error("No clerk ticket");
-    await clerkTicketSignIn(page, token, { businessId, landingPath, devPersona: "owner", fallbackEmail: email });
-  }
-  await dismissPlatformTour(page);
+  await signInBusiness(page, demoSlug);
 }
 
 async function scanRoute(
@@ -107,7 +70,10 @@ async function scanRoute(
 ) {
   await page.goto(route, { waitUntil: "domcontentloaded", timeout: 45_000 });
   await page.waitForTimeout(500);
-  if (opts?.signedIn) await dismissPlatformTour(page);
+  if (opts?.signedIn) {
+    await dismissLegalAcceptance(page);
+    await dismissPlatformTour(page);
+  }
 
   const body = await page.locator("body").innerText();
   const patterns =
