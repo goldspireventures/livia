@@ -25,10 +25,17 @@ export function ShipLanePanel({
   steps,
   betaSignupMode,
   demoEnabled,
+  stagingRelaxations,
 }: {
   steps: ShipStep[];
   betaSignupMode: string;
   demoEnabled: boolean;
+  stagingRelaxations?: {
+    active: boolean;
+    deployEnv: string;
+    guestHub: { otpMode: string; phoneMode: string; magicOtpCode: string | null };
+    controls: Record<string, string>;
+  };
 }) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const byLane = new Map<string, ShipStep[]>();
@@ -47,7 +54,33 @@ export function ShipLanePanel({
       <p style={{ margin: "0 0 12px", fontSize: 12, color: "#64748b" }}>
         Beta mode: <code>{betaSignupMode}</code>
         {demoEnabled ? " · demo ON" : " · demo OFF (prod)"}
+        {stagingRelaxations ? (
+          <>
+            {" "}
+            · deploy <code>{stagingRelaxations.deployEnv}</code>
+            {stagingRelaxations.active ? (
+              <>
+                {" "}
+                · relax ON (OTP {stagingRelaxations.guestHub.otpMode}, phone{" "}
+                {stagingRelaxations.guestHub.phoneMode}
+                {stagingRelaxations.guestHub.magicOtpCode
+                  ? `, magic ${stagingRelaxations.guestHub.magicOtpCode}`
+                  : ""}
+                )
+              </>
+            ) : (
+              " · relax OFF"
+            )}
+          </>
+        ) : null}
       </p>
+      {stagingRelaxations?.active ? (
+        <p style={{ margin: "0 0 12px", fontSize: 11, color: "#94a3b8", lineHeight: 1.5 }}>
+          Railway toggles: <code>{stagingRelaxations.controls.master}</code>,{" "}
+          <code>{stagingRelaxations.controls.guestOtp}</code> (strict|dev|bypass),{" "}
+          <code>{stagingRelaxations.controls.guestPhone}</code> (loose|strict)
+        </p>
+      ) : null}
       <div style={{ display: "grid", gap: 8 }}>
         {LANES.map((lane) => {
           const laneSteps = byLane.get(lane.id) ?? [];

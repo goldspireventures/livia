@@ -278,6 +278,7 @@ export function FounderCockpitView() {
         steps={data.release.steps}
         betaSignupMode={data.release.betaSignupMode}
         demoEnabled={data.release.demoEnabled}
+        stagingRelaxations={data.release.stagingRelaxations}
       />
 
       <section style={card}>

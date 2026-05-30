@@ -33,5 +33,6 @@ export * from "./wedge-gate";
 export * from "./wedge-demo-stories";
 export * from "./guest-surfaces";
 export * from "./phone-normalize";
+export * from "./staging-relaxations";
 export * from "./operational-wiring";
 export * from "./workforce-access";

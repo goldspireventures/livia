@@ -1,12 +1,14 @@
 import { isDemoLiviaEmail } from "@workspace/demo-logins";
 import {
   normalizeEmail,
+  resolveDeployEnv,
   resolveWorkforceAccessTier,
   type WorkforceAccessTier,
 } from "@workspace/policy";
 import { getBetaSignupMode } from "./beta-signup-gate.js";
 import { isDemoPortalEnabled } from "./demo-portal-config.js";
 import { isPlatformExecEmail } from "./platform-exec.js";
+import { getStagingRelaxations } from "./staging-relaxations.js";
 import {
   getApiPublicUrl,
   getDashboardUrl,
@@ -26,15 +28,11 @@ export type PlatformPrincipal = {
   demoPersona: boolean;
 };
 
-export function resolveDeployEnv(): "development" | "staging" | "production" {
-  const raw = (process.env.LIVIA_DEPLOY_ENV ?? "").trim().toLowerCase();
-  if (raw === "staging") return "staging";
-  if (process.env.NODE_ENV === "production") return "production";
-  return "development";
-}
+export { resolveDeployEnv };
 
 export function buildPlatformConfig() {
   const deployEnv = resolveDeployEnv();
+  const stagingRelaxations = getStagingRelaxations();
   return {
     deployEnv,
     urls: {
@@ -45,6 +43,7 @@ export function buildPlatformConfig() {
     },
     betaSignupMode: getBetaSignupMode(),
     demoEnabled: isDemoPortalEnabled(),
+    stagingRelaxations,
     capabilities: {
       /** Staging drills may enable demo on prod-shaped NODE_ENV via env pair. */
       demoPortal: isDemoPortalEnabled(),

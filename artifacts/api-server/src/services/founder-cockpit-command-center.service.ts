@@ -1,5 +1,6 @@
 import { getBetaSignupMode } from "../lib/beta-signup-gate.js";
 import { isDemoPortalEnabled } from "../lib/demo-portal-config.js";
+import { getStagingRelaxations } from "../lib/staging-relaxations.js";
 import {
   getApiPublicUrl,
   getDashboardUrl,
@@ -191,12 +192,14 @@ export function buildFounderReleaseChecklist(productionAllOk: boolean): {
   mode: "solo-pre-staging";
   betaSignupMode: string;
   demoEnabled: boolean;
+  stagingRelaxations: ReturnType<typeof getStagingRelaxations>;
   steps: Array<{ id: string; label: string; done: boolean; hint?: string }>;
 } {
   return {
     mode: "solo-pre-staging",
     betaSignupMode: getBetaSignupMode(),
     demoEnabled: isDemoPortalEnabled(),
+    stagingRelaxations: getStagingRelaxations(),
     steps: [
       {
         id: "ci",

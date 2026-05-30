@@ -8,8 +8,12 @@ import {
   businessesTable,
 } from "@workspace/db";
 import { eq, and, desc } from "drizzle-orm";
-import { normalizePhoneE164 } from "@workspace/policy";
+import {
+  guestOtpCodeMatches,
+  normalizeGuestHubPhone,
+} from "@workspace/policy";
 import { generateId } from "../lib/id";
+import { getStagingRelaxations } from "../lib/staging-relaxations";
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
@@ -23,7 +27,9 @@ function otpCode(): string {
 }
 
 export async function requestGuestHubOtp(rawPhone: string, defaultCountry = "IE") {
-  const phoneE164 = normalizePhoneE164(rawPhone, defaultCountry);
+  const relax = getStagingRelaxations();
+  const phoneMode = relax.active ? relax.guestHub.phoneMode : "strict";
+  const phoneE164 = normalizeGuestHubPhone(rawPhone, defaultCountry, phoneMode);
   if (!phoneE164) throw new Error("INVALID_PHONE");
 
   const token = sessionToken();
@@ -37,11 +43,15 @@ export async function requestGuestHubOtp(rawPhone: string, defaultCountry = "IE"
     otpExpiresAt: expires,
   });
 
+  const exposeDevOtp = relax.guestHub.exposeDevOtp;
+
   return {
     sessionToken: token,
     phoneE164,
-    /** Dev/staging only — production sends via SMS provider. */
-    devOtp: process.env.NODE_ENV === "production" ? undefined : code,
+    /** Relaxed staging/local — code shown in UI instead of SMS. */
+    devOtp: exposeDevOtp ? code : undefined,
+    magicOtpCode: relax.guestHub.magicOtpCode ?? undefined,
+    otpMode: relax.guestHub.otpMode,
     expiresAt: expires.toISOString(),
   };
 }
@@ -56,7 +66,9 @@ export async function verifyGuestHubOtp(sessionTokenValue: string, code: string)
   if (session.otpExpiresAt.getTime() < Date.now()) {
     return { ok: false as const, reason: "expired" as const };
   }
-  if (session.otpCode !== code.trim()) {
+  const relax = getStagingRelaxations();
+  const otpMode = relax.active ? relax.guestHub.otpMode : "strict";
+  if (!guestOtpCodeMatches(session.otpCode, code, otpMode, relax.guestHub.magicOtpCode)) {
     return { ok: false as const, reason: "invalid_code" as const };
   }
 
@@ -197,7 +209,9 @@ export async function ensureGuestVaultLinkFromBook(
   bookingStartAt: Date,
   defaultCountry = "IE",
 ) {
-  const phoneE164 = normalizePhoneE164(phoneRaw, defaultCountry);
+  const relax = getStagingRelaxations();
+  const phoneMode = relax.active ? relax.guestHub.phoneMode : "strict";
+  const phoneE164 = normalizeGuestHubPhone(phoneRaw, defaultCountry, phoneMode);
   if (!phoneE164) return null;
 
   const [existingGuest] = await db

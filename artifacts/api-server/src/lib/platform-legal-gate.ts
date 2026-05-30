@@ -7,6 +7,7 @@ import {
   type PlatformLegal,
   type TenantAttestation,
 } from "@workspace/policy";
+import { getStagingRelaxations } from "./staging-relaxations.js";
 
 export {
   PLATFORM_TOS_VERSION,
@@ -35,7 +36,7 @@ export function parseTenantAttestation(
   return parsed.data;
 }
 
-/** Local/dev escape hatch — never set in production. */
+/** Local/dev escape hatch — staging via LIVIA_STAGING_RELAX_LEGAL_GATE; never prod. */
 export function isLegalGateSkipped(): boolean {
-  return process.env.LIVIA_SKIP_LEGAL_GATE === "1";
+  return getStagingRelaxations().legalGateSkipped;
 }

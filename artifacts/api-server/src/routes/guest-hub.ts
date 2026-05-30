@@ -6,8 +6,13 @@ import {
   toggleGuestFavorite,
   verifyGuestHubOtp,
 } from "../services/guest-hub.service";
+import { buildPublicSurfaceConfig } from "../lib/staging-relaxations";
 
 const router: IRouter = Router();
+
+router.get("/public/surface-config", (_req, res): void => {
+  res.json(buildPublicSurfaceConfig());
+});
 
 router.post("/public/guest-hub/otp/request", async (req, res): Promise<void> => {
   try {

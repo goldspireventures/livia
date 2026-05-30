@@ -26,9 +26,21 @@ type HubView = {
   shops: HubShop[];
 };
 
+type SurfaceConfig = {
+  deployEnv: string;
+  stagingRelaxed: boolean;
+  guestHub: {
+    otpMode: "strict" | "dev" | "bypass";
+    phoneMode: "strict" | "loose";
+    magicOtpCode: string | null;
+    exposeDevOtp: boolean;
+  };
+};
+
 const HUB_TOKEN_KEY = "livia_guest_hub_token";
 
 export default function MyLiviaPage() {
+  const [surfaceConfig, setSurfaceConfig] = useState<SurfaceConfig | null>(null);
   const [hubToken, setHubToken] = useState<string | null>(() =>
     typeof window !== "undefined" ? localStorage.getItem(HUB_TOKEN_KEY) : null,
   );
@@ -37,9 +49,17 @@ export default function MyLiviaPage() {
   const [phone, setPhone] = useState("");
   const [otpSession, setOtpSession] = useState<string | null>(null);
   const [devOtp, setDevOtp] = useState<string | null>(null);
+  const [magicOtp, setMagicOtp] = useState<string | null>(null);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/public/surface-config")
+      .then(async (r) => (r.ok ? ((await r.json()) as SurfaceConfig) : null))
+      .then(setSurfaceConfig)
+      .catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     if (!hubToken) return;
@@ -59,6 +79,10 @@ export default function MyLiviaPage() {
       .finally(() => setLoading(false));
   }, [hubToken]);
 
+  const stagingRelaxed = surfaceConfig?.stagingRelaxed ?? false;
+  const phonePlaceholder =
+    surfaceConfig?.guestHub.phoneMode === "loose" ? "Any test number (e.g. 12345)" : "+353 87 …";
+
   async function requestOtp() {
     setBusy(true);
     setErr(null);
@@ -72,9 +96,15 @@ export default function MyLiviaPage() {
         const j = await r.json().catch(() => ({}));
         throw new Error((j as { error?: string }).error ?? "Could not send code");
       }
-      const j = (await r.json()) as { sessionToken: string; devOtp?: string };
+      const j = (await r.json()) as {
+        sessionToken: string;
+        devOtp?: string;
+        magicOtpCode?: string;
+      };
       setOtpSession(j.sessionToken);
       setDevOtp(j.devOtp ?? null);
+      setMagicOtp(j.magicOtpCode ?? surfaceConfig?.guestHub.magicOtpCode ?? null);
+      if (j.magicOtpCode) setCode(j.magicOtpCode);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Try again");
     } finally {
@@ -122,6 +152,23 @@ export default function MyLiviaPage() {
               Phone verify once — see every shop you&apos;ve booked with Livia. No password.
             </p>
           </div>
+
+          {stagingRelaxed ? (
+            <div
+              className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/90"
+              data-testid="guest-hub-staging-banner"
+            >
+              Staging QA — loose phone + magic OTP
+              {magicOtp || surfaceConfig?.guestHub.magicOtpCode ? (
+                <span className="block font-mono mt-1">
+                  Use code{" "}
+                  <strong>{magicOtp ?? surfaceConfig?.guestHub.magicOtpCode}</strong>
+                  {devOtp ? ` or ${devOtp}` : ""}
+                </span>
+              ) : null}
+            </div>
+          ) : null}
+
           {!otpSession ? (
             <Card>
               <CardHeader className="pb-2">
@@ -130,7 +177,7 @@ export default function MyLiviaPage() {
               <CardContent className="space-y-3">
                 <Input
                   type="tel"
-                  placeholder="+353 87 …"
+                  placeholder={phonePlaceholder}
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   data-testid="guest-hub-phone"
@@ -147,7 +194,10 @@ export default function MyLiviaPage() {
               </CardHeader>
               <CardContent className="space-y-3">
                 {devOtp ? (
-                  <p className="text-xs text-muted-foreground font-mono">Dev code: {devOtp}</p>
+                  <p className="text-xs text-muted-foreground font-mono">Session code: {devOtp}</p>
+                ) : null}
+                {magicOtp ? (
+                  <p className="text-xs text-muted-foreground font-mono">Magic staging code: {magicOtp}</p>
                 ) : null}
                 <Input
                   inputMode="numeric"

@@ -221,6 +221,12 @@ export type FounderCockpitSnapshot = {
     mode: string;
     betaSignupMode: string;
     demoEnabled: boolean;
+    stagingRelaxations: {
+      active: boolean;
+      deployEnv: string;
+      guestHub: { otpMode: string; phoneMode: string; magicOtpCode: string | null };
+      controls: Record<string, string>;
+    };
     steps: Array<{ id: string; label: string; done: boolean; hint?: string }>;
   };
   stagingPrep: {

@@ -162,6 +162,22 @@ Same artifact on staging and prod — **only env differs**.
 | `LIVIA_BETA_SIGNUP_MODE` | `invite` (default if unset in prod code) | `open` |
 | `LIVIA_SKIP_PRODUCTION_ENV_CHECK` | **never** | optional for drills |
 
+### Staging QA relaxations (Railway API — `LIVIA_DEPLOY_ENV=staging` only)
+
+Master switch defaults **ON** on staging. Set `LIVIA_STAGING_RELAXED=false` to run prod-strict checks before promote.
+
+| Variable | Default (staging) | Values | Effect |
+|----------|-----------------|--------|--------|
+| `LIVIA_STAGING_RELAXED` | `true` (implicit) | `false` disables all below | Master gate |
+| `LIVIA_STAGING_RELAX_GUEST_OTP` | `bypass` | `bypass` \| `dev` \| `strict` | Guest hub `/my` OTP — bypass accepts magic code + shows session code; strict = real SMS path |
+| `LIVIA_STAGING_RELAX_GUEST_PHONE` | `loose` | `loose` \| `strict` | Loose accepts short test numbers (`+1999…` synthetic E.164) |
+| `LIVIA_STAGING_GUEST_OTP_MAGIC` | `000000` | 4–8 digits | Magic code for bypass mode |
+| `LIVIA_STAGING_RELAX_LEGAL_GATE` | off | `true` | Skip platform legal acceptance on staging |
+
+**Read current values:** `GET /api/public/surface-config` (guest UI) or Founder Cockpit → Ship Lane (ops). Authenticated: `GET /api/me/platform-config` → `stagingRelaxations`.
+
+**To test real OTP/SMS on staging:** set `LIVIA_STAGING_RELAX_GUEST_OTP=strict` + configure Twilio on Railway.
+
 Prod boot **requires** `DASHBOARD_URL`, `MARKETING_URL`, `API_PUBLIC_URL` (no localhost).
 
 Clients: `GET /api/me/platform-config` returns deploy env + public URLs.
