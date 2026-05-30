@@ -73,7 +73,17 @@ LIVIA FINAL BUILD PLAN (master)
 | E13 | Continuity templates all verticals | **Done** | policy test |
 | E14 | typecheck clean | **Done** | CI |
 
-**R1 exit:** **~11/14 done · ~3/14 partial** → **staging deploy + E2 verify remain before founder E2E**.
+**R1 exit:** **~11/14 done · ~3/14 partial** → **staging must reflect main (PR #3 merged 2026-05-30) before founder E2E**.
+
+### Staging deploy status (post PR #3)
+
+| Check | Result |
+|-------|--------|
+| `pnpm smoke:staging` | ✓ green |
+| CI `staging-smoke` on main | ✓ green |
+| `staging.livia-hq.com` wave 8 content (€79, wedge chips) | ✗ not live yet — Vercel marketing staging may need promote / branch hook |
+| `api.staging…/api/demo/*` | ✗ 404 — enable `LIVIA_DEMO_ENABLED` + demo seed on Railway staging |
+| `pnpm test:e2e:staging` | blocked until above two |
 
 ---
 
@@ -132,12 +142,11 @@ LIVIA FINAL BUILD PLAN (master)
 
 **Next waves (agent queue — R1 closeout):**
 
-1. **Deploy** `release/r1` → staging; run `pnpm test:e2e:staging` (or `--full` with staging Clerk)
-2. **E2** — verify M1+M2 on [staging.livia-hq.com](https://staging.livia-hq.com/) *(staging still on pre-wave-8 build — no €79 yet)*
-3. **G5** — public book mobile visual pass
-4. **E7/E8/E9** — UAT polish (tenant default, support thread, hats)
-5. **Backlog sync** — mark done items in PLATFORM-BACKLOG.md
-6. **Founder E2E** — you test full matrix once row “R1 exit” hits 14/14
+1. **Staging infra** — Vercel `livia-marketing` → `staging.livia-hq.com` deploy from `main`; Railway staging `LIVIA_DEMO_ENABLED=true` + `pnpm db:seed` on staging DB
+2. **Verify** — `pnpm test:e2e:staging` green; E2 visual on staging marketing
+3. **E7** — preset picker UAT on staging settings
+4. **Backlog sync** — mark done items in PLATFORM-BACKLOG.md
+5. **Founder E2E** — ping when exit table hits 14/14 on staging
 
 ---
 
