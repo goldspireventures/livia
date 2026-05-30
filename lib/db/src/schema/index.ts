@@ -28,6 +28,7 @@ export * from "./booking/care-series";
 export * from "./booking/pets";
 export * from "./booking/medspa";
 export * from "./booking/booking-guest-access";
+export * from "./booking/medical-intake-guest-access";
 export * from "./booking/visit-feedback";
 
 // Conversations (modality-agnostic)

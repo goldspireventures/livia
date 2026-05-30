@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useBusiness } from "@/lib/business-context";
 import { verticalPackUi } from "@/lib/vertical-pack-ui";
+import { resolveSupportSurfaceId } from "@workspace/policy";
 import { apiFetch, ApiFetchError } from "@/lib/api-fetch";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -64,6 +65,10 @@ export function HelpSupportDialog({
           consentLogsAccess: consent,
           context: {
             ...context,
+            surfaceId:
+              typeof window !== "undefined"
+                ? resolveSupportSurfaceId(window.location.pathname, window.location.search)
+                : undefined,
             route: typeof window !== "undefined" ? window.location.pathname : undefined,
             userAgent: typeof navigator !== "undefined" ? navigator.userAgent : undefined,
           },

@@ -147,6 +147,12 @@ export async function upsertMedicalIntake(args: {
       .set(payload)
       .where(eq(medicalIntakeRecordsTable.id, existing[0].id))
       .returning();
+    if (row && row.status === "draft") {
+      const { ensureMedicalIntakeGuestAccess } = await import(
+        "./medical-intake-guest-access.service"
+      );
+      await ensureMedicalIntakeGuestAccess(args.businessId, row.id);
+    }
     return row!;
   }
 
@@ -159,6 +165,12 @@ export async function upsertMedicalIntake(args: {
       ...payload,
     })
     .returning();
+  if (row && row.status === "draft") {
+    const { ensureMedicalIntakeGuestAccess } = await import(
+      "./medical-intake-guest-access.service"
+    );
+    await ensureMedicalIntakeGuestAccess(args.businessId, row.id);
+  }
   return row!;
 }
 

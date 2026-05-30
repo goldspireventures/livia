@@ -73,7 +73,7 @@ LIVIA FINAL BUILD PLAN (master)
 | E13 | Continuity templates all verticals | **Done** | policy test |
 | E14 | typecheck clean | **Done** | CI |
 
-**R1 exit:** **14/14 automated** → **founder staging walkthrough** is the last step (see checklist § below).
+**R1 exit:** **14/14 automated** → **founder staging walkthrough** is the last step (see checklist § below). **R2 foundation** started wave 14 — see [`R2-BUILD-STATUS.md`](./R2-BUILD-STATUS.md).
 
 ### Staging deploy status (post PR #3)
 
@@ -129,6 +129,7 @@ LIVIA FINAL BUILD PLAN (master)
 
 | Wave | Date | Focus | Staging URLs affected |
 |------|------|-------|---------------------|
+| 14 | 2026-05-30 | B1 support registry; G3 visit link SMS; G2 intake/waitlist guest; F6 Board/Radar/Investigate | `/b/*/intake`, `/b/*/waitlist`, internal `/support/*` |
 | 13 | 2026-05-30 | E7 preset API gate + E2E; E11 headless lead→provision→/b | settings, headless lifecycle |
 | 12 | 2026-05-30 | Staging demo gate fix; readiness script; staging E2E 40/40 | `pnpm staging:readiness`, `pnpm test:e2e:staging` |
 | 11 | 2026-05-30 | Headless lifecycle fix; staging E2E script; E11 sign-up gateway test | `pnpm test:e2e:staging` |

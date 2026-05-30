@@ -6,4 +6,5 @@ export * from "./time-off-requests";
 export * from "./staff-shifts";
 export * from "./hiring";
 export * from "./booking-guest-access";
+export * from "./medical-intake-guest-access";
 export * from "./visit-feedback";

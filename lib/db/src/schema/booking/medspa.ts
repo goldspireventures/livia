@@ -74,6 +74,7 @@ export const slotWaitlistEntriesTable = pgTable(
       onDelete: "set null",
     }),
     offeredAt: timestamp("offered_at", { withTimezone: true }),
+    offerToken: text("offer_token").unique(),
     expiresAt: timestamp("expires_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

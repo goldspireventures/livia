@@ -94,13 +94,13 @@ Set on Railway staging API: `LIVIA_DEPLOY_ENV=staging`
 
 **Rule:** Thick work on Livia guest pages; SMS/WhatsApp = links + reminders only.
 
-- [ ] **G0** `guest-surfaces.ts` + token service
-- [ ] **G1** Body-art proof guest page `/b/:slug/proof/:token` + API + E2E
-- [ ] **G2** Medspa consent, fitness waitlist, pet/automotive guest polish
-- [ ] **G3** Link-first continuity templates + 9-vertical hero E2E + support surfaceIds
-- [ ] **G4** Phone E.164 normalize in `findOrCreateCustomer` + `/b` validation — [`GUEST-CUSTOMER-IDENTITY.md`](../product/GUEST-CUSTOMER-IDENTITY.md)
-- [ ] **G5** Public book mobile pass (`now/` tier) *(sticky CTA + touch targets wave 9)*
-- [ ] **G6 (R2)** Guest hub `my.livia-hq.com` — [`GUEST-CONTINUITY-HUB-SPEC.md`](../product/GUEST-CONTINUITY-HUB-SPEC.md)
+- [x] **G0** `guest-surfaces.ts` + token service
+- [x] **G1** Body-art proof guest page `/b/:slug/proof/:token` + API + E2E
+- [x] **G2** Medspa intake + fitness waitlist guest pages *(wave 14 — `/intake/:token`, `/waitlist/:token`)*
+- [x] **G3** Link-first continuity templates + support surfaceIds *(visit URL in SMS wave 14)*
+- [x] **G4** Phone E.164 normalize in `findOrCreateCustomer` + `/b` validation — [`GUEST-CUSTOMER-IDENTITY.md`](../product/GUEST-CUSTOMER-IDENTITY.md)
+- [x] **G5** Public book mobile pass (`now/` tier) *(sticky CTA + touch targets wave 9)*
+- [ ] **G6 (R2)** Guest hub `my.livia-hq.com` — [`GUEST-CONTINUITY-HUB-SPEC.md`](../product/GUEST-CONTINUITY-HUB-SPEC.md) *(shell + OTP wave 12+)*
 
 **Parallel:** Track D5 (public `/b`) · Track B1 (registry).
 
@@ -119,7 +119,7 @@ Set on Railway staging API: `LIVIA_DEPLOY_ENV=staging`
 - [ ] **F4** M5 vertical pages → demo deep links; M3 how-it-works *(M5 wedge CTAs on home + `/verticals` wave 8)*
 - [ ] **F5** I2 Ship Lane collapse/expand + Hats (metrics panels); I0 token pass
 - [ ] **H** Exec workforce — work-event ledger, Hats River v2, Cursor bridge — [`INTERNAL-EXEC-COCKPIT-SPEC.md`](../product/INTERNAL-EXEC-COCKPIT-SPEC.md) §4.2b · program §7e
-- [ ] **F6** I4 support: `/support/queue`, `/tickets/:id`, `/board`, `/radar`, `/investigate`
+- [x] **F6** I4 support: `/support/queue`, `/tickets/:id`, `/board`, `/radar`, `/investigate` *(Board/Radar live + Investigate trace wave 14)*
 - [ ] **F7** M6–M12 marketing utility pages
 - [ ] **F8** E2E marketing→demo→tenant; marketing-vs-reality audit *(headless API path in `test:e2e:verticals` wave 8)*
 
@@ -197,19 +197,20 @@ Env (staging): `LIVIA_PRESENTATION_PRESETS=true` or `LIVIA_ENV=staging`.
 ### Registry and policy
 
 - [x] Canonical doc — baseline (requestId, tickets, triage), surfaceId catalog, wire-up contract
-- [ ] **B1** `lib/policy/src/support-points.ts` — P0 `surfaceId` entries with paths, tests, runbooks
-- [ ] **B1** `getSupportPoint` / `listSupportPoints` + `support-points.test.ts`
+- [x] **B1** `lib/policy/src/support-points.ts` — P0 `surfaceId` entries with paths, tests, runbooks
+- [x] **B1** `getSupportPoint` / `listSupportPoints` + `support-points.test.ts`
 
 ### Dashboard
 
+- [x] **B2** `resolveSupportSurfaceId` in policy + `HelpSupportDialog` attaches `surfaceId`
 - [ ] **B2** `support-surface-map.ts` (route → surfaceId, second-shop override)
 - [ ] **B2** `use-support-context.ts`
-- [ ] **B2** `HelpSupportDialog` — required `surfaceId`; all call sites (layout, inbox, booking-detail, liv-incidents)
+- [ ] **B2** All call sites (layout, inbox, booking-detail, liv-incidents)
 - [ ] **B2** Sentry `surface` tag on route change
 
 ### API and triage
 
-- [ ] **B3** `support-ticket-triage.service.ts` — triage from `context.surfaceId` + registry `suggestedReply`
+- [x] **B3** `support-ticket-triage.service.ts` — triage from `context.surfaceId` + registry `suggestedReply`
 - [ ] **B3** Internal queue filter by `surfaceId` / `surface:*` tag
 
 ### Mobile
@@ -220,9 +221,9 @@ Env (staging): `LIVIA_PRESENTATION_PRESETS=true` or `LIVIA_ENV=staging`.
 
 ### Internal portal (Track C)
 
-- [ ] **C1** `GET /internal/ops/support-points`
+- [x] **C1** `GET /internal/ops/support-points`
 - [ ] **C1** Ticket detail — registry enrichment (“Likely code paths”)
-- [ ] **C1** Investigate panel — paste `requestId`, log/Sentry hints
+- [x] **C1** Investigate panel — paste `requestId`, log/Sentry hints *(wave 14)*
 - [ ] **C1** `SUPPORT-RUNBOOK.md` — surfaceId triage steps
 
 **Exit:** ≥90% Help submits include `surfaceId`; operator drill <10 min to first file.

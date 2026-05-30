@@ -1,5 +1,6 @@
 import { db, slotWaitlistEntriesTable, customersTable } from "@workspace/db";
 import { and, asc, eq } from "drizzle-orm";
+import { randomBytes } from "node:crypto";
 import { generateId } from "../lib/id";
 
 export async function joinSlotWaitlist(args: {
@@ -73,12 +74,14 @@ export async function popNextWaitlistCandidate(args: {
 }
 
 export async function markWaitlistOffered(entryId: string, bookingId: string) {
+  const offerToken = randomBytes(18).toString("base64url");
   const [row] = await db
     .update(slotWaitlistEntriesTable)
     .set({
       status: "offered",
       offeredBookingId: bookingId,
       offeredAt: new Date(),
+      offerToken,
       expiresAt: new Date(Date.now() + 2 * 60 * 60 * 1000),
       updatedAt: new Date(),
     })

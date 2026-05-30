@@ -1,3 +1,5 @@
+import { getSupportPoint } from "@workspace/policy";
+
 export type SupportTriage = {
   priority: "urgent" | "normal" | "low";
   tags: string[];
@@ -18,6 +20,7 @@ export function triageSupportTicket(input: {
   category: string;
   description: string;
   severity?: string;
+  context?: { surfaceId?: string; route?: string };
 }): SupportTriage {
   const text = input.description.trim();
   const lower = text.toLowerCase();
@@ -26,6 +29,11 @@ export function triageSupportTicket(input: {
   for (const { tag, re } of TAG_PATTERNS) {
     if (re.test(text)) tags.add(tag);
   }
+
+  const surfaceId = input.context?.surfaceId?.trim();
+  const point = surfaceId ? getSupportPoint(surfaceId) : undefined;
+  if (surfaceId) tags.add(`surface:${surfaceId}`);
+  if (point?.owner) tags.add(`owner:${point.owner}`);
 
   let priority: SupportTriage["priority"] = "normal";
   if (input.severity === "blocking" || input.category === "billing") {
@@ -38,6 +46,7 @@ export function triageSupportTicket(input: {
   }
 
   let suggestedReply =
+    point?.suggestedReply ??
     "See docs/business/OPERATOR-READY-PACK.md for the matching workflow starter.";
   if (tags.has("billing")) {
     suggestedReply =

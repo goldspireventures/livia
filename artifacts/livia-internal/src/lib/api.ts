@@ -421,6 +421,24 @@ export async function getRequestTrace(requestId: string, businessId?: string) {
   }>(`/internal/ops/trace/${encodeURIComponent(requestId)}${q}`);
 }
 
+export type SupportPointRow = {
+  surfaceId: string;
+  label: string;
+  owner: string;
+  apps: string[];
+  routes: string[];
+  policyModules: string[];
+  services: string[];
+  uiComponents: string[];
+  tests: string[];
+  runbook?: string;
+  suggestedReply?: string;
+};
+
+export async function listSupportPoints() {
+  return internalFetch<{ data: SupportPointRow[] }>("/internal/ops/support-points");
+}
+
 export async function getSupportBundle(businessId: string) {
   const res = await internalFetch<{
     businessId: string;

@@ -19,6 +19,7 @@ export async function createSupportTicket(input: CreateSupportTicketInput) {
     category: input.category,
     description: input.description,
     severity: input.severity,
+    context: input.context as { surfaceId?: string; route?: string } | undefined,
   });
   const context = {
     ...(input.context ?? {}),

@@ -15,6 +15,8 @@ import { sendAiSms, sendAiEmail } from "./ai-outbound.service";
 import { getPoliciesForBusinessId } from "./policies.service";
 import { getBookingById } from "./bookings.service";
 import { logEvent } from "./events.service";
+import { ensureBookingGuestAccess } from "./booking-guest-access.service";
+import { getDashboardUrl } from "../lib/public-urls";
 
 function formatLocal(iso: string, timezone: string, locale: string): string {
   try {
@@ -60,6 +62,8 @@ export async function runBookingContinuityBridge(
     biz.locale,
   );
   const bookingRef = bookingId.slice(-8).toUpperCase();
+  const guestToken = await ensureBookingGuestAccess(businessId, bookingId);
+  const visitUrl = `${getDashboardUrl().replace(/\/+$/, "")}/b/${biz.slug}/visit/${guestToken}`;
   const msgArgs = {
     businessName: biz.name,
     serviceName: enriched.service?.name ?? "Appointment",
@@ -71,6 +75,7 @@ export async function runBookingContinuityBridge(
     ),
     bookingRef,
     instagramHandle: biz.instagramHandle,
+    visitUrl,
   };
 
   const conversation = await createConversation({

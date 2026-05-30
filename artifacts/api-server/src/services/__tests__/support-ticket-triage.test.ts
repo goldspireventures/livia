@@ -15,4 +15,12 @@ const copy = triageSupportTicket({
 assert.ok(copy.tags.includes("vertical_copy"));
 assert.match(copy.suggestedReply, /Practice/i);
 
+const inbox = triageSupportTicket({
+  category: "bug",
+  description: "Inbox thread list empty after refresh",
+  context: { surfaceId: "dashboard.inbox", route: "/inbox" },
+});
+assert.ok(inbox.tags.includes("surface:dashboard.inbox"));
+assert.ok(inbox.tags.includes("owner:liv"));
+
 console.log("support-ticket-triage.test.ts: ok");

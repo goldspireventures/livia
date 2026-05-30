@@ -17,12 +17,19 @@ export interface ContinuityMessageArgs {
   startAtLocal: string;
   bookingRef: string;
   instagramHandle?: string | null;
+  /** Link-first guest surface (G3) — thick Livia page for replies & day-of. */
+  visitUrl?: string | null;
+}
+
+function visitLinkSuffix(args: ContinuityMessageArgs): string {
+  if (!args.visitUrl) return "";
+  return ` Manage your visit: ${args.visitUrl}`;
 }
 
 const BASE_SMS = (args: ContinuityMessageArgs, extra: string) =>
   `You're booked for ${args.serviceName} at ${args.businessName} on ${args.startAtLocal}${
     args.staffDisplayName ? ` with ${args.staffDisplayName}` : ""
-  }. Ref ${args.bookingRef}. ${extra}`;
+  }. Ref ${args.bookingRef}. ${extra}${visitLinkSuffix(args)}`;
 
 const HAIR: ContinuityTemplate = {
   smsBody: (a) =>

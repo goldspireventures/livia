@@ -32,6 +32,7 @@ export * from "./inbox-queue";
 export * from "./wedge-gate";
 export * from "./wedge-demo-stories";
 export * from "./guest-surfaces";
+export * from "./support-points";
 export * from "./phone-normalize";
 export * from "./staging-relaxations";
 export * from "./operational-wiring";

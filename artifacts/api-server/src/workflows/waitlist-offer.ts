@@ -7,9 +7,10 @@ import {
 } from "../services/waitlist.service";
 import { logger } from "../lib/logger";
 import { tenantContextStore, type TenantContext } from "@workspace/tenant-context";
-import { db, businessesTable } from "@workspace/db";
+import { db, businessesTable, slotWaitlistEntriesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { createTwilioClient } from "@workspace/integrations-twilio";
+import { getDashboardUrl } from "../lib/public-urls";
 
 /**
  * When a booking is cancelled, offer the freed slot to the next waitlist entry (FIFO).
@@ -52,24 +53,38 @@ export const waitlistOfferOnCancel = inngest.createFunction(
 
     if (!entry) return { skipped: "empty_waitlist" };
 
-    await step.run("mark-offered", async () =>
-      markWaitlistOffered(entry.id, data.bookingId),
-    );
-
-    const contact = await step.run("resolve-contact", async () =>
-      resolveWaitlistContact(entry),
-    );
-
     const [biz] = await db
       .select()
       .from(businessesTable)
       .where(eq(businessesTable.id, data.businessId))
       .limit(1);
 
+    await step.run("mark-offered", async () =>
+      markWaitlistOffered(entry.id, data.bookingId),
+    );
+
+    const offeredRow = await db
+      .select({ offerToken: slotWaitlistEntriesTable.offerToken })
+      .from(slotWaitlistEntriesTable)
+      .where(eq(slotWaitlistEntriesTable.id, entry.id))
+      .limit(1);
+
+    const offerToken = offeredRow[0]?.offerToken;
+    const waitlistUrl =
+      offerToken && biz?.slug
+        ? `${getDashboardUrl().replace(/\/+$/, "")}/b/${biz.slug}/waitlist/${offerToken}`
+        : null;
+
     const body = [
       `${biz?.name ?? "Your clinic"}: a slot opened up for a service you wanted.`,
-      "Reply YES within 2 hours to hold it — we'll follow up to confirm time.",
+      waitlistUrl
+        ? `Accept within 2 hours: ${waitlistUrl}`
+        : "Reply YES within 2 hours to hold it — we'll follow up to confirm time.",
     ].join(" ");
+
+    const contact = await step.run("resolve-contact", async () =>
+      resolveWaitlistContact(entry),
+    );
 
     const twilioSid = process.env["TWILIO_ACCOUNT_SID"];
     const twilioToken = process.env["TWILIO_AUTH_TOKEN"];

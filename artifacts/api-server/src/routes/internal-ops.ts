@@ -98,6 +98,11 @@ router.get("/internal/ops/tenants/:businessId", async (req, res): Promise<void> 
   res.json(detail);
 });
 
+router.get("/internal/ops/support-points", async (_req, res): Promise<void> => {
+  const { listSupportPoints } = await import("@workspace/policy");
+  res.json({ data: listSupportPoints() });
+});
+
 router.get("/internal/ops/support-tickets", async (req, res): Promise<void> => {
   const q = req.query;
   const result = await listInternalSupportTickets({

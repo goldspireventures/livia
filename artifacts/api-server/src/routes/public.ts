@@ -37,6 +37,14 @@ import {
   getGuestProofByToken,
   submitGuestProofDecision,
 } from "../services/design-proof-guest-access.service";
+import {
+  getGuestIntakeByToken,
+  submitGuestIntakeByToken,
+} from "../services/medical-intake-guest-access.service";
+import {
+  acceptGuestWaitlistOfferByToken,
+  getGuestWaitlistOfferByToken,
+} from "../services/waitlist-guest-access.service";
 import { db, visitFeedbackTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { socialProofForVertical } from "../lib/public-social-proof";
@@ -501,6 +509,65 @@ router.post("/public/b/:slug/proof/:token/decision", async (req, res): Promise<v
     return;
   }
   res.json({ ok: true, status: result.row?.status ?? decision });
+});
+
+router.get("/public/b/:slug/intake/:token", async (req, res): Promise<void> => {
+  const slug = Array.isArray(req.params.slug) ? req.params.slug[0] : req.params.slug;
+  const token = Array.isArray(req.params.token) ? req.params.token[0] : req.params.token;
+  const view = await getGuestIntakeByToken(slug, token);
+  if (!view) {
+    sendError(res, req, 404, "Intake link not found");
+    return;
+  }
+  res.json(view);
+});
+
+router.post("/public/b/:slug/intake/:token", async (req, res): Promise<void> => {
+  const slug = Array.isArray(req.params.slug) ? req.params.slug[0] : req.params.slug;
+  const token = Array.isArray(req.params.token) ? req.params.token[0] : req.params.token;
+  const result = await submitGuestIntakeByToken(slug, token, {
+    allergies: typeof req.body?.allergies === "string" ? req.body.allergies : undefined,
+    medications: typeof req.body?.medications === "string" ? req.body.medications : undefined,
+    conditions: typeof req.body?.conditions === "string" ? req.body.conditions : undefined,
+    priorProcedures:
+      typeof req.body?.priorProcedures === "string" ? req.body.priorProcedures : undefined,
+    notes: typeof req.body?.notes === "string" ? req.body.notes : undefined,
+  });
+  if (!result) {
+    sendError(res, req, 404, "Intake link not found");
+    return;
+  }
+  if ("error" in result && result.error === "already_submitted") {
+    sendError(res, req, 409, "Intake already submitted");
+    return;
+  }
+  res.json({ ok: true, status: result.row?.status ?? "submitted" });
+});
+
+router.get("/public/b/:slug/waitlist/:token", async (req, res): Promise<void> => {
+  const slug = Array.isArray(req.params.slug) ? req.params.slug[0] : req.params.slug;
+  const token = Array.isArray(req.params.token) ? req.params.token[0] : req.params.token;
+  const view = await getGuestWaitlistOfferByToken(slug, token);
+  if (!view) {
+    sendError(res, req, 404, "Waitlist offer not found");
+    return;
+  }
+  res.json(view);
+});
+
+router.post("/public/b/:slug/waitlist/:token/accept", async (req, res): Promise<void> => {
+  const slug = Array.isArray(req.params.slug) ? req.params.slug[0] : req.params.slug;
+  const token = Array.isArray(req.params.token) ? req.params.token[0] : req.params.token;
+  const result = await acceptGuestWaitlistOfferByToken(slug, token);
+  if (!result.ok) {
+    const code =
+      result.error === "expired" || result.error === "slot_taken" || result.error === "already_accepted"
+        ? 409
+        : 404;
+    sendError(res, req, code, result.error);
+    return;
+  }
+  res.json(result);
 });
 
 router.get("/public/vertical-coverage", async (_req, res): Promise<void> => {
