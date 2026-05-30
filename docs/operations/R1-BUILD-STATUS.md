@@ -73,7 +73,7 @@ LIVIA FINAL BUILD PLAN (master)
 | E13 | Continuity templates all verticals | **Done** | policy test |
 | E14 | typecheck clean | **Done** | CI |
 
-**R1 exit:** **~11/14 done · ~3/14 partial** → **staging must reflect main (PR #3 merged 2026-05-30) before founder E2E**.
+**R1 exit:** **~12/14 done · ~2/14 partial** (E7 preset picker UAT, E11 full signup→seed path) → staging automated gates green.
 
 ### Staging deploy status (post PR #3)
 
@@ -83,7 +83,7 @@ LIVIA FINAL BUILD PLAN (master)
 | `pnpm staging:readiness` | ✓ green (2026-05-30) |
 | `staging.livia-hq.com` wave 8+ (€79, wedge chips) | ✓ in JS bundles |
 | `api.staging…/api/demo/*` | ✓ provisioned (`LIVIA_DEPLOY_ENV=staging` gate fix) |
-| `pnpm test:e2e:staging` | running |
+| `pnpm test:e2e:staging` | ✓ 40/40 (marketing + lifecycle + public book) |
 
 ---
 
@@ -129,6 +129,7 @@ LIVIA FINAL BUILD PLAN (master)
 
 | Wave | Date | Focus | Staging URLs affected |
 |------|------|-------|---------------------|
+| 12 | 2026-05-30 | Staging demo gate fix; readiness script; staging E2E 40/40 | `pnpm staging:readiness`, `pnpm test:e2e:staging` |
 | 11 | 2026-05-30 | Headless lifecycle fix; staging E2E script; E11 sign-up gateway test | `pnpm test:e2e:staging` |
 | 10 | 2026-05-30 | E6 visit smoke; E8 support 3-col; E9 exec tabs; M9 waitlist; F8 browser E2E | internal `/support`, marketing waitlist |
 | 9 | 2026-05-30 | G5 public book mobile pass; E7/D-R1 platform-default shell wash | `/b/*` mobile, tenant app |
