@@ -57,6 +57,7 @@ import DashboardPage from "@/pages/dashboard";
 import PublicBookingPage from "@/pages/public-booking";
 import PublicVisitPage from "@/pages/public-visit";
 import PublicProofPage from "@/pages/public-proof";
+import MyLiviaPage from "@/pages/my-livia";
 import PublicPremisesPage from "@/pages/public-premises";
 import DemoLauncher from "@/pages/demo/Launcher";
 import DemoWedgeStoryPage from "@/pages/demo/WedgeStory";
@@ -186,6 +187,7 @@ function AppRouter() {
           <Route path="/experience/livia-evolution" component={LiviaEvolutionGalleryPage} />
         </>
       ) : null}
+      <Route path="/my" component={MyLiviaPage} />
       <Route path="/b/:slug/proof/:token" component={PublicProofPage} />
       <Route path="/b/:slug/visit/:token" component={PublicVisitPage} />
       <Route path="/b/:slug" component={PublicBookingPage} />

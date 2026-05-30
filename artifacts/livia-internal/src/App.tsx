@@ -25,6 +25,8 @@ import { buttonStyle, inputStyle } from "./styles/ops-ui";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { InternalShell } from "./layout/InternalShell";
 import { SupportPage } from "./pages/SupportPage";
+import { SupportBoardView } from "./views/SupportBoardView";
+import { SupportRadarView } from "./views/SupportRadarView";
 import { KnowledgePage } from "./pages/KnowledgePage";
 import { TenantsPage } from "./pages/TenantsPage";
 import { OnboardingExperiencePickerView } from "./views/OnboardingExperiencePickerView";
@@ -210,6 +212,25 @@ export function App() {
             <>
               <RequestTracePanel />
               <SupportPage />
+            </>
+          }
+        />
+
+        <Route
+          path="/support/board"
+          element={
+            <>
+              <RequestTracePanel />
+              <SupportBoardView />
+            </>
+          }
+        />
+        <Route
+          path="/support/radar"
+          element={
+            <>
+              <RequestTracePanel />
+              <SupportRadarView />
             </>
           }
         />

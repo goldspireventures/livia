@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { SupportSurfaceNav } from "../components/SupportSurfaceNav";
 import { SupportQueueView } from "../views/SupportQueueView";
 
 export function SupportPage() {
@@ -8,12 +9,14 @@ export function SupportPage() {
   const ticketId = useMemo(() => (params.ticketId ? String(params.ticketId) : undefined), [params.ticketId]);
 
   return (
-    <SupportQueueView
-      selectedTicketId={ticketId}
-      onTicketSelected={(id) => navigate(`/support/${encodeURIComponent(id)}`)}
-      onOpenTenant={(businessId) => navigate(`/tenants/${encodeURIComponent(businessId)}`)}
-      onOpenKnowledgeDoc={(docPath) => navigate(`/knowledge?doc=${encodeURIComponent(docPath)}`)}
-    />
+    <div>
+      <SupportSurfaceNav />
+      <SupportQueueView
+        selectedTicketId={ticketId}
+        onTicketSelected={(id) => navigate(`/support/${encodeURIComponent(id)}`)}
+        onOpenTenant={(businessId) => navigate(`/tenants/${encodeURIComponent(businessId)}`)}
+        onOpenKnowledgeDoc={(docPath) => navigate(`/knowledge?doc=${encodeURIComponent(docPath)}`)}
+      />
+    </div>
   );
 }
-

@@ -58,6 +58,9 @@ export * from "./entitlements/feature-flags";
 // Marketing
 export * from "./marketing/marketing-leads";
 
+// Guest hub (W6 — P7 cross-shop vault)
+export * from "./guest/guest-hub";
+
 // Billing (usage meters; plan composition in @workspace/entitlements)
 export * from "./billing";
 
