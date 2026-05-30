@@ -22,6 +22,8 @@ import {
   getRegulatoryOverlay,
   resolveJurisdictionCode,
   getVerticalPlaybook,
+  resolvePresentationPreset,
+  PLATFORM_DEFAULT_PRESET_ID,
 } from "@workspace/policy";
 import type { BusinessVertical } from "@workspace/policy";
 import type { Service } from "@workspace/db";
@@ -30,6 +32,11 @@ import { getPremisesBySlug } from "../services/premises.service";
 import { buildCountryPackForBusiness } from "../services/country-pack.service";
 import { getPublicDayPackages, bookDayPackage } from "../services/day-packages.service";
 import { ensureBookingGuestAccess, getGuestBookingByToken } from "../services/booking-guest-access.service";
+import { ensureGuestVaultLinkFromBook } from "../services/guest-hub.service";
+import {
+  getGuestProofByToken,
+  submitGuestProofDecision,
+} from "../services/design-proof-guest-access.service";
 import { db, visitFeedbackTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { socialProofForVertical } from "../lib/public-social-proof";
@@ -139,7 +146,14 @@ async function getPublicBusinessProfile(req: Request, res: Response): Promise<vo
       locale: biz.locale,
       name: biz.name,
     }),
-    experienceSkin: publicExperienceSkin(biz.vertical, biz.country),
+    experienceSkin: {
+      ...publicExperienceSkin(biz.vertical, biz.country),
+      presentation: resolvePresentationPreset(
+        biz.vertical as BusinessVertical,
+        biz.presentationPresetId ?? PLATFORM_DEFAULT_PRESET_ID,
+      ).cssPreset,
+      brandAccentHex: biz.brandAccentHex ?? null,
+    },
     socialProof: socialProofForVertical(biz.vertical),
   });
 }
@@ -222,7 +236,7 @@ router.post("/public/b/:slug/book", async (req, res): Promise<void> => {
   const {
     serviceId, staffId, startAt,
     customerFirstName, customerLastName, customerEmail, customerPhone,
-    notes, channelType, guardAnswers, medspaConsent,
+    notes, channelType, guardAnswers, medspaConsent, saveToMyLivia,
   } = req.body;
 
   if (!serviceId || !startAt || !customerFirstName) {
@@ -325,6 +339,16 @@ router.post("/public/b/:slug/book", async (req, res): Promise<void> => {
     const guestToken = await ensureBookingGuestAccess(biz.id, booking.id);
     const visitPath = `/b/${biz.slug}/visit/${guestToken}`;
 
+    let myLivia: { myLiviaPath: string } | null = null;
+    if (saveToMyLivia !== false && customerPhone) {
+      myLivia = await ensureGuestVaultLinkFromBook(
+        customerPhone,
+        biz.id,
+        new Date(booking.startAt),
+        biz.country?.slice(0, 2) ?? "IE",
+      );
+    }
+
     void markOnboardingTestBooking(biz.id).catch(() => undefined);
 
     res.status(201).json({
@@ -340,6 +364,8 @@ router.post("/public/b/:slug/book", async (req, res): Promise<void> => {
       instagramDeepLink: igDeepLink ?? null,
       guestToken,
       visitPath,
+      myLiviaPath: myLivia?.myLiviaPath ?? null,
+      savedToMyLivia: Boolean(myLivia),
     });
   } catch (err: unknown) {
     if (replyDomainError(req, res, err)) return;
@@ -434,9 +460,73 @@ router.post("/public/b/:slug/visit/:token/feedback", async (req, res): Promise<v
   }
 });
 
+router.get("/public/b/:slug/proof/:token", async (req, res): Promise<void> => {
+  const slug = Array.isArray(req.params.slug) ? req.params.slug[0] : req.params.slug;
+  const token = Array.isArray(req.params.token) ? req.params.token[0] : req.params.token;
+  const view = await getGuestProofByToken(slug, token);
+  if (!view) {
+    sendError(res, req, 404, "Proof link not found");
+    return;
+  }
+  res.json({
+    proofId: view.proofId,
+    businessName: view.businessName,
+    slug: view.slug,
+    vertical: view.vertical,
+    status: view.status,
+    imageUrl: view.imageUrl,
+    note: view.note,
+    customerFirstName: view.customerFirstName,
+    logoUrl: view.logoUrl,
+    createdAt: view.createdAt.toISOString(),
+  });
+});
+
+router.post("/public/b/:slug/proof/:token/decision", async (req, res): Promise<void> => {
+  const slug = Array.isArray(req.params.slug) ? req.params.slug[0] : req.params.slug;
+  const token = Array.isArray(req.params.token) ? req.params.token[0] : req.params.token;
+  const decision = req.body?.decision;
+  if (decision !== "approved" && decision !== "rejected") {
+    sendError(res, req, 400, "decision must be approved or rejected");
+    return;
+  }
+  const comment = typeof req.body?.comment === "string" ? req.body.comment : undefined;
+  const result = await submitGuestProofDecision(slug, token, decision, comment);
+  if (!result.ok) {
+    if (result.reason === "not_found") {
+      sendError(res, req, 404, "Proof link not found");
+      return;
+    }
+    sendError(res, req, 409, "Proof is no longer awaiting review");
+    return;
+  }
+  res.json({ ok: true, status: result.row?.status ?? decision });
+});
+
 router.get("/public/vertical-coverage", async (_req, res): Promise<void> => {
   const { listVerticalCoverage } = await import("@workspace/policy");
   res.json({ data: listVerticalCoverage() });
+});
+
+router.get("/public/wedge-demo/:vertical", async (req, res): Promise<void> => {
+  const vertical = Array.isArray(req.params.vertical) ? req.params.vertical[0] : req.params.vertical;
+  const { resolveWedgeDemoStory, listWedgeDemoVerticals } = await import("@workspace/policy");
+  const story = resolveWedgeDemoStory(vertical);
+  if (!story) {
+    sendError(res, req, 404, "Unknown or deferred vertical");
+    return;
+  }
+  res.json({ data: story, verticals: listWedgeDemoVerticals() });
+});
+
+router.get("/public/wedge-demo", async (_req, res): Promise<void> => {
+  const { listWedgeDemoVerticals, getWedgeDemoStory } = await import("@workspace/policy");
+  const verticals = listWedgeDemoVerticals();
+  res.json({
+    data: verticals
+      .map((v) => getWedgeDemoStory(v))
+      .filter((s): s is NonNullable<typeof s> => s != null),
+  });
 });
 
 export default router;

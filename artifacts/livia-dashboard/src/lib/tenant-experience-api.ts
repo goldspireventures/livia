@@ -2,8 +2,29 @@ import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-fetch";
 import type { TenantExperience } from "@workspace/policy";
 
+export type TenantPresentation = {
+  presetId: string;
+  cssPreset: string;
+  label: string;
+  brandAccentHex: string | null;
+  presetsEnabled: boolean;
+  tokens: {
+    colorMode: string;
+    density: string;
+    display: string;
+    layout: string;
+    shell: string;
+    radius: string;
+    motion: string;
+  };
+};
+
+export type TenantExperienceResponse = TenantExperience & {
+  presentation?: TenantPresentation;
+};
+
 export function fetchTenantExperience(businessId: string) {
-  return apiFetch<TenantExperience>(
+  return apiFetch<TenantExperienceResponse>(
     `/me/tenant-experience?businessId=${encodeURIComponent(businessId)}`,
   );
 }

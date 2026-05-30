@@ -45,6 +45,7 @@
     "test:e2e:platform": "pnpm --filter @workspace/e2e run test:platform",
     "test:e2e:preflight": "pnpm --filter @workspace/e2e run test:preflight",
     "test:e2e:verticals": "node scripts/e2e-all-verticals.mjs",
+    "headless:lifecycle:r1": "node scripts/headless-lifecycle-r1.mjs",
     "test:e2e:verticals:full": "node scripts/e2e-all-verticals.mjs --visual",
     "test:e2e:full-ready": "node scripts/e2e-all-verticals.mjs",
     "start:platform:test": "node scripts/start-platform-for-test.mjs",

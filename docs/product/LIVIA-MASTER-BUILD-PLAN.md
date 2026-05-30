@@ -585,6 +585,20 @@ flowchart LR
 
 **Phases 0–10 engineering deliverables are complete.** **Gate 3 declaration** still requires founder/ops items in `docs/launch-plan.md` (first paid sub, app stores, legal, 7-day zero P0).
 
+**Active UX/build program (2026-05-29):** Platform surfaces + tenant presets — see [`PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md`](./PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md):
+
+| Track | Scope | Est. |
+|-------|--------|------|
+| **F** | Platform surfaces implementation | ~28 d |
+| **G** | Guest collaboration + vertical completeness | ~15 d |
+| **D** | 36 presentation presets + surface morph (staging) | ~24 d |
+| **B/C** | Support registry + investigate UI | ~21 d |
+| **A** | Catalog dedupe + composable hygiene | ~14 d |
+
+**Design handoff:** [`design/PLATFORM-SURFACES-BUILD-SPEC.md`](../design/PLATFORM-SURFACES-BUILD-SPEC.md) · **Final visuals:** [`design/PLATFORM-SURFACES-FINAL-CATALOG.md`](../design/PLATFORM-SURFACES-FINAL-CATALOG.md) · **Flows:** [`product/LIVIA-PLATFORM-FLOWS.md`](../product/LIVIA-PLATFORM-FLOWS.md)
+
+**M1 locked:** R2 One thread (story). Gallery = 29 final/north-star PNGs (deprecated concepts removed).
+
 **Local Gate 3 smoke:** `pnpm dev:api` + `pnpm dev:dashboard` → `pnpm smoke:gate3`. **CI:** Playwright API job on every PR.
 
 **Phase 10 env:** `STRIPE_PRICE_CHAIN`, `STRIPE_PRICE_CHAIR_HOST`, `STRIPE_PRICE_PEER_INSIGHTS`, `PARTNER_API_KEY`. Run migration `lib/db/migrations/sql/003-phase10-entitlements-shifts.sql`.

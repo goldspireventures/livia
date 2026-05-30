@@ -22,8 +22,9 @@ import { getRitualNav } from "@/lib/persona-rituals";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { LiviaWordmark } from "@/components/brand/LiviaMark";
-import { applyExperienceTheme } from "@/lib/experience-theme";
+import { applyExperienceTheme, applyPresentationTheme } from "@/lib/experience-theme";
 import { fetchUserLifecycle } from "@/lib/lifecycle-api";
+import { useTenantExperience } from "@/lib/tenant-experience-api";
 
 import { UserButton } from "@clerk/clerk-react";
 
@@ -233,6 +234,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   }, []);
 
   const { business, businesses } = useBusiness();
+  const { data: tenantExperience } = useTenantExperience(business?.id);
 
   const { effectiveRole, role, viewingAsStaffId } = useMembership();
 
@@ -248,6 +250,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
       persona,
     });
   }, [business, persona]);
+
+  useEffect(() => {
+    const p = tenantExperience?.presentation;
+    if (p) {
+      applyPresentationTheme({ cssPreset: p.cssPreset, brandAccentHex: p.brandAccentHex });
+    }
+  }, [tenantExperience?.presentation?.cssPreset, tenantExperience?.presentation?.brandAccentHex]);
 
   useEffect(() => {
     if (role !== "OWNER" && persona !== "org_admin") {

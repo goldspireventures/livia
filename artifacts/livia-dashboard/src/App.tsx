@@ -1,4 +1,4 @@
-import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
+import { Switch, Route, Router as WouterRouter, Redirect, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -49,15 +49,22 @@ import SignInPage from "@/pages/sign-in";
 import SignUpPage from "@/pages/sign-up";
 import OnboardingPage from "@/pages/onboarding";
 import OnboardingPreviewPage from "@/pages/dev/onboarding-preview";
+import PlatformSurfacesGalleryPage from "@/pages/dev/platform-surfaces-gallery";
+import BrandLogoGalleryPage from "@/pages/dev/brand-logo-gallery";
+import LiviaEvolutionGalleryPage from "@/pages/dev/livia-evolution-gallery";
 import LegalAcceptancePage from "@/pages/legal-acceptance";
 import DashboardPage from "@/pages/dashboard";
 import PublicBookingPage from "@/pages/public-booking";
 import PublicVisitPage from "@/pages/public-visit";
+import PublicProofPage from "@/pages/public-proof";
+import MyLiviaPage from "@/pages/my-livia";
 import PublicPremisesPage from "@/pages/public-premises";
 import DemoLauncher from "@/pages/demo/Launcher";
+import DemoWedgeStoryPage from "@/pages/demo/WedgeStory";
 import { DemoProvider } from "@/lib/demo/demo-context";
 import { isProductionCustomerSurface } from "@/lib/production-surface";
 import { isOnboardingPreviewRouteEnabled } from "@/lib/onboarding-preview-route";
+import { isPublicGuestPath } from "@/lib/public-guest-paths";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -87,6 +94,24 @@ const CLERK_PROXY_URL =
     : undefined;
 
 function AuthenticatedRoutes() {
+  const [location] = useLocation();
+
+  // Safety net: guest paths must never enter tenant AuthGuard (avoids sign-in redirect loops on /my).
+  if (isPublicGuestPath(location)) {
+    if (location.split("?")[0]?.replace(/\/+$/, "") === "/my") {
+      return <MyLiviaPage />;
+    }
+    if (location.startsWith("/b/")) {
+      const visitMatch = location.match(/^\/b\/([^/]+)\/visit\/([^/]+)/);
+      const proofMatch = location.match(/^\/b\/([^/]+)\/proof\/([^/]+)/);
+      const slugMatch = location.match(/^\/b\/([^/]+)/);
+      if (proofMatch) return <PublicProofPage />;
+      if (visitMatch) return <PublicVisitPage />;
+      if (slugMatch) return <PublicBookingPage />;
+    }
+    if (location.startsWith("/p/")) return <PublicPremisesPage />;
+  }
+
   return (
     <AuthGuard>
       <AppLayout>
@@ -167,6 +192,8 @@ function AppRouter() {
     <Switch>
       <Route path="/sign-in" component={SignInPage} />
       <Route path="/sign-up" component={SignUpPage} />
+      <Route path="/my" component={MyLiviaPage} />
+      <Route path="/my/" component={MyLiviaPage} />
 
       {isOnboardingPreviewRouteEnabled() ? (
         <>
@@ -174,6 +201,14 @@ function AppRouter() {
           <Route path="/dev/onboarding-preview" component={OnboardingPreviewPage} />
         </>
       ) : null}
+      {import.meta.env.DEV ? (
+        <>
+          <Route path="/experience/platform-surfaces" component={PlatformSurfacesGalleryPage} />
+          <Route path="/experience/brand-logos" component={BrandLogoGalleryPage} />
+          <Route path="/experience/livia-evolution" component={LiviaEvolutionGalleryPage} />
+        </>
+      ) : null}
+      <Route path="/b/:slug/proof/:token" component={PublicProofPage} />
       <Route path="/b/:slug/visit/:token" component={PublicVisitPage} />
       <Route path="/b/:slug" component={PublicBookingPage} />
       <Route path="/p/:slug" component={PublicPremisesPage} />
@@ -183,6 +218,7 @@ function AppRouter() {
         <>
           <Route path="/guides">{() => <LazyRoute page={LazyGuidesPage} />}</Route>
           <Route path="/demo" component={DemoLauncher} />
+          <Route path="/demo/wedge/:vertical" component={DemoWedgeStoryPage} />
           <Route path="/demo/:persona">{() => <LazyRoute page={LazyDemoShowcase} />}</Route>
         </>
       ) : (

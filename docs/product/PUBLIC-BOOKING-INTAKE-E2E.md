@@ -1,7 +1,7 @@
 # Public booking & business intake — end-to-end
 
 **Canonical:** How Livia’s **direct-link** customer surface connects to the **business operator** surface and **automation**.  
-**Not a marketplace:** Unlike Booksy/Fresha discovery, customers arrive via `livia.io/b/<slug>` (or the business’s custom domain later) from Instagram bio, website, SMS, or QR — not by searching a Livia directory.
+**Platform flows (thick guest + thin channels):** [`LIVIA-PLATFORM-FLOWS.md`](./LIVIA-PLATFORM-FLOWS.md)
 
 ---
 
@@ -25,7 +25,9 @@
 3. **Time** — Date + slot grid; staff filter carries from step 1.
 4. **Details** — Name, email/phone, vertical guards (pet, medspa intake), notes.
 5. **Consent** — Medspa only: procedure + signature.
-6. **Confirmed** — ICS, visit link `/b/<slug>/visit/<token>`, next steps (SMS/email continuity when configured).
+6. **Confirmed** — ICS, visit link `/b/<slug>/visit/<token>`, next steps (SMS/email **link** to guest pages when configured — not media collab on channel).
+
+**Guest surfaces (thick, no login):** book · visit · proof (body-art) · consent (medspa) · pay — see [`LIVIA-PLATFORM-FLOWS.md`](./LIVIA-PLATFORM-FLOWS.md) §2.2.
 
 **API:** `GET /api/public/b/:slug` → `POST .../book` with `source: web`, `channelType: WEB`.
 
@@ -98,7 +100,7 @@ Run `pnpm demo:provision` — each showcase slug gets categories, descriptions, 
 ## Differentiation vs marketplaces
 
 - **Owned URL** — Business brand first; Livia footer minimal.  
-- **Same thread** — Public book → SMS continuity → inbox (not a separate “marketplace account”).  
+- **Same thread** — Public book → SMS **link** to guest pages → inbox (not marketplace account; not MMS proof loops).  
 - **Vertical policy packs** — Deposits, cancel windows, guards baked in per jurisdiction + vertical.  
 - **Ops loop closed** — Intake panel shows *what just came from the link you posted*, not anonymous marketplace demand.
 

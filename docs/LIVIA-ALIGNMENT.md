@@ -1,8 +1,11 @@
 # Livia alignment — company, product, and how we build
 
-**Status:** Canonical (2026-05-22) — **start here**; stable until the realignment program completes.  
+**Status:** Canonical (2026-05-30)  
 **Supersedes:** scattered “what is Livia?” paragraphs in README, audits, and chat summaries.  
-**Execution:** v1 realignment complete — [`product/ENGINEERING-HANDOFF.md`](./product/ENGINEERING-HANDOFF.md). **v2:** wrapped — [`product/V2-ENGINEERING-CLOSED.md`](./product/V2-ENGINEERING-CLOSED.md). **Active build:** [`product/V3-EXECUTION-PROGRAM.md`](./product/V3-EXECUTION-PROGRAM.md) (alive UX + booking continuity + platform + DACH + medspa; whole product every release). **Experience / pains:** [`product/V3-EXPERIENCE-SPEC.md`](./product/V3-EXPERIENCE-SPEC.md), [`product/V3-REAL-WORLD-SCENARIOS.md`](./product/V3-REAL-WORLD-SCENARIOS.md). **You:** [`product/FOUNDER-SHIP-LANE.md`](./product/FOUNDER-SHIP-LANE.md).
+**Terminology:** [`PLATFORM-TERMINOLOGY.md`](./PLATFORM-TERMINOLOGY.md) · **Index:** [`DOC-CANONICAL-INDEX.md`](./DOC-CANONICAL-INDEX.md)  
+**Master build plan (LOCKED):** [`product/LIVIA-FINAL-BUILD-PLAN.md`](./product/LIVIA-FINAL-BUILD-PLAN.md)  
+**Active execution:** [`product/OPERATION-SOLIDIFY.md`](./product/OPERATION-SOLIDIFY.md) · **Releases:** [`product/PLATFORM-RELEASE-PROGRAM.md`](./product/PLATFORM-RELEASE-PROGRAM.md) · **Gap review:** [`product/MULTI-HAT-GAP-REVIEW.md`](./product/MULTI-HAT-GAP-REVIEW.md)  
+**v2 closed:** [`product/V2-ENGINEERING-CLOSED.md`](./product/V2-ENGINEERING-CLOSED.md) · **You:** [`product/FOUNDER-SHIP-LANE.md`](./product/FOUNDER-SHIP-LANE.md)
 
 ---
 
@@ -15,7 +18,7 @@
 | **What do we sell?** | Multi-tenant SaaS: **Livia** (kernel + surfaces) + **Liv** (agent runtime on channels). Monetization: tiered subscription + usage/outcome components (see [`product/LIVIA-MASTER-PLAN.md`](./product/LIVIA-MASTER-PLAN.md)). |
 | **Who do we serve first?** | **Design partners** in EU (IE wedge: English-IE voice, EUR, GDPR posture). **Hair/barber** is the **first vertical pack to prove**, not the definition of the company. |
 | **Who do we serve eventually?** | Any bookable vertical in [`verticals.md`](./verticals.md) — beauty, tattoo, wellness, fitness, medspa, allied health, and extensions via packs. |
-| **How do we run ourselves?** | Internal ops portal, support runbooks, audit, incident response — [`company/livia-internal-portal-spec.md`](./company/livia-internal-portal-spec.md), [`operations/README.md`](./operations/README.md). |
+| **How do we run ourselves?** | Internal ops — [`product/INTERNAL-EXEC-COCKPIT-SPEC.md`](./product/INTERNAL-EXEC-COCKPIT-SPEC.md), [`product/INTERNAL-SUPPORT-PLATFORM-SPEC.md`](./product/INTERNAL-SUPPORT-PLATFORM-SPEC.md), [`operations/README.md`](./operations/README.md). |
 
 **Public line (approved framing):**  
 *Livia is the operating system for appointment-based businesses in Europe — Liv is your colleague for bookings, inbox, voice, and the day’s chaos.*
@@ -29,9 +32,11 @@
 - Multi-tenant **bookings, customers, staff, services, inbox, audit, billing hooks, workflows (Inngest)**.
 - **Liv** on public web chat, staff assist, SMS/voice paths (env-dependent).
 - **Persona rituals** on web + mobile (founder, owner, manager, staff, receptionist).
-- **Seven vertical packs** in `@workspace/policy` with vocabulary + default services.
+- **Nine vertical packs** in `@workspace/policy` with vocabulary + default services (registry: `VERTICAL_COVERAGE_REGISTRY`).
+- **Programmatic hub:** policy → tenant experience → surfaces; vertical add playbook + self-evolution target ([`engineering/VERTICAL-ADD-PLAYBOOK.md`](./engineering/VERTICAL-ADD-PLAYBOOK.md)).
+- **Guest model:** per-shop CRM + R2 **guest vault** (My Livia) — [`product/GUEST-CUSTOMER-IDENTITY.md`](./product/GUEST-CUSTOMER-IDENTITY.md) · [`product/GUEST-CONTINUITY-HUB-SPEC.md`](./product/GUEST-CONTINUITY-HUB-SPEC.md).
 - **Demo world** + onboarding wizard + public `/b/{slug}`.
-- **livia.io** (`artifacts/livia-marketing`) — prospect marketing; delivered in v2 Block J ([`product/V2-ENGINEERING-CLOSED.md`](./product/V2-ENGINEERING-CLOSED.md)).
+- **livia-hq.com** (`artifacts/livia-marketing`) — prospect marketing (production domain).
 
 ### Target (12–24 months — from positioning depth table)
 
@@ -92,7 +97,7 @@
 | **Manager** | **Queue** of what Liv did vs what needs human judgement — no silent money risk. |
 | **Staff** | **My chair** — next client, their day, nothing else. |
 | **Receptionist** | **Floor** + messages — calendar truth, walk-ins. |
-| **Customer (P7)** | Book and talk to Liv with **disclosure** — no account required on web. |
+| **Customer (P7)** | Book and talk to Liv with **disclosure** — no tenant login; **My Livia hub (R2)** for cross-shop *self* view |
 | **Livia Inc ops** | Support tenants when Liv or integrations fail — read-only + audited actions. |
 
 **Non-goals:** Marketplace that owns end-customers; generic project management; full clinical records for medspa/allied-health without partners.
@@ -136,20 +141,24 @@ Before shipping any screen or doc claim, answer:
 
 ---
 
-## Canonical doc map (after realignment)
+## Canonical doc map
 
 | I need… | Read |
 |---------|------|
 | **This page** | `LIVIA-ALIGNMENT.md` |
-| **Execution program** | `product/SYSTEM-REALIGNMENT-PROGRAM.md` |
+| **Master build plan (start here for heavy build)** | `product/LIVIA-FINAL-BUILD-PLAN.md` |
+| **Doc index** | `DOC-CANONICAL-INDEX.md` |
 | **Global product system** | `product/LIVIA-GLOBAL-PRODUCT-SYSTEM.md` |
-| **Truth vs gaps (UI)** | `product/LIVIA-IDEA-TO-REALITY.md` Part I |
-| **What ships when** | `launch-plan.md` + `roadmap/v1-scope.md` |
+| **Platform lifecycle / skins W1–W6** | `product/LIVIA-PLATFORM-LIFECYCLE.md` |
+| **Truth vs gaps (UI)** | `product/LIVIA-IDEA-TO-REALITY.md` |
+| **Composable evolution** | `engineering/COMPOSABLE-EVOLUTION.md` |
 | **Live user narrative** | `product/LIVIA-PRODUCTION-READY.md` |
 | **Engineering** | `engineering/README.md` + `adr/` |
-| **Run locally** | `testing/E2E-RUNBOOK.md` |
-| **Executive strategy (multi-hat review + action plan)** | `company/EXECUTIVE-MULTI-HAT-REVIEW.md` · `company/EXECUTIVE-ACTION-PLAN.md` · **progress:** `company/EXECUTION-PHASE-PROGRESS.md` · **founder-only:** `company/FOUNDER-BACKLOG.md` |
-| **Customer Support (SLAs, facilities, escalation)** | `operations/CUSTOMER-SUPPORT-OPERATING-MODEL.md` |
+| **Run locally** | `LOCAL_DEV.md` · `testing/E2E-RUNBOOK.md` |
+| **Founder commercial lane** | `product/FOUNDER-SHIP-LANE.md` |
+| **Support operating model** | `operations/CUSTOMER-SUPPORT-OPERATING-MODEL.md` |
+
+**Archived:** `product/SYSTEM-REALIGNMENT-PROGRAM.md` — engineering complete; do not extend.
 
 ---
 
@@ -158,4 +167,5 @@ Before shipping any screen or doc claim, answer:
 | Date | Change |
 |------|--------|
 | 2026-05-22 | Created as single alignment spine; triggers system-wide realignment program |
+| 2026-05-30 | Master build plan; W6 guest hub; programmatic self-evolution; 9 verticals; doc map refresh |
 | 2026-05-26 | Linked executive multi-hat review and founder action plan |

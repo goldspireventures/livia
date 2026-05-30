@@ -1,6 +1,8 @@
 # Livia Internal Portal — company operator surface
 
-**Status:** specification v0.1 (2026-05-20), support queue v1 2026-05-26 (filter, assign, lifecycle, Liv incident bundle).  
+> **Archived** — superseded by [`../product/INTERNAL-SUPPORT-PLATFORM-SPEC.md`](../product/INTERNAL-SUPPORT-PLATFORM-SPEC.md) + [`../product/INTERNAL-EXEC-COCKPIT-SPEC.md`](../product/INTERNAL-EXEC-COCKPIT-SPEC.md). See [`../archive/README.md`](../archive/README.md).
+
+**Status:** archived v0.1 — historical reference only  
 **Tenant collateral:** point businesses to [`../business/OPERATOR-READY-PACK.md`](../business/OPERATOR-READY-PACK.md) — not in-product HR/hiring.  
 **Audience:** founder, future Livia Inc ops/engineering/support with **cross-tenant** responsibilities.  
 **Not:** tenant owners (they use `livia-dashboard` + `livia-mobile`).  

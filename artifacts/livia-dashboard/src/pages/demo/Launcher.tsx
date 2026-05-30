@@ -32,6 +32,7 @@ import {
   type DemoSignInResult,
 } from "@/lib/demo-portal";
 import { useToast } from "@/hooks/use-toast";
+import { listWedgeDemoVerticals, getWedgeDemoStory } from "@workspace/policy";
 
 const VERTICAL_LABELS: Record<string, string> = {
   hair: "Hair & barber",
@@ -305,6 +306,30 @@ export default function DemoLauncher() {
             cards below for RBAC rehearsals.
           </p>
         </header>
+
+        <section className="mb-12">
+          <h2 className="text-sm font-mono uppercase tracking-widest text-white/40 mb-4">
+            Pick your world · G1-A wedge
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {listWedgeDemoVerticals().map((v) => {
+              const story = getWedgeDemoStory(v);
+              if (!story) return null;
+              return (
+                <Link
+                  key={v}
+                  href={`/demo/wedge/${v}`}
+                  className="group rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm transition hover:border-[#06b6d4]/40 hover:bg-white/[0.07]"
+                >
+                  <p className="text-sm font-medium text-white group-hover:text-[#22d3ee]">
+                    {story.label}
+                  </p>
+                  <p className="mt-1 text-xs text-white/45 line-clamp-2">{story.beats[0]?.headline}</p>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
 
         <div className="mb-10 flex flex-wrap items-center gap-3">
           <button

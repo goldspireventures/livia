@@ -11,6 +11,12 @@ export const dashboardDemoUrl =
   (import.meta.env.VITE_DASHBOARD_DEMO_URL as string | undefined)?.replace(/\/+$/, "") ??
   `${dashboardOrigin}/demo`;
 
+/** G1-A wedge interstitial for a registry vertical slug. */
+export function dashboardWedgeUrl(verticalSlug: string): string {
+  const slug = verticalSlug.replace(/^\/+/, "");
+  return `${dashboardOrigin}/demo/wedge/${encodeURIComponent(slug)}`;
+}
+
 export const dashboardSignInUrl =
   (import.meta.env.VITE_DASHBOARD_SIGN_IN_URL as string | undefined)?.replace(/\/+$/, "") ??
   `${dashboardOrigin}/sign-in`;

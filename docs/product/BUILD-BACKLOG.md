@@ -1,6 +1,8 @@
 # Build backlog
 
-> **Superseded for active work** by [`SYSTEM-REALIGNMENT-PROGRAM.md`](./SYSTEM-REALIGNMENT-PROGRAM.md) and [`SURFACE-COMPLETION-MATRIX.md`](./SURFACE-COMPLETION-MATRIX.md). Historical checklist from master design to shipped truth.
+> **Archived** — see [`../archive/README.md`](../archive/README.md). **Active build:** [`OPERATION-SOLIDIFY.md`](./OPERATION-SOLIDIFY.md).
+
+> **Superseded for active work** by [`OPERATION-SOLIDIFY.md`](./OPERATION-SOLIDIFY.md) and [`../operations/PLATFORM-BACKLOG.md`](../operations/PLATFORM-BACKLOG.md). Historical checklist from master design to shipped truth.
 
 **Status:** **Closed for in-repo scope** (2026-05-22). Use [`OPEN-ITEMS-DEFERRED.md`](./OPEN-ITEMS-DEFERRED.md) for off-platform gates and [`LIVIA-PRODUCTION-READY.md`](./LIVIA-PRODUCTION-READY.md) for the live-user narrative.
 

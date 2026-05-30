@@ -17,7 +17,7 @@ They gate **revenue**, **marketing truth**, and **commercial ship** — not the 
 | 5 | **10 real design-partner shops** (non-demo bookings) | Evidence in CRM |
 | 6 | Production Twilio IE + Meta BSP (if claiming SMS/WA) | Number live |
 | 7 | EU production region ADR + deploy pin | Infra doc + prod URL |
-| 8 | `livia.io` marketing + status page | Public |
+| 8 | **`livia-hq.com`** marketing + status page | Public |
 | 9 | Lighthouse ≥90 on marketing | Report saved |
 
 Details: [`OPEN-ITEMS-DEFERRED.md`](./OPEN-ITEMS-DEFERRED.md) · [`../launch-plan.md`](../launch-plan.md).

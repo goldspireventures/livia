@@ -1,5 +1,6 @@
 # Platform backlog — comprehensive todo (2026-05)
 
+**Master plan:** [`product/LIVIA-FINAL-BUILD-PLAN.md`](../product/LIVIA-FINAL-BUILD-PLAN.md) — **authority for scope**  
 **Single tracker** for staging, workforce access, onboarding portal, prod readiness, deploy discipline, **composable evolution**, and **support-point investigation**.
 
 **Same code staging → prod:** behaviour differences = **env only** ([`audits/PLATFORM-PRODUCTION-READINESS-AUDIT.md`](../audits/PLATFORM-PRODUCTION-READINESS-AUDIT.md)).
@@ -80,6 +81,49 @@ Set on Railway staging API: `LIVIA_DEPLOY_ENV=staging`
 - [x] CI **`staging-smoke`** job on `main` (continue-on-error)
 - [x] Founder release runbook updated
 - [x] Platform audit doc + agent checklist
+
+---
+
+---
+
+---
+
+## P1 — Guest collaboration + vertical completeness (Track G)
+
+**Spec:** [`product/LIVIA-PLATFORM-FLOWS.md`](../product/LIVIA-PLATFORM-FLOWS.md) · **Channels:** [`design/CHANNEL-UX-CONTRACT.md`](../design/CHANNEL-UX-CONTRACT.md) Part 1b
+
+**Rule:** Thick work on Livia guest pages; SMS/WhatsApp = links + reminders only.
+
+- [ ] **G0** `guest-surfaces.ts` + token service
+- [ ] **G1** Body-art proof guest page `/b/:slug/proof/:token` + API + E2E
+- [ ] **G2** Medspa consent, fitness waitlist, pet/automotive guest polish
+- [ ] **G3** Link-first continuity templates + 9-vertical hero E2E + support surfaceIds
+- [ ] **G4** Phone E.164 normalize in `findOrCreateCustomer` + `/b` validation — [`GUEST-CUSTOMER-IDENTITY.md`](../product/GUEST-CUSTOMER-IDENTITY.md)
+- [ ] **G5** Public book mobile pass (`now/` tier)
+- [ ] **G6 (R2)** Guest hub `my.livia-hq.com` — [`GUEST-CONTINUITY-HUB-SPEC.md`](../product/GUEST-CONTINUITY-HUB-SPEC.md)
+
+**Parallel:** Track D5 (public `/b`) · Track B1 (registry).
+
+---
+
+## P1 — Platform surfaces UX (Track F)
+
+**Spec:** [`design/PLATFORM-SURFACES-BUILD-SPEC.md`](../design/PLATFORM-SURFACES-BUILD-SPEC.md) · **Locks:** [`PLATFORM-SURFACES-CONCEPTS-DEEP.md`](../design/PLATFORM-SURFACES-CONCEPTS-DEEP.md) · **Program:** [`PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md`](../product/PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md) §7c
+
+**Design:** ✅ Spec complete — **M1 home open** (S1/S2/S3).
+
+- [x] **F0** M1-R2 locked · final gallery catalog (29 PNGs)
+- [ ] **F1** Marketing M0 aurora shell + logo components + EUR-only copy
+- [ ] **F2** M1 home + M2-A pricing + M9 waitlist vertical field + M4 index
+- [ ] **F3** G1-A: `wedge-demo-stories.ts` + `/demo/wedge/:vertical` + Launcher wiring
+- [ ] **F4** M5 vertical pages → demo deep links; M3 how-it-works
+- [ ] **F5** I2 Ship Lane collapse/expand + Hats (metrics panels); I0 token pass
+- [ ] **H** Exec workforce — work-event ledger, Hats River v2, Cursor bridge — [`INTERNAL-EXEC-COCKPIT-SPEC.md`](../product/INTERNAL-EXEC-COCKPIT-SPEC.md) §4.2b · program §7e
+- [ ] **F6** I4 support: `/support/queue`, `/tickets/:id`, `/board`, `/radar`, `/investigate`
+- [ ] **F7** M6–M12 marketing utility pages
+- [ ] **F8** E2E marketing→demo→tenant; marketing-vs-reality audit
+
+**Parallel:** Track D (tenant presets) · Tracks B/C (support registry for F6.5).
 
 ---
 

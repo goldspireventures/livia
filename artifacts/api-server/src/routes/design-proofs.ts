@@ -5,6 +5,7 @@ import {
   listDesignProofs,
   updateDesignProofStatus,
 } from "../services/design-proofs.service";
+import { ensureDesignProofGuestAccess } from "../services/design-proof-guest-access.service";
 
 import { sendError } from "../lib/http-errors";
 const router: IRouter = Router();
@@ -43,7 +44,11 @@ router.patch(
       sendError(res, req, 404, "not_found");
       return;
     }
-    res.json(row);
+    let guestToken: string | null = null;
+    if (status === "pending_review") {
+      guestToken = await ensureDesignProofGuestAccess(bizId(req.params.businessId), row.id);
+    }
+    res.json({ ...row, guestToken });
   }),
 );
 

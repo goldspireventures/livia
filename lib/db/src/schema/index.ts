@@ -21,6 +21,7 @@ export * from "./booking/hiring";
 export * from "./booking/class-sessions";
 export * from "./booking/package-credits";
 export * from "./booking/design-proofs";
+export * from "./booking/design-proof-guest-access";
 export * from "./booking/booking-resources";
 export * from "./booking/day-packages";
 export * from "./booking/care-series";
@@ -56,6 +57,9 @@ export * from "./entitlements/feature-flags";
 
 // Marketing
 export * from "./marketing/marketing-leads";
+
+// Guest hub (W6 — P7 cross-shop vault)
+export * from "./guest/guest-hub";
 
 // Billing (usage meters; plan composition in @workspace/entitlements)
 export * from "./billing";

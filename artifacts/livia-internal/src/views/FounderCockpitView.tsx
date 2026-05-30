@@ -7,6 +7,7 @@ import {
 } from "../lib/api";
 import { getDashboardUrl } from "../lib/dashboard-url";
 import { WorkforceAccessPanel } from "../components/WorkforceAccessPanel";
+import { ShipLanePanel } from "../components/ShipLanePanel";
 
 function internalRoute(href: string, base: string): string | null {
   const b = base.replace(/\/+$/, "");
@@ -273,30 +274,11 @@ export function FounderCockpitView() {
         </div>
       </section>
 
-      <section style={card}>
-        <h2 style={h2}>Ship checklist (solo · no staging yet)</h2>
-        <p style={{ margin: "0 0 10px", fontSize: 12, color: "#64748b" }}>
-          Beta mode: <code>{data.release.betaSignupMode}</code>
-          {data.release.demoEnabled ? " · demo ON" : " · demo OFF (prod)"}
-        </p>
-        <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: "#cbd5e1" }}>
-          {data.release.steps.map((step) => (
-            <li key={step.id} style={{ marginBottom: 8 }}>
-              <span style={{ color: step.done ? "#6ee7b7" : "#94a3b8" }}>
-                {step.done ? "☑" : "☐"} {step.label}
-              </span>
-              {step.hint ? (
-                <span style={{ display: "block", fontSize: 11, color: "#64748b", marginTop: 2 }}>
-                  {step.hint}
-                </span>
-              ) : null}
-            </li>
-          ))}
-        </ul>
-        <p style={{ margin: "12px 0 0", fontSize: 11, color: "#64748b" }}>
-          Full runbook: <code>docs/operations/FOUNDER-RELEASE-RUNBOOK.md</code>
-        </p>
-      </section>
+      <ShipLanePanel
+        steps={data.release.steps}
+        betaSignupMode={data.release.betaSignupMode}
+        demoEnabled={data.release.demoEnabled}
+      />
 
       <section style={card}>
         <h2 style={h2}>Today at a glance</h2>

@@ -2,25 +2,24 @@ import { Link } from "wouter";
 import { MarketingLayout } from "@/components/marketing-layout";
 import { EditorialPageHeader } from "@/components/editorial-page-header";
 import { EditorialArticle } from "@/components/editorial-article";
-import { INBOX_CHANNELS_DETAIL } from "@/lib/marketing-copy";
 import { dashboardDemoUrl } from "@/lib/marketing-links";
 
 const CHAPTERS = [
   {
-    title: "Liv answers",
-    body: `${INBOX_CHANNELS_DETAIL} Voice when telephony is configured.`,
+    title: "Book",
+    body: "Clients book on your branded page — no app download, no account. Phone and email are enough to start the thread.",
   },
   {
-    title: "One calendar",
-    body: "Bookings, clients, team. Staff invites by email.",
+    title: "Inbox",
+    body: "Every DM, text, and call lands in one calm inbox. Liv drafts replies; you take over any thread in one tap.",
   },
   {
-    title: "You stay in control",
-    body: "Take over any thread. Refunds. Hash-chained audit log.",
+    title: "Today",
+    body: "The shop floor view — who's in, what's next, deposits and proofs waiting. Mobile-first for the team on their feet.",
   },
   {
-    title: "Europe",
-    body: "GDPR-first. IE, UK, EU. Only what we ship.",
+    title: "Liv",
+    body: "Your AI colleague — not a bolt-on chatbot. Liv knows your services, policies, and vertical pack. Warm, precise, EU-honest.",
   },
 ] as const;
 

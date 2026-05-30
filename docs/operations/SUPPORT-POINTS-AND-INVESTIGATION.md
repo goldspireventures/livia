@@ -2,7 +2,7 @@
 
 **Status:** canonical (2026-05-29)  
 **Audience:** engineering, support_l1, support_l2, founder  
-**Reads with:** [`INTERNAL-SUPPORT-LIFECYCLE.md`](./INTERNAL-SUPPORT-LIFECYCLE.md) · [`INTERNAL-SUPPORT-SYSTEM-DESIGN.md`](./INTERNAL-SUPPORT-SYSTEM-DESIGN.md) · [`SUPPORT-RUNBOOK.md`](./SUPPORT-RUNBOOK.md) · [`../engineering/COMPOSABLE-EVOLUTION.md`](../engineering/COMPOSABLE-EVOLUTION.md) · [`../product/PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md`](../product/PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md)
+**Reads with:** [`INTERNAL-SUPPORT-LIFECYCLE.md`](./INTERNAL-SUPPORT-LIFECYCLE.md) · [`INTERNAL-SUPPORT-SYSTEM-DESIGN.md`](./INTERNAL-SUPPORT-SYSTEM-DESIGN.md) · [`support-runbook.md`](./support-runbook.md) · [`../engineering/COMPOSABLE-EVOLUTION.md`](../engineering/COMPOSABLE-EVOLUTION.md) · [`../product/PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md`](../product/PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md)
 
 ---
 

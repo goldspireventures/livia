@@ -74,6 +74,9 @@ export const businessesTable = pgTable(
     euRegion: businessEuRegionEnum("eu_region").notNull().default("fra"),
     logoUrl: text("logo_url"),
     coverImageUrl: text("cover_image_url"),
+    /** Track D2 — tenant skin; defaults to platform-default on signup. */
+    presentationPresetId: text("presentation_preset_id").default("platform-default"),
+    brandAccentHex: text("brand_accent_hex"),
     websiteUrl: text("website_url"),
     instagramHandle: text("instagram_handle"),
     aiEnabled: text("ai_enabled").notNull().default("true"),

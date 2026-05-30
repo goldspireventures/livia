@@ -1,7 +1,7 @@
 # Surface & breakpoints — phone, tablet, desktop
 
 **Status:** Active spec (2026-05-29)  
-**Scope:** All tenant-facing surfaces (dashboard web, native mobile, public `/b`). Internal ops excluded.  
+**Scope:** All tenant-facing surfaces (dashboard web, native mobile, public `/b`). Internal ops and marketing excluded — see [`EXPERIENCE-ARCHITECTURE.md`](./EXPERIENCE-ARCHITECTURE.md) Part 12.  
 **Builds on:** [`PRESENTATION-PRESETS-AND-ROLLOUT.md`](./PRESENTATION-PRESETS-AND-ROLLOUT.md), [`MOBILE-UX-PRINCIPLES.md`](./MOBILE-UX-PRINCIPLES.md), [`../product/WEB-MOBILE-PARITY.md`](../product/WEB-MOBILE-PARITY.md)
 
 ---

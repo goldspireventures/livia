@@ -26,15 +26,27 @@
 
 ```mermaid
 flowchart TD
-  A[Marketing waitlist / invite email] --> B[Clerk sign-up / sign-in]
-  B --> C["/legal-acceptance — platform ToS + Privacy"]
-  C --> D["/onboarding — welcome video + wizard"]
-  D --> A1[A1 Create business + entity attestation]
+  A[Marketing livia-hq.com] --> B1[Waitlist with vertical OR /demo wedge story]
+  B1 --> B2[Ops invite optional]
+  B2 --> C[Clerk sign-up / sign-in]
+  B1 --> C
+  C --> D["/legal-acceptance — platform ToS + Privacy"]
+  D --> E["/onboarding — welcome + wizard"]
+  E --> A1[A1 Create business — vertical pre-filled from URL/metadata]
   A1 --> A2[A2–A11 Shop, Liv, channels, billing…]
   A2 --> A12[A12 Go-live checklist + test booking]
-  A12 --> E[Dashboard + platform tour]
-  E --> F[Post-go-live: connect live Meta/SMS, Stripe Connect]
+  A12 --> F[Dashboard + platform tour with tenant skin]
+  F --> G[Post-go-live: live channels, Stripe Connect]
 ```
+
+**Pre-login platform readiness:** Demo wedge story lands user in **pre-seeded vertical tenant** (`VERTICAL_COVERAGE_REGISTRY.demoSlug`). Sign-up path seeds vertical pack on A1 from form/metadata. **Presentation preset = `platform-default`** on create (Track D2). See [`LIVIA-PLATFORM-LIFECYCLE.md`](./LIVIA-PLATFORM-LIFECYCLE.md) §3.
+
+### Phase −1 — Before Clerk (marketing + gateway)
+
+1. Prospect browses **livia-hq.com** — M1 showcases Book/Inbox/Today/Liv (concept TBD).
+2. Optional: **`/verticals/:slug`** → **`/demo/wedge/:vertical`** (G1-A) — trade-specific teaser, then demo.
+3. Waitlist (**M9**) captures email + **vertical** + country → ops CRM; does not block sign-up alone.
+4. Beta invite: ops adds email to `LIVIA_BETA_INVITE_EMAILS` or Clerk invite list.
 
 ### Phase 0 — Before the app (ops)
 
@@ -55,9 +67,11 @@ flowchart TD
 
 ### Phase A1 — Create business
 
-Collects: name, slug, **jurisdiction**, **vertical**, tier, timezone, **entity kind**, optional VAT, **attestation checkbox**.
+Collects: name, slug, **jurisdiction**, **vertical** (pre-fill from `?vertical=` query, Clerk metadata, or waitlist), tier, timezone, **entity kind**, optional VAT, **attestation checkbox**.
 
-Seeds: services, staff, policies, Liv pack for vertical.
+Seeds: services, staff, policies, Liv pack for vertical, **`presentation_preset_id = platform-default`** (Track D2).
+
+**Programmatic skin path:** `vertical` → `POST /businesses` → `GET /me/tenant-experience` → W4 dashboard/mobile. Public W5: `/b/{slug}` — see [`LIVIA-PLATFORM-LIFECYCLE.md`](./LIVIA-PLATFORM-LIFECYCLE.md) §5.
 
 ### Phases A2–A11 (same acts for all verticals; copy differs)
 

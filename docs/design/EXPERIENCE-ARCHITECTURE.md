@@ -20,6 +20,7 @@ This document is the **canonical architecture** for those decisions. Implementat
 
 | Child spec | Role |
 |------------|------|
+| [`PLATFORM-SURFACES-UX-REDESIGN.md`](./PLATFORM-SURFACES-UX-REDESIGN.md) | Marketing, internal, gateway — 3 concepts per screen |
 | [`PRESENTATION-PRESETS-AND-ROLLOUT.md`](./PRESENTATION-PRESETS-AND-ROLLOUT.md) | 36 presets, API, staging Phases 0–8 |
 | [`SURFACE-AND-BREAKPOINTS.md`](./SURFACE-AND-BREAKPOINTS.md) | Phone / tablet / desktop morph |
 | [`PERSONA-VERTICAL-SURFACE-MATRIX.md`](./PERSONA-VERTICAL-SURFACE-MATRIX.md) | Full P×V×surface tables |
@@ -357,8 +358,121 @@ Hub changes follow [`COMPOSABLE-EVOLUTION.md`](../engineering/COMPOSABLE-EVOLUTI
 
 ---
 
+## Part 12 — Platform surfaces beyond tenant UX
+
+Track D (presentation presets + surface morph) applies to **tenant-facing** clients only. Livia ships **seven deployable surfaces**; each has its own UX contract, chrome, and program owner.
+
+**Full inventory:** [`LIVIA-FULL-SURFACE-MAP.md`](../product/LIVIA-FULL-SURFACE-MAP.md) · **Identity boundaries:** [ADR 0019](../adr/0019-multi-surface-architecture.md)
+
+### 12.1 Surface taxonomy
+
+**Lifecycle map (skins, seed, programmatic flow):** [`LIVIA-PLATFORM-LIFECYCLE.md`](../product/LIVIA-PLATFORM-LIFECYCLE.md)
+
+| # | Surface | Artifact / URL | Audience | Five-layer presets? | Canonical spec | Program track |
+|---|---------|----------------|----------|---------------------|----------------|---------------|
+| 1 | **Public marketing** | `artifacts/livia-marketing` → **livia.io** | Prospects, waitlist | **No** — single Livia brand | [`LIVIA-FULL-SURFACE-MAP.md`](../product/LIVIA-FULL-SURFACE-MAP.md) Block J · [`audits/marketing-vs-reality.md`](../audits/marketing-vs-reality.md) | Operation Solidify / Block J |
+| 2 | **Tenant web** | `artifacts/livia-dashboard` → **app.** | Owner, manager, reception, founder (tenant) | **Yes** | This doc + Track D | Track D |
+| 3 | **Tenant mobile** | `artifacts/livia-mobile` | Staff, working owner, founder glance | **Yes** | Track D + [`MOBILE-UX-PRINCIPLES.md`](./MOBILE-UX-PRINCIPLES.md) | Track D |
+| 4 | **Customer booking** | `/b/{slug}` on dashboard host | End customers (P7) | **Yes** — brand + preset on public shell | Track D Phase D5 · [`PUBLIC-BOOKING-INTAKE-E2E.md`](../product/PUBLIC-BOOKING-INTAKE-E2E.md) | Track D |
+| 5 | **Internal ops** | `artifacts/livia-internal` → **ops.** (staging/prod) | Livia Inc, Goldspire workforce | **No** — fixed INTERNAL chrome | [`livia-internal-portal-spec.md`](../company/livia-internal-portal-spec.md) | Tracks **B** + **C** |
+| 6 | **API** | `artifacts/api-server` | All clients | N/A (data contract) | OpenAPI + [`TENANT-EXPERIENCE-CONTRACT.md`](../product/TENANT-EXPERIENCE-CONTRACT.md) | Ring 1–2 |
+| 7 | **Policy & DB** | `lib/policy`, `lib/db` | Kernel | N/A | `@workspace/policy` | Ring 1 |
+
+**Rule:** Do not apply tenant `presentation_preset_id` to marketing or internal. Do not ship internal “god mode” inside tenant apps ([ADR 0019](../adr/0019-multi-surface-architecture.md)).
+
+### 12.2 “Cockpit” — four different things
+
+The word **cockpit** appears in multiple artifacts. They are **not** the same surface.
+
+| Name | Where | Who | Presets? | Job |
+|------|-------|-----|----------|-----|
+| **Owner cockpit** | Dashboard `/dashboard` (today pulse) | P2 working owner | Yes | “What needs me right now?” — flight plan, running late, approvals |
+| **Chain cockpit** | Dashboard `/chain` + mobile Glance tab | P1 founder (multi-shop) | Yes | Cross-shop rollup, exception cards |
+| **Founder command center** | `livia-internal` → `FounderCockpitView` | Livia Inc / platform exec | No | **Platform exec home** — ship lane / exceptions / hats ([`PLATFORM-SURFACES-CONCEPTS-DEEP.md`](./PLATFORM-SURFACES-CONCEPTS-DEEP.md) I2). **Not** tenant P1 `/chain`. |
+| **Onboarding cockpit tease** | Dashboard onboarding A12 | New tenant owner | N/A (pre-go-live) | Frosted preview before first real session |
+
+**Platform exec routing:** `@livia-hq.com` (and configured Goldspire workforce) sign into the **tenant** Clerk app but `GET /me` returns `platformExec: true` → `PlatformExecHandoff` redirects to `opsPortalUrl` (`livia-internal`), not tenant onboarding. See `artifacts/livia-dashboard/src/components/platform-exec-handoff.tsx` and workforce docs [`WORKFORCE-ONBOARDING.md`](../operations/WORKFORCE-ONBOARDING.md).
+
+### 12.3 Public marketing (livia.io)
+
+Marketing is the **brand bible** for Livia Inc (ADR 0004): editorial Aurora on livia.io; tenant apps may inherit that direction via **Platform Default** preset — not the other way around.
+
+| Topic | Rule |
+|-------|------|
+| **Visual** | Single global Livia marketing skin — hero aurora, editorial proof, vertical landings. Not tenant-selectable. |
+| **Aurora blobs** | Marketing-only decorative aurora (v3 spec). **Excluded** from tenant ops UI except as Platform Default token baseline. |
+| **Copy honesty** | Every claim traceable to [`marketing-vs-reality.md`](../audits/marketing-vs-reality.md). No dental hero; no live WA/IG unless shipped. |
+| **Vertical landings** | `/verticals/:slug` — **prospect** stories, not tenant preset pickers. |
+| **CTA flow** | Demo → `VITE_DASHBOARD_DEMO_URL` · Waitlist → `POST /api/public/marketing/leads` |
+| **Build checklist** | Block J (J1.1–J1.10) in [`LIVIA-FULL-SURFACE-MAP.md`](../product/LIVIA-FULL-SURFACE-MAP.md) |
+| **Deploy** | [`VERCEL-PRODUCTION-SETUP.md`](../operations/VERCEL-PRODUCTION-SETUP.md) — `livia-hq.com` root `artifacts/livia-marketing` |
+
+Marketing does **not** participate in the 36×3 preset QA matrix (Track D7). Visual redesign concepts: [`PLATFORM-SURFACES-UX-REDESIGN.md`](./PLATFORM-SURFACES-UX-REDESIGN.md) Part 2.
+
+### 12.4 Internal ops (livia-internal)
+
+Separate product for **cross-tenant** work. Different identity boundary, different chrome, different API prefix.
+
+| Topic | Rule |
+|-------|------|
+| **Identity** | Workforce access grants (`@livia-hq.com`, Goldspire inboxes) — not tenant Clerk org JWT for writes. See [`workforce-access.ts`](../../lib/policy/src/workforce-access.ts). |
+| **Chrome** | Dense tables OK; **distinct** INTERNAL stripe (slate / violet border) so operators never confuse with a salon session ([`livia-internal-portal-spec.md`](../company/livia-internal-portal-spec.md) §4). |
+| **Modules today** | Founder cockpit snapshot, support queue, tenant directory, workforce access panel, platform health, weekly report, voice cast (see `artifacts/livia-internal/src/views/`). |
+| **Modules planned** | Feature flags, incidents, impersonation, finance read — portal spec §3 phasing. |
+| **Investigation UX** | Track **C**: paste `requestId`, registry “likely code paths”, Sentry link template ([`SUPPORT-POINTS-AND-INVESTIGATION.md`](../operations/SUPPORT-POINTS-AND-INVESTIGATION.md)). |
+| **Support metadata** | Tickets should carry `surfaceId` from tenant apps; internal enriches with registry row (Track B3 + C1.2). |
+| **Deploy** | `ops.livia-hq.com` — [`PLATFORM-BACKLOG.md`](../operations/PLATFORM-BACKLOG.md) P2 internal portal deploy |
+
+Internal does **not** get tenant preset picker, vertical vocabulary packs, or persona ritual homes. Visual redesign concepts: [`PLATFORM-SURFACES-UX-REDESIGN.md`](./PLATFORM-SURFACES-UX-REDESIGN.md) Part 3.
+
+### 12.5 How surfaces relate to the five-layer model
+
+```mermaid
+flowchart LR
+  subgraph tenant["Tenant-facing — Track D"]
+    D[dashboard]
+    M[mobile]
+    B["/b public"]
+  end
+  subgraph platform["Platform — fixed chrome"]
+    MK[marketing livia.io]
+    INT[internal ops]
+  end
+  subgraph kernel["Kernel"]
+    POL[policy + tenant experience]
+    API[api-server]
+  end
+
+  POL --> D
+  POL --> M
+  POL --> B
+  API --> INT
+  MK -.->|brand direction only| POL
+```
+
+- **Tenant apps** resolve capability → preset → brand → persona → surface (Parts 2–5).
+- **Marketing** sets Livia Inc brand narrative; may inform Platform Default tokens.
+- **Internal** consumes platform/exec APIs; UX owned by portal spec + Tracks B/C.
+- **Channels (M2–M4)** parallel all visual surfaces — see [`CHANNEL-UX-CONTRACT.md`](./CHANNEL-UX-CONTRACT.md).
+
+### 12.6 What to build next (by surface)
+
+| Surface | Next work | Where tracked |
+|---------|-----------|---------------|
+| **Platform flows** | Guest surfaces + vertical completeness matrix | **Track G** · [`LIVIA-PLATFORM-FLOWS.md`](../product/LIVIA-PLATFORM-FLOWS.md) |
+| Marketing | M0–M12 per BUILD-SPEC; **pick M1**; EUR; wedge deep links | **Track F** |
+| Gateway `/demo` | G1-A wedge grid + per-vertical story interstitial | Track F3 |
+| Tenant web/mobile/`/b` | Track D Phases D1–D8 | §7 |
+| Internal exec | Ship Lane collapse + Hats River | Track F5 |
+| Internal support | I4-A screen map + `surfaceId` registry | Track F6 + B/C |
+| Channels | Thin templates (link-only) — not MMS/media hero paths | Track G3 |
+
+---
+
 ## Part 11 — Changelog
 
 | Date | Change |
 |------|--------|
 | 2026-05-29 | Initial canonical architecture — synthesis of UX working session |
+| 2026-05-29 | Part 12 — platform surfaces (marketing, internal, cockpit disambiguation) |
+| 2026-05-29 | Part 12.6 — Track G guest flows cross-ref |

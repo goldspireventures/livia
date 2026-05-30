@@ -58,3 +58,24 @@ export function marketRibbon(
     : resolveJurisdictionCode(country);
   return MARKET_SKINS[code]?.ribbon ?? MARKET_SKINS.IE?.ribbon;
 }
+
+export function applyPresentationTheme(args: {
+  cssPreset?: string | null;
+  brandAccentHex?: string | null;
+}) {
+  const root = document.documentElement;
+  if (args.cssPreset) {
+    root.dataset.presentation = args.cssPreset;
+  } else {
+    delete root.dataset.presentation;
+  }
+  if (args.brandAccentHex) {
+    root.style.setProperty("--brand-accent", args.brandAccentHex);
+  } else {
+    root.style.removeProperty("--brand-accent");
+  }
+}
+
+export function clearPresentationTheme() {
+  applyPresentationTheme({});
+}

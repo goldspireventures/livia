@@ -1,8 +1,8 @@
 # Operation Solidify — v1 final build (formerly “v4 scope”)
 
 **Status:** **Active — canonical execution program** (2026-05-26)  
-**Engineering started:** 2026-05-26 — Tracks 0–1 done; 2/3/4/5/6 in progress; `pnpm solidify:verify` for local certify  
-**Supersedes for day-to-day engineering:** scattered “v1.5 / v2 / v3 partial” deferrals that hid mobile, channels, and internal ops behind “later”  
+**Master scope (LOCKED):** [`LIVIA-FINAL-BUILD-PLAN.md`](./LIVIA-FINAL-BUILD-PLAN.md) — **read first**; this doc is track detail for kernel/mobile/channels.  
+**Releases:** [`PLATFORM-RELEASE-PROGRAM.md`](./PLATFORM-RELEASE-PROGRAM.md) · **Backlog:** [`../operations/PLATFORM-BACKLOG.md`](../operations/PLATFORM-BACKLOG.md)  
 **Audience:** founder, product, engineering  
 **Companion docs:**  
 - [`../business/MARKET-COUNTRY-PLAYBOOKS.md`](../business/MARKET-COUNTRY-PLAYBOOKS.md) — per-country targets & channels  

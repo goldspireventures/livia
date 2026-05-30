@@ -1,6 +1,6 @@
 # Liv OS — Alphabet roadmap (C → Z and beyond)
 
-**Status:** Living execution map — **updated 2026-05-25**  
+**Status:** Living execution map — **updated 2026-05-30**  
 **Vision:** [`LIVIA-NORTH-STAR.md`](./LIVIA-NORTH-STAR.md)  
 **Gates:** [`PLATFORM-BUILT-RIGHT.md`](./PLATFORM-BUILT-RIGHT.md)  
 **Kernel:** [`../engineering/PLATFORM-KERNEL.md`](../engineering/PLATFORM-KERNEL.md)
@@ -74,6 +74,7 @@ Each letter is a **shippable slice**. Status: ✅ done · 🟡 partial (real cod
 
 | Codename | Status | Notes |
 |----------|--------|-------|
+| **Φ (Phi)** | ⬜ | **Exec workforce** — employed hats, work-event ledger, Cursor bridge (Track H, R2) |
 | **Ω** | 🟡 | Needs: voice eval gate, full medspa counsel, enterprise SSO marketing honesty |
 | **∞** | ⬜ | Partner OAuth brokers at scale |
 

@@ -2,6 +2,8 @@
 
 **Canonical doc index:** [`DOC-CANONICAL-INDEX.md`](./DOC-CANONICAL-INDEX.md) (when two docs disagree, the index wins).
 
+**Heavy build:** [`product/LIVIA-FINAL-BUILD-PLAN.md`](./product/LIVIA-FINAL-BUILD-PLAN.md) — **start here** before large work.
+
 ## Day 1 — run the product
 
 | Step | Doc / command |
@@ -48,4 +50,4 @@ These are **archived context**, not the active build plan:
 - `product/V2-EXECUTION-PROGRAM.md`
 - `product/V1.5-EXECUTION-PROGRAM.md`
 
-Active engineering direction: [`product/OPERATION-SOLIDIFY.md`](./product/OPERATION-SOLIDIFY.md) and [`product/SYSTEM-REALIGNMENT-PROGRAM.md`](./product/SYSTEM-REALIGNMENT-PROGRAM.md) (realignment complete; maintenance mode).
+Active engineering direction: [`product/LIVIA-FINAL-BUILD-PLAN.md`](./product/LIVIA-FINAL-BUILD-PLAN.md) · [`product/OPERATION-SOLIDIFY.md`](./product/OPERATION-SOLIDIFY.md) · [`product/PLATFORM-RELEASE-PROGRAM.md`](./product/PLATFORM-RELEASE-PROGRAM.md).

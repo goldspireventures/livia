@@ -27,7 +27,7 @@ The two brands have a relationship: Livia stewards Liv. Livia speaks ABOUT Liv. 
 | Aurora-Midnight palette + token discipline | ADR 0007 |
 | Mobile motion + materiality | ADR 0008 |
 | Marketing-vs-reality discipline | `docs/audits/marketing-vs-reality.md` |
-| Logo + wordmark + asset library | [`assets/`](./assets/) — `livia-wordmark.svg`, `livia-mark.svg`, `livia-app-icon.svg` |
+| Logo + wordmark + asset library | [`assets/`](./assets/) — **Aurum Lv roundel locked** · `livia-wordmark.svg`, `livia-mark.svg`, `livia-app-icon.svg` |
 | Outreach scripts + GTM voice | `docs/gtm/outreach-scripts.md` |
 | Brand stewards + decision rights | `docs/governance/decision-rights.md` |
 | No-fly list (banned vocabulary, refusal posture) | `docs/company/brand-of-livia-and-liv.md` § No-fly list |

@@ -1,8 +1,12 @@
 ## Internal support system — design pass (v1)
 
+> **Full platform spec:** [`product/INTERNAL-SUPPORT-PLATFORM-SPEC.md`](../product/INTERNAL-SUPPORT-PLATFORM-SPEC.md) (2026-05-30) — modules, IA, releases, spatial design. This file retains **workflow/lifecycle** detail; use both together.
+
 This doc defines the **workflow and information architecture** for Livia’s internal support function: from capture → triage → troubleshoot → close. It’s written to match a small, multi-hat company where the same people rotate between engineering, ops, and customer success.
 
 ### 1) Company hats (who uses this)
+
+> **Not the same as exec Hats River.** These are **support RBAC roles** (ticket permissions). Exec hats (CEO, CTO, …) are **company function roles** with a work ledger — [`INTERNAL-EXEC-COCKPIT-SPEC.md`](../product/INTERNAL-EXEC-COCKPIT-SPEC.md) §4.2b · Track H in [`PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md`](../product/PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md).
 
 - **support_l1**: first response, clarifies, gathers identifiers, applies runbook fixes
 - **support_l2**: deeper investigation, can impersonate, can request traces, can coordinate handoffs

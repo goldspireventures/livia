@@ -66,6 +66,7 @@ import { EU_TIMEZONES } from "@/lib/eu-timezones";
 import { verticalPackUi } from "@/lib/vertical-pack-ui";
 import { showPeerInsightsForTenant } from "@workspace/policy";
 import { OwnershipTransferPanel } from "@/components/lifecycle/ownership-transfer-panel";
+import { PresentationPresetControls } from "@/components/settings/presentation-preset-controls";
 import { Users, FileText } from "lucide-react";
 
 interface SettingsForm {
@@ -425,6 +426,7 @@ export default function SettingsPage() {
                 </form>
               </CardContent>
             </Card>
+            <PresentationPresetControls />
           </TabsContent>
 
           {visibleTabs.includes("policy") && (

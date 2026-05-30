@@ -1,5 +1,7 @@
 # Livia — Post-Demo Launch Plan
 
+> **Production domains:** `livia-hq.com`, `app.`, `api.` — see [`PLATFORM-TERMINOLOGY.md`](./PLATFORM-TERMINOLOGY.md). Historical references to `livia.io` in this doc are being migrated; treat `livia-hq.com` as canonical for new work.
+
 **Owner:** founder
 **Status:** v1 — locked at end of Demo Readiness (Task #23)
 **Cadence:** revisited every Monday (see `docs/operating-cadence.md`)

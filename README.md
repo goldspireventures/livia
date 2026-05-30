@@ -2,7 +2,7 @@
 
 Livia is a premium AI-native **operating system for appointment-based service businesses** globally — hair, beauty, tattoo, wellness, fitness, medspa, allied health, and more. **Ireland / English-IE** is the first market we prove; **hair/barber** is the first vertical pack, not the product definition. The product is **Livia**; the AI colleague is **Liv**.
 
-**Start here:** [`docs/LIVIA-ALIGNMENT.md`](docs/LIVIA-ALIGNMENT.md) · **Active program:** [`docs/product/SYSTEM-REALIGNMENT-PROGRAM.md`](docs/product/SYSTEM-REALIGNMENT-PROGRAM.md)
+**Start here:** [`docs/LIVIA-ALIGNMENT.md`](docs/LIVIA-ALIGNMENT.md) · **Active build:** [`docs/product/OPERATION-SOLIDIFY.md`](docs/product/OPERATION-SOLIDIFY.md) · **Releases:** [`docs/product/PLATFORM-RELEASE-PROGRAM.md`](docs/product/PLATFORM-RELEASE-PROGRAM.md)
 
 This repo is a single pnpm monorepo containing the API, web dashboard, mobile app, marketing site, a mockup sandbox, and the shared libraries that bind them together.
 
@@ -11,7 +11,7 @@ This repo is a single pnpm monorepo containing the API, web dashboard, mobile ap
 ```
 artifacts/
   api-server/        Node 24 + Express 5 + Drizzle + Postgres. Multi-tenant API.
-  livia-dashboard/   React + Vite + Tailwind. Owner cockpit (web).
+  livia-dashboard/   React + Vite + Tailwind. Tenant dashboard (web).
   livia-mobile/      Expo (iOS + Android). Owner app + custom Clerk sign-in.
   livia-marketing/   Astro/Vite. livia-hq.com — the brand bible.
   mockup-sandbox/    Non-shipping design preview (wordmarks/mockups only — not in prod builds).

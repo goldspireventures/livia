@@ -13,16 +13,34 @@ Presentation presets (`platform-default`, `body-art-studio-dark`, etc.) apply to
 
 - Dashboard web (`artifacts/livia-dashboard`)
 - Native mobile (`artifacts/livia-mobile`)
-- Public booking (`/b/{slug}`)
+- Public booking + **guest collaboration** (`/b/{slug}`, `/b/{slug}/visit/{token}`, `/b/{slug}/proof/{token}`, …)
 - Onboarding wizard (tenant)
 
 They do **not** automatically style:
 
-- SMS / WhatsApp / Instagram DMs (M2)
+- SMS / WhatsApp / Instagram DMs (M2) — **thin transport only** ([Part 1b](#part-1b--thick-livia-vs-thin-channels-platform-wide))
 - Inbound/outbound voice (M3)
 - Owners who never open the app (M4 passive)
 
 This document defines **channel-native UX rules** so Liv feels like one colleague across modalities.
+
+**Platform flows (nested, complete toolkits):** [`LIVIA-PLATFORM-FLOWS.md`](../product/LIVIA-PLATFORM-FLOWS.md)
+
+---
+
+## Part 1b — Thick Livia vs thin channels (platform-wide)
+
+**Founder lock (2026-05-29):** Channels are **not** collaboration surfaces for images, proofs, consent, or multi-step forms.
+
+| Thick (M1 on Livia) | Thin (M2/M3/M4 off-platform) |
+|---------------------|------------------------------|
+| Book, chat, proof approve, consent sign, deposit UI, visit actions | Reminders, “open this link”, YES/LATE/CANCEL keywords, voice confirm |
+| Customer = **guest token** or web session — **no login** | Customer = phone/email identity on thread |
+| Business = dashboard/mobile inbox + vertical modules | Same thread visible in inbox; channel is pipe |
+
+**Do not** design vertical hero workflows that depend on MMS or WhatsApp media loops. WhatsApp may carry **links** to guest pages; rich work happens on Livia.
+
+See vertical guest matrix: [`LIVIA-PLATFORM-FLOWS.md`](../product/LIVIA-PLATFORM-FLOWS.md) §4.
 
 ---
 
@@ -54,17 +72,19 @@ This document defines **channel-native UX rules** so Liv feels like one colleagu
 | Sender | Tenant Twilio number when live; else platform fallback with disclosure |
 | Tone | Match `aiTone` on business row (FRIENDLY default); not preset shell |
 | Length | IE GSM-7; split long messages; no markdown |
-| Actions | Tappable phone links; short URLs to `/b` and visit tokens |
-| Proof / deposit | Explicit next step (“Reply APPROVE” / link) — state machine drives copy |
+| Actions | Short URLs to **guest M1 pages** (`/b`, `/visit/{token}`, `/proof/{token}`) |
+| Media | **Do not rely on MMS** for core workflows — link to Livia guest surface |
+| Proof / deposit | Link to guest proof or pay page — not image attachment |
 
 ### 2.3 WhatsApp / Instagram (when BSP live)
 
 | Element | Rule |
 |---------|------|
 | Templates | Versioned in `@workspace/policy` continuity templates per vertical |
-| Media | Design proof refs, inspiration pics → `booking.media[]`; thumbs on M1 |
-| IG deep link | Pre-filled token `LIV-{bookingId}` — not “find our handle” |
-| Staff approve | M1 inbox shows same thread; M2 is transport only |
+| Media | **Not primary** for proof/consent collab — customer opens guest link |
+| Notifications | “Design ready”, “Confirm appointment”, deposit link — text + URL |
+| IG deep link | Pre-filled token or guest URL — not “send refs in DM” |
+| Staff view | M1 inbox + vertical modules; M2 is transport only |
 
 ### 2.4 In-app chat (staff / owner assist)
 
@@ -173,3 +193,4 @@ Country is **not** a preset ([`LIVIA-EXPERIENCE-DESIGN-BIBLE.md`](../product/LIV
 | Date | Change |
 |------|--------|
 | 2026-05-29 | Initial M2/M3/M4 contract — companion to visual preset program |
+| 2026-05-29 | Part 1b thick/thin platform rule; SMS/WA link-first; no MMS hero paths |

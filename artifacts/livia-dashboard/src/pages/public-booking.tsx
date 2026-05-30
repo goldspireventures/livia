@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { applyVerticalTheme } from "@/lib/vertical-theme";
-import { applyExperienceTheme, clearExperienceTheme, publicExperienceClassNames, marketRibbon } from "@/lib/experience-theme";
+import { applyExperienceTheme, applyPresentationTheme, clearExperienceTheme, clearPresentationTheme, publicExperienceClassNames, marketRibbon } from "@/lib/experience-theme";
 import { playCelebrationChime, celebrationEnabled } from "@/lib/celebrate";
 import { Link, useParams } from "wouter";
 import {
@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   CheckCircle2,
   MapPin,
@@ -104,7 +105,13 @@ interface PublicBusiness {
   vertical?: string;
   country?: string | null;
   socialProof?: { rating: number; reviewCount: number; highlights: string[] };
-  experienceSkin?: { shell: string; display: string; market: string };
+  experienceSkin?: {
+    shell: string;
+    display: string;
+    market: string;
+    presentation?: string;
+    brandAccentHex?: string | null;
+  };
   bookingGuards?: BookingGuardField[];
   medspaProcedures?: MedspaProcedure[];
   regulatoryFooter?: string[];
@@ -150,6 +157,8 @@ interface BookingConfirmation {
   instagramDeepLink?: string | null;
   visitPath?: string | null;
   guestToken?: string | null;
+  myLiviaPath?: string | null;
+  savedToMyLivia?: boolean;
 }
 
 function buildIcsDataUri(args: {
@@ -198,6 +207,7 @@ export default function PublicBookingPage() {
   const [confirmation, setConfirmation] = useState<BookingConfirmation | null>(null);
   const [medspaProcedure, setMedspaProcedure] = useState("");
   const [consentSignature, setConsentSignature] = useState("");
+  const [saveToMyLivia, setSaveToMyLivia] = useState(true);
   const [consentAgreed, setConsentAgreed] = useState(false);
   const [chatMount, setChatMount] = useState(false);
 
@@ -235,8 +245,20 @@ export default function PublicBookingPage() {
         country: b?.country,
       });
     }
-    return () => clearExperienceTheme();
+    return () => {
+      clearExperienceTheme();
+      clearPresentationTheme();
+    };
   }, [b?.vertical, b?.category, b?.country]);
+
+  useEffect(() => {
+    if (b?.experienceSkin?.presentation || b?.experienceSkin?.brandAccentHex) {
+      applyPresentationTheme({
+        cssPreset: b.experienceSkin.presentation,
+        brandAccentHex: b.experienceSkin.brandAccentHex,
+      });
+    }
+  }, [b?.experienceSkin?.presentation, b?.experienceSkin?.brandAccentHex]);
 
   const aiOn = (b?.aiEnabled ?? "true") === "true";
 
@@ -320,6 +342,7 @@ export default function PublicBookingPage() {
           customerEmail: email.trim() || undefined,
           customerPhone: phone.trim() || undefined,
           notes: notes.trim() || undefined,
+          saveToMyLivia: saveToMyLivia && Boolean(phone.trim()),
           ...(Object.keys(guardAnswers).length ? { guardAnswers } : {}),
           ...(isMedspa
             ? {
@@ -672,6 +695,21 @@ export default function PublicBookingPage() {
                   data-testid="input-phone"
                 />
               </div>
+              {phone.trim() ? (
+                <label className="flex items-start gap-3 rounded-lg border border-border/60 p-3 cursor-pointer">
+                  <Checkbox
+                    checked={saveToMyLivia}
+                    onCheckedChange={(v) => setSaveToMyLivia(v === true)}
+                    data-testid="save-to-my-livia"
+                  />
+                  <span className="text-sm leading-snug">
+                    <span className="font-medium">Save to My Livia</span>
+                    <span className="block text-muted-foreground text-xs mt-0.5">
+                      View all your bookings in one place — verify with a quick code after booking.
+                    </span>
+                  </span>
+                </label>
+              ) : null}
               {(b?.bookingGuards?.length ?? 0) > 0 && (
                 <div
                   className="space-y-3 rounded-lg border border-primary/20 p-4 bg-primary/5"
@@ -965,6 +1003,14 @@ export default function PublicBookingPage() {
               <Link href={confirmation.visitPath}>
                 <Button variant="default" className="w-full" data-testid="link-manage-visit">
                   Manage your visit (running late · receipt)
+                </Button>
+              </Link>
+            ) : null}
+
+            {confirmation.savedToMyLivia && confirmation.myLiviaPath ? (
+              <Link href={confirmation.myLiviaPath}>
+                <Button variant="outline" className="w-full" data-testid="link-my-livia">
+                  Open My Livia — verify your phone
                 </Button>
               </Link>
             ) : null}

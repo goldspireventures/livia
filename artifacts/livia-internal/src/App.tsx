@@ -25,12 +25,16 @@ import { buttonStyle, inputStyle } from "./styles/ops-ui";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { InternalShell } from "./layout/InternalShell";
 import { SupportPage } from "./pages/SupportPage";
+import { SupportBoardView } from "./views/SupportBoardView";
+import { SupportRadarView } from "./views/SupportRadarView";
 import { KnowledgePage } from "./pages/KnowledgePage";
 import { TenantsPage } from "./pages/TenantsPage";
 import { OnboardingExperiencePickerView } from "./views/OnboardingExperiencePickerView";
 import { WorkforceJoinView } from "./views/WorkforceJoinView";
+import { PlatformSurfacesPickerView } from "./views/PlatformSurfacesPickerView";
 
 const ONBOARDING_PICKER_PATH = "/experience/onboarding-picker";
+const PLATFORM_SURFACES_PICKER_PATH = "/experience/platform-surfaces";
 
 export function App() {
   const location = useLocation();
@@ -82,6 +86,10 @@ export function App() {
 
   if (import.meta.env.DEV && location.pathname === ONBOARDING_PICKER_PATH) {
     return <OnboardingExperiencePickerView />;
+  }
+
+  if (import.meta.env.DEV && location.pathname === PLATFORM_SURFACES_PICKER_PATH) {
+    return <PlatformSurfacesPickerView />;
   }
 
   if (!secret) {
@@ -204,6 +212,25 @@ export function App() {
             <>
               <RequestTracePanel />
               <SupportPage />
+            </>
+          }
+        />
+
+        <Route
+          path="/support/board"
+          element={
+            <>
+              <RequestTracePanel />
+              <SupportBoardView />
+            </>
+          }
+        />
+        <Route
+          path="/support/radar"
+          element={
+            <>
+              <RequestTracePanel />
+              <SupportRadarView />
             </>
           }
         />

@@ -1,5 +1,7 @@
 # System-wide realignment program
 
+> **Archived** — engineering complete (2026-05-22). **Active build:** [`OPERATION-SOLIDIFY.md`](./OPERATION-SOLIDIFY.md). See [`../archive/README.md`](../archive/README.md).
+
 **Status:** **Engineering complete (2026-05-22)** — founder ops (Phase 6) remains  
 **Owner:** founder + engineering  
 **Spine:** [`../LIVIA-ALIGNMENT.md`](../LIVIA-ALIGNMENT.md)  

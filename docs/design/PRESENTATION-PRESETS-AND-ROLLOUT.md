@@ -97,7 +97,8 @@ Surface rules: [`SURFACE-AND-BREAKPOINTS.md`](./SURFACE-AND-BREAKPOINTS.md).
 5. **Accessibility** — each preset must pass contrast check in light and dark variants.  
 6. **Motion** — inherit [`V3-EXPERIENCE-SPEC.md`](../product/V3-EXPERIENCE-SPEC.md); presets may only tune duration/density, not disable reduced-motion.  
 7. **Staging gate** — picker UI and `data-presentation` bundles ship when `presentationPresetsEnabled()` is true ([Part VII](#part-vii--staging-rollout-plan)).  
-8. **Production** — until promotion gate: all tenants use vertical **native default** preset on prod even if DB column set (`platform-default` excluded until promotion unless explicitly enabled).
+8. **Signup default (founder lock 2026-05-29)** — new businesses get **`platform-default`** on `POST /businesses` (Track D2). Owner may switch to vertical-native presets in Settings.  
+9. **Production promotion** — until D8 prod gate: preset **picker** may stay staging-only; existing tenants keep stored `presentation_preset_id`. See [`LIVIA-PLATFORM-LIFECYCLE.md`](../product/LIVIA-PLATFORM-LIFECYCLE.md).
 
 ---
 
@@ -118,7 +119,7 @@ Surface rules: [`SURFACE-AND-BREAKPOINTS.md`](./SURFACE-AND-BREAKPOINTS.md).
 | Layout primitive | `cards` — vertical-native home **modules** still apply (e.g. body-art pipeline data in Aurora chrome) |
 | Motion | `crisp` — v3 motion tokens |
 
-**When to pick it:** Tenant wants the canonical Livia look rather than a vertical-curated skin (barber bold, studio dark, etc.). Safe default for demos, design partners, and owners who do not care about appearance tuning.
+**When to pick it:** **Default for all new signups.** Also for demos, design partners, and owners who want canonical Livia chrome before exploring vertical-curated skins.
 
 **CSS implementation:** `html[data-presentation="platform-default"]` maps to **baseline** `:root` / `.dark` Aurora variables in `artifacts/livia-dashboard/src/index.css` — no alternate bundle required for Phase 3 (bundle is identity mapping). Other presets override tokens; Platform Default resets to Aurora defaults.
 

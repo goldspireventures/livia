@@ -1,70 +1,58 @@
-# Product design spine (paper before pixels)
+# Product documentation
 
-**Status:** living (2026-05-22). **Owner:** founder + product.
+**Status:** living (2026-05-30)  
+**Index:** [`../DOC-CANONICAL-INDEX.md`](../DOC-CANONICAL-INDEX.md) · **Terms:** [`../PLATFORM-TERMINOLOGY.md`](../PLATFORM-TERMINOLOGY.md)
 
-**Start:** [`../LIVIA-ALIGNMENT.md`](../LIVIA-ALIGNMENT.md) · **Handoff (engineering done):** [`ENGINEERING-HANDOFF.md`](./ENGINEERING-HANDOFF.md) · **Your go-live:** [`OPEN-ITEMS-DEFERRED.md`](./OPEN-ITEMS-DEFERRED.md)
+## Active programs (build these)
 
-This directory holds **integrated product architecture** for the **global appointment-business OS** (not salon-only). Foundation F1–F10 remains in [`../foundation/README.md`](../foundation/README.md).
+| Program | Role |
+|---------|------|
+| **[`LIVIA-FINAL-BUILD-PLAN.md`](./LIVIA-FINAL-BUILD-PLAN.md)** | **Master scope — LOCKED for heavy build** |
+| [`OPERATION-SOLIDIFY.md`](./OPERATION-SOLIDIFY.md) | Kernel / mobile / channels track detail |
+| [`PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md`](./PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md) | Master tracks A–H |
+| [`PLATFORM-RELEASE-PROGRAM.md`](./PLATFORM-RELEASE-PROGRAM.md) | R1 / R2 / R3 platform releases |
+| [`operations/PLATFORM-BACKLOG.md`](../operations/PLATFORM-BACKLOG.md) | Current todo checklist |
 
-**Founder “done” (revised):** P0 kernel + **P1 surfaces** (CRUD, mobile parity, UX program) in-repo; **P3** go-live ops per [`OPEN-ITEMS-DEFERRED.md`](./OPEN-ITEMS-DEFERRED.md). See [`LIVIA-IDEA-TO-REALITY.md`](./LIVIA-IDEA-TO-REALITY.md) Part I for honest API vs UI gaps.
+## Surface specs (design → build)
 
-## Read order (new hire / design sprint)
+| World | Spec |
+|-------|------|
+| Marketing W1 | [`../design/MARKETING-SURFACE-PROGRAM.md`](../design/MARKETING-SURFACE-PROGRAM.md) |
+| Gateway W2 | [`../design/GATEWAY-SURFACE-PROGRAM.md`](../design/GATEWAY-SURFACE-PROGRAM.md) |
+| Exec W3a | [`INTERNAL-EXEC-COCKPIT-SPEC.md`](./INTERNAL-EXEC-COCKPIT-SPEC.md) |
+| Support W3b | [`INTERNAL-SUPPORT-PLATFORM-SPEC.md`](./INTERNAL-SUPPORT-PLATFORM-SPEC.md) |
+| Tenant W4 | [`TENANT-EXPERIENCE-CONTRACT.md`](./TENANT-EXPERIENCE-CONTRACT.md) |
+| Public `/b` W5 | [`PUBLIC-B-SURFACE-SPEC.md`](./PUBLIC-B-SURFACE-SPEC.md) |
+| Guest hub W6 (R2) | [`GUEST-CONTINUITY-HUB-SPEC.md`](./GUEST-CONTINUITY-HUB-SPEC.md) |
+| Guest identity | [`GUEST-CUSTOMER-IDENTITY.md`](./GUEST-CUSTOMER-IDENTITY.md) |
 
-0. **[`../LIVIA-ALIGNMENT.md`](../LIVIA-ALIGNMENT.md)** — company + product spine.
-0. **[`SYSTEM-REALIGNMENT-PROGRAM.md`](./SYSTEM-REALIGNMENT-PROGRAM.md)** — what we are doing now.
-0. **[`LIVIA-PRODUCTION-READY.md`](./LIVIA-PRODUCTION-READY.md)** — what live users get today + off-platform blockers.
-0. **[`APPOINTMENT-BUSINESS-PLATFORM.md`](./APPOINTMENT-BUSINESS-PLATFORM.md)** — **vertical-neutral product framing** (not salon-only).
-0a. **[`LIVIA-DOCUMENTATION-READINESS.md`](./LIVIA-DOCUMENTATION-READINESS.md)** — doc readiness (L2/L4 complete; G2/G3 = deferred).
-0b. **[`OPEN-ITEMS-DEFERRED.md`](./OPEN-ITEMS-DEFERRED.md)** — **only** external/G2/G3 items still open (everything else closed in-repo).
-0c. **[`UX-AUDIT-2026-05-21.md`](./UX-AUDIT-2026-05-21.md)** — founder walkthrough — **closed in code**.
-0c2. **[`UX-CONTEXTUAL-REVIEW.md`](./UX-CONTEXTUAL-REVIEW.md)** — per-persona intent review (web captures + mobile checklist).
-0c3. **[`WEB-MOBILE-PARITY.md`](./WEB-MOBILE-PARITY.md)** — web vs mobile surface matrix.
-0b2. **[`CHANNELS-EU-MESSAGING.md`](./CHANNELS-EU-MESSAGING.md)** — WhatsApp, Instagram, Messenger, SMS, voice, EU roadmap.
-0a. **[`LIVIA-COMPLETE-SYSTEM-SPEC.md`](./LIVIA-COMPLETE-SYSTEM-SPEC.md)** — **EU complete spec** (L2 product truth).  
-0a2. **[`LIVIA-RESILIENCE-OPS-AND-TRUST.md`](./LIVIA-RESILIENCE-OPS-AND-TRUST.md)** — **failures, backups, logs, RBAC, internal ops** (multi-angle; parallel Track C).
-0b. **[`LIVIA-DETAILED-BUILD-PLAN.md`](./LIVIA-DETAILED-BUILD-PLAN.md)** — **canonical build sequence** (doc-gated phases, tasks).
-0c. **[`LIVIA-FINAL-EXECUTION-PLAN.md`](./LIVIA-FINAL-EXECUTION-PLAN.md)** — phase summary (see detailed plan for tasks).
-0d. **[`BUSINESS-RULES-REGISTRY.md`](./BUSINESS-RULES-REGISTRY.md)** — where platform + business rules live.
-0e. **[`LIV-OPERATING-SYSTEM.md`](./LIV-OPERATING-SYSTEM.md)** — **Liv as OS intelligence** (all verticals, public, staff, Livia Inc).
-0f. **[`LIV-EXECUTION-PLAN.md`](./LIV-EXECUTION-PLAN.md)** — phased build plan + Phase A file map.
+Lifecycle + flows: [`LIVIA-PLATFORM-LIFECYCLE.md`](./LIVIA-PLATFORM-LIFECYCLE.md) · [`LIVIA-PLATFORM-FLOWS.md`](./LIVIA-PLATFORM-FLOWS.md)
 
-1. **[`LIVIA-GLOBAL-PRODUCT-SYSTEM.md`](./LIVIA-GLOBAL-PRODUCT-SYSTEM.md)** — **global product + company**: every vertical, internal/external ops, pain & eagle-eye, Liv clears muddy water, Livia Inc internal env.
-2. **[`LIVIA-EXPERIENCE-DESIGN-BIBLE.md`](./LIVIA-EXPERIENCE-DESIGN-BIBLE.md)** — **screens & packs** (purpose per screen, access paths, gaps).
-3. **[`LIVIA-IDEA-TO-REALITY.md`](./LIVIA-IDEA-TO-REALITY.md)** — build tracks, Platform-Ready, sprints.
-4. **[`LIVIA-MASTER-PLAN.md`](./LIVIA-MASTER-PLAN.md)** — commercial bow: gates, waves, monetization.
-5. [`LIVIA_MASTER_DESIGN.md`](./LIVIA_MASTER_DESIGN.md) — constituencies, surfaces, app split.
-6. [`TARGET-STATE-VS-SHIP-SCOPE.md`](./TARGET-STATE-VS-SHIP-SCOPE.md) — vision vs **first ship** scope.
-7. **[`LIVIA-MASTER-BUILD-PLAN.md`](./LIVIA-MASTER-BUILD-PLAN.md)** — engineering — after screen cards **Designed**.
-8. [`BUILD-BACKLOG.md`](./BUILD-BACKLOG.md) — checklist (**closed** for in-repo scope).
-9. [`screens/`](./screens/) — screen cards (YAML).
-10. [`../company/livia-internal-portal-spec.md`](../company/livia-internal-portal-spec.md) — internal portal (see Global System Part VI).
-11. [`SCREEN-INVENTORY.md`](./SCREEN-INVENTORY.md) — generated routes.
-12. [`../foundation/README.md`](../foundation/README.md), [`../roadmap/v1-scope.md`](../roadmap/v1-scope.md).
+## Read order (new hire)
 
-## Relationship to existing docs
+1. [`LIVIA-FINAL-BUILD-PLAN.md`](./LIVIA-FINAL-BUILD-PLAN.md)  
+2. [`../LIVIA-ALIGNMENT.md`](../LIVIA-ALIGNMENT.md)  
+3. [`LIVIA-GLOBAL-PRODUCT-SYSTEM.md`](./LIVIA-GLOBAL-PRODUCT-SYSTEM.md)  
+4. [`LIVIA-IDEA-TO-REALITY.md`](./LIVIA-IDEA-TO-REALITY.md) — honest gaps  
+5. [`MULTI-HAT-GAP-REVIEW.md`](./MULTI-HAT-GAP-REVIEW.md) — what we still miss  
+6. [`OPERATION-SOLIDIFY.md`](./OPERATION-SOLIDIFY.md) — kernel/mobile track detail  
 
-| Topic | Canonical depth doc | This folder’s role |
-|-------|---------------------|-------------------|
-| Personas P1–P7 | `docs/personas.md` | Align **surfaces** (who gets which app) |
-| Verticals V1–V11 | `docs/verticals.md` | Align **phase gates** (hair ≠ whole category) |
-| Workflows | `docs/workflows/` | Map to **capabilities** + release phase |
-| Engineering | `docs/engineering/`, `docs/adr/` | Implementation after paper sign-off |
-| Roadmap v1 | `docs/roadmap/v1-scope.md` | **Ship contract** until RFC supersedes |
+## Canonical depth docs
 
-## Governance rule
+| Topic | Doc |
+|-------|-----|
+| Global product | `LIVIA-GLOBAL-PRODUCT-SYSTEM.md` |
+| Gaps | `LIVIA-IDEA-TO-REALITY.md` |
+| Commercial | `LIVIA-MASTER-PLAN.md` + `../launch-plan.md` |
+| Engineering phases | `LIVIA-MASTER-BUILD-PLAN.md` |
+| Liv OS | `LIV-OPERATING-SYSTEM.md` |
+| v3 UX | `V3-EXPERIENCE-SPEC.md`, `V3-SURFACE-MATRIX.md` |
+| Beta | `BETA-SHOWCASE-PROGRAM.md`, `BETA-ONBOARDING-FLOW.md` |
 
-Any change that widens **v1** verticals, locales, or modalities (e.g. “full sector at Gate 3”) is a **material roadmap change**: RFC → ADR supersedes or new `v1-scope` revision → update `docs/audits/marketing-vs-reality.md`. Do not imply scope in UI/marketing that the ledger does not support.
+## Archived (do not extend)
 
-## Build sequencing (after paper sign-off)
+See [`../archive/README.md`](../archive/README.md) — includes `SYSTEM-REALIGNMENT-PROGRAM`, `BUILD-BACKLOG`, V1.5/V2 execution plans, old build plans.
 
-1. **Experience Bible** — vertical + screen depth signed.  
-2. **Screen cards** — `screens/{vertical}.{locale}/*.yaml` marked Designed.  
-3. **Vertical/locale packs** in `lib/policy` + demo seeds (visible login diff).  
-4. **[`LIVIA-MASTER-BUILD-PLAN.md`](./LIVIA-MASTER-BUILD-PLAN.md)** — implement against cards, not ad hoc CRUD.
+## Governance
 
-## Next documents to add (backlog)
-
-- `LIV-CAPABILITY-MATRIX.md` — rung (R1–R5) × modality × vertical × workflow (extends `docs/experience-matrix.md`).
-- `DATA-SUBJECT-MAP.md` — GDPR Article 30 style map (controller/processor/subject flows).
-
-When those land, link them from this README.
+Scope widening requires RFC → update `../roadmap/v1-scope.md` + `../audits/marketing-vs-reality.md`. See [`SCOPE-MORATORIUM.md`](./SCOPE-MORATORIUM.md) for Gate 2 freeze.

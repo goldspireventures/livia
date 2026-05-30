@@ -1,16 +1,33 @@
-import { db, designProofAssetsTable } from "@workspace/db";
+import { db, designProofAssetsTable, designProofGuestAccessTable } from "@workspace/db";
 import { eq, and, desc } from "drizzle-orm";
 import { generateId } from "../lib/id";
 import { inngest, isInngestWorkflowsEnabled } from "../lib/inngest";
+import { ensureDesignProofGuestAccess } from "./design-proof-guest-access.service";
 
 export async function listDesignProofs(businessId: string, status?: string) {
   const conditions = [eq(designProofAssetsTable.businessId, businessId)];
   if (status) conditions.push(eq(designProofAssetsTable.status, status));
-  return db
-    .select()
+  const rows = await db
+    .select({
+      id: designProofAssetsTable.id,
+      businessId: designProofAssetsTable.businessId,
+      customerId: designProofAssetsTable.customerId,
+      bookingId: designProofAssetsTable.bookingId,
+      status: designProofAssetsTable.status,
+      imageUrl: designProofAssetsTable.imageUrl,
+      note: designProofAssetsTable.note,
+      createdAt: designProofAssetsTable.createdAt,
+      updatedAt: designProofAssetsTable.updatedAt,
+      guestToken: designProofGuestAccessTable.token,
+    })
     .from(designProofAssetsTable)
+    .leftJoin(
+      designProofGuestAccessTable,
+      eq(designProofGuestAccessTable.proofId, designProofAssetsTable.id),
+    )
     .where(and(...conditions))
     .orderBy(desc(designProofAssetsTable.createdAt));
+  return rows;
 }
 
 export async function createDesignProof(
@@ -72,6 +89,7 @@ export async function updateDesignProofStatus(
     });
   }
   if (row && status === "pending_review") {
+    await ensureDesignProofGuestAccess(businessId, proofId);
     void import("./in-app-notifications.service").then(({ deliverInAppNotification }) =>
       deliverInAppNotification({
         kind: "liv.proposal.pending",

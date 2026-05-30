@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PersonaRitualHeader } from "@/components/ritual/persona-ritual-header";
-import { ImageIcon } from "lucide-react";
+import { ImageIcon, Link2 } from "lucide-react";
 import { uploadImageFile } from "@/lib/upload-media";
 
 type Proof = {
@@ -18,6 +18,7 @@ type Proof = {
   note?: string | null;
   customerId?: string | null;
   createdAt: string;
+  guestToken?: string | null;
 };
 
 export default function DesignProofsPage() {
@@ -73,6 +74,17 @@ export default function DesignProofsPage() {
       void load();
     } catch {
       toast({ title: "Update failed", variant: "destructive" });
+    }
+  }
+
+  async function copyGuestLink(guestToken: string) {
+    if (!business?.slug) return;
+    const url = `${window.location.origin}/b/${business.slug}/proof/${guestToken}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast({ title: "Guest link copied" });
+    } catch {
+      toast({ title: url, description: "Copy this link for your client" });
     }
   }
 
@@ -152,6 +164,17 @@ export default function DesignProofsPage() {
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  {p.status === "pending_review" && p.guestToken ? (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => void copyGuestLink(p.guestToken!)}
+                      data-testid={`copy-guest-proof-link-${p.id}`}
+                    >
+                      <Link2 className="h-3.5 w-3.5 mr-1" />
+                      Copy guest link
+                    </Button>
+                  ) : null}
                   {p.status === "draft" ? (
                     <Button
                       size="sm"

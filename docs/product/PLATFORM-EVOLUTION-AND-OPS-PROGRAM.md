@@ -1,6 +1,6 @@
 # Platform evolution and ops program — master build plan
 
-**Status:** canonical program (2026-05-29)  
+**Status:** canonical program (2026-05-30)  
 **Origin:** product/architecture working session — composable evolution + internal troubleshooting + **UX experience architecture** (design session 2026-05-29)  
 **Audience:** founder, engineering, support operators, agents  
 **Does not replace:** [`OPERATION-SOLIDIFY.md`](./OPERATION-SOLIDIFY.md) (v1 ship) · [`../operations/PLATFORM-BACKLOG.md`](../operations/PLATFORM-BACKLOG.md) (ongoing ops checklist)
@@ -17,6 +17,7 @@
 | Self-evolving / hub-and-spoke product rules | [`../engineering/COMPOSABLE-EVOLUTION.md`](../engineering/COMPOSABLE-EVOLUTION.md) |
 | Support points, surfaceId, investigation | [`../operations/SUPPORT-POINTS-AND-INVESTIGATION.md`](../operations/SUPPORT-POINTS-AND-INVESTIGATION.md) |
 | Tenant experience bundle | [`TENANT-EXPERIENCE-CONTRACT.md`](./TENANT-EXPERIENCE-CONTRACT.md) |
+| Internal exec cockpit + workforce | [`INTERNAL-EXEC-COCKPIT-SPEC.md`](./INTERNAL-EXEC-COCKPIT-SPEC.md) §4.2b · Track H §7e |
 
 ---
 
@@ -29,6 +30,12 @@ Two capabilities make Livia **modular and operable at scale**:
 2. **Investigation by design** — support tickets, logs, and Sentry share `requestId` and (target) `surfaceId`; a registry maps surfaces to code, tests, and runbooks.
 
 3. **Experience architecture (Track D/E)** — five-layer UX (capability → presentation → brand → persona → surface); 36 presentation presets; phone/tablet/desktop morph; M2/M3/M4 channel parity documented.
+
+4. **Platform lifecycle (W1–W5)** — marketing, gateway, internal exec/support, tenant Platform Default, public `/b` — [`LIVIA-PLATFORM-LIFECYCLE.md`](./LIVIA-PLATFORM-LIFECYCLE.md).
+
+5. **Platform flows (nested, thick/thin, vertical toolkits)** — [`LIVIA-PLATFORM-FLOWS.md`](./LIVIA-PLATFORM-FLOWS.md).
+
+6. **Exec company workforce (Track H)** — programmatic **employed hats**: role catalog, work-event ledger, Cursor/agent bridge into Hats River — [`INTERNAL-EXEC-COCKPIT-SPEC.md`](./INTERNAL-EXEC-COCKPIT-SPEC.md) §4.2b.
 
 This program sequences **documentation**, **registry + wiring**, **CI guards**, **internal portal UX**, and **staging-only presentation preset rollout** without blocking Operation Solidify’s v1 ship criteria. Work proceeds in **tracks** that can run in parallel after Track 0.
 
@@ -49,6 +56,7 @@ This program absorbed a full UX architecture working session. Every decision bel
 | Full P×V×surface routing | Matrix tables + body-art E2E reference | [`PERSONA-VERTICAL-SURFACE-MATRIX.md`](../design/PERSONA-VERTICAL-SURFACE-MATRIX.md) |
 | Staging-only rollout Phases 0–8 | ~24 eng-days after Phase 0 | This doc §7 + PRESENTATION-PRESETS Part VII |
 | Cross-cutting (a11y, locale, shared tablet, support metadata) | Must ship with Track D | PRESENTATION-PRESETS Appendix B; EXPERIENCE-ARCHITECTURE Part 8 |
+| Marketing / internal / cockpit scope | **Track F** — platform surfaces build | EXPERIENCE-ARCHITECTURE Part 12 · [`PLATFORM-SURFACES-BUILD-SPEC.md`](../design/PLATFORM-SURFACES-BUILD-SPEC.md) |
 
 **Code landed (Phase D0):** `lib/policy/src/presentation-presets.ts`, `artifacts/api-server/src/services/__tests__/presentation-presets.test.ts`, `"aurora"` in dashboard `VerticalShellKind`.
 
@@ -68,6 +76,7 @@ This program absorbed a full UX architecture working session. Every decision bel
 | G6 | Internal ticket detail shows registry paths | screenshot / QA checklist |
 | G7 | Staging preset switch works on 3 demo verticals without feature loss | Phase 7 QA sign-off |
 | G8 | M2 SMS/WA uses vertical vocabulary on body-art + hair demos | CHANNEL-UX-CONTRACT §8 |
+| G9 | Meaningful Cursor/build sessions emit ≥1 exec work event when Track H live | Hats River shows last 3 events per hat |
 
 ### 1.2 Non-goals (this program)
 
@@ -106,6 +115,9 @@ gantt
 | **C** | Internal investigate | B | Investigate view, ticket detail enrichment |
 | **D** | Presentation presets + surface morph | 0, E | Staging Phases 1–8 — see §7 |
 | **E** | Experience architecture docs | — | **Complete** — EXPERIENCE-ARCHITECTURE + matrix + channel + surface specs |
+| **F** | Platform surfaces implementation | 0, E | Marketing + gateway + internal exec/support UX |
+| **G** | Guest collaboration + vertical completeness | 0, D5 | Thick guest pages, thin channel templates — [`LIVIA-PLATFORM-FLOWS.md`](../product/LIVIA-PLATFORM-FLOWS.md) |
+| **H** | Exec company workforce (employed hats) | F5.2 | Role catalog, work-event ledger, Hats River v2, Cursor bridge — [`INTERNAL-EXEC-COCKPIT-SPEC.md`](./INTERNAL-EXEC-COCKPIT-SPEC.md) §4.2b |
 
 ---
 
@@ -259,7 +271,7 @@ gantt
 
 | ID | Task | Files | Done when |
 |----|------|-------|-----------|
-| D2.1 | Migration `027-presentation-preset.sql` | `lib/db/migrations/sql/` | `presentation_preset_id`, `brand_accent_hex` nullable |
+| D2.1 | Migration `027-presentation-preset.sql` | `lib/db/migrations/sql/` | `presentation_preset_id` default **`platform-default`**, `brand_accent_hex` nullable |
 | D2.2 | Drizzle schema | `businesses.ts` | push/typecheck |
 | D2.3 | `presentation.service.ts` validate + PATCH | api-server | 400 on invalid preset for vertical |
 | D2.4 | `GET /businesses/:id/presentation-presets` | businesses routes | Returns 4 presets for vertical |
@@ -355,6 +367,210 @@ gantt
 | PERSONA-UX.md surface note | done |
 
 No code in Track E. Track D implements Track E specs.
+
+---
+
+## 7c. Track F — Platform surfaces (marketing · gateway · internal UX)
+
+**Owner:** engineering  
+**Spec:** [`../design/PLATFORM-SURFACES-BUILD-SPEC.md`](../design/PLATFORM-SURFACES-BUILD-SPEC.md)  
+**Founder locks:** [`../design/PLATFORM-SURFACES-CONCEPTS-DEEP.md`](../design/PLATFORM-SURFACES-CONCEPTS-DEEP.md) v5  
+**Depends on:** Track 0 docs; **parallel** Tracks B/C (support registry) for F6 context pane; Track D optional overlap on aurora tokens only.
+
+**Design status:** ✅ Spec complete — **M1 home still open** (S1 / S2 / S3).
+
+### Phase F0 — Founder gate
+
+| ID | Task | Done when |
+|----|------|-----------|
+| F0.1 | Pick M1 home concept (S1 Four Pillars / S2 One Thread / S3 Appointment shops) | Locked in CONCEPTS-DEEP worksheet |
+
+### Phase F1 — Marketing shell + tokens
+
+| ID | Task | Files | Done when |
+|----|------|-------|-----------|
+| F1.1 | Logo wordmark component from brand assets | `livia-marketing/src/components/brand/` | Nav + footer |
+| F1.2 | M0 Aurora shell — nav, footer, EUR helpers | `marketing-layout.tsx`, `index.css` | All routes inherit |
+| F1.3 | Remove `$` copy drift | grep clean in marketing | € only |
+
+### Phase F2 — Marketing core pages
+
+| ID | Task | Files | Done when |
+|----|------|-------|-----------|
+| F2.1 | M1 home per picked concept | `editorial-hero.tsx` or new | Founder sign-off |
+| F2.2 | M2-A pricing (honest, no badge) | `pricing.tsx`, `pricing-catalog.ts` | Matches BUILD-SPEC |
+| F2.3 | M9 waitlist + vertical select | `MarketingForm`, leads API | vertical in lead payload |
+| F2.4 | M4 vertical index from registry | `verticals-index.tsx` | Links to M5 + demo |
+
+### Phase F3 — Gateway wedge stories (G1-A)
+
+| ID | Task | Files | Done when |
+|----|------|-------|-----------|
+| F3.1 | `wedge-demo-stories.ts` in policy | `lib/policy/src/` | 9 heartland/beta-full verticals |
+| F3.2 | `WedgeStory.tsx` interstitial | `dashboard/src/pages/demo/` | 3–4 steps per vertical |
+| F3.3 | Launcher grid → `/demo/wedge/:vertical` | `Launcher.tsx` | Tattoo reference parity |
+| F3.4 | Enter demo → correct `demoSlug` | `demo-portal.ts` | E2E body-art + hair |
+
+### Phase F4 — Vertical landings + deep links
+
+| ID | Task | Done when |
+|----|------|-----------|
+| F4.1 | M5 template wired to `VERTICAL_COVERAGE_REGISTRY` | Each slug has teaser + CTA |
+| F4.2 | M5 CTA → `/demo/wedge/:vertical` | Query preserved |
+| F4.3 | M3 how-it-works continuity strip | Links to demo |
+
+### Phase F5 — Internal exec (I2)
+
+| ID | Task | Files | Done when |
+|----|------|-------|-----------|
+| F5.1 | Ship Lane collapse/expand component | `FounderCockpitView.tsx` | Same skin, in-place expand |
+| F5.2 | Hats River tab | same | API `FounderCockpitSnapshot.hats` |
+| F5.3 | Exceptions default tab | same | ≤5 items UX |
+| F5.4 | I0 token pass inline → CSS | `InternalShell.tsx`, `ops-ui.css` | Amber stripe retained |
+
+### Phase F6 — Internal support workspace (I4-A)
+
+| ID | Task | Routes | Done when |
+|----|------|--------|-----------|
+| F6.1 | Support nav: Thread / Board / Radar / Investigate | layout | Persists across routes |
+| F6.2 | Queue + thread 3-col | `/support/queue`, `/support/tickets/:id` | Desktop + tablet drawers |
+| F6.3 | Triage board | `/support/board` | Kanban + drawer detail |
+| F6.4 | Tenant radar | `/support/radar`, `/support/radar/:businessId` | Grid + drill |
+| F6.5 | Context pane + registry | context column | Track B1 `getSupportPoint` |
+| F6.6 | Investigate panel | `/support/investigate` | Track C1.3 |
+
+### Phase F7 — Marketing utility pages
+
+| ID | Task | Routes |
+|----|------|--------|
+| F7.1 | M6 chair rental | `/for/chair-rental` |
+| F7.2 | M7 europe + `/de` | `/europe`, `/de` |
+| F7.3 | M8 EU AI | `/eu-ai` |
+| F7.4 | M10–M12 changelog, status, legal | utility routes |
+
+### Phase F8 — E2E + honesty
+
+| ID | Task | Done when |
+|----|------|-----------|
+| F8.1 | E2E marketing → wedge story → demo tenant | Playwright green |
+| F8.2 | E2E waitlist vertical → invite → onboard A1 pre-fill | Manual or E2E |
+| F8.3 | `marketing-vs-reality.md` rows for new claims | Audit updated |
+
+**Track F exit:** livia-hq.com inherits M0; demo G1-A live; internal exec + support match BUILD-SPEC screen map.
+
+**Estimate:** ~28 eng-days (F1–F8); F0 founder-only.
+
+---
+
+## 7d. Track G — Guest collaboration + vertical completeness
+
+**Owner:** engineering  
+**Spec:** [`LIVIA-PLATFORM-FLOWS.md`](./LIVIA-PLATFORM-FLOWS.md)  
+**Depends on:** Track D5 (public `/b` shell); Track B1 (guest `surfaceId`s); CHANNEL-UX-CONTRACT Part 1b.
+
+**Rule:** Thick collaboration on Livia guest M1; channels thin (link + text only).
+
+### Phase G0 — Registry + tokens
+
+| ID | Task | Done when |
+|----|------|-----------|
+| G0.1 | `lib/policy/src/guest-surfaces.ts` — id, route, verticals, events | Exported from policy |
+| G0.2 | Generic guest token service (extend `booking_guest_access` pattern) | Issue/validate/revoke |
+| G0.3 | `guest-surfaces.test.ts` | CI green |
+
+### Phase G1 — Body-art proof guest (reference vertical)
+
+| ID | Task | Done when |
+|----|------|-----------|
+| G1.1 | `GET/POST /api/public/b/:slug/proof/:token` | Approve/reject/comment |
+| G1.2 | Public proof page `artifacts/livia-dashboard` or marketing host | Mobile-first |
+| G1.3 | Notify customer: SMS template + link only | No MMS dependency |
+| G1.4 | Dashboard proof desk ↔ guest page sync | Single `designProofAssets` row |
+| G1.5 | E2E body-art hero workflow | Playwright |
+
+### Phase G2 — Other vertical guest surfaces
+
+| ID | Task | Vertical |
+|----|------|----------|
+| G2.1 | Consent revisit token (if not only inline book step) | medspa |
+| G2.2 | Waitlist accept guest page | fitness |
+| G2.3 | Pet intake polish on book + profile | pet-grooming |
+| G2.4 | Vehicle tier step hardening | automotive-detailing |
+
+### Phase G3 — Thin channel templates + E2E matrix
+
+| ID | Task | Done when |
+|----|------|-----------|
+| G3.1 | Continuity templates: link-first copy per vertical | policy |
+| G3.2 | E2E hero workflow × 9 beta-full verticals | CI or manual matrix |
+| G3.3 | Support registry `surfaceId` per guest route | Track B1 |
+| G3.4 | Remove MMS-as-primary from docs/code paths | grep clean |
+
+**Track G exit:** §4 vertical matrix in FLOWS doc has no 🔲 for beta-full tier hero path.
+
+**Estimate:** ~15 eng-days (G0–G3); G1 is P0 wedge proof.
+
+---
+
+## 7e. Track H — Exec company workforce (programmatic hats)
+
+**Owner:** founder + engineering  
+**Spec:** [`INTERNAL-EXEC-COCKPIT-SPEC.md`](./INTERNAL-EXEC-COCKPIT-SPEC.md) §4.2b  
+**Depends on:** F5.2 (Hats River tab exists — metrics panels today)  
+**Release:** R2 (after R1 Ship Lane + Hats UI shell)
+
+**Problem:** Multi-hat founder work in Cursor/chat is invisible to the cockpit. Hats today are **metric costumes**, not **employed roles with output history**.
+
+**Rule:** Work events are append-only; mandates live in policy; UI never invents progress.
+
+### Phase H0 — Policy + types
+
+| ID | Task | Files | Done when |
+|----|------|-------|-----------|
+| H0.1 | `exec-hats.ts` — `ExecHatId`, role labels, default mandates | `lib/policy/src/` | Exported; mirrors `buildExecHatPanels` ids |
+| H0.2 | Work event Zod + OpenAPI types | `lib/policy` or api-server schema | Codegen path documented |
+| H0.3 | `exec-hats.test.ts` | api-server or policy tests | CI green |
+
+### Phase H1 — Database + API
+
+| ID | Task | Files | Done when |
+|----|------|-------|-----------|
+| H1.1 | Migration `exec_work_events` | `lib/db` | hatId, summary, actor, links json, sessionId, source, createdAt |
+| H1.2 | `POST /internal/ops/exec/work-events` | `internal-ops.ts` | Exec auth; rate limit; validates hatId |
+| H1.3 | `GET /internal/ops/exec/work-events?hat=&limit=` | same | Founder results view |
+| H1.4 | Optional `exec_hat_mandates` + PATCH | same | Time-boxed mandate override (can defer to H2) |
+
+### Phase H2 — Snapshot merge + Hats River v2
+
+| ID | Task | Files | Done when |
+|----|------|-------|-----------|
+| H2.1 | Merge recent events into `FounderCockpitSnapshot.hats` | `internal-founder-cockpit.service.ts` | Last 3 events per hat on snapshot |
+| H2.2 | Hats River UI — mandate + events list | `FounderCockpitView.tsx` | Mobile-readable swimlanes |
+| H2.3 | Active duty selector (session) | same + localStorage or API | “Wearing CTO today” visible on cockpit |
+| H2.4 | Extend `FounderCockpitSnapshot` types | `livia-internal/src/lib/api.ts`, mobile | Typecheck green |
+
+### Phase H3 — Cursor / build-session bridge
+
+| ID | Task | Files | Done when |
+|----|------|-------|-----------|
+| H3.1 | `pnpm exec:hat-work` CLI | `scripts/` or `artifacts/api-server` | Posts to local/staging API with secret |
+| H3.2 | Cursor skill `log-exec-hat-work` | `.cursor/skills/` or agent skill | Documents hat declare + log on task close |
+| H3.3 | `AGENTS.md` — exec hat logging when Track H shipped | root | Agents declare hat + emit event on meaningful work |
+| H3.4 | Optional: `afterAgentResponse` hook stub | `.cursor/hooks/` | Best-effort reminder, not auto-inference |
+
+### Phase H4 — Enrichers (optional, R3)
+
+| ID | Task | Done when |
+|----|------|-----------|
+| H4.1 | Conventional commit / PR label → hat mapping | Documented in COMPOSABLE-EVOLUTION §5.3 |
+| H4.2 | Support ticket close → CS hat event when resolution linked | Ticket metadata hook |
+| H4.3 | Agent delegate prototype (one hat, policy guardrails) | Spike only — not production autopilot |
+
+**Track H exit:** Founder opens Hats River and sees **this week’s real work** per role from Cursor sessions + manual CLI; metrics badges still live.
+
+**Estimate:** ~5 eng-days (H0–H3); H4 optional.
+
+**Chat → build loop:** Discussions in Cursor update this program’s §8.9 checklist; implementation runs in dedicated build sessions tagged to a hat via H3.
 
 ---
 
@@ -514,7 +730,51 @@ Use this section as the **single checklist** for the program. Mirror in PLATFORM
 - [ ] D8.4 PLATFORM-BACKLOG § P1 Presentation all checked
 - [ ] D8.5 FOUNDER-SHIP-LANE note if prod promotion approved
 
-### 8.6 Cross-program (existing PLATFORM-BACKLOG — keep in sync)
+### 8.6 Track F — Platform surfaces (marketing · gateway · internal)
+
+**Spec:** [`../design/PLATFORM-SURFACES-BUILD-SPEC.md`](../design/PLATFORM-SURFACES-BUILD-SPEC.md)
+
+- [x] F0.1 M1-R2 locked
+- [x] F0.2 Final screen catalog + gallery restructure (29 PNGs)
+- [ ] F1.1–F1.3 Marketing M0 shell + logo + EUR
+- [ ] F2.1–F2.4 M1 home + M2 pricing + M9 waitlist vertical + M4 index
+- [ ] F3.1 `wedge-demo-stories.ts`
+- [ ] F3.2–F3.4 G1-A wedge grid + story + demo slug routing
+- [ ] F4.1–F4.3 M5 vertical landings + demo deep links + M3
+- [ ] F5.1–F5.4 I2 Ship Lane collapse + Hats + I0 tokens
+- [ ] F6.1–F6.6 I4 support screen map (queue/thread/board/radar/investigate)
+- [ ] F7.1–F7.4 M6–M12 utility pages
+- [ ] F8.1–F8.3 E2E + marketing-vs-reality
+
+### 8.7 Track G — Guest collaboration + vertical completeness
+
+**Spec:** [`LIVIA-PLATFORM-FLOWS.md`](../product/LIVIA-PLATFORM-FLOWS.md)
+
+- [ ] G0.1 `guest-surfaces.ts` registry
+- [ ] G0.2 Guest token service
+- [ ] G1.1–G1.5 Body-art proof guest page + API + E2E
+- [ ] G2.1–G2.4 Medspa, fitness, pet, automotive guest polish
+- [ ] G3.1 Link-first continuity templates (all verticals)
+- [ ] G3.2 Hero workflow E2E matrix (9 verticals)
+- [ ] G3.3 Support `surfaceId` for guest routes
+- [ ] G3.4 No MMS-primary dependency
+
+### 8.8 Track H — Exec company workforce (programmatic hats)
+
+**Spec:** [`INTERNAL-EXEC-COCKPIT-SPEC.md`](./INTERNAL-EXEC-COCKPIT-SPEC.md) §4.2b
+
+- [ ] H0.1 `exec-hats.ts` policy catalog
+- [ ] H0.2–H0.3 Work event types + tests
+- [ ] H1.1 `exec_work_events` migration
+- [ ] H1.2–H1.3 POST/GET work-events API
+- [ ] H2.1 Snapshot merge (events + metrics)
+- [ ] H2.2–H2.3 Hats River v2 + active duty
+- [ ] H2.4 Client types (internal + mobile)
+- [ ] H3.1 `pnpm exec:hat-work` CLI
+- [ ] H3.2–H3.4 Cursor skill + AGENTS.md + hook stub
+- [ ] H4.1–H4.3 Enrichers (optional R3)
+
+### 8.9 Cross-program (existing PLATFORM-BACKLOG — keep in sync)
 
 - [ ] P0 rotate Supabase DB password if exposed
 - [ ] P1 staging stack A–I
@@ -534,6 +794,14 @@ Use this section as the **single checklist** for the program. Mirror in PLATFORM
 | B1 before C1.2 | Ticket enrichment needs registry |
 | A1.2 can parallel B1 | Different files |
 | D Phase 1 before preset UI | Same hub as tenant experience |
+| F3 before F4 | Wedge stories before M5 demo deep links |
+| B1 before F6.5 | Context pane needs support registry |
+| G0 before G1 | Registry before proof guest page |
+| G1 before G3.2 body-art E2E | Reference vertical first |
+| D5 parallel G1 | Public shell + proof page |
+| F5 can parallel F2 | Exec vs marketing different artifacts |
+| F5.2 before H0 | Hats River shell before workforce ledger |
+| H2 before H3 | API + UI before Cursor bridge |
 | Do not block Solidify G2–G6 on C | Internal investigate is ops maturity, not wedge |
 
 **Merge with Operation Solidify:** Solidify criterion 7 (“Internal ops — Support 3-column workspace + runbooks”) absorbs Track C when complete.

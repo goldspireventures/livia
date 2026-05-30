@@ -191,6 +191,8 @@ Canonical contract: [`../product/TENANT-EXPERIENCE-CONTRACT.md`](../product/TENA
 
 ### 5.3 Vertical / vocabulary change
 
+**Full checklist:** [`VERTICAL-ADD-PLAYBOOK.md`](./VERTICAL-ADD-PLAYBOOK.md)
+
 | Step | Action |
 |------|--------|
 | 1 | Policy: vocabulary, playbook, onboarding extras |
@@ -208,9 +210,22 @@ Canonical contract: [`../product/TENANT-EXPERIENCE-CONTRACT.md`](../product/TENA
 | 4 | Use generated hooks in dashboard where possible; `apiFetch` only for gaps |
 | 5 | Entitlements: `withBusinessFeature()` or plan gate in service |
 
----
+### 5.5 Exec workforce / work-event change (Track H)
 
-## 6. CI and tests as the nervous system
+**Spec:** [`../product/INTERNAL-EXEC-COCKPIT-SPEC.md`](../product/INTERNAL-EXEC-COCKPIT-SPEC.md) §4.2b
+
+| Step | Action | Verify |
+|------|--------|--------|
+| 1 | Edit `lib/policy/src/exec-hats.ts` (role catalog, default mandates) | Policy tests |
+| 2 | Migration + Drizzle schema for `exec_work_events` | Migration applies |
+| 3 | OpenAPI + `pnpm codegen` for POST/GET work-events | check-codegen clean |
+| 4 | Merge events in `internal-founder-cockpit.service.ts` | Snapshot includes last N per hat |
+| 5 | Hats River UI in `FounderCockpitView.tsx` | Manual: event visible after CLI post |
+| 6 | `pnpm exec:hat-work` + AGENTS.md logging discipline | Cursor session emits event |
+
+**Do not:** store work events only in client state; infer hat from chat tokens without explicit declare.
+
+---
 
 Automated “notification” that something did not adjust:
 
@@ -238,6 +253,7 @@ Maintain this table when adding P0 flows. **Program owner:** engineering lead; u
 | Liv inbox | policy inbox lenses | conversations API | `pages/inbox.tsx` | inbox tab | support Liv bundle | e2e inbox |
 | Bookings | booking services | OpenAPI bookings | booking-detail, wizard | bookings | — | booking conflict tests |
 | Support intake | — | `POST .../support/tickets` | `help-support-dialog.tsx` | (planned) | SupportQueueView | triage tests |
+| Exec workforce (hats) | `exec-hats.ts` | `POST/GET .../exec/work-events` | — | — | FounderCockpitView Hats River | exec-hats tests |
 | Billing | entitlements | Stripe routes | settings billing | — | finance_read | — |
 
 Full program tasks for map automation: [`../product/PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md`](../product/PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md) Track A.

@@ -1,5 +1,6 @@
 import { db, customersTable, bookingsTable, channelIdentitiesTable } from "@workspace/db";
 import { eq, and, or, ilike, sql, desc, inArray } from "drizzle-orm";
+import { normalizePhoneE164 } from "@workspace/policy";
 import { generateId } from "../lib/id";
 
 // STAFF-scoped: list customers I (the staff row) have served. Mirrors
@@ -179,26 +180,27 @@ export async function findOrCreateCustomer(
     phone?: string;
   },
 ): Promise<typeof customersTable.$inferSelect> {
+  const phone = data.phone ? normalizePhoneE164(data.phone) ?? data.phone.trim() : undefined;
+
   if (data.email) {
     const [existing] = await db
       .select()
       .from(customersTable)
       .where(and(eq(customersTable.businessId, businessId), eq(customersTable.email, data.email)));
     if (existing) return existing;
-  } else if (data.phone) {
+  }
+  if (phone) {
     const [existing] = await db
       .select()
       .from(customersTable)
-      .where(
-        and(eq(customersTable.businessId, businessId), eq(customersTable.phone, data.phone)),
-      );
+      .where(and(eq(customersTable.businessId, businessId), eq(customersTable.phone, phone)));
     if (existing) return existing;
   }
 
   const displayName =
     [data.firstName, data.lastName].filter(Boolean).join(" ") ||
     data.email?.split("@")[0] ||
-    data.phone ||
+    phone ||
     "Unknown";
 
   const [c] = await db
@@ -210,7 +212,7 @@ export async function findOrCreateCustomer(
       lastName: data.lastName,
       displayName,
       email: data.email,
-      phone: data.phone,
+      phone,
     })
     .returning();
   return c;

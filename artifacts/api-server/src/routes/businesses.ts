@@ -38,6 +38,10 @@ import {
 import { evaluateBetaSignup } from "../lib/beta-signup-gate";
 import { isLegalGateSkipped } from "../lib/platform-legal-gate";
 import { getOrCreateUser } from "../services/users.service";
+import {
+  getPresentationForBusiness,
+  patchPresentationForBusiness,
+} from "../services/presentation.service";
 
 const router: IRouter = Router();
 
@@ -298,6 +302,66 @@ router.patch(
       fields: Object.keys(parsed.data),
     });
     res.json(payload);
+  },
+);
+
+router.get(
+  "/businesses/:businessId/presentation",
+  requireAuth,
+  requireRole("STAFF"),
+  async (req, res): Promise<void> => {
+    const id = Array.isArray(req.params.businessId) ? req.params.businessId[0] : req.params.businessId;
+    const payload = await getPresentationForBusiness(id);
+    if (!payload) {
+      sendError(res, req, 404, "Business not found");
+      return;
+    }
+    res.json(payload);
+  },
+);
+
+router.patch(
+  "/businesses/:businessId/presentation",
+  requireAuth,
+  requireRole("ADMIN"),
+  async (req, res): Promise<void> => {
+    const userId = getUserId(req);
+    const id = Array.isArray(req.params.businessId) ? req.params.businessId[0] : req.params.businessId;
+    try {
+      const payload = await patchPresentationForBusiness(id, {
+        presentationPresetId:
+          typeof req.body?.presentationPresetId === "string"
+            ? req.body.presentationPresetId
+            : undefined,
+        brandAccentHex:
+          req.body?.brandAccentHex === null || typeof req.body?.brandAccentHex === "string"
+            ? req.body.brandAccentHex
+            : undefined,
+      });
+      if (!payload) {
+        sendError(res, req, 404, "Business not found");
+        return;
+      }
+      await appendHumanAudit(id, userId, "human.presentation.update", "business", id, {
+        presetId: payload.presetId,
+      });
+      res.json(payload);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Failed";
+      if (msg === "PRESENTATION_PRESETS_DISABLED") {
+        sendError(res, req, 403, "Presentation presets are staging-only until prod promotion");
+        return;
+      }
+      if (msg === "INVALID_PRESET") {
+        sendError(res, req, 400, "Invalid presentation preset for this vertical");
+        return;
+      }
+      if (msg === "INVALID_ACCENT_HEX") {
+        sendError(res, req, 400, "brandAccentHex must be #RRGGBB");
+        return;
+      }
+      throw e;
+    }
   },
 );
 

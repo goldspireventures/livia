@@ -147,6 +147,7 @@ export async function createBusiness(
       euRegion: packDefaults.euRegion,
       aiGreeting: packDefaults.aiGreeting,
       logoUrl: data.logoUrl,
+      presentationPresetId: "platform-default",
       instagramHandle: data.instagramHandle,
       onboardingState: afterBusinessCreatedState() as unknown as Record<string, unknown>,
       tenantAttestation: data.tenantAttestation as unknown as Record<string, unknown> | undefined,
