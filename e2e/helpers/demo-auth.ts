@@ -177,29 +177,22 @@ export async function signInBusiness(page: Page, slug: string) {
   if (!metaRes.ok()) {
     throw new Error(`sign-in-business ${slug}: ${metaRes.status()} ${(await metaRes.text()).slice(0, 200)}`);
   }
-  const { email, landingPath = "/dashboard", businessId } = (await metaRes.json()) as {
+  const { email, landingPath = "/dashboard", businessId, token } = (await metaRes.json()) as {
     email?: string;
     landingPath?: string;
     businessId?: string;
+    token?: string;
   };
   if (!email) throw new Error(`No demo email for ${slug}`);
 
-  // Demo direct sign-in form — ticket exchange inside app Clerk context (most reliable locally).
-  await page.goto("/sign-in", { waitUntil: "domcontentloaded", timeout: 60_000 });
-  const demoForm = page.getByTestId("demo-password-sign-in");
-  if ((await demoForm.count()) > 0) {
-    await demoForm.scrollIntoViewIfNeeded();
-    await page.locator("#demo-email").fill(email);
-    await page.locator("#demo-password").fill(DEMO_PASSWORD);
-    await page.getByRole("button", { name: "Sign in as demo" }).click();
-    await page.waitForURL(/\/(dashboard|inbox|chain|bookings|my-day|onboarding|settings)/, {
-      timeout: 90_000,
+  // Prefer server-issued ticket — same path as demo portal one-click sign-in.
+  if (token) {
+    await clerkTicketSignIn(page, token, {
+      businessId,
+      landingPath,
+      devPersona: "owner",
+      fallbackEmail: email,
     });
-    if (businessId) {
-      await page.evaluate((id) => {
-        window.localStorage.setItem("livia.currentBusinessId", id);
-      }, businessId);
-    }
     await dismissPlatformTour(page);
     return;
   }
@@ -211,9 +204,9 @@ export async function signInBusiness(page: Page, slug: string) {
   if (!emailRes.ok()) {
     throw new Error(`sign-in-email ${email}: ${emailRes.status()} ${(await emailRes.text()).slice(0, 200)}`);
   }
-  const { token } = (await emailRes.json()) as { token?: string };
-  if (!token) throw new Error(`No Clerk ticket for ${email}`);
-  await clerkTicketSignIn(page, token, {
+  const { token: emailToken } = (await emailRes.json()) as { token?: string };
+  if (!emailToken) throw new Error(`No Clerk ticket for ${email}`);
+  await clerkTicketSignIn(page, emailToken, {
     businessId,
     landingPath,
     devPersona: "owner",
