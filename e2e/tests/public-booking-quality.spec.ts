@@ -87,12 +87,29 @@ test.describe("Public booking quality", () => {
       hasTouch: true,
     });
 
-    test("hair — sticky CTA on details", async ({ page, request }) => {
-      const slug = "luxe-salon-spa";
+    for (const { slug, tag } of SLUGS) {
+      test(`${tag} — sticky CTA on details`, async ({ page, request }) => {
+        if (!(await demoHasBusiness(request, slug))) test.skip(true, slug);
+        const ok = await gotoDetailsStep(page, request, slug);
+        if (!ok) test.skip(true, "no slot");
+        await expect(page.getByTestId("public-booking-sticky-summary")).toBeVisible();
+        await expect(page.getByTestId("button-sticky-continue")).toBeVisible();
+        // Desktop-only confirm should stay hidden on mobile when sticky is active.
+        await expect(page.getByTestId("button-continue-booking")).toBeHidden();
+      });
+    }
+
+    test("medspa — sticky CTA on consent step", async ({ page, request }) => {
+      const slug = "clarity-medspa-dublin";
       if (!(await demoHasBusiness(request, slug))) test.skip(true, slug);
       const ok = await gotoDetailsStep(page, request, slug);
       if (!ok) test.skip(true, "no slot");
+      await page.getByTestId("input-first-name").fill("Jane");
+      await page.getByTestId("input-email").fill("jane@example.com");
+      await page.getByTestId("button-sticky-continue").click();
+      await expect(page.getByTestId("select-medspa-procedure")).toBeVisible({ timeout: 15_000 });
       await expect(page.getByTestId("public-booking-sticky-summary")).toBeVisible();
+      await expect(page.getByTestId("button-confirm-booking")).toBeHidden();
     });
   });
 });

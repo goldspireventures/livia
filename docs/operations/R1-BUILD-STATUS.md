@@ -64,7 +64,7 @@ LIVIA FINAL BUILD PLAN (master)
 | E4 | All 9 `/b/{demoSlug}` E2E | **Done (local)** | `pnpm test:e2e:verticals` 73/73 green 2026-05-30 |
 | E5 | Body-art proof guest page | **Done** | `/b/.../proof/:token` |
 | E6 | Visit token pages | **Partial** | route exists; 9-vertical smoke TBD |
-| E7 | Platform Default polish + preset picker | **Partial** | D2 + picker staging; UAT open |
+| E7 | Platform Default polish + preset picker | **Partial** | D-R1 aurora wash on tenant shell wave 9 |
 | E8 | I4 Thread 3-column shell | **Partial** | queue + nav stubs |
 | E9 | I2 Ship Lane + Hats | **Partial** | Ship Lane yes; Hats metrics thin |
 | E10 | Phone E.164 normalize | **Done** | customers + guest hub |
@@ -102,7 +102,7 @@ LIVIA FINAL BUILD PLAN (master)
 | G2 | medspa/waitlist/pet polish | Open |
 | G3 | continuity + E2E | Partial |
 | G4 | phone normalize | Done |
-| G5 | public book mobile pass | Open |
+| G5 | public book mobile pass | **Partial** | sticky CTA + touch targets + mobile E2E wave 9 |
 | G6 | guest hub `/my` | **Shell (R2)** |
 
 ### Track D — Presets (R1 minimal)
@@ -111,7 +111,7 @@ LIVIA FINAL BUILD PLAN (master)
 |------|--------|
 | D2 migration + API | Done |
 | D5 public `/b` skin | Partial |
-| D-R1 platform default polish | Open |
+| D-R1 platform default polish | **Partial** | tenant shell aurora wash wave 9 |
 
 ---
 
@@ -119,6 +119,7 @@ LIVIA FINAL BUILD PLAN (master)
 
 | Wave | Date | Focus | Staging URLs affected |
 |------|------|-------|---------------------|
+| 9 | 2026-05-30 | G5 public book mobile pass; E7/D-R1 platform-default shell wash | `/b/*` mobile, tenant app |
 | 8 | 2026-05-30 | E4 local green; M2-A pricing; M5 home wedge chips; headless lifecycle fix | marketing home + `/pricing` |
 | 7 | 2026-05-30 | M1-R2 story home wired + BUILD-PLAN-WIRE doc | [staging.livia-hq.com](https://staging.livia-hq.com/) |
 | 2 | 2026-05-30 | Guest proof `/b/.../proof/:token` | public `/b/*` |

@@ -99,7 +99,7 @@ Set on Railway staging API: `LIVIA_DEPLOY_ENV=staging`
 - [ ] **G2** Medspa consent, fitness waitlist, pet/automotive guest polish
 - [ ] **G3** Link-first continuity templates + 9-vertical hero E2E + support surfaceIds
 - [ ] **G4** Phone E.164 normalize in `findOrCreateCustomer` + `/b` validation — [`GUEST-CUSTOMER-IDENTITY.md`](../product/GUEST-CUSTOMER-IDENTITY.md)
-- [ ] **G5** Public book mobile pass (`now/` tier)
+- [ ] **G5** Public book mobile pass (`now/` tier) *(sticky CTA + touch targets wave 9)*
 - [ ] **G6 (R2)** Guest hub `my.livia-hq.com` — [`GUEST-CONTINUITY-HUB-SPEC.md`](../product/GUEST-CONTINUITY-HUB-SPEC.md)
 
 **Parallel:** Track D5 (public `/b`) · Track B1 (registry).

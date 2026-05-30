@@ -24,7 +24,7 @@ export function PublicBookingStickySummary({
 }) {
   return (
     <div
-      className="public-booking-sticky-bar md:hidden fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 backdrop-blur-md px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+      className="public-booking-sticky-bar md:hidden fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 backdrop-blur-md px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
       data-testid="public-booking-sticky-summary"
     >
       <div className="max-w-lg mx-auto flex items-center gap-3">
@@ -38,7 +38,7 @@ export function PublicBookingStickySummary({
           </p>
         </div>
         <Button
-          className="shrink-0"
+          className="shrink-0 min-h-[44px]"
           disabled={disabled || pending}
           onClick={onCta}
           data-testid="button-sticky-continue"
