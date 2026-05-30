@@ -6,8 +6,9 @@
 import { test, expect } from "@playwright/test";
 
 const marketingBase = process.env.E2E_MARKETING_URL ?? "http://127.0.0.1:5174";
+const dashboardBase = (process.env.E2E_DASHBOARD_BASE ?? "http://127.0.0.1:5173").replace(/\/+$/, "");
 const dashboardDemo =
-  process.env.E2E_DASHBOARD_DEMO_URL ?? "http://127.0.0.1:5173/demo";
+  process.env.E2E_DASHBOARD_DEMO_URL ?? `${dashboardBase}/demo`;
 
 const ROUTES = [
   "/",
@@ -66,7 +67,7 @@ test.describe("livia.io — platform smoke", () => {
     await page.goto(`${marketingBase}/how-it-works`);
     const demo = page.getByTestId("marketing-demo-link").first();
     await expect(demo).toBeVisible();
-    await expect(demo).toHaveAttribute("href", new RegExp("5173/demo"));
+    await expect(demo).toHaveAttribute("href", dashboardDemo);
   });
 
   test("pricing shows wedge tiers", async ({ page }) => {

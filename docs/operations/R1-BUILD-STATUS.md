@@ -59,7 +59,7 @@ LIVIA FINAL BUILD PLAN (master)
 | # | Criterion | Status | Notes |
 |---|-----------|--------|-------|
 | E1 | G1-A wedge all verticals | **Done** | `/demo/wedge/:vertical` + policy |
-| E2 | M1-R2 + M2-A marketing on staging | **In progress** | M2-A honest pricing + home teaser wired wave 8 |
+| E2 | M1-R2 + M2-A marketing on staging | **Done (automated)** | staging:readiness + marketing E2E |
 | E3 | `wedge-demo-stories.ts` + `guest-surfaces.ts` | **Done** | policy |
 | E4 | All 9 `/b/{demoSlug}` E2E | **Done (local)** | `pnpm test:e2e:verticals` 76/76 green 2026-05-30 (34 vertical + 12 booking + rest) |
 | E5 | Body-art proof guest page | **Done** | `/b/.../proof/:token` |
@@ -80,10 +80,10 @@ LIVIA FINAL BUILD PLAN (master)
 | Check | Result |
 |-------|--------|
 | `pnpm smoke:staging` | ✓ green |
-| CI `staging-smoke` on main | ✓ green |
-| `staging.livia-hq.com` wave 8 content (€79, wedge chips) | ✗ not live yet — Vercel marketing staging may need promote / branch hook |
-| `api.staging…/api/demo/*` | ✗ 404 — fixed in code (LIVIA_DEPLOY_ENV=staging); Railway vars set, deploy pending |
-| `pnpm test:e2e:staging` | blocked until API redeploy + demo seed |
+| `pnpm staging:readiness` | ✓ green (2026-05-30) |
+| `staging.livia-hq.com` wave 8+ (€79, wedge chips) | ✓ in JS bundles |
+| `api.staging…/api/demo/*` | ✓ provisioned (`LIVIA_DEPLOY_ENV=staging` gate fix) |
+| `pnpm test:e2e:staging` | running |
 
 ---
 
