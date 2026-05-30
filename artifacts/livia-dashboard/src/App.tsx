@@ -1,4 +1,4 @@
-import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
+import { Switch, Route, Router as WouterRouter, Redirect, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -64,6 +64,7 @@ import DemoWedgeStoryPage from "@/pages/demo/WedgeStory";
 import { DemoProvider } from "@/lib/demo/demo-context";
 import { isProductionCustomerSurface } from "@/lib/production-surface";
 import { isOnboardingPreviewRouteEnabled } from "@/lib/onboarding-preview-route";
+import { isPublicGuestPath } from "@/lib/public-guest-paths";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -93,6 +94,24 @@ const CLERK_PROXY_URL =
     : undefined;
 
 function AuthenticatedRoutes() {
+  const [location] = useLocation();
+
+  // Safety net: guest paths must never enter tenant AuthGuard (avoids sign-in redirect loops on /my).
+  if (isPublicGuestPath(location)) {
+    if (location.split("?")[0]?.replace(/\/+$/, "") === "/my") {
+      return <MyLiviaPage />;
+    }
+    if (location.startsWith("/b/")) {
+      const visitMatch = location.match(/^\/b\/([^/]+)\/visit\/([^/]+)/);
+      const proofMatch = location.match(/^\/b\/([^/]+)\/proof\/([^/]+)/);
+      const slugMatch = location.match(/^\/b\/([^/]+)/);
+      if (proofMatch) return <PublicProofPage />;
+      if (visitMatch) return <PublicVisitPage />;
+      if (slugMatch) return <PublicBookingPage />;
+    }
+    if (location.startsWith("/p/")) return <PublicPremisesPage />;
+  }
+
   return (
     <AuthGuard>
       <AppLayout>
@@ -173,6 +192,8 @@ function AppRouter() {
     <Switch>
       <Route path="/sign-in" component={SignInPage} />
       <Route path="/sign-up" component={SignUpPage} />
+      <Route path="/my" component={MyLiviaPage} />
+      <Route path="/my/" component={MyLiviaPage} />
 
       {isOnboardingPreviewRouteEnabled() ? (
         <>
@@ -187,7 +208,6 @@ function AppRouter() {
           <Route path="/experience/livia-evolution" component={LiviaEvolutionGalleryPage} />
         </>
       ) : null}
-      <Route path="/my" component={MyLiviaPage} />
       <Route path="/b/:slug/proof/:token" component={PublicProofPage} />
       <Route path="/b/:slug/visit/:token" component={PublicVisitPage} />
       <Route path="/b/:slug" component={PublicBookingPage} />
