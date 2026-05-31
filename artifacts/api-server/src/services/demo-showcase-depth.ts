@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, gt, isNull, or, sql } from "drizzle-orm";
 import {
   db,
   businessesTable,
@@ -10,6 +10,7 @@ import {
   conversationsTable,
   petsTable,
   medicalIntakeRecordsTable,
+  slotWaitlistEntriesTable,
 } from "@workspace/db";
 import { createStaff } from "./staff.service";
 import { createService } from "./services.service";
@@ -329,4 +330,97 @@ export async function getDemoGuestPayToken(slug: string): Promise<string | null>
 
   const { ensureBookingGuestAccess } = await import("./booking-guest-access.service");
   return ensureBookingGuestAccess(biz.id, booking.id);
+}
+
+/** Offered slot waitlist entry — fitness / medspa guest accept E2E. */
+export async function ensureDemoGuestWaitlistOffer(businessId: string): Promise<string | null> {
+  const now = new Date();
+  const [existing] = await db
+    .select({ offerToken: slotWaitlistEntriesTable.offerToken })
+    .from(slotWaitlistEntriesTable)
+    .where(
+      and(
+        eq(slotWaitlistEntriesTable.businessId, businessId),
+        eq(slotWaitlistEntriesTable.status, "offered"),
+        sql`${slotWaitlistEntriesTable.offerToken} IS NOT NULL`,
+        or(
+          isNull(slotWaitlistEntriesTable.expiresAt),
+          gt(slotWaitlistEntriesTable.expiresAt, now),
+        ),
+      ),
+    )
+    .limit(1);
+  if (existing?.offerToken) return existing.offerToken;
+
+  const [customer] = await db
+    .select({ id: customersTable.id })
+    .from(customersTable)
+    .where(eq(customersTable.businessId, businessId))
+    .limit(1);
+  const [service] = await db
+    .select({ id: servicesTable.id })
+    .from(servicesTable)
+    .where(eq(servicesTable.businessId, businessId))
+    .limit(1);
+  if (!customer || !service) return null;
+
+  const [staff] = await db
+    .select({ id: staffTable.id })
+    .from(staffTable)
+    .where(eq(staffTable.businessId, businessId))
+    .limit(1);
+
+  const start = new Date();
+  start.setDate(start.getDate() + 3);
+  start.setHours(10, 0, 0, 0);
+
+  const { createBooking, cancelBookingWithReason } = await import("./bookings.service");
+  const { joinSlotWaitlist, markWaitlistOffered } = await import("./waitlist.service");
+
+  const booking = await createBooking(businessId, {
+    serviceId: service.id,
+    customerId: customer.id,
+    staffId: staff?.id,
+    startAt: start.toISOString(),
+    channelType: "WEB",
+    source: "demo-waitlist-offer",
+    notes: "Demo slot opened for waitlist accept",
+  });
+  await cancelBookingWithReason(businessId, booking.id, "Demo — slot offered to waitlist");
+
+  const [activeEntry] = await db
+    .select({ id: slotWaitlistEntriesTable.id })
+    .from(slotWaitlistEntriesTable)
+    .where(
+      and(
+        eq(slotWaitlistEntriesTable.businessId, businessId),
+        eq(slotWaitlistEntriesTable.status, "active"),
+        eq(slotWaitlistEntriesTable.customerId, customer.id),
+      ),
+    )
+    .limit(1);
+
+  const entryId =
+    activeEntry?.id ??
+    (
+      await joinSlotWaitlist({
+        businessId,
+        serviceId: service.id,
+        customerId: customer.id,
+        notes: "Demo waitlist — guest accept link",
+      })
+    ).id;
+
+  const offered = await markWaitlistOffered(entryId, booking.id);
+  return offered?.offerToken ?? null;
+}
+
+export async function getDemoGuestWaitlistToken(slug: string): Promise<string | null> {
+  const [biz] = await db
+    .select({ id: businessesTable.id })
+    .from(businessesTable)
+    .where(eq(businessesTable.slug, slug))
+    .limit(1);
+  if (!biz) return null;
+  return ensureDemoGuestWaitlistOffer(biz.id);
 }

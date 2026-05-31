@@ -42,6 +42,7 @@ const routeChecks: Array<[string, string]> = [
   ["/b/demo-shop/pay/tok1", "public.deposit-pay"],
   ["/b/demo-shop/intake/tok1", "public.intake"],
   ["/b/demo-shop/proof/tok1", "guest.public.proof"],
+  ["/b/demo-shop/waitlist/tok1", "w5.waitlist-accept"],
   ["/my", "guest.public.hub"],
 ];
 

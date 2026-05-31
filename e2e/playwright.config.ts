@@ -282,6 +282,26 @@ export default defineConfig({
         baseURL: dashboardBase,
       },
     },
+    {
+      name: "demo-waitlist-token",
+      testMatch: /demo-waitlist-token\.spec\.ts/,
+      timeout: 180_000,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+      },
+    },
+    {
+      name: "guest-token-suite",
+      testMatch: /guest-token-suite\.spec\.ts/,
+      timeout: 300_000,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+      },
+    },
   ],
   metadata: {
     demoSlug,

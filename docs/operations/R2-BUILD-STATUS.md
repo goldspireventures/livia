@@ -3,7 +3,7 @@
 **Authority:** [`product/LIVIA-FINAL-BUILD-PLAN.md`](../product/LIVIA-FINAL-BUILD-PLAN.md) §5  
 **Sequencing:** [`product/LIVIA-WIDE-BUILD-PLAN.md`](../product/LIVIA-WIDE-BUILD-PLAN.md) §6  
 **Tracker:** [`PLATFORM-BACKLOG.md`](./PLATFORM-BACKLOG.md)  
-**Updated:** 2026-05-30 (Wave 15 — R1 close + R2 kickoff)
+**Updated:** 2026-05-31 (Wave 16 — guest-token CI + waitlist accept)
 
 ---
 
@@ -25,7 +25,7 @@ Guest surfaces complete · P7 hub · support at scale · mobile parity push.
 | R2-E4 | B1 registry complete + Investigate depth | **Partial** | P0 catalog + trace lookup |
 | R2-E5 | Mobile Today v2 + guest deep links | **Partial → Wave 15** | `/my-livia`, `/guest-surface`, 12s Today refetch |
 | R2-E6 | Proactive Radar feeds (stuck onboarding, zero bookings) | **Partial → Wave 15** | `/internal/ops/radar/feeds` |
-| R2-E7 | CI guest-token suite | **Not started** | |
+| R2-E7 | CI guest-token suite | **Partial → Wave 16** | `guest-token-api` in CI api gate; UI `guest-token-suite` |
 | R2-E8 | Support opens tenant from thread (impersonation policy) | **Partial** | bundle API exists |
 
 ---
@@ -34,6 +34,7 @@ Guest surfaces complete · P7 hub · support at scale · mobile parity push.
 
 | Wave | Date | Shipped |
 |------|------|---------|
+| 16 | 2026-05-31 | Guest waitlist accept polish · demo waitlist token API · `guest-token-api` CI · `guest-token-suite` UI |
 | 15 | 2026-05-30 | **R1 closed** · guest hub upcoming/favorites/book-again · `/pay/:token` · owner booking toast · Radar proactive feeds · support context registry · mobile My Livia + guest deep links · Today/bookings 12s refetch |
 | 14 | 2026-05-30 | G2 intake/waitlist · B1 registry · F6 Board/Radar |
 
@@ -41,11 +42,11 @@ Guest surfaces complete · P7 hub · support at scale · mobile parity push.
 
 ## Next agent queue
 
-1. Stripe deposit checkout on `/pay/:token` (R2-G)
-2. CI guest-token suite (R2-E7)
-3. Liv mandate approval UX (R2-C)
-4. Split Aurora demo composite (R2-F)
-5. E2E guest hub favorites + pay page smoke
+1. Hub Liv orchestrator chat (R2.5)
+2. Waitlist accept in CI with live API + dashboard (full `guest-token-suite` in release gate)
+3. Split Aurora demo composite (R2-F)
+4. Support opens tenant from thread — impersonation policy (R2-E8)
+5. Mobile guest deep links parity audit
 
 ---
 

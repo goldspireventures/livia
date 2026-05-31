@@ -253,7 +253,7 @@ export function resolvePlatformSurfaceId(pathname: string, search = ""): string 
 
   if (path.startsWith("/b/") && path.includes("/pay/")) return "public.deposit-pay";
   if (path.startsWith("/b/") && path.includes("/intake/")) return "public.intake";
-  if (path.startsWith("/b/") && path.includes("/waitlist/")) return "public.visit";
+  if (path.startsWith("/b/") && path.includes("/waitlist/")) return "w5.waitlist-accept";
   if (path.startsWith("/b/") && path.includes("/visit/")) return "public.visit";
   if (path.startsWith("/b/") && path.includes("/proof/")) return "guest.public.proof";
   if (path.startsWith("/b/")) return "guest.public.book";

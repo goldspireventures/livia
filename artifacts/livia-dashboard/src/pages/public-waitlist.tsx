@@ -1,14 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "wouter";
 import { applyVerticalTheme } from "@/lib/vertical-theme";
+import { applyExperienceTheme, clearExperienceTheme } from "@/lib/experience-theme";
+import { formatDateTime } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Clock, Loader2, Sparkles, CheckCircle2 } from "lucide-react";
 import {
   PublicSurfaceFooter,
   PublicSurfaceLoading,
   PublicSurfaceNotFound,
 } from "@/components/public/public-surface-chrome";
+import { usePublicGuestPwa } from "@/lib/public-guest-pwa";
 
 type WaitlistPayload = {
   entryId: string;
@@ -23,6 +26,17 @@ type WaitlistPayload = {
   customerFirstName: string | null;
 };
 
+function formatTtl(expiresAt: string | null): string | null {
+  if (!expiresAt) return null;
+  const ms = new Date(expiresAt).getTime() - Date.now();
+  if (ms <= 0) return "Expired";
+  const mins = Math.floor(ms / 60_000);
+  if (mins < 60) return `${mins} min left`;
+  const hrs = Math.floor(mins / 60);
+  const rem = mins % 60;
+  return rem > 0 ? `${hrs}h ${rem}m left` : `${hrs}h left`;
+}
+
 export default function PublicWaitlistPage() {
   const { slug, token } = useParams<{ slug: string; token: string }>();
   const [data, setData] = useState<WaitlistPayload | null>(null);
@@ -30,6 +44,9 @@ export default function PublicWaitlistPage() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [ttl, setTtl] = useState<string | null>(null);
+
+  usePublicGuestPwa(slug);
 
   useEffect(() => {
     if (!slug || !token) return;
@@ -42,13 +59,29 @@ export default function PublicWaitlistPage() {
       .then((d) => {
         setData(d);
         applyVerticalTheme(d.vertical, null);
+        applyExperienceTheme({ vertical: d.vertical ?? undefined });
+        setTtl(formatTtl(d.expiresAt));
       })
       .catch(() => setData(null))
       .finally(() => setLoading(false));
     return () => {
       document.documentElement.removeAttribute("data-vertical");
+      clearExperienceTheme();
     };
   }, [slug, token]);
+
+  useEffect(() => {
+    if (!data?.expiresAt || data.status !== "offered") return;
+    const tick = () => setTtl(formatTtl(data.expiresAt));
+    tick();
+    const id = window.setInterval(tick, 30_000);
+    return () => window.clearInterval(id);
+  }, [data?.expiresAt, data?.status]);
+
+  const greeting = useMemo(() => {
+    if (!data?.customerFirstName) return "A spot opened up";
+    return `Hi ${data.customerFirstName} — a spot opened up`;
+  }, [data?.customerFirstName]);
 
   async function accept() {
     if (!slug || !token) return;
@@ -80,48 +113,84 @@ export default function PublicWaitlistPage() {
     );
   }
 
-  const when = data.startAt
-    ? new Date(data.startAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
-    : null;
-  const canAccept = data.status === "offered";
+  const when = data.startAt ? formatDateTime(data.startAt) : null;
+  const canAccept = data.status === "offered" && ttl !== "Expired";
+  const accepted = data.status === "accepted" || !!message;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <main className="flex-1 max-w-lg mx-auto w-full p-4 pb-8 space-y-4">
-        <div className="text-center space-y-1 pt-4">
+    <div
+      className="min-h-screen bg-background public-booking-shell has-sticky-cta"
+      data-testid="guest-waitlist-page"
+    >
+      <div className="max-w-md mx-auto px-4 py-10 pb-28 space-y-6">
+        <div className="text-center space-y-2" data-testid="guest-waitlist-hero">
           {data.logoUrl ? (
-            <img src={data.logoUrl} alt="" className="h-12 mx-auto rounded-lg object-contain" />
+            <img src={data.logoUrl} alt="" className="h-12 mx-auto object-contain rounded-lg" />
           ) : null}
-          <h1 className="text-xl font-semibold">{data.businessName}</h1>
-          <p className="text-sm text-muted-foreground">Waitlist slot available</p>
+          <p className="text-[10px] uppercase tracking-widest font-mono text-primary flex items-center justify-center gap-1">
+            <Sparkles className="h-3 w-3" aria-hidden />
+            Waitlist offer
+          </p>
+          <h1 className="text-2xl font-serif">{data.businessName}</h1>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">
-              {data.serviceName ?? "Class session"}
-              {when ? ` · ${when}` : ""}
-            </CardTitle>
+        <Card className="border-primary/20">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">{data.serviceName ?? "Session"}</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              {canAccept
-                ? "A spot opened up from the waitlist. Accept to confirm your booking."
-                : data.status === "accepted"
-                  ? "This offer has been accepted."
+          <CardContent className="space-y-3 text-sm">
+            <p className="font-medium">{greeting}</p>
+            {when ? <p className="text-muted-foreground">{when}</p> : null}
+            {ttl && data.status === "offered" ? (
+              <p
+                className="text-xs text-muted-foreground flex items-center gap-1"
+                data-testid="guest-waitlist-ttl"
+              >
+                <Clock className="h-3 w-3" aria-hidden />
+                {ttl}
+              </p>
+            ) : null}
+            <p className="text-muted-foreground">
+              {accepted
+                ? "You're confirmed — we'll send details shortly."
+                : canAccept
+                  ? "Accept to lock in this slot before someone else does."
                   : "This offer is no longer available."}
             </p>
-            {message ? <p className="text-sm text-green-600">{message}</p> : null}
-            {err ? <p className="text-sm text-destructive">{err}</p> : null}
-            {canAccept ? (
-              <Button className="w-full" onClick={accept} disabled={busy}>
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Accept slot"}
-              </Button>
+            {message ? (
+              <p className="text-sm text-primary flex items-center gap-2" data-testid="guest-waitlist-success">
+                <CheckCircle2 className="h-4 w-4 shrink-0" />
+                {message}
+              </p>
             ) : null}
+            {err ? <p className="text-sm text-destructive">{err}</p> : null}
           </CardContent>
         </Card>
-      </main>
-      <PublicSurfaceFooter />
+
+        <PublicSurfaceFooter />
+      </div>
+
+      {canAccept ? (
+        <div
+          className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/80 bg-background/95 backdrop-blur-md px-4 py-3"
+          data-testid="guest-waitlist-sticky-cta"
+        >
+          <div className="max-w-md mx-auto flex flex-col gap-2">
+            <Button
+              className="w-full min-h-[48px]"
+              size="lg"
+              disabled={busy}
+              data-testid="guest-waitlist-accept"
+              onClick={() => void accept()}
+            >
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Accept slot"}
+            </Button>
+            <p className="text-center text-xs text-muted-foreground">
+              Not this time? Ignore this link — the offer will expire on its own.
+            </p>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

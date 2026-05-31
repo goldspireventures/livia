@@ -197,6 +197,28 @@ router.get("/demo/guest-surfaces/:slug/intake", async (req, res): Promise<void> 
   res.json({ slug, token, path: `/b/${slug}/intake/${token}`, url: `${dashboardBase}/b/${slug}/intake/${token}` });
 });
 
+/** Demo-only: waitlist accept token (fitness / slot waitlist). */
+router.get("/demo/guest-surfaces/:slug/waitlist", async (req, res): Promise<void> => {
+  const slug = String(req.params.slug ?? "").trim();
+  if (!slug) {
+    sendError(res, req, 400, "slug is required");
+    return;
+  }
+  const { getDemoGuestWaitlistToken } = await import("../services/demo-showcase-depth");
+  const token = await getDemoGuestWaitlistToken(slug);
+  if (!token) {
+    sendError(res, req, 404, "No waitlist offer for this demo shop");
+    return;
+  }
+  const dashboardBase = process.env.LIVIA_DASHBOARD_URL?.replace(/\/+$/, "") ?? "http://127.0.0.1:5173";
+  res.json({
+    slug,
+    token,
+    path: `/b/${slug}/waitlist/${token}`,
+    url: `${dashboardBase}/b/${slug}/waitlist/${token}`,
+  });
+});
+
 /**
  * One-tap persona sign-in (Clerk ticket). In dev, no prior auth required.
  * Production: LIVIA_DEMO_ENABLED + caller email must be demo/@livia.io.

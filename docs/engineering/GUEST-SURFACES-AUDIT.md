@@ -32,7 +32,7 @@
 | proof | ✅ `PublicProofPage` | ✅ + decision | ✅ body-art | ✅ `demo-proof-token` |
 | consent | ✅ `PublicIntakePage` | 🔨 partial | 🔨 medspa | 📋 |
 | deposit-pay | ✅ `PublicPayPage` | 🔨 Stripe | 📋 | 📋 |
-| waitlist-accept | 📋 | 📋 | 📋 fitness | 📋 |
+| waitlist-accept | ✅ `PublicWaitlistPage` | ✅ accept | ✅ fitness | ✅ `demo-waitlist-token`, `guest-token-*` |
 
 ---
 
@@ -42,6 +42,7 @@
 |---------|----------|
 | Catalog | `lib/policy/src/guest-surfaces.ts` |
 | Demo proof token | `GET /api/demo/guest-surfaces/:slug/proof` |
+| Demo waitlist token | `GET /api/demo/guest-surfaces/:slug/waitlist` |
 | TTL enforcement | api-server token services (per type) |
 | Support context | `surfaceId` on tickets → registry in support-points |
 
