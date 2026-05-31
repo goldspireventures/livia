@@ -175,6 +175,33 @@ async function ensureDemoAccountReady(def: DemoPersonaDef): Promise<string> {
   }
   await ensureDemoPlatformLegal(userId, def.email, def.displayName);
   await wireDemoAccountMemberships(def, userId, def.membershipRole ?? "OWNER");
+  if (def.membershipRole === "STAFF" || def.id === "staff-senior" || def.id === "staff-junior") {
+    for (const slug of def.businessSlugs) {
+      const [biz] = await db
+        .select({ id: businessesTable.id })
+        .from(businessesTable)
+        .where(eq(businessesTable.slug, slug))
+        .limit(1);
+      if (!biz) continue;
+      const staffQuery = def.staffDisplayName
+        ? db
+            .select({ id: staffTable.id })
+            .from(staffTable)
+            .where(
+              and(eq(staffTable.businessId, biz.id), eq(staffTable.displayName, def.staffDisplayName)),
+            )
+            .limit(1)
+        : db
+            .select({ id: staffTable.id })
+            .from(staffTable)
+            .where(eq(staffTable.businessId, biz.id))
+            .limit(1);
+      const [staffRow] = await staffQuery;
+      if (staffRow) {
+        await updateStaff(biz.id, staffRow.id, { userId });
+      }
+    }
+  }
   return userId;
 }
 
@@ -828,6 +855,7 @@ export async function syncDemoWorld(): Promise<{
   rosterAccounts: number;
   clerkSynced: number;
   brandingUpdated?: number;
+  servicesUpdated?: number;
   warnings?: string[];
   passwordHint: string;
   businesses: Array<{ slug: string; id: string; name: string }>;
@@ -847,44 +875,27 @@ export async function syncDemoWorld(): Promise<{
 
   const started = Date.now();
   let brandingUpdated = 0;
-  let rosterAccounts = 0;
-  let clerkSynced = 0;
-  const warnings: string[] = [];
+  let servicesUpdated = 0;
 
   try {
     brandingUpdated = await backfillAllDemoPublicBranding(DEMO_WORLD_SLUGS);
+    for (const b of status.businesses) {
+      servicesUpdated += await backfillDemoServiceImages(
+        b.id,
+        (b.vertical ?? undefined) as import("@workspace/policy").BusinessVertical | undefined,
+        { force: true },
+      );
+    }
   } catch (err) {
-    warnings.push(err instanceof Error ? err.message : "Branding backfill failed");
-    logger.warn({ err }, "demo.sync.branding_failed");
-  }
-
-  try {
-    const rosterResult = await seedDemoBusinessRosters();
-    rosterAccounts = rosterResult.accounts;
-  } catch (err) {
-    warnings.push(err instanceof Error ? err.message : "Roster seed failed");
-    logger.warn({ err }, "demo.sync.roster_failed");
-  }
-
-  try {
-    const clerkResult = await syncAllDemoClerkUsers();
-    clerkSynced = clerkResult.synced;
-  } catch (err) {
-    warnings.push(err instanceof Error ? err.message : "Clerk sync failed");
-    logger.warn({ err }, "demo.sync.clerk_failed");
-  }
-
-  if (warnings.length === 3) {
-    throw Object.assign(new Error(warnings[0] ?? "Demo sync failed"), { status: 500 });
+    logger.warn({ err }, "demo.sync.assets_failed");
+    throw err;
   }
 
   logger.info(
     {
       duration_ms: Date.now() - started,
-      clerkSynced,
-      rosterAccounts,
       brandingUpdated,
-      warnings,
+      servicesUpdated,
     },
     "demo.sync.completed",
   );
@@ -893,17 +904,26 @@ export async function syncDemoWorld(): Promise<{
   return {
     mode: "sync",
     provisioned: refreshed.provisioned,
-    rosterAccounts,
-    clerkSynced,
+    rosterAccounts: 0,
+    clerkSynced: 0,
     brandingUpdated,
+    servicesUpdated,
     passwordHint: publicDemoPasswordHint(),
     businesses: refreshed.businesses.map((b) => ({
       slug: b.slug,
       id: b.id,
       name: b.name,
     })),
-    warnings: warnings.length ? warnings : undefined,
   };
+}
+
+/** Heavy path — Clerk passwords + roster memberships (run after provision or when logins break). */
+export async function syncDemoLogins(): Promise<{ clerkSynced: number; rosterAccounts: number }> {
+  const [clerkResult, rosterResult] = await Promise.all([
+    syncAllDemoClerkUsers(),
+    seedDemoBusinessRosters(),
+  ]);
+  return { clerkSynced: clerkResult.synced, rosterAccounts: rosterResult.accounts };
 }
 
 export type DemoBusinessTenant = {

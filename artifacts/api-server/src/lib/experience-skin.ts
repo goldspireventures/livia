@@ -46,9 +46,9 @@ const SERVICE_IMAGES: Record<string, string> = {
   brow: "https://images.unsplash.com/photo-1487412940907-6530b50e3063?w=400&h=300&fit=crop",
   massage: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=400&h=300&fit=crop",
   tattoo: "https://images.unsplash.com/photo-1568515045052-f9a854d70bfd?w=400&h=300&fit=crop",
-  consult: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=400&h=300&fit=crop",
+  consult: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=400&h=300&fit=crop",
   botox: "https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=400&h=300&fit=crop",
-  filler: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=400&h=300&fit=crop",
+  filler: "https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=400&h=300&fit=crop",
   groom: "https://images.unsplash.com/photo-1516734212186-a967f81ad12d?w=400&h=300&fit=crop",
   dog: "https://images.unsplash.com/photo-1516734212186-a967f81ad12d?w=400&h=300&fit=crop",
   detail: "https://images.unsplash.com/photo-1601362841437-42e164e303e7?w=400&h=300&fit=crop",
@@ -73,6 +73,14 @@ export function inferDemoServiceImageUrl(
   vertical?: BusinessVertical | null,
 ): string | undefined {
   const n = serviceName.toLowerCase();
+
+  if (vertical === "body-art") {
+    return SERVICE_IMAGES.tattoo;
+  }
+  if (vertical === "medspa" || vertical === "allied-health") {
+    if (n.includes("consult")) return SERVICE_IMAGES.consult;
+  }
+
   for (const [key, url] of Object.entries(SERVICE_IMAGES)) {
     if (n.includes(key)) return url;
   }

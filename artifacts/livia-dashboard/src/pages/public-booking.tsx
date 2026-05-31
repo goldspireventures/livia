@@ -672,10 +672,11 @@ export default function PublicBookingPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>
-                  Email <span className="text-muted-foreground text-xs">(or phone)</span>
+                <Label htmlFor="public-email">
+                  Email <span className="text-destructive">*</span>
                 </Label>
                 <Input
+                  id="public-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -684,17 +685,21 @@ export default function PublicBookingPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>
-                  Phone <span className="text-muted-foreground text-xs">(or email)</span>
+                <Label htmlFor="public-phone">
+                  Phone <span className="text-destructive">*</span>
                 </Label>
                 <Input
+                  id="public-phone"
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+1 555 000 0000"
+                  placeholder="+353 87 123 4567"
                   data-testid="input-phone"
                 />
               </div>
+              <p className="text-xs text-muted-foreground">
+                <span className="text-destructive">*</span> At least one of email or phone is required.
+              </p>
               {phone.trim() ? (
                 <label className="flex items-start gap-3 rounded-lg border border-border/60 p-3 cursor-pointer">
                   <Checkbox
@@ -828,6 +833,10 @@ export default function PublicBookingPage() {
             </div>
             <p className="text-sm text-muted-foreground -mt-2">
               Required before your {vocab.serviceNoun.toLowerCase()} — please read carefully.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Your booking time is for the visit. The procedure below is what you&apos;ll consent to on the day — many
+              medspas confirm the exact treatment after consultation.
             </p>
             {(b.regulatoryFooter?.length ?? 0) > 0 && (
               <div

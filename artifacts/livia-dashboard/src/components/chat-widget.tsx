@@ -137,7 +137,7 @@ export default function ChatWidget({
         className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-[hsl(var(--chart-1))] px-5 py-3 text-sm font-semibold text-primary-foreground shadow-[0_8px_30px_-6px_hsl(var(--primary)/0.6)] hover:scale-105 active:scale-95 transition-transform"
       >
         <Sparkles className="h-4 w-4" />
-        Chat with AI
+        Chat with Liv
       </button>
     );
   }
@@ -153,7 +153,7 @@ export default function ChatWidget({
             </div>
             <div>
               <div className="text-sm font-semibold leading-none">{businessName}</div>
-              <div className="text-[11px] text-muted-foreground mt-0.5">AI booking assistant</div>
+              <div className="text-[11px] text-muted-foreground mt-0.5">Liv · booking assistant</div>
             </div>
           </div>
           <button

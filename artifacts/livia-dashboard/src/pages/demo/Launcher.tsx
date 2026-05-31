@@ -23,6 +23,7 @@ import {
   fetchDemoStatus,
   provisionDemoWorld,
   syncDemoWorld,
+  syncDemoLogins,
   requestDemoQuickSignIn,
   requestDemoSignIn,
   type DemoBusinessTenant,
@@ -121,19 +122,37 @@ export default function DemoLauncher() {
     try {
       const result = await syncDemoWorld();
       toast({
-        title: result.mode === "full" ? "Demo world created" : "Demo synced",
+        title: result.mode === "full" ? "Demo world created" : "Quick sync done",
         description:
           result.mode === "full"
             ? `${result.businesses.length} businesses seeded — pick a scenario next.`
-            : result.warnings?.length
-              ? `Branding refreshed · ${result.warnings[0]}`
-              : `Branding ${result.brandingUpdated ?? 0} · Clerk ${result.clerkSynced} · roster ${result.rosterAccounts}`,
+            : `Branding ${result.brandingUpdated ?? 0} · service images ${result.servicesUpdated ?? 0}`,
       });
       await refresh();
     } catch (e: unknown) {
       toast({
         title: "Setup failed",
         description: e instanceof Error ? e.message : "Is the API running with CLERK_SECRET_KEY?",
+        variant: "destructive",
+      });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function handleSyncLogins() {
+    setBusy("sync-logins");
+    try {
+      const result = await syncDemoLogins();
+      toast({
+        title: "Demo logins synced",
+        description: `Clerk ${result.clerkSynced} · roster ${result.rosterAccounts}`,
+      });
+      await refresh();
+    } catch (e: unknown) {
+      toast({
+        title: "Login sync failed",
+        description: e instanceof Error ? e.message : "Is CLERK_SECRET_KEY set?",
         variant: "destructive",
       });
     } finally {
@@ -332,7 +351,8 @@ export default function DemoLauncher() {
           </h2>
           <p className="text-sm text-white/55 mb-4 max-w-xl">
             First visit runs a full seed (~30–60s). After that, <strong className="text-white/80">Quick sync</strong>{" "}
-            refreshes branding + logins (~15–30s). If Clerk rate-limits, wait 60s and retry.
+            refreshes public branding + service images only (~5s). Use <strong className="text-white/80">Sync logins</strong>{" "}
+            if role sign-in breaks (Clerk, ~30–60s).
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <button
@@ -349,6 +369,22 @@ export default function DemoLauncher() {
               )}
               {provisioned ? "Quick sync" : "Set up demo world"}
             </button>
+            {provisioned ? (
+              <button
+                type="button"
+                onClick={() => void handleSyncLogins()}
+                disabled={!!busy}
+                className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm text-white/80 hover:bg-white/10 disabled:opacity-60"
+                data-testid="demo-sync-logins-btn"
+              >
+                {busy === "sync-logins" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4" />
+                )}
+                Sync logins
+              </button>
+            ) : null}
             {provisioned ? (
               <span className="text-[11px] font-mono text-emerald-400/90">
                 {tenants.length} businesses ready
@@ -449,7 +485,9 @@ export default function DemoLauncher() {
               </div>
             </div>
           ) : (
-            <p className="text-sm text-amber-200/80">Run quick sync — roster logins missing for this tenant.</p>
+            <p className="text-sm text-amber-200/80">
+              Run <strong>Sync logins</strong> on step 1 — roster accounts missing for this tenant.
+            </p>
           )}
         </section>
 

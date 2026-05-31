@@ -77,13 +77,18 @@ export function inferServiceCategory(name: string, vertical?: string | null): st
     if (n.includes("nail") || n.includes("manicure") || n.includes("pedicure")) return "Nails";
     return "Treatments";
   }
-  if (vertical === "hair" || vertical === "body-art") {
+  if (vertical === "hair") {
     if (n.includes("colour") || n.includes("color") || n.includes("balayage")) return "Colour";
     if (n.includes("beard") || n.includes("fade") || n.includes("trim") || n.includes("cut")) {
       return "Cuts & grooming";
     }
     if (n.includes("consult")) return "Consultations";
     return "Hair";
+  }
+  if (vertical === "body-art") {
+    if (n.includes("consult")) return "Consultations";
+    if (n.includes("tattoo") || n.includes("session") || n.includes("pierc")) return "Sessions";
+    return "Sessions";
   }
   if (vertical === "wellness" || vertical === "fitness") return "Sessions";
   return CATEGORY_FALLBACK;
@@ -204,4 +209,18 @@ export function isConsultOnlyService(
 export function consultServiceBadge(vertical?: string | null): string | null {
   if (vertical !== "body-art") return null;
   return "Consultation — deposit may apply for session work";
+}
+
+/** Per-service CTA on /b — consult vs paid session (body-art uses vertical default only as fallback). */
+export function publicServiceBookCta(
+  svc: PublicServiceRow,
+  vertical?: string | null,
+  businessCta?: string,
+): string {
+  const fallback = businessCta ?? verticalPublicCta(vertical);
+  if (isConsultOnlyService(svc.name, svc.priceMinor, vertical)) {
+    return vertical === "body-art" ? "Request a consult" : fallback;
+  }
+  if (vertical === "body-art") return "Book session";
+  return fallback;
 }

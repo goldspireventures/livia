@@ -9,6 +9,7 @@ import {
   getDemoPortalStatus,
   provisionDemoWorld,
   syncDemoWorld,
+  syncDemoLogins,
   signInAsDemoBusiness,
   signInAsDemoEmail,
   signInAsDemoPersona,
@@ -76,7 +77,7 @@ router.post("/demo/provision", async (req, res): Promise<void> => {
   }
 });
 
-/** Fast sync — refresh Clerk + rosters without wiping businesses (~5–15s). */
+/** Fast sync — branding + service images only (~3–8s). No Clerk. */
 router.post("/demo/sync", async (req, res): Promise<void> => {
   const requestId = (req as Request & { id?: string }).id;
   const started = Date.now();
@@ -88,8 +89,8 @@ router.post("/demo/sync", async (req, res): Promise<void> => {
         request_id: requestId,
         mode: result.mode,
         duration_ms: Date.now() - started,
-        clerk_synced: result.clerkSynced,
-        roster_accounts: result.rosterAccounts,
+        services_updated: result.servicesUpdated,
+        branding_updated: result.brandingUpdated,
       },
       "Demo world synced",
     );
@@ -110,6 +111,20 @@ router.post("/demo/sync", async (req, res): Promise<void> => {
       return;
     }
     sendError(res, req, 500, err.message ?? "Sync failed");
+  }
+});
+
+/** Refresh Clerk passwords + role memberships (~30–60s). Run once after key rotation. */
+router.post("/demo/sync-logins", async (req, res): Promise<void> => {
+  try {
+    res.json(await syncDemoLogins());
+  } catch (e: unknown) {
+    const err = e as Error & { code?: string };
+    if (err.code === "CLERK_NOT_CONFIGURED") {
+      sendError(res, req, 503, err.message, { code: err.code });
+      return;
+    }
+    sendError(res, req, 500, err.message ?? "Login sync failed");
   }
 });
 

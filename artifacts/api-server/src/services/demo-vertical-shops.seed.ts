@@ -149,8 +149,8 @@ export async function seedVerticalShowcaseShops(
         { firstName: "Rory", lastName: "Mannion", displayName: "Rory Mannion", email: "rory@ink.ie", color: "#F97316" },
       ],
       services: [
-        { name: "Consultation", durationMinutes: 30, priceMinor: 0, sortOrder: 1 },
-        { name: "Tattoo session (2h)", durationMinutes: 120, priceMinor: 20000, sortOrder: 2 },
+        { name: "Consultation", durationMinutes: 30, priceMinor: 0, sortOrder: 1, category: "Consultations" },
+        { name: "Tattoo session (2h)", durationMinutes: 120, priceMinor: 20000, sortOrder: 2, category: "Sessions" },
       ],
     },
     {

@@ -464,7 +464,7 @@ export default function SettingsPage() {
                         <div className="space-y-0.5">
                           <Label className="text-sm font-medium">Enable AI assistant</Label>
                           <p className="text-xs text-muted-foreground">
-                            Show the "Chat with AI" button on your public booking page.
+                            Show the &quot;Chat with Liv&quot; button on your public booking page.
                           </p>
                         </div>
                         <Switch

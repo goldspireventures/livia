@@ -226,6 +226,9 @@ export default function MyLiviaPage() {
           <p className="text-[10px] uppercase tracking-widest font-mono text-primary">My Livia</p>
           <h1 className="text-2xl font-serif mt-2">Your shops</h1>
           <p className="text-xs text-muted-foreground mt-1">{view.phoneE164}</p>
+          <p className="text-sm text-muted-foreground mt-3 max-w-sm mx-auto">
+            Tap a shop to book again. Visit links and appointment management are coming soon.
+          </p>
         </div>
 
         {view.shops.length === 0 ? (
@@ -236,25 +239,27 @@ export default function MyLiviaPage() {
           </Card>
         ) : (
           view.shops.map((shop) => (
-            <Card key={shop.businessId}>
-              <CardContent className="py-4 flex items-center gap-3">
-                {shop.logoUrl ? (
-                  <img src={shop.logoUrl} alt="" className="h-10 w-10 rounded object-contain" />
-                ) : (
-                  <Store className="h-8 w-8 text-muted-foreground" />
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">{shop.businessName}</p>
-                  <p className="text-xs text-muted-foreground capitalize">{shop.vertical.replace(/-/g, " ")}</p>
-                </div>
-                {shop.isFavorite ? <Heart className="h-4 w-4 text-primary fill-primary" /> : null}
-                <Link href={shop.bookUrl}>
-                  <Button size="sm" variant="secondary">
-                    Book again
+            <Link key={shop.businessId} href={shop.bookUrl}>
+              <Card className="transition-colors hover:border-primary/40 cursor-pointer">
+                <CardContent className="py-4 flex items-center gap-3">
+                  {shop.logoUrl ? (
+                    <img src={shop.logoUrl} alt="" className="h-10 w-10 rounded object-contain" />
+                  ) : (
+                    <Store className="h-8 w-8 text-muted-foreground" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{shop.businessName}</p>
+                    <p className="text-xs text-muted-foreground capitalize">
+                      {shop.vertical.replace(/-/g, " ")}
+                    </p>
+                  </div>
+                  {shop.isFavorite ? <Heart className="h-4 w-4 text-primary fill-primary" /> : null}
+                  <Button size="sm" variant="secondary" asChild>
+                    <span>Book again</span>
                   </Button>
-                </Link>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
           ))
         )}
 

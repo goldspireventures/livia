@@ -104,18 +104,26 @@ export async function provisionDemoWorld() {
   }>("/demo/provision", { method: "POST" });
 }
 
-/** Fast path — sync Clerk + rosters without wiping data. Runs full provision only if missing. */
+/** Fast path — branding + service images only (~3–8s). No Clerk. Runs full provision if missing. */
 export async function syncDemoWorld() {
   return apiFetch<{
     mode: "sync" | "full";
     provisioned: boolean;
-    rosterAccounts: number;
-    clerkSynced: number;
+    rosterAccounts?: number;
+    clerkSynced?: number;
     brandingUpdated?: number;
+    servicesUpdated?: number;
     warnings?: string[];
     passwordHint: string;
     businesses: Array<{ slug: string; id: string; name: string }>;
   }>("/demo/sync", { method: "POST" });
+}
+
+/** Heavy path — Clerk passwords + roster memberships (~30–60s). */
+export async function syncDemoLogins() {
+  return apiFetch<{ clerkSynced: number; rosterAccounts: number }>("/demo/sync-logins", {
+    method: "POST",
+  });
 }
 
 export async function fetchDemoStatus() {

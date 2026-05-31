@@ -7,6 +7,7 @@ import {
   groupServicesByCategory,
   isConsultOnlyService,
   consultServiceBadge,
+  publicServiceBookCta,
   type PublicServiceRow,
 } from "@/lib/public-booking-helpers";
 
@@ -92,7 +93,7 @@ export function PublicServiceCatalog({
                         data-testid={`button-service-${svc.id}`}
                         onClick={() => onSelect(svc)}
                       >
-                        {bookCta}
+                        {publicServiceBookCta(svc, vertical, bookCta)}
                         <ChevronRight className="h-4 w-4 ml-0.5" aria-hidden />
                       </Button>
                     </div>

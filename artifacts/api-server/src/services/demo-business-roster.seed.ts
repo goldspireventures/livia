@@ -1,6 +1,6 @@
 import { createClerkClient } from "@clerk/express";
 import { and, eq, inArray } from "drizzle-orm";
-import { db, businessesTable, businessMembershipsTable } from "@workspace/db";
+import { db, businessesTable, businessMembershipsTable, staffTable } from "@workspace/db";
 import { DEMO_ROLE_EMAILS, demoRoleEmailForSlug, type DemoTenantRole } from "@workspace/demo-logins";
 import { mapWithConcurrency, withClerkRetry } from "../lib/async-pool";
 import { generateId } from "../lib/id";
@@ -13,6 +13,7 @@ import {
 import { syncDemoClerkUser } from "../lib/demo-clerk-sync";
 import { logger } from "../lib/logger";
 import { getOrCreateUser, updateUser } from "./users.service";
+import { updateStaff } from "./staff.service";
 import { buildPlatformLegalAcceptance, hasCurrentPlatformLegal } from "../lib/platform-legal-gate";
 import { usersTable } from "@workspace/db";
 
@@ -120,6 +121,16 @@ export async function seedDemoBusinessRosters(): Promise<{ accounts: number; slu
         const userId = await ensureClerkForDef(def);
         if (!userId) return 0;
         await upsertMembership(row.id, userId, membershipRoleFor(def));
+        if (role === "staff") {
+          const [staffRow] = await db
+            .select({ id: staffTable.id })
+            .from(staffTable)
+            .where(eq(staffTable.businessId, row.id))
+            .limit(1);
+          if (staffRow) {
+            await updateStaff(row.id, staffRow.id, { userId });
+          }
+        }
         return 1;
       } catch (err) {
         logger.warn({ err, slug: row.slug, role, email: def.email }, "demo.roster.clerk_failed");

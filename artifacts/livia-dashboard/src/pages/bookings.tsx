@@ -16,7 +16,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { CalendarPlus, Search, Calendar, ChevronRight, Loader2 } from "lucide-react";
 import { usePersona } from "@/lib/persona";
-import { OPERATIONAL_REFETCH_MS } from "@/lib/operational-cache";
 import { BookingCreateDialog } from "@/components/booking/booking-create-dialog";
 import { pendingReasonLabel } from "@/lib/booking-pending";
 import { BookingRowActions } from "@/components/booking/booking-row-actions";
@@ -64,7 +63,14 @@ export default function BookingsPage() {
   const { data, isLoading, isFetching } = useListBookings(
     bid,
     { status: statusParam, limit: PAGE_SIZE, offset },
-    { query: { enabled: !!bid, refetchInterval: OPERATIONAL_REFETCH_MS } as any },
+    {
+      query: {
+        enabled: !!bid,
+        refetchInterval: 12_000,
+        refetchOnWindowFocus: true,
+        refetchOnMount: "always",
+      } as any,
+    },
   );
 
   const page = useMemo(() => {
