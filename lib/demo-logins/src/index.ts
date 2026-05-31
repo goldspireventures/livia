@@ -81,6 +81,32 @@ export function demoOwnerEmailForSlug(slug: string): string {
   return demoEmail(`owner-${demoOwnerShortForSlug(slug)}`);
 }
 
+export type DemoTenantRole = "owner" | "manager" | "desk" | "staff";
+
+export function demoRoleEmailForSlug(slug: string, role: DemoTenantRole): string {
+  const short = demoOwnerShortForSlug(slug);
+  return demoEmail(`${role}-${short}`);
+}
+
+const TENANT_ROLE_RE =
+  /^(owner|manager|desk|staff)-([a-z0-9]+)@(demo\.livia-hq\.com|livia\.io)$/;
+
+/** Parse per-tenant demo email → business slug + role. */
+export function parseDemoTenantEmail(
+  email: string,
+): { slug: string; role: DemoTenantRole } | null {
+  const lower = email.trim().toLowerCase();
+  const m = lower.match(TENANT_ROLE_RE);
+  if (!m?.[1] || !m[2]) {
+    const ownerSlug = slugFromOwnerDemoEmail(lower);
+    return ownerSlug ? { slug: ownerSlug, role: "owner" } : null;
+  }
+  const role = m[1] as DemoTenantRole;
+  const slug = SHORT_TO_SLUG[m[2]];
+  if (!slug) return null;
+  return { slug, role };
+}
+
 const OWNER_DEMO_RE = /^owner-([a-z0-9]+)@(demo\.livia-hq\.com|livia\.io)$/;
 const LEGACY_OWNER_DEMO_RE = /^demo-owner-([a-z0-9-]+)@(demo\.livia-hq\.com|livia\.io)$/;
 
@@ -102,6 +128,7 @@ export function isDemoLiviaEmail(email: string | null | undefined): boolean {
   const local = lower.split("@")[0] ?? "";
   if (local.startsWith("demo-")) return true;
   if (local.startsWith("owner-")) return true;
+  if (/^(manager|desk|staff)-/.test(local)) return true;
   if (Object.values(DEMO_ROLE_EMAILS).some((e) => e.toLowerCase() === lower)) return true;
   // Legacy @livia.io role emails from docs before domain migration
   if (lower.endsWith(`@${LEGACY_DEMO_EMAIL_DOMAIN}`)) {

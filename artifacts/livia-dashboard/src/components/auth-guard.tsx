@@ -3,7 +3,7 @@ import { Redirect, useLocation } from "wouter";
 import { useGetMyBusinesses } from "@workspace/api-client-react";
 import { BusinessProvider, normalizeBusinessList, useBusiness } from "@/lib/business-context";
 import { MembershipProvider, useMembership } from "@/lib/membership-context";
-import { usePersona } from "@/lib/persona";
+import { isDemoLoginEnabled, usePersona } from "@/lib/persona";
 import { PERSONA_RITUALS } from "@/lib/persona-rituals";
 import { Spinner } from "@/components/ui/spinner";
 import { ReactNode, useEffect, useState } from "react";
@@ -78,7 +78,8 @@ export function AuthGuard({ children }: { children: ReactNode }) {
   }
 
   if (!isSignedIn) {
-    return <Redirect to={`/sign-in?redirect_url=${encodeURIComponent(location)}`} />;
+    const gate = isDemoLoginEnabled ? "/demo" : "/sign-in";
+    return <Redirect to={`${gate}?redirect_url=${encodeURIComponent(location)}`} />;
   }
 
   return (

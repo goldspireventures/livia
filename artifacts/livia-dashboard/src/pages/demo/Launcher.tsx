@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState, useDeferredValue } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useDeferredValue } from "react";
 import { Link, useLocation } from "wouter";
-import { useAuth, useSignIn, useClerk } from "@clerk/clerk-react";
+import { useSignIn, useClerk } from "@clerk/clerk-react";
 import {
   Sparkles,
   LayoutDashboard,
@@ -12,7 +12,6 @@ import {
   ArrowRight,
   Loader2,
   RefreshCw,
-  BookOpen,
   Building2,
   ExternalLink,
   type LucideIcon,
@@ -23,17 +22,19 @@ import {
   fetchDemoCatalog,
   fetchDemoStatus,
   provisionDemoWorld,
+  syncDemoWorld,
+  requestDemoQuickSignIn,
   requestDemoSignIn,
-  requestDemoSignInForBusiness,
-  requestDemoSignInAsBusiness,
   type DemoBusinessTenant,
   type DemoCatalogPersona,
   type DemoPersonaId,
+  type DemoScenarioSpotlight,
   type DemoSignInResult,
 } from "@/lib/demo-portal";
 import { useToast } from "@/hooks/use-toast";
 import { listWedgeDemoVerticals, getWedgeDemoStory } from "@workspace/policy";
 import { completeDemoClerkSignIn } from "@/lib/demo-clerk-sign-in";
+import { DemoFlowStepper, type DemoFlowStep } from "@/components/demo/demo-flow-stepper";
 
 const VERTICAL_LABELS: Record<string, string> = {
   hair: "Hair & barber",
@@ -68,17 +69,30 @@ export default function DemoLauncher() {
   const { signIn, isLoaded: signInLoaded } = useSignIn();
   const { setActive, signOut, session } = useClerk();
   const [catalog, setCatalog] = useState<DemoCatalogPersona[]>([]);
+  const [scenarios, setScenarios] = useState<DemoScenarioSpotlight[]>([]);
   const [tenants, setTenants] = useState<DemoBusinessTenant[]>([]);
   const [provisioned, setProvisioned] = useState(false);
-  const [passwordHint, setPasswordHint] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [devPassword, setDevPassword] = useState<string | undefined>();
   const [tenantFilter, setTenantFilter] = useState("");
   const [countryFilter, setCountryFilter] = useState<string>("ALL");
+  const [selectedScenario, setSelectedScenario] = useState<DemoScenarioSpotlight | null>(null);
+  const roleSectionRef = useRef<HTMLElement | null>(null);
+
+  const flowStep: DemoFlowStep = !provisioned
+    ? "setup"
+    : selectedScenario
+      ? "role"
+      : "scenario";
 
   const refresh = useCallback(async () => {
     const [cat, st] = await Promise.all([
-      fetchDemoCatalog().catch(() => ({ personas: [], devPassword: undefined })),
+      fetchDemoCatalog().catch(() => ({
+        personas: [],
+        devPassword: undefined,
+        sharedPassword: undefined,
+        scenarios: [],
+      })),
       fetchDemoStatus().catch(
         (): Awaited<ReturnType<typeof fetchDemoStatus>> => ({
           provisioned: false,
@@ -92,30 +106,84 @@ export default function DemoLauncher() {
       ),
     ]);
     setCatalog(cat.personas);
-    setDevPassword(cat.devPassword);
+    setScenarios(cat.scenarios ?? []);
+    setDevPassword(cat.sharedPassword ?? cat.devPassword);
     setProvisioned(st.provisioned);
     setTenants(st.businesses ?? []);
-    setPasswordHint(st.passwordHint ?? "");
   }, []);
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
 
-  async function handleProvision() {
+  async function handleSync() {
     setBusy("provision");
     try {
-      await provisionDemoWorld();
+      const result = await syncDemoWorld();
       toast({
-        title: "Demo world ready",
+        title: result.mode === "full" ? "Demo world created" : "Demo synced",
         description:
-          "Every business now has its own owner login. Pick any row → Open as owner.",
+          result.mode === "full"
+            ? `${result.businesses.length} businesses seeded — pick a scenario next.`
+            : `Clerk ${result.clerkSynced} · roster ${result.rosterAccounts} — ready to test.`,
       });
       await refresh();
     } catch (e: unknown) {
       toast({
-        title: "Provision failed",
+        title: "Setup failed",
         description: e instanceof Error ? e.message : "Is the API running with CLERK_SECRET_KEY?",
+        variant: "destructive",
+      });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function handleFullReset() {
+    setBusy("reset");
+    try {
+      await provisionDemoWorld();
+      toast({
+        title: "Full reset complete",
+        description: "All demo businesses wiped and re-seeded. Pick a scenario.",
+      });
+      setSelectedScenario(null);
+      await refresh();
+    } catch (e: unknown) {
+      toast({
+        title: "Reset failed",
+        description: e instanceof Error ? e.message : "Unknown error",
+        variant: "destructive",
+      });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  function selectScenario(scenario: DemoScenarioSpotlight) {
+    setSelectedScenario(scenario);
+    window.requestAnimationFrame(() => {
+      roleSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
+  async function quickEnterEmail(email: string, busyKey: string) {
+    if (!provisioned) {
+      toast({
+        title: "Provision demo world first",
+        description: "Click “Set up demo world” once — seeds every business + role login.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setBusy(busyKey);
+    try {
+      const result = await requestDemoQuickSignIn(email);
+      await completeTicketSignIn(result);
+    } catch (e: unknown) {
+      toast({
+        title: "Could not sign in",
+        description: e instanceof Error ? e.message : "Unknown error",
         variant: "destructive",
       });
     } finally {
@@ -138,29 +206,10 @@ export default function DemoLauncher() {
     navigate(result.landingPath);
   }
 
-  async function enterBusiness(slug: string) {
-    if (!provisioned) {
-      toast({
-        title: "Provision demo world first",
-        description: "Click “Set up full demo world” to seed businesses and owner logins.",
-        variant: "destructive",
-      });
-      return;
-    }
-    setBusy(slug);
-    try {
-      const result = await requestDemoSignInAsBusiness(slug);
-      await completeTicketSignIn(result);
-    } catch (e: unknown) {
-      toast({
-        title: "Could not open business",
-        description: e instanceof Error ? e.message : "Unknown error",
-        variant: "destructive",
-      });
-    } finally {
-      setBusy(null);
-    }
-  }
+  const selectedTenant = useMemo(
+    () => (selectedScenario ? tenants.find((t) => t.slug === selectedScenario.slug) : null),
+    [selectedScenario, tenants],
+  );
 
   const deferredFilter = useDeferredValue(tenantFilter);
 
@@ -239,34 +288,6 @@ export default function DemoLauncher() {
     }
   }
 
-  async function enterPersonaForBusiness(personaId: DemoPersonaId, businessSlug: string) {
-    if (!provisioned && personaId !== "customer") {
-      toast({
-        title: "Provision demo world first",
-        description: "Click “Set up full demo world” once.",
-        variant: "destructive",
-      });
-      return;
-    }
-    setBusy(`${personaId}:${businessSlug}`);
-    try {
-      const result = await requestDemoSignInForBusiness(personaId, businessSlug);
-      if (result.signInStrategy === "public") {
-        navigate(result.landingPath);
-        return;
-      }
-      await completeTicketSignIn(result);
-    } catch (e: unknown) {
-      toast({
-        title: "Could not enter persona",
-        description: e instanceof Error ? e.message : "Unknown error",
-        variant: "destructive",
-      });
-    } finally {
-      setBusy(null);
-    }
-  }
-
   return (
     <div className="min-h-[100dvh] bg-[#09090b] text-white relative overflow-x-hidden">
       <div className="fixed inset-0 pointer-events-none -z-10" aria-hidden>
@@ -284,52 +305,157 @@ export default function DemoLauncher() {
             className="text-3xl md:text-5xl tracking-tight leading-[1.08] mb-4"
             style={{ fontFamily: "var(--app-font-serif)" }}
           >
-            Pick a trade, enter as owner.
+            Staging demo gateway
           </h1>
           <p className="text-sm md:text-base text-white/60 leading-relaxed">
-            Wedge stories show how Liv runs each vertical. Provision once, then open any seeded tenant.
-            Password: <code className="text-white/80">{devPassword ?? "LiviaDemo2026!"}</code>
+            One place to enter any demo business as owner, manager, front desk, or staff.
+            Shared password: <code className="text-white/80">{devPassword ?? "LiviaDemo2026!"}</code>
+            {" · "}
+            <Link href="/sign-in?beta=1" className="text-white/50 underline underline-offset-2 hover:text-white/80">
+              Real beta account
+            </Link>
           </p>
         </header>
 
-        <div className="mb-8 flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => void handleProvision()}
-            disabled={!!busy}
-            className="inline-flex items-center gap-2 rounded-full bg-[#06b6d4] text-black px-4 py-2 text-sm font-semibold hover:bg-[#22d3ee] disabled:opacity-60"
-            data-testid="demo-provision-btn"
-          >
-            {busy === "provision" ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+        <DemoFlowStepper
+          current={flowStep}
+          provisioned={provisioned}
+          scenarioSelected={!!selectedScenario}
+        />
+
+        {/* Step 1 — Setup */}
+        <section className="mb-10 rounded-2xl border border-white/12 bg-white/[0.03] p-5" data-testid="demo-step-setup">
+          <h2 className="text-xs font-mono uppercase tracking-widest text-white/40 mb-2">
+            1 · Set up demo world
+          </h2>
+          <p className="text-sm text-white/55 mb-4 max-w-xl">
+            First visit runs a full seed (~30–60s). After that, <strong className="text-white/80">Quick sync</strong>{" "}
+            refreshes logins in seconds without wiping data.
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => void handleSync()}
+              disabled={!!busy}
+              className="inline-flex items-center gap-2 rounded-full bg-[#06b6d4] text-black px-4 py-2 text-sm font-semibold hover:bg-[#22d3ee] disabled:opacity-60"
+              data-testid="demo-provision-btn"
+            >
+              {busy === "provision" ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+              {provisioned ? "Quick sync" : "Set up demo world"}
+            </button>
+            {provisioned ? (
+              <span className="text-[11px] font-mono text-emerald-400/90">
+                {tenants.length} businesses ready
+              </span>
             ) : (
-              <RefreshCw className="h-4 w-4" />
+              <span className="text-[11px] font-mono text-amber-400/90">Required before testing</span>
             )}
-            {provisioned ? "Reset demo world" : "Set up demo world"}
-          </button>
-          {provisioned ? (
-            <span className="text-[11px] font-mono text-emerald-400/90">
-              {tenants.length} businesses ready
-            </span>
+            {provisioned ? (
+              <button
+                type="button"
+                onClick={() => void handleFullReset()}
+                disabled={!!busy}
+                className="text-[11px] text-white/40 underline underline-offset-2 hover:text-white/70 disabled:opacity-50"
+              >
+                {busy === "reset" ? "Resetting…" : "Full reset (slow)"}
+              </button>
+            ) : null}
+          </div>
+        </section>
+
+        {/* Step 2 — Scenario */}
+        <section
+          className={`mb-10 ${!provisioned ? "opacity-50 pointer-events-none" : ""}`}
+          data-testid="demo-step-scenario"
+        >
+          <h2 className="text-xs font-mono uppercase tracking-widest text-white/40 mb-3">
+            2 · Pick a real-world scenario
+          </h2>
+          {!provisioned ? (
+            <p className="text-sm text-amber-200/80">Complete step 1 first.</p>
           ) : (
-            <span className="text-[11px] font-mono text-amber-400/90">Provision first</span>
+            <div className="grid gap-3 md:grid-cols-2">
+              {scenarios.map((scenario) => {
+                const selected = selectedScenario?.id === scenario.id;
+                return (
+                  <button
+                    key={scenario.id}
+                    type="button"
+                    onClick={() => selectScenario(scenario)}
+                    className={`rounded-2xl border p-4 text-left transition ${
+                      selected
+                        ? "border-[#06b6d4]/60 bg-[#06b6d4]/10"
+                        : "border-white/12 bg-white/[0.04] hover:border-white/25"
+                    }`}
+                    data-testid={`demo-scenario-${scenario.id}`}
+                  >
+                    <p className="text-[10px] font-mono uppercase tracking-wider text-[#22d3ee]/80">
+                      {scenario.structure.replace(/-/g, " ")}
+                    </p>
+                    <p className="text-sm font-medium text-white mt-1">{scenario.title}</p>
+                    <p className="text-xs text-white/45 mt-1">{scenario.description}</p>
+                    {selected ? (
+                      <p className="mt-2 text-[10px] font-mono text-[#22d3ee]">Selected ↓ choose role</p>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
           )}
-          <Link href="/sign-in">
-            <span className="text-xs text-white/50 hover:text-white/80 underline underline-offset-2">
-              Sign-in
-            </span>
-          </Link>
-          <Link href="/guides">
-            <span className="text-xs text-white/50 hover:text-white/80 underline underline-offset-2">
-              Playbook
-            </span>
-          </Link>
-        </div>
+        </section>
+
+        {/* Step 3 — Role */}
+        <section
+          ref={roleSectionRef}
+          className={`mb-10 ${!selectedScenario || !provisioned ? "opacity-50" : ""}`}
+          data-testid="demo-step-role"
+        >
+          <h2 className="text-xs font-mono uppercase tracking-widest text-white/40 mb-3">
+            3 · Enter as a role
+          </h2>
+          {!selectedScenario ? (
+            <p className="text-sm text-white/45">Pick a scenario above — then one-click login as owner, manager, desk, or staff.</p>
+          ) : selectedTenant?.roster?.length ? (
+            <div className="rounded-2xl border border-white/12 bg-white/[0.04] p-5">
+              <p className="text-sm font-medium text-white">{selectedScenario.title}</p>
+              <p className="text-xs text-white/45 mt-1 mb-4">{selectedTenant.name} · password{" "}
+                <code className="text-white/70">{devPassword ?? "LiviaDemo2026!"}</code>
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {selectedTenant.roster.map((entry) => {
+                  const loading = busy === `${selectedScenario.slug}:${entry.email}`;
+                  return (
+                    <button
+                      key={entry.email}
+                      type="button"
+                      disabled={!!busy || !provisioned}
+                      onClick={() => void quickEnterEmail(entry.email, `${selectedScenario.slug}:${entry.email}`)}
+                      className="flex flex-col items-start rounded-xl border border-white/15 bg-white/[0.03] px-3 py-3 text-left hover:border-[#06b6d4]/40 hover:bg-white/[0.06] disabled:opacity-60"
+                      title={entry.email}
+                    >
+                      <span className="text-xs font-medium text-white">
+                        {loading ? "Signing in…" : entry.label.split(" · ").pop()}
+                      </span>
+                      <span className="mt-1 text-[9px] font-mono text-white/35 truncate w-full">{entry.email}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-amber-200/80">Run quick sync — roster logins missing for this tenant.</p>
+          )}
+        </section>
 
         <section className="mb-10">
-          <h2 className="text-xs font-mono uppercase tracking-widest text-white/40 mb-3">
-            Wedge · one story per trade
+          <h2 className="text-xs font-mono uppercase tracking-widest text-white/40 mb-1">
+            Or explore by trade story
           </h2>
+          <p className="text-xs text-white/40 mb-3">Same flow: story → pick role → enter app</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {listWedgeDemoVerticals().map((v) => {
               const story = getWedgeDemoStory(v);
@@ -351,33 +477,34 @@ export default function DemoLauncher() {
         </section>
 
         <section className="mb-10" data-testid="demo-tenant-tour">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-3">
-            <h2 className="text-xs font-mono uppercase tracking-widest text-white/40">
-              All demo tenants
-            </h2>
-            <div className="flex gap-2 w-full sm:w-auto">
-              <select
-                value={countryFilter}
-                onChange={(e) => setCountryFilter(e.target.value)}
-                className="rounded-lg border border-white/15 bg-white/5 px-2 py-1.5 text-xs text-white"
-                aria-label="Filter by country"
-              >
-                {countries.map((c) => (
-                  <option key={c} value={c} className="bg-[#09090b]">
-                    {c === "ALL" ? "All countries" : c}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="search"
-                placeholder="Filter…"
-                value={tenantFilter}
-                onChange={(e) => setTenantFilter(e.target.value)}
-                className="flex-1 sm:w-48 rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white placeholder:text-white/30"
-                aria-label="Filter businesses"
-              />
+          <details className="group">
+            <summary className="cursor-pointer text-xs font-mono uppercase tracking-widest text-white/40 mb-3 list-none">
+              Advanced · all {tenants.length} demo tenants
+            </summary>
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-3 pt-2">
+              <div className="flex gap-2 w-full sm:w-auto">
+                <select
+                  value={countryFilter}
+                  onChange={(e) => setCountryFilter(e.target.value)}
+                  className="rounded-lg border border-white/15 bg-white/5 px-2 py-1.5 text-xs text-white"
+                  aria-label="Filter by country"
+                >
+                  {countries.map((c) => (
+                    <option key={c} value={c} className="bg-[#09090b]">
+                      {c === "ALL" ? "All countries" : c}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="search"
+                  placeholder="Filter…"
+                  value={tenantFilter}
+                  onChange={(e) => setTenantFilter(e.target.value)}
+                  className="flex-1 sm:w-48 rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white placeholder:text-white/30"
+                  aria-label="Filter businesses"
+                />
+              </div>
             </div>
-          </div>
           {!provisioned ? (
             <p className="text-sm text-amber-200/80">Provision first — then every business gets an owner login.</p>
           ) : filteredTenants.length === 0 ? (
@@ -395,7 +522,9 @@ export default function DemoLauncher() {
                     {(tenantsByVertical[vKey] ?? [])
                       .sort((a, b) => a.name.localeCompare(b.name))
                       .map((t) => {
-                        const loading = busy === t.slug;
+                        const ownerEmail =
+                          t.roster?.find((r) => r.role === "owner")?.email ?? t.ownerEmail;
+                        const loading = busy === `${t.slug}:${ownerEmail}`;
                         const ownerPersona = t.ownerPersonaId;
                         return (
                           <div
@@ -406,52 +535,36 @@ export default function DemoLauncher() {
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-white truncate">{t.name}</p>
                               <p className="text-[10px] font-mono text-white/40 mt-0.5 truncate">
-                                {t.slug} · {t.ownerEmail}
+                                {t.slug}
                               </p>
-                              <details className="mt-2">
-                                <summary className="cursor-pointer text-[10px] text-white/45 hover:text-white/70">
-                                  Staff roles
-                                </summary>
+                              {t.roster?.length ? (
                                 <div className="mt-2 flex flex-wrap gap-1.5">
-                                <button
-                                  type="button"
-                                  onClick={() => void enterPersonaForBusiness("manager", t.slug)}
-                                  disabled={!!busy}
-                                  className="rounded-md border border-white/15 px-2 py-1 text-[10px] text-white/80 hover:bg-white/5 disabled:opacity-60"
-                                >
-                                  Manager
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => void enterPersonaForBusiness("receptionist", t.slug)}
-                                  disabled={!!busy}
-                                  className="rounded-md border border-white/15 px-2 py-1 text-[10px] text-white/80 hover:bg-white/5 disabled:opacity-60"
-                                >
-                                  Reception
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => void enterPersonaForBusiness("staff-senior", t.slug)}
-                                  disabled={!!busy}
-                                  className="rounded-md border border-white/15 px-2 py-1 text-[10px] text-white/80 hover:bg-white/5 disabled:opacity-60"
-                                >
-                                  Staff senior
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => void enterPersonaForBusiness("staff-junior", t.slug)}
-                                  disabled={!!busy}
-                                  className="rounded-md border border-white/15 px-2 py-1 text-[10px] text-white/80 hover:bg-white/5 disabled:opacity-60"
-                                >
-                                  Staff junior
-                                </button>
+                                  {t.roster.map((entry) => {
+                                    const roleBusy = busy === `${t.slug}:${entry.email}`;
+                                    return (
+                                      <button
+                                        key={entry.email}
+                                        type="button"
+                                        disabled={!!busy}
+                                        onClick={() => void quickEnterEmail(entry.email, `${t.slug}:${entry.email}`)}
+                                        className="rounded-md border border-white/15 px-2 py-1 text-[10px] text-white/80 hover:bg-white/5 disabled:opacity-60"
+                                        title={entry.email}
+                                      >
+                                        {roleBusy ? "…" : entry.label.split(" · ").pop()}
+                                      </button>
+                                    );
+                                  })}
                                 </div>
-                              </details>
+                              ) : null}
                             </div>
                             <div className="flex flex-wrap gap-2 shrink-0">
                               <button
                                 type="button"
-                                onClick={() => void (ownerPersona ? enterPersona(ownerPersona) : enterBusiness(t.slug))}
+                                onClick={() => {
+                                  const ownerEmail =
+                                    t.roster?.find((r) => r.role === "owner")?.email ?? t.ownerEmail;
+                                  void quickEnterEmail(ownerEmail, `${t.slug}:${ownerEmail}`);
+                                }}
                                 disabled={!!busy}
                                 className="inline-flex items-center gap-1.5 rounded-lg bg-[#06b6d4] text-black px-3 py-1.5 text-xs font-semibold hover:bg-[#22d3ee] disabled:opacity-60"
                               >
@@ -459,7 +572,7 @@ export default function DemoLauncher() {
                                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                                 ) : (
                                   <>
-                                    {ownerPersona ? "Open chain owner" : "Open as owner"}
+                                    {ownerPersona ? "Chain owner" : "Owner"}
                                     <ArrowRight className="h-3.5 w-3.5" />
                                   </>
                                 )}
@@ -482,6 +595,7 @@ export default function DemoLauncher() {
               ))}
             </div>
           )}
+          </details>
         </section>
 
         <details className="mb-10 group">

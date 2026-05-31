@@ -8,11 +8,13 @@ import {
   getDemoCatalog,
   getDemoPortalStatus,
   provisionDemoWorld,
+  syncDemoWorld,
   signInAsDemoBusiness,
   signInAsDemoEmail,
   signInAsDemoPersona,
   syncAllDemoClerkUsers,
   syncVerticalShowcaseForDemo,
+  quickDemoSignIn,
 } from "../services/demo-portal.service";
 
 import { sendError } from "../lib/http-errors";
@@ -71,6 +73,43 @@ router.post("/demo/provision", async (req, res): Promise<void> => {
       return;
     }
     sendError(res, req, 500, err.message ?? "Provision failed");
+  }
+});
+
+/** Fast sync — refresh Clerk + rosters without wiping businesses (~5–15s). */
+router.post("/demo/sync", async (req, res): Promise<void> => {
+  const requestId = (req as Request & { id?: string }).id;
+  const started = Date.now();
+  try {
+    const result = await syncDemoWorld();
+    logger.info(
+      {
+        event: "demo.sync.ok",
+        request_id: requestId,
+        mode: result.mode,
+        duration_ms: Date.now() - started,
+        clerk_synced: result.clerkSynced,
+        roster_accounts: result.rosterAccounts,
+      },
+      "Demo world synced",
+    );
+    res.json(result);
+  } catch (e: unknown) {
+    const err = e as Error & { code?: string; status?: number };
+    logger.error(
+      {
+        event: "demo.sync.failed",
+        request_id: requestId,
+        duration_ms: Date.now() - started,
+        err,
+      },
+      "Demo sync failed",
+    );
+    if (err.code === "CLERK_NOT_CONFIGURED") {
+      sendError(res, req, 503, err.message, { code: err.code });
+      return;
+    }
+    sendError(res, req, 500, err.message ?? "Sync failed");
   }
 });
 
@@ -139,6 +178,35 @@ router.post("/demo/sign-in-email", async (req, res): Promise<void> => {
   try {
     const out = await signInAsDemoEmail({ email, password });
     res.json(out);
+  } catch (e: unknown) {
+    const err = e as Error & { status?: number; code?: string };
+    if (err.status === 401 || err.status === 403 || err.status === 409) {
+      sendError(res, req, err.status, err.message);
+      return;
+    }
+    if (err.code === "CLERK_NOT_CONFIGURED") {
+      sendError(res, req, 503, err.message, { code: err.code });
+      return;
+    }
+    sendError(res, req, 500, err.message ?? "Sign-in failed");
+  }
+});
+
+/** One-click demo login — server applies shared password (staging internal only). */
+router.post("/demo/quick-sign-in", async (req, res): Promise<void> => {
+  const email = String(req.body?.email ?? "").trim();
+  if (!email) {
+    sendError(res, req, 400, "email is required");
+    return;
+  }
+
+  if (process.env.NODE_ENV === "production" && process.env.LIVIA_DEMO_ENABLED !== "true") {
+    sendError(res, req, 404, "Not found");
+    return;
+  }
+
+  try {
+    res.json(await quickDemoSignIn(email));
   } catch (e: unknown) {
     const err = e as Error & { status?: number; code?: string };
     if (err.status === 401 || err.status === 403 || err.status === 409) {

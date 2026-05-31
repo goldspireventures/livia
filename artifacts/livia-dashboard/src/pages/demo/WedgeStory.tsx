@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "wouter";
 import { useSignIn, useClerk } from "@clerk/clerk-react";
 import {
@@ -22,12 +22,13 @@ import {
   applyDemoSessionContext,
   fetchDemoCatalog,
   fetchDemoStatus,
-  provisionDemoWorld,
-  requestDemoSignInAsBusiness,
+  requestDemoQuickSignIn,
+  type DemoBusinessTenant,
   type DemoSignInResult,
 } from "@/lib/demo-portal";
 import { completeDemoClerkSignIn } from "@/lib/demo-clerk-sign-in";
 import { useToast } from "@/hooks/use-toast";
+import { DemoFlowStepper } from "@/components/demo/demo-flow-stepper";
 
 const CROP_META: Record<
   string,
@@ -47,33 +48,27 @@ export default function DemoWedgeStoryPage() {
   const { toast } = useToast();
   const { signIn, isLoaded: signInLoaded } = useSignIn();
   const { signOut, session, setActive } = useClerk();
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
   const [devPassword, setDevPassword] = useState("LiviaDemo2026!");
   const [provisioned, setProvisioned] = useState(false);
-  const [resolvedSlug, setResolvedSlug] = useState<string | null>(story?.demoSlug ?? null);
+  const [tenant, setTenant] = useState<DemoBusinessTenant | null>(null);
 
   useEffect(() => {
     void fetchDemoCatalog()
       .then((c) => {
-        if (c.devPassword) setDevPassword(c.devPassword);
+        if (c.sharedPassword ?? c.devPassword) setDevPassword(c.sharedPassword ?? c.devPassword ?? "LiviaDemo2026!");
       })
       .catch(() => undefined);
     void fetchDemoStatus()
-      .then((st) => setProvisioned(st.provisioned))
+      .then((st) => {
+        setProvisioned(st.provisioned);
+        const slug = story?.demoSlug;
+        const match =
+          (slug ? st.businesses?.find((b) => b.slug === slug) : null) ??
+          st.businesses?.find((b) => (b.vertical ?? "").toLowerCase() === vertical.toLowerCase());
+        setTenant(match ?? null);
+      })
       .catch(() => undefined);
-  }, []);
-
-  useEffect(() => {
-    if (story?.demoSlug) {
-      setResolvedSlug(story.demoSlug);
-      return;
-    }
-    void fetchDemoStatus().then((st) => {
-      const match = st.businesses?.find(
-        (b) => (b.vertical ?? "").toLowerCase() === vertical.toLowerCase(),
-      );
-      if (match) setResolvedSlug(match.slug);
-    });
   }, [story?.demoSlug, vertical]);
 
   const completeTicketSignIn = useCallback(
@@ -94,29 +89,18 @@ export default function DemoWedgeStoryPage() {
     [devPassword, session?.id, signIn, signInLoaded, setActive, signOut, toast],
   );
 
-  async function enterDemo() {
-    setBusy(true);
+  async function enterAsRole(email: string, busyKey: string) {
+    if (!provisioned) {
+      toast({
+        title: "Set up demo world first",
+        description: "Go to /demo → step 1 Quick sync, then return here.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setBusy(busyKey);
     try {
-      if (!provisioned) {
-        await provisionDemoWorld();
-        setProvisioned(true);
-        toast({ title: "Demo world ready", description: "Opening owner view…" });
-      }
-      const slug =
-        resolvedSlug ??
-        story?.demoSlug ??
-        (await fetchDemoStatus()).businesses?.find(
-          (b) => (b.vertical ?? "").toLowerCase() === vertical.toLowerCase(),
-        )?.slug;
-      if (!slug) {
-        toast({
-          title: "Demo shop not found",
-          description: "Try /demo → Set up full demo world.",
-          variant: "destructive",
-        });
-        return;
-      }
-      const result = await requestDemoSignInAsBusiness(slug);
+      const result = await requestDemoQuickSignIn(email);
       await completeTicketSignIn(result);
     } catch (e: unknown) {
       toast({
@@ -125,16 +109,21 @@ export default function DemoWedgeStoryPage() {
         variant: "destructive",
       });
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   }
+
+  const ownerEmail = useMemo(
+    () => tenant?.roster?.find((r) => r.role === "owner")?.email ?? tenant?.ownerEmail,
+    [tenant],
+  );
 
   if (!story) {
     return (
       <div className="min-h-[100dvh] bg-background flex flex-col items-center justify-center gap-4 px-6">
         <p className="text-muted-foreground">Unknown vertical wedge.</p>
         <Link href="/demo" className="text-primary underline-offset-4 hover:underline">
-          Back to demo grid
+          Back to demo gateway
         </Link>
       </div>
     );
@@ -155,14 +144,29 @@ export default function DemoWedgeStoryPage() {
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
-          Demo hub
+          Demo gateway
         </Link>
       </header>
 
       <main className="relative z-10 mx-auto w-full max-w-lg flex-1 px-6 pb-16 pt-4">
+        <DemoFlowStepper current="role" provisioned={provisioned} scenarioSelected />
+
         <p className="text-xs uppercase tracking-widest text-aurora-cyan/80">{story.vertical.replace("-", " ")}</p>
         <h1 className="mt-2 font-serif text-3xl font-normal tracking-tight md:text-4xl">{story.label}</h1>
         <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{hook}</p>
+
+        {!provisioned ? (
+          <div className="mt-6 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm">
+            <p className="font-medium text-amber-100">Step 1 required</p>
+            <p className="mt-1 text-amber-200/80">
+              Demo data isn&apos;t seeded yet.{" "}
+              <Link href="/demo" className="underline underline-offset-2">
+                Open /demo
+              </Link>{" "}
+              and run <strong>Quick sync</strong> first.
+            </p>
+          </div>
+        ) : null}
 
         <ol className="mt-8 space-y-4">
           {story.beats.map((beat, i) => {
@@ -195,20 +199,56 @@ export default function DemoWedgeStoryPage() {
           })}
         </ol>
 
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => void enterDemo()}
-          className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:opacity-60"
-        >
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-          Enter as owner
-          {!busy ? <ArrowRight className="h-4 w-4" /> : null}
-        </button>
+        <section className="mt-8">
+          <h2 className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-3">
+            Enter as role
+          </h2>
+          {tenant?.roster?.length ? (
+            <div className="grid grid-cols-2 gap-2">
+              {tenant.roster.map((entry) => {
+                const loading = busy === entry.email;
+                return (
+                  <button
+                    key={entry.email}
+                    type="button"
+                    disabled={!!busy || !provisioned}
+                    onClick={() => void enterAsRole(entry.email, entry.email)}
+                    className="rounded-xl border border-border/60 bg-card/30 px-3 py-3 text-left hover:border-primary/40 disabled:opacity-60"
+                  >
+                    <span className="text-sm font-medium">
+                      {loading ? "Signing in…" : entry.label.split(" · ").pop()}
+                    </span>
+                    <span className="mt-1 block text-[9px] font-mono text-muted-foreground truncate">
+                      {entry.email}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : ownerEmail ? (
+            <button
+              type="button"
+              disabled={!!busy || !provisioned}
+              onClick={() => void enterAsRole(ownerEmail, ownerEmail)}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:opacity-60"
+            >
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              Enter as owner
+              {!busy ? <ArrowRight className="h-4 w-4" /> : null}
+            </button>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Tenant not found — run quick sync on{" "}
+              <Link href="/demo" className="text-primary underline">
+                /demo
+              </Link>
+              .
+            </p>
+          )}
+        </section>
 
-        <p className="mt-3 text-center text-xs text-muted-foreground">
-          {provisioned ? "Demo ready" : "Auto-provisions demo world on first click"} · password{" "}
-          <code className="text-[10px]">{devPassword}</code>
+        <p className="mt-4 text-center text-xs text-muted-foreground">
+          Password <code className="text-[10px]">{devPassword}</code> · applied automatically on quick login
         </p>
 
         <nav className="mt-10 flex flex-wrap gap-2 border-t border-border/40 pt-6" aria-label="Other trades">

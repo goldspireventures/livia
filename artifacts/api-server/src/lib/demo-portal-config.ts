@@ -5,12 +5,18 @@
 import {
   DEMO_ROLE_EMAILS,
   demoOwnerEmailForSlug,
+  demoRoleEmailForSlug,
   isDemoLiviaEmail,
+  parseDemoTenantEmail,
   slugFromOwnerDemoEmail,
+  type DemoTenantRole,
 } from "@workspace/demo-logins";
+
+export type { DemoTenantRole };
 
 export {
   demoOwnerEmailForSlug,
+  parseDemoTenantEmail,
   slugFromOwnerDemoEmail,
 } from "@workspace/demo-logins";
 
@@ -175,14 +181,65 @@ export function buildBusinessOwnerDef(
   slug: string,
   name: string,
 ): DemoPersonaDef {
+  return buildDemoRoleDef(slug, "owner", name);
+}
+
+export function buildDemoRoleDef(
+  slug: string,
+  role: DemoTenantRole,
+  name?: string,
+): DemoPersonaDef {
+  const bizLabel = name ?? slug;
+  const email = demoRoleEmailForSlug(slug, role);
+  const byRole: Record<
+    DemoTenantRole,
+    Pick<
+      DemoPersonaDef,
+      "id" | "displayName" | "roleLabel" | "firstName" | "lastName" | "landingPath" | "membershipRole" | "receptionPreset" | "staffDisplayName"
+    >
+  > = {
+    owner: {
+      id: "owner",
+      displayName: `${bizLabel} · Owner`,
+      roleLabel: `Owner · ${bizLabel}`,
+      firstName: "Demo",
+      lastName: "Owner",
+      landingPath: "/dashboard",
+    },
+    manager: {
+      id: "manager",
+      displayName: `${bizLabel} · Manager`,
+      roleLabel: `Manager · ${bizLabel}`,
+      firstName: "Demo",
+      lastName: "Manager",
+      landingPath: "/inbox",
+      membershipRole: "ADMIN",
+    },
+    desk: {
+      id: "receptionist",
+      displayName: `${bizLabel} · Front desk`,
+      roleLabel: `Reception · ${bizLabel}`,
+      firstName: "Demo",
+      lastName: "Desk",
+      landingPath: "/bookings",
+      membershipRole: "ADMIN",
+      receptionPreset: true,
+    },
+    staff: {
+      id: "staff-senior",
+      displayName: `${bizLabel} · Stylist`,
+      roleLabel: `Staff · ${bizLabel}`,
+      firstName: "Demo",
+      lastName: "Staff",
+      landingPath: "/my-day",
+      membershipRole: "STAFF",
+      staffDisplayName: `${bizLabel} Staff`,
+    },
+  };
+  const meta = byRole[role];
   return {
-    id: "owner",
-    email: demoOwnerEmailForSlug(slug),
-    displayName: `${name} · Owner`,
-    roleLabel: `Owner · ${name}`,
-    firstName: "Demo",
-    lastName: "Owner",
-    landingPath: "/dashboard",
+    ...meta,
+    email,
     primaryBusinessSlug: slug,
     businessSlugs: [slug],
     requiresClerk: true,
@@ -210,5 +267,6 @@ export function isDemoPortalEnabled(): boolean {
 }
 
 export function demoResponsesMayIncludeSecrets(): boolean {
-  return process.env.NODE_ENV !== "production";
+  if (process.env.NODE_ENV !== "production") return true;
+  return process.env.LIVIA_DEPLOY_ENV === "staging" && process.env.LIVIA_DEMO_ENABLED === "true";
 }

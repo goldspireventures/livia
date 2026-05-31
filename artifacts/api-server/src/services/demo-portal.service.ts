@@ -35,13 +35,16 @@ import {
   DEMO_PERSONAS,
   DEMO_WORLD_SLUGS,
   buildBusinessOwnerDef,
+  buildDemoRoleDef,
   demoOwnerEmailForSlug,
   getDemoPersona,
   isDemoEmail,
+  parseDemoTenantEmail,
   slugFromOwnerDemoEmail,
   type DemoPersonaDef,
   type DemoPersonaId,
   demoResponsesMayIncludeSecrets,
+  type DemoTenantRole,
 } from "../lib/demo-portal-config";
 import { DEMO_SCENARIO_ACCOUNTS } from "../lib/demo-scenario-config";
 import { syncDemoClerkUser } from "../lib/demo-clerk-sync";
@@ -57,6 +60,12 @@ import { ensureDemoOperationalCases } from "./demo-operational-cases.seed";
 import { seedVerticalDemoExtras } from "./demo-vertical-extras.seed";
 import { seedCountryDepthOnMarketShops } from "./demo-country-depth.seed";
 import { seedDemoHierarchyLinks } from "./demo-hierarchy.seed";
+import {
+  demoScenarioSpotlights,
+  resolveRosterOwnerEmail,
+  rosterEntriesForSlug,
+  seedDemoBusinessRosters,
+} from "./demo-business-roster.seed";
 import { getDashboardUrl, getInternalUrl, getMarketingUrl } from "../lib/public-urls";
 
 function getClerk() {
@@ -125,6 +134,11 @@ function getDemoAccountByEmail(email: string): DemoPersonaDef | undefined {
   const slug = slugFromOwnerDemoEmail(lower);
   if (slug) {
     return buildBusinessOwnerDef(slug, `Demo ${slug}`);
+  }
+
+  const parsed = parseDemoTenantEmail(lower);
+  if (parsed) {
+    return buildDemoRoleDef(parsed.slug, parsed.role);
   }
   return undefined;
 }
@@ -469,15 +483,22 @@ export async function provisionDemoWorld(): Promise<{
   const clerkIds: Record<string, string> = {};
   const clerkIdsByEmail: Record<string, string> = {};
   const allAccounts = [...DEMO_PERSONAS, ...DEMO_SCENARIO_ACCOUNTS];
-  for (const def of allAccounts) {
-    if (!def.requiresClerk) continue;
-    const id = await ensureClerkUser(def);
-    if (id) {
-      clerkIdsByEmail[def.email] = id;
-      if (DEMO_PERSONAS.some((p) => p.email === def.email)) {
-        clerkIds[def.id] = id;
-      }
-      await ensureDemoPlatformLegal(id, def.email, def.displayName);
+  const clerkResults = await Promise.all(
+    allAccounts
+      .filter((def) => def.requiresClerk)
+      .map(async (def) => {
+        const id = await ensureClerkUser(def);
+        if (id) {
+          await ensureDemoPlatformLegal(id, def.email, def.displayName);
+        }
+        return { def, id };
+      }),
+  );
+  for (const { def, id } of clerkResults) {
+    if (!id) continue;
+    clerkIdsByEmail[def.email] = id;
+    if (DEMO_PERSONAS.some((p) => p.email === def.email)) {
+      clerkIds[def.id] = id;
     }
   }
 
@@ -599,11 +620,13 @@ export async function provisionDemoWorld(): Promise<{
   );
 
   await applyDemoPublicBranding(auroraStudio.id, "hair", { instagramHandle: "aurorastudio.dublin" });
-  await applyDemoPublicBranding(auroraMews.id, "hair");
-  await applyDemoPublicBranding(auroraGalway.id, "hair");
-  await applyDemoPublicBranding(conorsCut.id, "hair", { instagramHandle: "conorscutco" });
-  await backfillDemoServiceImages(auroraStudio.id, "hair");
-  await backfillDemoServiceImages(conorsCut.id, "hair");
+  await Promise.all([
+    applyDemoPublicBranding(auroraMews.id, "hair"),
+    applyDemoPublicBranding(auroraGalway.id, "hair"),
+    applyDemoPublicBranding(conorsCut.id, "hair", { instagramHandle: "conorscutco" }),
+    backfillDemoServiceImages(auroraStudio.id, "hair"),
+    backfillDemoServiceImages(conorsCut.id, "hair"),
+  ]);
 
   await seedShopCore(auroraMews.id, [
     { firstName: "Ava", lastName: "Reid", displayName: "Ava Reid", email: "ava@aurora.ie", color: "#EC4899" },
@@ -668,6 +691,7 @@ export async function provisionDemoWorld(): Promise<{
   const marketShowcase = await seedMarketShowcaseShops(orgAdminId);
   await seedCountryDepthOnMarketShops();
   await seedDemoHierarchyLinks();
+  await seedDemoBusinessRosters();
   const realWorld = await seedRealWorldScenarios(orgAdminId);
 
   for (const shop of [
@@ -742,15 +766,17 @@ export async function provisionDemoWorld(): Promise<{
     name: b.name,
   }));
 
-  let businessOwners = 0;
-  for (const b of businesses) {
-    const def = buildBusinessOwnerDef(b.slug, b.name);
-    const ownerId = await ensureClerkUser(def);
-    if (!ownerId) continue;
-    await ensureDemoPlatformLegal(ownerId, def.email, def.displayName);
-    await wireDemoAccountMemberships(def, ownerId, "OWNER");
-    businessOwners += 1;
-  }
+  const ownerResults = await Promise.all(
+    businesses.map(async (b) => {
+      const def = buildBusinessOwnerDef(b.slug, b.name);
+      const ownerId = await ensureClerkUser(def);
+      if (!ownerId) return false;
+      await ensureDemoPlatformLegal(ownerId, def.email, def.displayName);
+      await wireDemoAccountMemberships(def, ownerId, "OWNER");
+      return true;
+    }),
+  );
+  const businessOwners = ownerResults.filter(Boolean).length;
   logger.info({ businessOwners, slugs: businesses.length }, "demo.per_business_owners.provisioned");
 
   const onboardingMarked = await markDemoBusinessesOnboardingComplete(DEMO_WORLD_SLUGS);
@@ -794,6 +820,57 @@ export async function provisionDemoWorld(): Promise<{
   };
 }
 
+/** Fast idempotent sync — no wipe. Full provision only when demo world is missing. */
+export async function syncDemoWorld(): Promise<{
+  mode: "sync" | "full";
+  provisioned: boolean;
+  rosterAccounts: number;
+  clerkSynced: number;
+  passwordHint: string;
+  businesses: Array<{ slug: string; id: string; name: string }>;
+}> {
+  const status = await getDemoPortalStatus();
+  if (!status.provisioned) {
+    const full = await provisionDemoWorld();
+    return {
+      mode: "full",
+      provisioned: true,
+      rosterAccounts: status.businesses.length > 0 ? 0 : full.businesses.length * 4,
+      clerkSynced: full.personas.filter((p) => p.clerkUserId).length,
+      passwordHint: full.passwordHint,
+      businesses: full.businesses,
+    };
+  }
+
+  const started = Date.now();
+  const [clerkResult, rosterResult] = await Promise.all([
+    syncAllDemoClerkUsers(),
+    seedDemoBusinessRosters(),
+  ]);
+  logger.info(
+    {
+      duration_ms: Date.now() - started,
+      clerkSynced: clerkResult.synced,
+      rosterAccounts: rosterResult.accounts,
+    },
+    "demo.sync.completed",
+  );
+
+  const refreshed = await getDemoPortalStatus();
+  return {
+    mode: "sync",
+    provisioned: refreshed.provisioned,
+    rosterAccounts: rosterResult.accounts,
+    clerkSynced: clerkResult.synced,
+    passwordHint: publicDemoPasswordHint(),
+    businesses: refreshed.businesses.map((b) => ({
+      slug: b.slug,
+      id: b.id,
+      name: b.name,
+    })),
+  };
+}
+
 export type DemoBusinessTenant = {
   slug: string;
   id: string;
@@ -804,6 +881,13 @@ export type DemoBusinessTenant = {
   /** If set, UI should sign in as this persona (e.g. chain owner) rather than per-tenant owner. */
   ownerPersonaId?: "org_admin" | null;
   publicBookingUrl: string;
+  roster: Array<{
+    role: string;
+    label: string;
+    email: string;
+    landingPath: string;
+    personaId: string;
+  }>;
 };
 
 export async function getDemoPortalStatus(): Promise<{
@@ -847,9 +931,16 @@ export async function getDemoPortalStatus(): Promise<{
           name: r.name,
           vertical: r.vertical,
           country: r.country,
-          ownerEmail: chainFounder ? orgAdminEmail : demoOwnerEmailForSlug(r.slug),
+          ownerEmail: resolveRosterOwnerEmail(r.slug, chainFounder),
           ownerPersonaId: chainFounder ? ("org_admin" as const) : null,
           publicBookingUrl: `${dashboardBase}/b/${r.slug}`,
+          roster: rosterEntriesForSlug(r.slug, r.name).map((entry) => ({
+            ...entry,
+            email:
+              entry.role === "owner" && chainFounder
+                ? resolveRosterOwnerEmail(r.slug, true)
+                : entry.email,
+          })),
         };
       })
       .sort((a, b) => a.name.localeCompare(b.name)),
@@ -865,6 +956,8 @@ export async function getDemoPortalStatus(): Promise<{
 export function getDemoCatalog() {
   return {
     passwordHint: publicDemoPasswordHint(),
+    sharedPassword: demoResponsesMayIncludeSecrets() ? getDemoPassword() : undefined,
+    scenarios: demoScenarioSpotlights(),
     personas: DEMO_PERSONAS.map((p) => ({
       id: p.id,
       email: p.email,
@@ -886,9 +979,14 @@ export function getDemoCatalog() {
       primaryBusinessSlug: p.primaryBusinessSlug,
       businessSlugs: p.businessSlugs,
     })),
-    /** Only returned in non-production for local E2E — never log in prod. */
-    devPassword: process.env.NODE_ENV === "production" ? undefined : getDemoPassword(),
+    /** @deprecated use sharedPassword */
+    devPassword: demoResponsesMayIncludeSecrets() ? getDemoPassword() : undefined,
   };
+}
+
+/** One-click staging login — server applies shared demo password. */
+export async function quickDemoSignIn(email: string) {
+  return signInAsDemoEmail({ email, password: getDemoPassword() });
 }
 
 /** Idempotent: seed any missing vertical showcase shops without wiping the demo world. */
@@ -938,17 +1036,26 @@ export async function syncAllDemoClerkUsers(): Promise<{ synced: number }> {
     throw Object.assign(new Error("Clerk not configured"), { code: "CLERK_NOT_CONFIGURED" });
   }
   const password = getDemoPassword();
-  let synced = 0;
   const status = await getDemoPortalStatus();
-  const ownerDefs = status.businesses.map((b) => buildBusinessOwnerDef(b.slug, b.name));
+  const ownerDefs = status.businesses.flatMap((b) =>
+    rosterEntriesForSlug(b.slug, b.name).map((entry) => buildDemoRoleDef(b.slug, entry.role as DemoTenantRole, b.name)),
+  );
+  const uniqueByEmail = new Map<string, DemoPersonaDef>();
   for (const def of [...DEMO_PERSONAS, ...DEMO_SCENARIO_ACCOUNTS, ...ownerDefs]) {
     if (!def.requiresClerk) continue;
-    const list = await clerk.users.getUserList({ emailAddress: [def.email], limit: 1 });
-    const user = list.data[0];
-    if (!user) continue;
-    await syncDemoClerkUser(clerk, user.id, { email: def.email, password });
-    synced += 1;
+    uniqueByEmail.set(def.email.toLowerCase(), def);
   }
+
+  const syncedResults = await Promise.all(
+    [...uniqueByEmail.values()].map(async (def) => {
+      const list = await clerk.users.getUserList({ emailAddress: [def.email], limit: 1 });
+      const user = list.data[0];
+      if (!user) return 0;
+      await syncDemoClerkUser(clerk, user.id, { email: def.email, password });
+      return 1;
+    }),
+  );
+  const synced = syncedResults.reduce((sum, n) => sum + n, 0);
   return { synced };
 }
 

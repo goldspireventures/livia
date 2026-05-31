@@ -40,6 +40,23 @@ export type DemoBusinessTenant = {
   ownerEmail: string;
   ownerPersonaId?: DemoPersonaId | null;
   publicBookingUrl: string;
+  roster?: DemoRosterEntry[];
+};
+
+export type DemoRosterEntry = {
+  role: string;
+  label: string;
+  email: string;
+  landingPath: string;
+  personaId: string;
+};
+
+export type DemoScenarioSpotlight = {
+  id: string;
+  title: string;
+  description: string;
+  slug: string;
+  structure: "solo" | "chain-hq" | "chain-location" | "franchise" | "chair-host";
 };
 
 export type DemoSignInResult = {
@@ -72,7 +89,9 @@ export async function fetchDemoCatalog() {
   return apiFetch<{
     personas: DemoCatalogPersona[];
     scenarioAccounts?: DemoScenarioAccount[];
+    scenarios?: DemoScenarioSpotlight[];
     passwordHint?: string;
+    sharedPassword?: string;
     devPassword?: string;
   }>("/demo/catalog");
 }
@@ -83,6 +102,18 @@ export async function provisionDemoWorld() {
     businesses: Array<{ slug: string; id: string; name: string }>;
     passwordHint: string;
   }>("/demo/provision", { method: "POST" });
+}
+
+/** Fast path — sync Clerk + rosters without wiping data. Runs full provision only if missing. */
+export async function syncDemoWorld() {
+  return apiFetch<{
+    mode: "sync" | "full";
+    provisioned: boolean;
+    rosterAccounts: number;
+    clerkSynced: number;
+    passwordHint: string;
+    businesses: Array<{ slug: string; id: string; name: string }>;
+  }>("/demo/sync", { method: "POST" });
 }
 
 export async function fetchDemoStatus() {
@@ -115,6 +146,13 @@ export async function requestDemoSignInForBusiness(persona: DemoPersonaId, busin
   return apiFetch<DemoSignInResult>("/demo/sign-in", {
     method: "POST",
     body: JSON.stringify({ persona, businessSlug }),
+  });
+}
+
+export async function requestDemoQuickSignIn(email: string) {
+  return apiFetch<DemoSignInResult>("/demo/quick-sign-in", {
+    method: "POST",
+    body: JSON.stringify({ email }),
   });
 }
 

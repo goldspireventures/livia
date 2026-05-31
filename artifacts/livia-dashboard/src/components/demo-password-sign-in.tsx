@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { apiFetch } from "@/lib/api-fetch";
 import {
   applyDemoSessionContext,
+  requestDemoQuickSignIn,
   type DemoSignInResult,
 } from "@/lib/demo-portal";
 import { completeDemoClerkSignIn } from "@/lib/demo-clerk-sign-in";
@@ -38,15 +39,19 @@ export function DemoPasswordSignIn({
     setBusy(true);
     setError("");
     try {
-      const result = await apiFetch<DemoSignInResult>("/demo/sign-in-email", {
-        method: "POST",
-        body: JSON.stringify({ email: email.trim(), password }),
-      });
+      const trimmedEmail = email.trim();
+      const result =
+        password.trim() || !devPasswordHint
+          ? await apiFetch<DemoSignInResult>("/demo/sign-in-email", {
+              method: "POST",
+              body: JSON.stringify({ email: trimmedEmail, password }),
+            })
+          : await requestDemoQuickSignIn(trimmedEmail);
       await completeDemoClerkSignIn(
         signIn,
         { signOut, setActive, sessionId: session?.id },
         result,
-        password,
+        password.trim() || devPasswordHint,
       );
       applyDemoSessionContext(result);
       navigate(result.landingPath);
@@ -109,8 +114,12 @@ export function DemoPasswordSignIn({
           />
         </div>
         <div className="flex items-end">
-          <Button type="submit" className="w-full" disabled={busy || !email.trim() || !password}>
-            {busy ? "Signing in…" : "Sign in as demo"}
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={busy || !email.trim() || (!password && !devPasswordHint)}
+          >
+            {busy ? "Signing in…" : devPasswordHint && !password ? "Quick sign in" : "Sign in as demo"}
           </Button>
         </div>
       </div>
