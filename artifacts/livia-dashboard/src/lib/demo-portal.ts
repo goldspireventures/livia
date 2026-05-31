@@ -56,7 +56,9 @@ export type DemoScenarioSpotlight = {
   title: string;
   description: string;
   slug: string;
-  structure: "solo" | "chain-hq" | "chain-location" | "franchise" | "chair-host";
+  structure: "solo" | "studio" | "chain-hq" | "franchise" | "chair-host";
+  group?: "structure" | "vertical";
+  locationOperatorSlug?: string;
 };
 
 export type DemoSignInResult = {

@@ -233,6 +233,21 @@ export default function DemoLauncher() {
     [selectedScenario, tenants],
   );
 
+  const locationOperatorTenant = useMemo(() => {
+    const locSlug = selectedScenario?.locationOperatorSlug;
+    if (!locSlug) return null;
+    return tenants.find((t) => t.slug === locSlug) ?? null;
+  }, [selectedScenario, tenants]);
+
+  const structureScenarios = useMemo(
+    () => scenarios.filter((s) => s.group !== "vertical"),
+    [scenarios],
+  );
+  const verticalScenarios = useMemo(
+    () => scenarios.filter((s) => s.group === "vertical"),
+    [scenarios],
+  );
+
   const deferredFilter = useDeferredValue(tenantFilter);
 
   const filteredTenants = useMemo(() => {
@@ -411,39 +426,72 @@ export default function DemoLauncher() {
           className={`mb-10 ${!provisioned ? "opacity-50 pointer-events-none" : ""}`}
           data-testid="demo-step-scenario"
         >
-          <h2 className="text-xs font-mono uppercase tracking-widest text-white/40 mb-3">
-            2 · Pick a real-world scenario
+          <h2 className="text-xs font-mono uppercase tracking-widest text-white/40 mb-1">
+            2 · Pick your business shape
           </h2>
+          <p className="text-xs text-white/40 mb-3">
+            Structure first — solo, team, multi-site, host, franchise. Industry flows below are optional.
+          </p>
           {!provisioned ? (
             <p className="text-sm text-amber-200/80">Complete step 1 first.</p>
           ) : (
-            <div className="grid gap-3 md:grid-cols-2">
-              {scenarios.map((scenario) => {
-                const selected = selectedScenario?.id === scenario.id;
-                return (
-                  <button
-                    key={scenario.id}
-                    type="button"
-                    onClick={() => selectScenario(scenario)}
-                    className={`rounded-2xl border p-4 text-left transition ${
-                      selected
-                        ? "border-[#06b6d4]/60 bg-[#06b6d4]/10"
-                        : "border-white/12 bg-white/[0.04] hover:border-white/25"
-                    }`}
-                    data-testid={`demo-scenario-${scenario.id}`}
-                  >
-                    <p className="text-[10px] font-mono uppercase tracking-wider text-[#22d3ee]/80">
-                      {scenario.structure.replace(/-/g, " ")}
-                    </p>
-                    <p className="text-sm font-medium text-white mt-1">{scenario.title}</p>
-                    <p className="text-xs text-white/45 mt-1">{scenario.description}</p>
-                    {selected ? (
-                      <p className="mt-2 text-[10px] font-mono text-[#22d3ee]">Selected ↓ choose role</p>
-                    ) : null}
-                  </button>
-                );
-              })}
-            </div>
+            <>
+              <div className="grid gap-3 md:grid-cols-2 mb-6">
+                {structureScenarios.map((scenario) => {
+                  const selected = selectedScenario?.id === scenario.id;
+                  return (
+                    <button
+                      key={scenario.id}
+                      type="button"
+                      onClick={() => selectScenario(scenario)}
+                      className={`rounded-2xl border p-4 text-left transition ${
+                        selected
+                          ? "border-[#06b6d4]/60 bg-[#06b6d4]/10"
+                          : "border-white/12 bg-white/[0.04] hover:border-white/25"
+                      }`}
+                      data-testid={`demo-scenario-${scenario.id}`}
+                    >
+                      <p className="text-[10px] font-mono uppercase tracking-wider text-[#22d3ee]/80">
+                        {scenario.structure.replace(/-/g, " ")}
+                      </p>
+                      <p className="text-sm font-medium text-white mt-1">{scenario.title}</p>
+                      <p className="text-xs text-white/45 mt-1">{scenario.description}</p>
+                      {selected ? (
+                        <p className="mt-2 text-[10px] font-mono text-[#22d3ee]">Selected ↓ choose role</p>
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
+              {verticalScenarios.length > 0 ? (
+                <>
+                  <p className="text-[10px] font-mono uppercase tracking-widest text-white/35 mb-2">
+                    Industry flows (vertical UAT)
+                  </p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {verticalScenarios.map((scenario) => {
+                      const selected = selectedScenario?.id === scenario.id;
+                      return (
+                        <button
+                          key={scenario.id}
+                          type="button"
+                          onClick={() => selectScenario(scenario)}
+                          className={`rounded-xl border p-3 text-left transition ${
+                            selected
+                              ? "border-violet-500/50 bg-violet-500/10"
+                              : "border-white/10 bg-white/[0.03] hover:border-white/20"
+                          }`}
+                          data-testid={`demo-scenario-${scenario.id}`}
+                        >
+                          <p className="text-sm font-medium text-white">{scenario.title}</p>
+                          <p className="text-xs text-white/45 mt-0.5">{scenario.description}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : null}
+            </>
           )}
         </section>
 
@@ -470,7 +518,9 @@ export default function DemoLauncher() {
                   const roleLabel =
                     selectedScenario.id === "chain-hq" && entry.role === "owner"
                       ? "Org admin"
-                      : (entry.label.split(" · ").pop() ?? entry.label);
+                      : selectedScenario.id === "chair-host" && entry.role === "owner"
+                        ? "Host owner"
+                        : (entry.label.split(" · ").pop() ?? entry.label);
                   return (
                     <button
                       key={entry.email}
@@ -488,6 +538,28 @@ export default function DemoLauncher() {
                   );
                 })}
               </div>
+              {locationOperatorTenant?.roster?.length ? (
+                <div className="mt-4 pt-4 border-t border-white/10">
+                  <p className="text-xs text-white/50 mb-2">
+                    Or run <strong className="text-white/70">{locationOperatorTenant.name}</strong> only — location
+                    operator (no chain rollup)
+                  </p>
+                  <button
+                    type="button"
+                    disabled={!!busy || !provisioned}
+                    onClick={() => {
+                      const owner = locationOperatorTenant.roster!.find((e) => e.role === "owner");
+                      if (owner) {
+                        void quickEnterEmail(owner.email, `${locationOperatorTenant.slug}:loc-owner`);
+                      }
+                    }}
+                    className="rounded-xl border border-white/15 bg-white/[0.03] px-3 py-2 text-left text-xs hover:border-[#06b6d4]/40 disabled:opacity-60"
+                    data-testid="demo-location-operator-btn"
+                  >
+                    Location owner · {locationOperatorTenant.slug}
+                  </button>
+                </div>
+              ) : null}
             </div>
           ) : (
             <p className="text-sm text-amber-200/80">

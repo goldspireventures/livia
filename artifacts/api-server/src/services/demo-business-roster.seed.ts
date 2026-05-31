@@ -172,50 +172,72 @@ export function demoScenarioSpotlights(): Array<{
   title: string;
   description: string;
   slug: string;
-  structure: "solo" | "chain-hq" | "chain-location" | "franchise" | "chair-host";
+  /** Business structure — how the org is shaped (not industry). */
+  structure: "solo" | "studio" | "chain-hq" | "franchise" | "chair-host";
+  /** Gateway grouping: structure vs industry flow testing. */
+  group: "structure" | "vertical";
+  /** For multi-site: optional second tenant to demo location-only owner. */
+  locationOperatorSlug?: string;
 }> {
   return [
+    // —— Business structure (who you are in the org) ——
     {
       id: "solo",
       title: "Solo owner",
-      description: "One shop, one owner — Conor's Cut Co.",
+      description: "One person, one shop — home studio or small room (Conor's Cut Co.)",
       slug: "conors-cut-co",
       structure: "solo",
+      group: "structure",
+    },
+    {
+      id: "studio",
+      title: "Studio with team",
+      description: "Owner + stylists + front desk — Luxe Salon & Spa, Dublin",
+      slug: "luxe-salon-spa",
+      structure: "studio",
+      group: "structure",
     },
     {
       id: "chain-hq",
-      title: "Chain HQ",
-      description: "Org admin — roll-up across Aurora Studio, Mews & Galway",
+      title: "Multi-site founder",
+      description: "Org admin roll-up — Aurora Studio + Mews + Galway",
       slug: "aurora-studio",
       structure: "chain-hq",
+      group: "structure",
+      locationOperatorSlug: "aurora-mews",
     },
     {
-      id: "chain-loc",
-      title: "Chain location",
-      description: "Aurora Mews — run one site as the location owner (not HQ)",
-      slug: "aurora-mews",
-      structure: "chain-location",
+      id: "chair-host",
+      title: "Chair-rental host",
+      description: "Rent chairs to independents — host floor, rent due (Aurora Studio demo)",
+      slug: "aurora-studio",
+      structure: "chair-host",
+      group: "structure",
     },
     {
       id: "franchise",
       title: "Franchisee",
-      description: "Bloom Beauty under Aurora franchisor",
+      description: "Owns Bloom Beauty — franchised under Aurora in demo seed",
       slug: "bloom-beauty-dublin",
       structure: "franchise",
+      group: "structure",
     },
+    // —— Industry flows (vertical-specific guest + ops paths) ——
     {
       id: "vertical-medspa",
-      title: "Medspa owner",
-      description: "Clinical intake + consent flows",
+      title: "Medspa",
+      description: "Clinical intake, consent step, mandate defaults",
       slug: "clarity-medspa-dublin",
       structure: "solo",
+      group: "vertical",
     },
     {
       id: "vertical-body-art",
-      title: "Body art studio",
-      description: "Proof collab + visit tokens",
+      title: "Body art",
+      description: "Consult-first booking, design proof, deposit norms",
       slug: "ink-anchor-galway",
       structure: "solo",
+      group: "vertical",
     },
   ];
 }
