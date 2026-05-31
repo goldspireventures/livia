@@ -18,6 +18,7 @@ import {
 import { ONBOARDING_ACT_IDS, onboardingChecklistSchema } from "@workspace/policy";
 import { and, eq, inArray } from "drizzle-orm";
 import { generateId } from "../lib/id";
+import { mapWithConcurrency, withClerkRetry } from "../lib/async-pool";
 import { logger } from "../lib/logger";
 import { appendHumanAudit } from "../lib/audit";
 import { getOrCreateUser, updateUser } from "./users.service";
@@ -827,6 +828,7 @@ export async function syncDemoWorld(): Promise<{
   rosterAccounts: number;
   clerkSynced: number;
   brandingUpdated?: number;
+  warnings?: string[];
   passwordHint: string;
   businesses: Array<{ slug: string; id: string; name: string }>;
 }> {
@@ -844,17 +846,45 @@ export async function syncDemoWorld(): Promise<{
   }
 
   const started = Date.now();
-  const [clerkResult, rosterResult, brandingUpdated] = await Promise.all([
-    syncAllDemoClerkUsers(),
-    seedDemoBusinessRosters(),
-    backfillAllDemoPublicBranding(DEMO_WORLD_SLUGS),
-  ]);
+  let brandingUpdated = 0;
+  let rosterAccounts = 0;
+  let clerkSynced = 0;
+  const warnings: string[] = [];
+
+  try {
+    brandingUpdated = await backfillAllDemoPublicBranding(DEMO_WORLD_SLUGS);
+  } catch (err) {
+    warnings.push(err instanceof Error ? err.message : "Branding backfill failed");
+    logger.warn({ err }, "demo.sync.branding_failed");
+  }
+
+  try {
+    const rosterResult = await seedDemoBusinessRosters();
+    rosterAccounts = rosterResult.accounts;
+  } catch (err) {
+    warnings.push(err instanceof Error ? err.message : "Roster seed failed");
+    logger.warn({ err }, "demo.sync.roster_failed");
+  }
+
+  try {
+    const clerkResult = await syncAllDemoClerkUsers();
+    clerkSynced = clerkResult.synced;
+  } catch (err) {
+    warnings.push(err instanceof Error ? err.message : "Clerk sync failed");
+    logger.warn({ err }, "demo.sync.clerk_failed");
+  }
+
+  if (warnings.length === 3) {
+    throw Object.assign(new Error(warnings[0] ?? "Demo sync failed"), { status: 500 });
+  }
+
   logger.info(
     {
       duration_ms: Date.now() - started,
-      clerkSynced: clerkResult.synced,
-      rosterAccounts: rosterResult.accounts,
+      clerkSynced,
+      rosterAccounts,
       brandingUpdated,
+      warnings,
     },
     "demo.sync.completed",
   );
@@ -863,8 +893,8 @@ export async function syncDemoWorld(): Promise<{
   return {
     mode: "sync",
     provisioned: refreshed.provisioned,
-    rosterAccounts: rosterResult.accounts,
-    clerkSynced: clerkResult.synced,
+    rosterAccounts,
+    clerkSynced,
     brandingUpdated,
     passwordHint: publicDemoPasswordHint(),
     businesses: refreshed.businesses.map((b) => ({
@@ -872,6 +902,7 @@ export async function syncDemoWorld(): Promise<{
       id: b.id,
       name: b.name,
     })),
+    warnings: warnings.length ? warnings : undefined,
   };
 }
 
@@ -1050,15 +1081,15 @@ export async function syncAllDemoClerkUsers(): Promise<{ synced: number }> {
     uniqueByEmail.set(def.email.toLowerCase(), def);
   }
 
-  const syncedResults = await Promise.all(
-    [...uniqueByEmail.values()].map(async (def) => {
-      const list = await clerk.users.getUserList({ emailAddress: [def.email], limit: 1 });
-      const user = list.data[0];
-      if (!user) return 0;
-      await syncDemoClerkUser(clerk, user.id, { email: def.email, password });
-      return 1;
-    }),
-  );
+  const syncedResults = await mapWithConcurrency([...uniqueByEmail.values()], 3, async (def) => {
+    const list = await withClerkRetry(() =>
+      clerk.users.getUserList({ emailAddress: [def.email], limit: 1 }),
+    );
+    const user = list.data[0];
+    if (!user) return 0;
+    await syncDemoClerkUser(clerk, user.id, { email: def.email, password });
+    return 1;
+  });
   const synced = syncedResults.reduce((sum, n) => sum + n, 0);
   return { synced };
 }

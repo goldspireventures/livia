@@ -2,6 +2,7 @@ import { createClerkClient } from "@clerk/express";
 import { and, eq, inArray } from "drizzle-orm";
 import { db, businessesTable, businessMembershipsTable } from "@workspace/db";
 import { DEMO_ROLE_EMAILS, demoRoleEmailForSlug, type DemoTenantRole } from "@workspace/demo-logins";
+import { mapWithConcurrency, withClerkRetry } from "../lib/async-pool";
 import { generateId } from "../lib/id";
 import {
   buildDemoRoleDef,
@@ -71,20 +72,24 @@ async function ensureClerkForDef(def: DemoPersonaDef): Promise<string | null> {
   const clerk = getClerk();
   if (!clerk) return null;
   const password = getDemoPassword();
-  const existing = await clerk.users.getUserList({ emailAddress: [def.email], limit: 1 });
+  const existing = await withClerkRetry(() =>
+    clerk.users.getUserList({ emailAddress: [def.email], limit: 1 }),
+  );
   let userId: string;
   if (existing.data[0]) {
     userId = existing.data[0].id;
     await syncDemoClerkUser(clerk, userId, { email: def.email, password });
   } else {
-    const created = await clerk.users.createUser({
-      emailAddress: [def.email],
-      firstName: def.firstName,
-      lastName: def.lastName,
-      password,
-      skipPasswordChecks: true,
-      skipPasswordRequirement: true,
-    });
+    const created = await withClerkRetry(() =>
+      clerk.users.createUser({
+        emailAddress: [def.email],
+        firstName: def.firstName,
+        lastName: def.lastName,
+        password,
+        skipPasswordChecks: true,
+        skipPasswordRequirement: true,
+      }),
+    );
     userId = created.id;
     await syncDemoClerkUser(clerk, userId, { email: def.email, password });
   }
@@ -109,8 +114,7 @@ export async function seedDemoBusinessRosters(): Promise<{ accounts: number; slu
     ROSTER_ROLES.map((role) => ({ row, role })),
   );
 
-  const results = await Promise.all(
-    tasks.map(async ({ row, role }) => {
+  const results = await mapWithConcurrency(tasks, 4, async ({ row, role }) => {
       const def = buildDemoRoleDef(row.slug, role, row.name);
       try {
         const userId = await ensureClerkForDef(def);
@@ -121,8 +125,7 @@ export async function seedDemoBusinessRosters(): Promise<{ accounts: number; slu
         logger.warn({ err, slug: row.slug, role, email: def.email }, "demo.roster.clerk_failed");
         return 0;
       }
-    }),
-  );
+  });
 
   const accounts = results.reduce((sum, n) => sum + n, 0);
   logger.info({ accounts, slugs: rows.length }, "demo.business_rosters.seeded");
