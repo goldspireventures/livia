@@ -65,7 +65,7 @@ import { PageFrame } from "@/components/ui/page-frame";
 import { SettingsDisclosure } from "@/components/ui/settings-disclosure";
 import { EU_TIMEZONES } from "@/lib/eu-timezones";
 import { verticalPackUi } from "@/lib/vertical-pack-ui";
-import { showPeerInsightsForTenant } from "@workspace/policy";
+import { SETTINGS_SHOP_SECONDARY_DEFAULT_OPEN, showPeerInsightsForTenant } from "@workspace/policy";
 import { OwnershipTransferPanel } from "@/components/lifecycle/ownership-transfer-panel";
 import { PublicAppearancePanel } from "@/components/settings/public-appearance-panel";
 import { Users, FileText } from "lucide-react";
@@ -231,7 +231,7 @@ export default function SettingsPage() {
           <Skeleton className="h-96" />
         </div>
       ) : (
-        <Tabs defaultValue={defaultTab} className="space-y-6">
+        <Tabs defaultValue={defaultTab} className="space-y-4">
           <TabsList className="flex flex-wrap h-auto gap-1">
             {visibleTabs.map((tab) => {
               const icons: Partial<Record<SettingsTabId, ReactNode>> = {
@@ -269,52 +269,53 @@ export default function SettingsPage() {
           </TabsList>
 
           {/* ===== Shop tab ===== */}
-          <TabsContent value="shop" className="space-y-6 mt-0">
+          <TabsContent value="shop" className="space-y-4 mt-0">
             {!shopEditable && (
               <p className="text-sm text-muted-foreground rounded-lg border border-border p-3">
                 View-only for your role — ask the owner to change {vocab.locationNoun.toLowerCase()} details.
               </p>
             )}
-            {b && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Globe className="h-4 w-4" />
-                    Public Booking Link
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="flex-1 bg-muted rounded-md px-3 py-2 text-sm font-mono truncate"
-                      data-testid="text-booking-url"
-                    >
-                      {bookingUrl}
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      aria-label="Copy booking link"
-                      onClick={copyLink}
-                      data-testid="button-copy-link"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                    <a href={bookingUrl} target="_blank" rel="noopener noreferrer">
-                      <Button variant="outline" size="icon" aria-label="Open booking link" data-testid="button-open-link">
-                        <ExternalLink className="h-4 w-4" />
-                      </Button>
-                    </a>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            {b ? (
+              <div
+                className="flex items-center gap-2 rounded-lg border border-border/80 bg-muted/30 px-3 py-2.5"
+                data-testid="settings-booking-link-strip"
+              >
+                <Globe className="h-4 w-4 shrink-0 text-primary" aria-hidden />
+                <span
+                  className="flex-1 text-xs font-mono truncate text-muted-foreground"
+                  data-testid="text-booking-url"
+                >
+                  {bookingUrl}
+                </span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8 shrink-0"
+                  aria-label="Copy booking link"
+                  onClick={copyLink}
+                  data-testid="button-copy-link"
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                </Button>
+                <a href={bookingUrl} target="_blank" rel="noopener noreferrer">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 shrink-0"
+                    aria-label="Open booking link"
+                    data-testid="button-open-link"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </Button>
+                </a>
+              </div>
+            ) : null}
 
             <Card>
-              <CardHeader>
+              <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Settings className="h-4 w-4" />
-                  Business Details
+                  Business details
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -371,54 +372,62 @@ export default function SettingsPage() {
                       />
                     ) : null}
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Phone</Label>
-                      <Input {...generalForm.register("phone")} data-testid="input-phone" />
+                  <SettingsDisclosure
+                    title="Contact & location"
+                    description="Phone, socials, city, and timezone."
+                    defaultOpen={SETTINGS_SHOP_SECONDARY_DEFAULT_OPEN}
+                  >
+                    <div className="space-y-4 pt-1">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Phone</Label>
+                          <Input {...generalForm.register("phone")} data-testid="input-phone" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Instagram</Label>
+                          <Input
+                            {...generalForm.register("instagramHandle")}
+                            placeholder="@handle"
+                            data-testid="input-instagram"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>City</Label>
+                          <Input {...generalForm.register("city")} data-testid="input-city" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Country</Label>
+                          <Input
+                            {...generalForm.register("country")}
+                            data-testid="input-country"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Timezone</Label>
+                        <Controller
+                          control={generalForm.control}
+                          name="timezone"
+                          render={({ field }) => (
+                            <Select value={field.value} onValueChange={field.onChange}>
+                              <SelectTrigger aria-label="Time zone" data-testid="input-timezone">
+                                <SelectValue placeholder="Select timezone" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {EU_TIMEZONES.map((tz) => (
+                                  <SelectItem key={tz.value} value={tz.value}>
+                                    {tz.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label>Instagram</Label>
-                      <Input
-                        {...generalForm.register("instagramHandle")}
-                        placeholder="@handle"
-                        data-testid="input-instagram"
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>City</Label>
-                      <Input {...generalForm.register("city")} data-testid="input-city" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Country</Label>
-                      <Input
-                        {...generalForm.register("country")}
-                        data-testid="input-country"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Timezone</Label>
-                    <Controller
-                      control={generalForm.control}
-                      name="timezone"
-                      render={({ field }) => (
-                        <Select value={field.value} onValueChange={field.onChange}>
-                          <SelectTrigger aria-label="Time zone" data-testid="input-timezone">
-                            <SelectValue placeholder="Select timezone" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {EU_TIMEZONES.map((tz) => (
-                              <SelectItem key={tz.value} value={tz.value}>
-                                {tz.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-                  </div>
+                  </SettingsDisclosure>
                   {shopEditable && (
                   <Button
                     type="submit"
@@ -436,7 +445,7 @@ export default function SettingsPage() {
           </TabsContent>
 
           {visibleTabs.includes("appearance") && (
-            <TabsContent value="appearance" className="space-y-6 mt-0">
+            <TabsContent value="appearance" className="space-y-4 mt-0">
               {!shopEditable && (
                 <p className="text-sm text-muted-foreground rounded-lg border border-border p-3">
                   View-only — ask the owner to change public appearance.
@@ -451,7 +460,7 @@ export default function SettingsPage() {
           )}
 
           {visibleTabs.includes("policy") && (
-            <TabsContent value="policy" className="space-y-6 mt-0">
+            <TabsContent value="policy" className="space-y-4 mt-0">
               <OperationalPolicyControls />
               <BookingResourcesPanel />
             </TabsContent>
@@ -459,7 +468,7 @@ export default function SettingsPage() {
 
           {/* ===== Liv tab ===== */}
           {visibleTabs.includes("liv") && (
-          <TabsContent value="liv" className="space-y-6 mt-0">
+          <TabsContent value="liv" className="space-y-4 mt-0">
             {!livEditable && (
               <p className="text-sm text-muted-foreground">You do not have permission to edit Liv settings.</p>
             )}
@@ -640,7 +649,7 @@ export default function SettingsPage() {
           )}
 
           {visibleTabs.includes("team") && showTeam && (
-            <TabsContent value="team" className="space-y-6 mt-0">
+            <TabsContent value="team" className="space-y-4 mt-0">
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base">Team & services</CardTitle>
@@ -662,7 +671,7 @@ export default function SettingsPage() {
           )}
 
           {visibleTabs.includes("legal") && (
-            <TabsContent value="legal" className="space-y-6 mt-0">
+            <TabsContent value="legal" className="space-y-4 mt-0">
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base">Legal & trust</CardTitle>

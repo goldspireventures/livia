@@ -67,3 +67,20 @@ export const VERTICAL_HOME_SHORTCUTS_VISIBLE = 3;
 export function shouldShowInboxContextRail(hasSelectedThread: boolean): boolean {
   return hasSelectedThread;
 }
+
+/** Staff my-day timeline — hide when only the hero booking exists or day is empty. */
+export function shouldShowStaffMyDayTimeline(args: {
+  todayBookingCount: number;
+  hasNextBooking: boolean;
+}): boolean {
+  const n = Math.max(0, args.todayBookingCount);
+  if (n === 0) return false;
+  if (!args.hasNextBooking) return n > 0;
+  return n > 1;
+}
+
+/** Default visible rows in staff timeline before expand (all verticals). */
+export const STAFF_MY_DAY_TIMELINE_MAX_VISIBLE = 6;
+
+/** Settings shop tab — secondary fields behind disclosure by default. */
+export const SETTINGS_SHOP_SECONDARY_DEFAULT_OPEN = false;

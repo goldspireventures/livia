@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { ChevronRight } from "lucide-react";
 import type { StaffMyDayBooking } from "@/components/staff/staff-my-day-hero";
 import { staffClientFirstName } from "@/lib/staff-my-day-helpers";
+import { STAFF_MY_DAY_TIMELINE_MAX_VISIBLE } from "@workspace/policy";
 import { cn } from "@/lib/utils";
 import { MOTION } from "@/lib/motion";
 
@@ -9,7 +10,7 @@ export function StaffMyDayTimeline({
   bookings,
   nextId,
   formatTime,
-  maxVisible = 6,
+  maxVisible = STAFF_MY_DAY_TIMELINE_MAX_VISIBLE,
 }: {
   bookings: StaffMyDayBooking[];
   nextId?: string | null;

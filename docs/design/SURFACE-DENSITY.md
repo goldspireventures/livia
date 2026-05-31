@@ -34,6 +34,13 @@ Rules live in **`lib/policy/src/tenant-surface-density.ts`** so web and mobile c
 
 Other P0 surfaces should adopt the same tier model in their screen cards over R∞.
 
+| Surface | Status |
+|---------|--------|
+| Owner `/dashboard` | Reference implementation |
+| `/inbox` | Context rail gated |
+| Staff `/my-day` | Timeline gated via `shouldShowStaffMyDayTimeline` |
+| `/settings` shop tab | Compact link strip + disclosure for secondary fields |
+
 ---
 
 ## UI primitive

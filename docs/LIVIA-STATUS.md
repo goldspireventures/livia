@@ -16,7 +16,7 @@
 | Bucket | Status | What it means for you |
 |--------|--------|------------------------|
 | **A — Platform engineering** | **Done** | APIs, policy hub, 9 verticals, guest `/b`, presets matrix, CI, demo seeds, support registry, mobile parity hooks |
-| **B — Screen implementation** | **In progress (~35%)** | Density program started — see **Bucket B checklist** below |
+| **B — Screen implementation** | **In progress (~55%)** | Density program — see **Bucket B checklist** below |
 | **C — Visual & founder acceptance** | **Not done** | No full P0 screenshot gate in CI; Figma frames incomplete; founder field UAT not signed off for production presets |
 | **D — Launch & field** | **Not done** | Gate 2 (10 Dublin shops), prod preset flag, App Store / Stripe prod evidence |
 
@@ -32,9 +32,9 @@
 | Spec: `docs/design/SURFACE-DENSITY.md` | Done |
 | Owner/manager `/dashboard` | Done (ritual, contextual modules, disclosures) |
 | `/inbox` three-pane density | Done (context rail only when thread selected; shorter viewport) |
-| Staff `/my-day` | Not started |
-| `/settings` long pages | Not started |
-| Other P0 tenant routes (bookings list, etc.) | Not started |
+| Staff `/my-day` | Done (timeline only when 2+ bookings; tighter spacing) |
+| `/settings` shop + tabs | Done (compact booking link strip; contact fields collapsed) |
+| Other P0 tenant routes (bookings list, toolkit, etc.) | Not started |
 | P0 visual regression CI (`visual-screen-p0`) | Not started |
 | Founder compare to northstar PNGs | Not started |
 

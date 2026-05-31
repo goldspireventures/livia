@@ -14,6 +14,7 @@ import { StaffMyDayLoading } from "@/components/staff/staff-my-day-loading";
 import { StaffMyDayHero, type StaffMyDayBooking } from "@/components/staff/staff-my-day-hero";
 import { StaffMyDayTimeline } from "@/components/staff/staff-my-day-timeline";
 import { StaffMyDayQuickActions } from "@/components/staff/staff-my-day-quick-actions";
+import { shouldShowStaffMyDayTimeline } from "@workspace/policy";
 
 interface MyDayResponse {
   staffId: string | null;
@@ -55,10 +56,14 @@ export default function MyDayPage() {
   const emptyChair = data.todayCount === 0 && (persona === "staff" || effectiveRole === "STAFF");
   const next = data.next;
   const canRunLate = next?.status === "CONFIRMED" || next?.status === "PENDING";
+  const showTimeline = shouldShowStaffMyDayTimeline({
+    todayBookingCount: data.todayCount,
+    hasNextBooking: !!next,
+  });
 
   return (
     <div
-      className="max-w-xl mx-auto w-full pb-28 md:pb-6 space-y-6"
+      className="max-w-xl mx-auto w-full pb-28 md:pb-6 space-y-4"
       data-testid="staff-my-day-page"
     >
       <div className="flex items-center gap-2">
@@ -95,7 +100,7 @@ export default function MyDayPage() {
               <StaffMyDayHero booking={next} formatTime={formatTime} vertical={vertical} />
             ) : emptyChair ? (
               <section
-                className="rounded-[20px] border border-dashed border-border/80 bg-muted/20 px-6 py-12 text-center"
+                className="rounded-[20px] border border-dashed border-border/80 bg-muted/20 px-5 py-8 text-center"
                 data-testid="staff-my-day-empty"
               >
                 <p className="text-lg font-medium">Your day is open</p>
@@ -116,11 +121,13 @@ export default function MyDayPage() {
             />
           </div>
 
-          <StaffMyDayTimeline
-            bookings={data.today}
-            nextId={next?.id}
-            formatTime={formatTime}
-          />
+          {showTimeline ? (
+            <StaffMyDayTimeline
+              bookings={data.today}
+              nextId={next?.id}
+              formatTime={formatTime}
+            />
+          ) : null}
         </div>
       )}
 

@@ -203,7 +203,7 @@ export default function BookingsPage() {
               ))}
             </div>
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="flex flex-col items-center justify-center py-10 text-center">
               <Calendar className="h-10 w-10 text-muted-foreground mb-4 opacity-40" />
               <p className="font-medium">No bookings found</p>
               <p className="text-sm text-muted-foreground mt-1">

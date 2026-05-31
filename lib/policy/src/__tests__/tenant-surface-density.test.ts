@@ -6,6 +6,7 @@ import {
   shouldShowOnboardingMaturityBanner,
   shouldShowRunningLateAffordance,
   shouldShowInboxContextRail,
+  shouldShowStaffMyDayTimeline,
 } from "../tenant-surface-density";
 
 describe("tenant-surface-density", () => {
@@ -58,5 +59,20 @@ describe("tenant-surface-density", () => {
   it("inbox context rail only with selection", () => {
     expect(shouldShowInboxContextRail(false)).toBe(false);
     expect(shouldShowInboxContextRail(true)).toBe(true);
+  });
+
+  it("staff timeline hidden for empty or single-booking day", () => {
+    expect(shouldShowStaffMyDayTimeline({ todayBookingCount: 0, hasNextBooking: false })).toBe(
+      false,
+    );
+    expect(shouldShowStaffMyDayTimeline({ todayBookingCount: 1, hasNextBooking: true })).toBe(
+      false,
+    );
+    expect(shouldShowStaffMyDayTimeline({ todayBookingCount: 2, hasNextBooking: true })).toBe(
+      true,
+    );
+    expect(shouldShowStaffMyDayTimeline({ todayBookingCount: 1, hasNextBooking: false })).toBe(
+      true,
+    );
   });
 });
