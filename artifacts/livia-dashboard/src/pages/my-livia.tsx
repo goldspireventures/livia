@@ -1,17 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  PublicSurfaceFooter,
-  PublicSurfaceLoading,
-} from "@/components/public/public-surface-chrome";
+import { Card, CardContent } from "@/components/ui/card";
+import { PublicSurfaceLoading } from "@/components/public/public-surface-chrome";
 import {
   GuestHubShell,
   GuestHubUpcomingHero,
 } from "@/components/guest/guest-hub-chrome";
-import { LiviaWordmark } from "@/components/brand/LiviaMark";
+import { GuestHubSignIn } from "@/components/guest/guest-hub-sign-in";
 import { formatDateTime } from "@/lib/format";
 import { Heart, Loader2, Store } from "lucide-react";
 
@@ -194,18 +190,21 @@ export default function MyLiviaPage() {
 
   if (!hubToken || !view) {
     return (
-      <div className="min-h-screen bg-background guest-hub-shell public-booking-shell" data-testid="guest-hub-sign-in">
-        <div className="max-w-md mx-auto px-4 py-16 space-y-6">
-          <div className="text-center space-y-2">
-            <LiviaWordmark size="md" className="mx-auto opacity-90" />
-            <p className="text-[10px] uppercase tracking-widest font-mono text-primary">My Livia</p>
-            <h1 className="text-2xl font-serif">Your bookings, one place</h1>
-            <p className="text-sm text-muted-foreground">
-              Phone verify once — see every shop you&apos;ve booked with Livia. No password.
-            </p>
-          </div>
-
-          {stagingRelaxed ? (
+      <GuestHubSignIn
+        phone={phone}
+        onPhoneChange={setPhone}
+        phonePlaceholder={phonePlaceholder}
+        code={code}
+        onCodeChange={setCode}
+        otpSession={otpSession}
+        busy={busy}
+        resendSec={resendSec}
+        err={err}
+        stagingRelaxed={stagingRelaxed}
+        devOtp={devOtp}
+        magicOtp={magicOtp}
+        stagingHint={
+          stagingRelaxed ? (
             <div
               className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/90"
               data-testid="guest-hub-staging-banner"
@@ -219,74 +218,16 @@ export default function MyLiviaPage() {
                 </span>
               ) : null}
             </div>
-          ) : null}
-
-          {!otpSession ? (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">Enter your mobile</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Input
-                  type="tel"
-                  placeholder={phonePlaceholder}
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  data-testid="guest-hub-phone"
-                />
-                <Button
-                  className="w-full"
-                  disabled={busy || !phone.trim() || resendSec > 0}
-                  onClick={() => void requestOtp()}
-                >
-                  {busy ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : resendSec > 0 ? (
-                    `Resend in ${resendSec}s`
-                  ) : (
-                    "Send code"
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">Enter the code</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {devOtp ? (
-                  <p className="text-xs text-muted-foreground font-mono">Session code: {devOtp}</p>
-                ) : null}
-                {magicOtp ? (
-                  <p className="text-xs text-muted-foreground font-mono">Magic staging code: {magicOtp}</p>
-                ) : null}
-                <Input
-                  inputMode="numeric"
-                  placeholder="6-digit code"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  data-testid="guest-hub-otp"
-                />
-                <Button className="w-full" disabled={busy || code.length < 4} onClick={() => void verifyOtp()}>
-                  Verify
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="w-full text-xs text-muted-foreground"
-                  disabled={busy || resendSec > 0}
-                  onClick={() => void requestOtp()}
-                >
-                  {resendSec > 0 ? `Resend code in ${resendSec}s` : "Resend code"}
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-          {err ? <p className="text-sm text-destructive text-center">{err}</p> : null}
-          <PublicSurfaceFooter />
-        </div>
-      </div>
+          ) : undefined
+        }
+        onRequestOtp={() => void requestOtp()}
+        onVerifyOtp={() => void verifyOtp()}
+        onChangePhone={() => {
+          setOtpSession(null);
+          setCode("");
+          setDevOtp(null);
+        }}
+      />
     );
   }
 

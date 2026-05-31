@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { customFetch } from "@workspace/api-client-react";
-import type { LivMandateAction } from "@workspace/policy";
+import { LIV_MANDATE_RUNG_LABELS, type LivMandateAction } from "@workspace/policy";
 import { Bot } from "lucide-react";
 
 const DENY_TOGGLES: Array<{ action: LivMandateAction; label: string }> = [
@@ -35,14 +35,6 @@ type LivMandatePayload = {
     outcome: string;
     reason: string;
   }>;
-};
-
-const RUNG_LABELS: Record<string, string> = {
-  R0: "Observe — suggest only",
-  R1: "Propose — you approve everything",
-  R2: "Bounded — auto small tasks",
-  R3: "Routine — auto common flows",
-  R4: "Mandated — full allowlist",
 };
 
 export default function LivMandateControls() {
@@ -168,7 +160,11 @@ export default function LivMandateControls() {
               className="justify-start h-auto py-3 text-left"
             >
               <span className="font-mono text-xs mr-2">{r}</span>
-              <span className="text-sm">{RUNG_LABELS[r]}</span>
+              <span className="text-sm">
+                {LIV_MANDATE_RUNG_LABELS[r as keyof typeof LIV_MANDATE_RUNG_LABELS]?.short ?? r} —{" "}
+                {LIV_MANDATE_RUNG_LABELS[r as keyof typeof LIV_MANDATE_RUNG_LABELS]?.description ??
+                  ""}
+              </span>
             </Button>
           ))}
         </div>

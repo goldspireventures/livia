@@ -197,6 +197,33 @@ export function resolveLivDecision(args: {
   };
 }
 
+/** Owner-facing copy for mandate rungs (G6 guardrails UX). */
+export const LIV_MANDATE_RUNG_LABELS: Record<
+  LivAutonomyRung,
+  { short: string; description: string }
+> = {
+  R0: {
+    short: "Observe",
+    description: "Liv only suggests — nothing runs without you.",
+  },
+  R1: {
+    short: "Approve all",
+    description: "Every customer-facing action needs your tap first.",
+  },
+  R2: {
+    short: "Bounded",
+    description: "Liv handles small routine replies; bigger moves wait for you.",
+  },
+  R3: {
+    short: "Routine",
+    description: "Liv books and reschedules within your rules; money stays gated.",
+  },
+  R4: {
+    short: "Full allowlist",
+    description: "Liv runs your allowlist — still blocked by anything you denied.",
+  },
+};
+
 export function simulateMandateScenarios(
   mandate: LivMandate,
   vertical?: string,

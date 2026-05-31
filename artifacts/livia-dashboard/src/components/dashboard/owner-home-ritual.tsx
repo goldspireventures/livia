@@ -7,6 +7,7 @@ import { timeGreeting } from "@/lib/persona-rituals";
 import { useListConversations } from "@workspace/api-client-react";
 import { useBusiness } from "@/lib/business-context";
 import { InboxPreviewPanel } from "@/components/dashboard/inbox-preview-panel";
+import { OwnerLivGuardrails } from "@/components/dashboard/owner-liv-guardrails";
 import { VerticalHomeModules } from "@/components/dashboard/vertical-home-modules";
 import { LazyMount } from "@/components/lazy-mount";
 import { cn } from "@/lib/utils";
@@ -192,6 +193,8 @@ export function OwnerHomeRitual({
           </Link>
         </div>
       </section>
+
+      <OwnerLivGuardrails />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4" data-testid="owner-kpi-row">
         <KpiChip
