@@ -253,9 +253,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const p = tenantExperience?.presentation;
-    if (p) {
-      applyPresentationTheme({ cssPreset: p.cssPreset, brandAccentHex: p.brandAccentHex });
-    }
+    applyPresentationTheme({
+      cssPreset: p?.cssPreset ?? "platform-default",
+      brandAccentHex: p?.brandAccentHex,
+    });
   }, [tenantExperience?.presentation?.cssPreset, tenantExperience?.presentation?.brandAccentHex]);
 
   useEffect(() => {

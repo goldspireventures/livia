@@ -455,6 +455,24 @@ export function FounderCockpitView() {
                   ))}
                 </div>
                 <p style={{ margin: "8px 0", fontSize: 12, color: "#94a3b8", fontStyle: "italic" }}>{hat.focus}</p>
+                {hat.recentWork && hat.recentWork.length > 0 ? (
+                  <div style={{ marginBottom: 8 }}>
+                    <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", marginBottom: 4 }}>
+                      Recent work
+                    </div>
+                    <ul style={{ margin: 0, paddingLeft: 16, display: "grid", gap: 4 }}>
+                      {hat.recentWork.slice(0, 3).map((w) => (
+                        <li key={w.id} style={{ fontSize: 11, color: "#cbd5e1", lineHeight: 1.35 }}>
+                          {w.summary}
+                          <span style={{ color: "#64748b" }}>
+                            {" "}
+                            · {w.actorLabel ?? w.actor} · {new Date(w.createdAt).toLocaleDateString()}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                   {hat.actions.map((a) =>
                     a.internalPath ? (

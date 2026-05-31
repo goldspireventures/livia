@@ -1,16 +1,15 @@
 import { useEffect, useState } from "react";
-import { useParams } from "wouter";
+import { Link, useParams } from "wouter";
 import { applyVerticalTheme } from "@/lib/vertical-theme";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { applyExperienceTheme, clearExperienceTheme } from "@/lib/experience-theme";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Clock, Star, Receipt, CheckCircle2, Loader2 } from "lucide-react";
-import { formatDate, formatTime, formatCurrency } from "@/lib/format";
-import {
-  PublicSurfaceFooter,
-  PublicSurfaceLoading,
-  PublicSurfaceNotFound,
-} from "@/components/public/public-surface-chrome";
+import { Clock, Star, CheckCircle2, Loader2, MapPin } from "lucide-react";
+import { formatVisitHeroTime, visitDateChip } from "@/lib/format";
+import { publicCareNotes } from "@/lib/public-booking-helpers";
+import { PublicSurfaceNotFound } from "@/components/public/public-surface-chrome";
+import { PublicVisitLoading } from "@/components/public/public-visit-loading";
+import { usePublicGuestPwa } from "@/lib/public-guest-pwa";
 
 type VisitPayload = {
   bookingId: string;
@@ -26,6 +25,7 @@ type VisitPayload = {
   currency: string;
   priceMinor: number;
   logoUrl: string | null;
+  timezone: string;
   feedbackSubmitted: boolean;
   feedbackScore: number | null;
 };
@@ -42,6 +42,8 @@ export default function PublicVisitPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
+  usePublicGuestPwa(slug);
+
   useEffect(() => {
     if (!slug || !token) return;
     setLoading(true);
@@ -53,11 +55,13 @@ export default function PublicVisitPage() {
       .then((d) => {
         setData(d);
         applyVerticalTheme(d.vertical, null);
+        applyExperienceTheme({ vertical: d.vertical ?? undefined });
       })
       .catch(() => setData(null))
       .finally(() => setLoading(false));
     return () => {
       document.documentElement.removeAttribute("data-vertical");
+      clearExperienceTheme();
     };
   }, [slug, token]);
 
@@ -107,93 +111,164 @@ export default function PublicVisitPage() {
   }
 
   if (loading) {
-    return <PublicSurfaceLoading />;
+    return <PublicVisitLoading />;
   }
 
   if (!data) {
     return (
       <PublicSurfaceNotFound
-        title="Visit link not found"
-        detail="This link is invalid or has expired. Contact the business if you need help."
+        title="This visit link has expired"
+        detail="This link is invalid or has expired."
       />
     );
   }
 
+  const tzOpts = { timeZone: data.timezone };
   const canRunLate = data.status === "CONFIRMED" || data.status === "PENDING";
   const canFeedback = data.status === "COMPLETED" && !data.feedbackSubmitted;
+  const isCancelled = data.status === "CANCELLED";
+  const prepNotes = publicCareNotes(data.vertical);
+  const bookUrl = `/b/${data.slug}`;
 
   return (
-    <div className="min-h-screen bg-background public-booking-shell">
-      <div className="public-booking-hero pointer-events-none absolute inset-x-0 top-0 h-40" aria-hidden />
-      <div className="max-w-lg mx-auto px-4 py-10 relative z-10 space-y-6">
-        <div className="text-center">
+    <div className="min-h-screen bg-background" data-testid="guest-visit-page">
+      <div className="max-w-xl mx-auto px-4 py-5 pb-28">
+        <header className="flex items-center gap-3 mb-5" data-testid="guest-visit-header">
           {data.logoUrl ? (
-            <img src={data.logoUrl} alt="" className="h-12 mx-auto mb-3 rounded-md object-contain" />
-          ) : null}
-          <p className="text-[10px] uppercase tracking-widest font-mono text-primary">
-            Your visit · {data.businessName}
-          </p>
-          <h1 className="text-2xl font-serif mt-2">
-            {data.customerFirstName ? `Hi ${data.customerFirstName}` : "Your appointment"}
-          </h1>
-        </div>
+            <img
+              src={data.logoUrl}
+              alt=""
+              className="h-10 w-10 rounded-full object-cover border border-border/60"
+            />
+          ) : (
+            <div className="h-10 w-10 rounded-full bg-primary/15 flex items-center justify-center text-sm font-serif border border-border/60">
+              {data.businessName.charAt(0)}
+            </div>
+          )}
+          <p className="flex-1 min-w-0 font-semibold truncate">{data.businessName}</p>
+          <span className="shrink-0 rounded-full bg-muted px-2.5 py-1 text-xs font-medium tabular-nums">
+            {visitDateChip(data.startAt, tzOpts)}
+          </span>
+        </header>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Receipt className="h-4 w-4" />
-              Booking summary
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm space-y-2">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Service</span>
-              <span className="font-medium">{data.serviceName}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">When</span>
-              <span>
-                {formatDate(data.startAt)} {formatTime(data.startAt)}
-              </span>
-            </div>
+        {isCancelled ? (
+          <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-center space-y-3">
+            <p className="font-medium">This appointment was cancelled</p>
+            <Button asChild variant="outline" className="w-full">
+              <Link href={bookUrl}>Book again</Link>
+            </Button>
+          </div>
+        ) : (
+          <section
+            className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm motion-hero-fade-in"
+            data-testid="guest-visit-hero"
+          >
+            <p
+              className="text-[2.25rem] leading-tight font-bold tabular-nums tracking-tight"
+              data-testid="guest-visit-time"
+            >
+              {formatVisitHeroTime(data.startAt, tzOpts)}
+            </p>
+            <p className="text-lg font-medium mt-2">{data.serviceName}</p>
             {data.staffDisplayName ? (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">With</span>
-                <span>{data.staffDisplayName}</span>
-              </div>
+              <p className="text-sm text-muted-foreground mt-2 flex items-center gap-2">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-medium">
+                  {data.staffDisplayName.charAt(0)}
+                </span>
+                with {data.staffDisplayName}
+              </p>
             ) : null}
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Price</span>
-              <span>{formatCurrency(data.priceMinor, data.currency)}</span>
-            </div>
-          </CardContent>
-        </Card>
+            <p className="text-sm text-muted-foreground mt-3 flex items-start gap-1.5">
+              <MapPin className="h-4 w-4 shrink-0 mt-0.5" aria-hidden />
+              See you at the studio
+            </p>
+            {data.customerFirstName ? (
+              <p className="text-xs text-muted-foreground mt-3">
+                Hi {data.customerFirstName} — here's your visit summary.
+              </p>
+            ) : null}
+          </section>
+        )}
+
+        {!isCancelled && prepNotes.length > 0 ? (
+          <section className="mt-8" data-testid="guest-visit-prep">
+            <h2 className="text-[13px] uppercase tracking-widest text-muted-foreground font-medium mb-3">
+              Before you arrive
+            </h2>
+            <ul className="space-y-2 text-[15px] leading-relaxed text-foreground/90 list-disc pl-5">
+              {prepNotes.map((note) => (
+                <li key={note}>{note}</li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
 
         {message ? (
-          <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm flex gap-2">
+          <div className="mt-6 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm flex gap-2">
             <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
             {message}
           </div>
         ) : null}
 
-        {err ? (
-          <p className="text-sm text-destructive text-center">{err}</p>
-        ) : null}
+        {err ? <p className="mt-4 text-sm text-destructive text-center">{err}</p> : null}
 
-        {canRunLate ? (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                Running late?
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-wrap gap-2">
+        {canFeedback ? (
+          <section className="mt-8 space-y-3 rounded-2xl border border-border/80 p-4">
+            <h2 className="text-base font-semibold flex items-center gap-2">
+              <Star className="h-4 w-4" />
+              How was your visit?
+            </h2>
+            <div className="flex justify-center gap-2">
+              {SCORES.map((s) => (
+                <Button
+                  key={s}
+                  variant={score === s ? "default" : "outline"}
+                  size="icon"
+                  className="h-11 w-11"
+                  aria-label={`Rate ${s} out of 5`}
+                  onClick={() => setScore(s)}
+                  data-testid={`feedback-score-${s}`}
+                >
+                  {s}
+                </Button>
+              ))}
+            </div>
+            <Textarea
+              placeholder="Anything we should know? (optional)"
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              rows={3}
+            />
+            <Button
+              className="w-full min-h-[44px]"
+              disabled={busy || score == null}
+              onClick={() => void submitFeedback()}
+              data-testid="feedback-submit"
+            >
+              Send feedback
+            </Button>
+          </section>
+        ) : data.feedbackSubmitted ? (
+          <p className="mt-8 text-center text-sm text-muted-foreground">
+            Thanks — you rated this visit {data.feedbackScore}/5.
+          </p>
+        ) : null}
+      </div>
+
+      {canRunLate ? (
+        <div className="fixed bottom-0 inset-x-0 z-40 border-t border-border/80 bg-background/95 backdrop-blur-md px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <div className="max-w-xl mx-auto space-y-2">
+            <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+              <Clock className="h-3.5 w-3.5" aria-hidden />
+              Running late?
+            </p>
+            <div className="flex flex-wrap gap-2">
               {[5, 10, 15, 30].map((m) => (
                 <Button
                   key={m}
                   variant="outline"
                   size="sm"
+                  className="min-h-[44px] flex-1"
                   disabled={busy}
                   onClick={() => void sendRunningLate(m)}
                   data-testid={`customer-late-${m}`}
@@ -201,58 +276,10 @@ export default function PublicVisitPage() {
                   {m} min
                 </Button>
               ))}
-            </CardContent>
-          </Card>
-        ) : null}
-
-        {canFeedback ? (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Star className="h-4 w-4" />
-                How was your visit?
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-center gap-2">
-                {SCORES.map((s) => (
-                  <Button
-                    key={s}
-                    variant={score === s ? "default" : "outline"}
-                    size="icon"
-                    className="h-10 w-10"
-                    aria-label={`Rate ${s} out of 5`}
-                    onClick={() => setScore(s)}
-                    data-testid={`feedback-score-${s}`}
-                  >
-                    {s}
-                  </Button>
-                ))}
-              </div>
-              <Textarea
-                placeholder="Anything we should know? (optional)"
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                rows={3}
-              />
-              <Button
-                className="w-full"
-                disabled={busy || score == null}
-                onClick={() => void submitFeedback()}
-                data-testid="feedback-submit"
-              >
-                Send feedback
-              </Button>
-            </CardContent>
-          </Card>
-        ) : data.feedbackSubmitted ? (
-          <p className="text-center text-sm text-muted-foreground">
-            Thanks — you rated this visit {data.feedbackScore}/5.
-          </p>
-        ) : null}
-
-        <PublicSurfaceFooter />
-      </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

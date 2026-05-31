@@ -1,6 +1,8 @@
 # Livia — Master Plan (one bow)
 
-**Status:** Canonical orchestration doc — 2026-05-21  
+> **⚠ Superseded (2026-05-31)** for execution by [`LIVIA-WIDE-BUILD-PLAN.md`](./LIVIA-WIDE-BUILD-PLAN.md) + [`LIVIA-BUILD-PLAN-V2.md`](./LIVIA-BUILD-PLAN-V2.md). Strategy sections remain useful reference.
+
+**Status:** Archived orchestration doc — 2026-05-21  
 **Owner:** founder + product + engineering  
 **Purpose:** One nested plan that ties **company strategy**, **business model**, **product promise**, **platform architecture**, and **sprint execution** into a single hierarchy. Everything else is an **annex**, not a competing plan.
 

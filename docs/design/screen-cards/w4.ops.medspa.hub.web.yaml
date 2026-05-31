@@ -1,0 +1,63 @@
+meta:
+  id: w4.ops.medspa.hub.web
+  world: W4
+  route: "/medspa"
+  artifact: livia-dashboard
+  persona: [P2, P3]
+  verticals: [medspa]
+  release: R1
+  status: designed
+
+job: >
+  Medspa owner clinical-adjacent ops — consent status, today's procedures, mandate alerts — not an EHR.
+
+visual:
+  canvas:
+    device: desktop
+    viewport: 1280x800
+    background: clinical-calm preset — cool neutrals, generous whitespace
+  zones:
+    - id: mandate_strip
+      height: auto
+      visible: when Liv mandate alerts exist
+      content:
+        - amber calm banner "2 consents missing before today's appointments"
+        - CTA "Review" → filtered today list
+      tone: serious not alarmist
+    - id: today_procedures
+      layout: timeline list
+      content:
+        - rows: time | patient first name | procedure | consent ✓/⚠ | practitioner
+        - tap row → booking detail + intake link resend
+    - id: consent_queue
+      layout: side panel 320px
+      content:
+        - unsigned intakes list
+        - one-click "Send intake link"
+    - id: audit_footnote
+      content:
+        - "Livia is not a medical record system" 12px muted link to legal
+  typography:
+    labels: 13px uppercase tracking clinical
+    names: 16px — first name only on floor view
+  color:
+    consent_ok: emerald-600 dot
+    consent_missing: amber-500 dot
+
+states:
+  empty_today:
+    copy: "No procedures scheduled today"
+  loading:
+    visual: timeline skeleton 6 rows
+
+acceptance:
+  e2e:
+    - clarity-medspa-dublin owner medspa route
+  human:
+    - No diagnostic or treatment recommendation UI anywhere
+
+traceability:
+  surfaceId: tenant.medspa.hub
+  figma:
+    frame: W4-Tenant/w4.ops.medspa.hub.web
+    status: not_started

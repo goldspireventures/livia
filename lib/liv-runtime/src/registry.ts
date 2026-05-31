@@ -29,6 +29,8 @@ export const LIV_TOOL_RESCHEDULE_BOOKING = "reschedule_booking";
 export const LIV_TOOL_LOOKUP_CUSTOMER = "lookup_customer";
 export const LIV_TOOL_GET_BOOKING = "get_booking";
 export const LIV_TOOL_LIST_STUCK_CONTINUITY = "list_stuck_continuity";
+export const LIV_TOOL_LIST_DRIFT_CANDIDATES = "list_drift_candidates";
+export const LIV_TOOL_DRAFT_DRIFT_RECOVERY = "draft_drift_recovery";
 export const LIV_TOOL_MORNING_BRIEFING = "morning_briefing";
 export const LIV_TOOL_SEARCH_TENANTS = "search_tenants";
 export const LIV_TOOL_TENANT_SNAPSHOT = "tenant_snapshot";
@@ -157,6 +159,40 @@ const CATALOG: RegisteredLivTool[] = [
       type: "object",
       properties: {
         limit: { type: "string", description: "Max rows (default 10)." },
+      },
+      required: [],
+    },
+  },
+  {
+    id: LIV_TOOL_LIST_DRIFT_CANDIDATES,
+    name: LIV_TOOL_LIST_DRIFT_CANDIDATES,
+    risk: "low",
+    profiles: ["tenant_staff"],
+    description:
+      "List lapsed clients (completed visit 90+ days ago, no upcoming booking). Drift recovery queue.",
+    input_schema: {
+      type: "object",
+      properties: {
+        minDays: { type: "string", description: "Minimum days since last visit (default 90)." },
+        limit: { type: "string", description: "Max rows (default 10)." },
+      },
+      required: [],
+    },
+  },
+  {
+    id: LIV_TOOL_DRAFT_DRIFT_RECOVERY,
+    name: LIV_TOOL_DRAFT_DRIFT_RECOVERY,
+    risk: "low",
+    profiles: ["tenant_staff"],
+    description:
+      "Draft a warm re-engagement message for a lapsed client. Owner reviews before send_message.",
+    input_schema: {
+      type: "object",
+      properties: {
+        customerId: { type: "string" },
+        customerName: { type: "string", description: "Optional if customerId unknown." },
+        lastServiceName: { type: "string" },
+        daysSinceVisit: { type: "string" },
       },
       required: [],
     },

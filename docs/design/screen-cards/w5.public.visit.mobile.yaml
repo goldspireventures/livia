@@ -1,0 +1,80 @@
+meta:
+  id: w5.public.visit.mobile
+  world: W5
+  route: "/b/:slug/visit/:token"
+  artifact: livia-dashboard
+  persona: [P7]
+  verticals: all
+  release: R1
+  status: designed
+
+job: >
+  Day-of visit hub — who, when, where, what to bring — plus reschedule/cancel without login.
+
+visual:
+  canvas:
+    device: phone
+    viewport: 390x844
+    background: preset surface — calm, high legibility
+  zones:
+    - id: header
+      height: 56px
+      content:
+        - business logo 40px + name
+        - date chip "Today" or formatted visit date
+    - id: visit_hero
+      padding: 20px
+      content:
+        - time 36px tabular bold — local timezone words "Tuesday 2:30 PM"
+        - service name 18px
+        - practitioner/staff name with avatar 32px if assigned
+        - location line address or "See you at the studio"
+      card:
+        radius: 16px
+        background: preset card elevated
+    - id: prep
+      content:
+        - section "Before you arrive" 13px uppercase
+        - vertical-specific bullets (patch test done, no mascara, fasted, etc.)
+    - id: wallet
+      content:
+        - "Add to Apple Wallet / Google Wallet" outlined button — R2
+        - QR code fallback 120px for check-in desk
+    - id: actions
+      sticky_bottom: true
+      layout: stack gap 8px
+      content:
+        - secondary "Running late" → triggers workflow link
+        - tertiary "Reschedule" → wizard subset with token
+        - destructive text "Cancel visit" → policy modal
+  typography:
+    time: 36px tabular nums
+    body: 15px/1.5
+  motion:
+    enter_page: enter-page
+    wallet_add: success-beat once
+
+states:
+  loading:
+    visual: hero card skeleton
+  expired_token:
+    copy: "This visit link has expired"
+    action: "Book again" → /b/:slug
+  cancelled:
+    copy: "This appointment was cancelled"
+    show: refund/deposit note per policy
+
+acceptance:
+  human:
+    - Time readable at glance outdoors (sunlight contrast AA)
+  e2e:
+    - visit token from booking confirm flow
+  visual:
+    - baseline: final-public-guest-visit.png family
+
+traceability:
+  surfaceId: public.visit
+  guest_surface: visit
+  figma:
+    frame: W5/w5.public.visit.mobile
+    status: not_started

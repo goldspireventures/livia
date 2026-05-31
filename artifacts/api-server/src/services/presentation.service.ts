@@ -2,6 +2,7 @@ import {
   listPresentationPresets,
   resolvePresentationPreset,
   isValidPresentationPreset,
+  presetPreservesVerticalGates,
   presentationPresetsEnabled,
   PLATFORM_DEFAULT_PRESET_ID,
   type BusinessVertical,
@@ -44,6 +45,9 @@ export async function patchPresentationForBusiness(
     const vertical = biz.vertical as BusinessVertical;
     if (!isValidPresentationPreset(vertical, input.presentationPresetId)) {
       throw new Error("INVALID_PRESET");
+    }
+    if (!presetPreservesVerticalGates(vertical, input.presentationPresetId)) {
+      throw new Error("PRESET_DROPS_VERTICAL_GATES");
     }
     patch.presentationPresetId = input.presentationPresetId;
   }

@@ -15,7 +15,7 @@ import {
 import { LiviaWordmark } from "@/components/brand/LiviaMark";
 import {
   getWedgeDemoStory,
-  listWedgeDemoVerticals,
+  listWedgeDemoVerticalsForDisplay,
   type WedgeDemoStory,
 } from "@workspace/policy";
 import {
@@ -201,7 +201,7 @@ export default function DemoWedgeStoryPage() {
 
         <section className="mt-8">
           <h2 className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-3">
-            Enter as role
+            Enter demo
           </h2>
           {tenant?.roster?.length ? (
             <div className="grid grid-cols-2 gap-2">
@@ -252,7 +252,7 @@ export default function DemoWedgeStoryPage() {
         </p>
 
         <nav className="mt-10 flex flex-wrap gap-2 border-t border-border/40 pt-6" aria-label="Other trades">
-          {listWedgeDemoVerticals()
+          {listWedgeDemoVerticalsForDisplay()
             .filter((v) => v !== story.vertical)
             .map((v) => {
               const s = getWedgeDemoStory(v);

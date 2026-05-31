@@ -33,6 +33,23 @@ function buildSteps(
   return steps;
 }
 
+export function PublicBookingStepper({
+  step,
+  serviceStepLabel = "Service",
+  includeConsentStep = false,
+}: {
+  step: PublicRitualStep;
+  serviceStepLabel?: string;
+  includeConsentStep?: boolean;
+}) {
+  const steps = buildSteps(serviceStepLabel, includeConsentStep);
+  const stepIndex = Math.max(
+    0,
+    steps.findIndex((s) => s.key === step),
+  );
+  return <Stepper steps={steps} stepIndex={stepIndex} />;
+}
+
 function Stepper({
   steps,
   stepIndex,
@@ -125,12 +142,6 @@ export function PublicCustomerRitual({
   onScrollToServices?: () => void;
   bookCta?: string;
 }) {
-  const steps = buildSteps(serviceStepLabel, includeConsentStep);
-  const stepIndex = Math.max(
-    0,
-    steps.findIndex((s) => s.key === step),
-  );
-
   const livLine =
     aiGreeting ??
     tagline ??
@@ -161,7 +172,11 @@ export function PublicCustomerRitual({
             />
           ) : null}
         </div>
-        <Stepper steps={steps} stepIndex={stepIndex} />
+        <PublicBookingStepper
+          step={step}
+          serviceStepLabel={serviceStepLabel}
+          includeConsentStep={includeConsentStep}
+        />
       </header>
     );
   }
@@ -186,10 +201,10 @@ export function PublicCustomerRitual({
               <img
                 src={logoUrl}
                 alt=""
-                className="h-14 w-14 rounded-xl border-2 border-background object-cover shadow-md bg-card"
+                className="h-14 w-14 rounded-xl border-2 border-background object-cover shadow-md bg-card motion-logo-enter"
               />
             ) : (
-              <div className="h-14 w-14 rounded-xl border-2 border-background bg-primary/15 flex items-center justify-center text-lg font-serif">
+              <div className="h-14 w-14 rounded-xl border-2 border-background bg-primary/15 flex items-center justify-center text-lg font-serif motion-logo-enter">
                 {businessName.charAt(0)}
               </div>
             )}
@@ -246,7 +261,11 @@ export function PublicCustomerRitual({
       </section>
 
       <div className="mt-4">
-        <Stepper steps={steps} stepIndex={stepIndex} />
+        <PublicBookingStepper
+          step={step}
+          serviceStepLabel={serviceStepLabel}
+          includeConsentStep={includeConsentStep}
+        />
       </div>
     </header>
   );

@@ -2,7 +2,6 @@ import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
-  ActivityIndicator,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -11,6 +10,11 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  groupNotificationsByDay,
+  notificationFeedIcon,
+  type NotificationFeedIcon,
+} from "@workspace/policy";
 import { fonts, type } from "@/constants/typography";
 import { useColors } from "@/hooks/useColors";
 import { useHaptics } from "@/hooks/useHaptics";
@@ -19,10 +23,10 @@ import { useInAppNotifications, type InAppNotification } from "@/hooks/useInAppN
 
 function relativeTime(iso: string): string {
   const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60_000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  if (mins < 1440) return `${Math.round(mins / 60)}h ago`;
-  return `${Math.round(mins / 1440)}d ago`;
+  if (mins < 1) return "now";
+  if (mins < 60) return `${mins}m`;
+  if (mins < 1440) return `${Math.round(mins / 60)}h`;
+  return `${Math.round(mins / 1440)}d`;
 }
 
 function priorityBorder(p: InAppNotification["priority"], colors: ReturnType<typeof useColors>) {
@@ -36,6 +40,96 @@ function priorityBorder(p: InAppNotification["priority"], colors: ReturnType<typ
   }
 }
 
+function feedIconName(type: NotificationFeedIcon): keyof typeof Feather.glyphMap {
+  switch (type) {
+    case "booking":
+      return "calendar";
+    case "inbox":
+      return "message-circle";
+    case "chain":
+      return "layers";
+    default:
+      return "check-circle";
+  }
+}
+
+function NotificationRow({
+  n,
+  colors,
+  onPress,
+}: {
+  n: InAppNotification;
+  colors: ReturnType<typeof useColors>;
+  onPress: () => void;
+}) {
+  const icon = feedIconName(notificationFeedIcon(n.kind));
+  return (
+    <Pressable
+      onPress={onPress}
+      style={[
+        styles.row,
+        {
+          backgroundColor: n.readAt ? colors.card : colors.primary + "12",
+          borderColor: colors.border,
+          borderLeftColor: priorityBorder(n.priority, colors),
+          opacity: n.readAt ? 0.85 : 1,
+        },
+      ]}
+    >
+      <View style={[styles.iconWrap, { backgroundColor: colors.muted }]}>
+        <Feather name={icon} size={18} color={colors.primary} />
+      </View>
+      <View style={styles.rowBody}>
+        <Text
+          style={[
+            styles.rowTitle,
+            { color: colors.foreground, fontFamily: n.readAt ? fonts.bodyMed : fonts.bodySemi },
+          ]}
+          numberOfLines={1}
+        >
+          {n.title}
+        </Text>
+        <Text style={[styles.rowSubtitle, { color: colors.mutedForeground }]} numberOfLines={2}>
+          {n.body}
+        </Text>
+      </View>
+      <Text style={[styles.rowTime, { color: colors.mutedForeground }]}>{relativeTime(n.createdAt)}</Text>
+    </Pressable>
+  );
+}
+
+function NotificationGroup({
+  label,
+  items,
+  colors,
+  onOpen,
+}: {
+  label: string;
+  items: InAppNotification[];
+  colors: ReturnType<typeof useColors>;
+  onOpen: (n: InAppNotification) => void;
+}) {
+  if (items.length === 0) return null;
+  return (
+    <View style={styles.group}>
+      <Text style={[styles.groupLabel, { color: colors.mutedForeground }]}>{label}</Text>
+      {items.map((n) => (
+        <NotificationRow key={n.id} n={n} colors={colors} onPress={() => onOpen(n)} />
+      ))}
+    </View>
+  );
+}
+
+function LoadingSkeleton({ colors }: { colors: ReturnType<typeof useColors> }) {
+  return (
+    <View style={styles.group}>
+      {Array.from({ length: 8 }).map((_, i) => (
+        <View key={i} style={[styles.skeleton, { backgroundColor: colors.muted }]} />
+      ))}
+    </View>
+  );
+}
+
 export default function NotificationsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -44,7 +138,10 @@ export default function NotificationsScreen() {
   const { notifications, unreadCount, isLoading, markRead, markAllRead, refetch } =
     useInAppNotifications();
 
+  const { today, earlier } = groupNotificationsByDay(notifications);
+
   const openItem = async (n: InAppNotification) => {
+    haptics.tap();
     if (!n.readAt) await markRead(n.id);
     const route = n.mobileHref ?? n.href;
     if (route) router.push(route as never);
@@ -64,10 +161,10 @@ export default function NotificationsScreen() {
               void markAllRead();
             }}
           >
-            <Text style={[styles.markAll, { color: colors.primary }]}>Read all</Text>
+            <Text style={[styles.markAll, { color: colors.primary }]}>Mark all read</Text>
           </Pressable>
         ) : (
-          <View style={{ width: 56 }} />
+          <View style={{ width: 88 }} />
         )}
       </View>
 
@@ -81,48 +178,19 @@ export default function NotificationsScreen() {
           />
         }
       >
-        <Text style={[styles.lede, { color: colors.mutedForeground }]}>
-          Liv only pings you when something needs a human — tap through to resolve.
-        </Text>
-
         {isLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: 32 }} />
+          <LoadingSkeleton colors={colors} />
         ) : notifications.length === 0 ? (
           <EmptyState
             icon="bell"
-            title="All caught up"
-            subtitle="You'll see pings when Liv needs a yes, a message lands, or a booking waits on you."
+            title="You're all caught up"
+            subtitle="Liv will surface bookings, inbox handoffs, and chain alerts when they need you."
           />
         ) : (
-          notifications.map((n) => (
-            <Pressable
-              key={n.id}
-              onPress={() => void openItem(n)}
-              style={[
-                styles.card,
-                {
-                  backgroundColor: n.readAt ? colors.card : colors.primary + "10",
-                  borderColor: colors.border,
-                  borderLeftColor: priorityBorder(n.priority, colors),
-                },
-              ]}
-            >
-              <View style={styles.cardHead}>
-                <Text style={[styles.cardTitle, { color: colors.foreground }]} numberOfLines={2}>
-                  {n.title}
-                </Text>
-                {!n.readAt ? (
-                  <View style={[styles.dot, { backgroundColor: colors.primary }]} />
-                ) : null}
-              </View>
-              <Text style={[styles.cardBody, { color: colors.mutedForeground }]} numberOfLines={3}>
-                {n.body}
-              </Text>
-              <Text style={[styles.cardMeta, { color: colors.mutedForeground }]}>
-                {relativeTime(n.createdAt)}
-              </Text>
-            </Pressable>
-          ))
+          <>
+            <NotificationGroup label="Today" items={today} colors={colors} onOpen={openItem} />
+            <NotificationGroup label="Earlier" items={earlier} colors={colors} onOpen={openItem} />
+          </>
         )}
       </ScrollView>
     </View>
@@ -141,18 +209,35 @@ const styles = StyleSheet.create({
   },
   title: { fontFamily: fonts.bodyMed, fontSize: 17 },
   markAll: { fontFamily: fonts.bodySemi, fontSize: 13 },
-  lede: { ...type.body, fontSize: 13, lineHeight: 18, marginBottom: 16 },
-  empty: { ...type.body, textAlign: "center", marginTop: 40 },
-  card: {
-    borderRadius: 14,
+  group: { marginBottom: 20, gap: 8 },
+  groupLabel: {
+    fontFamily: fonts.bodySemi,
+    fontSize: 11,
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+    marginBottom: 4,
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    minHeight: 72,
+    borderRadius: 12,
     borderWidth: 1,
     borderLeftWidth: 3,
-    padding: 14,
-    marginBottom: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
-  cardHead: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
-  cardTitle: { flex: 1, fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 20 },
-  dot: { width: 8, height: 8, borderRadius: 4, marginTop: 6 },
-  cardBody: { ...type.body, fontSize: 13, lineHeight: 18, marginTop: 6 },
-  cardMeta: { ...type.caption, marginTop: 8 },
+  iconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  rowBody: { flex: 1, minWidth: 0 },
+  rowTitle: { fontSize: 15, lineHeight: 20 },
+  rowSubtitle: { ...type.body, fontSize: 14, lineHeight: 19, marginTop: 2 },
+  rowTime: { ...type.caption, fontSize: 11, alignSelf: "flex-start", paddingTop: 2 },
+  skeleton: { height: 72, borderRadius: 12, marginBottom: 8 },
 });

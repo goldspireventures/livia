@@ -579,6 +579,22 @@ export function isValidPresentationPreset(
   return PRESENTATION_PRESETS[vertical].some((p) => p.id === presetId);
 }
 
+/** Presets are presentation-only — must not pick a shell incompatible with vertical guest gates. */
+export function presetPreservesVerticalGates(
+  vertical: BusinessVertical,
+  presetId: string,
+): boolean {
+  if (!isValidPresentationPreset(vertical, presetId)) return false;
+  const preset = resolvePresentationPreset(vertical, presetId);
+  if (vertical === "medspa" || vertical === "allied-health") {
+    return ["clinical", "soft", "aurora"].includes(preset.tokens.shell);
+  }
+  if (vertical === "body-art") {
+    return ["bold", "warm", "aurora", "industrial"].includes(preset.tokens.shell);
+  }
+  return true;
+}
+
 /** Staging-only gate — presentation picker + token bundles ship behind this until prod promotion. */
 export function presentationPresetsEnabled(env?: Record<string, string | undefined>): boolean {
   const e = env ?? (typeof process !== "undefined" ? process.env : {});

@@ -13,6 +13,10 @@ import { lookupCustomersForLiv } from "../services/customers.service";
 import { getMorningBriefing } from "../services/morning-briefing.service";
 import { getBookingById } from "../services/bookings.service";
 import { listStuckContinuityBookings } from "../services/booking-continuity.service";
+import {
+  draftDriftRecoveryMessage,
+  listCustomerDriftCandidates,
+} from "../services/customer-drift.service";
 
 export function buildLivToolDeps(args: {
   business: Business;
@@ -151,6 +155,35 @@ export function buildLivToolDeps(args: {
           startAt: r.startAt,
         })),
         total: rows.length,
+      };
+    },
+    async listDriftCandidates(input) {
+      const rows = await listCustomerDriftCandidates(businessId, {
+        minDays: input.minDays,
+        limit: input.limit,
+      });
+      return {
+        candidates: rows.map((r) => ({
+          customerId: r.customerId,
+          customerName: r.customerName,
+          lastServiceName: r.lastServiceName,
+          lastVisitAt: r.lastVisitAt,
+          daysSinceVisit: r.daysSinceVisit,
+        })),
+        total: rows.length,
+      };
+    },
+    async draftDriftRecovery(input) {
+      const message = draftDriftRecoveryMessage({
+        businessName: business.name,
+        customerName: input.customerName ?? "there",
+        lastServiceName: input.lastServiceName,
+        daysSinceVisit: input.daysSinceVisit ?? 90,
+      });
+      return {
+        message,
+        customerId: input.customerId ?? null,
+        note: "Review and send via send_message or inbox — owner approval required.",
       };
     },
   };

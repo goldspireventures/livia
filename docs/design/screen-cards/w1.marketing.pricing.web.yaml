@@ -1,0 +1,55 @@
+meta:
+  id: w1.marketing.pricing.web
+  world: W1
+  route: "/pricing"
+  artifact: livia-marketing
+  persona: [Prospect]
+  release: R1
+  status: designed
+
+job: >
+  Honest EUR pricing — inherits M1 home skin (M2-A lock) — no fake enterprise fluff.
+
+visual:
+  canvas:
+    device: responsive
+    viewport: 1280x900
+    background: same aurora editorial as home — M0 shell nav/footer
+  zones:
+    - id: hero
+      content:
+        - headline "Simple pricing for people-businesses" serif 40px
+        - sub "Liv earns more responsibility — and you can start small"
+    - id: tier_cards
+      layout: 3 or 4 columns desktop | carousel mobile
+      cards:
+        - Solo | Studio | Chain | Host (chair-rental)
+        - price €/mo large serif
+        - feature list honest — no dental, no fake AI unlimited
+        - CTA "Start demo" → dashboard /demo
+      style:
+        middle_tier: subtle aurora border highlight Studio
+        inherit: M2-A aurora tier cards locked PNG
+    - id: add_ons
+      content:
+        - voice minutes, outcome share footnote optional tier
+    - id: faq
+      content:
+        - accordion 6 items — migration, GDPR, Liv disclosure
+  motion:
+    enter: fade sections on scroll — reduced motion instant
+
+acceptance:
+  e2e:
+    - marketing-gate pricing EUR symbols
+  visual:
+    - baseline: marketing-pricing-a-aurora-honest.png
+  gtm:
+    - must match in-app billing SSOT when wired
+
+traceability:
+  surfaceId: marketing.pricing
+  northstar_png: m2-pricing.png
+  figma:
+    frame: W1/w1.marketing.pricing.web
+    status: not_started

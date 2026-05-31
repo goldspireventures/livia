@@ -1,6 +1,8 @@
 # Livia — Final Execution Plan (EU, get over the line)
 
-**Status:** v1.0 (2026-05-21) — **summary only**; task-level authority is [`LIVIA-DETAILED-BUILD-PLAN.md`](./LIVIA-DETAILED-BUILD-PLAN.md).  
+> **⚠ Superseded (2026-05-31)** by [`LIVIA-FINAL-BUILD-PLAN.md`](./LIVIA-FINAL-BUILD-PLAN.md) + [`LIVIA-BUILD-PLAN-V2.md`](./LIVIA-BUILD-PLAN-V2.md).
+
+**Status:** v1.0 (2026-05-21) — archived summary  
 **Prerequisite:** [`LIVIA-DOCUMENTATION-READINESS.md`](./LIVIA-DOCUMENTATION-READINESS.md) + [`LIVIA-COMPLETE-SYSTEM-SPEC.md`](./LIVIA-COMPLETE-SYSTEM-SPEC.md) signed off.  
 **Goal:** Ship a **EU-ready, self-onboarding, OS-coherent** Livia that replaces tool sprawl for appointment businesses — with **livia.io** and **internal ops** at the same quality bar as the product.
 

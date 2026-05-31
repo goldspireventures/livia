@@ -19,6 +19,7 @@ import { appendHumanAudit } from "../lib/audit";
 import { recordBookingOutcomeMeters } from "../services/billing.service";
 import { emitBookingCreated, emitBookingStatusChange } from "../lib/booking-events";
 import { listStuckContinuityBookings } from "../services/booking-continuity.service";
+import { listCustomerDriftCandidates } from "../services/customer-drift.service";
 import { getBookingTimeline } from "../services/booking-timeline.service";
 import { listBookingMedia, attachBookingMedia } from "../services/booking-media.service";
 import { replyDomainError } from "../lib/domain-errors";
@@ -134,6 +135,22 @@ router.get(
     const hours = req.query.hours ? parseInt(String(req.query.hours), 10) : 24;
     const rows = await listStuckContinuityBookings(businessId, Number.isFinite(hours) ? hours : 24);
     res.json({ stuck: rows });
+  },
+);
+
+router.get(
+  "/businesses/:businessId/bookings/drift-candidates",
+  requireAuth,
+  requireRole("ADMIN"),
+  async (req, res): Promise<void> => {
+    const businessId = getBizId(req.params.businessId);
+    const minDays = req.query.minDays ? parseInt(String(req.query.minDays), 10) : 90;
+    const limit = req.query.limit ? parseInt(String(req.query.limit), 10) : 15;
+    const rows = await listCustomerDriftCandidates(businessId, {
+      minDays: Number.isFinite(minDays) ? minDays : 90,
+      limit: Number.isFinite(limit) ? limit : 15,
+    });
+    res.json({ candidates: rows });
   },
 );
 

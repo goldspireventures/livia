@@ -1,0 +1,152 @@
+meta:
+  id: w5.public.book.mobile
+  world: W5
+  route: "/b/:slug"
+  artifact: livia-dashboard
+  persona: [P7]
+  verticals: all
+  release: R1
+  status: designed
+
+job: >
+  P7 books a service in under 90 seconds on phone without creating an account —
+  feels like the business's own app, not a generic widget.
+
+visual:
+  canvas:
+    device: phone
+    viewport: 390x844
+    safe_area: env(safe-area-inset-top/bottom)
+    background: preset surface — warm off-white (wellness) or clean white (medspa)
+  zones:
+    - id: header
+      height: 64px
+      sticky: true
+      background: brand cover blur gradient bottom 40%
+      content:
+        - business logo 48px circle left 16px
+        - business display name serif 18px
+        - optional "Message" text button right → opens Liv sheet
+      elevation: 0 — merges into hero
+    - id: hero
+      height: min(220px, 32vh)
+      content:
+        - full-bleed coverImageUrl with 24px bottom radius
+        - primary CTA pill floating -20px overlap on hero bottom:
+          label from vertical (Book visit | Request consult | Book class)
+      motion: hero image fade-in 400ms on load
+    - id: services
+      layout: vertical scroll stack
+      padding: 16px
+      content:
+        - section title "Services" 14px uppercase tracking muted
+        - service cards: 72px min height, left title+duration, right price, chevron
+        - grouped by vertical category when >6 services
+      card_style:
+        radius: 12px
+        border: 1px preset border
+        press: scale 0.98 + haptic on tap (PWA)
+    - id: liv_entry
+      height: 56px
+      content:
+        - full-width secondary button "Chat with Liv"
+        - subtle liv-thinking pulse when session active
+      position: fixed bottom above safe area when scroll past hero
+    - id: policy_footer
+      content:
+        - cancel/deposit one-liner from jurisdiction pack 12px muted
+        - no "Powered by Livia" wordmark — Liv speaks in chat only
+  typography:
+    display: preset.display — Cormorant for editorial presets, sans for industrial
+    body: preset.sans 16px/1.5
+    price: tabular nums 17px semibold
+  color:
+    primary_cta: brandAccentHex or preset.primary
+    text: preset.foreground
+    muted: preset.muted-foreground
+  density: comfortable — 16px grid, 12px between cards
+
+components:
+  service_card:
+    tap: navigate to book wizard with serviceId preselected
+  book_wizard:
+    steps: [service confirm, staff optional, datetime, details vertical, confirm]
+    progress: dots or thin bar top — max 5 steps
+  liv_chat_sheet:
+    type: bottom sheet 70vh
+    first_message: AI disclosure per lib/ai-disclosure
+    input: sticky bottom with send
+
+motion:
+  enter_page: enter-page token
+  wizard_step: enter-panel slide right
+  confirm_success: success-beat once — shimmer + optional chime
+  liv_typing: liv-thinking on assistant bubble
+
+copy:
+  default_cta: "Book now"
+  vertical_overrides:
+    body-art:
+      cta: "Request a consult"
+      wizard_first: "Tell us about your idea"
+    medspa:
+      cta: "Book treatment"
+      consent_step: "Before we continue"
+    pet-grooming:
+      wizard_extra: "Which pet?"
+
+states:
+  loading:
+    visual: hero skeleton 220px + 4 service row skeletons
+  empty:
+    copy: "Online booking opens soon"
+    action: Open Liv chat
+  error:
+    copy: "Something went wrong — tap to retry"
+    show_request_id: false
+  offline:
+    banner: "You're offline — some times may be outdated"
+
+breakpoints:
+  tablet:
+    max_width_content: 480px centered
+    hero: same proportions
+  desktop:
+    max_width: 520px centered column
+    liv_sheet: side panel right 400px optional
+
+vertical_overrides:
+  medspa:
+    visual.density: spacious
+    extra_step: consent checkbox + procedure acknowledgement
+    tone: clinical-calm — softer corners, more whitespace
+  body-art:
+    visual.color.primary_cta: darker ink black
+    hero.cta: "Start consult"
+  automotive-detailing:
+    extra_step: vehicle make/model + package tier cards
+
+acceptance:
+  human:
+    - Complete book in <90s on iPhone SE width
+    - Business logo visible without scrolling
+    - AI disclosure before first Liv reply
+  e2e:
+    - spec: public-booking-quality.spec.ts
+    - tests: [medspa consent, pet picker, book confirm]
+  visual:
+    - baseline: docs/design/assets/livia-evolution/northstar/public-book-mobile.png
+  a11y:
+    - wcag: AA
+    - touch_targets: 44px min
+
+traceability:
+  surfaceId: guest.public.book
+  northstar_png: public-book-mobile.png
+  figma:
+    file: Livia Platform 2026
+    frame: W5/w5.public.book.mobile
+    status: not_started
+  openapi:
+    - GET /api/public/b/:slug
+    - POST /api/public/b/:slug/bookings

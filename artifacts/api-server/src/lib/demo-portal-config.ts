@@ -50,6 +50,7 @@ export const DEMO_WORLD_SLUGS = [
   "london-rose-spa",
   "berlin-studio-neun",
   "paris-belle-vue",
+  "copenhagen-havn-wellness",
 ] as const;
 
 export type DemoPersonaDef = {
@@ -79,12 +80,20 @@ export const DEMO_PERSONAS: DemoPersonaDef[] = [
     id: "org_admin",
     email: DEMO_ROLE_EMAILS.orgAdmin,
     displayName: "Aoife O'Connor",
-    roleLabel: "Org admin · 3 locations",
+    roleLabel: "Org admin · multi-vertical portfolio",
     firstName: "Aoife",
     lastName: "O'Connor",
     landingPath: "/chain",
     primaryBusinessSlug: "aurora-studio",
-    businessSlugs: ["aurora-studio", "aurora-mews", "aurora-galway"],
+    businessSlugs: [
+      "aurora-studio",
+      "aurora-mews",
+      "aurora-galway",
+      "clarity-medspa-dublin",
+      "ink-anchor-galway",
+      "motion-physio-cork",
+      "copenhagen-havn-wellness",
+    ],
     requiresClerk: true,
   },
   {

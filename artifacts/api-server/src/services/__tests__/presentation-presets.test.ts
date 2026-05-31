@@ -3,6 +3,7 @@ import {
   isValidPresentationPreset,
   listPresentationPresets,
   PLATFORM_DEFAULT_PRESET_ID,
+  presetPreservesVerticalGates,
   presentationPresetsEnabled,
   resolvePresentationPreset,
 } from "@workspace/policy";
@@ -39,6 +40,16 @@ assert.equal(resolvePresentationPreset("hair", "not-a-real-preset").id, "hair-wa
 
 assert.equal(isValidPresentationPreset("hair", "hair-barber-bold"), true);
 assert.equal(isValidPresentationPreset("hair", "body-art-studio-dark"), false);
+
+for (const vertical of verticals) {
+  for (const preset of listPresentationPresets(vertical)) {
+    assert.equal(
+      presetPreservesVerticalGates(vertical, preset.id),
+      true,
+      `${vertical}/${preset.id} must preserve vertical gates`,
+    );
+  }
+}
 
 assert.equal(presentationPresetsEnabled({ LIVIA_ENV: "staging" }), true);
 assert.equal(presentationPresetsEnabled({ LIVIA_DEPLOY_ENV: "staging", NODE_ENV: "production" }), true);

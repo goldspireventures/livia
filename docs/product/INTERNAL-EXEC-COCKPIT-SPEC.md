@@ -240,11 +240,11 @@ Full runbook: [`EXEC-COMMAND-CENTER.md`](../operations/EXEC-COMMAND-CENTER.md).
 
 ### R2 — Track H (programmatic workforce)
 
-- `exec-hats.ts` policy catalog + `exec_work_events` migration
-- `POST/GET` work-events API; snapshot merge in `internal-founder-cockpit.service.ts`
-- Hats River UI: mandate + last 3 events + metric badges
-- `pnpm exec:hat-work` CLI + Cursor skill stub
-- `AGENTS.md` hat logging discipline for build sessions
+- ✅ `exec-hats.ts` policy catalog + `exec_work_events` migration (`031-exec-work-events.sql`)
+- ✅ `POST/GET` work-events API; snapshot merge in `internal-founder-cockpit.service.ts`
+- 🔨 Hats River UI: mandate + last 3 events + metric badges (internal app)
+- ✅ `pnpm exec:hat-work` CLI
+- 🔨 Cursor skill stub + `AGENTS.md` hat logging discipline
 
 ### R2 (cockpit — other)
 

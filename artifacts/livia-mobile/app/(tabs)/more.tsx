@@ -66,6 +66,27 @@ export default function MoreScreen() {
       }
       contentStyle={{ paddingBottom: 140 }}
     >
+      <Pressable
+        onPress={() => {
+          haptics.tap();
+          router.push("/my-livia" as never);
+        }}
+        style={({ pressed }) => [
+          styles.businessCard,
+          { backgroundColor: colors.card, borderColor: colors.border, opacity: pressed ? 0.92 : 1 },
+        ]}
+      >
+        <Feather name="heart" size={18} color={colors.primary} />
+        <View style={{ flex: 1 }}>
+          <Text style={[type.body, { fontFamily: fonts.bodyMed, color: colors.foreground }]}>
+            My Livia
+          </Text>
+          <Text style={[type.caption, { color: colors.mutedForeground }]}>
+            Customer vault — your bookings across shops
+          </Text>
+        </View>
+        <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
+      </Pressable>
 
       {/* Current business card — tappable when there are others to switch to */}
       {currentBusiness && (

@@ -46,9 +46,22 @@ Each **business** has its own customer list (`customers.business_id`). When you 
 /b/clarity-medspa-dublin
 /b/motion-physio-cork
 /b/peak-fitness-dublin
+/b/shine-studio-belfast
+/b/london-rose-spa
+/b/copenhagen-havn-wellness
 ```
 
-After **Reset demo world** on `/demo`, re-provision to create any missing vertical tenants (idempotent).
+**Founder (org_admin):** `/chain` + business switcher — Aurora chain **plus** medspa, body-art, physio, DK wellness (7 shops). Run `POST /api/demo/sync-logins` after pulling to refresh Clerk memberships.
+
+## E2E (demo depth)
+
+```bash
+pnpm e2e:prep   # API + dashboard up, demo provisioned
+pnpm --filter @workspace/e2e run test:demo-depth   # all three demo specs, serial
+```
+
+**Depth sync:** `POST http://127.0.0.1:3000/api/demo/sync-vertical-showcase` (idempotent; ~60–90s).  
+**Guest proof URL (body-art):** `GET /api/demo/guest-surfaces/ink-anchor-galway/proof`
 
 ## Sign-in
 

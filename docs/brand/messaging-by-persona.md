@@ -29,7 +29,7 @@ Each persona below has:
 ### What we don't say
 - "Multi-location dashboard" (sounds like Salesforce).
 - "Roll-up reports" (corporate; cold).
-- "Manage your portfolio" (you're a salon owner, not a hedge fund).
+- "Manage your portfolio" (you're a shop owner, not a hedge fund).
 
 ### Yes moment
 > "Sunday I'll know which shop needs me, without reading three reports."
@@ -168,10 +168,10 @@ Each persona below has:
 "I want to book. I don't want to download anything. I don't want to call. I want to message and have it sorted."
 
 ### 5-second pitch
-"Message the salon. Liv (their AI) will sort you out."
+"Message the business. Liv (their AI colleague) will sort you out."
 
 ### 30-second pitch
-"Your salon uses Liv to handle bookings + reschedules. You message them — WhatsApp, SMS, however you usually do — and Liv replies fast, books you in, remembers what you usually get. If you need a human, Liv puts you through. Your data stays with the salon, not anywhere else."
+"Your shop uses Liv to handle bookings + reschedules. You message them — WhatsApp, SMS, however you usually do — and Liv replies fast, books you in, remembers what you usually get. If you need a human, Liv puts you through. Your data stays with the business, not anywhere else."
 
 ### What we don't say
 - "AI booking experience" (cold).

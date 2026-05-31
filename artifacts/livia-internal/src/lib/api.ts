@@ -242,6 +242,13 @@ export type FounderCockpitSnapshot = {
     metrics: Array<{ label: string; value: string }>;
     actions: Array<{ label: string; internalPath?: string; href?: string }>;
     focus: string;
+    recentWork?: Array<{
+      id: string;
+      summary: string;
+      actor: string;
+      actorLabel: string | null;
+      createdAt: string;
+    }>;
   }>;
   automations: Array<{
     id: string;
@@ -437,6 +444,21 @@ export type SupportPointRow = {
 
 export async function listSupportPoints() {
   return internalFetch<{ data: SupportPointRow[] }>("/internal/ops/support-points");
+}
+
+export type RadarProactiveFeed = {
+  id: string;
+  kind: "stuck_onboarding" | "zero_bookings";
+  businessId: string;
+  businessName: string;
+  slug: string;
+  detail: string;
+  ownerEmail: string | null;
+  detectedAt: string;
+};
+
+export async function listRadarProactiveFeeds() {
+  return internalFetch<{ data: RadarProactiveFeed[] }>("/internal/ops/radar/feeds");
 }
 
 export async function getSupportBundle(businessId: string) {

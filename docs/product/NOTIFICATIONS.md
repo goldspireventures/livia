@@ -2,6 +2,8 @@
 
 **Status:** Implemented (in-app centre + staff push + web alert strip) · **Surfaces:** mobile Expo, web dashboard
 
+**Customer (P7) notifications:** Staff channels below are live. End-customer confirmations, reminders, visit tokens, and P7 web push are specified in [`CUSTOMER-NOTIFICATIONS-SPEC.md`](./CUSTOMER-NOTIFICATIONS-SPEC.md) — digest windows, quiet hours, and opt-out live there.
+
 ---
 
 ## Principles

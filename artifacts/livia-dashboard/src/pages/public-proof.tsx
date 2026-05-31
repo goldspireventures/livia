@@ -1,15 +1,12 @@
 import { useEffect, useState } from "react";
-import { useParams } from "wouter";
+import { Link, useParams } from "wouter";
 import { applyVerticalTheme } from "@/lib/vertical-theme";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle2, ImageIcon, Loader2, XCircle } from "lucide-react";
-import {
-  PublicSurfaceFooter,
-  PublicSurfaceLoading,
-  PublicSurfaceNotFound,
-} from "@/components/public/public-surface-chrome";
+import { CheckCircle2, ChevronLeft, Loader2, XCircle } from "lucide-react";
+import { PublicSurfaceNotFound } from "@/components/public/public-surface-chrome";
+import { PublicProofLoading } from "@/components/public/public-proof-loading";
+import { usePublicGuestPwa } from "@/lib/public-guest-pwa";
 
 type ProofPayload = {
   proofId: string;
@@ -24,6 +21,8 @@ type ProofPayload = {
   createdAt: string;
 };
 
+const COMMENT_MAX = 500;
+
 export default function PublicProofPage() {
   const { slug, token } = useParams<{ slug: string; token: string }>();
   const [data, setData] = useState<ProofPayload | null>(null);
@@ -32,6 +31,8 @@ export default function PublicProofPage() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+
+  usePublicGuestPwa(slug);
 
   useEffect(() => {
     if (!slug || !token) return;
@@ -84,121 +85,159 @@ export default function PublicProofPage() {
   }
 
   if (loading) {
-    return <PublicSurfaceLoading />;
+    return <PublicProofLoading />;
   }
 
   if (!data) {
     return (
       <PublicSurfaceNotFound
-        title="Design proof link not found"
-        detail="This link is invalid or has expired. Contact the studio if you need help."
+        title="This link has expired"
+        detail="This design proof link is invalid or has expired."
       />
     );
   }
 
   const canDecide = data.status === "pending_review";
+  const bookUrl = `/b/${data.slug}`;
 
   return (
-    <div className="min-h-screen bg-background public-booking-shell" data-testid="guest-proof-page">
-      <div className="public-booking-hero pointer-events-none absolute inset-x-0 top-0 h-40" aria-hidden />
-      <div className="max-w-lg mx-auto px-4 py-10 relative z-10 space-y-6">
-        <div className="text-center">
-          {data.logoUrl ? (
-            <img src={data.logoUrl} alt="" className="h-12 mx-auto mb-3 rounded-md object-contain" />
+    <div
+      className="min-h-screen bg-[#0a0a0b] text-zinc-100 public-proof-shell"
+      data-testid="guest-proof-page"
+    >
+      <header className="sticky top-0 z-30 flex h-14 items-center gap-2 px-3 border-b border-zinc-800/80 bg-[#0a0a0b]/92 backdrop-blur-md">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="shrink-0 text-zinc-300 hover:text-white hover:bg-zinc-800"
+          aria-label="Go back"
+          onClick={() => window.history.back()}
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </Button>
+        <h1 className="flex-1 text-center text-base font-semibold tracking-tight">Design proof</h1>
+        {data.logoUrl ? (
+          <img
+            src={data.logoUrl}
+            alt=""
+            className="h-8 w-8 shrink-0 rounded-full object-cover border border-zinc-700"
+          />
+        ) : (
+          <div className="h-8 w-8 shrink-0" aria-hidden />
+        )}
+      </header>
+
+      <section
+        className="relative border-b border-zinc-800 bg-zinc-950 motion-hero-fade-in"
+        data-testid="guest-proof-artwork"
+      >
+        <div className="flex h-[55vh] min-h-[240px] items-center justify-center p-2">
+          {data.imageUrl ? (
+            <img
+              src={data.imageUrl}
+              alt="Design proof"
+              className="max-h-full max-w-full object-contain"
+              data-testid="guest-proof-image"
+            />
+          ) : (
+            <p className="text-sm text-zinc-500">No image attached yet.</p>
+          )}
+        </div>
+      </section>
+
+      <div className={`max-w-lg mx-auto px-4 pt-4 ${canDecide ? "pb-36" : "pb-10"}`}>
+        <div className="space-y-1 mb-4">
+          <p className="text-sm text-zinc-400">{data.businessName}</p>
+          {data.customerFirstName ? (
+            <p className="text-base text-zinc-200">
+              Hi {data.customerFirstName} — review your design below.
+            </p>
           ) : null}
-          <p className="text-[10px] uppercase tracking-widest font-mono text-primary">
-            Design proof · {data.businessName}
-          </p>
-          <h1 className="text-2xl font-serif mt-2">
-            {data.customerFirstName ? `Hi ${data.customerFirstName}` : "Your design"}
-          </h1>
+          {data.note ? (
+            <p className="text-sm text-zinc-400 whitespace-pre-wrap pt-1">{data.note}</p>
+          ) : null}
         </div>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <ImageIcon className="h-4 w-4" />
-              Artwork preview
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {data.imageUrl ? (
-              <img
-                src={data.imageUrl}
-                alt="Design proof"
-                className="w-full rounded-lg border object-contain max-h-[min(420px,60vh)]"
-                data-testid="guest-proof-image"
-              />
-            ) : (
-              <p className="text-sm text-muted-foreground">No image attached yet.</p>
-            )}
-            {data.note ? (
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{data.note}</p>
-            ) : null}
-          </CardContent>
-        </Card>
-
         {message ? (
-          <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm flex gap-2">
-            <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm flex gap-2 mb-4 motion-glow-success">
+            <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
             {message}
           </div>
         ) : null}
 
-        {err ? <p className="text-sm text-destructive text-center">{err}</p> : null}
+        {err ? <p className="text-sm text-rose-400 text-center mb-4">{err}</p> : null}
 
         {canDecide ? (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Your decision</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Textarea
-                placeholder="Notes or change requests (optional)"
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                rows={3}
-                data-testid="guest-proof-comment"
-              />
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Button
-                  className="flex-1"
-                  disabled={busy}
-                  onClick={() => void submitDecision("approved")}
-                  data-testid="guest-proof-approve"
-                >
-                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Approve design"}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  disabled={busy}
-                  onClick={() => void submitDecision("rejected")}
-                  data-testid="guest-proof-reject"
-                >
-                  Request changes
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="space-y-2">
+            <label htmlFor="guest-proof-comment" className="text-xs text-zinc-500">
+              Notes for your artist
+            </label>
+            <Textarea
+              id="guest-proof-comment"
+              placeholder="Be specific — placement, size, shading…"
+              value={comment}
+              onChange={(e) => setComment(e.target.value.slice(0, COMMENT_MAX))}
+              rows={3}
+              maxLength={COMMENT_MAX}
+              className="bg-zinc-900 border-zinc-700 text-zinc-100 placeholder:text-zinc-500 resize-none"
+              data-testid="guest-proof-comment"
+            />
+            <p className="text-[11px] text-zinc-600 text-right">{comment.length}/{COMMENT_MAX}</p>
+          </div>
         ) : data.status === "approved" ? (
-          <div className="text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-primary" />
-            This design was approved.
+          <div className="text-center text-sm text-zinc-400 flex flex-col items-center gap-3 py-6">
+            <CheckCircle2 className="h-8 w-8 text-emerald-400" />
+            <p>You approved this design.</p>
+            <Button asChild variant="secondary" className="bg-zinc-800 hover:bg-zinc-700">
+              <Link href={bookUrl}>Book your session</Link>
+            </Button>
           </div>
         ) : data.status === "rejected" ? (
-          <div className="text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
+          <div className="text-center text-sm text-zinc-400 flex items-center justify-center gap-2 py-6">
             <XCircle className="h-4 w-4" />
             Change requests were sent to the studio.
           </div>
         ) : (
-          <p className="text-center text-sm text-muted-foreground capitalize">
+          <p className="text-center text-sm text-zinc-500 capitalize py-4">
             Status: {data.status.replace(/_/g, " ")}
           </p>
         )}
 
-        <PublicSurfaceFooter />
+        {!canDecide && !message ? (
+          <p className="text-center pt-4">
+            <Link href={bookUrl} className="text-sm text-zinc-400 underline underline-offset-2">
+              Message the studio
+            </Link>
+          </p>
+        ) : null}
       </div>
+
+      {canDecide ? (
+        <div className="fixed bottom-0 inset-x-0 z-40 border-t border-zinc-800 bg-[#0a0a0b]/95 backdrop-blur-md px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <div className="max-w-lg mx-auto grid grid-cols-2 gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              className="min-h-[52px] border-zinc-600 bg-transparent text-zinc-100 hover:bg-zinc-800"
+              disabled={busy}
+              onClick={() => void submitDecision("rejected")}
+              data-testid="guest-proof-reject"
+            >
+              Request changes
+            </Button>
+            <Button
+              type="button"
+              className="min-h-[52px] bg-emerald-600 hover:bg-emerald-500 text-white"
+              disabled={busy}
+              onClick={() => void submitDecision("approved")}
+              data-testid="guest-proof-approve"
+            >
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Approve design"}
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

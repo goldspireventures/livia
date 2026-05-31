@@ -1,12 +1,30 @@
 # Platform backlog — comprehensive todo (2026-05)
 
 **Master plan:** [`product/LIVIA-FINAL-BUILD-PLAN.md`](../product/LIVIA-FINAL-BUILD-PLAN.md) — **authority for scope**  
+**Sequencing:** [`product/LIVIA-WIDE-BUILD-PLAN.md`](../product/LIVIA-WIDE-BUILD-PLAN.md) — vision, org shapes, next waves  
 **Single tracker** for staging, workforce access, onboarding portal, prod readiness, deploy discipline, **composable evolution**, and **support-point investigation**.
 
 **Same code staging → prod:** behaviour differences = **env only** ([`audits/PLATFORM-PRODUCTION-READINESS-AUDIT.md`](../audits/PLATFORM-PRODUCTION-READINESS-AUDIT.md)).
 
 **Program (full build plan + master checklist):** [`product/PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md`](../product/PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md)  
 **Specs:** [`engineering/COMPOSABLE-EVOLUTION.md`](../engineering/COMPOSABLE-EVOLUTION.md) · [`operations/SUPPORT-POINTS-AND-INVESTIGATION.md`](./SUPPORT-POINTS-AND-INVESTIGATION.md)
+
+---
+
+## P0.5 — Platform kernel & lifecycle (R2–R3)
+
+**Spec:** [`engineering/PLATFORM-LIFECYCLE-REGISTRY.md`](../engineering/PLATFORM-LIFECYCLE-REGISTRY.md) · **Wide plan:** [`LIVIA-WIDE-BUILD-PLAN.md`](../product/LIVIA-WIDE-BUILD-PLAN.md) §3
+
+- [x] Demo gateway: **structure** scenarios (solo, studio, multi-site, chair-host, franchise) vs **vertical** cards
+- [x] Quick sync (branding + images + live-day) · scoped sync logins (Clerk 429 fix)
+- [x] Public `/b` single-header layout · trust pills · services before care notes
+- [x] AGENTS.md cascade checklist
+- [ ] **R2-F** Split Aurora composite demo (chain HQ vs host vs franchisor) or label clearly in gateway
+- [x] **R2-C** Owner notification on new booking (toast web + mobile 12s refetch)
+- [ ] **`vertical-check.mjs`** — registry row requires demo slug + E2E file (R2 precursor)
+- [ ] **`defineVerticalPack()`** factory in policy (R3)
+- [ ] **`platform-lifecycle.service.ts`** — post-create fan-out handler (R3)
+- [ ] **`pnpm vertical:check`** in CI (R3)
 
 ---
 
@@ -100,7 +118,7 @@ Set on Railway staging API: `LIVIA_DEPLOY_ENV=staging`
 - [x] **G3** Link-first continuity templates + support surfaceIds *(visit URL in SMS wave 14)*
 - [x] **G4** Phone E.164 normalize in `findOrCreateCustomer` + `/b` validation — [`GUEST-CUSTOMER-IDENTITY.md`](../product/GUEST-CUSTOMER-IDENTITY.md)
 - [x] **G5** Public book mobile pass (`now/` tier) *(sticky CTA + touch targets wave 9)*
-- [ ] **G6 (R2)** Guest hub `my.livia-hq.com` — [`GUEST-CONTINUITY-HUB-SPEC.md`](../product/GUEST-CONTINUITY-HUB-SPEC.md) *(shell + OTP wave 12+)*
+- [ ] **G6 (R2)** Guest hub `my.livia-hq.com` — [`GUEST-CONTINUITY-HUB-SPEC.md`](../product/GUEST-CONTINUITY-HUB-SPEC.md) *(wave 15: favorites + upcoming + book-again)*
 
 **Parallel:** Track D5 (public `/b`) · Track B1 (registry).
 

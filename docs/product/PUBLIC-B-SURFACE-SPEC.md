@@ -3,7 +3,7 @@
 **Status:** canonical (2026-05-30)  
 **Artifact:** `artifacts/livia-dashboard` — `/b/{slug}/*` (public, no Clerk)  
 **Visual anchors:** [`northstar/public-book-mobile.png`](../design/assets/livia-evolution/northstar/public-book-mobile.png) · [`northstar/guest-proof-mobile.png`](../design/assets/livia-evolution/northstar/guest-proof-mobile.png)  
-**Reads with:** [`GUEST-CUSTOMER-IDENTITY.md`](./GUEST-CUSTOMER-IDENTITY.md) · [`LIVIA-PLATFORM-FLOWS.md`](./LIVIA-PLATFORM-FLOWS.md) · [`LIVIA-PLATFORM-LIFECYCLE.md`](./LIVIA-PLATFORM-LIFECYCLE.md) · [`TENANT-EXPERIENCE-CONTRACT.md`](./TENANT-EXPERIENCE-CONTRACT.md) · [`PRESENTATION-PRESETS-AND-ROLLOUT.md`](../design/PRESENTATION-PRESETS-AND-ROLLOUT.md) · [`CHANNEL-UX-CONTRACT.md`](../design/CHANNEL-UX-CONTRACT.md)
+**Reads with:** [`GUEST-CUSTOMER-IDENTITY.md`](./GUEST-CUSTOMER-IDENTITY.md) · [`LIVIA-PLATFORM-FLOWS.md`](./LIVIA-PLATFORM-FLOWS.md) · [`LIVIA-PLATFORM-LIFECYCLE.md`](./LIVIA-PLATFORM-LIFECYCLE.md) · [`TENANT-EXPERIENCE-CONTRACT.md`](./TENANT-EXPERIENCE-CONTRACT.md) · [`PRESENTATION-PRESETS-AND-ROLLOUT.md`](../design/PRESENTATION-PRESETS-AND-ROLLOUT.md) · [`CHANNEL-UX-CONTRACT.md`](../design/CHANNEL-UX-CONTRACT.md) · [`SKIN-BRAND-INHERITANCE-SPEC.md`](../design/SKIN-BRAND-INHERITANCE-SPEC.md) · [`UI-UX-MASTER-PROGRAM.md`](../design/UI-UX-MASTER-PROGRAM.md)
 
 ---
 
@@ -110,7 +110,17 @@ publicExperienceSkin = vertical template × presentation preset × brand fields
 | Brand | `logoUrl`, `coverImageUrl`, `brandAccentHex` |
 | Guest surface type | `guest-surfaces.ts` (Track G) — route + token pattern |
 
-**Rule:** Dashboard preset picker previews **must include `/b` frame** (D3).
+**Rule:** Dashboard preset picker previews **must include `/b` frame** (D3). See [`SKIN-BRAND-INHERITANCE-SPEC.md`](../design/SKIN-BRAND-INHERITANCE-SPEC.md) §4.4.
+
+### 5.1b Mobile entry & PWA (P7)
+
+| Decision | R1 | R2+ |
+|----------|----|-----|
+| **Primary surface** | Mobile web `/b/{slug}` — not a guest native app | PWA install optional |
+| **Viewport** | 390×844 design target; sticky summary on book | Wallet pass / home-screen icon |
+| **Channels** | SMS/WA deep-link to `/b` token routes | Same — channels never host thick UX |
+
+**Honesty:** No App Store guest app in R1–R2; [`MOBILE-UX-PRINCIPLES.md`](../design/MOBILE-UX-PRINCIPLES.md) covers **tenant** mobile, not P7.
 
 ### 5.2 Guest surface catalog
 
@@ -268,4 +278,32 @@ Evolution PNGs: `now/` = R1 honesty; `v3/` = mid; `northstar/` = ceiling.
 
 | Date | Change |
 |------|--------|
+| 2026-05-31 | §15 PWA + preset preview parity (doc sprint) |
 | 2026-05-30 | Full `/b` public surface spec — purpose, verticals, tokens, platform links |
+
+---
+
+## 15. PWA manifest & preset preview parity
+
+**Cross-ref:** [`SKIN-BRAND-INHERITANCE-SPEC.md`](../design/SKIN-BRAND-INHERITANCE-SPEC.md) §4.4 · [`LIVIA-BUILD-PLAN-V2.md`](./LIVIA-BUILD-PLAN-V2.md) Phase 1 checklist
+
+### 15.1 Preset preview (R1 — required before build)
+
+| Requirement | Acceptance |
+|-------------|------------|
+| Settings → Public appearance shows **live `/b` mobile frame** | 390×844 iframe or embedded route |
+| Changing `brandAccentHex` updates CTA in frame within one save | E2E `preset-public-parity.spec.ts` |
+| Preset switch updates layout morph visible in frame | Manual + screenshot |
+| `GET /me/tenant-experience` exposes `publicPreviewUrl` | API contract |
+
+### 15.2 PWA (R2 prep — document now, ship later)
+
+| Field | Value |
+|-------|-------|
+| Scope | `/b/{slug}` only — not full dashboard |
+| Manifest | `name`, `short_name`, `theme_color` from brand + preset |
+| Icons | Business logo when set; else Livia roundel fallback |
+| Install prompt | After successful booking confirm — not on landing |
+| Offline | Read-only last visit token cache optional R3 |
+
+**Flag:** `public_pwa` per [`FEATURE-FLAGS-SPEC.md`](./FEATURE-FLAGS-SPEC.md).

@@ -7,11 +7,25 @@ type PushData = {
   businessId?: string;
   bookingId?: string;
   conversationId?: string;
+  slug?: string;
+  token?: string;
+  guestKind?: string;
 };
 
 function routeForPush(data: PushData | undefined): string | null {
   if (!data?.type) return null;
   switch (data.type) {
+    case "guest.visit":
+    case "guest.intake":
+    case "guest.waitlist":
+    case "guest.pay":
+    case "guest.proof": {
+      const kind = data.guestKind ?? data.type.replace("guest.", "");
+      if (data.slug && data.token) {
+        return `/guest-surface?kind=${encodeURIComponent(kind)}&slug=${encodeURIComponent(data.slug)}&token=${encodeURIComponent(data.token)}`;
+      }
+      return null;
+    }
     case "booking.created":
     case "booking.cancelled":
     case "booking.pending":

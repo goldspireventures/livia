@@ -1,0 +1,44 @@
+meta:
+  id: w1.marketing.europe.web
+  world: W1
+  route: "/europe"
+  artifact: livia-marketing
+  persona: ["Prospect"]
+  verticals: all
+  release: R1
+  status: designed
+  tier: P1
+
+job: >
+  EU expansion story.
+
+visual:
+  summary: >
+    Map + locale packs honest.
+  canvas:
+    device: responsive
+  zones:
+    - id: main
+      content: [see VISUAL-SCREEN-MASTER-INVENTORY.md — expand in build]
+  typography:
+    inherit: world skin — see SKIN-BRAND-INHERITANCE-SPEC
+  motion:
+    inherit: motion-tokens.md
+
+states:
+  loading:
+    visual: layout-matched skeleton
+  empty:
+    copy: persona-appropriate — see EMPTY-ERROR-LOADING-CATALOG.md
+  error:
+    copy: human retry message
+
+acceptance:
+  e2e:
+    - see TESTING-VISUAL-ACCEPTANCE.md P1 matrix
+
+traceability:
+  figma:
+    file: Livia Platform 2026
+    frame: W1/w1.marketing.europe.web
+    status: not_started

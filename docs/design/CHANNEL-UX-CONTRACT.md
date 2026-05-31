@@ -192,5 +192,24 @@ Country is **not** a preset ([`LIVIA-EXPERIENCE-DESIGN-BIBLE.md`](../product/LIV
 
 | Date | Change |
 |------|--------|
+| 2026-05-31 | Part 10 — per-vertical thick/thin examples |
 | 2026-05-29 | Initial M2/M3/M4 contract — companion to visual preset program |
 | 2026-05-29 | Part 1b thick/thin platform rule; SMS/WA link-first; no MMS hero paths |
+
+---
+
+## Part 10 — Per-vertical examples (thick vs thin)
+
+| Vertical | Thick (Livia URL) | Thin (SMS/WA) | Never in channel |
+|----------|-------------------|---------------|------------------|
+| **hair** | `/b` book, `/visit/{token}` | "Book here: {url}", reminder | Full service menu in SMS |
+| **beauty** | `/b` + patch-test note on page | Confirm + reminder | Patch-test form in MMS |
+| **wellness** | `/b` intake checkboxes | Package balance link (R2) | Medical advice |
+| **body-art** | `/proof/{token}`, `/pay/{token}` | "Design ready: {proofUrl}" | Proof image in DM |
+| **fitness** | `/waitlist/{token}` (R2) | "Spot open — accept: {url}" | Class roster PDF |
+| **medspa** | `/intake/{token}` | Consent link | Consent PDF in WA |
+| **allied-health** | `/intake/{token}` | Prep note + visit link | Clinical records |
+| **pet-grooming** | `/b` pet picker | Reminder + visit | Vaccination upload in MMS |
+| **automotive** | `/b` vehicle step | Reminder + visit | Damage photos in SMS loop |
+
+All links use stable `businesses.slug`. Vocabulary from `businessVocabulary(vertical)`.

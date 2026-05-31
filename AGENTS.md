@@ -2,13 +2,20 @@
 
 Read this before large edits or refactors.
 
+**⏸ Build paused (2026-05-31):** Prefer **documentation** over feature code until [`docs/product/LIVIA-DOCUMENTATION-PROGRAM.md`](docs/product/LIVIA-DOCUMENTATION-PROGRAM.md) gate **G-DOC** passes. Category: [`PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md`](docs/product/PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md).
+
 ## Must read first
 
-1. [`docs/product/LIVIA-FINAL-BUILD-PLAN.md`](docs/product/LIVIA-FINAL-BUILD-PLAN.md) — **master build scope**
-2. [`docs/LIVIA-ALIGNMENT.md`](docs/LIVIA-ALIGNMENT.md)
-3. [`docs/PLATFORM-TERMINOLOGY.md`](docs/PLATFORM-TERMINOLOGY.md)
-4. [`docs/START-HERE.md`](docs/START-HERE.md)
-5. [`docs/DOC-CANONICAL-INDEX.md`](docs/DOC-CANONICAL-INDEX.md)
+1. [`docs/product/LIVIA-DOCUMENTATION-PROGRAM.md`](docs/product/LIVIA-DOCUMENTATION-PROGRAM.md) — **doc sprint (active)**
+2. [`docs/product/PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md`](docs/product/PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md) — **category — not salon-shaped**
+3. [`docs/design/UI-UX-MASTER-PROGRAM.md`](docs/design/UI-UX-MASTER-PROGRAM.md) — **UX authority**
+4. [`docs/product/LIVIA-WIDE-BUILD-PLAN.md`](docs/product/LIVIA-WIDE-BUILD-PLAN.md) — vision + build sequencing (after doc gate)
+5. [`docs/product/LIVIA-BUILD-PLAN-V2.md`](docs/product/LIVIA-BUILD-PLAN-V2.md) — build authority after G-DOC
+6. [`docs/product/LIVIA-FINAL-BUILD-PLAN.md`](docs/product/LIVIA-FINAL-BUILD-PLAN.md) — master build scope (locks)
+7. [`docs/LIVIA-ALIGNMENT.md`](docs/LIVIA-ALIGNMENT.md)
+8. [`docs/PLATFORM-TERMINOLOGY.md`](docs/PLATFORM-TERMINOLOGY.md)
+9. [`docs/START-HERE.md`](docs/START-HERE.md)
+10. [`docs/DOC-CANONICAL-INDEX.md`](docs/DOC-CANONICAL-INDEX.md)
 
 ## Before you edit (narrow task + system-wide vision)
 
@@ -57,6 +64,8 @@ lib/policy (vertical, onboarding, presets, guest surfaces)
 - `pnpm run typecheck` before claiming done.
 - Minimal diff; match surrounding style.
 - No secrets in repo; use `.env.example` only.
+- **Code clarity:** naming, one-home modules, policy-first — [`CODE-CLARITY-STANDARDS.md`](docs/engineering/CODE-CLARITY-STANDARDS.md). Atlas/search alignment — [`ATLAS-INTEGRATION-GUIDE.md`](docs/engineering/ATLAS-INTEGRATION-GUIDE.md).
+- **UX:** premium motion restraint — [`PREMIUM-MOTION-LAYER.md`](docs/design/PREMIUM-MOTION-LAYER.md) + [`UI-UX-MASTER-PROGRAM.md`](docs/design/UI-UX-MASTER-PROGRAM.md).
 
 ## Production
 

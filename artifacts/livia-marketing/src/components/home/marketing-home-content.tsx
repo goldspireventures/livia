@@ -7,7 +7,7 @@ import { EditorialPricingTeaser } from "@/components/home/editorial-pricing-teas
 import { Link } from "wouter";
 import { ArrowRight } from "lucide-react";
 import { editorialCopy, type MarketingLocale } from "@/lib/marketing-editorial-i18n";
-import { dashboardDemoUrl, dashboardWedgeUrl } from "@/lib/marketing-links";
+import { dashboardWedgeUrl } from "@/lib/marketing-links";
 import { MARKETING_VERTICAL_LINKS } from "@/lib/marketing-verticals";
 
 type MarketingHomeContentProps = {
@@ -31,8 +31,10 @@ export function MarketingHomeContent({ locale }: MarketingHomeContentProps) {
     <>
       {/* Hero — continuity thread opens here (M1-R2) */}
       <section className="relative overflow-hidden px-4 sm:px-6 border-b border-white/5">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(6,182,212,0.12),transparent_50%)] pointer-events-none" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(139,92,246,0.06),transparent_45%)] pointer-events-none" />
+        <div className="absolute inset-0 marketing-aurora-breathe pointer-events-none" aria-hidden>
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(6,182,212,0.12),transparent_50%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(139,92,246,0.06),transparent_45%)]" />
+        </div>
 
         <div className="max-w-4xl mx-auto pt-16 sm:pt-20 md:pt-24 pb-12 md:pb-16 text-center z-10 relative">
           <p className="text-[11px] font-medium tracking-[0.22em] uppercase text-muted-foreground mb-6">
@@ -62,8 +64,9 @@ export function MarketingHomeContent({ locale }: MarketingHomeContentProps) {
               <ArrowRight className="w-4 h-4" />
             </button>
             <a
-              href={dashboardDemoUrl}
+              href={dashboardWedgeUrl("body-art")}
               className="inline-flex items-center justify-center rounded-lg border border-white/15 px-5 py-3 text-sm text-muted-foreground hover:text-foreground min-h-[44px]"
+              data-testid="marketing-hero-demo"
             >
               {t.nav.seeDemo}
             </a>
@@ -83,7 +86,13 @@ export function MarketingHomeContent({ locale }: MarketingHomeContentProps) {
       </section>
 
       {/* M1-R2 story scroll — chapters 1–3 + trust timeline */}
-      <EditorialStory locale={locale} />
+      <div className="relative">
+        <div
+          className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 bg-gradient-to-b from-aurora-cyan/35 via-aurora-cyan/10 to-transparent pointer-events-none"
+          aria-hidden
+        />
+        <EditorialStory locale={locale} />
+      </div>
 
       {/* M2-A pricing teaser — honest tiers, link to full /pricing */}
       <EditorialPricingTeaser locale={locale} />

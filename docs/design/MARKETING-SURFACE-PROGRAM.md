@@ -106,4 +106,21 @@ Track **F** in [`PLATFORM-EVOLUTION-AND-OPS-PROGRAM.md`](../product/PLATFORM-EVO
 
 | Date | Change |
 |------|--------|
+| 2026-05-31 | §9 build status vs R1 code audit |
 | 2026-05-30 | Marketing program — anchor PNG, inheritance matrix, M1-R2 lock |
+
+---
+
+## 9. Build status (2026-05-31 doc audit)
+
+| Page | Spec | Code (`livia-marketing`) | Gap |
+|------|------|------------------------|-----|
+| M0 shell | §3 | ✅ Nav + footer tokens | — |
+| M1 home | M1-R2 story | 🔨 Partial — not full story scroll | Motion + section continuity |
+| M2 pricing | M2-A € | ✅ Tier cards | Badge honesty |
+| M3 how-it-works | §4 | 📋 Stub | Journey timeline |
+| M4/M5 verticals | §4 | 🔨 Grid + slugs | Deep M5 copy per registry |
+| M7 locale | §4 | 🔨 `/de` route exists | Full locale pass |
+| Premium motion | PREMIUM-MOTION-LAYER | 📋 | `aurora-breathe`, `logo-enter` |
+
+**Next after G-DOC:** M1-R2 density pass + premium motion tokens on hero only.

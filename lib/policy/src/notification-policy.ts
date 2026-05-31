@@ -161,7 +161,7 @@ export function buildNotificationDeepLinks(args: {
     case "inbox.liv_booked":
       if (conversationId) {
         return {
-          href: `/inbox?conversationId=${conversationId}`,
+          href: `/inbox?conversation=${conversationId}`,
           mobileHref: `/conversation/${conversationId}`,
         };
       }
@@ -193,4 +193,28 @@ export function buildInboxHandoffPush(args: {
     title: `Handoff · ${args.businessName || "Inbox"}`,
     body: `${who} on ${ch} needs a human — Liv is paused on that thread.`,
   };
+}
+
+/** Screen card w4m.notifications — row icon family. */
+export type NotificationFeedIcon = "booking" | "inbox" | "approval" | "chain";
+
+export function notificationFeedIcon(kind: string): NotificationFeedIcon {
+  if (kind.startsWith("booking")) return "booking";
+  if (kind.startsWith("inbox")) return "inbox";
+  if (kind === "chain.alert") return "chain";
+  return "approval";
+}
+
+export function groupNotificationsByDay<T extends { createdAt: string }>(
+  items: T[],
+): { today: T[]; earlier: T[] } {
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const today: T[] = [];
+  const earlier: T[] = [];
+  for (const item of items) {
+    if (new Date(item.createdAt) >= startOfToday) today.push(item);
+    else earlier.push(item);
+  }
+  return { today, earlier };
 }

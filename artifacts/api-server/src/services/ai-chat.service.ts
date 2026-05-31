@@ -259,6 +259,7 @@ export async function handlePublicChat(args: {
         email: conversation.customerEmail ?? args.customerEmail ?? null,
         phone: conversation.customerPhone ?? args.customerPhone ?? null,
       },
+      channelType,
     }) + memoryBlock;
 
   const anthropicMessages: Anthropic.MessageParam[] = [];

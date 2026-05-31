@@ -1,4 +1,4 @@
-import { useEffect, useMemo, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link } from "wouter";
 import { useBusiness } from "@/lib/business-context";
 import { legalUrl } from "@/lib/surface-urls";
@@ -32,6 +32,7 @@ import {
   Sparkles,
   FlaskConical,
   KeyRound,
+  Palette,
 } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import DemoDataControls from "@/components/demo-data-controls";
@@ -66,7 +67,7 @@ import { EU_TIMEZONES } from "@/lib/eu-timezones";
 import { verticalPackUi } from "@/lib/vertical-pack-ui";
 import { showPeerInsightsForTenant } from "@workspace/policy";
 import { OwnershipTransferPanel } from "@/components/lifecycle/ownership-transfer-panel";
-import { PresentationPresetControls } from "@/components/settings/presentation-preset-controls";
+import { PublicAppearancePanel } from "@/components/settings/public-appearance-panel";
 import { Users, FileText } from "lucide-react";
 
 interface SettingsForm {
@@ -106,6 +107,7 @@ export default function SettingsPage() {
   const showTeam = canViewTeam(persona);
   const showBilling = canViewBilling(persona);
   const canTransferOwnership = effectiveRole === "OWNER";
+  const [brandFields, setBrandFields] = useState({ logoUrl: "", coverImageUrl: "" });
 
   const defaultTab = useMemo((): SettingsTabId => {
     if (typeof window === "undefined") return visibleTabs[0] ?? "shop";
@@ -151,6 +153,10 @@ export default function SettingsPage() {
         description: b.description ?? "",
         instagramHandle: b.instagramHandle ?? "",
         logoUrl: b.logoUrl ?? "",
+      });
+      setBrandFields({
+        logoUrl: b.logoUrl ?? "",
+        coverImageUrl: b.coverImageUrl ?? "",
       });
       aiForm.reset({
         aiEnabled: (b.aiEnabled ?? "true") !== "false",
@@ -230,6 +236,7 @@ export default function SettingsPage() {
             {visibleTabs.map((tab) => {
               const icons: Partial<Record<SettingsTabId, ReactNode>> = {
                 shop: <Settings className="h-4 w-4 mr-1.5 shrink-0" />,
+                appearance: <Palette className="h-4 w-4 mr-1.5 shrink-0" />,
                 policy: <Shield className="h-4 w-4 mr-1.5 shrink-0" />,
                 liv: <Sparkles className="h-4 w-4 mr-1.5 shrink-0" />,
                 comms: <MessageSquare className="h-4 w-4 mr-1.5 shrink-0" />,
@@ -426,8 +433,22 @@ export default function SettingsPage() {
                 </form>
               </CardContent>
             </Card>
-            <PresentationPresetControls />
           </TabsContent>
+
+          {visibleTabs.includes("appearance") && (
+            <TabsContent value="appearance" className="space-y-6 mt-0">
+              {!shopEditable && (
+                <p className="text-sm text-muted-foreground rounded-lg border border-border p-3">
+                  View-only — ask the owner to change public appearance.
+                </p>
+              )}
+              <PublicAppearancePanel
+                editable={shopEditable}
+                brandFields={brandFields}
+                onBrandFieldsChange={setBrandFields}
+              />
+            </TabsContent>
+          )}
 
           {visibleTabs.includes("policy") && (
             <TabsContent value="policy" className="space-y-6 mt-0">

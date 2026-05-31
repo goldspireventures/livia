@@ -1,6 +1,8 @@
 # Livia — Detailed build plan (EU, doc-gated)
 
-**Status:** v1.0 (2026-05-21) — **canonical execution sequence**  
+> **⚠ Superseded (2026-05-31)** by [`LIVIA-BUILD-PLAN-V2.md`](./LIVIA-BUILD-PLAN-V2.md) after G-DOC gate. Historical reference only.
+
+**Status:** v1.0 (2026-05-21) — archived  
 **Supersedes:** [`LIVIA-FINAL-EXECUTION-PLAN.md`](./LIVIA-FINAL-EXECUTION-PLAN.md) for task-level detail (phases unchanged)  
 **Reads with:** [`LIVIA-DOCUMENTATION-READINESS.md`](./LIVIA-DOCUMENTATION-READINESS.md) · [`LIVIA-MASTER-BUILD-PLAN.md`](./LIVIA-MASTER-BUILD-PLAN.md) (kernel phases) · [`BUILD-BACKLOG.md`](./BUILD-BACKLOG.md)
 

@@ -3,6 +3,11 @@
  * @see docs/operations/SUPPORT-POINTS-AND-INVESTIGATION.md
  */
 
+import {
+  canonicalSurfaceId,
+  resolvePlatformSurfaceId,
+} from "./platform-surface-registry";
+
 export type SupportPointApp = "dashboard" | "mobile" | "public" | "internal";
 
 export type SupportPoint = {
@@ -22,30 +27,18 @@ export type SupportPoint = {
 /** P0 catalog — expand via PR with registry + triage + this table together. */
 export const SUPPORT_POINTS: SupportPoint[] = [
   {
-    surfaceId: "dashboard.shell",
-    label: "Dashboard shell",
-    owner: "platform",
-    apps: ["dashboard"],
-    routes: ["*"],
-    policyModules: ["lib/policy/src/tenant-experience.ts"],
-    services: [],
-    uiComponents: ["artifacts/livia-dashboard/src/components/layout/app-layout.tsx"],
-    tests: [],
-    suggestedReply: "Confirm route and business context; check tenant experience API.",
-  },
-  {
-    surfaceId: "dashboard.home",
+    surfaceId: "tenant.owner.dashboard",
     label: "Owner home",
     owner: "onboarding",
     apps: ["dashboard"],
     routes: ["/", "/dashboard"],
-    policyModules: ["lib/policy/src/onboarding-program.ts"],
+    policyModules: ["lib/policy/src/onboarding-program.ts", "lib/policy/src/tenant-experience.ts"],
     services: ["artifacts/api-server/src/services/onboarding-analytics.service.ts"],
     uiComponents: ["artifacts/livia-dashboard/src/pages/dashboard.tsx"],
     tests: [],
   },
   {
-    surfaceId: "dashboard.onboarding",
+    surfaceId: "gateway.onboarding",
     label: "Onboarding wizard",
     owner: "onboarding",
     apps: ["dashboard"],
@@ -58,7 +51,7 @@ export const SUPPORT_POINTS: SupportPoint[] = [
     suggestedReply: "Check onboarding state in Settings; compare acts A1–A12 in onboarding-program.ts.",
   },
   {
-    surfaceId: "dashboard.inbox",
+    surfaceId: "tenant.inbox",
     label: "Inbox / conversations",
     owner: "liv",
     apps: ["dashboard"],
@@ -70,7 +63,129 @@ export const SUPPORT_POINTS: SupportPoint[] = [
     suggestedReply: "Open thread; check Liv takeover and queue lenses.",
   },
   {
-    surfaceId: "dashboard.booking.detail",
+    surfaceId: "tenant.bookings.list",
+    label: "Bookings calendar",
+    owner: "bookings",
+    apps: ["dashboard"],
+    routes: ["/bookings"],
+    policyModules: ["lib/policy/src/booking-guards.ts"],
+    services: ["artifacts/api-server/src/services/bookings.service.ts"],
+    uiComponents: ["artifacts/livia-dashboard/src/pages/bookings.tsx"],
+    tests: [],
+  },
+  {
+    surfaceId: "tenant.booking.new",
+    label: "New booking wizard",
+    owner: "bookings",
+    apps: ["dashboard"],
+    routes: ["/bookings/new"],
+    policyModules: ["lib/policy/src/booking-guards.ts"],
+    services: ["artifacts/api-server/src/services/bookings.service.ts"],
+    uiComponents: ["artifacts/livia-dashboard/src/pages/booking-new.tsx"],
+    tests: [],
+  },
+  {
+    surfaceId: "tenant.settings",
+    label: "Tenant settings",
+    owner: "platform",
+    apps: ["dashboard"],
+    routes: ["/settings"],
+    policyModules: ["lib/policy/src/tenant-experience.ts", "lib/policy/src/presentation-presets.ts"],
+    services: [],
+    uiComponents: ["artifacts/livia-dashboard/src/pages/settings.tsx"],
+    tests: [],
+    suggestedReply: "Check Settings tabs; verify /b preview on Public appearance.",
+  },
+  {
+    surfaceId: "tenant.founder.chain",
+    label: "Multi-shop chain view",
+    owner: "platform",
+    apps: ["dashboard"],
+    routes: ["/chain"],
+    policyModules: ["lib/policy/src/org-shape.ts"],
+    services: [],
+    uiComponents: ["artifacts/livia-dashboard/src/pages/chain.tsx"],
+    tests: [],
+  },
+  {
+    surfaceId: "tenant.medspa.hub",
+    label: "Medspa clinical hub",
+    owner: "medspa",
+    apps: ["dashboard"],
+    routes: ["/medspa"],
+    policyModules: ["lib/policy/src/medspa-procedures.ts"],
+    services: [],
+    uiComponents: ["artifacts/livia-dashboard/src/pages/medspa-hub.tsx"],
+    tests: [],
+  },
+  {
+    surfaceId: "tenant.design-proofs",
+    label: "Design proofs",
+    owner: "body-art",
+    apps: ["dashboard"],
+    routes: ["/design-proofs"],
+    policyModules: ["lib/policy/src/guest-surfaces.ts"],
+    services: ["artifacts/api-server/src/services/design-proofs.service.ts"],
+    uiComponents: ["artifacts/livia-dashboard/src/pages/design-proofs.tsx"],
+    tests: [],
+  },
+  {
+    surfaceId: "tenant.staff.my-day",
+    label: "Staff my day",
+    owner: "bookings",
+    apps: ["dashboard"],
+    routes: ["/my-day"],
+    policyModules: [],
+    services: ["artifacts/api-server/src/routes/my-day.ts"],
+    uiComponents: ["artifacts/livia-dashboard/src/pages/my-day.tsx"],
+    tests: [],
+  },
+  {
+    surfaceId: "gateway.sign-in",
+    label: "Sign in",
+    owner: "platform",
+    apps: ["dashboard"],
+    routes: ["/sign-in"],
+    policyModules: [],
+    services: [],
+    uiComponents: ["artifacts/livia-dashboard/src/pages/sign-in.tsx"],
+    tests: [],
+  },
+  {
+    surfaceId: "gateway.legal-accept",
+    label: "Legal acceptance gate",
+    owner: "platform",
+    apps: ["dashboard"],
+    routes: ["/legal-acceptance"],
+    policyModules: ["lib/policy/src/platform-legal.ts"],
+    services: [],
+    uiComponents: ["artifacts/livia-dashboard/src/pages/legal-acceptance.tsx"],
+    tests: [],
+  },
+  {
+    surfaceId: "gateway.demo.launcher",
+    label: "Demo launcher",
+    owner: "gtm",
+    apps: ["dashboard"],
+    routes: ["/demo"],
+    policyModules: ["lib/policy/src/wedge-demo-stories.ts"],
+    services: ["artifacts/api-server/src/routes/demo.ts"],
+    uiComponents: ["artifacts/livia-dashboard/src/pages/demo/Launcher.tsx"],
+    tests: ["e2e/tests/full-platform-demo.spec.ts"],
+  },
+  {
+    surfaceId: "gateway.demo.wedge",
+    label: "Demo wedge story",
+    owner: "gtm",
+    apps: ["dashboard"],
+    routes: ["/demo/wedge/:vertical"],
+    policyModules: ["lib/policy/src/wedge-demo-stories.ts"],
+    services: [],
+    uiComponents: ["artifacts/livia-dashboard/src/pages/demo/WedgeStory.tsx"],
+    tests: ["e2e/tests/full-platform-demo.spec.ts"],
+  },
+  {
+    surfaceId: "tenant.booking.detail",
     label: "Booking detail",
     owner: "bookings",
     apps: ["dashboard"],
@@ -82,31 +197,7 @@ export const SUPPORT_POINTS: SupportPoint[] = [
     suggestedReply: "Open booking detail continuity timeline; check pending queue.",
   },
   {
-    surfaceId: "dashboard.settings.billing",
-    label: "Settings — billing",
-    owner: "billing",
-    apps: ["dashboard"],
-    routes: ["/settings"],
-    policyModules: ["lib/entitlements/src/index.ts"],
-    services: ["artifacts/api-server/src/services/billing.service.ts"],
-    uiComponents: ["artifacts/livia-dashboard/src/pages/settings.tsx"],
-    tests: [],
-    suggestedReply: "Check Settings → Billing and Stripe status on tenant health card.",
-  },
-  {
-    surfaceId: "dashboard.settings.liv",
-    label: "Settings — Liv",
-    owner: "liv",
-    apps: ["dashboard"],
-    routes: ["/settings"],
-    policyModules: ["lib/policy/src/liv-mandate.ts"],
-    services: [],
-    uiComponents: ["artifacts/livia-dashboard/src/pages/settings.tsx"],
-    tests: [],
-    suggestedReply: "Settings → Liv tone and tool catalog; compare thread with Take over.",
-  },
-  {
-    surfaceId: "public.booking",
+    surfaceId: "guest.public.book",
     label: "Public book /b",
     owner: "guest",
     apps: ["public"],
@@ -141,19 +232,19 @@ export const SUPPORT_POINTS: SupportPoint[] = [
     suggestedReply: "Open intake token URL; check medical_intake_records status.",
   },
   {
-    surfaceId: "public.waitlist",
-    label: "Class waitlist accept",
+    surfaceId: "public.deposit-pay",
+    label: "Guest deposit pay",
     owner: "guest",
     apps: ["public"],
-    routes: ["/b/:slug/waitlist/:token"],
+    routes: ["/b/:slug/pay/:token"],
     policyModules: ["lib/policy/src/guest-surfaces.ts"],
-    services: ["artifacts/api-server/src/services/waitlist-guest-access.service.ts"],
-    uiComponents: ["artifacts/livia-dashboard/src/pages/public-waitlist.tsx"],
+    services: ["artifacts/api-server/src/routes/public.ts"],
+    uiComponents: ["artifacts/livia-dashboard/src/pages/public-pay.tsx"],
     tests: [],
-    suggestedReply: "Confirm offer_token on slot_waitlist_entries and cancelled slot still open.",
+    suggestedReply: "Open pay token URL; check Stripe element and deposit amount.",
   },
   {
-    surfaceId: "public.proof",
+    surfaceId: "guest.public.proof",
     label: "Body-art proof",
     owner: "guest",
     apps: ["public"],
@@ -161,30 +252,38 @@ export const SUPPORT_POINTS: SupportPoint[] = [
     policyModules: ["lib/policy/src/guest-surfaces.ts"],
     services: ["artifacts/api-server/src/services/design-proofs.service.ts"],
     uiComponents: ["artifacts/livia-dashboard/src/pages/public-proof.tsx"],
-    tests: [],
+    tests: ["e2e/tests/demo-proof-token.spec.ts"],
   },
   {
-    surfaceId: "internal.support.queue",
-    label: "Support thread queue",
+    surfaceId: "guest.public.hub",
+    label: "My Livia guest hub",
+    owner: "guest",
+    apps: ["public"],
+    routes: ["/my"],
+    policyModules: ["lib/policy/src/guest-surfaces.ts"],
+    services: ["artifacts/api-server/src/services/guest-hub.service.ts"],
+    uiComponents: [
+      "artifacts/livia-dashboard/src/pages/my-livia.tsx",
+      "artifacts/livia-dashboard/src/components/guest/guest-hub-chrome.tsx",
+    ],
+    tests: [],
+    suggestedReply: "Verify phone OTP on /my; check guest-hub token and shop links API.",
+  },
+  {
+    surfaceId: "internal.support.thread",
+    label: "Support thread",
     owner: "support",
     apps: ["internal"],
-    routes: ["/support", "/support/queue"],
+    routes: ["/support", "/support/queue", "/support/investigate"],
     policyModules: ["lib/policy/src/support-points.ts"],
     services: ["artifacts/api-server/src/services/internal-support-tickets.service.ts"],
-    uiComponents: ["artifacts/livia-internal/src/views/SupportQueueView.tsx"],
+    uiComponents: [
+      "artifacts/livia-internal/src/views/SupportQueueView.tsx",
+      "artifacts/livia-internal/src/views/SupportInvestigateView.tsx",
+    ],
     tests: ["e2e/tests/internal-ops-smoke.spec.ts"],
     runbook: "docs/operations/support-runbook.md",
-  },
-  {
-    surfaceId: "internal.support.investigate",
-    label: "Support investigate",
-    owner: "support",
-    apps: ["internal"],
-    routes: ["/support/investigate"],
-    policyModules: ["lib/policy/src/support-points.ts"],
-    services: [],
-    uiComponents: ["artifacts/livia-internal/src/views/SupportInvestigateView.tsx"],
-    tests: [],
+    suggestedReply: "Open thread context pane; match surfaceId to registry and Liv tool matrix.",
   },
 ];
 
@@ -195,33 +294,10 @@ export function listSupportPoints(): SupportPoint[] {
 }
 
 export function getSupportPoint(surfaceId: string): SupportPoint | undefined {
-  return BY_ID.get(surfaceId);
+  return BY_ID.get(canonicalSurfaceId(surfaceId));
 }
 
-/** Resolve stable surfaceId from dashboard pathname (+ optional search for onboarding intent). */
+/** Resolve stable surfaceId from dashboard pathname — canonical P0 ids from screen cards. */
 export function resolveSupportSurfaceId(pathname: string, search = ""): string {
-  const path = pathname.replace(/\/+$/, "") || "/";
-  const params = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
-
-  if (path === "/" || path === "/dashboard") return "dashboard.home";
-  if (path.startsWith("/onboarding")) return "dashboard.onboarding";
-  if (path === "/inbox") return "dashboard.inbox";
-  if (/^\/bookings\/[^/]+$/.test(path)) return "dashboard.booking.detail";
-  if (path === "/bookings/new") return "dashboard.bookings.new";
-  if (path.startsWith("/settings")) {
-    const tab = params.get("tab");
-    if (tab === "billing") return "dashboard.settings.billing";
-    if (tab === "liv") return "dashboard.settings.liv";
-    if (tab === "comms") return "dashboard.settings.comms";
-    if (tab === "shop" || tab === "policy") return "dashboard.settings.shop";
-    return "dashboard.settings.shop";
-  }
-  if (path.startsWith("/b/") && path.includes("/intake/")) return "public.intake";
-  if (path.startsWith("/b/") && path.includes("/waitlist/")) return "public.waitlist";
-  if (path.startsWith("/b/") && path.includes("/visit/")) return "public.visit";
-  if (path.startsWith("/b/") && path.includes("/proof/")) return "public.proof";
-  if (path.startsWith("/b/")) return "public.booking";
-  if (path.startsWith("/support/investigate")) return "internal.support.investigate";
-  if (path.startsWith("/support")) return "internal.support.queue";
-  return "dashboard.shell";
+  return resolvePlatformSurfaceId(pathname, search);
 }

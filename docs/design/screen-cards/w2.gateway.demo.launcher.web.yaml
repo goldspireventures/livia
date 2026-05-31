@@ -1,0 +1,49 @@
+meta:
+  id: w2.gateway.demo.launcher.web
+  world: W2
+  route: "/demo"
+  artifact: livia-dashboard
+  persona: [Prospect, Founder QA]
+  release: R1
+  status: designed
+
+job: >
+  Demo entry — vertical-fair grid — leads to wedge story then persona showcase — not hair-only.
+
+visual:
+  canvas:
+    device: responsive
+    viewport: 1280x900
+    background: gateway aurora W2
+  zones:
+    - id: hero
+      content:
+        - "Explore Livia live" headline
+        - sub people-business — pick a business type
+    - id: vertical_grid
+      layout: 3 col desktop | 2 col tablet | 1 col phone
+      cards:
+        - one per VERTICAL_COVERAGE_REGISTRY beta-full vertical
+        - icon + label + one-line hook
+        - honest tier badge partner-only if applicable
+        tap: → /demo/wedge/:vertical then persona grid
+    - id: persona_shortcuts
+      content:
+        - row: Owner | Staff | Founder | Guest /b link
+    - id: footer_honesty
+      content:
+        - "Demo data — not production" 12px
+  motion:
+    card_hover: lift 2px
+
+acceptance:
+  e2e:
+    - full-platform-demo.spec.ts
+  gtm:
+    - non-hair verticals above fold on first row
+
+traceability:
+  surfaceId: gateway.demo.launcher
+  figma:
+    frame: W2/w2.gateway.demo.launcher.web
+    status: not_started

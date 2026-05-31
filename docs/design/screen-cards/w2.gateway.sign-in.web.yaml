@@ -1,0 +1,48 @@
+meta:
+  id: w2.gateway.sign-in.web
+  world: W2
+  route: "/sign-in"
+  artifact: livia-dashboard
+  persona: [All tenant users]
+  release: R1
+  status: designed
+
+job: >
+  Clerk sign-in — gateway aurora W2 — calm, premium, routes to correct persona home.
+
+visual:
+  canvas:
+    device: responsive
+    viewport: 390x844 minimum
+    background: aurora gateway gradient subtle — split layout desktop
+  zones:
+    - id: brand_panel
+      visible: desktop left 50%
+      content:
+        - Livia mark
+        - tagline people-business one line
+        - optional rotating vertical crop screenshot
+    - id: clerk_panel
+      content:
+        - Clerk SignIn component themed cyan primary ADR
+        - email + password / magic link
+        - link to sign-up
+      max_width: 400px centered
+  motion:
+    enter: fade 300ms
+
+states:
+  error_auth:
+    clerk: inline errors — no custom stack traces
+
+acceptance:
+  e2e:
+    - demo login flows DEMO-LOGINS.md
+  visual:
+    - baseline: final-gateway-g3-sign-in.png
+
+traceability:
+  surfaceId: gateway.sign-in
+  figma:
+    frame: W2/w2.gateway.sign-in.web
+    status: not_started

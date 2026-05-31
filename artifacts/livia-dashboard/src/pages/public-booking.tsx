@@ -1,7 +1,8 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { applyVerticalTheme } from "@/lib/vertical-theme";
 import { applyExperienceTheme, applyPresentationTheme, clearExperienceTheme, clearPresentationTheme, publicExperienceClassNames, marketRibbon } from "@/lib/experience-theme";
 import { playCelebrationChime, celebrationEnabled } from "@/lib/celebrate";
+import { publicGuestPwaEnabled, usePublicGuestPwa } from "@/lib/public-guest-pwa";
 import { Link, useParams } from "wouter";
 import {
   useGetPublicBusiness,
@@ -34,13 +35,16 @@ import {
 const ChatWidget = lazy(() => import("@/components/chat-widget"));
 import {
   PublicCustomerRitual,
+  PublicBookingStepper,
   type PublicRitualStep,
 } from "@/components/ritual/public-customer-ritual";
 import {
-  PublicSurfaceFooter,
-  PublicSurfaceLoading,
   PublicSurfaceNotFound,
 } from "@/components/public/public-surface-chrome";
+import { PublicBookLoading } from "@/components/public/public-book-loading";
+import { PublicBookStorefront } from "@/components/public-booking/public-book-storefront";
+import { PublicBookLivBar } from "@/components/public-booking/public-book-liv-bar";
+import { PublicBookPolicyFooter } from "@/components/public-booking/public-book-policy-footer";
 import { PublicBookingStickySummary } from "@/components/public-booking/public-booking-sticky-summary";
 import { PublicBookingSummaryCard } from "@/components/public-booking/public-booking-summary-card";
 import { PublicBookingTrustStrip } from "@/components/public-booking/public-booking-trust-strip";
@@ -48,11 +52,10 @@ import { PublicCareNotes } from "@/components/public-booking/public-care-notes";
 import { PublicStaffStrip } from "@/components/public-booking/public-staff-strip";
 import { PublicServiceCatalog } from "@/components/public-booking/public-service-catalog";
 import {
-  formatPublicAddress,
   guardSectionTitle,
   guessMedspaProcedureCode,
   publicBookingLayout,
-  verticalPublicCta,
+  verticalHeroCta,
   type PublicPolicyTrust,
   type PublicServiceRow,
 } from "@/lib/public-booking-helpers";
@@ -207,8 +210,14 @@ export default function PublicBookingPage() {
   const [saveToMyLivia, setSaveToMyLivia] = useState(true);
   const [consentAgreed, setConsentAgreed] = useState(false);
   const [chatMount, setChatMount] = useState(false);
+  const [chatOpenRequest, setChatOpenRequest] = useState(0);
+  const [pastHero, setPastHero] = useState(false);
+  const heroSentinelRef = useRef<HTMLDivElement>(null);
+  const servicePrefApplied = useRef(false);
 
   const sl = slug ?? "";
+
+  usePublicGuestPwa(sl);
 
   const { data: bizData, isLoading: isLoadingBiz } = useGetPublicBusiness(
     sl,
@@ -257,6 +266,18 @@ export default function PublicBookingPage() {
     }
   }, [b?.experienceSkin?.presentation, b?.experienceSkin?.brandAccentHex]);
 
+  useEffect(() => {
+    if (!b?.services?.length || servicePrefApplied.current) return;
+    const serviceId = new URLSearchParams(window.location.search).get("service");
+    if (!serviceId) return;
+    const svc = b.services.find((s) => s.id === serviceId);
+    if (svc) {
+      servicePrefApplied.current = true;
+      setSelectedService(svc);
+      setStep("slots");
+    }
+  }, [b?.services]);
+
   const aiOn = (b?.aiEnabled ?? "true") === "true";
 
   useEffect(() => {
@@ -286,16 +307,30 @@ export default function PublicBookingPage() {
   const needsMedspaConsent =
     b?.vertical === "medspa" && (b.medspaProcedures?.length ?? 0) > 0;
   const pb = b?.countryPack?.publicBooking;
-  const chooseServiceTitle =
-    pb?.chooseService ?? `Choose a ${vocab.serviceNoun.toLowerCase()}`;
   const confirmLabel = pb?.confirmBooking ?? "Confirm booking";
   const aiFooterLine = b?.aiDisclosureFooterLine?.trim() || null;
-  const publicAddress = b ? formatPublicAddress(b) : null;
   const showStickyCta =
     (step === "details" || step === "consent") && !!selectedService && !!selectedSlot;
   const layout = publicBookingLayout(b?.vertical);
-  const bookCta = b?.publicCta ?? verticalPublicCta(b?.vertical);
+  const heroCta = verticalHeroCta(b?.vertical, b?.publicCta);
   const staffForward = layout === "staff-forward";
+
+  const requestChatOpen = () => setChatOpenRequest((n) => n + 1);
+
+  useEffect(() => {
+    if (step !== "services") {
+      setPastHero(false);
+      return;
+    }
+    const el = heroSentinelRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setPastHero(entry ? !entry.isIntersecting : false),
+      { threshold: 0, rootMargin: "0px" },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [step, b?.slug]);
 
   useEffect(() => {
     if (step !== "consent" || !selectedService || !b?.medspaProcedures?.length) return;
@@ -384,7 +419,7 @@ export default function PublicBookingPage() {
   }
 
   if (isLoadingBiz) {
-    return <PublicSurfaceLoading />;
+    return <PublicBookLoading />;
   }
 
   if (!b) {
@@ -406,29 +441,43 @@ export default function PublicBookingPage() {
       })}${showStickyCta ? " has-sticky-cta" : ""}`}
     >
       <main className="max-w-xl mx-auto px-4 py-6 pb-6 md:pb-8 relative z-10">
-        <PublicCustomerRitual
-          businessName={b.name}
-          city={b.city ? `${b.city}` : null}
-          step={step as PublicRitualStep}
-          aiGreeting={b.aiGreeting}
-          verticalLabel={verticalPackUi(b.vertical, b.category).label}
-          logoUrl={b.logoUrl}
-          description={b.description}
-          serviceStepLabel={vocab.serviceNoun}
-          includeConsentStep={needsMedspaConsent}
-          tagline={vocab.hint}
-          variant={step === "services" ? "storefront" : "compact"}
-          coverImageUrl={b.coverImageUrl}
-          instagramHandle={b.instagramHandle}
-          publicAddress={publicAddress}
-          socialProof={b.socialProof}
-          bookCta={bookCta}
-          onScrollToServices={
-            step === "services"
-              ? () => document.getElementById("public-service-menu")?.scrollIntoView({ behavior: "smooth" })
-              : undefined
-          }
-        />
+        {step === "services" ? (
+          <>
+            <PublicBookStorefront
+              businessName={b.name}
+              logoUrl={b.logoUrl}
+              coverImageUrl={b.coverImageUrl}
+              heroCta={heroCta}
+              onHeroCta={() =>
+                document.getElementById("public-service-menu")?.scrollIntoView({ behavior: "smooth" })
+              }
+              onOpenChat={aiOn ? requestChatOpen : undefined}
+              showMessage={aiOn}
+            />
+            <div ref={heroSentinelRef} className="h-px w-full" aria-hidden />
+            <div className="mt-4 mb-5">
+              <PublicBookingStepper
+                step={step as PublicRitualStep}
+                serviceStepLabel={vocab.serviceNoun}
+                includeConsentStep={needsMedspaConsent}
+              />
+            </div>
+          </>
+        ) : (
+          <PublicCustomerRitual
+            businessName={b.name}
+            city={b.city ? `${b.city}` : null}
+            step={step as PublicRitualStep}
+            aiGreeting={b.aiGreeting}
+            verticalLabel={verticalPackUi(b.vertical, b.category).label}
+            logoUrl={b.logoUrl}
+            description={b.description}
+            serviceStepLabel={vocab.serviceNoun}
+            includeConsentStep={needsMedspaConsent}
+            tagline={vocab.hint}
+            variant="compact"
+          />
+        )}
         {step === "services" ? (
           <>
             <PublicBookingTrustStrip
@@ -453,10 +502,7 @@ export default function PublicBookingPage() {
 
         {/* Step: Services */}
         {step === "services" && (
-          <div
-            id="public-service-menu"
-            className="space-y-3 animate-in fade-in slide-in-from-right-4 duration-300"
-          >
+          <div id="public-service-menu" className="space-y-3">
             {staffForward ? (
               <PublicStaffStrip
                 staff={b.staff}
@@ -470,11 +516,9 @@ export default function PublicBookingPage() {
                 {marketRibbon(b.country, b.experienceSkin)}
               </p>
             ) : null}
-            <h2 className="text-lg font-semibold pt-1">{chooseServiceTitle}</h2>
             <PublicServiceCatalog
               services={b.services}
               vertical={b.vertical}
-              bookCta={bookCta}
               onSelect={(svc) => {
                 setSelectedService(svc);
                 setStep("slots");
@@ -486,7 +530,7 @@ export default function PublicBookingPage() {
 
         {/* Step: Slots */}
         {step === "slots" && selectedService && (
-          <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="space-y-4 motion-wizard-enter">
             <div className="flex items-center gap-3">
               <Button variant="ghost" size="icon" aria-label="Back to services" onClick={() => setStep("services")}>
                 <ChevronLeft className="h-4 w-4" />
@@ -593,7 +637,7 @@ export default function PublicBookingPage() {
 
         {/* Step: Details */}
         {step === "details" && selectedService && (
-          <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300 relative">
+          <div className="space-y-4 motion-wizard-enter relative">
             {createBooking.isPending && (
               <div className="absolute inset-0 -m-4 z-20 bg-background/70 backdrop-blur-sm flex items-center justify-center rounded-lg">
                 <div className="flex flex-col items-center gap-2">
@@ -792,7 +836,7 @@ export default function PublicBookingPage() {
 
         {step === "consent" && selectedService && b.medspaProcedures && (
           <section
-            className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300"
+            className="space-y-4 motion-wizard-enter"
             aria-labelledby="consent-heading"
           >
             <div className="flex items-center gap-3">
@@ -800,15 +844,11 @@ export default function PublicBookingPage() {
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <h2 id="consent-heading" className="text-lg font-semibold">
-                Treatment consent
+                Before we continue
               </h2>
             </div>
             <p className="text-sm text-muted-foreground -mt-2">
               Required before your {vocab.serviceNoun.toLowerCase()} — please read carefully.
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Your booking time is for the visit. The procedure below is what you&apos;ll consent to on the day — many
-              medspas confirm the exact treatment after consultation.
             </p>
             {(b.regulatoryFooter?.length ?? 0) > 0 && (
               <div
@@ -836,8 +876,11 @@ export default function PublicBookingPage() {
               </Select>
             </div>
             {medspaProcedure && (
-              <Card className="bg-muted/40">
-                <CardContent className="pt-4 text-sm space-y-2">
+              <div className="rounded-xl border border-border/80 bg-muted/30 max-h-[40vh] overflow-y-auto">
+                <div className="p-4 text-sm space-y-2">
+                  <p className="font-medium">
+                    {b.medspaProcedures.find((p) => p.code === medspaProcedure)?.label}
+                  </p>
                   <p>
                     {b.medspaProcedures.find((p) => p.code === medspaProcedure)?.summary}
                   </p>
@@ -848,22 +891,24 @@ export default function PublicBookingPage() {
                         <li key={r}>{r}</li>
                       ))}
                   </ul>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             )}
-            <label className="flex items-start gap-2 text-sm">
-              <input
-                type="checkbox"
+            <div className="flex items-start gap-3 text-sm">
+              <Checkbox
+                id="checkbox-consent"
                 checked={consentAgreed}
-                onChange={(e) => setConsentAgreed(e.target.checked)}
-                className="mt-1"
+                onCheckedChange={(v) => setConsentAgreed(v === true)}
                 data-testid="checkbox-consent"
               />
-              I have read the risks and confirm my medical history is accurate.
-            </label>
+              <Label htmlFor="checkbox-consent" className="leading-snug font-normal cursor-pointer">
+                I have read the risks and confirm my medical history is accurate.
+              </Label>
+            </div>
             <div className="space-y-2">
-              <Label>Full legal name (signature) *</Label>
+              <Label htmlFor="input-consent-signature">Full legal name (signature) *</Label>
               <Input
+                id="input-consent-signature"
                 value={consentSignature}
                 onChange={(e) => setConsentSignature(e.target.value)}
                 placeholder="Jane Smith"
@@ -899,7 +944,7 @@ export default function PublicBookingPage() {
         {/* Step: Confirmed */}
         {step === "confirmed" && confirmation && (
           <div
-            className={`text-center space-y-6 animate-in fade-in zoom-in-95 duration-500 rounded-2xl p-2 ${
+            className={`text-center space-y-6 animate-in fade-in zoom-in-95 duration-500 rounded-2xl p-2 motion-glow-success ${
               celebrationEnabled() ? "celebrate-shimmer" : ""
             }`}
           >
@@ -988,6 +1033,15 @@ export default function PublicBookingPage() {
               </Link>
             ) : null}
 
+            {publicGuestPwaEnabled ? (
+              <p
+                className="text-xs text-muted-foreground text-center max-w-sm mx-auto leading-relaxed"
+                data-testid="public-pwa-hint"
+              >
+                Tip: add {b.name} to your home screen for quick access to your visit link.
+              </p>
+            ) : null}
+
             {confirmation.savedToMyLivia && confirmation.myLiviaPath ? (
               <Link href={confirmation.myLiviaPath}>
                 <Button variant="outline" className="w-full" data-testid="link-my-livia">
@@ -1032,8 +1086,20 @@ export default function PublicBookingPage() {
           </p>
         ) : null}
 
-        <PublicSurfaceFooter />
+        <PublicBookPolicyFooter
+          depositPolicySummary={b.depositPolicySummary}
+          policyTrust={b.policyTrust}
+          regulatoryFooter={b.regulatoryFooter}
+        />
       </main>
+
+      {step === "services" && aiOn ? (
+        <PublicBookLivBar
+          visible={pastHero}
+          livActive={chatOpenRequest > 0}
+          onOpenChat={requestChatOpen}
+        />
+      ) : null}
 
       {showStickyCta && selectedService && (
         <PublicBookingStickySummary
@@ -1078,6 +1144,8 @@ export default function PublicBookingPage() {
             initialName={firstName ? `${firstName} ${lastName}`.trim() : undefined}
             initialEmail={email || undefined}
             initialPhone={phone || undefined}
+            openRequest={chatOpenRequest}
+            hideLauncher={step === "services"}
           />
         </Suspense>
       )}

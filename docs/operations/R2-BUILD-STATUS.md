@@ -1,8 +1,9 @@
 # R2 build status — post-R1 program (living doc)
 
 **Authority:** [`product/LIVIA-FINAL-BUILD-PLAN.md`](../product/LIVIA-FINAL-BUILD-PLAN.md) §5  
+**Sequencing:** [`product/LIVIA-WIDE-BUILD-PLAN.md`](../product/LIVIA-WIDE-BUILD-PLAN.md) §6  
 **Tracker:** [`PLATFORM-BACKLOG.md`](./PLATFORM-BACKLOG.md)  
-**Updated:** 2026-05-30 (overnight wave 14)
+**Updated:** 2026-05-30 (Wave 15 — R1 close + R2 kickoff)
 
 ---
 
@@ -10,7 +11,7 @@
 
 Guest surfaces complete · P7 hub · support at scale · mobile parity push.
 
-**Honest progress:** ~25% code landed (foundations); ~10% exit criteria.
+**Honest progress:** ~40% code landed; ~25% exit criteria (Wave 15).
 
 ---
 
@@ -18,12 +19,12 @@ Guest surfaces complete · P7 hub · support at scale · mobile parity push.
 
 | # | Criterion | Status | Notes |
 |---|-----------|--------|-------|
-| R2-E1 | W6 guest hub OTP + favorites + book-again | **In progress** | migration `029` + `guest-hub.service` + `/my` UI |
-| R2-E2 | W5 consent · pay · waitlist · visit all verticals | **Partial** | visit + proof + intake + waitlist accept (wave 14) |
-| R2-E3 | I4 Context pane + runbook links in Thread | **Not started** | Thread shell done R1 |
-| R2-E4 | B1 registry complete + Investigate depth | **Partial** | P0 catalog + trace lookup + surface picker |
-| R2-E5 | Mobile Today v2 + guest deep links | **Not started** | R1 mobile pass only |
-| R2-E6 | Proactive Radar feeds (stuck onboarding, zero bookings) | **Partial** | Radar metrics from ticket queue only |
+| R2-E1 | W6 guest hub OTP + favorites + book-again | **Partial → Wave 15** | upcoming + favorites + service prefill |
+| R2-E2 | W5 consent · pay · waitlist · visit all verticals | **Partial** | `/pay/:token` shell added wave 15 |
+| R2-E3 | I4 Context pane + runbook links in Thread | **Partial → Wave 15** | registry runbook in context column |
+| R2-E4 | B1 registry complete + Investigate depth | **Partial** | P0 catalog + trace lookup |
+| R2-E5 | Mobile Today v2 + guest deep links | **Partial → Wave 15** | `/my-livia`, `/guest-surface`, 12s Today refetch |
+| R2-E6 | Proactive Radar feeds (stuck onboarding, zero bookings) | **Partial → Wave 15** | `/internal/ops/radar/feeds` |
 | R2-E7 | CI guest-token suite | **Not started** | |
 | R2-E8 | Support opens tenant from thread (impersonation policy) | **Partial** | bundle API exists |
 
@@ -33,20 +34,21 @@ Guest surfaces complete · P7 hub · support at scale · mobile parity push.
 
 | Wave | Date | Shipped |
 |------|------|---------|
-| 14 | 2026-05-30 | G2 `/intake/:token` + `/waitlist/:token` pages + API · migration `030` · waitlist SMS link-first · B1 registry · F6 Board/Radar/Investigate functional |
+| 15 | 2026-05-30 | **R1 closed** · guest hub upcoming/favorites/book-again · `/pay/:token` · owner booking toast · Radar proactive feeds · support context registry · mobile My Livia + guest deep links · Today/bookings 12s refetch |
+| 14 | 2026-05-30 | G2 intake/waitlist · B1 registry · F6 Board/Radar |
 
 ---
 
 ## Next agent queue
 
-1. Guest hub: favorites toggle API + book-again from `/my`
-2. Thread Context pane — runbook links from `support-points` registry
-3. Radar proactive feeds — stuck onboarding + 14d zero-booking monitors
-4. Deposit-pay guest surface `/pay/:token`
-5. Mobile deep links to visit/intake/waitlist tokens
+1. Stripe deposit checkout on `/pay/:token` (R2-G)
+2. CI guest-token suite (R2-E7)
+3. Liv mandate approval UX (R2-C)
+4. Split Aurora demo composite (R2-F)
+5. E2E guest hub favorites + pay page smoke
 
 ---
 
 ## Founder UAT (when R2 exit ready)
 
-Same staging stack as R1 — add `/my` OTP flow, intake/waitlist token links from demo medspa/fitness seeds.
+Staging stack + `/my` full flow (favorites, upcoming, book-again), `/pay/:token`, mobile My Livia, Radar proactive section.

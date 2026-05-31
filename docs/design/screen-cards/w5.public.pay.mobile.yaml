@@ -1,0 +1,66 @@
+meta:
+  id: w5.public.pay.mobile
+  world: W5
+  route: "/b/:slug/pay/:token"
+  artifact: livia-dashboard
+  persona: [P7]
+  verticals: [hair, beauty, body-art, medspa]
+  release: R1
+  status: designed
+
+job: >
+  Guest pays deposit securely — Stripe embedded — trust and clarity before money moves.
+
+visual:
+  canvas:
+    device: phone
+    viewport: 390x844
+    background: preset surface
+  zones:
+    - id: header
+      content:
+        - business logo + "Secure deposit"
+        - lock icon 16px muted
+    - id: summary
+      padding: 20px
+      content:
+        - service + date recap card
+        - deposit amount 32px tabular €XX.XX
+        - policy line "Refundable per {shop} policy until {date}"
+    - id: stripe
+      content:
+        - Stripe Payment Element embedded — full width
+        - no Livia branding inside payment frame
+    - id: pay_cta
+      sticky_bottom: true
+      content:
+        - primary "Pay deposit" 52px full width
+        - pending-overlay on submit
+    - id: trust
+      content:
+        - "Payments processed securely. Charged by {businessName}."
+        - 12px muted — not Livia Inc merchant of record for tenant deposits
+  motion:
+    success: success-beat → redirect visit token or book confirm
+
+states:
+  loading:
+    visual: summary skeleton + stripe placeholder
+  error_payment:
+    copy: "Payment didn't go through"
+    action: Retry + support link with requestId hidden from P7
+  expired:
+    copy: "This payment link expired"
+
+acceptance:
+  e2e:
+    - Stripe test mode deposit flow
+  a11y:
+    - Stripe element focus order preserved
+
+traceability:
+  surfaceId: public.deposit-pay
+  guest_surface: deposit-pay
+  figma:
+    frame: W5/w5.public.pay.mobile
+    status: not_started

@@ -31,7 +31,7 @@ Both Livia and Liv are calibrated to this. The brand fails when copy becomes eit
 - "Brought" / "tucked away" / "marked" — for soft state-changes Liv makes on Owner's behalf.
 - "Briefing" — for the morning + Sunday digest. Not "report", not "summary."
 - "Today" — when we mean today; not "this current 24-hour period."
-- "Owner" — when speaking to / about a salon owner. Not "client" (we're not their agency).
+- "Owner" — when speaking to / about a people-business operator. Not "client" (we're not their agency).
 - "Your customer" — when addressing the Owner about their P7. Possessive; relational.
 - "Cap" — for refund cap. Specific. Owners understand it.
 - "Easy to leave" — for the export + cancellation commitment. Two words; bookmarkable.
@@ -43,7 +43,7 @@ Both Livia and Liv are calibrated to this. The brand fails when copy becomes eit
 - "Powered by AI" / "AI-powered." Say "with Liv" or just describe the action.
 - "Smart" (as in "smart booking" — meaningless).
 - "Seamless" (overused; meaningless).
-- "Effortless" (Owners know operating a salon is hard work; this insults).
+- "Effortless" (Owners know running a service business is hard work; this insults).
 - "Magical" / "delightful" (precious).
 - "10x" / "supercharge" / "next-level" / "game-changer" / "disrupt" / "synergy" (banned).
 - "Leverage" as a verb.
@@ -117,7 +117,7 @@ Both Livia and Liv are calibrated to this. The brand fails when copy becomes eit
 
 ### Livia-mouth — Founder demo intro
 
-> Hi, I'm <founder>. I'm going to show you what Tuesday morning looks like in a salon that's running with Liv. Should take about ten minutes.
+> Hi, I'm <founder>. I'm going to show you what Tuesday morning looks like in a shop that's running with Liv. Should take about ten minutes.
 
 (26 words; first-person; specific scope; calibrated time commitment.)
 

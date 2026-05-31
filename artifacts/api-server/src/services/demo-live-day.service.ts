@@ -56,9 +56,10 @@ export async function ensureLiveDayForBusiness(
     if (staffIds.length > 0 && serviceIds.length > 0 && customers.length > 0) {
       const slots: Array<{ ci: number; si: number; vi: number; status: BookingStatus; hour: number }> =
         [
-          { ci: 0, si: 0, vi: 0, status: "CONFIRMED", hour: 10 },
-          { ci: 1, si: 0, vi: Math.min(1, serviceIds.length - 1), status: "PENDING", hour: 14 },
-          { ci: 0, si: Math.min(1, staffIds.length - 1), vi: 0, status: "CONFIRMED", hour: 16 },
+          { ci: 0, si: 0, vi: 0, status: "CONFIRMED", hour: 9 },
+          { ci: 1, si: 0, vi: Math.min(1, serviceIds.length - 1), status: "PENDING", hour: 12 },
+          { ci: 2, si: Math.min(1, staffIds.length - 1), vi: 0, status: "CONFIRMED", hour: 14 },
+          { ci: 0, si: Math.min(2, staffIds.length - 1), vi: Math.min(2, serviceIds.length - 1), status: "CONFIRMED", hour: 16 },
         ];
       const rows = slots.map((s) => {
         const startAt = new Date();

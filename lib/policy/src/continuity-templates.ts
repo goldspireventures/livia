@@ -64,7 +64,7 @@ const PET: ContinuityTemplate = {
     `${BASE_SMS(a, "Reply with pet details and temperament notes so we prep the right setup.")}`,
   publicNextSteps: (a) => [
     "We'll text you to confirm pet details and any special handling.",
-    "Vaccination records can be sent in the same thread if your salon requires them.",
+    "Vaccination records can be sent in the same thread if your groomer requires them.",
     `Reference: ${a.bookingRef}`,
   ],
 };

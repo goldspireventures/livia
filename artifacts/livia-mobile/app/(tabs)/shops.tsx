@@ -2,16 +2,15 @@ import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useCallback } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChainPulseBadge, ChainPulseReason } from "@/components/ChainPulseBadge";
 import { EmptyState } from "@/components/EmptyState";
 import { OperationalScreen } from "@/components/OperationalScreen";
+import { Shimmer } from "@/components/brand/Shimmer";
 import { aurum } from "@/constants/colors";
 import { elevation } from "@/constants/elevation";
 import { fonts, type } from "@/constants/typography";
@@ -24,16 +23,36 @@ import { asHref } from "@/lib/navigation";
 import type { ChainShopRollup } from "@/lib/chain-rollup";
 import { getPublicBookingLabel } from "@/lib/public-booking-url";
 
+function verticalLabel(vertical?: string | null): string {
+  if (!vertical) return "Business";
+  return vertical.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function ShopCardSkeleton() {
+  return (
+    <View style={{ gap: 12 }}>
+      {[1, 2, 3].map((i) => (
+        <Shimmer key={i} height={120} radius={16} />
+      ))}
+    </View>
+  );
+}
+
 function ShopRollupCard({
   shop,
+  vertical,
   isActive,
   onOpen,
 }: {
   shop: ChainShopRollup;
+  vertical?: string | null;
   isActive: boolean;
   onOpen: () => void;
 }) {
   const colors = useColors();
+  const inboxWaiting = shop.openConversations + shop.handedOffConversations;
+  const hasAlert = shop.pulseStatus !== "ok";
+
   return (
     <Pressable
       onPress={onOpen}
@@ -50,6 +69,9 @@ function ShopRollupCard({
       accessibilityLabel={`Open ${shop.name}`}
       testID={`shop-card-${shop.businessId}`}
     >
+      <View style={styles.logoWrap}>
+        <Feather name="home" size={22} color={colors.primary} />
+      </View>
       <View style={{ flex: 1, gap: 6 }}>
         <View style={styles.cardTop}>
           <Text style={[styles.cardName, { color: colors.foreground }]} numberOfLines={1}>
@@ -57,12 +79,23 @@ function ShopRollupCard({
           </Text>
           <ChainPulseBadge status={shop.pulseStatus} />
         </View>
-        {shop.city ? (
-          <Text style={[styles.cardMeta, { color: colors.mutedForeground }]}>{shop.city}</Text>
-        ) : null}
-        <Text style={[styles.cardStats, { color: colors.mutedForeground }]}>
-          {shop.todayBookings} today · {shop.pendingBookings} pending · {shop.openConversations} inbox
+        <Text style={[styles.cardMeta, { color: colors.mutedForeground }]}>
+          {verticalLabel(vertical)}
+          {shop.city ? ` · ${shop.city}` : ""}
         </Text>
+        <View style={styles.statsRow}>
+          <Text style={[styles.statChip, { color: colors.foreground }]}>
+            {shop.todayBookings} today
+          </Text>
+          <Text style={[styles.statChip, { color: colors.mutedForeground }]}>·</Text>
+          <Text style={[styles.statChip, { color: colors.foreground }]}>{inboxWaiting} inbox</Text>
+          {hasAlert ? (
+            <>
+              <Text style={[styles.statChip, { color: colors.mutedForeground }]}>·</Text>
+              <Feather name="alert-circle" size={12} color={colors.destructive} />
+            </>
+          ) : null}
+        </View>
         <ChainPulseReason reason={shop.pulseReason} />
       </View>
       {isActive ? (
@@ -77,12 +110,19 @@ function ShopRollupCard({
 export default function ShopsScreen() {
   const colors = useColors();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const haptics = useHaptics();
   const { horizontalPad, maxContentWidth } = useContentInsets();
   const { businesses, currentBusiness, setCurrentBusiness } = useBusiness();
   const useRollup = businesses.length >= 2;
   const { rollup, loading, reload } = useChainRollup(useRollup);
+
+  const verticalById = React.useMemo(
+    () =>
+      Object.fromEntries(
+        businesses.map((b) => [b.id, (b as { vertical?: string }).vertical ?? null]),
+      ),
+    [businesses],
+  );
 
   const openShop = useCallback(
     (businessId: string) => {
@@ -95,12 +135,12 @@ export default function ShopsScreen() {
   );
 
   const shops = rollup?.shops ?? [];
-  const briefing = rollup?.founderBriefingLine;
+  const briefing = rollup?.orgAdminBriefingLine;
 
   return (
     <OperationalScreen
-      eyebrow="Your rooms"
-      title="Glance"
+      eyebrow="Multi-location"
+      title="Your shops"
       subtitle={
         briefing ??
         (businesses.length > 0
@@ -125,7 +165,6 @@ export default function ShopsScreen() {
         gap: 12,
       }}
     >
-
       {rollup && rollup.shopsNeedingAttention > 0 ? (
         <View
           style={[
@@ -141,55 +180,27 @@ export default function ShopsScreen() {
         </View>
       ) : null}
 
-      {(rollup?.alerts?.length ?? 0) > 0 ? (
-        <View style={[styles.alertsBlock, { borderColor: colors.destructive + "44" }]}>
-          <Text style={[styles.alertsTitle, { color: colors.foreground }]}>Cross-shop alerts</Text>
-          {rollup!.alerts!.map((a, i) => (
-            <Pressable
-              key={`${a.businessId}-${a.code}`}
-              onPress={() => openShop(a.businessId)}
-              style={[
-                styles.alertRow,
-                i > 0 ? { borderTopWidth: StyleSheet.hairlineWidth, borderColor: colors.border } : null,
-              ]}
-            >
-              <Text style={[styles.alertShop, { color: colors.foreground }]}>{a.shopName}</Text>
-              <Text style={[styles.alertMsg, { color: colors.mutedForeground }]} numberOfLines={2}>
-                {a.message}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      ) : null}
-
-      {rollup ? (
-        <View style={[styles.summaryRow, { borderColor: colors.border }]}>
-          <Text style={[styles.summaryStat, { color: colors.foreground }]}>
-            {rollup.bookingsThisWeek}
-          </Text>
-          <Text style={[styles.summaryLabel, { color: colors.mutedForeground }]}>bookings this week</Text>
-          <Text style={[styles.summaryDot, { color: colors.mutedForeground }]}>·</Text>
-          <Text style={[styles.summaryStat, { color: colors.foreground }]}>
-            {rollup.completedThisWeek}
-          </Text>
-          <Text style={[styles.summaryLabel, { color: colors.mutedForeground }]}>completed</Text>
-        </View>
-      ) : null}
-
-      {loading && useRollup && !rollup ? (
-        <ActivityIndicator color={colors.primary} style={{ marginTop: 24 }} />
-      ) : null}
+      {loading && useRollup && !rollup ? <ShopCardSkeleton /> : null}
 
       {useRollup && shops.length > 0
         ? shops.map((shop) => (
             <ShopRollupCard
               key={shop.businessId}
               shop={shop}
+              vertical={verticalById[shop.businessId]}
               isActive={shop.businessId === currentBusiness?.id}
               onOpen={() => openShop(shop.businessId)}
             />
           ))
         : null}
+
+      {!useRollup && businesses.length === 1 ? (
+        <EmptyState
+          icon="grid"
+          title="One shop for now"
+          subtitle="Add another location in web settings to see cross-shop pulse here."
+        />
+      ) : null}
 
       {!useRollup && businesses.length === 0 ? (
         <EmptyState
@@ -199,7 +210,7 @@ export default function ShopsScreen() {
         />
       ) : null}
 
-      {!useRollup
+      {!useRollup && businesses.length > 1
         ? businesses.map((b) => {
             const isActive = b.id === currentBusiness?.id;
             return (
@@ -214,15 +225,15 @@ export default function ShopsScreen() {
                   elevation.resting,
                 ]}
               >
-                <View
-                  style={[
-                    styles.dot,
-                    { backgroundColor: isActive ? aurum.champagne : colors.mutedForeground },
-                  ]}
-                />
+                <View style={styles.logoWrap}>
+                  <Feather name="home" size={20} color={colors.primary} />
+                </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.cardName, { color: colors.foreground }]} numberOfLines={1}>
                     {b.name}
+                  </Text>
+                  <Text style={[styles.cardMeta, { color: colors.mutedForeground }]}>
+                    {verticalLabel((b as { vertical?: string }).vertical)}
                   </Text>
                   {b.slug ? (
                     <Text style={[styles.cardMeta, { color: colors.mutedForeground }]}>
@@ -246,9 +257,6 @@ export default function ShopsScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
-  content: { paddingBottom: 140, gap: 12 },
-  glowWrap: { position: "absolute", top: 0, left: 0, right: 0, height: 320, overflow: "hidden" },
   banner: {
     flexDirection: "row",
     alignItems: "center",
@@ -258,33 +266,6 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   bannerText: { ...type.body, fontSize: 14, flex: 1 },
-  alertsBlock: {
-    borderRadius: 12,
-    borderWidth: 1,
-    padding: 12,
-    gap: 8,
-    marginBottom: 4,
-  },
-  alertsTitle: { fontFamily: fonts.bodySemi, fontSize: 14 },
-  alertRow: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: 8,
-    gap: 2,
-  },
-  alertShop: { fontFamily: fonts.bodySemi, fontSize: 13 },
-  alertMsg: { ...type.caption, fontSize: 12 },
-  summaryRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    alignItems: "baseline",
-    gap: 6,
-    paddingVertical: 8,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    marginBottom: 4,
-  },
-  summaryStat: { fontFamily: fonts.bodySemi, fontSize: 18 },
-  summaryLabel: { ...type.caption, fontSize: 12 },
-  summaryDot: { fontSize: 14 },
   card: {
     flexDirection: "row",
     alignItems: "center",
@@ -292,11 +273,20 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     padding: 14,
+    minHeight: 96,
+  },
+  logoWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.06)",
   },
   cardTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
-  dot: { width: 8, height: 8, borderRadius: 8 },
-  cardName: { fontFamily: fonts.bodySemi, fontSize: 15, flex: 1 },
+  cardName: { fontFamily: fonts.bodySemi, fontSize: 16, flex: 1 },
   cardMeta: { ...type.caption, fontSize: 12 },
-  cardStats: { ...type.caption, fontSize: 12 },
+  statsRow: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 4 },
+  statChip: { ...type.caption, fontSize: 12 },
   activePill: { ...type.eyebrow, fontSize: 10, letterSpacing: 0.6 },
 });

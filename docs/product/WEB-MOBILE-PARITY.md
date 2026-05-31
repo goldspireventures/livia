@@ -1,7 +1,9 @@
 # Web ↔ mobile parity matrix
 
-**Updated:** 2026-05-25  
+**Updated:** 2026-05-31  
 **Captures:** `pnpm e2e:full-visual-audit` (web + mobile) · `e2e/visual-captures/web/<persona>/` · `e2e/visual-captures/mobile/`
+
+**Status summary:** Core ops surfaces **OK** (2026-05-25). Remaining gaps: settings depth (billing/team web-first), presentation preset morph on mobile, premium motion on Today entry.
 
 This doc tracks **tenant product** surfaces (not marketing site, not internal ops portal).
 

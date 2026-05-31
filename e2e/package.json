@@ -15,6 +15,7 @@
     "test:contextual-web": "playwright test --project=contextual-web",
     "test:full-visual-audit": "playwright test --project=full-visual-audit",
     "test:all-verticals": "playwright test --project=all-verticals-smoke --workers=1",
+    "test:demo-depth": "playwright test --project=demo-live-day --project=demo-proof-token --project=public-booking-quality --workers=1",
     "test:ux-quality-gate": "playwright test tests/ux-quality-gate.spec.ts --project=dashboard",
     "test:preflight": "playwright test --project=v3-preflight-ui && playwright test --project=founder-auth-setup --project=v3-preflight-auth --project=api --project=dashboard --project=internal --project=marketing",
     "test:preflight:fast": "playwright test --project=api --project=dashboard --project=internal tests/v3-preflight.spec.ts",

@@ -1,8 +1,13 @@
 # Start here — engineers
 
+**✅ Build active (2026-05-31):** G-DOC founder sign-off received. Authority: [`product/LIVIA-BUILD-PLAN-V2.md`](./product/LIVIA-BUILD-PLAN-V2.md) + [`product/LIVIA-DOCUMENTATION-PROGRAM.md`](./product/LIVIA-DOCUMENTATION-PROGRAM.md).
+
 **Canonical doc index:** [`DOC-CANONICAL-INDEX.md`](./DOC-CANONICAL-INDEX.md) (when two docs disagree, the index wins).
 
-**Heavy build:** [`product/LIVIA-FINAL-BUILD-PLAN.md`](./product/LIVIA-FINAL-BUILD-PLAN.md) — **start here** before large work.
+**Category:** [`product/PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md`](./product/PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md) — people-business OS, not salon-only.
+
+**Vision + queue (after doc gate):** [`product/LIVIA-WIDE-BUILD-PLAN.md`](./product/LIVIA-WIDE-BUILD-PLAN.md) · **Build v2:** [`product/LIVIA-BUILD-PLAN-V2.md`](./product/LIVIA-BUILD-PLAN-V2.md)  
+**Heavy build (locks):** [`product/LIVIA-FINAL-BUILD-PLAN.md`](./product/LIVIA-FINAL-BUILD-PLAN.md) — scope authority before large work.
 
 ## Day 1 — run the product
 

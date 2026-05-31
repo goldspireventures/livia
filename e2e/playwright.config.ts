@@ -233,13 +233,33 @@ export default defineConfig({
       },
     },
     {
-      name: "marketing-lifecycle",
-      testMatch: /marketing-lifecycle\.spec\.ts/,
+      name: "demo-live-day",
+      testMatch: /demo-live-day\.spec\.ts/,
+      timeout: 240_000,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+      },
+    },
+    {
+      name: "demo-proof-token",
+      testMatch: /demo-proof-token\.spec\.ts/,
       timeout: 180_000,
       workers: 1,
       use: {
         ...devices["Desktop Chrome"],
-        baseURL: marketingBase,
+        baseURL: dashboardBase,
+      },
+    },
+    {
+      name: "demo-intake-token",
+      testMatch: /demo-intake-token\.spec\.ts/,
+      timeout: 180_000,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
       },
     },
   ],

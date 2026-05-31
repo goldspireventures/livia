@@ -1,0 +1,56 @@
+meta:
+  id: w4m.notifications.mobile
+  world: W4
+  route: "/notifications"
+  artifact: livia-mobile
+  persona: [P1, P2, P3, P4]
+  verticals: all
+  release: R1
+  status: designed
+
+job: >
+  Unified in-app notification feed — actionable deep links — complements push.
+
+visual:
+  canvas:
+    device: phone
+    viewport: 390x844
+    background: preset surface
+  zones:
+    - id: header
+      content:
+        - title "Notifications"
+        - "Mark all read" text button
+    - id: list
+      layout: grouped by Today | Earlier
+      row:
+        height: 72px min
+        content:
+          - icon by type booking | inbox | approval | chain
+          - title bold if unread
+          - body 14px 2 line truncate vertical vocabulary
+          - time relative right
+        tap: deep link mobileHref from API
+    - id: empty
+      content:
+        - bell illustration line
+        - "You're all caught up"
+  motion:
+    mark_read: fade opacity 400ms
+    new_item: alert-in strip optional
+
+states:
+  loading:
+    visual: 8 row skeletons
+  founder_chain:
+    note: chain alerts synced from /me/chain-rollup idempotent
+
+acceptance:
+  e2e:
+    - book on /b → owner sees row + push
+  traceability:
+  surfaceId: tenant.notifications
+  policy: notification-policy.ts
+  figma:
+    frame: W4-Mobile/w4m.notifications.mobile
+    status: not_started

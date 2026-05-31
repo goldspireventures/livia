@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sparkles, Inbox, LayoutGrid, Settings, ExternalLink, RefreshCw } from "lucide-react";
 import { StuckContinuityCard } from "@/components/stuck-continuity-card";
+import { DriftRecoveryCard } from "@/components/drift-recovery-card";
 import { LivMomentsStrip } from "@/components/ritual/liv-moments-strip";
 
 /**
@@ -84,6 +85,7 @@ export function LivCommandHub({ compact }: { compact?: boolean }) {
           </p>
         ) : null}
         {!compact ? <StuckContinuityCard /> : null}
+        {!compact ? <DriftRecoveryCard /> : null}
         {!compact ? <LivMomentsStrip /> : null}
       </CardContent>
     </Card>

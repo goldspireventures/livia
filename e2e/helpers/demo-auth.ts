@@ -24,7 +24,7 @@ export async function ensureDemoProvisioned(request: APIRequestContext) {
     }
     return;
   }
-  const sync = await request.post(`${apiBase}/api/demo/sync-vertical-showcase`, { timeout: 120_000 });
+  const sync = await request.post(`${apiBase}/api/demo/sync-vertical-showcase`, { timeout: 180_000 });
   if (!sync.ok() && sync.status() !== 404) {
     console.warn(`sync-vertical-showcase: ${sync.status()} — restart API if new verticals are missing`);
   }

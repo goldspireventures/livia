@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import {
   db,
   businessesTable,
@@ -37,13 +37,22 @@ export async function seedVerticalDemoExtras(): Promise<{
   if (ink) {
     const existing = await listDesignProofs(ink.id, "pending_review");
     if (existing.length === 0) {
+      const [customer] = await db
+        .select({ id: customersTable.id })
+        .from(customersTable)
+        .where(eq(customersTable.businessId, ink.id))
+        .limit(1);
+      const proofId = generateId();
       await db.insert(designProofAssetsTable).values({
-        id: generateId(),
+        id: proofId,
         businessId: ink.id,
+        customerId: customer?.id ?? null,
         status: "pending_review",
         note: "Demo: sleeve concept — client awaiting artist sign-off",
         imageUrl: DEMO_TATTOO_PROOF_IMAGE,
       });
+      const { ensureDesignProofGuestAccess } = await import("./design-proof-guest-access.service");
+      await ensureDesignProofGuestAccess(ink.id, proofId);
       designProofs += 1;
     } else if (existing.some((p) => !p.imageUrl)) {
       const row = existing.find((p) => !p.imageUrl);
@@ -52,6 +61,12 @@ export async function seedVerticalDemoExtras(): Promise<{
           .update(designProofAssetsTable)
           .set({ imageUrl: DEMO_TATTOO_PROOF_IMAGE, updatedAt: new Date() })
           .where(eq(designProofAssetsTable.id, row.id));
+      }
+    } else {
+      const row = existing[0];
+      if (row) {
+        const { ensureDesignProofGuestAccess } = await import("./design-proof-guest-access.service");
+        await ensureDesignProofGuestAccess(ink.id, row.id);
       }
     }
   }
@@ -116,27 +131,41 @@ export async function seedVerticalDemoExtras(): Promise<{
     }
 
     const intakes = await listIntakesAwaitingReview(medspa.id);
-    if (intakes.length === 0) {
+    const [draftIntake] = await db
+      .select({ id: medicalIntakeRecordsTable.id })
+      .from(medicalIntakeRecordsTable)
+      .where(
+        and(
+          eq(medicalIntakeRecordsTable.businessId, medspa.id),
+          eq(medicalIntakeRecordsTable.status, "draft"),
+        ),
+      )
+      .limit(1);
+    if (!draftIntake) {
       const [customer] = await db
         .select({ id: customersTable.id })
         .from(customersTable)
         .where(eq(customersTable.businessId, medspa.id))
         .limit(1);
       if (customer) {
+        const intakeId = generateId();
         await db.insert(medicalIntakeRecordsTable).values({
-          id: generateId(),
+          id: intakeId,
           businessId: medspa.id,
           customerId: customer.id,
-          allergies: "Demo: nickel sensitivity (patch test on file)",
-          medications: "None declared",
-          conditions: "Mild rosacea",
-          priorProcedures: "SPF daily; no prior injectables",
-          notes: "First visit — review before consult room",
-          status: "submitted",
-          submittedAt: new Date(),
+          status: "draft",
         });
+        const { ensureMedicalIntakeGuestAccess } = await import(
+          "./medical-intake-guest-access.service"
+        );
+        await ensureMedicalIntakeGuestAccess(medspa.id, intakeId);
         medspaIntakes += 1;
       }
+    } else if (intakes.length === 0) {
+      const { ensureMedicalIntakeGuestAccess } = await import(
+        "./medical-intake-guest-access.service"
+      );
+      await ensureMedicalIntakeGuestAccess(medspa.id, draftIntake.id);
     }
   }
 

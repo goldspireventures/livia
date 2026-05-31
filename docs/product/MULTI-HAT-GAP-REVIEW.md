@@ -292,10 +292,22 @@ need — and what are we still not seeing?”
 | Surface program docs | Add **owner trust** + **guest continuity** specs when scoped |
 | Multi-hat review (this doc) | Re-run after R1 ship |
 
+### Post doc-sprint (2026-05-31)
+
+| Closed | Still open |
+|--------|------------|
+| P0 screen cards 72/72, EMPTY-ERROR-LOADING, vertical playbooks | G-VISUAL Figma PNG exports |
+| Track H exec hat ledger + CLI | Hats River UI polish |
+| CODE-CLARITY-STANDARDS + ATLAS-INTEGRATION-GUIDE | Atlas deep-link from support Context (R2) |
+| PREMIUM-MOTION-LAYER spec | Implementation in marketing/gateway/mobile splash |
+| Demo depth E2E green | 10 Dublin shops field evidence |
+| Phase E surface program audits | M1-R2 marketing story scroll build |
+
 ---
 
 ## 7. Changelog
 
 | Date | Change |
 |------|--------|
+| 2026-05-31 | Post doc-sprint addendum |
 | 2026-05-30 | Initial multi-hat simulation after doc audit + platform programs |

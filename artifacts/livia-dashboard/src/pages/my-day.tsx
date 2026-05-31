@@ -1,62 +1,39 @@
-// STAFF landing page — "My Day".
-// Read-only by design: today's slate, the next appointment, and the
-// roster of customers I've served before.
+// STAFF landing — w4.staff.my-day.mobile (web + responsive)
 
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useBusiness } from "@/lib/business-context";
 import { useMembership, personaQuery } from "@/lib/membership-context";
 import { apiFetch } from "@/lib/api-fetch";
-import { Link } from "wouter";
-import { Calendar, Users, Clock, ArrowRight } from "lucide-react";
-import { PersonaRitualHeader } from "@/components/ritual/persona-ritual-header";
-import { PageFrame } from "@/components/ui/page-frame";
-import { RunningLateSheet } from "@/components/ops/running-late-sheet";
+import { useFormat } from "@/lib/use-format";
+import { RefreshCw } from "lucide-react";
 import { OPERATIONAL_REFETCH_MS } from "@/lib/operational-cache";
 import { usePersona } from "@/lib/persona";
+import { StaffMyDayLoading } from "@/components/staff/staff-my-day-loading";
+import { StaffMyDayHero, type StaffMyDayBooking } from "@/components/staff/staff-my-day-hero";
+import { StaffMyDayTimeline } from "@/components/staff/staff-my-day-timeline";
+import { StaffMyDayQuickActions } from "@/components/staff/staff-my-day-quick-actions";
 
 interface MyDayResponse {
   staffId: string | null;
   todayCount: number;
   weekCount: number;
-  today: Array<{
-    id: string;
-    startAt: string;
-    endAt: string;
-    status: string;
-    customer?: { id: string; displayName: string | null } | null;
-    service?: { id: string; name: string } | null;
-  }>;
-  next: MyDayResponse["today"][number] | null;
-  myCustomers: Array<{ id: string; displayName: string | null; email: string | null }>;
+  today: StaffMyDayBooking[];
+  next: StaffMyDayBooking | null;
   role: string;
   effectiveRole: string;
-}
-
-function fmtTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-}
-
-function timeUntil(iso: string): string {
-  const ms = new Date(iso).getTime() - Date.now();
-  if (ms < 0) return "now";
-  const m = Math.round(ms / 60000);
-  if (m < 60) return `in ${m}m`;
-  const h = Math.floor(m / 60);
-  const mm = m % 60;
-  return mm ? `in ${h}h ${mm}m` : `in ${h}h`;
 }
 
 export default function MyDayPage() {
   const { business } = useBusiness();
   const { kind: persona } = usePersona();
   const { effectiveRole, viewingAsStaffId, ownStaffId } = useMembership();
+  const { formatTime } = useFormat();
   const bid = business?.id ?? "";
+  const vertical = (business as { vertical?: string } | null)?.vertical ?? null;
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: ["my-day", bid, viewingAsStaffId, ownStaffId],
     queryFn: () =>
       apiFetch<MyDayResponse>(`/businesses/${bid}/my-day${personaQuery(viewingAsStaffId)}`),
@@ -65,151 +42,93 @@ export default function MyDayPage() {
     refetchInterval: OPERATIONAL_REFETCH_MS,
   });
 
+  const isViewingAs = effectiveRole === "STAFF" && viewingAsStaffId !== null;
+
   if (isLoading || !data) {
     return (
-      <PageFrame width="full">
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-32 w-full" />
-        <Skeleton className="h-64 w-full" />
-      </PageFrame>
+      <div className="max-w-xl mx-auto w-full px-1" data-testid="staff-my-day-page">
+        <StaffMyDayLoading />
+      </div>
     );
   }
 
-  const isViewingAs = effectiveRole === "STAFF" && viewingAsStaffId !== null;
-
-  const emptyChair =
-    data.todayCount === 0 &&
-    (persona === "staff" || effectiveRole === "STAFF");
+  const emptyChair = data.todayCount === 0 && (persona === "staff" || effectiveRole === "STAFF");
+  const next = data.next;
+  const canRunLate = next?.status === "CONFIRMED" || next?.status === "PENDING";
 
   return (
-    <PageFrame width="full">
-      <PersonaRitualHeader
-        variant="page"
-        subtitle={
-          data.todayCount === 0
-            ? emptyChair
-              ? "Your chair is open — here's how walk-ins work: check the floor calendar or ask front desk."
-              : "Nothing on the books today."
-            : `${data.todayCount} appointment${data.todayCount === 1 ? "" : "s"} today · ${data.weekCount} more this week`
-        }
-      />
+    <div
+      className="max-w-xl mx-auto w-full pb-28 md:pb-6 space-y-6"
+      data-testid="staff-my-day-page"
+    >
+      <div className="flex items-center gap-2">
+        <p className="flex-1 text-center text-[13px] text-muted-foreground truncate">
+          {business?.name ?? "Your shop"}
+        </p>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="shrink-0 h-9 w-9"
+          aria-label="Refresh my day"
+          disabled={isFetching}
+          onClick={() => void refetch()}
+        >
+          <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+        </Button>
+      </div>
+
       {isViewingAs ? (
-        <Badge variant="outline" className="text-xs -mt-4">
+        <Badge variant="outline" className="text-xs mx-auto block w-fit">
           Viewing as staff (read-only)
         </Badge>
       ) : null}
 
-      {data.next ? (
-        <Card className="border-primary/40 bg-primary/5">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-              <Clock className="h-4 w-4" />
-              Up next
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-baseline justify-between gap-3 flex-wrap">
-              <div>
-                <div className="text-2xl font-semibold">
-                  {data.next.customer?.displayName ?? "Unnamed customer"}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {data.next.service?.name ?? "Appointment"}
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-xl font-semibold">{fmtTime(data.next.startAt)}</div>
-                <div className="text-xs text-muted-foreground">{timeUntil(data.next.startAt)}</div>
-              </div>
-            </div>
-            {data.next.status === "CONFIRMED" ? (
-              <div className="mt-4">
-                <RunningLateSheet
-                  bookingId={data.next.id}
-                  customerName={data.next.customer?.displayName ?? undefined}
-                />
-              </div>
-            ) : null}
-          </CardContent>
-        </Card>
+      {!data.staffId ? (
+        <div className="rounded-xl border border-border/70 bg-muted/30 px-4 py-8 text-center text-sm text-muted-foreground">
+          Your account isn&apos;t linked to a staff row yet — ask your manager to link it.
+        </div>
+      ) : (
+        <div className="md:grid md:grid-cols-2 md:gap-6 md:items-start">
+          <div className="space-y-4">
+            {next ? (
+              <StaffMyDayHero booking={next} formatTime={formatTime} vertical={vertical} />
+            ) : emptyChair ? (
+              <section
+                className="rounded-[20px] border border-dashed border-border/80 bg-muted/20 px-6 py-12 text-center"
+                data-testid="staff-my-day-empty"
+              >
+                <p className="text-lg font-medium">Your day is open</p>
+                <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
+                  Walk-ins welcome — check the floor calendar or ask front desk.
+                </p>
+              </section>
+            ) : (
+              <section className="rounded-[20px] border border-border/70 bg-card px-6 py-8 text-center">
+                <p className="text-sm text-muted-foreground">No upcoming appointments today.</p>
+              </section>
+            )}
+
+            <StaffMyDayQuickActions
+              bookingId={next?.id}
+              customerName={next?.customer?.displayName}
+              canRunLate={canRunLate}
+            />
+          </div>
+
+          <StaffMyDayTimeline
+            bookings={data.today}
+            nextId={next?.id}
+            formatTime={formatTime}
+          />
+        </div>
+      )}
+
+      {data.weekCount > 0 ? (
+        <p className="text-xs text-muted-foreground text-center font-mono">
+          {data.weekCount} more this week after today
+        </p>
       ) : null}
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Today's appointments
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {data.today.length === 0 ? (
-            <div className="text-sm text-muted-foreground py-6 text-center">
-              {data.staffId
-                ? "No appointments today."
-                : "Your account isn't linked to a staff row yet — ask your manager to link it."}
-            </div>
-          ) : (
-            <ul className="divide-y">
-              {data.today.map((b) => (
-                <li key={b.id} className="py-3 flex items-center gap-4">
-                  <div className="w-20 shrink-0">
-                    <div className="font-medium">{fmtTime(b.startAt)}</div>
-                    <div className="text-xs text-muted-foreground">{fmtTime(b.endAt)}</div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium truncate">
-                      {b.customer?.displayName ?? "Unnamed customer"}
-                    </div>
-                    <div className="text-sm text-muted-foreground truncate">
-                      {b.service?.name ?? "Appointment"}
-                    </div>
-                  </div>
-                  <Badge variant={b.status === "CONFIRMED" ? "default" : "secondary"}>
-                    {b.status.toLowerCase()}
-                  </Badge>
-                  <Link href={`/bookings/${b.id}`}>
-                    <Button variant="ghost" size="sm">
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            My customers
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {data.myCustomers.length === 0 ? (
-            <div className="text-sm text-muted-foreground py-6 text-center">
-              No customers yet — they'll show up here as you work through bookings.
-            </div>
-          ) : (
-            <ul className="divide-y">
-              {data.myCustomers.slice(0, 20).map((c) => (
-                <li key={c.id} className="py-3 flex items-center justify-between gap-4">
-                  <div className="min-w-0">
-                    <div className="font-medium truncate">{c.displayName ?? "Unnamed"}</div>
-                    {c.email ? (
-                      <div className="text-xs text-muted-foreground truncate">{c.email}</div>
-                    ) : null}
-                  </div>
-                  <Link href={`/customers/${c.id}`}>
-                    <Button variant="ghost" size="sm">View</Button>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
-    </PageFrame>
+    </div>
   );
 }

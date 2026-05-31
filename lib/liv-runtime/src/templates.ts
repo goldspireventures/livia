@@ -1,4 +1,9 @@
 import type { ResolvedBusinessPolicies } from "@workspace/policy";
+import {
+  livVoiceCharacterBlock,
+  resolveLivChannelModality,
+  type LivChannelModality,
+} from "@workspace/policy";
 import type { VerticalPackManifest } from "./packs/loader";
 import type { LivBusinessContext, LivServiceRow, LivStaffRow } from "./prompt";
 
@@ -10,7 +15,12 @@ export type LivPromptContext = {
   pack: VerticalPackManifest;
   knownCustomer?: { name?: string | null; email?: string | null; phone?: string | null };
   today: string;
+  channelType?: string | null;
 };
+
+function modalityFromContext(ctx: LivPromptContext): LivChannelModality {
+  return resolveLivChannelModality(ctx.channelType);
+}
 
 export function buildLivPromptFromTemplate(ctx: LivPromptContext): string {
   const { business, policies, services, staff, pack, knownCustomer, today } = ctx;
@@ -77,7 +87,9 @@ RULES:
 - Never invent service or staff ids.
 - If no slots, suggest another date or service.
 - Be honest that you are an AI assistant when asked.
-- Do not give medical or legal advice.`;
+- Do not give medical or legal advice.
+
+${livVoiceCharacterBlock(modalityFromContext(ctx))}`;
 }
 
 function tonePhrase(tone: string): string {

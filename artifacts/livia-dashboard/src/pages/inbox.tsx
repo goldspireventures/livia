@@ -9,7 +9,6 @@ import {
 } from "@workspace/api-client-react";
 import { useBusiness } from "@/lib/business-context";
 import { useToast } from "@/hooks/use-toast";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,16 +26,15 @@ import {
   matchesInboxQueueLens,
   type InboxQueueLens,
 } from "@workspace/policy";
-import { InboxLinkedBooking } from "@/components/inbox/inbox-linked-booking";
+import { InboxThreadList } from "@/components/inbox/inbox-thread-list";
+import { InboxContextRail } from "@/components/inbox/inbox-context-rail";
 import { invalidateOperationalState, OPERATIONAL_REFETCH_MS } from "@/lib/operational-cache";
 import { apiFetch } from "@/lib/api-fetch";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Sparkles,
-  User as UserIcon,
   CheckCircle2,
   HandHelping,
-  CalendarCheck,
   MessageSquare,
   Globe,
   Phone,
@@ -73,16 +71,6 @@ interface ConversationMessageItem {
   bookingId: string | null;
   authorUserId?: string | null;
   createdAt: string;
-}
-
-function formatRelative(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h`;
-  return `${Math.floor(hrs / 24)}d`;
 }
 
 function formatTime(dateStr: string): string {
@@ -139,6 +127,12 @@ export default function InboxPage() {
     if (showRitual) setQueueLens(defaultInboxQueueLens(persona));
   }, [persona, showRitual]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("conversation") ?? params.get("conversationId");
+    if (id) setSelectedId(id);
+  }, []);
+
   const { data: convos, isLoading: isLoadingConvos } = useListConversations(
     businessId,
     showRitual ? {} : statusFilter === "ALL" ? {} : { status: statusFilter },
@@ -167,7 +161,10 @@ export default function InboxPage() {
   const queueCounts = useMemo(() => countByInboxQueueLens(conversations), [conversations]);
   const filteredConversations = useMemo(() => {
     if (!showRitual) return conversations;
-    return conversations.filter((c) => matchesInboxQueueLens(c, queueLens));
+    return conversations.filter((c) => {
+      if (queueLens === "all") return c.status !== "CLOSED";
+      return matchesInboxQueueLens(c, queueLens);
+    });
   }, [conversations, queueLens, showRitual]);
 
   const detailData = detail as
@@ -250,11 +247,26 @@ export default function InboxPage() {
       : `${inboxScreenTitle(persona)} · ${business?.name ?? "this shop"}`;
 
   const QUEUE_LENSES: InboxQueueLens[] = [
+    "all",
     "needs_you",
     "liv_handling",
     "taken_over",
     "closed",
   ];
+
+  const emptyInboxTitle = showRitual
+    ? queueLens === "needs_you"
+      ? "Nothing needs you right now"
+      : queueLens === "all" && conversations.filter((c) => c.status !== "CLOSED").length === 0
+        ? "Inbox clear — Liv is watching your channels"
+        : `No threads in “${INBOX_QUEUE_LENS_LABELS[queueLens].short}”`
+    : "No conversations yet";
+
+  const emptyInboxSubtitle = showRitual
+    ? queueLens === "all"
+      ? "Connect WhatsApp in Settings when you're ready for more channels."
+      : INBOX_QUEUE_LENS_LABELS[queueLens].description
+    : "When customers message Liv on your booking page or SMS line, conversations appear here.";
 
   return (
     <OperationalPageShell
@@ -279,7 +291,7 @@ export default function InboxPage() {
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  {INBOX_QUEUE_LENS_LABELS[lens].short}
+                  {lens === "liv_handling" ? "Liv handling" : INBOX_QUEUE_LENS_LABELS[lens].short}
                   {queueCounts[lens] > 0 ? ` (${queueCounts[lens]})` : ""}
                 </button>
               ))
@@ -301,101 +313,24 @@ export default function InboxPage() {
         </div>
       }
     >
-      <div className="grid grid-cols-1 md:grid-cols-[360px_1fr] gap-4">
-        {/* Conversation list */}
-        <Card className="flex flex-col">
-          {isLoadingConvos ? (
-            <div className="p-3 space-y-2">
-              {[0, 1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-20 w-full" />
-              ))}
-            </div>
-          ) : filteredConversations.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-              <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center mb-3">
-                <Sparkles className="h-6 w-6 text-muted-foreground" />
-              </div>
-              <p className="font-medium text-sm">
-                {showRitual ? `No threads in “${INBOX_QUEUE_LENS_LABELS[queueLens].short}”` : "No conversations yet"}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1 max-w-[240px]">
-                {showRitual
-                  ? INBOX_QUEUE_LENS_LABELS[queueLens].description
-                  : "When customers message Liv on your booking page or SMS line, conversations appear here."}
-              </p>
-            </div>
-          ) : (
-            <div className="divide-y divide-border">
-              {filteredConversations.map((c) => {
-                const isActive = selectedId === c.id;
-                return (
-                  <button
-                    key={c.id}
-                    type="button"
-                    data-testid={`conversation-${c.id}`}
-                    onClick={() => setSelectedId(c.id)}
-                    className={`w-full text-left px-4 py-3 transition-colors ${
-                      isActive ? "bg-primary/10" : "hover:bg-muted/50"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="h-7 w-7 rounded-full bg-gradient-to-br from-primary/30 to-[hsl(var(--chart-1))]/30 flex items-center justify-center shrink-0">
-                          <UserIcon className="h-3.5 w-3.5" />
-                        </div>
-                        <span className="font-medium text-sm truncate">
-                          {c.customerName ?? "Anonymous visitor"}
-                        </span>
-                      </div>
-                      <span className="text-[10px] text-muted-foreground shrink-0">
-                        {formatRelative(c.lastMessageAt)}
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground line-clamp-1 mb-1.5">
-                      {c.lastMessage ??
-                        c.summary ??
-                        (c.aiHandled ? "Liv is handling this thread" : "(no messages yet)")}
-                    </p>
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <Badge
-                        variant="outline"
-                        className="h-5 px-1.5 text-[10px] gap-1 font-normal"
-                      >
-                        {channelIcon(c.channel)}
-                        {c.channel}
-                      </Badge>
-                      {c.status === "HANDED_OFF" ? (
-                        <Badge className="h-5 px-1.5 text-[10px] gap-1 bg-[hsl(var(--chart-4))]/15 text-[hsl(var(--chart-4))] border-[hsl(var(--chart-4))]/30">
-                          <HandHelping className="h-2.5 w-2.5" />
-                          You
-                        </Badge>
-                      ) : c.aiHandled ? (
-                        <Badge className="h-5 px-1.5 text-[10px] gap-1 bg-primary/15 text-primary border-primary/30">
-                          <Sparkles className="h-2.5 w-2.5" />
-                          AI
-                        </Badge>
-                      ) : null}
-                      {c.bookingCount > 0 && (
-                        <Badge className="h-5 px-1.5 text-[10px] gap-1 bg-[hsl(var(--chart-3))]/15 text-[hsl(var(--chart-3))] border-[hsl(var(--chart-3))]/30">
-                          <CalendarCheck className="h-2.5 w-2.5" />
-                          {c.bookingCount} booking{c.bookingCount > 1 ? "s" : ""}
-                        </Badge>
-                      )}
-                      {c.status === "CLOSED" && (
-                        <Badge variant="outline" className="h-5 px-1.5 text-[10px]">
-                          Closed
-                        </Badge>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </Card>
+      <div
+        className="grid grid-cols-1 lg:grid-cols-[320px_minmax(0,1fr)_280px] gap-0 lg:gap-0 border border-border/80 rounded-xl overflow-hidden bg-card min-h-[min(720px,calc(100vh-200px))]"
+        data-testid="inbox-three-pane"
+      >
+        {/* Thread list */}
+        <div className="flex flex-col border-b lg:border-b-0 lg:border-r border-border/80">
+          <InboxThreadList
+            threads={filteredConversations}
+            loading={isLoadingConvos}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+            emptyTitle={emptyInboxTitle}
+            emptySubtitle={emptyInboxSubtitle}
+          />
+        </div>
 
-        {/* Thread view */}
-        <Card className="flex flex-col min-h-0 overflow-hidden">
+        {/* Conversation */}
+        <div className="flex flex-col min-h-0 min-w-0 border-b lg:border-b-0 lg:border-r border-border/80">
           {!selectedId ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
               <MessageSquare className="h-10 w-10 text-muted-foreground mb-3" />
@@ -416,7 +351,8 @@ export default function InboxPage() {
                 <div className="border-b border-border px-4 py-3 flex flex-col gap-3">
                   <div className="flex items-center justify-between gap-3 flex-wrap">
                   <div className="min-w-0">
-                    <div className="font-semibold truncate">
+                    <div className="font-semibold truncate flex items-center gap-2">
+                      {channelIcon(selectedConversation.channel)}
                       {selectedConversation.customerName ?? "Anonymous visitor"}
                     </div>
                     <div className="text-xs text-muted-foreground truncate">
@@ -514,14 +450,17 @@ export default function InboxPage() {
                 </div>
               )}
 
-              {selectedConversation?.linkedBookingId && businessId ? (
-                <InboxLinkedBooking
-                  businessId={businessId}
-                  bookingId={selectedConversation.linkedBookingId}
-                />
+              {selectedConversation?.status === "HANDED_OFF" ? (
+                <div
+                  className="mx-4 mt-3 rounded-lg border border-amber-500/40 bg-amber-50 dark:bg-amber-950/40 px-3 py-2 text-sm text-amber-950 dark:text-amber-100 flex items-center gap-2"
+                  data-testid="inbox-handoff-banner"
+                >
+                  <HandHelping className="h-4 w-4 shrink-0" aria-hidden />
+                  You&apos;ve taken over — Liv is paused on this thread.
+                </div>
               ) : null}
 
-              <div className="p-4 space-y-3 bg-background/30">
+              <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-background/30 motion-wizard-enter">
                 {detailData?.messages
                   .filter((m) => m.role !== "SYSTEM")
                   .map((m) => {
@@ -540,14 +479,20 @@ export default function InboxPage() {
                     }
                     const isUser = m.role === "USER";
                     const isStaff = m.role === "ASSISTANT" && !!m.authorUserId;
+                    const isLiv = m.role === "ASSISTANT" && !m.authorUserId;
                     return (
                       <div
                         key={m.id}
-                        className={`flex ${isUser ? "justify-end" : "justify-start"}`}
+                        className={`flex ${isUser ? "justify-end" : "justify-start"} gap-2 items-end`}
                       >
+                        {isLiv ? (
+                          <div className="h-7 w-7 rounded-full bg-primary/15 flex items-center justify-center shrink-0 mb-0.5">
+                            <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden />
+                          </div>
+                        ) : null}
                         <div
                           data-testid={`thread-msg-${m.role.toLowerCase()}`}
-                          className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm whitespace-pre-wrap ${
+                          className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-[15px] leading-[1.45] whitespace-pre-wrap ${
                             isUser
                               ? "bg-primary text-primary-foreground rounded-br-sm"
                               : isStaff
@@ -586,7 +531,7 @@ export default function InboxPage() {
               </div>
 
               {selectedId && selectedConversation?.status !== "CLOSED" ? (
-                <div className="border-t border-border p-3 space-y-2 bg-card/80">
+                <div className="sticky bottom-0 border-t border-border p-3 space-y-2 bg-card/95 backdrop-blur-sm mt-auto">
                   {(selectedConversation?.status === "OPEN" ||
                     selectedConversation?.status === "HANDED_OFF") ? (
                     <LivInboxAssist
@@ -728,7 +673,9 @@ export default function InboxPage() {
               ) : null}
             </>
           )}
-        </Card>
+        </div>
+
+        <InboxContextRail businessId={businessId ?? ""} conversation={selectedConversation} />
       </div>
     </OperationalPageShell>
   );

@@ -2,7 +2,7 @@
 
 **Status:** canonical (2026-05-30)  
 **Audience:** engineering, product, founder  
-**Reads with:** [`COMPOSABLE-EVOLUTION.md`](./COMPOSABLE-EVOLUTION.md) §5.3 · [`LIVIA-PLATFORM-LIFECYCLE.md`](../product/LIVIA-PLATFORM-LIFECYCLE.md) · [`vertical-coverage.ts`](../../lib/policy/src/vertical-coverage.ts)
+**Reads with:** [`COMPOSABLE-EVOLUTION.md`](./COMPOSABLE-EVOLUTION.md) §5.3 · [`PLATFORM-LIFECYCLE-REGISTRY.md`](./PLATFORM-LIFECYCLE-REGISTRY.md) · [`LIVIA-PLATFORM-LIFECYCLE.md`](../product/LIVIA-PLATFORM-LIFECYCLE.md) · [`vertical-coverage.ts`](../../lib/policy/src/vertical-coverage.ts)
 
 ---
 

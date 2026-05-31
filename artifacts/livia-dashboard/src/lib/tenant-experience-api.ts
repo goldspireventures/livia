@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-fetch";
-import type { TenantExperience } from "@workspace/policy";
+import type { TenantExperience, TenantExperiencePublicAppearance } from "@workspace/policy";
 
 export type TenantPresentation = {
   presetId: string;
@@ -21,6 +21,7 @@ export type TenantPresentation = {
 
 export type TenantExperienceResponse = TenantExperience & {
   presentation?: TenantPresentation;
+  publicAppearance?: TenantExperiencePublicAppearance;
 };
 
 export function fetchTenantExperience(businessId: string) {

@@ -157,7 +157,13 @@ export default function BookingsScreen() {
       limit: 50,
       ...(statusFilter === "PENDING" ? { status: "PENDING" as const } : {}),
     },
-    { query: { enabled: !!currentBusiness?.id } as any },
+    {
+      query: {
+        enabled: !!currentBusiness?.id,
+        refetchInterval: 12_000,
+        refetchOnWindowFocus: true,
+      } as never,
+    },
   );
 
   const bookings = data?.data ?? [];

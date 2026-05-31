@@ -14,6 +14,7 @@ import {
 import { EXEC_AUTOMATIONS } from "./founder-cockpit-automations.service.js";
 import { buildExecHatPanels } from "./founder-cockpit-hats.service.js";
 import { listCockpitWorkforceAccessGrants } from "./workforce-access-grants.service.js";
+import { listRecentExecWorkEventsByHat } from "./exec-work-events.service.js";
 
 function hoursBetween(aIso: string, bIso: string): number {
   const a = new Date(aIso).getTime();
@@ -115,6 +116,30 @@ export async function getOrgAdminCockpitSnapshot(): Promise<{
     .slice(0, 20)
     .map((f) => ({ key: String(f.key), description: f.description ?? null }));
 
+  const workByHat = await listRecentExecWorkEventsByHat(5);
+
+  const hats = buildExecHatPanels({
+    observability,
+    platformHealth,
+    support: {
+      openTotal: openTickets.total,
+      urgentOpen: urgent.length,
+      oldestOpenHours: oldest ? Math.round(hoursBetween(oldest, nowIso) * 10) / 10 : null,
+    },
+    production,
+    release,
+    rollouts: { globalEnabled: enabledGlobal },
+  }).map((hat) => ({
+    ...hat,
+    recentWork: (workByHat[hat.id] ?? []).map((e) => ({
+      id: e.id,
+      summary: e.summary,
+      actor: e.actor,
+      actorLabel: e.actorLabel,
+      createdAt: e.createdAt.toISOString(),
+    })),
+  }));
+
   // Local/dev: allow reading last gate outputs from repo root if present.
   const founderGate = tryReadJsonFile("founder-gate.json");
   const wargameReport = tryReadJsonFile("wargame-report.json");
@@ -138,18 +163,7 @@ export async function getOrgAdminCockpitSnapshot(): Promise<{
     production,
     release,
     stagingPrep,
-    hats: buildExecHatPanels({
-      observability,
-      platformHealth,
-      support: {
-        openTotal: openTickets.total,
-        urgentOpen: urgent.length,
-        oldestOpenHours: oldest ? Math.round(hoursBetween(oldest, nowIso) * 10) / 10 : null,
-      },
-      production,
-      release,
-      rollouts: { globalEnabled: enabledGlobal },
-    }),
+    hats,
     automations: EXEC_AUTOMATIONS,
     workforceAccess,
   };

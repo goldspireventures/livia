@@ -147,6 +147,40 @@ router.post("/demo/sync-vertical-showcase", async (req, res): Promise<void> => {
   }
 });
 
+/** Demo-only: guest proof token for E2E / GTM walkthroughs (body-art). */
+router.get("/demo/guest-surfaces/:slug/proof", async (req, res): Promise<void> => {
+  const slug = String(req.params.slug ?? "").trim();
+  if (!slug) {
+    sendError(res, req, 400, "slug is required");
+    return;
+  }
+  const { getDemoGuestProofToken } = await import("../services/demo-showcase-depth");
+  const token = await getDemoGuestProofToken(slug);
+  if (!token) {
+    sendError(res, req, 404, "No pending guest proof for this demo shop");
+    return;
+  }
+  const dashboardBase = process.env.LIVIA_DASHBOARD_URL?.replace(/\/+$/, "") ?? "http://127.0.0.1:5173";
+  res.json({ slug, token, path: `/b/${slug}/proof/${token}`, url: `${dashboardBase}/b/${slug}/proof/${token}` });
+});
+
+/** Demo-only: guest intake token for E2E / medspa walkthroughs. */
+router.get("/demo/guest-surfaces/:slug/intake", async (req, res): Promise<void> => {
+  const slug = String(req.params.slug ?? "").trim();
+  if (!slug) {
+    sendError(res, req, 400, "slug is required");
+    return;
+  }
+  const { getDemoGuestIntakeToken } = await import("../services/demo-showcase-depth");
+  const token = await getDemoGuestIntakeToken(slug);
+  if (!token) {
+    sendError(res, req, 404, "No draft guest intake for this demo shop");
+    return;
+  }
+  const dashboardBase = process.env.LIVIA_DASHBOARD_URL?.replace(/\/+$/, "") ?? "http://127.0.0.1:5173";
+  res.json({ slug, token, path: `/b/${slug}/intake/${token}`, url: `${dashboardBase}/b/${slug}/intake/${token}` });
+});
+
 /**
  * One-tap persona sign-in (Clerk ticket). In dev, no prior auth required.
  * Production: LIVIA_DEMO_ENABLED + caller email must be demo/@livia.io.

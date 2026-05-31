@@ -43,6 +43,7 @@ export function buildLivSystemPrompt(args: {
   packConfig?: Record<string, unknown> | null;
   promptOverrides?: Record<string, string>;
   knownCustomer?: { name?: string | null; email?: string | null; phone?: string | null };
+  channelType?: string | null;
 }): string {
   const pack = loadVerticalPack(args.verticalId, args.packConfig);
   const today = todayInTimezone(args.business.timezone);
@@ -54,6 +55,7 @@ export function buildLivSystemPrompt(args: {
     pack,
     knownCustomer: args.knownCustomer,
     today,
+    channelType: args.channelType,
   });
   const overrides = args.promptOverrides ?? {};
   const verticalOverride = overrides["vertical.module"]?.trim();

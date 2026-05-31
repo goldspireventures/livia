@@ -1,0 +1,67 @@
+meta:
+  id: w3.support.thread.web
+  world: W3
+  route: "/support/:ticketId"
+  artifact: livia-internal
+  persona: [Support L1/L2]
+  release: R1
+  status: designed
+
+job: >
+  Support resolves tenant issues in Thread layout — queue | conversation | context — I4-A lock.
+
+visual:
+  canvas:
+    device: desktop
+    viewport: 1440x900
+    background: ops amber dark shell #0f172a — W3 fixed
+  zones:
+    - id: shell_sidebar
+      width: 200px
+      content:
+        - INTERNAL banner
+        - nav Support | Tenants | Knowledge | Exec
+    - id: queue_column
+      width: 280px
+      content:
+        - filters Open | Triaged | Waiting tenant
+        - ticket rows: tenant name | subject snippet | age | priority dot
+        - active row highlight amber left border
+    - id: thread_column
+      flex: 1
+      content:
+        - ticket subject header
+        - message timeline tenant + internal notes
+        - reply composer + status change dropdown
+        - suggested reply from runbook when surfaceId match
+    - id: context_column
+      width: 320px
+      content:
+        - surfaceId → registry file paths
+        - requestId copy button
+        - tenant snapshot: tier, vertical, last booking
+        - Liv transcript excerpt last 5 turns target R2
+        - runbook link tag-matched
+  typography:
+    mono: requestId, file paths 12px
+    body: 14px #e2e8f0
+  motion:
+    minimal: thread scroll only — data-dense
+
+states:
+  empty_queue:
+    copy: "No open tickets"
+  loading:
+    visual: 3-column skeletons
+
+acceptance:
+  visual:
+    - baseline: internal-support-a-the-thread.png
+  eng:
+    - surfaceId on every guest route maps here
+
+traceability:
+  surfaceId: internal.support.thread
+  figma:
+    frame: W3/w3.support.thread.web
+    status: not_started

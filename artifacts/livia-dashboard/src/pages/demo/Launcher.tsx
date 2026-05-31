@@ -33,9 +33,10 @@ import {
   type DemoSignInResult,
 } from "@/lib/demo-portal";
 import { useToast } from "@/hooks/use-toast";
-import { listWedgeDemoVerticals, getWedgeDemoStory } from "@workspace/policy";
+import { resolveWedgeDemoStory } from "@workspace/policy";
 import { completeDemoClerkSignIn } from "@/lib/demo-clerk-sign-in";
 import { DemoFlowStepper, type DemoFlowStep } from "@/components/demo/demo-flow-stepper";
+import { DemoWedgeGrid } from "@/components/demo/demo-wedge-grid";
 
 const VERTICAL_LABELS: Record<string, string> = {
   hair: "Hair & barber",
@@ -116,6 +117,14 @@ export default function DemoLauncher() {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    const v = new URLSearchParams(window.location.search).get("vertical");
+    const story = resolveWedgeDemoStory(v);
+    if (story) {
+      navigate(`/demo/wedge/${story.vertical}`);
+    }
+  }, [navigate]);
 
   async function handleSync() {
     setBusy("provision");
@@ -336,16 +345,16 @@ export default function DemoLauncher() {
       <div className="max-w-5xl mx-auto px-6 pt-16 pb-20">
         <header className="mb-8 max-w-2xl">
           <p className="text-[11px] font-mono tracking-wide text-[#22d3ee] uppercase mb-3">
-            Demo gateway · staging
+            Demo gateway · people-business OS
           </p>
           <h1
             className="text-3xl md:text-5xl tracking-tight leading-[1.08] mb-4"
             style={{ fontFamily: "var(--app-font-serif)" }}
           >
-            Staging demo gateway
+            Explore Livia live
           </h1>
           <p className="text-sm md:text-base text-white/60 leading-relaxed">
-            One place to enter any demo business as owner, manager, front desk, or staff.
+            Pick your trade — see a short story — enter a seeded shop as owner, manager, desk, or staff.
             Shared password: <code className="text-white/80">{devPassword ?? "LiviaDemo2026!"}</code>
             {" · "}
             <Link href="/sign-in?beta=1" className="text-white/50 underline underline-offset-2 hover:text-white/80">
@@ -354,16 +363,18 @@ export default function DemoLauncher() {
           </p>
         </header>
 
+        <DemoWedgeGrid />
+
         <DemoFlowStepper
           current={flowStep}
           provisioned={provisioned}
           scenarioSelected={!!selectedScenario}
         />
 
-        {/* Step 1 — Setup */}
+        {/* Step 2 — Setup */}
         <section className="mb-10 rounded-2xl border border-white/12 bg-white/[0.03] p-5" data-testid="demo-step-setup">
           <h2 className="text-xs font-mono uppercase tracking-widest text-white/40 mb-2">
-            1 · Set up demo world
+            2 · Set up demo world
           </h2>
           <p className="text-sm text-white/55 mb-4 max-w-xl">
             First visit runs a full seed (~30–60s). After that, <strong className="text-white/80">Quick sync</strong>{" "}
@@ -421,16 +432,16 @@ export default function DemoLauncher() {
           </div>
         </section>
 
-        {/* Step 2 — Scenario */}
+        {/* Step 3 — Scenario */}
         <section
           className={`mb-10 ${!provisioned ? "opacity-50 pointer-events-none" : ""}`}
           data-testid="demo-step-scenario"
         >
           <h2 className="text-xs font-mono uppercase tracking-widest text-white/40 mb-1">
-            2 · Pick your business shape
+            3 · Or pick a business shape
           </h2>
           <p className="text-xs text-white/40 mb-3">
-            Structure first — solo, team, multi-site, host, franchise. Industry flows below are optional.
+            Advanced path — solo, team, multi-site, host, franchise. Prefer a trade story above when pitching a vertical.
           </p>
           {!provisioned ? (
             <p className="text-sm text-amber-200/80">Complete step 1 first.</p>
@@ -495,14 +506,14 @@ export default function DemoLauncher() {
           )}
         </section>
 
-        {/* Step 3 — Role */}
+        {/* Step 4 — Role */}
         <section
           ref={roleSectionRef}
           className={`mb-10 ${!selectedScenario || !provisioned ? "opacity-50" : ""}`}
           data-testid="demo-step-role"
         >
           <h2 className="text-xs font-mono uppercase tracking-widest text-white/40 mb-3">
-            3 · Enter as a role
+            4 · Enter as a role
           </h2>
           {!selectedScenario ? (
             <p className="text-sm text-white/45">Pick a scenario above — then one-click login as owner, manager, desk, or staff.</p>
@@ -568,30 +579,9 @@ export default function DemoLauncher() {
           )}
         </section>
 
-        <section className="mb-10">
-          <h2 className="text-xs font-mono uppercase tracking-widest text-white/40 mb-1">
-            Or explore by trade story
-          </h2>
-          <p className="text-xs text-white/40 mb-3">Same flow: story → pick role → enter app</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {listWedgeDemoVerticals().map((v) => {
-              const story = getWedgeDemoStory(v);
-              if (!story) return null;
-              return (
-                <Link
-                  key={v}
-                  href={`/demo/wedge/${v}`}
-                  className="group rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm transition hover:border-[#06b6d4]/40 hover:bg-white/[0.07]"
-                >
-                  <p className="text-sm font-medium text-white group-hover:text-[#22d3ee]">
-                    {story.label}
-                  </p>
-                  <p className="mt-1 text-xs text-white/45 line-clamp-2">{story.beats[0]?.headline}</p>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
+        <p className="mt-10 text-center text-[11px] text-white/35 font-mono" data-testid="demo-footer-honesty">
+          Demo data — not production · reset anytime via quick sync
+        </p>
 
         <section className="mb-10" data-testid="demo-tenant-tour">
           <details className="group">

@@ -1,0 +1,70 @@
+meta:
+  id: w4.ops.design-proofs.web
+  world: W4
+  route: "/design-proofs"
+  artifact: livia-dashboard
+  persona: [P2, P3, P4 body-art]
+  verticals: [body-art]
+  release: R1
+  status: designed
+
+job: >
+  Artist/owner manages design proof pipeline — send guest link, track approve/pending/changes.
+
+visual:
+  canvas:
+    device: desktop
+    viewport: 1440x900
+    layout: kanban_or_list — pipeline preset morph
+  zones:
+    - id: page_header
+      content:
+        - title "Design proofs"
+        - CTA "Upload proof" primary
+        - filter: Pending | Changes requested | Approved
+    - id: pipeline
+      layout: horizontal columns desktop | vertical tabs mobile web
+      columns:
+        - id: draft
+          title: Draft
+          cards: thumbnail + client + session date
+        - id: sent
+          title: With client
+          badge: awaiting
+        - id: approved
+          title: Approved
+          link: create session booking
+      card:
+        width: 280px
+        image: 16:9 top
+        actions: Send link | Open guest URL copy
+    - id: detail_drawer
+      width: 400px
+      trigger: card click
+      content:
+        - full image
+        - version history
+        - guest comment thread
+        - "Send SMS link" → generates /proof/:token
+  motion:
+    card_drag: optional R2 — list only R1
+    send_link: success toast + clipboard
+
+states:
+  empty:
+    copy: "No proofs yet — upload after consult"
+    action: Upload + link to inbox consult threads
+  loading:
+    visual: 6 card skeletons
+
+acceptance:
+  e2e:
+    - body-art smoke proof send
+  visual:
+    - baseline: final-tenant-dashboard-proofs.png
+
+traceability:
+  surfaceId: tenant.design-proofs
+  figma:
+    frame: W4-Tenant/w4.ops.design-proofs.web
+    status: not_started

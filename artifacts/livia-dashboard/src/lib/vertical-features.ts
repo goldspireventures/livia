@@ -110,7 +110,14 @@ export function verticalHomeModules(
 export const VERTICAL_LIV_TOOL_HINTS: Record<BusinessVertical, string[]> = {
   hair: ["find_slots", "create_booking", "send_message", "morning_briefing"],
   beauty: ["find_slots", "create_booking", "send_message", "morning_briefing"],
-  "body-art": ["find_slots", "create_booking", "send_message", "list_stuck_continuity"],
+  "body-art": [
+    "find_slots",
+    "create_booking",
+    "send_message",
+    "list_stuck_continuity",
+    "list_drift_candidates",
+    "draft_drift_recovery",
+  ],
   wellness: ["find_slots", "create_booking", "send_message", "morning_briefing"],
   fitness: ["find_slots", "create_booking", "send_message", "morning_briefing"],
   medspa: ["find_slots", "create_booking", "confirm_booking", "send_message"],

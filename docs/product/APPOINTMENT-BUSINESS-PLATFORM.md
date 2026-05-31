@@ -1,6 +1,7 @@
 # Livia — appointment-business platform (not salon-only)
 
-**Status:** canonical product framing (2026-05-22)
+**Status:** canonical product framing (2026-05-22) · updated 2026-05-31  
+**Category authority:** [`PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md`](./PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md)
 
 ## What we build
 

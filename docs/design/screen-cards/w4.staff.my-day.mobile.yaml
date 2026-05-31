@@ -1,0 +1,111 @@
+meta:
+  id: w4.staff.my-day.mobile
+  world: W4
+  route: "/my-day"
+  artifact: livia-mobile
+  persona: [P4, P5]
+  verticals: all
+  release: R1
+  status: designed
+
+job: >
+  Staff sees only their next client and today's chair — nothing else — between services.
+
+visual:
+  canvas:
+    device: phone
+    viewport: 390x844
+    background: preset surface — light for hair/beauty, slightly cooler for clinical
+  zones:
+    - id: status_bar
+      content:
+        - business name truncated center 13px muted
+        - notification bell right with unread dot
+    - id: hero_next
+      height: auto min 200px
+      content:
+        - label "UP NEXT" 11px uppercase tracking-widest accent
+        - client first name 32px display serif or preset display
+        - service name + duration 16px
+        - time block "2:30 PM · 45 min" pill
+        - optional notes snippet allergy/formula 14px yellow-tint banner if present
+      card:
+        radius: 20px
+        padding: 24px
+        gradient: subtle preset hero gradient
+      motion: stagger-in on pull refresh
+    - id: timeline
+      content:
+        - section "Rest of today" 13px uppercase muted
+        - compact booking rows: time | client | service — max 6 visible
+        - empty slots shown as dashed "Open" muted
+      layout: vertical list 56px rows
+    - id: quick_actions
+      sticky_bottom: true
+      content:
+        - row: Message client | Running late | View detail
+        - max 3 icon+label buttons
+  typography:
+    hero_name: 32px/1.1 display
+    timeline: 15px tabular time column 64px fixed
+  color:
+    accent: preset primary
+    alert_banner: amber-50 bg / amber-900 text
+
+components:
+  next_card:
+    tap: navigate /booking/:id
+  running_late:
+    action: trigger workflow customer-running-late
+  pull_refresh:
+    haptic: light on complete
+
+motion:
+  enter_page: enter-page
+  list: stagger-list cap 6
+  hero_update: crossfade 200ms when next client changes
+
+copy:
+  vertical_overrides:
+    body-art:
+      hero_label: "SESSION"
+      show: design proof approved badge if applicable
+    medspa:
+      hero_label: "PATIENT"
+      banner: contraindication flags only — no diagnosis copy
+    pet-grooming:
+      hero_label: "NEXT GROOM"
+      subtitle: pet name prominent
+
+states:
+  loading:
+    visual: hero skeleton 200px + 4 timeline skeletons
+  empty_day:
+    copy: "Your day is open"
+    sub: "Walk-ins welcome — here's the flow"
+    illustration: optional chair icon line art
+  error:
+    copy: "Couldn't load your day"
+    action: pull to refresh
+
+breakpoints:
+  tablet:
+    hero: left 50% | timeline right 50% split
+
+acceptance:
+  human:
+    - Primary info readable at arm's length
+    - Max 4 tab bar items on this persona
+  e2e:
+    - maestro: capture-founder-verticals.yaml staff path
+  visual:
+    - baseline: tenant-today-mobile.png
+  a11y:
+    - touch_targets: 48px on quick actions
+
+traceability:
+  surfaceId: tenant.staff.my-day
+  northstar_png: tenant-today-mobile.png
+  figma:
+    frame: W4-Mobile/w4.staff.my-day.mobile
+    status: not_started

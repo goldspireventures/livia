@@ -6,14 +6,19 @@ import {
   guestSessionsTable,
   guestShopLinksTable,
   businessesTable,
+  bookingsTable,
+  customersTable,
+  servicesTable,
+  staffTable,
 } from "@workspace/db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, gte, inArray } from "drizzle-orm";
 import {
   guestOtpCodeMatches,
   normalizeGuestHubPhone,
 } from "@workspace/policy";
 import { generateId } from "../lib/id";
 import { getStagingRelaxations } from "../lib/staging-relaxations";
+import { ensureBookingGuestAccess } from "./booking-guest-access.service";
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
@@ -143,16 +148,108 @@ export async function getGuestHubView(hubToken: string) {
 
   const favoriteSet = new Set(favorites.map((f) => f.businessId));
 
+  const businessIds = shops.map((s) => s.businessId);
+  const now = new Date();
+
+  const upcomingRaw =
+    businessIds.length > 0
+      ? await db
+          .select({
+            bookingId: bookingsTable.id,
+            businessId: bookingsTable.businessId,
+            status: bookingsTable.status,
+            startAt: bookingsTable.startAt,
+            serviceName: servicesTable.name,
+            serviceId: bookingsTable.serviceId,
+            staffDisplayName: staffTable.displayName,
+            businessName: businessesTable.name,
+            slug: businessesTable.slug,
+          })
+          .from(bookingsTable)
+          .innerJoin(customersTable, eq(bookingsTable.customerId, customersTable.id))
+          .innerJoin(businessesTable, eq(bookingsTable.businessId, businessesTable.id))
+          .innerJoin(servicesTable, eq(bookingsTable.serviceId, servicesTable.id))
+          .leftJoin(staffTable, eq(bookingsTable.staffId, staffTable.id))
+          .where(
+            and(
+              eq(customersTable.phone, session.phoneE164),
+              inArray(bookingsTable.businessId, businessIds),
+              gte(bookingsTable.startAt, now),
+              inArray(bookingsTable.status, ["PENDING", "CONFIRMED"]),
+            ),
+          )
+          .orderBy(bookingsTable.startAt)
+          .limit(25)
+      : [];
+
+  const lastBookRaw =
+    businessIds.length > 0
+      ? await db
+          .select({
+            businessId: bookingsTable.businessId,
+            serviceId: bookingsTable.serviceId,
+            serviceName: servicesTable.name,
+            startAt: bookingsTable.startAt,
+          })
+          .from(bookingsTable)
+          .innerJoin(customersTable, eq(bookingsTable.customerId, customersTable.id))
+          .innerJoin(servicesTable, eq(bookingsTable.serviceId, servicesTable.id))
+          .where(
+            and(
+              eq(customersTable.phone, session.phoneE164),
+              inArray(bookingsTable.businessId, businessIds),
+              inArray(bookingsTable.status, ["PENDING", "CONFIRMED", "COMPLETED"]),
+            ),
+          )
+          .orderBy(desc(bookingsTable.startAt))
+          .limit(50)
+      : [];
+
+  const lastByBusiness = new Map<string, { serviceId: string; serviceName: string }>();
+  for (const row of lastBookRaw) {
+    if (!lastByBusiness.has(row.businessId)) {
+      lastByBusiness.set(row.businessId, {
+        serviceId: row.serviceId,
+        serviceName: row.serviceName,
+      });
+    }
+  }
+
+  const upcomingBookings = await Promise.all(
+    upcomingRaw.map(async (b) => {
+      const visitToken = await ensureBookingGuestAccess(b.businessId, b.bookingId);
+      return {
+        bookingId: b.bookingId,
+        businessId: b.businessId,
+        businessName: b.businessName,
+        slug: b.slug,
+        status: b.status,
+        startAt: b.startAt.toISOString(),
+        serviceName: b.serviceName,
+        staffDisplayName: b.staffDisplayName,
+        visitUrl: `/b/${b.slug}/visit/${visitToken}`,
+      };
+    }),
+  );
+
   return {
     guestId: session.guestId,
     phoneE164: session.phoneE164,
-    shops: shops.map((s) => ({
-      ...s,
-      firstBookingAt: s.firstBookingAt?.toISOString() ?? null,
-      consentAt: s.consentAt.toISOString(),
-      isFavorite: favoriteSet.has(s.businessId),
-      bookUrl: `/b/${s.slug}`,
-    })),
+    upcomingBookings,
+    shops: shops.map((s) => {
+      const last = lastByBusiness.get(s.businessId);
+      const bookUrl = last
+        ? `/b/${s.slug}?service=${encodeURIComponent(last.serviceId)}`
+        : `/b/${s.slug}`;
+      return {
+        ...s,
+        firstBookingAt: s.firstBookingAt?.toISOString() ?? null,
+        consentAt: s.consentAt.toISOString(),
+        isFavorite: favoriteSet.has(s.businessId),
+        bookUrl,
+        lastServiceName: last?.serviceName ?? null,
+      };
+    }),
   };
 }
 

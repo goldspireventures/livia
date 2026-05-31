@@ -85,6 +85,27 @@ export function listWedgeDemoVerticals(): BusinessVertical[] {
   return [...seen];
 }
 
+/**
+ * GTM display order — people-business story first (body-art clarity standard),
+ * hair last on the grid so non-hair verticals sit above the fold.
+ */
+const WEDGE_DEMO_DISPLAY_ORDER: BusinessVertical[] = [
+  "body-art",
+  "medspa",
+  "wellness",
+  "beauty",
+  "fitness",
+  "allied-health",
+  "pet-grooming",
+  "automotive-detailing",
+  "hair",
+];
+
+export function listWedgeDemoVerticalsForDisplay(): BusinessVertical[] {
+  const available = new Set(listWedgeDemoVerticals());
+  return WEDGE_DEMO_DISPLAY_ORDER.filter((v) => available.has(v));
+}
+
 export function getWedgeDemoStory(vertical: BusinessVertical): WedgeDemoStory | null {
   const row = VERTICAL_COVERAGE_REGISTRY.find((e) => e.codeVertical === vertical);
   if (!row || row.tier === "defer") return null;

@@ -1,0 +1,44 @@
+meta:
+  id: w4m.staff.today.mobile
+  world: W4
+  route: "/(tabs)/index"
+  artifact: livia-mobile
+  persona: ["P4"]
+  verticals: all
+  release: R1
+  status: designed
+  tier: P1
+
+job: >
+  Staff today tab alias home.
+
+visual:
+  summary: >
+    Same ritual as my-day variant.
+  canvas:
+    device: phone
+  zones:
+    - id: main
+      content: [see VISUAL-SCREEN-MASTER-INVENTORY.md — expand in build]
+  typography:
+    inherit: world skin — see SKIN-BRAND-INHERITANCE-SPEC
+  motion:
+    inherit: motion-tokens.md
+
+states:
+  loading:
+    visual: layout-matched skeleton
+  empty:
+    copy: persona-appropriate — see EMPTY-ERROR-LOADING-CATALOG.md
+  error:
+    copy: human retry message
+
+acceptance:
+  e2e:
+    - see TESTING-VISUAL-ACCEPTANCE.md P1 matrix
+
+traceability:
+  figma:
+    file: Livia Platform 2026
+    frame: W4/w4m.staff.today.mobile
+    status: not_started

@@ -224,18 +224,18 @@ export function demoScenarioSpotlights(): Array<{
     },
     // —— Industry flows (vertical-specific guest + ops paths) ——
     {
-      id: "vertical-medspa",
-      title: "Medspa",
-      description: "Clinical intake, consent step, mandate defaults",
-      slug: "clarity-medspa-dublin",
-      structure: "solo",
-      group: "vertical",
-    },
-    {
       id: "vertical-body-art",
       title: "Body art",
       description: "Consult-first booking, design proof, deposit norms",
       slug: "ink-anchor-galway",
+      structure: "solo",
+      group: "vertical",
+    },
+    {
+      id: "vertical-medspa",
+      title: "Medspa",
+      description: "Clinical intake, consent step, mandate defaults",
+      slug: "clarity-medspa-dublin",
       structure: "solo",
       group: "vertical",
     },

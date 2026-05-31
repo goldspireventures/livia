@@ -75,6 +75,8 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     const onExecDesk = segments[0] === "_internal";
     const onDemo = isDemoRoute(segments);
     const onPublicBook = segments[0] === "public-book";
+    const onGuestHub = segments[0] === "my-livia";
+    const onGuestSurface = segments[0] === "guest-surface";
     const allowDemo =
       onDemo &&
       (process.env.EXPO_PUBLIC_DEMO_LOGIN === "true" || __DEV__);
@@ -82,7 +84,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
       router.replace("/sign-in");
       return;
     }
-    if (!isSignedIn && !onSignIn && !allowDemo && !onPublicBook) {
+    if (!isSignedIn && !onSignIn && !allowDemo && !onPublicBook && !onGuestHub && !onGuestSurface) {
       router.replace("/sign-in");
     } else if (isSignedIn && onSignIn) {
       void (async () => {
@@ -94,7 +96,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
         const home = await consumeMobileHomeRoute();
         router.replace((home ?? "/(tabs)") as never);
       })();
-    } else if (isSignedIn && !onExecDesk && !onDemo && !onPublicBook) {
+    } else if (isSignedIn && !onExecDesk && !onDemo && !onPublicBook && !onGuestHub && !onGuestSurface) {
       void (async () => {
         const surface = await fetchOperatorSurface(() => getToken());
         if (surface?.platformExec) {
@@ -135,6 +137,8 @@ function RootLayoutNav() {
           <Stack.Screen name="experience" options={{ title: "Experience" }} />
           <Stack.Screen name="demo-guide" options={{ headerShown: false }} />
           <Stack.Screen name="public-book/[slug]" options={{ headerShown: false }} />
+          <Stack.Screen name="my-livia" options={{ headerShown: false }} />
+          <Stack.Screen name="guest-surface" options={{ headerShown: false }} />
           <Stack.Screen name="booking/[id]" options={{ title: "Booking" }} />
           <Stack.Screen name="conversation/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="notifications" options={{ headerShown: false }} />

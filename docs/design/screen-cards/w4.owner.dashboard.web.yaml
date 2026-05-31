@@ -1,0 +1,89 @@
+meta:
+  id: w4.owner.dashboard.web
+  world: W4
+  route: "/dashboard"
+  artifact: livia-dashboard
+  persona: [P2, P2a, P2b]
+  verticals: all
+  release: R1
+  status: designed
+
+job: >
+  Owner answers "Is today OK?" in one glance — briefing, three truths, one action — not twelve reports.
+
+visual:
+  canvas:
+    device: desktop_primary
+    viewport: 1280x800
+    background: preset shell background — Platform Default aurora subtle mesh
+  zones:
+    - id: shell_sidebar
+      width: 240px
+      content:
+        - business logo + name
+        - nav 5 items max persona-filtered
+        - notification bell with unread count
+        - Liv mark small footer "Liv is on duty"
+    - id: main_header
+      height: 72px
+      content:
+        - greeting "Good morning, {firstName}" display 28px
+        - date localized
+        - chain switcher if P1 membership
+    - id: briefing_strip
+      height: auto
+      content:
+        - Liv briefing card 3 sentences max — prose not bullets
+        - "One thing to do" CTA button right
+      style:
+        background: preset card
+        border_left: 4px preset primary
+      motion: liv-thinking subtle while briefing loads
+    - id: kpi_row
+      layout: 3 or 4 equal columns gap 16px
+      content:
+        - chip cards: Today's bookings | Revenue signal | Inbox waiting | Open slots
+        - each: number 28px bold + label 13px + spark optional
+    - id: modules
+      layout: 2 column grid
+      content:
+        - left: inbox preview top 3 threads OR pipeline board (body-art)
+        - right: today timeline OR approval queue
+      vertical_swap:
+        body-art: pipeline kanban mini
+        medspa: mandate alerts stack
+        fitness: next class + waitlist count
+  typography:
+    greeting: Cormorant 28px (platform default preset)
+    kpi: Inter 28px tabular
+  density: comfortable desktop — 24px page padding
+
+motion:
+  enter_page: enter-page
+  kpi_update: number count-up 400ms optional
+  briefing_refresh: crossfade text
+
+states:
+  loading:
+    visual: briefing skeleton 3 lines + 4 kpi skeletons + 2 module skeletons
+  empty_new_tenant:
+    copy: "Welcome — let's get your first service live"
+    action: CTA → /services
+  error_briefing:
+    copy: "Briefing unavailable — your numbers are still below"
+    show: KPI row remains if loaded
+
+acceptance:
+  human:
+    - Owner finds inbox count without scrolling 1280px
+    - Vertical module swap visible in demo (ink vs aurora)
+  e2e:
+    - all-verticals-smoke owner path
+  visual:
+    - baseline: tenant-inbox-web.png (shared northstar family)
+
+traceability:
+  surfaceId: tenant.owner.dashboard
+  figma:
+    frame: W4-Tenant/w4.owner.dashboard.web
+    status: not_started

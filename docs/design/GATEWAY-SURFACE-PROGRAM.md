@@ -141,4 +141,20 @@ Demo entry must match **same vertical** as story — no bait-and-switch slug.
 
 | Date | Change |
 |------|--------|
+| 2026-05-31 | §9 build status; all 9 wedge beats in policy |
 | 2026-05-30 | Gateway program; hair wedge clarity; tattoo as interstitial standard |
+
+---
+
+## 9. Build status (2026-05-31 doc audit)
+
+| Item | Spec | Code (`livia-dashboard`) | Gap |
+|------|------|--------------------------|-----|
+| G1-A grid | §3 | ✅ `/demo` launcher | — |
+| Wedge interstitial | §4 | ✅ `/demo/wedge/:vertical` | Per-vertical screenshot crops |
+| Policy stories | `wedge-demo-stories.ts` | ✅ All 9 verticals | Copy polish |
+| Sign-in/up | §5 | ✅ Clerk + gateway skin | — |
+| Mobile full-bleed | §5 | 🔨 Usable | Match northstar mobile PNG |
+| Premium halo | PREMIUM-MOTION-LAYER | 📋 | `halo-focus` on wedge select |
+
+Demo slug coupling verified in E2E vertical suite.

@@ -1,7 +1,8 @@
 # Livia final build plan — master execution scope
 
-**Status:** **LOCKED FOR BUILD** (2026-05-30)  
-**Authority:** When this doc conflicts with older programs, **this wins**. Index: [`DOC-CANONICAL-INDEX.md`](../DOC-CANONICAL-INDEX.md)  
+**Status:** **LOCKED FOR BUILD** (2026-05-30) — **implementation paused** until **G-DOC** + **G-VISUAL** pass ([`LIVIA-DOCUMENTATION-PROGRAM.md`](./LIVIA-DOCUMENTATION-PROGRAM.md)).  
+**Post-gate execution authority:** [`LIVIA-BUILD-PLAN-V2.md`](./LIVIA-BUILD-PLAN-V2.md) (sequencing + checklists when docs gate clears).  
+**Authority:** When this doc conflicts with older programs, **this wins** for scope locks. Index: [`DOC-CANONICAL-INDEX.md`](../DOC-CANONICAL-INDEX.md)  
 **Audience:** founder, engineering, product, agents — read before any heavy build session.
 
 **This plan consolidates:** platform surface programs · programmatic lifecycle · all-vertical scope · guest identity + hub · composable self-evolution · Solidify tracks · release program R1–R3 · multi-hat gap review · workforce/exec · doc audit · founder locks from May 2026 design sessions.
@@ -12,10 +13,12 @@
 
 | Role | Read first |
 |------|------------|
-| **Founder** | §1 locks · §2 principles · §4 R1 exit · §8 founder lane |
-| **Engineering** | §2–3 · §4–6 releases · [`PLATFORM-BACKLOG.md`](../operations/PLATFORM-BACKLOG.md) |
-| **Product/design** | §1 · §3 worlds · surface program table §3.2 |
-| **Agent (Cursor)** | [`AGENTS.md`](../../AGENTS.md) + this doc §2 + §4 R1 checklist |
+| **Founder** | [`LIVIA-WIDE-BUILD-PLAN.md`](./LIVIA-WIDE-BUILD-PLAN.md) · §1 locks · §4 R1 exit · §8 founder lane |
+| **Engineering** | Wide plan §3–6 · §2–3 here · [`PLATFORM-BACKLOG.md`](../operations/PLATFORM-BACKLOG.md) |
+| **Product/design** | Wide plan §1–2 · §1 here · §3 worlds · surface program table §3.2 |
+| **Agent (Cursor)** | [`AGENTS.md`](../../AGENTS.md) + wide plan + this doc §2 + §4 R1 checklist |
+
+**Sequencing companion (not a scope override):** [`LIVIA-WIDE-BUILD-PLAN.md`](./LIVIA-WIDE-BUILD-PLAN.md) — widened vision, org shapes, cascade architecture, next 4–8 week queue.
 
 **Verify locally:** `pnpm run typecheck` · `pnpm test:e2e:verticals` · `pnpm solidify:verify` (when wired) · dev galleries `:5173/experience/*`
 

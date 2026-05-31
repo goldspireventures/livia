@@ -29,6 +29,10 @@ interface ChatWidgetProps {
   initialEmail?: string;
   initialPhone?: string;
   onBooked?: (bookingId: string) => void;
+  /** Increment to open the sheet from an external CTA (header / Liv bar). */
+  openRequest?: number;
+  /** Hide the default floating launcher — use when another surface opens chat. */
+  hideLauncher?: boolean;
 }
 
 export default function ChatWidget({
@@ -41,6 +45,8 @@ export default function ChatWidget({
   initialEmail,
   initialPhone,
   onBooked,
+  openRequest,
+  hideLauncher = false,
 }: ChatWidgetProps) {
   const firstMessage =
     disclosureFirstMessage ?? AI_DISCLOSURE.chatFirstMessage(businessName);
@@ -78,6 +84,10 @@ export default function ChatWidget({
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, sendMessage.isPending]);
+
+  useEffect(() => {
+    if (openRequest && openRequest > 0) setOpen(true);
+  }, [openRequest]);
 
   function send(text: string) {
     const trimmed = text.trim();
@@ -129,6 +139,7 @@ export default function ChatWidget({
   }
 
   if (!open) {
+    if (hideLauncher) return null;
     return (
       <button
         type="button"

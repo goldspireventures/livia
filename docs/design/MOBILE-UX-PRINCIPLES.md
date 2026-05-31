@@ -1,13 +1,16 @@
 # Mobile UX principles (Livia tenant app)
 
-**Updated:** 2026-05-24  
-**App:** `artifacts/livia-mobile` (Expo)
+**Updated:** 2026-05-31  
+**App:** `artifacts/livia-mobile` (Expo)  
+**Guest P7:** [`PUBLIC-B-SURFACE-SPEC.md`](../product/PUBLIC-B-SURFACE-SPEC.md) — **mobile web `/b` is primary** for end customers; tenant Expo app is for operators (P2–P6).
 
 ---
 
 ## Design intent
 
 Most operators check Livia on a phone between clients. Mobile is not a shrunken dashboard — it is a **ritual-first flagship** with one primary job per persona tab, and **More** for depth.
+
+**P7 (guests):** Do not conflate with livia-mobile. Customers book on `/b` in the mobile browser; operators use Expo. Parity matrix: [`WEB-MOBILE-PARITY.md`](../product/WEB-MOBILE-PARITY.md).
 
 **v1 bar ([`OPERATION-SOLIDIFY.md`](../product/OPERATION-SOLIDIFY.md) Track 3):** If a task is done daily on the shop floor (book, reply, rota, client edit, approve leave), it must be **doable on mobile** unless it requires a large table editor — then one-line web handoff, not a dead end.
 

@@ -1,0 +1,71 @@
+meta:
+  id: w4.ops.inbox.web
+  world: W4
+  route: "/inbox"
+  artifact: livia-dashboard
+  persona: [P2, P3, P6]
+  release: R1
+  status: designed
+
+job: >
+  Manager clears Liv queue — see AI vs human-needed threads, act without email archaeology.
+
+visual:
+  canvas:
+    device: desktop
+    viewport: 1440x900
+    layout: three_pane when >=1024px
+  zones:
+    - id: thread_list
+      width: 320px
+      border_right: 1px border
+      content:
+        - filter tabs: All | Needs you | Liv handling
+        - thread rows: avatar | name | snippet | time | badge AI/HANDOFF
+        - unread bold weight
+      motion: stagger-list on load
+    - id: conversation
+      flex: 1
+      content:
+        - header: customer name + channel icon (WA/SMS/web)
+        - message bubbles: customer left, Liv right with subtle avatar
+        - handoff banner amber when HANDED_OFF
+        - composer sticky bottom: textarea + Take over | Approve booking
+    - id: context_rail
+      width: 280px
+      visible: desktop only
+      content:
+        - next booking if any
+        - customer since date
+        - quick links: full profile | booking
+  typography:
+    snippet: 14px truncate 2 lines
+    bubble: 15px/1.45
+  color:
+    liv_bubble: preset muted bg
+    handoff_banner: amber-100 / amber-950 dark
+
+motion:
+  thread_select: enter-panel conversation
+  new_message: scroll smooth + flash unread dot
+
+states:
+  loading:
+    visual: 8 thread row skeletons
+  empty:
+    copy: "Inbox clear — Liv is watching your channels"
+    sub: "Connect WhatsApp in Settings"
+  empty_filter_needs_you:
+    copy: "Nothing needs you right now"
+
+acceptance:
+  e2e:
+    - inbox handoff flow when Meta stub fires
+  visual:
+    - baseline: tenant-inbox-web.png
+
+traceability:
+  surfaceId: tenant.inbox
+  figma:
+    frame: W4-Tenant/w4.ops.inbox.web
+    status: not_started

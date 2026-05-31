@@ -1,6 +1,8 @@
 # Pricing and packaging — F9
 
-**Status:** F9 (2026-05-07). Sourced from F6 per-cell economics + F7 wedge cells.
+**Status:** F9 (2026-05-07), people-business alignment 2026-05-31.  
+**Category:** Pricing applies to **all appointment-led people businesses** — tiers map to org shape (solo, studio, chain), not hair-only. See [`PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md`](../product/PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md).  
+**Marketing display:** € tiers on **livia-hq.com** (M2-A) must match this doc — [`marketing-vs-reality.md`](../audits/marketing-vs-reality.md).
 
 ## The pricing model
 

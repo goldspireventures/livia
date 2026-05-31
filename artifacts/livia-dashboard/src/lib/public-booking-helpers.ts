@@ -51,6 +51,21 @@ export function verticalPublicCta(vertical?: string | null): string {
   }
 }
 
+/** Hero pill CTA — screen card w5.public.book.mobile vertical_overrides. */
+export function verticalHeroCta(vertical?: string | null, businessCta?: string | null): string {
+  if (businessCta?.trim()) return businessCta.trim();
+  switch (vertical) {
+    case "body-art":
+      return "Request a consult";
+    case "medspa":
+      return "Book treatment";
+    case "fitness":
+      return "Book class";
+    default:
+      return verticalPublicCta(vertical);
+  }
+}
+
 const CATEGORY_FALLBACK = "Services";
 
 function humanizeCategory(raw: string): string {

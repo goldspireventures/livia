@@ -1,8 +1,15 @@
 import { Link } from "wouter";
-import { Bell, CheckCheck } from "lucide-react";
+import {
+  Bell,
+  Building2,
+  CalendarCheck,
+  CheckCheck,
+  ClipboardCheck,
+  MessageSquare,
+} from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Sheet,
   SheetContent,
@@ -11,6 +18,12 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { MOTION } from "@/lib/motion";
+import {
+  groupNotificationsByDay,
+  notificationFeedIcon,
+  type NotificationFeedIcon,
+} from "@workspace/policy";
 import {
   useInAppNotifications,
   type InAppNotification,
@@ -29,16 +42,110 @@ function priorityClass(p: InAppNotification["priority"]): string {
 
 function relativeTime(iso: string): string {
   const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60_000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  if (mins < 1440) return `${Math.round(mins / 60)}h ago`;
-  return `${Math.round(mins / 1440)}d ago`;
+  if (mins < 1) return "now";
+  if (mins < 60) return `${mins}m`;
+  if (mins < 1440) return `${Math.round(mins / 60)}h`;
+  return `${Math.round(mins / 1440)}d`;
+}
+
+function FeedIcon({ type }: { type: NotificationFeedIcon }) {
+  const cls = "h-4 w-4 shrink-0";
+  switch (type) {
+    case "booking":
+      return <CalendarCheck className={cn(cls, "text-primary")} aria-hidden />;
+    case "inbox":
+      return <MessageSquare className={cn(cls, "text-emerald-600 dark:text-emerald-400")} aria-hidden />;
+    case "chain":
+      return <Building2 className={cn(cls, "text-violet-600 dark:text-violet-400")} aria-hidden />;
+    default:
+      return <ClipboardCheck className={cn(cls, "text-amber-600 dark:text-amber-400")} aria-hidden />;
+  }
+}
+
+function NotificationRow({
+  n,
+  onOpen,
+}: {
+  n: InAppNotification;
+  onOpen: () => void;
+}) {
+  const iconType = notificationFeedIcon(n.kind);
+  const inner = (
+    <div
+      className={cn(
+        "flex gap-3 min-h-[72px] items-center rounded-lg border border-border border-l-4 px-3 py-2.5 text-left transition-opacity",
+        priorityClass(n.priority),
+        !n.readAt && "bg-muted/40 font-medium",
+        n.readAt && "opacity-80",
+        MOTION.listItem,
+      )}
+      data-testid={`notification-row-${n.id}`}
+    >
+      <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center shrink-0">
+        <FeedIcon type={iconType} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className={cn("text-sm leading-snug truncate", !n.readAt && "font-semibold")}>{n.title}</p>
+        <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2 leading-[1.35]">{n.body}</p>
+      </div>
+      <span className="text-[11px] text-muted-foreground shrink-0 tabular-nums self-start pt-1">
+        {relativeTime(n.createdAt)}
+      </span>
+    </div>
+  );
+
+  if (n.href) {
+    return (
+      <Link href={n.href} onClick={onOpen}>
+        {inner}
+      </Link>
+    );
+  }
+  return (
+    <button type="button" className="w-full" onClick={onOpen}>
+      {inner}
+    </button>
+  );
+}
+
+function NotificationGroup({
+  label,
+  items,
+  onOpenItem,
+}: {
+  label: string;
+  items: InAppNotification[];
+  onOpenItem: (n: InAppNotification) => void;
+}) {
+  if (items.length === 0) return null;
+  return (
+    <section className="space-y-2">
+      <h3 className="text-[11px] uppercase tracking-widest text-muted-foreground font-medium px-0.5">
+        {label}
+      </h3>
+      {items.map((n) => (
+        <NotificationRow key={n.id} n={n} onOpen={() => void onOpenItem(n)} />
+      ))}
+    </section>
+  );
+}
+
+function NotificationListSkeleton() {
+  return (
+    <div className="space-y-2" data-testid="notification-list-loading">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <Skeleton key={i} className="h-[72px] w-full rounded-lg" />
+      ))}
+    </div>
+  );
 }
 
 export function NotificationCenter({ className }: { className?: string }) {
   const [open, setOpen] = useState(false);
   const { notifications, unreadCount, isLoading, markRead, markAllRead } =
     useInAppNotifications();
+
+  const { today, earlier } = groupNotificationsByDay(notifications);
 
   const onOpenItem = async (n: InAppNotification) => {
     if (!n.readAt) await markRead(n.id);
@@ -66,7 +173,7 @@ export function NotificationCenter({ className }: { className?: string }) {
           ) : null}
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-full sm:max-w-md flex flex-col">
+      <SheetContent side="right" className="w-full sm:max-w-md flex flex-col" data-testid="notification-sheet">
         <SheetHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <SheetTitle>Notifications</SheetTitle>
           {unreadCount > 0 ? (
@@ -82,60 +189,27 @@ export function NotificationCenter({ className }: { className?: string }) {
             </Button>
           ) : null}
         </SheetHeader>
-        <p className="text-xs text-muted-foreground pb-3">
-          Tailored to your role — bookings, inbox, and multi-shop alerts when they need you.
-        </p>
-        <div className="flex-1 overflow-y-auto space-y-2 -mx-1 px-1">
+        <div className="flex-1 overflow-y-auto space-y-5 -mx-1 px-1 pb-4">
           {isLoading ? (
-            <p className="text-sm text-muted-foreground py-8 text-center">Loading…</p>
+            <NotificationListSkeleton />
           ) : notifications.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-8 text-center">
-              You&apos;re all caught up. Liv will surface anything that needs a human here.
-            </p>
+            <div
+              className="flex flex-col items-center justify-center text-center py-12"
+              data-testid="notification-empty"
+            >
+              <div className="h-16 w-16 rounded-full border-2 border-dashed border-muted-foreground/30 flex items-center justify-center mb-4">
+                <Bell className="h-7 w-7 text-muted-foreground/60" strokeWidth={1.5} />
+              </div>
+              <p className="font-medium text-sm">You&apos;re all caught up</p>
+              <p className="text-xs text-muted-foreground mt-2 max-w-[240px] leading-relaxed">
+                Liv will surface bookings, inbox handoffs, and chain alerts when they need you.
+              </p>
+            </div>
           ) : (
-            notifications.map((n) => {
-              const inner = (
-                <div
-                  className={cn(
-                    "rounded-lg border border-border border-l-4 p-3 text-left transition-colors",
-                    priorityClass(n.priority),
-                    !n.readAt && "bg-muted/40",
-                  )}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-medium leading-snug">{n.title}</p>
-                    {!n.readAt ? (
-                      <Badge variant="secondary" className="text-[9px] shrink-0">
-                        New
-                      </Badge>
-                    ) : null}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{n.body}</p>
-                  <p className="text-[10px] text-muted-foreground mt-2">
-                    {relativeTime(n.createdAt)}
-                    {n.personaHint ? ` · ${n.personaHint}` : ""}
-                  </p>
-                </div>
-              );
-
-              if (n.href) {
-                return (
-                  <Link key={n.id} href={n.href} onClick={() => void onOpenItem(n)}>
-                    {inner}
-                  </Link>
-                );
-              }
-              return (
-                <button
-                  key={n.id}
-                  type="button"
-                  className="w-full"
-                  onClick={() => void onOpenItem(n)}
-                >
-                  {inner}
-                </button>
-              );
-            })
+            <>
+              <NotificationGroup label="Today" items={today} onOpenItem={onOpenItem} />
+              <NotificationGroup label="Earlier" items={earlier} onOpenItem={onOpenItem} />
+            </>
           )}
         </div>
       </SheetContent>

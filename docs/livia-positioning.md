@@ -168,9 +168,11 @@ The discipline of *what we are not* protects the integrity of the unit primitive
 
 ## Section 6 — The public category line
 
-**Livia is the colleague your salon hires. Her name is Liv.**
+**Livia is the operating system for people-businesses in Europe. Liv is the colleague you hire — and she earns more responsibility over time.**
 
-*Subhead:* "She answers the phone, runs your bookings, knows your regulars, and earns more responsibility every month — until she's running the place."
+*Subhead:* "She answers the phone, runs your bookings, knows your regulars, and keeps the day's chaos in one calm place — on web, mobile, and the channels you already use."
+
+**Deprecated (GTM residue — do not use in product copy):** "the colleague your **salon** hires."
 
 **Defended:**
 

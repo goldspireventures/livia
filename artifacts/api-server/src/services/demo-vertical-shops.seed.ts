@@ -4,37 +4,40 @@ import { createBusiness } from "./businesses.service";
 import { seedShopCore } from "./demo-portal.service";
 import { seedExpandedBookings, seedDemoInbox } from "./demo-inbox.seed";
 import { ensureLiveDayForBusiness } from "./demo-live-day.service";
-import { createPet } from "./pets.service";
 import { ensureDemoOperationalCases } from "./demo-operational-cases.seed";
-import { applyDemoPublicBranding } from "../lib/demo-public-assets";
-import { backfillDemoServiceImages } from "../lib/demo-service-images";
+import {
+  ensureShowcaseCustomers,
+  ensureShowcasePets,
+  refreshVerticalShowcaseShop,
+} from "./demo-showcase-depth";
 import type { BusinessVertical } from "@workspace/policy";
+
+type ShowcaseDef = {
+  vertical: BusinessVertical;
+  name: string;
+  slug: string;
+  description: string;
+  category: string;
+  city: string;
+  staff: Array<{ firstName: string; lastName: string; displayName: string; email: string; color: string }>;
+  services: Array<{
+    name: string;
+    durationMinutes: number;
+    priceMinor: number;
+    sortOrder: number;
+    category?: string;
+    description?: string;
+  }>;
+  seedPets?: Array<{ name: string; breed: string; species?: "dog" | "cat"; customerIndex?: number }>;
+  country?: string;
+  timezone?: string;
+};
 
 /** Extra EU vertical showcase shops — proves Livia is not salon-only. */
 export async function seedVerticalShowcaseShops(
   founderUserId: string,
 ): Promise<Array<{ slug: string; id: string; name: string; vertical: BusinessVertical }>> {
-  const defs: Array<{
-    vertical: BusinessVertical;
-    name: string;
-    slug: string;
-    description: string;
-    category: string;
-    city: string;
-    staff: Array<{ firstName: string; lastName: string; displayName: string; email: string; color: string }>;
-    services: Array<{
-      name: string;
-      durationMinutes: number;
-      priceMinor: number;
-      sortOrder: number;
-      category?: string;
-      description?: string;
-    }>;
-    /** Seed a pet profile on the first demo customer (pet-grooming only). */
-    seedPet?: { name: string; breed: string };
-    country?: string;
-    timezone?: string;
-  }> = [
+  const defs: ShowcaseDef[] = [
     {
       vertical: "hair",
       name: "Luxe Salon & Spa",
@@ -56,6 +59,13 @@ export async function seedVerticalShowcaseShops(
           displayName: "James O'Brien",
           email: "james@luxesalon.ie",
           color: "#78716C",
+        },
+        {
+          firstName: "Marie",
+          lastName: "Dubois",
+          displayName: "Marie Dubois",
+          email: "marie@luxesalon.ie",
+          color: "#A78BFA",
         },
       ],
       services: [
@@ -81,6 +91,8 @@ export async function seedVerticalShowcaseShops(
           sortOrder: 3,
           category: "Colour",
         },
+        { name: "Blow dry", durationMinutes: 45, priceMinor: 4000, sortOrder: 4, category: "Cuts & styling" },
+        { name: "Children's cut", durationMinutes: 30, priceMinor: 3500, sortOrder: 5, category: "Cuts & styling" },
       ],
     },
     {
@@ -92,6 +104,8 @@ export async function seedVerticalShowcaseShops(
       city: "Dublin",
       staff: [
         { firstName: "Zara", lastName: "Keane", displayName: "Zara Keane", email: "zara@bloom.ie", color: "#EC4899" },
+        { firstName: "Mia", lastName: "Walsh", displayName: "Mia Walsh", email: "mia@bloom.ie", color: "#F472B6" },
+        { firstName: "Leah", lastName: "Nguyen", displayName: "Leah Nguyen", email: "leah@bloom.ie", color: "#DB2777" },
       ],
       services: [
         {
@@ -115,6 +129,8 @@ export async function seedVerticalShowcaseShops(
           sortOrder: 3,
           category: "Lashes & brows",
         },
+        { name: "Gel nails", durationMinutes: 60, priceMinor: 4500, sortOrder: 4, category: "Nails" },
+        { name: "Lash lift", durationMinutes: 75, priceMinor: 6500, sortOrder: 5, category: "Lashes & brows" },
       ],
     },
     {
@@ -132,10 +148,27 @@ export async function seedVerticalShowcaseShops(
           email: "orla@harbour.ie",
           color: "#14B8A6",
         },
+        {
+          firstName: "Niamh",
+          lastName: "Costello",
+          displayName: "Niamh Costello",
+          email: "niamh@harbour.ie",
+          color: "#0D9488",
+        },
+        {
+          firstName: "Tom",
+          lastName: "Reid",
+          displayName: "Tom Reid",
+          email: "tom@harbour.ie",
+          color: "#2DD4BF",
+        },
       ],
       services: [
         { name: "60 min massage", durationMinutes: 60, priceMinor: 7000, sortOrder: 1 },
         { name: "90 min massage", durationMinutes: 90, priceMinor: 9500, sortOrder: 2 },
+        { name: "Hot stone therapy", durationMinutes: 75, priceMinor: 8500, sortOrder: 3 },
+        { name: "Reflexology", durationMinutes: 50, priceMinor: 6000, sortOrder: 4 },
+        { name: "Couples massage", durationMinutes: 60, priceMinor: 14000, sortOrder: 5 },
       ],
     },
     {
@@ -148,10 +181,14 @@ export async function seedVerticalShowcaseShops(
       staff: [
         { firstName: "Rory", lastName: "Mannion", displayName: "Rory Mannion", email: "rory@ink.ie", color: "#F97316" },
         { firstName: "Siobhan", lastName: "Kelly", displayName: "Siobhan Kelly", email: "siobhan@ink.ie", color: "#FB923C" },
+        { firstName: "Dylan", lastName: "Hayes", displayName: "Dylan Hayes", email: "dylan@ink.ie", color: "#EA580C" },
       ],
       services: [
         { name: "Consultation", durationMinutes: 30, priceMinor: 0, sortOrder: 1, category: "Consultations" },
         { name: "Tattoo session (2h)", durationMinutes: 120, priceMinor: 20000, sortOrder: 2, category: "Sessions" },
+        { name: "Tattoo session (4h)", durationMinutes: 240, priceMinor: 38000, sortOrder: 3, category: "Sessions" },
+        { name: "Touch-up", durationMinutes: 60, priceMinor: 8000, sortOrder: 4, category: "Sessions" },
+        { name: "Cover-up consult", durationMinutes: 45, priceMinor: 0, sortOrder: 5, category: "Consultations" },
       ],
     },
     {
@@ -169,13 +206,32 @@ export async function seedVerticalShowcaseShops(
           email: "jade@pawsparlor.ie",
           color: "#A855F7",
         },
+        {
+          firstName: "Rory",
+          lastName: "Chen",
+          displayName: "Rory Chen",
+          email: "rory@pawsparlor.ie",
+          color: "#9333EA",
+        },
+        {
+          firstName: "Amy",
+          lastName: "Walsh",
+          displayName: "Amy Walsh",
+          email: "amy@pawsparlor.ie",
+          color: "#C084FC",
+        },
       ],
       services: [
         { name: "Full groom (medium dog)", durationMinutes: 90, priceMinor: 5500, sortOrder: 1 },
         { name: "Bath & tidy", durationMinutes: 60, priceMinor: 3500, sortOrder: 2 },
         { name: "Nail trim", durationMinutes: 20, priceMinor: 1500, sortOrder: 3 },
+        { name: "Full groom (large dog)", durationMinutes: 120, priceMinor: 7000, sortOrder: 4 },
+        { name: "Cat groom", durationMinutes: 75, priceMinor: 6000, sortOrder: 5 },
       ],
-      seedPet: { name: "Biscuit", breed: "Cockapoo" },
+      seedPets: [
+        { name: "Biscuit", breed: "Cockapoo", customerIndex: 0 },
+        { name: "Mochi", breed: "Shih Tzu", customerIndex: 1 },
+      ],
     },
     {
       vertical: "medspa",
@@ -192,11 +248,27 @@ export async function seedVerticalShowcaseShops(
           email: "clinical@claritymedspa.ie",
           color: "#8B5CF6",
         },
+        {
+          firstName: "Sinead",
+          lastName: "Moran",
+          displayName: "Sinead Moran",
+          email: "sinead@claritymedspa.ie",
+          color: "#7C3AED",
+        },
+        {
+          firstName: "Aoife",
+          lastName: "Daly",
+          displayName: "Aoife Daly",
+          email: "aoife@claritymedspa.ie",
+          color: "#A78BFA",
+        },
       ],
       services: [
         { name: "Aesthetics consultation", durationMinutes: 30, priceMinor: 0, sortOrder: 1 },
         { name: "Treatment session (60 min)", durationMinutes: 60, priceMinor: 15000, sortOrder: 2 },
         { name: "Follow-up review", durationMinutes: 20, priceMinor: 0, sortOrder: 3 },
+        { name: "Skin peel", durationMinutes: 45, priceMinor: 12000, sortOrder: 4 },
+        { name: "LED therapy", durationMinutes: 30, priceMinor: 8000, sortOrder: 5 },
       ],
     },
     {
@@ -214,11 +286,27 @@ export async function seedVerticalShowcaseShops(
           email: "eoin@motionphysio.ie",
           color: "#0EA5E9",
         },
+        {
+          firstName: "Sarah",
+          lastName: "Lynch",
+          displayName: "Sarah Lynch",
+          email: "sarah@motionphysio.ie",
+          color: "#0284C7",
+        },
+        {
+          firstName: "Mark",
+          lastName: "O'Donnell",
+          displayName: "Mark O'Donnell",
+          email: "mark@motionphysio.ie",
+          color: "#38BDF8",
+        },
       ],
       services: [
         { name: "Initial assessment", durationMinutes: 45, priceMinor: 6500, sortOrder: 1 },
         { name: "Follow-up session", durationMinutes: 30, priceMinor: 4500, sortOrder: 2 },
         { name: "Sports massage (30 min)", durationMinutes: 30, priceMinor: 5000, sortOrder: 3 },
+        { name: "Rehab block (45 min)", durationMinutes: 45, priceMinor: 5500, sortOrder: 4 },
+        { name: "Dry needling", durationMinutes: 30, priceMinor: 4800, sortOrder: 5 },
       ],
     },
     {
@@ -238,11 +326,27 @@ export async function seedVerticalShowcaseShops(
           email: "marc@shinestudio.co.uk",
           color: "#64748B",
         },
+        {
+          firstName: "Chris",
+          lastName: "Bell",
+          displayName: "Chris Bell",
+          email: "chris@shinestudio.co.uk",
+          color: "#475569",
+        },
+        {
+          firstName: "Jamie",
+          lastName: "Reid",
+          displayName: "Jamie Reid",
+          email: "jamie@shinestudio.co.uk",
+          color: "#334155",
+        },
       ],
       services: [
         { name: "Exterior detail", durationMinutes: 120, priceMinor: 12000, sortOrder: 1 },
         { name: "Interior + exterior", durationMinutes: 180, priceMinor: 18000, sortOrder: 2 },
         { name: "Maintenance wash", durationMinutes: 45, priceMinor: 4500, sortOrder: 3 },
+        { name: "Ceramic coating", durationMinutes: 240, priceMinor: 45000, sortOrder: 4 },
+        { name: "Paint correction", durationMinutes: 300, priceMinor: 55000, sortOrder: 5 },
       ],
     },
     {
@@ -260,11 +364,27 @@ export async function seedVerticalShowcaseShops(
           email: "sam@peakfitness.ie",
           color: "#22C55E",
         },
+        {
+          firstName: "Lisa",
+          lastName: "Grant",
+          displayName: "Lisa Grant",
+          email: "lisa@peakfitness.ie",
+          color: "#16A34A",
+        },
+        {
+          firstName: "Conor",
+          lastName: "Flynn",
+          displayName: "Conor Flynn",
+          email: "conor@peakfitness.ie",
+          color: "#4ADE80",
+        },
       ],
       services: [
         { name: "Intro assessment", durationMinutes: 45, priceMinor: 0, sortOrder: 1 },
         { name: "PT session (60 min)", durationMinutes: 60, priceMinor: 6000, sortOrder: 2 },
         { name: "Group class (45 min)", durationMinutes: 45, priceMinor: 2200, sortOrder: 3 },
+        { name: "HIIT class", durationMinutes: 45, priceMinor: 2200, sortOrder: 4 },
+        { name: "Nutrition check-in", durationMinutes: 30, priceMinor: 3500, sortOrder: 5 },
       ],
     },
   ];
@@ -280,8 +400,7 @@ export async function seedVerticalShowcaseShops(
       .limit(1);
 
     if (existing) {
-      await applyDemoPublicBranding(existing.id, d.vertical);
-      await backfillDemoServiceImages(existing.id, d.vertical);
+      await refreshVerticalShowcaseShop(existing.id, d);
       created.push({
         slug: existing.slug,
         id: existing.id,
@@ -305,27 +424,26 @@ export async function seedVerticalShowcaseShops(
     });
 
     const core = await seedShopCore(biz.id, d.staff, d.services, d.vertical);
-    await applyDemoPublicBranding(biz.id, d.vertical);
-    if (d.seedPet && core.customers[0]) {
-      await createPet(biz.id, core.customers[0].id, {
-        name: d.seedPet.name,
-        breed: d.seedPet.breed,
-        species: "dog",
-        behaviourNotes: "Friendly; nervous with dryers",
-      });
+    const customers = await ensureShowcaseCustomers(biz.id, 20);
+    if (d.seedPets?.length) {
+      await ensureShowcasePets(
+        biz.id,
+        customers.map((c) => c.id),
+        d.seedPets,
+      );
     }
     const bookingKeys = await seedExpandedBookings(
       biz.id,
-      core.customers,
+      customers,
       core.staffRows.map((s) => s.id),
       core.serviceRows.map((s) => s.id),
       now,
     );
-    await seedDemoInbox(biz.id, core.customers, { vertical: d.vertical, bookingKeys });
+    await seedDemoInbox(biz.id, customers, { vertical: d.vertical, bookingKeys });
     await ensureDemoOperationalCases(biz.id, biz.slug, bookingKeys);
     await ensureLiveDayForBusiness(biz.id, {
       force: true,
-      customerSeed: core.customers,
+      customerSeed: customers,
       staffIds: core.staffRows.map((s) => s.id),
       serviceIds: core.serviceRows.map((s) => s.id),
     });

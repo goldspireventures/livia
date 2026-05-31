@@ -31,7 +31,7 @@ export type ChainRollup = {
   bookingsThisWeek: number;
   completedThisWeek: number;
   shopsNeedingAttention: number;
-  founderBriefingLine: string;
+  orgAdminBriefingLine: string;
   alerts?: ChainAlert[];
   shops: ChainShopRollup[];
 };

@@ -69,6 +69,11 @@ import {
   resolveWorkforceAccessTierForEmail,
   revokeCockpitWorkforceAccess,
 } from "../services/workforce-access-grants.service";
+import {
+  createExecWorkEvent,
+  listExecWorkEvents,
+} from "../services/exec-work-events.service";
+import { isExecHatId } from "@workspace/policy";
 import { logRouteError, safeClientMessage, sendError } from "../lib/http-errors";
 
 const router: IRouter = Router();
@@ -101,6 +106,12 @@ router.get("/internal/ops/tenants/:businessId", async (req, res): Promise<void> 
 router.get("/internal/ops/support-points", async (_req, res): Promise<void> => {
   const { listSupportPoints } = await import("@workspace/policy");
   res.json({ data: listSupportPoints() });
+});
+
+router.get("/internal/ops/radar/feeds", async (_req, res): Promise<void> => {
+  const { getRadarProactiveFeeds } = await import("../services/internal-radar-feeds.service");
+  const data = await getRadarProactiveFeeds(40);
+  res.json({ data });
 });
 
 router.get("/internal/ops/support-tickets", async (req, res): Promise<void> => {
@@ -213,6 +224,73 @@ router.get(
   requireInternalOpsMutation("exec"),
   async (_req, res): Promise<void> => {
     res.json(await getOrgAdminCockpitSnapshot());
+  },
+);
+
+router.get(
+  "/internal/ops/exec/work-events",
+  requireInternalOpsMutation("exec"),
+  async (req, res): Promise<void> => {
+    const hatRaw = String(req.query.hatId ?? "").trim();
+    const hatId = hatRaw && isExecHatId(hatRaw) ? hatRaw : undefined;
+    const limit = Number(req.query.limit ?? 20);
+    const events = await listExecWorkEvents({ hatId, limit: Number.isFinite(limit) ? limit : 20 });
+    res.json({
+      events: events.map((e) => ({
+        id: e.id,
+        hatId: e.hatId,
+        summary: e.summary,
+        actor: e.actor,
+        actorLabel: e.actorLabel,
+        links: e.links,
+        sessionId: e.sessionId,
+        source: e.source,
+        createdAt: e.createdAt.toISOString(),
+      })),
+    });
+  },
+);
+
+router.post(
+  "/internal/ops/exec/work-events",
+  requireInternalOpsMutation("exec"),
+  async (req, res): Promise<void> => {
+    try {
+      const hatId = String(req.body?.hatId ?? "").trim();
+      const summary = String(req.body?.summary ?? "").trim();
+      const actor = req.body?.actor === "agent" ? "agent" : "human";
+      if (!isExecHatId(hatId)) {
+        sendError(res, req, 400, "hatId required (ceo|coo|cpo|cto|cs|cro)");
+        return;
+      }
+      const row = await createExecWorkEvent({
+        hatId,
+        summary,
+        actor,
+        actorLabel:
+          typeof req.body?.actorLabel === "string" ? req.body.actorLabel : undefined,
+        links: Array.isArray(req.body?.links) ? req.body.links : undefined,
+        sessionId: typeof req.body?.sessionId === "string" ? req.body.sessionId : undefined,
+        source: req.body?.source,
+      });
+      res.status(201).json({
+        ok: true,
+        event: {
+          id: row.id,
+          hatId: row.hatId,
+          summary: row.summary,
+          actor: row.actor,
+          actorLabel: row.actorLabel,
+          links: row.links,
+          sessionId: row.sessionId,
+          source: row.source,
+          createdAt: row.createdAt.toISOString(),
+        },
+      });
+    } catch (e) {
+      const status = typeof e === "object" && e && "status" in e ? Number((e as { status: number }).status) : 400;
+      sendError(res, req, status, safeClientMessage(e));
+    }
   },
 );
 

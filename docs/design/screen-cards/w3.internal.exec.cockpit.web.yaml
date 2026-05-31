@@ -1,0 +1,53 @@
+meta:
+  id: w3.internal.exec.cockpit.web
+  world: W3
+  route: "/"
+  artifact: livia-internal
+  persona: [Exec]
+  release: R1
+  status: designed
+
+job: >
+  Livia Inc founder ops — Ship Lane + Hats + Exceptions — I2 lock, collapse/expand states.
+
+visual:
+  canvas:
+    device: desktop
+    viewport: 1440x900
+    background: ops amber dark shell
+  zones:
+    - id: tabs
+      content:
+        - Home summary | Ship Lane | Hats River | Exceptions
+    - id: ship_lane_collapsed
+      state: default tab Ship Lane collapsed
+      content:
+        - progress ring or bar R1 checklist
+        - 3 next actions bullets
+        - expand chevron
+    - id: ship_lane_expanded
+      state: expanded
+      content:
+        - full gate checklist rows — automated smoke links target
+        - founder sign-off rows
+    - id: hats_river
+      content:
+        - exec hat cards horizontal scroll — CTO, GTM, Support
+        - work event log recent
+    - id: exceptions
+      content:
+        - blocked items table — tenant, issue, owner hat
+  motion:
+    collapse: height animate 250ms ease — not decorative
+
+acceptance:
+  visual:
+    - baselines: shiplane collapsed + expanded PNGs
+  eng:
+    - Track H work events emit from AGENTS.md session rule
+
+traceability:
+  surfaceId: internal.exec.cockpit
+  figma:
+    frame: W3/w3.internal.exec.cockpit.web
+    status: not_started

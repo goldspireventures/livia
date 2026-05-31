@@ -8,7 +8,7 @@
 
 ## One-line counter
 
-**They added an AI feature to salon software. You hired a colleague with an audit trail, role hierarchy, and EU posture — built for operators they under-serve (solo, chair-rental, multi-brand).**
+**They added an AI feature to incumbent software. You hired a colleague with an audit trail, role hierarchy, and EU posture — built for appointment-based people businesses they under-serve (solo, chair-rental, multi-brand).**
 
 ---
 
@@ -19,13 +19,13 @@
 | **Unit primitive** | Feature on Phorest stack | Feature on Fresha + marketplace | Colleague on operator OS |
 | **Named character** | Yes (customizable; default Ivy) | “AI Concierge” | **Liv** (character bible, rungs) |
 | **Voice + SMS + WA** | SMS/WA (voice not primary in launch materials) | Calls + messages (English first) | Voice wedge + SMS; WA per roadmap honesty |
-| **Customer ownership** | Salon-branded | Marketplace + Fresha profile risk | **Bet 5** — customer belongs to salon |
+| **Customer ownership** | Shop-branded | Marketplace + Fresha profile risk | **Bet 5** — customer belongs to the business |
 | **Audit as product** | Handover context | Platform logs | **Hash-chained audit + “Liv was wrong”** |
 | **Role hierarchy** | Staff member “Ivy AI” in roster | Team permissions | **P3 cap ladder, P4b Senior-w-admin** |
 | **Chair-rental / multi-brand** | Weak / chain-focused | Weak | **C10, C13 wedges in data model** |
 | **EU residency / AI Act** | Incumbent retrofit | US-origin scale | **EU-anchored, disclosure centralised** |
 | **Pricing model** | Phorest subscription + add-ons | Free tier + payments/marketplace | Hybrid SaaS + optional voice outcome share |
-| **Existing clients only (Ivy)** | **Yes** (launch materials) | Open booking | New + existing via salon channels |
+| **Existing clients only (Ivy)** | **Yes** (launch materials) | Open booking | New + existing via business channels |
 
 ---
 

@@ -211,6 +211,35 @@ router.post("/public/b/:slug/day-packages/:packageId/book", async (req, res): Pr
 });
 
 router.get("/public/b/:slug", getPublicBusinessProfile);
+
+router.get("/public/b/:slug/manifest.webmanifest", async (req, res): Promise<void> => {
+  const slug = Array.isArray(req.params.slug) ? req.params.slug[0] : req.params.slug;
+  const biz = await getBusinessBySlug(slug);
+  if (!biz) {
+    sendError(res, req, 404, "Business not found");
+    return;
+  }
+  const host = (req.get("x-forwarded-host") ?? req.get("host") ?? "localhost").split(",")[0]!.trim();
+  const proto = (req.get("x-forwarded-proto") ?? req.protocol ?? "http").split(",")[0]!.trim();
+  const origin = `${proto}://${host}`;
+  const accent = biz.brandAccentHex?.trim() || "#6366f1";
+  const scope = `${origin}/b/${slug}/`;
+  const icons = biz.logoUrl
+    ? [{ src: biz.logoUrl, sizes: "192x192", type: "image/png", purpose: "any maskable" }]
+    : [{ src: `${origin}/favicon.svg`, sizes: "any", type: "image/svg+xml", purpose: "any" }];
+
+  res.type("application/manifest+json").json({
+    name: biz.name,
+    short_name: biz.name.slice(0, 12),
+    description: `Book with ${biz.name}`,
+    start_url: `${origin}/b/${slug}`,
+    scope,
+    display: "standalone",
+    background_color: "#ffffff",
+    theme_color: accent,
+    icons,
+  });
+});
 /** Legacy path used by E2E and older clients — same payload as /public/b/:slug */
 router.get("/public/businesses/:slug", getPublicBusinessProfile);
 
@@ -568,6 +597,18 @@ router.post("/public/b/:slug/waitlist/:token/accept", async (req, res): Promise<
     return;
   }
   res.json(result);
+});
+
+router.get("/public/b/:slug/pay/:token", async (req, res): Promise<void> => {
+  const slug = Array.isArray(req.params.slug) ? req.params.slug[0] : req.params.slug;
+  const token = Array.isArray(req.params.token) ? req.params.token[0] : req.params.token;
+  const { getGuestDepositPayView } = await import("../services/guest-deposit-pay.service");
+  const view = await getGuestDepositPayView(slug, token);
+  if (!view) {
+    sendError(res, req, 404, "Payment link not found or expired");
+    return;
+  }
+  res.json(view);
 });
 
 router.get("/public/vertical-coverage", async (_req, res): Promise<void> => {

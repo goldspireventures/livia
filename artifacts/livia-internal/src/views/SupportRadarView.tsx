@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { SupportSurfaceNav } from "../components/SupportSurfaceNav";
-import { listSupportTickets, type SupportTicketRow } from "../lib/api";
+import { listSupportTickets, listRadarProactiveFeeds, type RadarProactiveFeed, type SupportTicketRow } from "../lib/api";
 import { buttonStyle } from "../styles/ops-ui";
 
 type RadarMetric = { label: string; value: number; tone: "ok" | "warn" | "urgent" };
@@ -13,6 +13,7 @@ function ticketPriority(t: SupportTicketRow): string {
 
 export function SupportRadarView() {
   const [tickets, setTickets] = useState<SupportTicketRow[]>([]);
+  const [feeds, setFeeds] = useState<RadarProactiveFeed[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
@@ -20,8 +21,12 @@ export function SupportRadarView() {
     setErr(null);
     setLoading(true);
     try {
-      const res = await listSupportTickets({ status: "open,triaged" });
-      setTickets(res.data);
+      const [ticketRes, feedRes] = await Promise.all([
+        listSupportTickets({ status: "open,triaged" }),
+        listRadarProactiveFeeds(),
+      ]);
+      setTickets(ticketRes.data);
+      setFeeds(feedRes.data);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Failed to load radar");
     } finally {
@@ -94,6 +99,37 @@ export function SupportRadarView() {
           </div>
         ))}
       </div>
+      <h2 style={{ fontSize: 14, color: "#94a3b8", margin: "0 0 8px" }}>Proactive tenant health</h2>
+      {feeds.length === 0 ? (
+        <p style={{ fontSize: 13, color: "#64748b", marginBottom: 16 }}>No stuck onboarding or zero-booking tenants flagged.</p>
+      ) : (
+        <ul
+          style={{ listStyle: "none", margin: "0 0 16px", padding: 0, display: "grid", gap: 8 }}
+          data-testid="support-radar-proactive"
+        >
+          {feeds.slice(0, 12).map((f) => (
+            <li
+              key={f.id}
+              style={{
+                border: "1px solid rgba(148, 163, 184, 0.2)",
+                borderRadius: 8,
+                padding: 10,
+                fontSize: 12,
+                background: f.kind === "stuck_onboarding" ? "rgba(120, 53, 15, 0.15)" : "rgba(15, 23, 42, 0.5)",
+              }}
+            >
+              <strong style={{ color: "#fbbf24" }}>
+                {f.kind === "stuck_onboarding" ? "Stuck onboarding" : "Zero bookings"}
+              </strong>
+              <span style={{ color: "#64748b", marginLeft: 8 }}>{f.businessName}</span>
+              <p style={{ margin: "6px 0", color: "#cbd5e1" }}>{f.detail}</p>
+              <Link to={`/tenants/${f.businessId}`} style={{ color: "#38bdf8" }}>
+                Open tenant →
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
       <h2 style={{ fontSize: 14, color: "#94a3b8", margin: "0 0 8px" }}>Needs attention</h2>
       {hot.length === 0 ? (
         <p style={{ fontSize: 13, color: "#64748b" }}>No urgent or Liv tickets in the active queue.</p>
@@ -120,7 +156,7 @@ export function SupportRadarView() {
         </ul>
       )}
       <p style={{ fontSize: 11, color: "#64748b", marginTop: 16 }}>
-        Proactive tenant health (stuck onboarding, zero bookings) feeds here in R2.
+        Proactive feeds: stuck onboarding (&gt;48h) · zero bookings (14d). Ticket metrics above refresh manually.
       </p>
     </div>
   );

@@ -21,7 +21,9 @@
 | **How do we run ourselves?** | Internal ops — [`product/INTERNAL-EXEC-COCKPIT-SPEC.md`](./product/INTERNAL-EXEC-COCKPIT-SPEC.md), [`product/INTERNAL-SUPPORT-PLATFORM-SPEC.md`](./product/INTERNAL-SUPPORT-PLATFORM-SPEC.md), [`operations/README.md`](./operations/README.md). |
 
 **Public line (approved framing):**  
-*Livia is the operating system for appointment-based businesses in Europe — Liv is your colleague for bookings, inbox, voice, and the day’s chaos.*
+*Livia is the operating system for people-businesses in Europe — Liv is the colleague you hire for bookings, inbox, voice, and the day's chaos.*
+
+**Category detail:** [`product/PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md`](./product/PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md). Hair/barber is the **first GTM wedge**, not the product definition.
 
 ---
 

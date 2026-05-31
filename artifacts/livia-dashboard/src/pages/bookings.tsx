@@ -9,6 +9,7 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDateTime } from "@/lib/format";
+import { useNewBookingArrivalToast } from "@/hooks/use-new-booking-arrival";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -87,6 +88,8 @@ export default function BookingsPage() {
       return [...prev, ...page.data.filter((b: { id: string }) => !ids.has(b.id))];
     });
   }, [page.data, offset, bid, isLoading]);
+
+  useNewBookingArrivalToast(accumulated, !!bid && offset === 0 && !isLoading);
 
   const total = page.total;
   const hasMore =

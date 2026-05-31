@@ -1,6 +1,7 @@
 # Sales motion — F9
 
-**Status:** F9 (2026-05-07), OS alignment 2026-05-25.  
+**Status:** F9 (2026-05-07), OS alignment 2026-05-31.  
+**Category pitch:** People-business OS for appointment-led shops — hair is **GTM wedge**, not product ceiling ([`PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md`](../product/PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md)).  
 **Onboarding collateral:** [`OPERATOR-READY-PACK.md`](./OPERATOR-READY-PACK.md) — week-zero checklist + copy-paste templates for policies, leave, running late, team invite.
 
 ## Buyer vs user vs influencer per persona
@@ -14,7 +15,7 @@
 | **P4 Senior-w-admin** | Influencer post-pilot (the first staff-side promoter once they get scoped power). | Highlight the role in case studies; rare in current incumbents. |
 | **P5 Staff** | User; not in buy loop. | UX must respect Staff dignity; no Staff-resentment bug stories. |
 | **P6 Receptionist** | Strong influencer (in-shop champion when present); occasionally first to mention Liv. | Receptionist-friendly UX; receptionist referral programme. |
-| **P7 Customer** | Indirect influencer (NPS feedback). Never sees the buy decision. | Customer experience must self-evidently elevate the salon. |
+| **P7 Customer** | Indirect influencer (NPS feedback). Never sees the buy decision. | Customer experience must self-evidently elevate the **business** (not generic “salon software”). |
 
 ## Motion stages
 

@@ -45,6 +45,7 @@ export type GuestBookingView = {
   customerFirstName: string | null;
   currency: string;
   priceMinor: number;
+  depositPaidEurCents: number;
   timezone: string;
   logoUrl: string | null;
 };
@@ -68,6 +69,7 @@ export async function getGuestBookingByToken(
       serviceName: servicesTable.name,
       priceMinor: servicesTable.priceMinor,
       currency: servicesTable.currency,
+      depositPaidEurCents: bookingsTable.depositPaidEurCents,
       staffDisplayName: staffTable.displayName,
       customerId: customersTable.id,
       customerFirstName: customersTable.firstName,
@@ -100,6 +102,7 @@ export async function getGuestBookingByToken(
     customerFirstName: row.customerFirstName,
     currency: row.currency,
     priceMinor: row.priceMinor,
+    depositPaidEurCents: row.depositPaidEurCents,
     timezone: row.timezone,
     logoUrl: row.logoUrl,
   };

@@ -26,6 +26,15 @@ export type TenantExperienceActivationStep = {
   href: string;
 };
 
+export type TenantExperiencePublicAppearance = {
+  slug: string;
+  publicPreviewUrl: string;
+  logoUrl: string | null;
+  coverImageUrl: string | null;
+  brandAccentHex: string | null;
+  presentationPresetId: string;
+};
+
 export type TenantExperience = {
   vertical: BusinessVertical;
   vocabulary: ReturnType<typeof businessVocabulary>;
@@ -41,6 +50,12 @@ export type TenantExperience = {
     welcomeSubline: string;
   };
 };
+
+/** Relative `/b/{slug}` path for settings preview iframe (same origin). */
+export function resolvePublicPreviewPath(slug: string): string {
+  const clean = slug.trim().replace(/^\/+|\/+$/g, "");
+  return `/b/${clean}`;
+}
 
 const ACCENT_HEX: Record<BusinessVertical, string> = {
   hair: "#D4A72C",

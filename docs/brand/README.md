@@ -8,8 +8,8 @@ The brand of Livia + the brand of Liv. Read this first; it tells you what's wher
 
 Livia is two brands per `docs/company/brand-of-livia-and-liv.md`:
 
-1. **Livia** — the company. The B2B brand. The thing salons subscribe to.
-2. **Liv** — the agent. The character. The thing salons (and their customers) talk to.
+1. **Livia** — the company. The B2B brand. The platform operators subscribe to.
+2. **Liv** — the agent. The character. The colleague operators (and their customers) talk to.
 
 The two brands have a relationship: Livia stewards Liv. Livia speaks ABOUT Liv. Liv speaks AS Liv.
 

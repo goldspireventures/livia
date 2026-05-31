@@ -1,6 +1,9 @@
 # Brand of Livia and Liv — F10
 
-**Status:** F10 (2026-05-07). The single most under-addressed thing in the project pre-F10. Reads with `docs/livia-manifesto.md`, `docs/livia-positioning.md`, `docs/engineering/design-system.md`.
+**Status:** F10 (2026-05-07), surface matrix 2026-05-31.  
+**Tone per surface:** [`design/LIV-TONE-PER-SURFACE-MATRIX.md`](../design/LIV-TONE-PER-SURFACE-MATRIX.md) — canonical routing for who speaks where.  
+**Category:** People-business OS — not salon-shaped ([`PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md`](../product/PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md)).  
+Reads with `docs/livia-manifesto.md`, `docs/livia-positioning.md`, `docs/engineering/design-system.md`.
 
 ## Two brands, one company
 

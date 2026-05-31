@@ -78,8 +78,24 @@ Before documenting or building any surface family, confirm:
 
 ---
 
-## 6. Changelog
+## 6. W4/W5 skin inheritance (doc sprint)
+
+**Authority:** [`SKIN-BRAND-INHERITANCE-SPEC.md`](./SKIN-BRAND-INHERITANCE-SPEC.md)
+
+| World | Inherits | Owner-editable |
+|-------|----------|----------------|
+| W1–W3 | Platform fixed chrome | Marketing copy only |
+| W4 tenant web/mobile | Preset + brand + vertical pack | Logo, cover, accent, preset |
+| W5 `/b` | Same preset + brand as tenant | Same fields — **live mobile preview** in Settings |
+| W6 guest hub (R2) | Separate guest chrome | N/A |
+
+Screen cards: [`FIGMA-SCREEN-MANIFEST.md`](./FIGMA-SCREEN-MANIFEST.md) · inventory [`VISUAL-SCREEN-MASTER-INVENTORY.md`](./VISUAL-SCREEN-MASTER-INVENTORY.md).
+
+---
+
+## 7. Changelog
 
 | Date | Change |
 |------|--------|
 | 2026-05-30 | Initial locks: Aurum logo, visual anchors, wedge clarity, inheritance rules |
+| 2026-05-31 | §6 skin inheritance cross-link to SKIN-BRAND-INHERITANCE-SPEC |

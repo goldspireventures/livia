@@ -3,7 +3,7 @@
 **Status:** canonical (2026-05-30)  
 **Purpose:** Platform-wide release cadence — surfaces, policy, API, and ops evolve **together**, not patch-by-patch.  
 **Gallery:** http://localhost:5173/experience/livia-evolution  
-**Reads with:** [`LIVIA-FINAL-BUILD-PLAN.md`](./LIVIA-FINAL-BUILD-PLAN.md) · [`LIVIA-MASTER-BUILD-PLAN.md`](./LIVIA-MASTER-BUILD-PLAN.md) · [`PLATFORM-BACKLOG.md`](../operations/PLATFORM-BACKLOG.md) · [`LIVIA-PLATFORM-LIFECYCLE.md`](./LIVIA-PLATFORM-LIFECYCLE.md) · [`VISUAL-INHERITANCE-AND-BRAND-LOCKS.md`](../design/VISUAL-INHERITANCE-AND-BRAND-LOCKS.md)
+**Reads with:** [`LIVIA-FINAL-BUILD-PLAN.md`](./LIVIA-FINAL-BUILD-PLAN.md) · [`LIVIA-BUILD-PLAN-V2.md`](./LIVIA-BUILD-PLAN-V2.md) (post–G-DOC sequencing) · [`LIVIA-MASTER-BUILD-PLAN.md`](./LIVIA-MASTER-BUILD-PLAN.md) · [`PLATFORM-BACKLOG.md`](../operations/PLATFORM-BACKLOG.md) · [`LIVIA-PLATFORM-LIFECYCLE.md`](./LIVIA-PLATFORM-LIFECYCLE.md) · [`VISUAL-INHERITANCE-AND-BRAND-LOCKS.md`](../design/VISUAL-INHERITANCE-AND-BRAND-LOCKS.md)
 
 **Surface programs (design before build):**
 

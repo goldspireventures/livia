@@ -1,0 +1,59 @@
+meta:
+  id: w4.owner.chain.web
+  world: W4
+  route: "/chain"
+  artifact: livia-dashboard
+  persona: [P1]
+  verticals: all
+  release: R1
+  status: designed
+
+job: >
+  Founder sees which shop needs attention — rollup KPIs without cross-tenant customer leakage.
+
+visual:
+  canvas:
+    device: desktop
+    viewport: 1440x900
+  zones:
+    - id: header
+      content:
+        - "Your businesses" display 28px
+        - period selector This week | Today
+    - id: shop_cards
+      layout: responsive grid 1/2/3 col
+      content:
+        - card per business: logo, name, vertical badge, 3 KPI chips
+          - bookings today
+          - inbox waiting
+          - alert dot if anomaly
+        - tap card → switch tenant context → that shop dashboard
+    - id: rollup_table
+      visible: desktop
+      content:
+        - sortable columns: Shop | Bookings | Revenue signal | Inbox | Status
+    - id: liv_briefing
+      content:
+        - cross-shop briefing paragraph max 4 sentences
+        - "Galway down 18% WoW" style — actionable
+  motion:
+    card_hover: subtle lift shadow
+    switch_shop: enter-page on destination dashboard
+
+states:
+  single_shop:
+    redirect: /dashboard — chain hidden if only one membership
+  loading:
+    visual: 3 shop card skeletons
+
+acceptance:
+  e2e:
+    - demo-founder@ chain view
+  privacy:
+    - no cross-shop customer names in rollup
+
+traceability:
+  surfaceId: tenant.founder.chain
+  figma:
+    frame: W4-Tenant/w4.owner.chain.web
+    status: not_started

@@ -4,6 +4,8 @@
 **Owner:** founder  
 **Until:** Gate 2 declared (see [`../company/EXECUTIVE-ACTION-PLAN.md`](../company/EXECUTIVE-ACTION-PLAN.md))
 
+> **Product ceiling ≠ GTM wedge.** This moratorium limits **go-to-market and customer-facing launch** scope (IE hair first). The **people-business OS** — all code verticals, guest surfaces, demo world — continues in docs and engineering per [`PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md`](./PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md) and [`LIVIA-DOCUMENTATION-PROGRAM.md`](./LIVIA-DOCUMENTATION-PROGRAM.md). Do not read “hair only” as “build salon-only product.”
+
 ## Rule
 
 All engineering and customer-facing work serves **one wedge** until Gate 2:

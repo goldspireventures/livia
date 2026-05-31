@@ -1062,6 +1062,8 @@ export async function syncVerticalShowcaseForDemo(): Promise<{
   }
   const before = new Set(status.businesses.map((b) => b.slug));
   const businesses = await seedVerticalShowcaseShops(orgAdminId);
+  await seedVerticalDemoExtras();
+  await seedMarketShowcaseShops(orgAdminId);
   for (const b of businesses) {
     if (!before.has(b.slug)) {
       await ensureLiveDayForBusiness(b.id, { force: true });
@@ -1071,7 +1073,14 @@ export async function syncVerticalShowcaseForDemo(): Promise<{
       await ensureDemoOperationalCases(b.id, b.slug, {});
     }
   }
-  await syncAllDemoClerkUsers();
+  const addedNew = businesses.some((b) => !before.has(b.slug));
+  if (addedNew) {
+    try {
+      await syncAllDemoClerkUsers();
+    } catch (e) {
+      logger.warn({ err: e }, "Clerk sync skipped after vertical showcase sync (rate limit or offline)");
+    }
+  }
   return {
     businesses: businesses.map((b) => ({
       slug: b.slug,

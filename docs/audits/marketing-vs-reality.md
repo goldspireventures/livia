@@ -1,11 +1,12 @@
 # Marketing-promise vs product-truth audit
 
 - **Owner:** founder
-- **Last audited:** 2026-05-20 (Phase 9 re-audit)
+- **Last audited:** 2026-05-31 (doc sprint pass + Phase 9 baseline)
+- **Domain:** **livia-hq.com** is canonical for marketing claims ([`PLATFORM-TERMINOLOGY.md`](../PLATFORM-TERMINOLOGY.md)). Historical `livia.io` references in older docs = same audit intent.
 - **Cadence:** weekly Monday review (see `docs/operating-cadence.md` → "Promise integrity")
 - **Gating power:** A row in state `build-before-G2` blocks Gate 2. A row in state `build-before-G3` blocks Gate 3 (see `docs/launch-plan.md`).
 
-The audit's job is to keep `livia.io` honest. Every claim on the marketing surface is mapped to **exactly one** of four decision states:
+The audit's job is to keep **livia-hq.com** honest. Every claim on the marketing surface is mapped to **exactly one** of four decision states:
 
 - **`build-before-G2`** — the claim must be true before closed beta opens. Linked to a tracker task.
 - **`build-before-G3`** — the claim must be true before public launch. Linked to a tracker task.
@@ -70,7 +71,22 @@ Gate 2 cannot be declared until rows 3 and 5b flip to ✅. Gate 3 cannot be decl
 | 6b | EU production residency codified | ADR + deploy region pin (#57) |
 | 1 | WhatsApp / Instagram inbound | Remove or defer claims (unchanged) |
 
-**Gate 3 ops (not code):** first paid Stripe subscriber, App/Play live, `livia.io` live, legal pages, SOC 2 kickoff — see `docs/launch-plan.md` and `docs/compliance/soc2-type1-kickoff-checklist.md`.
+**Gate 3 ops (not code):** first paid Stripe subscriber, App/Play live, **livia-hq.com** live, legal pages, SOC 2 kickoff — see `docs/launch-plan.md` and `docs/compliance/soc2-type1-kickoff-checklist.md`.
+
+---
+
+## Phase 10 re-audit (2026-05-31) — category + demo depth
+
+| Area | Claim risk | Reality | Action |
+|------|------------|---------|--------|
+| **Category** | "Salon software" / hair-only hero | People-business OS; 9 vertical demo grid | Marketing copy uses trade-neutral language per M5; hair = wedge not ceiling |
+| **Demo** | "See it work" | Live demo world + E2E depth (`DEMO-WORLD-LIVE-SPEC`) | ✅ Substantive; do not imply features absent from demo slug |
+| **Guest proof/consent** | Implied on all verticals | Proof live (body-art); consent partial | M5 honest per `GUEST-SURFACES-AUDIT` |
+| **Premium UX** | Implicit "premium" aesthetic | PREMIUM-MOTION-LAYER spec; partial implementation | Do not claim app-open motion until shipped |
+| **WhatsApp/IG** | Row 1 unchanged | Still defer | Keep removed from M1 copy |
+| **Deposits / Connect** | Row 2b/8b unchanged | Partial Stripe | Keep "at launch" framing until Connect live |
+
+**Rows 3, 4b, 5b, 9b:** remain ✅ per Phase 9 when prod cron + billing keys verified.
 
 ---
 

@@ -1,0 +1,76 @@
+meta:
+  id: w5.public.intake.mobile
+  world: W5
+  route: "/b/:slug/intake/:token"
+  artifact: livia-dashboard
+  persona: [P7]
+  verticals: [medspa, allied-health]
+  release: R1
+  status: designed
+
+job: >
+  Medspa/allied guest completes informed consent and intake — medico-legally clear, never diagnostic Liv.
+
+visual:
+  canvas:
+    device: phone
+    viewport: 390x844
+    background: clinical-calm white #fafafa — spacious density
+  zones:
+    - id: header
+      sticky: true
+      content:
+        - progress "Step 2 of 4"
+        - clinic name 16px semibold
+    - id: consent_body
+      layout: scroll
+      padding: 20px
+      content:
+        - procedure name 20px
+        - plain-language consent paragraphs scrollable max-height 40vh inset border
+        - checkbox rows required:
+            - "I confirm I am over 18" where applicable
+            - "I have read and agree to the treatment consent"
+            - "I confirm the information I provide is accurate"
+        - signature pad OR typed name + date — thick surface not SMS
+    - id: contraindications
+      content:
+        - yes/no toggles — pregnancy, blood thinners, allergies
+        - free text allergy field
+        - footnote: "This is not medical advice — your practitioner will review"
+    - id: footer_actions
+      sticky_bottom: true
+      content:
+        - primary "Continue to book" disabled until required checks
+        - link "Questions? Message the clinic" → /b chat
+  typography:
+    legal: 14px/1.6 serif optional for consent block
+    labels: 15px medium
+  color:
+    primary: muted teal or brand accent — not aggressive red
+    error: rose-600 for missing required
+
+copy:
+  liv_never: Liv must not recommend treatments or diagnose on this screen
+  disclosure: AI disclosure if chat opened from here
+
+states:
+  loading:
+    visual: consent block skeleton
+  already_signed:
+    copy: "Consent recorded on {date}"
+    readonly: true
+
+acceptance:
+  e2e:
+    - public-booking-quality medspa consent path
+  a11y:
+    - checkbox labels programmatically linked
+    - signature area keyboard alternative
+
+traceability:
+  surfaceId: public.intake
+  guest_surface: consent
+  figma:
+    frame: W5/w5.public.intake.mobile
+    status: not_started

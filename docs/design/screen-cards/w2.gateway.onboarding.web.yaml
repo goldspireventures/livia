@@ -1,0 +1,68 @@
+meta:
+  id: w2.gateway.onboarding.web
+  world: W2
+  route: "/onboarding"
+  artifact: livia-dashboard
+  persona: [P2 new owner]
+  verticals: all
+  release: R1
+  status: designed
+
+job: >
+  New owner goes from signed up to live `/b` link with vertical-fair steps — platform-default skin, not preset parade.
+
+visual:
+  canvas:
+    device: desktop_tablet
+    viewport: 1024x768
+    background: platform-default preset — aurora subtle
+  zones:
+    - id: wizard_shell
+      layout: centered card max-width 560px
+      content:
+        - Livia mark top center small
+        - step indicator dots
+        - step title 24px
+        - step body form fields
+        - footer: Back | Continue primary
+    steps:
+      - id: vertical
+        title: "What kind of business?"
+        content: vertical grid cards with icon — hair beauty wellness body-art fitness medspa allied-health pet automotive
+      - id: business_basics
+        title: "Your business details"
+        fields: [name, slug preview /b/{slug}, timezone]
+      - id: services_seed
+        title: "Your services"
+        content: vertical default services checklist editable
+      - id: brand
+        title: "Your public page"
+        content: logo upload | cover upload | accent picker | live /b mobile preview iframe
+      - id: liv_train
+        title: "How should Liv sound?"
+        content: tone slider warm↔professional + deposit policy toggles
+      - id: go_live
+        title: "You're ready"
+        content: copy /b link | QR | simulate live day button
+  motion:
+    step: enter-panel horizontal
+    preview_update: debounce 300ms iframe refresh on brand change
+
+states:
+  blocked_gate:
+    copy: "Complete {step} to continue"
+  loading_provision:
+    overlay: pending-overlay "Setting up your shop…"
+
+acceptance:
+  e2e:
+    - onboarding wizard headless lifecycle
+  visual:
+    - platform-default tokens only — no vertical preset parade
+
+traceability:
+  surfaceId: gateway.onboarding
+  policy: onboarding-program.ts acts
+  figma:
+    frame: W2/w2.gateway.onboarding.web
+    status: not_started

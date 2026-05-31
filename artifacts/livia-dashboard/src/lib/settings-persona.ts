@@ -2,6 +2,7 @@ import type { PersonaKind } from "@/lib/persona";
 
 export type SettingsTabId =
   | "shop"
+  | "appearance"
   | "policy"
   | "liv"
   | "comms"
@@ -22,6 +23,7 @@ export function settingsTabsForPersona(
     case "owner":
       return [
         "shop",
+        "appearance",
         "policy",
         "liv",
         "comms",
@@ -33,7 +35,7 @@ export function settingsTabsForPersona(
         ...demo,
       ];
     case "manager":
-      return ["comms", "shop", "policy", "liv", "team", "legal"];
+      return ["comms", "shop", "appearance", "policy", "liv", "team", "legal"];
     case "receptionist":
       return ["comms", "shop", "legal"];
     case "staff":
@@ -66,6 +68,7 @@ export function canViewBilling(persona: PersonaKind): boolean {
 /** Consistent tab labels — order in settingsTabsForPersona is the display order */
 export const SETTINGS_TAB_LABELS: Record<SettingsTabId, string> = {
   shop: "Shop",
+  appearance: "Public appearance",
   policy: "Policies",
   liv: "Liv AI",
   comms: "Channels",

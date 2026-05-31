@@ -356,6 +356,10 @@ router.patch(
         sendError(res, req, 400, "Invalid presentation preset for this vertical");
         return;
       }
+      if (msg === "PRESET_DROPS_VERTICAL_GATES") {
+        sendError(res, req, 400, "Preset is not compatible with required guest flows for this vertical");
+        return;
+      }
       if (msg === "INVALID_ACCENT_HEX") {
         sendError(res, req, 400, "brandAccentHex must be #RRGGBB");
         return;

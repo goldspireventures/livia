@@ -368,6 +368,72 @@
   20%  { opacity: 1; }
   100% { background-position: -20% 0; opacity: 0; }
 }
+
+/* Premium motion — PREMIUM-MOTION-LAYER.md */
+@keyframes motion-logo-enter {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes motion-liv-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 hsl(var(--primary) / 0.25); }
+  50%      { opacity: 0.92; box-shadow: 0 0 0 6px hsl(var(--primary) / 0); }
+}
+@keyframes motion-glow-success {
+  0%   { box-shadow: 0 0 0 0 hsl(var(--brand-accent, var(--primary)) / 0.45); }
+  70%  { box-shadow: 0 0 0 14px hsl(var(--brand-accent, var(--primary)) / 0); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+@keyframes motion-preview-crossfade {
+  from { opacity: 0.6; }
+  to   { opacity: 1; }
+}
+@keyframes motion-hero-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes motion-wizard-enter {
+  from { opacity: 0; transform: translateX(12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.motion-logo-enter {
+  animation: motion-logo-enter 400ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+.motion-liv-pulse {
+  animation: motion-liv-pulse 2s ease-in-out infinite;
+}
+.motion-glow-success {
+  animation: motion-glow-success 600ms ease-out both;
+}
+.motion-preview-crossfade {
+  animation: motion-preview-crossfade 200ms ease-out both;
+}
+.motion-hero-fade-in {
+  animation: motion-hero-fade-in 400ms ease-out both;
+}
+.motion-wizard-enter {
+  animation: motion-wizard-enter 300ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+.demo-wedge-card {
+  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+}
+.demo-wedge-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px hsl(187 92% 69% / 0.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-logo-enter,
+  .motion-liv-pulse,
+  .motion-glow-success,
+  .motion-preview-crossfade,
+  .motion-hero-fade-in,
+  .motion-wizard-enter,
+  .celebrate-shimmer::before {
+    animation: none !important;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .celebrate-shimmer::before { display: none; }
 }
@@ -558,6 +624,13 @@
   .public-booking-shell {
     position: relative;
   }
+  .guest-hub-shell {
+    background: linear-gradient(
+      180deg,
+      hsl(var(--primary) / 0.08) 0%,
+      hsl(var(--background)) 28%
+    );
+  }
   .public-booking-hero {
     background: linear-gradient(
       180deg,
@@ -612,11 +685,30 @@
   }
 
   html[data-presentation="platform-default"] .app-shell-main {
-    background-image: linear-gradient(
-      180deg,
-      hsl(var(--primary) / 0.04) 0%,
-      transparent 12rem
-    );
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, hsl(var(--primary) / 0.07), transparent),
+      linear-gradient(180deg, hsl(var(--primary) / 0.04) 0%, transparent 12rem);
+  }
+
+  html[data-presentation="platform-default"] aside.w-64 {
+    background: hsl(var(--card) / 0.72);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  html[data-presentation="platform-default"] .platform-default-liv-glass {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  html[data-presentation="platform-default"] [data-testid="owner-dashboard-briefing"],
+  html[data-presentation="platform-default"] [data-testid="liv-command-hub"] {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  html[data-presentation="platform-default"] .platform-default-card-lift:hover {
+    box-shadow: 0 10px 28px hsl(var(--primary) / 0.08);
   }
 
   html[data-vertical-display="serif"] .public-booking-shell h1,

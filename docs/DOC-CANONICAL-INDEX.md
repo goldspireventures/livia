@@ -3,7 +3,7 @@
 **Purpose:** When two docs disagree, **this table wins**.  
 **Terminology:** [`PLATFORM-TERMINOLOGY.md`](./PLATFORM-TERMINOLOGY.md)  
 **Archived docs:** [`archive/README.md`](./archive/README.md) — do not extend  
-**Updated:** 2026-05-30 (full audit + platform surface programs)
+**Updated:** 2026-05-31 (documentation program — build paused)
 
 ---
 
@@ -11,7 +11,17 @@
 
 | I need to… | Open |
 |------------|------|
-| **Start heavy build** | [`product/LIVIA-FINAL-BUILD-PLAN.md`](./product/LIVIA-FINAL-BUILD-PLAN.md) |
+| **Doc sprint (BUILD PAUSED)** | [`product/LIVIA-DOCUMENTATION-PROGRAM.md`](./product/LIVIA-DOCUMENTATION-PROGRAM.md) |
+| **Build hierarchy (where we are)** | [`product/BUILD-HIERARCHY-MAP.md`](./product/BUILD-HIERARCHY-MAP.md) |
+| **Visual / every screen** | [`design/VISUAL-DOCUMENTATION-PROGRAM.md`](./design/VISUAL-DOCUMENTATION-PROGRAM.md) · [`design/VISUAL-SCREEN-MASTER-INVENTORY.md`](./design/VISUAL-SCREEN-MASTER-INVENTORY.md) |
+| **Screen cards (L3)** | [`design/screen-cards/`](./design/screen-cards/) |
+| **Category (people-business OS)** | [`product/PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md`](./product/PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md) |
+| **UI/UX authority** | [`design/UI-UX-MASTER-PROGRAM.md`](./design/UI-UX-MASTER-PROGRAM.md) |
+| **Skin / `/b` inheritance** | [`design/SKIN-BRAND-INHERITANCE-SPEC.md`](./design/SKIN-BRAND-INHERITANCE-SPEC.md) |
+| **Systems gap audit** | [`product/SYSTEMS-COMPLETENESS-AUDIT.md`](./product/SYSTEMS-COMPLETENESS-AUDIT.md) |
+| **Build after doc gate** | [`product/LIVIA-BUILD-PLAN-V2.md`](./product/LIVIA-BUILD-PLAN-V2.md) |
+| **Vision + build sequencing** | [`product/LIVIA-WIDE-BUILD-PLAN.md`](./product/LIVIA-WIDE-BUILD-PLAN.md) |
+| **Start heavy build (locks — pre-pause)** | [`product/LIVIA-FINAL-BUILD-PLAN.md`](./product/LIVIA-FINAL-BUILD-PLAN.md) |
 | Understand the company | [`LIVIA-ALIGNMENT.md`](./LIVIA-ALIGNMENT.md) |
 | Build something today | [`BUILD-PLAN-WIRE.md`](./operations/BUILD-PLAN-WIRE.md) · [`R1-BUILD-STATUS.md`](./operations/R1-BUILD-STATUS.md) · [`PLATFORM-BACKLOG.md`](./operations/PLATFORM-BACKLOG.md) |
 | Ship a platform release | [`product/PLATFORM-RELEASE-PROGRAM.md`](./product/PLATFORM-RELEASE-PROGRAM.md) |
@@ -26,7 +36,11 @@
 
 | # | Document | Role |
 |---|----------|------|
-| 0 | [`product/LIVIA-FINAL-BUILD-PLAN.md`](./product/LIVIA-FINAL-BUILD-PLAN.md) | **Master execution scope — LOCKED** |
+| 0 | [`product/LIVIA-DOCUMENTATION-PROGRAM.md`](./product/LIVIA-DOCUMENTATION-PROGRAM.md) | **Doc sprint — BUILD PAUSED until G-DOC** |
+| 0a | [`product/PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md`](./product/PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md) | **Category — not salon-shaped** |
+| 0b | [`product/LIVIA-BUILD-PLAN-V2.md`](./product/LIVIA-BUILD-PLAN-V2.md) | **Build authority after doc gate** |
+| 0c | [`product/LIVIA-WIDE-BUILD-PLAN.md`](./product/LIVIA-WIDE-BUILD-PLAN.md) | Vision, org shapes, cascade, R1→R3 queue |
+| 0d | [`product/LIVIA-FINAL-BUILD-PLAN.md`](./product/LIVIA-FINAL-BUILD-PLAN.md) | Master execution scope — LOCKED (pre-pause) |
 | 1 | [`LIVIA-ALIGNMENT.md`](./LIVIA-ALIGNMENT.md) | Company + product + architecture rules |
 | 2 | [`PLATFORM-TERMINOLOGY.md`](./PLATFORM-TERMINOLOGY.md) | Names, domains, skins, disambiguation |
 | 3 | [`product/LIVIA-GLOBAL-PRODUCT-SYSTEM.md`](./product/LIVIA-GLOBAL-PRODUCT-SYSTEM.md) | Global OS — not wedge-only |
@@ -74,10 +88,31 @@
 | Beta / showcase | `product/BETA-SHOWCASE-PROGRAM.md` | `BETA-ONBOARDING-FLOW.md` |
 | Onboarding | `product/BETA-ONBOARDING-FLOW.md` | `ONBOARDING-PRODUCTION.md` |
 | Channels EU | `product/CHANNELS-EU-MESSAGING.md` | `CHANNEL-UX-CONTRACT.md` |
-| Notifications | `product/NOTIFICATIONS.md` | workflows/ |
+| Notifications (staff) | `product/NOTIFICATIONS.md` | workflows/ |
+| Notifications (customer P7) | `product/CUSTOMER-NOTIFICATIONS-SPEC.md` | CUSTOMER-NOTIFICATIONS |
+| Global search | `product/GLOBAL-SEARCH-SPEC.md` | — |
+| Import / migration | `product/IMPORT-MIGRATION-SPEC.md` | booksy-import-runbook |
+| Feature flags | `product/FEATURE-FLAGS-SPEC.md` | internal /flags |
+| Performance budgets | `product/PERFORMANCE-BUDGETS.md` | MULTI-HAT-GAP-REVIEW |
+| Resource inventory | `product/RESOURCE-INVENTORY-SPEC.md` | booking-guards, medspa |
+| Voucher / packages | `product/VOUCHER-PACKAGE-SPEC.md` | wellness playbooks |
+| Liv tool matrix | `product/LIV-TOOL-REGISTRY-MATRIX.md` | liv-runtime registry |
+| Guest surfaces audit | `engineering/GUEST-SURFACES-AUDIT.md` | `lib/policy/guest-surfaces.ts` |
+| Exec hat ledger (Track H) | `product/INTERNAL-EXEC-COCKPIT-SPEC.md` §4.2b | `lib/policy/exec-hats.ts`, `pnpm exec:hat-work` |
+| Vertical playbooks | `product/vertical-playbooks/` | GLOBAL-PRODUCT §III |
+| Demo live depth | `product/DEMO-WORLD-LIVE-SPEC.md` | PER-VERTICAL-DEMO-SEED |
+| UI/UX program | `design/UI-UX-MASTER-PROGRAM.md` | V3-EXPERIENCE-SPEC, motion-tokens, screen-cards |
+| Premium motion | `design/PREMIUM-MOTION-LAYER.md` | motion-tokens, UI-UX-MASTER |
+| Liv tone / surfaces | `design/LIV-TONE-PER-SURFACE-MATRIX.md` | brand-of-livia-and-liv |
+| Visual program | `design/VISUAL-DOCUMENTATION-PROGRAM.md` | VISUAL-SCREEN-MASTER-INVENTORY, SCREEN-CARD-SCHEMA |
+| Visual acceptance tests | `testing/TESTING-VISUAL-ACCEPTANCE.md` | E2E, Maestro |
+| Empty/error/loading | `design/EMPTY-ERROR-LOADING-CATALOG.md` | UI-UX-MASTER-PROGRAM |
+| Skin inheritance | `design/SKIN-BRAND-INHERITANCE-SPEC.md` | VISUAL-INHERITANCE |
 | Public booking E2E | `product/PUBLIC-BOOKING-INTAKE-E2E.md` | `PUBLIC-B-SURFACE-SPEC.md` |
 | Guest identity (no login) | `product/GUEST-CUSTOMER-IDENTITY.md` | `GUEST-CONTINUITY-HUB-SPEC.md`, `customer-typologies.md` |
-| Add a new vertical | `engineering/VERTICAL-ADD-PLAYBOOK.md` | `vertical-coverage.ts`, `COMPOSABLE-EVOLUTION.md` §5.3 |
+| Add a new vertical | `engineering/VERTICAL-ADD-PLAYBOOK.md` | `vertical-coverage.ts`, `PLATFORM-LIFECYCLE-REGISTRY.md` |
+| Register-once cascade (target) | `engineering/PLATFORM-LIFECYCLE-REGISTRY.md` | `COMPOSABLE-EVOLUTION.md` §5.3 |
+| Wide build / sequencing | `product/LIVIA-WIDE-BUILD-PLAN.md` | `R1/R2-BUILD-STATUS`, `PLATFORM-BACKLOG` |
 | Web/mobile parity | `product/WEB-MOBILE-PARITY.md` | `design/MOBILE-UX-PRINCIPLES.md` |
 | Production-ready | `product/LIVIA-PRODUCTION-READY.md` | `OPEN-ITEMS-DEFERRED.md` |
 | EU complete spec | `product/LIVIA-COMPLETE-SYSTEM-SPEC.md` | — |
@@ -89,6 +124,8 @@
 | Master build phases | `product/LIVIA-MASTER-BUILD-PLAN.md` | `LIVIA-OS-MASTER-PLAN.md` |
 | Platform kernel | `engineering/PLATFORM-KERNEL.md` | ADRs |
 | Composable evolution | `engineering/COMPOSABLE-EVOLUTION.md` | TENANT-EXPERIENCE-CONTRACT |
+| Code clarity / naming | `engineering/CODE-CLARITY-STANDARDS.md` | REPO-LAYOUT |
+| Atlas (internal knowledge) | `engineering/ATLAS-INTEGRATION-GUIDE.md` | INTERNAL-EXEC-COCKPIT |
 | Repo layout | `engineering/REPO-LAYOUT.md` | `PRODUCTION-REPO-STRUCTURE.md` |
 | Data model | `engineering/data-model.md` | `lib/db` |
 | Design system | `engineering/design-system.md` | ADR 0007, 0008 |
@@ -155,5 +192,6 @@ See [`archive/README.md`](./archive/README.md). Includes: `SYSTEM-REALIGNMENT-PR
 
 | Date | Change |
 |------|--------|
+| 2026-05-31 | Documentation program — build pause, category manifesto, UX/skin/systems specs |
 | 2026-05-30 | Full audit — tiers, surface programs, archive, terminology, gap review link |
 | 2026-05-30 | Track H workforce + platform surfaces (prior) |

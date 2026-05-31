@@ -146,7 +146,11 @@ export default function DashboardScreen() {
     refetch,
     isRefetching,
   } = useGetDashboardSummary(currentBusiness?.id ?? "", {
-    query: { enabled: !!currentBusiness?.id } as any,
+    query: {
+      enabled: !!currentBusiness?.id,
+      refetchInterval: 12_000,
+      refetchOnWindowFocus: true,
+    } as any,
   });
 
   const { data: bizDetail } = useGetBusiness(currentBusiness?.id ?? "", {
@@ -374,7 +378,7 @@ export default function DashboardScreen() {
             <Text style={[styles.founderSub, { color: colors.mutedForeground }]} numberOfLines={2}>
               {(rollup?.alerts?.length ?? 0) > 0
                 ? `${rollup!.alerts!.length} cross-shop alert${rollup!.alerts!.length === 1 ? "" : "s"} on Glance`
-                : rollup?.founderBriefingLine ??
+                : rollup?.orgAdminBriefingLine ??
                   "Open Glance for pulse across every shop — Today stays focused on one location at a time."}
             </Text>
           </View>

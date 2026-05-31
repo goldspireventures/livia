@@ -1,0 +1,61 @@
+meta:
+  id: w4.ops.bookings.new.web
+  world: W4
+  route: "/bookings/new"
+  artifact: livia-dashboard
+  persona: [P3, P6]
+  verticals: all
+  release: R1
+  status: designed
+
+job: >
+  Staff books correctly — client, service, qualified staff, slot — vertical gates enforced.
+
+visual:
+  canvas:
+    device: desktop
+    viewport: 1280x800
+    layout: wizard centered max 640px or split calendar right
+  zones:
+    - id: step_indicator
+      content: dots or labeled steps 1-5
+    steps:
+      - id: client
+        content: search select customer + add new inline
+      - id: service
+        content: service list filtered by vertical
+      - id: staff
+        content: skill-filtered staff pick — only qualified
+      - id: slot
+        content: calendar week strip + slot chips
+        motion: slot lost → haptic warning mobile
+      - id: confirm
+        content: summary + deposit note + confirm
+    - id: vertical_gates
+      beauty:
+        patch_test_banner: if first lash service
+      medspa:
+        block: if consent required and missing
+      body-art:
+        link: attach proof if session type
+  motion:
+    step: enter-panel
+    confirm: success-beat → navigate booking detail
+
+states:
+  no_slots:
+    copy: "No slots — try another day or staff"
+  loading_slots:
+    visual: slot chip skeletons
+
+acceptance:
+  e2e:
+    - booking-wizard headless lifecycle
+  vertical:
+    - patch test gate beauty documented in BUSINESS-RULES-REGISTRY
+
+traceability:
+  surfaceId: tenant.booking.new
+  figma:
+    frame: W4-Tenant/w4.ops.bookings.new.web
+    status: not_started

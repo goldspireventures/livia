@@ -1,5 +1,7 @@
 # Livia — Documentation readiness (levels, POVs, verdict)
 
+> **⚠ Superseded (2026-05-31)** by [`LIVIA-DOCUMENTATION-PROGRAM.md`](./LIVIA-DOCUMENTATION-PROGRAM.md). Build is paused until gate **G-DOC**. The verdict below reflects May 2026 beta — not the full doc sprint target.
+
 
 
 **Status:** v1.1 (2026-05-21) — post close-out pass  

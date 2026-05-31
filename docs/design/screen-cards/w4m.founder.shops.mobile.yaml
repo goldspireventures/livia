@@ -1,0 +1,53 @@
+meta:
+  id: w4m.founder.shops.mobile
+  world: W4
+  route: "/(tabs)/shops"
+  artifact: livia-mobile
+  persona: [P1]
+  verticals: all
+  release: R1
+  status: designed
+
+job: >
+  Founder glances at all shops on phone — tap to switch tenant — not full chain analytics.
+
+visual:
+  canvas:
+    device: phone
+    viewport: 390x844
+  zones:
+    - id: header
+      content:
+        - "Your shops" 28px
+        - active shop pill if switched
+    - id: shop_list
+      layout: vertical cards gap 12px
+      card:
+        content:
+          - logo 48px | name | vertical label
+          - row 3 mini stats: today bookings | inbox | alert icon
+        tap: switch business context + haptic light → navigate to that shop Today/dashboard
+    - id: liv_glance
+      content:
+        - optional one-line Liv briefing cross-shop
+  motion:
+    switch: enter-page on destination tab
+
+states:
+  loading:
+    visual: 3 card skeletons
+  one_shop:
+    copy: "Add another location in web settings"
+    hide: if single membership
+
+acceptance:
+  e2e:
+    - demo-founder mobile shops tab
+  privacy:
+    - no P7 names cross-shop
+
+traceability:
+  surfaceId: tenant.founder.shops.mobile
+  figma:
+    frame: W4-Mobile/w4m.founder.shops.mobile
+    status: not_started

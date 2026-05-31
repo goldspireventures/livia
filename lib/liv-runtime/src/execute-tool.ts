@@ -5,6 +5,8 @@ import {
   LIV_TOOL_FIND_SLOTS,
   LIV_TOOL_GET_BOOKING,
   LIV_TOOL_LIST_STUCK_CONTINUITY,
+  LIV_TOOL_LIST_DRIFT_CANDIDATES,
+  LIV_TOOL_DRAFT_DRIFT_RECOVERY,
   LIV_TOOL_LOOKUP_CUSTOMER,
   LIV_TOOL_MORNING_BRIEFING,
   LIV_TOOL_RESCHEDULE_BOOKING,
@@ -56,6 +58,16 @@ export type LivToolDeps = {
   lookupCustomer?: (input: { query: string }) => Promise<Record<string, unknown>>;
   getBooking?: (input: { bookingId: string }) => Promise<Record<string, unknown>>;
   listStuckContinuity?: (input: { limit?: number }) => Promise<Record<string, unknown>>;
+  listDriftCandidates?: (input: {
+    minDays?: number;
+    limit?: number;
+  }) => Promise<Record<string, unknown>>;
+  draftDriftRecovery?: (input: {
+    customerId?: string;
+    customerName?: string;
+    lastServiceName?: string;
+    daysSinceVisit?: number;
+  }) => Promise<Record<string, unknown>>;
   morningBriefing?: () => Promise<Record<string, unknown>>;
   searchTenants?: (input: { q: string; limit?: number }) => Promise<Record<string, unknown>>;
   tenantSnapshot?: (input: { businessId: string }) => Promise<Record<string, unknown>>;
@@ -237,6 +249,35 @@ export async function executeLivTool(args: {
     const limit = toolInput.limit ? parseInt(String(toolInput.limit), 10) : 10;
     const out = await deps.listStuckContinuity({
       limit: Number.isFinite(limit) ? limit : 10,
+    });
+    return { result: { ok: true, ...out } };
+  }
+
+  if (toolName === LIV_TOOL_LIST_DRIFT_CANDIDATES) {
+    if (!deps.listDriftCandidates) {
+      return { result: { ok: false, error: "NOT_CONFIGURED" } };
+    }
+    const minDays = toolInput.minDays ? parseInt(String(toolInput.minDays), 10) : undefined;
+    const limit = toolInput.limit ? parseInt(String(toolInput.limit), 10) : undefined;
+    const out = await deps.listDriftCandidates({
+      minDays: Number.isFinite(minDays) ? minDays : undefined,
+      limit: Number.isFinite(limit) ? limit : undefined,
+    });
+    return { result: { ok: true, ...out } };
+  }
+
+  if (toolName === LIV_TOOL_DRAFT_DRIFT_RECOVERY) {
+    if (!deps.draftDriftRecovery) {
+      return { result: { ok: false, error: "NOT_CONFIGURED" } };
+    }
+    const days = toolInput.daysSinceVisit
+      ? parseInt(String(toolInput.daysSinceVisit), 10)
+      : undefined;
+    const out = await deps.draftDriftRecovery({
+      customerId: toolInput.customerId ? String(toolInput.customerId) : undefined,
+      customerName: toolInput.customerName ? String(toolInput.customerName) : undefined,
+      lastServiceName: toolInput.lastServiceName ? String(toolInput.lastServiceName) : undefined,
+      daysSinceVisit: Number.isFinite(days) ? days : undefined,
     });
     return { result: { ok: true, ...out } };
   }

@@ -1,0 +1,72 @@
+meta:
+  id: w2.gateway.demo.wedge.web
+  world: W2
+  route: "/demo/wedge/:vertical"
+  artifact: livia-dashboard
+  persona: [Prospect]
+  verticals: all_registry
+  release: R1
+  status: designed
+
+job: >
+  Prospect understands ONE vertical's hero workflow in 4 beats before entering demo —
+  tattoo clarity standard for every wedge.
+
+visual:
+  canvas:
+    device: phone_first
+    viewport: 390x844
+    background: aurora gateway gradient — W2 fixed skin
+  zones:
+    - id: progress
+      height: 4px
+      content: 4 segment progress bar top — fills per beat
+    - id: beat
+      layout: centered vertical stack
+      padding: 24px
+      content:
+        - beat number "1 of 4" 12px muted
+        - headline one sentence 24px serif max 2 lines
+        - UI crop screenshot 60vh rounded-16 shadow-lg — real product chrome
+        - body one sentence 16px muted max 3 lines
+    - id: nav
+      sticky_bottom: true
+      content:
+        - primary "Next" full width 52px
+        - secondary "Skip to demo" text link
+      beat_4_primary: "Enter demo"
+  beats_by_vertical:
+    body-art:
+      - { headline: "DMs become bookings", crop: inbox-to-book-link }
+      - { headline: "Design proof on their phone", crop: guest-proof }
+      - { headline: "Deposit holds the slot", crop: deposit-confirm }
+      - { headline: "Artist sees Today", crop: staff-my-day }
+    medspa:
+      - { headline: "Consent before treatment", crop: consent-step }
+      - { headline: "Professional booking page", crop: public-book }
+      - { headline: "Reminders they trust", crop: sms-reminder }
+      - { headline: "Clinical hub calm", crop: medspa-dashboard }
+    hair:
+      - { headline: "Inbox while you're mid-colour", crop: inbox-handoff }
+      - { headline: "Book link in one tap", crop: public-book }
+      - { headline: "Regulars rebook on time", crop: reminder }
+      - { headline: "Today on your phone", crop: my-day }
+  motion:
+    beat_transition: slide left 300ms + progress fill
+    crop_parallax: subtle 8px max — disabled reduced-motion
+
+acceptance:
+  human:
+    - Readable without scrolling on iPhone SE except crop
+    - Same shell all verticals — only copy/crop change
+  e2e:
+    - full-platform-demo.spec.ts wedge routes
+  visual:
+    - baseline: gateway-demo-a-wedge-story-tattoo.png
+
+traceability:
+  surfaceId: gateway.demo.wedge
+  northstar_png: g1-wedge-web.png
+  figma:
+    frame: W2/w2.gateway.demo.wedge.web
+    status: not_started

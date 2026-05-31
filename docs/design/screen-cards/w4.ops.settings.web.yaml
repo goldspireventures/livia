@@ -1,0 +1,70 @@
+meta:
+  id: w4.ops.settings.web
+  world: W4
+  route: "/settings"
+  artifact: livia-dashboard
+  persona: [P2, P3]
+  verticals: all
+  release: R1
+  status: designed
+
+job: >
+  Owner configures shop, Liv, channels, team — including **live `/b` preview** when changing public appearance.
+
+visual:
+  canvas:
+    device: desktop
+    viewport: 1280x800
+    layout: settings_tabs + content
+  zones:
+    - id: settings_nav
+      width: 220px
+      tabs:
+        - Business
+        - Public appearance  # preset + brand — see SKIN spec
+        - Communications
+        - Liv & AI
+        - Billing
+        - Team
+    - id: public_appearance_panel
+      visible: tab Public appearance
+      layout: split 50/50
+      left:
+        - preset picker 4 cards per vertical
+        - logo upload dropzone
+        - cover upload with crop guide
+        - accent hex picker + WCAG contrast hint
+        - slug display read-only with copy /b link
+      right:
+        - iframe or mock device 390x844 **live /b preview**
+        - updates debounced 300ms on any change
+        - label "What customers see on their phone"
+    - id: communications_panel
+      content:
+        - notification toggles per NOTIFICATIONS.md
+        - channel connect WA/IG stubs
+    - id: liv_panel
+      content:
+        - tone slider, deposit policy, handoff rules
+        - mandate rung display read-only + link docs
+  motion:
+    preview_refresh: crossfade iframe 200ms
+
+states:
+  saving:
+    overlay: pending on save button only
+  contrast_fail:
+    banner: "Accent doesn't meet contrast — pick darker"
+
+acceptance:
+  e2e:
+    - preset-public-parity.spec.ts target
+  human:
+    - Preview matches production /b within 1 token diff
+
+traceability:
+  surfaceId: tenant.settings
+  skin_spec: SKIN-BRAND-INHERITANCE-SPEC §4.4
+  figma:
+    frame: W4-Tenant/w4.ops.settings.web
+    status: not_started

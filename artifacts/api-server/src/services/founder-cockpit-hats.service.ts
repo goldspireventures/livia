@@ -1,4 +1,6 @@
-export type ExecHatId = "ceo" | "coo" | "cpo" | "cto" | "cs" | "cro";
+import type { ExecHatId } from "@workspace/policy";
+
+export type { ExecHatId };
 
 export type ExecHatPanel = {
   id: ExecHatId;
@@ -8,6 +10,13 @@ export type ExecHatPanel = {
   metrics: Array<{ label: string; value: string }>;
   actions: Array<{ label: string; internalPath?: string; href?: string }>;
   focus: string;
+  recentWork?: Array<{
+    id: string;
+    summary: string;
+    actor: string;
+    actorLabel: string | null;
+    createdAt: string;
+  }>;
 };
 
 /** Minimal snapshot shape for hat panels (avoids circular imports). */

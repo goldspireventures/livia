@@ -1,0 +1,98 @@
+meta:
+  id: w5.public.proof.mobile
+  world: W5
+  route: "/b/:slug/proof/:token"
+  artifact: livia-dashboard
+  persona: [P7]
+  verticals: [body-art]
+  release: R1
+  status: designed
+
+job: >
+  Guest approves or requests changes on tattoo/design artwork — thick collaboration
+  that cannot happen in WhatsApp threads.
+
+visual:
+  canvas:
+    device: phone
+    viewport: 390x844
+    background: near-black #0a0a0b with studio preset accent — bold vertical
+  zones:
+    - id: header
+      height: 56px
+      sticky: true
+      content:
+        - back chevron (browser back)
+        - "Design proof" title center
+        - studio logo 32px right
+      background: rgba(10,10,11,0.92) blur
+    - id: artwork
+      height: 55vh
+      content:
+        - single design image full width contain
+        - pinch-zoom enabled
+        - revision badge top-left if v2+
+      border: 1px #27272a
+    - id: meta
+      padding: 16px
+      content:
+        - artist name + session date 14px muted
+        - deposit reminder if bound: "€150 deposit holds this design"
+    - id: comment
+      content:
+        - textarea placeholder "Notes for your artist…" 3 rows
+        - character hint 500 max
+    - id: actions
+      layout: two equal columns gap 12px
+      sticky_bottom: true
+      padding: 16px + safe area
+      content:
+        - secondary outline "Request changes" full height 52px
+        - primary fill "Approve design" 52px — success green or brand accent
+  typography:
+    display: studio sans bold 20px
+    body: 15px #e4e4e7
+  color:
+    primary: brandAccentHex or #fafafa on dark
+    danger: muted — changes is not destructive
+
+components:
+  approve_flow:
+    on_approve: success-beat → "Artist notified" → visit booking CTA
+  changes_flow:
+    on_submit: "Sent to artist" toast → sheet dismiss optional
+
+motion:
+  enter_page: fade up artwork 500ms
+  approve: success-beat + haptic
+  image_load: blur-up placeholder
+
+copy:
+  approve_confirm: "Approve this design?"
+  changes_hint: "Be specific — placement, size, shading"
+
+states:
+  loading:
+    visual: artwork rectangle skeleton 55vh
+  expired_token:
+    copy: "This link has expired"
+    action: "Message the studio" → /b/:slug
+  already_approved:
+    copy: "You approved this design on {date}"
+    show: readonly image + green check
+
+acceptance:
+  human:
+    - Approve/reject without login
+    - Image readable on 320px width
+  e2e:
+    - spec: demo-proof-token.spec.ts (target)
+  visual:
+    - baseline: guest-proof-mobile.png
+
+traceability:
+  surfaceId: guest.public.proof
+  northstar_png: guest-proof-mobile.png
+  figma:
+    frame: W5/w5.public.proof.mobile
+    status: not_started

@@ -3,7 +3,9 @@
 **Status:** Active spec (2026-05-29)  
 **Scope:** **Staging rollout only** until promotion gate in [Part VIII](#part-viii--production-promotion-gate).  
 **Code catalog:** `lib/policy/src/presentation-presets.ts`  
-**Builds on:** [`../product/TENANT-EXPERIENCE-CONTRACT.md`](../product/TENANT-EXPERIENCE-CONTRACT.md), [`../product/PERSONA-UX.md`](../product/PERSONA-UX.md), [`../product/LIVIA-EXPERIENCE-DESIGN-BIBLE.md`](../product/LIVIA-EXPERIENCE-DESIGN-BIBLE.md)
+**Builds on:** [`../product/TENANT-EXPERIENCE-CONTRACT.md`](../product/TENANT-EXPERIENCE-CONTRACT.md), [`../product/PERSONA-UX.md`](../product/PERSONA-UX.md), [`../product/LIVIA-EXPERIENCE-DESIGN-BIBLE.md`](../product/LIVIA-EXPERIENCE-DESIGN-BIBLE.md), [`SKIN-BRAND-INHERITANCE-SPEC.md`](./SKIN-BRAND-INHERITANCE-SPEC.md)
+
+**Settings requirement (G-DOC):** Preset picker shows a **live `/b` mobile frame** when the owner changes preset or brand — same bundle the guest sees on phone. Frame id: `w5.public.book.mobile` in [`FIGMA-SCREEN-MANIFEST.md`](./FIGMA-SCREEN-MANIFEST.md).
 
 ---
 

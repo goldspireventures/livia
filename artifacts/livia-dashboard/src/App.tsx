@@ -59,6 +59,7 @@ import PublicVisitPage from "@/pages/public-visit";
 import PublicProofPage from "@/pages/public-proof";
 import PublicIntakePage from "@/pages/public-intake";
 import PublicWaitlistPage from "@/pages/public-waitlist";
+import PublicPayPage from "@/pages/public-pay";
 import MyLiviaPage from "@/pages/my-livia";
 import PublicPremisesPage from "@/pages/public-premises";
 import DemoLauncher from "@/pages/demo/Launcher";
@@ -107,10 +108,12 @@ function AuthenticatedRoutes() {
       const visitMatch = location.match(/^\/b\/([^/]+)\/visit\/([^/]+)/);
       const proofMatch = location.match(/^\/b\/([^/]+)\/proof\/([^/]+)/);
       const intakeMatch = location.match(/^\/b\/([^/]+)\/intake\/([^/]+)/);
+      const payMatch = location.match(/^\/b\/([^/]+)\/pay\/([^/]+)/);
       const waitlistMatch = location.match(/^\/b\/([^/]+)\/waitlist\/([^/]+)/);
       const slugMatch = location.match(/^\/b\/([^/]+)/);
       if (proofMatch) return <PublicProofPage />;
       if (intakeMatch) return <PublicIntakePage />;
+      if (payMatch) return <PublicPayPage />;
       if (waitlistMatch) return <PublicWaitlistPage />;
       if (visitMatch) return <PublicVisitPage />;
       if (slugMatch) return <PublicBookingPage />;
@@ -217,6 +220,7 @@ function AppRouter() {
       <Route path="/b/:slug/proof/:token" component={PublicProofPage} />
       <Route path="/b/:slug/intake/:token" component={PublicIntakePage} />
       <Route path="/b/:slug/waitlist/:token" component={PublicWaitlistPage} />
+      <Route path="/b/:slug/pay/:token" component={PublicPayPage} />
       <Route path="/b/:slug/visit/:token" component={PublicVisitPage} />
       <Route path="/b/:slug" component={PublicBookingPage} />
       <Route path="/p/:slug" component={PublicPremisesPage} />

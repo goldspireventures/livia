@@ -35,6 +35,8 @@ import { LivMomentsStrip } from "@/components/ritual/liv-moments-strip";
 import { LivIncidentsStrip } from "@/components/ritual/liv-incidents-strip";
 import { LivCommandHub } from "@/components/liv/liv-command-hub";
 import { VerticalHomeModules } from "@/components/dashboard/vertical-home-modules";
+import { OwnerHomeRitual } from "@/components/dashboard/owner-home-ritual";
+import { OwnerDashboardLoading } from "@/components/dashboard/owner-dashboard-loading";
 import { PublicBookingIntakePanel } from "@/components/dashboard/public-booking-intake-panel";
 import { VisitFeedbackStrip } from "@/components/dashboard/visit-feedback-strip";
 import { LazyMount } from "@/components/lazy-mount";
@@ -284,6 +286,10 @@ export default function DashboardPage() {
 
   // Brand-new account: no bookings, no customers — show a beautiful onboarding
   // empty state instead of a sea of zeros.
+  const isOperatorHome = persona === "owner" || persona === "manager";
+  const showTenantOpsPanels =
+    persona === "owner" || persona === "manager" || persona === "org_admin";
+
   const isFirstRun =
     !!summary &&
     !isLoadingSummary &&
@@ -388,6 +394,14 @@ export default function DashboardPage() {
     );
   }
 
+  if (isOperatorHome && isLoadingSummary && !summary) {
+    return (
+      <div className="max-w-6xl w-full" style={{ fontFamily: "var(--app-font-sans)" }}>
+        <OwnerDashboardLoading />
+      </div>
+    );
+  }
+
   return (
     <div
       className={`flex w-full min-w-0 max-w-6xl flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 ${
@@ -398,57 +412,57 @@ export default function DashboardPage() {
       <ActivationWelcome />
       <OperatorMaturityBanner />
 
-      {(persona === "owner" || persona === "manager" || persona === "org_admin") && (
+      {isOperatorHome ? (
+        <OwnerHomeRitual
+          summary={summary as Parameters<typeof OwnerHomeRitual>[0]["summary"]}
+          isLoadingSummary={isLoadingSummary}
+          pendingBookings={pendingBookings}
+          formatTime={formatTime}
+          formatHeaderDate={formatHeaderDate}
+          now={now}
+          onConfirmBooking={(id) => handleStatusUpdate(id, "CONFIRMED")}
+          onDeclineBooking={(id) => handleStatusUpdate(id, "CANCELLED")}
+          updatePending={updateBooking.isPending}
+        />
+      ) : persona === "org_admin" ? (
         <PersonaRitualHeader
           variant="home"
-          showActions={persona !== "org_admin"}
-          showAlert={persona !== "org_admin"}
-          greeting={
-            persona === "org_admin"
-              ? shopScopedGreeting(
-                  user?.firstName ?? user?.fullName?.split(" ")[0],
-                  business?.name ?? "this shop",
-                )
-              : undefined
-          }
-          title={
-            persona === "org_admin"
-              ? `Today · ${business?.name ?? "this shop"}`
-              : persona === "owner"
-                ? "Today"
-                : `Today · ${business?.name ?? "this shop"}`
-          }
-          subtitle={
-            persona === "org_admin"
-              ? "This location's floor — switch shops from Glance when you need the chain view."
-              : undefined
-          }
+          showActions={false}
+          showAlert={false}
+          greeting={shopScopedGreeting(
+            user?.firstName ?? user?.fullName?.split(" ")[0],
+            business?.name ?? "this shop",
+          )}
+          title={`Today · ${business?.name ?? "this shop"}`}
+          subtitle="This location's floor — switch shops from Glance when you need the chain view."
         />
-      )}
+      ) : null}
+
+      {isOperatorHome && persona === "owner" && business?.id ? (
+        <PublicBookingIntakePanel businessId={business.id} />
+      ) : null}
 
       {(persona === "owner" || persona === "org_admin") && <LifecycleNudges compact />}
 
-      {(persona === "owner" || persona === "manager" || persona === "org_admin") && (
+      {!isOperatorHome && persona === "org_admin" && (
         <>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <LivProposalsPanel />
             <VerticalTodayInsights />
           </div>
-          {(persona === "owner" || persona === "org_admin") && business?.id ? (
-            <PublicBookingIntakePanel businessId={business.id} />
-          ) : null}
+          {business?.id ? <PublicBookingIntakePanel businessId={business.id} /> : null}
         </>
       )}
 
-      {(persona === "owner" || persona === "manager" || persona === "org_admin") && (
+      {showTenantOpsPanels && (
         <LivMomentsStrip />
       )}
 
-      {(persona === "owner" || persona === "manager" || persona === "org_admin") && (
+      {showTenantOpsPanels && (
         <LivIncidentsStrip />
       )}
 
-      {(persona === "owner" || persona === "manager" || persona === "org_admin") && (
+      {showTenantOpsPanels && (
         <div className="flex flex-wrap gap-2">
           <RunningLateSheet />
         </div>
@@ -458,13 +472,13 @@ export default function DashboardPage() {
 
       {/* Command hub stays available on /toolkit; dashboard keeps focus on operations. */}
 
-      {(persona === "owner" || persona === "manager" || persona === "org_admin") && (
+      {persona === "org_admin" && (
         <LazyMount minHeight={160}>
           <VerticalHomeModules />
         </LazyMount>
       )}
 
-      {(persona === "owner" || persona === "manager" || persona === "org_admin") && (
+      {showTenantOpsPanels && (
         <LazyMount minHeight={80}>
           <VisitFeedbackStrip />
         </LazyMount>
@@ -477,7 +491,7 @@ export default function DashboardPage() {
             className="text-base font-semibold tracking-tight"
             style={{ fontFamily: "var(--app-font-display)" }}
           >
-            Flight plan
+            {isOperatorHome ? "Today's timeline" : "Flight plan"}
           </h2>
           <span className="hidden md:inline-block w-1 h-1 rounded-full bg-border" />
           <span className="text-xs text-muted-foreground font-mono">
@@ -498,7 +512,8 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      {/* ============== KPI strip + Action Queue ============== */}
+      {/* ============== KPI strip + Action Queue (org_admin / legacy layout) ============== */}
+      {!isOperatorHome ? (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
           <KpiTile
@@ -610,6 +625,7 @@ export default function DashboardPage() {
           )}
         </Panel>
       </div>
+      ) : null}
 
       {/* ============== Live Timeline (hero) ============== */}
       <Panel
