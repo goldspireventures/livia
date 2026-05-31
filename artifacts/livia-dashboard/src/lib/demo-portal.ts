@@ -113,16 +113,19 @@ export async function syncDemoWorld() {
     clerkSynced?: number;
     brandingUpdated?: number;
     servicesUpdated?: number;
+    liveDaysRefreshed?: number;
+    bookingsAdded?: number;
     warnings?: string[];
     passwordHint: string;
     businesses: Array<{ slug: string; id: string; name: string }>;
   }>("/demo/sync", { method: "POST" });
 }
 
-/** Heavy path — Clerk passwords + roster memberships (~30–60s). */
-export async function syncDemoLogins() {
+/** Heavy path — Clerk passwords + roster memberships. Optional slug = one tenant only. */
+export async function syncDemoLogins(slug?: string) {
   return apiFetch<{ clerkSynced: number; rosterAccounts: number }>("/demo/sync-logins", {
     method: "POST",
+    body: JSON.stringify(slug ? { slug } : {}),
   });
 }
 

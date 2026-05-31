@@ -147,6 +147,7 @@ export async function seedVerticalShowcaseShops(
       city: "Galway",
       staff: [
         { firstName: "Rory", lastName: "Mannion", displayName: "Rory Mannion", email: "rory@ink.ie", color: "#F97316" },
+        { firstName: "Siobhan", lastName: "Kelly", displayName: "Siobhan Kelly", email: "siobhan@ink.ie", color: "#FB923C" },
       ],
       services: [
         { name: "Consultation", durationMinutes: 30, priceMinor: 0, sortOrder: 1, category: "Consultations" },

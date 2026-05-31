@@ -105,17 +105,20 @@ function membershipRoleFor(def: DemoPersonaDef): "OWNER" | "ADMIN" | "STAFF" {
 }
 
 /** Per-tenant demo roster — owner + manager + desk + staff @demo.livia-hq.com */
-export async function seedDemoBusinessRosters(): Promise<{ accounts: number; slugs: number }> {
+export async function seedDemoBusinessRosters(opts?: {
+  slugs?: string[];
+}): Promise<{ accounts: number; slugs: number }> {
+  const slugFilter = opts?.slugs?.length ? opts.slugs : [...DEMO_WORLD_SLUGS];
   const rows = await db
     .select({ id: businessesTable.id, slug: businessesTable.slug, name: businessesTable.name })
     .from(businessesTable)
-    .where(inArray(businessesTable.slug, [...DEMO_WORLD_SLUGS]));
+    .where(inArray(businessesTable.slug, slugFilter));
 
   const tasks = rows.flatMap((row) =>
     ROSTER_ROLES.map((role) => ({ row, role })),
   );
 
-  const results = await mapWithConcurrency(tasks, 4, async ({ row, role }) => {
+  const results = await mapWithConcurrency(tasks, 1, async ({ row, role }) => {
       const def = buildDemoRoleDef(row.slug, role, row.name);
       try {
         const userId = await ensureClerkForDef(def);
@@ -182,14 +185,14 @@ export function demoScenarioSpotlights(): Array<{
     {
       id: "chain-hq",
       title: "Chain HQ",
-      description: "Org admin across Aurora Studio + Mews + Galway",
+      description: "Org admin — roll-up across Aurora Studio, Mews & Galway",
       slug: "aurora-studio",
       structure: "chain-hq",
     },
     {
       id: "chain-loc",
       title: "Chain location",
-      description: "Single location in a multi-site brand",
+      description: "Aurora Mews — run one site as the location owner (not HQ)",
       slug: "aurora-mews",
       structure: "chain-location",
     },
@@ -217,8 +220,13 @@ export function demoScenarioSpotlights(): Array<{
   ];
 }
 
-/** Chain locations share org-admin@ for owner quick login. */
-export function resolveRosterOwnerEmail(slug: string, chainFounder: boolean): string {
-  if (chainFounder) return DEMO_ROLE_EMAILS.orgAdmin;
+/** Chain HQ (aurora-studio) uses org-admin@; every other tenant gets owner-{short}@ */
+export function isDemoChainHqSlug(slug: string): boolean {
+  return slug === "aurora-studio";
+}
+
+/** @deprecated use isDemoChainHqSlug — only HQ uses org-admin owner login */
+export function resolveRosterOwnerEmail(slug: string, chainHq: boolean): string {
+  if (chainHq) return DEMO_ROLE_EMAILS.orgAdmin;
   return demoRoleEmailForSlug(slug, "owner");
 }

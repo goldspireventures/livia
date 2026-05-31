@@ -55,7 +55,7 @@ import { seedRealWorldScenarios, REAL_WORLD_PREMISES_SLUG } from "./demo-real-wo
 import { seedVerticalShowcaseShops } from "./demo-vertical-shops.seed";
 import { seedMarketShowcaseShops } from "./demo-market-shops.seed";
 import { seedDemoLivSignalsForBusinesses } from "./demo-liv-signals.seed";
-import { ensureLiveDayForBusiness } from "./demo-live-day.service";
+import { ensureLiveDayForBusiness, refreshDemoLiveDaysForSlugs } from "./demo-live-day.service";
 import { seedDemoSupportTickets } from "./demo-support-tickets.seed";
 import { ensureDemoOperationalCases } from "./demo-operational-cases.seed";
 import { seedVerticalDemoExtras } from "./demo-vertical-extras.seed";
@@ -64,6 +64,7 @@ import { seedDemoHierarchyLinks } from "./demo-hierarchy.seed";
 import {
   demoScenarioSpotlights,
   resolveRosterOwnerEmail,
+  isDemoChainHqSlug,
   rosterEntriesForSlug,
   seedDemoBusinessRosters,
 } from "./demo-business-roster.seed";
@@ -247,17 +248,6 @@ export async function linkDemoChainHierarchy(): Promise<number> {
     updated += 1;
   }
   return updated;
-}
-
-function isFounderChainTenant(
-  row: { slug: string; parentBusinessId: string | null },
-  parentSlugById: Map<string, string>,
-  founderSlugs: ReadonlySet<string>,
-): boolean {
-  if (founderSlugs.has(row.slug)) return true;
-  if (!row.parentBusinessId) return false;
-  const parentSlug = parentSlugById.get(row.parentBusinessId);
-  return parentSlug ? founderSlugs.has(parentSlug) : false;
 }
 
 /** Demo tenants skip the onboarding wizard — owners land on dashboard/Liv. */
@@ -856,6 +846,8 @@ export async function syncDemoWorld(): Promise<{
   clerkSynced: number;
   brandingUpdated?: number;
   servicesUpdated?: number;
+  liveDaysRefreshed?: number;
+  bookingsAdded?: number;
   warnings?: string[];
   passwordHint: string;
   businesses: Array<{ slug: string; id: string; name: string }>;
@@ -876,6 +868,8 @@ export async function syncDemoWorld(): Promise<{
   const started = Date.now();
   let brandingUpdated = 0;
   let servicesUpdated = 0;
+  let liveDaysRefreshed = 0;
+  let bookingsAdded = 0;
 
   try {
     brandingUpdated = await backfillAllDemoPublicBranding(DEMO_WORLD_SLUGS);
@@ -886,6 +880,9 @@ export async function syncDemoWorld(): Promise<{
         { force: true },
       );
     }
+    const live = await refreshDemoLiveDaysForSlugs(DEMO_WORLD_SLUGS);
+    liveDaysRefreshed = live.businesses;
+    bookingsAdded = live.bookingsAdded;
   } catch (err) {
     logger.warn({ err }, "demo.sync.assets_failed");
     throw err;
@@ -896,6 +893,8 @@ export async function syncDemoWorld(): Promise<{
       duration_ms: Date.now() - started,
       brandingUpdated,
       servicesUpdated,
+      liveDaysRefreshed,
+      bookingsAdded,
     },
     "demo.sync.completed",
   );
@@ -908,6 +907,8 @@ export async function syncDemoWorld(): Promise<{
     clerkSynced: 0,
     brandingUpdated,
     servicesUpdated,
+    liveDaysRefreshed,
+    bookingsAdded,
     passwordHint: publicDemoPasswordHint(),
     businesses: refreshed.businesses.map((b) => ({
       slug: b.slug,
@@ -917,12 +918,13 @@ export async function syncDemoWorld(): Promise<{
   };
 }
 
-/** Heavy path — Clerk passwords + roster memberships (run after provision or when logins break). */
-export async function syncDemoLogins(): Promise<{ clerkSynced: number; rosterAccounts: number }> {
-  const [clerkResult, rosterResult] = await Promise.all([
-    syncAllDemoClerkUsers(),
-    seedDemoBusinessRosters(),
-  ]);
+/** Heavy path — Clerk passwords + roster memberships. Sequential to avoid Clerk 429. */
+export async function syncDemoLogins(opts?: {
+  slug?: string;
+}): Promise<{ clerkSynced: number; rosterAccounts: number }> {
+  const slugs = opts?.slug?.trim() ? [opts.slug.trim().toLowerCase()] : undefined;
+  const rosterResult = await seedDemoBusinessRosters(slugs ? { slugs } : undefined);
+  const clerkResult = await syncAllDemoClerkUsers(slugs ? { slugs } : undefined);
   return { clerkSynced: clerkResult.synced, rosterAccounts: rosterResult.accounts };
 }
 
@@ -966,10 +968,6 @@ export async function getDemoPortalStatus(): Promise<{
     })
     .from(businessesTable)
     .where(inArray(businessesTable.slug, [...DEMO_WORLD_SLUGS]));
-  const orgAdminDef = DEMO_PERSONAS.find((p) => p.id === "org_admin");
-  const founderSlugs = new Set(orgAdminDef?.businessSlugs ?? []);
-  const orgAdminEmail = orgAdminDef?.email ?? "org-admin@livia.io";
-  const parentSlugById = new Map(rows.map((r) => [r.id, r.slug]));
   const dashboardBase = getDashboardUrl();
   const internalBase = getInternalUrl();
   const marketingBase = getMarketingUrl();
@@ -979,20 +977,20 @@ export async function getDemoPortalStatus(): Promise<{
       rows.length >= DEMO_WORLD_SLUGS.length - 2,
     businesses: rows
       .map((r) => {
-        const chainFounder = isFounderChainTenant(r, parentSlugById, founderSlugs);
+        const chainHq = isDemoChainHqSlug(r.slug);
         return {
           slug: r.slug,
           id: r.id,
           name: r.name,
           vertical: r.vertical,
           country: r.country,
-          ownerEmail: resolveRosterOwnerEmail(r.slug, chainFounder),
-          ownerPersonaId: chainFounder ? ("org_admin" as const) : null,
+          ownerEmail: resolveRosterOwnerEmail(r.slug, chainHq),
+          ownerPersonaId: chainHq ? ("org_admin" as const) : null,
           publicBookingUrl: `${dashboardBase}/b/${r.slug}`,
           roster: rosterEntriesForSlug(r.slug, r.name).map((entry) => ({
             ...entry,
             email:
-              entry.role === "owner" && chainFounder
+              entry.role === "owner" && chainHq
                 ? resolveRosterOwnerEmail(r.slug, true)
                 : entry.email,
           })),
@@ -1085,29 +1083,42 @@ export async function syncVerticalShowcaseForDemo(): Promise<{
 }
 
 /** Re-sync Clerk state for all demo emails (password, verified email, MFA off). */
-export async function syncAllDemoClerkUsers(): Promise<{ synced: number }> {
+export async function syncAllDemoClerkUsers(opts?: {
+  slugs?: string[];
+}): Promise<{ synced: number }> {
   const clerk = getClerk();
   if (!clerk) {
     throw Object.assign(new Error("Clerk not configured"), { code: "CLERK_NOT_CONFIGURED" });
   }
   const password = getDemoPassword();
   const status = await getDemoPortalStatus();
-  const ownerDefs = status.businesses.flatMap((b) =>
+  const slugSet = opts?.slugs?.length ? new Set(opts.slugs) : null;
+  const tenantRows = slugSet
+    ? status.businesses.filter((b) => slugSet.has(b.slug))
+    : status.businesses;
+  const ownerDefs = tenantRows.flatMap((b) =>
     rosterEntriesForSlug(b.slug, b.name).map((entry) => buildDemoRoleDef(b.slug, entry.role as DemoTenantRole, b.name)),
   );
   const uniqueByEmail = new Map<string, DemoPersonaDef>();
-  for (const def of [...DEMO_PERSONAS, ...DEMO_SCENARIO_ACCOUNTS, ...ownerDefs]) {
+  const staticPersonas = slugSet
+    ? DEMO_PERSONAS.filter((p) => {
+        if (p.id === "org_admin" && slugSet.has("aurora-studio")) return true;
+        return p.businessSlugs.some((s) => slugSet.has(s));
+      })
+    : [...DEMO_PERSONAS, ...DEMO_SCENARIO_ACCOUNTS];
+  for (const def of [...staticPersonas, ...ownerDefs]) {
     if (!def.requiresClerk) continue;
     uniqueByEmail.set(def.email.toLowerCase(), def);
   }
 
-  const syncedResults = await mapWithConcurrency([...uniqueByEmail.values()], 3, async (def) => {
+  const syncedResults = await mapWithConcurrency([...uniqueByEmail.values()], 1, async (def) => {
     const list = await withClerkRetry(() =>
       clerk.users.getUserList({ emailAddress: [def.email], limit: 1 }),
     );
     const user = list.data[0];
     if (!user) return 0;
     await syncDemoClerkUser(clerk, user.id, { email: def.email, password });
+    await new Promise((r) => setTimeout(r, 150));
     return 1;
   });
   const synced = syncedResults.reduce((sum, n) => sum + n, 0);

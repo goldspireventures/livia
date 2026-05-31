@@ -14,6 +14,7 @@ const SLUGS = [
   { slug: "luxe-salon-spa", tag: "hair" },
   { slug: "clarity-medspa-dublin", tag: "medspa" },
   { slug: "paws-parlour-dublin", tag: "pet" },
+  { slug: "ink-anchor-galway", tag: "body-art" },
 ] as const;
 
 async function gotoDetailsStep(
@@ -64,6 +65,16 @@ test.describe("Public booking quality", () => {
       expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
     });
   }
+
+  test("body-art — compact header, no duplicate reviews block", async ({ page, request }) => {
+    const slug = "ink-anchor-galway";
+    if (!(await demoHasBusiness(request, slug))) test.skip(true, slug);
+    await page.goto(`/b/${slug}`, { waitUntil: "domcontentloaded" });
+    await expect(page.getByTestId("text-business-name")).toBeVisible();
+    await expect(page.getByTestId("public-storefront-hero")).toHaveCount(1);
+    await expect(page.getByTestId("public-social-proof")).toHaveCount(0);
+    await expect(page.getByTestId("public-service-catalog")).toBeVisible();
+  });
 
   test("medspa — consent step in progress", async ({ page, request }) => {
     const slug = "clarity-medspa-dublin";

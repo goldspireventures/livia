@@ -1,4 +1,4 @@
-import { db, bookingsTable, EventType } from "@workspace/db";
+import { db, bookingsTable, EventType, businessesTable, staffTable, servicesTable, customersTable } from "@workspace/db";
 import { and, eq, gte, lte, sql } from "drizzle-orm";
 import { generateId } from "../lib/id";
 import { generateMorningBriefingForBusiness } from "./morning-briefing.service";
@@ -117,4 +117,61 @@ export async function ensureLiveDayForBusiness(
   }
 
   return { seededBookings, briefing: true };
+}
+
+/** Idempotent — top up today's bookings for demo tenants that have staff/services/customers. */
+export async function refreshDemoLiveDaysForSlugs(
+  slugs: readonly string[],
+): Promise<{ businesses: number; bookingsAdded: number }> {
+  let bookingsAdded = 0;
+  let businesses = 0;
+
+  for (const slug of slugs) {
+    const [biz] = await db
+      .select({ id: businessesTable.id })
+      .from(businessesTable)
+      .where(eq(businessesTable.slug, slug))
+      .limit(1);
+    if (!biz) continue;
+
+    const staffRows = await db
+      .select({ id: staffTable.id })
+      .from(staffTable)
+      .where(eq(staffTable.businessId, biz.id))
+      .limit(4);
+    const serviceRows = await db
+      .select({ id: servicesTable.id })
+      .from(servicesTable)
+      .where(eq(servicesTable.businessId, biz.id))
+      .limit(8);
+    const customerRows = await db
+      .select({
+        id: customersTable.id,
+        displayName: customersTable.displayName,
+        firstName: customersTable.firstName,
+        email: customersTable.email,
+        phone: customersTable.phone,
+      })
+      .from(customersTable)
+      .where(eq(customersTable.businessId, biz.id))
+      .limit(4);
+
+    if (!staffRows.length || !serviceRows.length || !customerRows.length) continue;
+
+    const result = await ensureLiveDayForBusiness(biz.id, {
+      force: false,
+      staffIds: staffRows.map((s) => s.id),
+      serviceIds: serviceRows.map((s) => s.id),
+      customerSeed: customerRows.map((c) => ({
+        id: c.id,
+        displayName: c.displayName ?? c.firstName ?? "Guest",
+        email: c.email ?? "",
+        phone: c.phone ?? "",
+      })),
+    });
+    bookingsAdded += result.seededBookings;
+    businesses += 1;
+  }
+
+  return { businesses, bookingsAdded };
 }

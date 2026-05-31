@@ -114,10 +114,11 @@ router.post("/demo/sync", async (req, res): Promise<void> => {
   }
 });
 
-/** Refresh Clerk passwords + role memberships (~30–60s). Run once after key rotation. */
+/** Refresh Clerk passwords + role memberships. Pass { slug } to sync one tenant (~5s). */
 router.post("/demo/sync-logins", async (req, res): Promise<void> => {
   try {
-    res.json(await syncDemoLogins());
+    const slug = typeof req.body?.slug === "string" ? req.body.slug : undefined;
+    res.json(await syncDemoLogins({ slug }));
   } catch (e: unknown) {
     const err = e as Error & { code?: string };
     if (err.code === "CLERK_NOT_CONFIGURED") {

@@ -126,7 +126,7 @@ export default function DemoLauncher() {
         description:
           result.mode === "full"
             ? `${result.businesses.length} businesses seeded — pick a scenario next.`
-            : `Branding ${result.brandingUpdated ?? 0} · service images ${result.servicesUpdated ?? 0}`,
+            : `Branding ${result.brandingUpdated ?? 0} · images ${result.servicesUpdated ?? 0} · live ${result.liveDaysRefreshed ?? 0} shops`,
       });
       await refresh();
     } catch (e: unknown) {
@@ -143,10 +143,11 @@ export default function DemoLauncher() {
   async function handleSyncLogins() {
     setBusy("sync-logins");
     try {
-      const result = await syncDemoLogins();
+      const slug = selectedScenario?.slug;
+      const result = await syncDemoLogins(slug);
       toast({
-        title: "Demo logins synced",
-        description: `Clerk ${result.clerkSynced} · roster ${result.rosterAccounts}`,
+        title: slug ? `Logins synced · ${slug}` : "Demo logins synced",
+        description: `Clerk ${result.clerkSynced} · roster ${result.rosterAccounts}${slug ? "" : " — pick a scenario first to sync one tenant faster"}`,
       });
       await refresh();
     } catch (e: unknown) {
@@ -351,8 +352,8 @@ export default function DemoLauncher() {
           </h2>
           <p className="text-sm text-white/55 mb-4 max-w-xl">
             First visit runs a full seed (~30–60s). After that, <strong className="text-white/80">Quick sync</strong>{" "}
-            refreshes public branding + service images only (~5s). Use <strong className="text-white/80">Sync logins</strong>{" "}
-            if role sign-in breaks (Clerk, ~30–60s).
+            refreshes public branding + service images + today's bookings (~5s). Use <strong className="text-white/80">Sync logins</strong>{" "}
+            after picking a scenario — syncs that tenant only (~5s). Full sync all tenants if no scenario selected.
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <button
@@ -466,6 +467,10 @@ export default function DemoLauncher() {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {selectedTenant.roster.map((entry) => {
                   const loading = busy === `${selectedScenario.slug}:${entry.email}`;
+                  const roleLabel =
+                    selectedScenario.id === "chain-hq" && entry.role === "owner"
+                      ? "Org admin"
+                      : (entry.label.split(" · ").pop() ?? entry.label);
                   return (
                     <button
                       key={entry.email}
@@ -476,7 +481,7 @@ export default function DemoLauncher() {
                       title={entry.email}
                     >
                       <span className="text-xs font-medium text-white">
-                        {loading ? "Signing in…" : entry.label.split(" · ").pop()}
+                        {loading ? "Signing in…" : roleLabel}
                       </span>
                       <span className="mt-1 text-[9px] font-mono text-white/35 truncate w-full">{entry.email}</span>
                     </button>

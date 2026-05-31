@@ -47,7 +47,6 @@ import { PublicBookingTrustStrip } from "@/components/public-booking/public-book
 import { PublicCareNotes } from "@/components/public-booking/public-care-notes";
 import { PublicStaffStrip } from "@/components/public-booking/public-staff-strip";
 import { PublicServiceCatalog } from "@/components/public-booking/public-service-catalog";
-import { PublicSocialProofStrip } from "@/components/public-booking/public-social-proof";
 import {
   formatPublicAddress,
   guardSectionTitle,
@@ -482,7 +481,6 @@ export default function PublicBookingPage() {
               }}
             />
             <PublicCareNotes vertical={b.vertical} />
-            <PublicSocialProofStrip proof={b.socialProof} variant="quotes" />
           </div>
         )}
 
