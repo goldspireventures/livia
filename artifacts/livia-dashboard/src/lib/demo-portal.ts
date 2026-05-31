@@ -111,6 +111,8 @@ export async function syncDemoWorld() {
     provisioned: boolean;
     rosterAccounts: number;
     clerkSynced: number;
+    brandingUpdated?: number;
+    warnings?: string[];
     passwordHint: string;
     businesses: Array<{ slug: string; id: string; name: string }>;
   }>("/demo/sync", { method: "POST" });

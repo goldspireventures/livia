@@ -125,7 +125,9 @@ export default function DemoLauncher() {
         description:
           result.mode === "full"
             ? `${result.businesses.length} businesses seeded — pick a scenario next.`
-            : `Clerk ${result.clerkSynced} · roster ${result.rosterAccounts} — ready to test.`,
+            : result.warnings?.length
+              ? `Branding refreshed · ${result.warnings[0]}`
+              : `Branding ${result.brandingUpdated ?? 0} · Clerk ${result.clerkSynced} · roster ${result.rosterAccounts}`,
       });
       await refresh();
     } catch (e: unknown) {
@@ -330,7 +332,7 @@ export default function DemoLauncher() {
           </h2>
           <p className="text-sm text-white/55 mb-4 max-w-xl">
             First visit runs a full seed (~30–60s). After that, <strong className="text-white/80">Quick sync</strong>{" "}
-            refreshes logins in seconds without wiping data.
+            refreshes branding + logins (~15–30s). If Clerk rate-limits, wait 60s and retry.
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <button
