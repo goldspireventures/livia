@@ -6,6 +6,7 @@ import {
   consultServiceBadge,
   type PublicServiceRow,
 } from "@/lib/public-booking-helpers";
+import { resolvePublicServiceImageUrl } from "@/lib/public-service-image";
 import { Badge } from "@/components/ui/badge";
 
 export function PublicServiceCatalog({
@@ -44,14 +45,26 @@ export function PublicServiceCatalog({
             {category}
           </h3>
           <div className="space-y-3">
-            {items.map((svc) => (
+            {items.map((svc) => {
+              const thumb = resolvePublicServiceImageUrl(svc.name, vertical, svc.imageUrl);
+              return (
               <button
                 key={svc.id}
                 type="button"
-                className="flex w-full items-center min-h-[72px] rounded-xl border border-border/80 px-4 py-3 text-left transition-[transform,border-color] active:scale-[0.98] hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="flex w-full items-center min-h-[72px] rounded-xl border border-border/80 px-3 py-3 text-left transition-[transform,border-color] active:scale-[0.98] hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring gap-3"
                 data-testid={`button-service-${svc.id}`}
                 onClick={() => onSelect(svc)}
               >
+                {thumb ? (
+                  <img
+                    src={thumb}
+                    alt=""
+                    className="h-14 w-14 rounded-lg object-cover shrink-0 bg-muted"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="h-14 w-14 rounded-lg bg-muted shrink-0" aria-hidden />
+                )}
                 <div className="flex-1 min-w-0 pr-3">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-medium leading-snug truncate">{svc.name}</p>
@@ -75,7 +88,8 @@ export function PublicServiceCatalog({
                   <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden />
                 </div>
               </button>
-            ))}
+            );
+            })}
           </div>
         </section>
       ))}

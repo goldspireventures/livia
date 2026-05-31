@@ -258,6 +258,17 @@ export default function PublicBookingPage() {
   }, [b?.vertical, b?.category, b?.country]);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const isPreview = params.get("preview") === "1";
+    const previewPreset = params.get("preset")?.trim();
+    const previewAccent = params.get("accent")?.trim();
+    if (isPreview && (previewPreset || previewAccent)) {
+      applyPresentationTheme({
+        cssPreset: previewPreset || b?.experienceSkin?.presentation,
+        brandAccentHex: previewAccent || b?.experienceSkin?.brandAccentHex,
+      });
+      return;
+    }
     if (b?.experienceSkin?.presentation || b?.experienceSkin?.brandAccentHex) {
       applyPresentationTheme({
         cssPreset: b.experienceSkin.presentation,

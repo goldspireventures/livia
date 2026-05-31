@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button";
 type Props = {
   items: RitualNavItem[];
   accent: string;
+  badges?: Record<string, number>;
 };
 
-export function MobileBottomNav({ items, accent }: Props) {
+export function MobileBottomNav({ items, accent, badges }: Props) {
   const [location] = useLocation();
   const { primary, overflow } = splitMobileNav(items);
 
@@ -31,7 +32,14 @@ export function MobileBottomNav({ items, accent }: Props) {
         return (
           <Link key={item.href} href={item.href}>
             <div className={linkClass(isActive)} style={isActive ? { color: accent } : undefined}>
-              <item.icon className="h-5 w-5 shrink-0" />
+              <span className="relative">
+                <item.icon className="h-5 w-5 shrink-0" />
+                {(badges?.[item.href] ?? 0) > 0 ? (
+                  <span className="absolute -top-1.5 -right-2 min-w-[14px] h-[14px] px-0.5 rounded-full bg-primary text-primary-foreground text-[8px] font-bold flex items-center justify-center">
+                    {badges![item.href] > 9 ? "9+" : badges![item.href]}
+                  </span>
+                ) : null}
+              </span>
               <span className="text-[9px] font-medium truncate max-w-[4.25rem]">{item.ritualName}</span>
             </div>
           </Link>

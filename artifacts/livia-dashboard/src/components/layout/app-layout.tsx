@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 
 import { useBusiness } from "@/lib/business-context";
 
@@ -62,8 +62,8 @@ import { KeysChangedRitual } from "@/components/lifecycle/keys-changed-ritual";
 import { OnboardingProgressBanner } from "@/components/onboarding-progress-banner";
 import { OperatorMaturityBanner } from "@/components/operator-maturity-banner";
 import { PlatformTour } from "@/components/platform-tour";
-import { NotificationAlertStrip } from "@/components/notification-alert-strip";
 import { NotificationCenter } from "@/components/notification-center";
+import { useNavActionCounts } from "@/hooks/use-nav-action-counts";
 import { useWebPush } from "@/hooks/useWebPush";
 import { HelpSupportDialog } from "@/components/help-support-dialog";
 import { VerticalPackBanner } from "@/components/vertical-pack-banner";
@@ -292,7 +292,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
     viewingAsStaffId ? "Previewing staff" : PERSONA_LABEL[persona].split("·")[0].trim();
 
-
+  const { pendingCount, handedOffCount } = useNavActionCounts();
+  const navBadges = useMemo(() => {
+    const badges: Record<string, number> = {};
+    if (handedOffCount > 0) badges["/inbox"] = handedOffCount;
+    if (pendingCount > 0) badges["/bookings"] = pendingCount;
+    return badges;
+  }, [handedOffCount, pendingCount]);
 
   return (
 
@@ -332,16 +338,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
           </div>
 
-          <div className="flex items-center gap-1 shrink-0">
-            <NotificationCenter />
-            <VerticalPackBanner />
-          </div>
+          <VerticalPackBanner />
 
         </div>
 
         <BusinessSwitcher />
 
-        <SidebarNav items={items} accent={accent} />
+        <SidebarNav items={items} accent={accent} badges={navBadges} />
 
         <PersonaSwitcher />
 
@@ -385,10 +388,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
 
 
+        <div className="hidden md:flex h-12 shrink-0 items-center justify-end gap-2 sticky top-0 z-20 bg-background/90 backdrop-blur-sm -mx-4 md:-mx-6 lg:-mx-8 px-4 md:px-6 lg:px-8 mb-2 border-b border-border/60">
+          <NotificationCenter />
+        </div>
+
         <div className="p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto">
           <OnboardingProgressBanner />
           <OperatorMaturityBanner />
-          <NotificationAlertStrip />
           <PlatformTour />
           <ErrorBoundary>{children}</ErrorBoundary>
         </div>
@@ -398,7 +404,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
 
 
-      <MobileBottomNav items={items} accent={accent} />
+      <MobileBottomNav items={items} accent={accent} badges={navBadges} />
 
 
     </div>

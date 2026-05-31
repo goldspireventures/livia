@@ -150,7 +150,6 @@ const NAV_POOL: RitualNavItem[] = [
   { ritualName: "Audit", href: "/audit", icon: Shield, min: "OWNER", personas: ["org_admin", "owner"] },
   { ritualName: "Lifecycle", href: "/lifecycle", icon: BookOpen, min: "OWNER", personas: ["org_admin", "owner"] },
   { ritualName: "Settings", href: "/settings", icon: Settings, min: "STAFF" },
-  { ritualName: "Portal", href: "/portal", icon: Building2, min: "OWNER", demoOnly: true },
   { ritualName: "Host floor", href: "/host", icon: Armchair, min: "OWNER", tiers: ["chair-host"] },
   {
     ritualName: "Brands",

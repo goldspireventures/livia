@@ -6,9 +6,11 @@ import { groupNavBySection } from "@/lib/nav-sections";
 type Props = {
   items: RitualNavItem[];
   accent: string;
+  /** href → count badge (inbox handoffs, pending bookings, etc.) */
+  badges?: Record<string, number>;
 };
 
-export function SidebarNav({ items, accent }: Props) {
+export function SidebarNav({ items, accent, badges }: Props) {
   const [location] = useLocation();
   const groups = groupNavBySection(items);
 
@@ -40,7 +42,15 @@ export function SidebarNav({ items, accent }: Props) {
                     data-testid={`nav-${item.href.replace(/\//g, "") || "home"}`}
                   >
                     <item.icon className="h-4 w-4 shrink-0" />
-                    <span className="truncate">{item.ritualName}</span>
+                    <span className="truncate flex-1">{item.ritualName}</span>
+                    {(badges?.[item.href] ?? 0) > 0 ? (
+                      <span
+                        className="ml-auto min-w-[1.25rem] h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold flex items-center justify-center tabular-nums"
+                        aria-label={`${badges![item.href]} items need attention`}
+                      >
+                        {badges![item.href] > 99 ? "99+" : badges![item.href]}
+                      </span>
+                    ) : null}
                   </div>
                 </Link>
               );

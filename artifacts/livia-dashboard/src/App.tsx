@@ -34,7 +34,6 @@ import {
   LazyLifecyclePage,
   LazyMedspaHubPage,
   LazyMyDayPage,
-  LazyPortalPage,
   LazyPremisesPage,
   LazyRotaPage,
   LazyServicesPage,
@@ -186,7 +185,7 @@ function AuthenticatedRoutes() {
           <Route path="/toolkit">{() => <LazyRoute page={LazyToolkitPage} />}</Route>
           <Route path="/lifecycle">{() => <LazyRoute page={LazyLifecyclePage} />}</Route>
           <Route path="/experience">{() => <LazyRoute page={LazyExperiencePage} />}</Route>
-          <Route path="/portal">{() => <LazyRoute page={LazyPortalPage} />}</Route>
+          <Route path="/portal">{() => <Redirect to="/demo" />}</Route>
           <Route path="/launch-status">{() => <LazyRoute page={LazyLaunchStatusPage} />}</Route>
           <Route path="/settings">{() => <LazyRoute page={LazySettingsPage} />}</Route>
           <Route component={NotFound} />

@@ -14,6 +14,6 @@ export function pendingReasonLabel(reason: string | null | undefined): string {
     case "awaiting_continuity":
       return "Waiting for thread — pics or reply";
     default:
-      return "Pending";
+      return reason?.trim() ? reason.replace(/_/g, " ") : "Pending — needs your confirmation";
   }
 }

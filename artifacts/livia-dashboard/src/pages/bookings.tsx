@@ -250,8 +250,11 @@ export default function BookingsPage() {
                         >
                           {booking.status}
                         </span>
-                        {booking.status === "PENDING" && booking.pendingReason ? (
-                          <span className="text-[9px] text-muted-foreground max-w-[140px] truncate text-right">
+                        {booking.status === "PENDING" ? (
+                          <span
+                            className="text-[9px] text-amber-700 dark:text-amber-300 max-w-[160px] truncate text-right"
+                            data-testid={`pending-reason-${booking.id}`}
+                          >
                             {pendingReasonLabel(booking.pendingReason)}
                           </span>
                         ) : null}

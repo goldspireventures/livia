@@ -183,7 +183,14 @@ export function applyDemoSessionContext(result: DemoSignInResult) {
   if (result.businessId) {
     window.localStorage.setItem(STORAGE_BUSINESS, result.businessId);
   }
+  try {
+    window.localStorage.removeItem("livia.viewingAsStaffId");
+  } catch {
+    // ignore
+  }
   if (result.persona === "staff-senior" || result.persona === "staff-junior") {
     window.sessionStorage.setItem("livia.demoStaffPersona", result.persona);
+  } else {
+    window.sessionStorage.removeItem("livia.demoStaffPersona");
   }
 }

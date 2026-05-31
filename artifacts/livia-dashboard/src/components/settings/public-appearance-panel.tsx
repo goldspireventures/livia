@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { uploadImageFile } from "@/lib/upload-media";
 import { useBusiness } from "@/lib/business-context";
 import { useToast } from "@/hooks/use-toast";
 import { customFetch, getGetBusinessQueryKey, useUpdateBusiness } from "@workspace/api-client-react";
@@ -57,8 +58,11 @@ export function PublicAppearancePanel({ editable = true, brandFields, onBrandFie
   const [presetId, setPresetId] = useState("");
   const [accent, setAccent] = useState("");
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState<"logo" | "cover" | null>(null);
   const [previewKey, setPreviewKey] = useState(0);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
   const previewUrl = slug ? `/b/${slug}` : "";
   const contrastOk = accentMeetsWcagAa(accent);
@@ -133,15 +137,59 @@ export function PublicAppearancePanel({ editable = true, brandFields, onBrandFie
     [persist],
   );
 
+  const selectedPresetMeta = data?.availablePresets.find((p) => p.id === presetId);
+
+  const previewIframeSrc = useMemo(() => {
+    if (!previewUrl) return "";
+    const params = new URLSearchParams({ preview: "1", v: String(previewKey) });
+    const cssPreset = selectedPresetMeta?.cssPreset ?? presetId;
+    if (cssPreset) params.set("preset", cssPreset);
+    if (accent.trim()) params.set("accent", accent.trim());
+    return `${previewUrl}?${params.toString()}`;
+  }, [previewUrl, previewKey, selectedPresetMeta?.cssPreset, presetId, accent]);
+
   function selectPreset(id: string) {
     setPresetId(id);
+    const preset = data?.availablePresets.find((p) => p.id === id);
+    if (preset) {
+      applyPresentationTheme({
+        cssPreset: preset.cssPreset,
+        brandAccentHex: accent.trim() || null,
+      });
+      refreshPreview();
+    }
     scheduleSave({ presentationPresetId: id, brandAccentHex: accent.trim() || null });
   }
 
   function onAccentChange(value: string) {
     setAccent(value);
     if (value.trim() && !accentMeetsWcagAa(value)) return;
+    applyPresentationTheme({
+      cssPreset: selectedPresetMeta?.cssPreset ?? undefined,
+      brandAccentHex: value.trim() || null,
+    });
+    refreshPreview();
     scheduleSave({ presentationPresetId: presetId, brandAccentHex: value.trim() || null });
+  }
+
+  async function uploadBrandImage(kind: "logo" | "cover", file: File) {
+    if (!bid || !editable) return;
+    setUploading(kind);
+    try {
+      const { url } = await uploadImageFile(bid, file, { entityType: "business" });
+      if (kind === "logo") {
+        onBrandFieldsChange({ ...brandFields, logoUrl: url });
+        await persist({ logoUrl: url });
+      } else {
+        onBrandFieldsChange({ ...brandFields, coverImageUrl: url });
+        await persist({ coverImageUrl: url });
+      }
+      toast({ title: kind === "logo" ? "Logo uploaded" : "Cover uploaded" });
+    } catch {
+      toast({ title: "Upload failed", variant: "destructive" });
+    } finally {
+      setUploading(null);
+    }
   }
 
   function copyLink() {
@@ -165,11 +213,42 @@ export function PublicAppearancePanel({ editable = true, brandFields, onBrandFie
   }
 
   return (
-    <div
-      className="grid gap-6 lg:grid-cols-2 lg:items-start"
-      data-testid="public-appearance-panel"
-    >
-      <div className="space-y-6">
+    <div className="space-y-8" data-testid="public-appearance-panel">
+      <Card className="overflow-hidden">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Smartphone className="h-4 w-4" />
+            Live preview
+          </CardTitle>
+          <CardDescription>
+            Updates as you change preset or accent — same `/b` page your clients book on.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex justify-center pb-8">
+          <div
+            className="w-full max-w-[440px] rounded-[2rem] border-[10px] border-foreground/10 bg-background shadow-2xl overflow-hidden motion-preview-crossfade"
+            data-testid="public-b-preview-frame"
+          >
+            <div className="h-[min(85vh,920px)] w-full bg-muted">
+              {previewIframeSrc ? (
+                <iframe
+                  key={previewIframeSrc}
+                  title="Public booking preview"
+                  src={previewIframeSrc}
+                  className="h-full w-full border-0 bg-background"
+                  data-testid="public-b-preview-iframe"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center text-sm text-muted-foreground p-6 text-center">
+                  Save a slug to preview your public page.
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
@@ -206,35 +285,71 @@ export function PublicAppearancePanel({ editable = true, brandFields, onBrandFie
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="appearance-logo">Logo URL</Label>
-              <Input
-                id="appearance-logo"
-                value={brandFields.logoUrl}
-                disabled={!editable}
-                data-testid="appearance-logo-url"
-                placeholder="https://…"
+              <Label>Logo</Label>
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept="image/*"
+                className="sr-only"
                 onChange={(e) => {
-                  const logoUrl = e.target.value;
-                  onBrandFieldsChange({ ...brandFields, logoUrl });
-                  scheduleSave({ logoUrl });
+                  const file = e.target.files?.[0];
+                  if (file) void uploadBrandImage("logo", file);
+                  e.target.value = "";
                 }}
               />
+              <div className="flex flex-wrap items-center gap-3">
+                {brandFields.logoUrl ? (
+                  <img
+                    src={brandFields.logoUrl}
+                    alt=""
+                    className="h-12 w-12 rounded-lg object-contain bg-muted border"
+                  />
+                ) : null}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={!editable || uploading === "logo"}
+                  data-testid="appearance-logo-upload"
+                  onClick={() => logoInputRef.current?.click()}
+                >
+                  {uploading === "logo" ? "Uploading…" : "Upload logo"}
+                </Button>
+              </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="appearance-cover">Cover image URL</Label>
-              <Input
-                id="appearance-cover"
-                value={brandFields.coverImageUrl}
-                disabled={!editable}
-                data-testid="appearance-cover-url"
-                placeholder="https://…"
+              <Label>Cover image</Label>
+              <input
+                ref={coverInputRef}
+                type="file"
+                accept="image/*"
+                className="sr-only"
                 onChange={(e) => {
-                  const coverImageUrl = e.target.value;
-                  onBrandFieldsChange({ ...brandFields, coverImageUrl });
-                  scheduleSave({ coverImageUrl });
+                  const file = e.target.files?.[0];
+                  if (file) void uploadBrandImage("cover", file);
+                  e.target.value = "";
                 }}
               />
+              <div className="flex flex-wrap items-center gap-3">
+                {brandFields.coverImageUrl ? (
+                  <img
+                    src={brandFields.coverImageUrl}
+                    alt=""
+                    className="h-14 w-24 rounded-lg object-cover bg-muted border"
+                  />
+                ) : null}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={!editable || uploading === "cover"}
+                  data-testid="appearance-cover-upload"
+                  onClick={() => coverInputRef.current?.click()}
+                >
+                  {uploading === "cover" ? "Uploading…" : "Upload cover"}
+                </Button>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -277,37 +392,6 @@ export function PublicAppearancePanel({ editable = true, brandFields, onBrandFie
           </CardContent>
         </Card>
       </div>
-
-      <Card className="lg:sticky lg:top-4">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Smartphone className="h-4 w-4" />
-            What customers see on their phone
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div
-            className="mx-auto w-[390px] max-w-full rounded-[2rem] border-[10px] border-foreground/10 bg-background shadow-xl overflow-hidden motion-preview-crossfade"
-            data-testid="public-b-preview-frame"
-          >
-            <div className="h-[844px] max-h-[70vh] w-full bg-muted">
-              {previewUrl ? (
-                <iframe
-                  key={previewKey}
-                  title="Public booking preview"
-                  src={`${previewUrl}?preview=1`}
-                  className="h-full w-full border-0 bg-background"
-                  data-testid="public-b-preview-iframe"
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center text-sm text-muted-foreground p-6 text-center">
-                  Save a slug to preview your public page.
-                </div>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

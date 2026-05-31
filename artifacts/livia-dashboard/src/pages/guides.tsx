@@ -150,7 +150,7 @@ export default function GuidesPage() {
           <Link href="/lifecycle">
             <Button variant="outline">Lifecycle map</Button>
           </Link>
-          <Link href="/portal">
+          <Link href="/demo">
             <Button variant="outline">Portal hub</Button>
           </Link>
         </div>

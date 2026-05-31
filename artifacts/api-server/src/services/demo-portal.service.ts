@@ -170,6 +170,12 @@ async function wireScenarioMemberships(clerkIdsByEmail: Record<string, string>):
 
 /** Ensure Clerk user + DB memberships exist (e.g. scenario added after last provision). */
 async function ensureDemoAccountReady(def: DemoPersonaDef): Promise<string> {
+  const parsed = parseDemoTenantEmail(def.email);
+  if (parsed) {
+    await seedDemoBusinessRosters({ slugs: [parsed.slug] }).catch((err) => {
+      logger.warn({ err, slug: parsed.slug }, "demo.roster.ensure_on_signin_failed");
+    });
+  }
   let userId = await ensureClerkUser(def);
   if (!userId) {
     throw Object.assign(new Error("Could not create demo Clerk user"), { status: 500 });
@@ -1223,6 +1229,15 @@ export async function signInAsDemoEmail(opts: {
     .select()
     .from(businessesTable)
     .where(eq(businessesTable.slug, def.primaryBusinessSlug));
+
+  if (!biz) {
+    throw Object.assign(
+      new Error(
+        `Demo tenant "${def.primaryBusinessSlug}" is not provisioned — run Sync logins on /demo first.`,
+      ),
+      { status: 409 },
+    );
+  }
 
   const { token } = await clerk.signInTokens.createSignInToken({
     userId,
