@@ -55,6 +55,8 @@ export function LivMemoryPanel({
     }
   }
 
+  if (!canEdit && rows.length === 0) return null;
+
   return (
     <Card data-testid="liv-memory-panel">
       <CardHeader className="pb-2">
@@ -62,15 +64,13 @@ export function LivMemoryPanel({
           <Sparkles className="h-4 w-4 text-primary" />
           Liv memory
         </CardTitle>
-        <CardDescription>
-          Notes Liv uses in inbox and booking conversations — per client, never shared across shops.
-        </CardDescription>
+        {rows.length > 0 ? (
+          <CardDescription>What Liv remembers for this client in inbox and booking.</CardDescription>
+        ) : null}
       </CardHeader>
       <CardContent className="space-y-3">
-        {rows.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No memory yet — add what Liv should remember.</p>
-        ) : (
-          <ul className="space-y-2">
+        {rows.length > 0 ? (
+          <ul className="space-y-2 max-h-48 overflow-y-auto">
             {rows.map((r) => (
               <li key={r.id} className="text-sm border rounded-md px-3 py-2">
                 <span className="text-[10px] font-mono uppercase text-muted-foreground">{r.kind}</span>
@@ -78,9 +78,9 @@ export function LivMemoryPanel({
               </li>
             ))}
           </ul>
-        )}
+        ) : null}
         {canEdit ? (
-          <>
+          <div className="space-y-2">
             <Textarea
               placeholder="e.g. Prefers Lara for colour · patch test due every 6 months"
               value={draft}
@@ -91,7 +91,7 @@ export function LivMemoryPanel({
             <Button size="sm" onClick={() => void save()} disabled={!draft.trim()}>
               Add memory
             </Button>
-          </>
+          </div>
         ) : null}
       </CardContent>
     </Card>

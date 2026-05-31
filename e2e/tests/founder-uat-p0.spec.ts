@@ -65,6 +65,11 @@ test.describe("Founder UAT P0", () => {
       await expect(page.getByTestId("customers-page")).toBeVisible();
     });
 
+    test("services catalog", async ({ page }) => {
+      await page.goto("/services", { waitUntil: "domcontentloaded" });
+      await expect(page.getByTestId("services-page")).toBeVisible();
+    });
+
     test("settings shop tab — booking link strip", async ({ page }) => {
       await page.goto("/settings?tab=shop", { waitUntil: "domcontentloaded" });
       await expect(page.getByTestId("settings-page")).toBeVisible();
@@ -100,6 +105,11 @@ test.describe("Founder UAT P0", () => {
     test("staff roster", async ({ page }) => {
       await page.goto("/staff", { waitUntil: "domcontentloaded" });
       await expect(page.getByTestId("staff-page")).toBeVisible();
+    });
+
+    test("services catalog", async ({ page }) => {
+      await page.goto("/services", { waitUntil: "domcontentloaded" });
+      await expect(page.getByTestId("services-page")).toBeVisible();
     });
 
     test("public appearance preview frame", async ({ page }) => {

@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Mail, Phone, Calendar, AlertCircle, Pencil, Link2 } from "lucide-react";
+import { ArrowLeft, Mail, Phone, Calendar, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { customFetch } from "@workspace/api-client-react";
 import { CustomerTimeline } from "@/components/customer-timeline";
@@ -27,6 +27,7 @@ import { CustomerPetsPanel } from "@/components/customer-pets-panel";
 import { CareSeriesPanel } from "@/components/customers/care-series-panel";
 import { useForm } from "react-hook-form";
 import { OperationalPageShell } from "@/components/layout/operational-page-shell";
+import { SettingsDisclosure } from "@/components/ui/settings-disclosure";
 import { invalidateOperationalState } from "@/lib/operational-cache";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -57,6 +58,9 @@ export default function CustomerDetailPage() {
 
   const bid = business?.id ?? "";
   const cid = customerId ?? "";
+  const vertical = (business as { vertical?: string } | null)?.vertical;
+  const showCareSeries =
+    vertical === "allied-health" || vertical === "wellness" || vertical === "physio";
   const canEdit = effectiveRole === "OWNER" || effectiveRole === "ADMIN";
 
   const { data: customer, isLoading } = useGetCustomer(
@@ -173,6 +177,7 @@ export default function CustomerDetailPage() {
 
   return (
     <OperationalPageShell
+      data-testid="customer-detail-page"
       title={editing ? "Edit client" : "Client profile"}
       subtitle={editing ? "Update contact details and notes" : "History and contact details"}
       width="lg"
@@ -193,7 +198,7 @@ export default function CustomerDetailPage() {
         </div>
       }
     >
-      <div className="space-y-6 max-w-2xl">
+      <div className="space-y-4 max-w-2xl">
 
       {isLoading ? (
         <div className="space-y-4">
@@ -331,38 +336,35 @@ export default function CustomerDetailPage() {
                 </div>
               ) : null}
 
-              {canEdit ? (
-                <div className="mt-4 pt-4 border-t space-y-2">
-                  <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                    <Link2 className="h-3 w-3" />
-                    Merge duplicate channel
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Paste the channel identity id from the duplicate profile to attach it to this
-                    client.
-                  </p>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Channel identity id"
-                      value={mergeIdentityId}
-                      onChange={(e) => setMergeIdentityId(e.target.value)}
-                      data-testid="input-merge-identity"
-                    />
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      disabled={merging || !mergeIdentityId.trim()}
-                      onClick={() => void mergeIdentity()}
-                    >
-                      {merging ? "Merging…" : "Merge"}
-                    </Button>
-                  </div>
-                </div>
-              ) : null}
             </CardContent>
           </Card>
 
-          <CareSeriesPanel customerId={cid} canEdit={canEdit} />
+          {canEdit ? (
+            <SettingsDisclosure
+              title="Merge duplicate channel"
+              description="Advanced — link a stray channel identity to this client."
+              defaultOpen={false}
+            >
+              <div className="flex gap-2 pt-1">
+                <Input
+                  placeholder="Channel identity id"
+                  value={mergeIdentityId}
+                  onChange={(e) => setMergeIdentityId(e.target.value)}
+                  data-testid="input-merge-identity"
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={merging || !mergeIdentityId.trim()}
+                  onClick={() => void mergeIdentity()}
+                >
+                  {merging ? "Merging…" : "Merge"}
+                </Button>
+              </div>
+            </SettingsDisclosure>
+          ) : null}
+
+          {showCareSeries ? <CareSeriesPanel customerId={cid} canEdit={canEdit} /> : null}
 
           <CustomerPetsPanel
             businessId={bid}
@@ -374,20 +376,20 @@ export default function CustomerDetailPage() {
           <CustomerTimeline businessId={bid} customerId={cid} />
 
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
                 Booking history
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               {!c.recentBookings || c.recentBookings.length === 0 ? (
-                <p className="text-sm text-muted-foreground px-6 py-8 text-center">No bookings yet</p>
+                <p className="text-sm text-muted-foreground px-4 py-6 text-center">No bookings yet</p>
               ) : (
-                <div className="divide-y divide-border">
+                <div className="divide-y divide-border max-h-64 overflow-y-auto">
                   {c.recentBookings.map((booking) => (
                     <Link key={booking.id} href={`/bookings/${booking.id}`}>
-                      <div className="flex items-center justify-between px-6 py-4 hover:bg-muted/30 transition-colors cursor-pointer">
+                      <div className="flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors cursor-pointer">
                         <div>
                           <p className="font-medium text-sm">{booking.service?.name ?? "—"}</p>
                           <p className="text-xs text-muted-foreground">{formatDateTime(booking.startAt)}</p>

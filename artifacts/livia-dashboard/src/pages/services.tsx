@@ -133,6 +133,7 @@ export default function ServicesPage() {
 
   return (
     <OperationalPageShell
+      data-testid="services-page"
       title="Services"
       subtitle="Your catalog — duration and price drive availability and Liv's booking suggestions."
       width="full"
@@ -256,13 +257,15 @@ export default function ServicesPage() {
       </Dialog>
 
       {isLoading ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-40" />)}
+        <div className="space-y-2">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-14 w-full" />
+          ))}
         </div>
       ) : svcList.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-            <Scissors className="h-10 w-10 text-muted-foreground mb-4 opacity-40" />
+          <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+            <Scissors className="h-9 w-9 text-muted-foreground mb-3 opacity-40" />
             <p className="font-medium">No services yet</p>
             <p className="text-sm text-muted-foreground mt-1">
               Create your first service to start taking bookings
@@ -270,48 +273,46 @@ export default function ServicesPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {svcList.map((svc: any) => (
-            <Card
-              key={svc.id}
-              data-testid={`card-service-${svc.id}`}
-              className={!svc.isActive ? "opacity-60" : ""}
-            >
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between">
-                  <CardTitle className="text-base">{svc.name}</CardTitle>
-                  {!svc.isActive && (
-                    <Badge variant="outline" className="text-[10px]">Inactive</Badge>
-                  )}
+        <Card>
+          <CardContent className="p-0 max-h-[min(70vh,640px)] overflow-y-auto divide-y divide-border">
+            {svcList.map((svc: any) => (
+              <div
+                key={svc.id}
+                data-testid={`row-service-${svc.id}`}
+                className={`flex flex-wrap items-center gap-3 p-3 ${!svc.isActive ? "opacity-60" : ""}`}
+              >
+                <div className="flex-1 min-w-[140px]">
+                  <p className="font-medium text-sm">{svc.name}</p>
+                  {svc.description ? (
+                    <p className="text-xs text-muted-foreground line-clamp-1">{svc.description}</p>
+                  ) : null}
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {svc.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">{svc.description}</p>
-                )}
-                <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-3 text-sm shrink-0">
                   <span className="flex items-center gap-1 text-muted-foreground">
-                    <Clock className="h-3 w-3" />
-                    {svc.durationMinutes} min
+                    <Clock className="h-3.5 w-3.5" />
+                    {svc.durationMinutes}m
                   </span>
                   <span className="font-semibold text-primary">
                     {formatCurrency(svc.priceMinor, svc.currency)}
                   </span>
+                  {!svc.isActive ? (
+                    <Badge variant="outline" className="text-[10px]">
+                      Inactive
+                    </Badge>
+                  ) : null}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 shrink-0">
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1"
                     onClick={() => openEdit(svc)}
                     data-testid={`button-edit-service-${svc.id}`}
                   >
                     Edit
                   </Button>
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
-                    className="flex-1"
                     onClick={() => toggleActive(svc.id, svc.isActive)}
                     disabled={updateService.isPending}
                     data-testid={`button-toggle-service-${svc.id}`}
@@ -319,10 +320,10 @@ export default function ServicesPage() {
                     {svc.isActive ? "Deactivate" : "Activate"}
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       )}
     </OperationalPageShell>
   );

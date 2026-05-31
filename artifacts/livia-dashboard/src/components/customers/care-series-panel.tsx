@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useBusiness } from "@/lib/business-context";
 import { customFetch } from "@workspace/api-client-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SettingsDisclosure } from "@/components/ui/settings-disclosure";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -88,9 +89,10 @@ export function CareSeriesPanel({
   }
 
   if (!business) return null;
+  if (series.length === 0 && !canEdit) return null;
 
   return (
-    <Card>
+    <Card data-testid="customer-care-series-panel">
       <CardHeader>
         <CardTitle className="text-base">Care series</CardTitle>
         <CardDescription>Multi-session plans (physio, allied health, packages).</CardDescription>
@@ -115,25 +117,31 @@ export function CareSeriesPanel({
           </div>
         ))}
         {canEdit ? (
-          <div className="border-t pt-4 space-y-3">
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div className="space-y-2">
-                <Label>Plan name</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} />
+          <SettingsDisclosure
+            title="Start a care series"
+            description="Multi-session plans for physio and allied health."
+            defaultOpen={series.length === 0}
+          >
+            <div className="space-y-3 pt-1">
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="space-y-2">
+                  <Label>Plan name</Label>
+                  <Input value={name} onChange={(e) => setName(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Sessions</Label>
+                  <Input value={sessionsTotal} onChange={(e) => setSessionsTotal(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Service ID</Label>
+                  <Input value={serviceId} onChange={(e) => setServiceId(e.target.value)} />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>Sessions</Label>
-                <Input value={sessionsTotal} onChange={(e) => setSessionsTotal(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Service ID</Label>
-                <Input value={serviceId} onChange={(e) => setServiceId(e.target.value)} />
-              </div>
+              <Button size="sm" onClick={() => void createSeries()}>
+                Start series
+              </Button>
             </div>
-            <Button size="sm" onClick={() => void createSeries()}>
-              Start series
-            </Button>
-          </div>
+          </SettingsDisclosure>
         ) : null}
       </CardContent>
     </Card>

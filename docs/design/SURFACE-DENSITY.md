@@ -50,6 +50,8 @@ Other P0 surfaces should adopt the same tier model in their screen cards over Râ
 | `/customers` | Merge panel omitted when no suggestions; compact roster rows |
 | `/staff` | Compact roster + scroll cap |
 | `/onboarding` | Portal shell; demo seed card only when demo login enabled |
+| `/services` | Compact list rows (not 3-col cards) |
+| `/customers/:id` | Merge channel in disclosure; care series vertical-gated; compact history |
 | `/bookings` | Compact list rows; shorter empty state |
 | `/bookings/:id` | Merged client/service card; notes in disclosure |
 | `/bookings/new` | Tighter wizard rhythm |

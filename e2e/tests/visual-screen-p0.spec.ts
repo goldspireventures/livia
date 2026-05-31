@@ -98,6 +98,16 @@ test.describe("P0 visual / density", () => {
     await expect(page.getByTestId("medspa-hub-page")).toBeVisible();
   });
 
+  test("services catalog shell", async ({ page, request }) => {
+    if (!(await demoCanSignIn(request, OWNER_SLUG))) {
+      test.skip(true, "Clerk sign-in unavailable");
+    }
+    await signInBusiness(page, OWNER_SLUG);
+    await page.goto("/services", { waitUntil: "domcontentloaded" });
+    await dismissPlatformTour(page);
+    await expect(page.getByTestId("services-page")).toBeVisible();
+  });
+
   test("customers list shell", async ({ page, request }) => {
     if (!(await demoCanSignIn(request, OWNER_SLUG))) {
       test.skip(true, "Clerk sign-in unavailable");
