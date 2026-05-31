@@ -3,6 +3,7 @@
  */
 import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import {
+  bookingsTable,
   businessMembershipsTable,
   conversationsTable,
   db,
@@ -333,6 +334,23 @@ export async function seedDemoInAppNotifications(
   businessId: string,
   personaHint: NotificationPersonaHint,
 ): Promise<void> {
+  const [pendingBooking] = await db
+    .select({ id: bookingsTable.id })
+    .from(bookingsTable)
+    .where(and(eq(bookingsTable.businessId, businessId), eq(bookingsTable.status, "PENDING")))
+    .limit(1);
+
+  const [handoffConvo] = await db
+    .select({ id: conversationsTable.id })
+    .from(conversationsTable)
+    .where(
+      and(
+        eq(conversationsTable.businessId, businessId),
+        eq(conversationsTable.status, "HANDED_OFF"),
+      ),
+    )
+    .limit(1);
+
   const samples: Array<Omit<InAppDelivery, "businessId"> & { kind: InAppNotificationKind }> =
     personaHint === "staff"
         ? [
@@ -346,13 +364,32 @@ export async function seedDemoInAppNotifications(
             },
           ]
         : [
-            {
-              kind: "booking.pending",
-              title: "Booking needs your yes",
-              body: "Deposit not received yet — approve once paid or Liv will release the slot.",
-              priority: "act",
-              dedupeKey: `demo:pending:${businessId}`,
-            },
+            ...(pendingBooking
+              ? [
+                  {
+                    kind: "booking.pending" as const,
+                    title: "Booking needs your yes",
+                    body: "Tap to open this booking — confirm or decline with the reason shown.",
+                    priority: "act" as const,
+                    dedupeKey: `demo:pending:${businessId}`,
+                    resourceKind: "booking",
+                    resourceId: pendingBooking.id,
+                  },
+                ]
+              : []),
+            ...(handoffConvo
+              ? [
+                  {
+                    kind: "inbox.handoff" as const,
+                    title: "Inbox handoff",
+                    body: "A thread needs your decision — refund or reply is waiting.",
+                    priority: "act" as const,
+                    dedupeKey: `demo:handoff:${businessId}`,
+                    resourceKind: "conversation",
+                    resourceId: handoffConvo.id,
+                  },
+                ]
+              : []),
           ];
 
   for (const s of samples) {

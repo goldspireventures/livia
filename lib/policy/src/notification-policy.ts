@@ -172,8 +172,21 @@ export function buildNotificationDeepLinks(args: {
       return { href: "/inbox", mobileHref: "/(tabs)/inbox" };
     case "time_off.pending":
       return { href: "/team/time-off", mobileHref: "/time-off" };
-    case "liv.proposal.pending":
     case "refund.pending":
+      if (conversationId) {
+        return {
+          href: `/inbox?conversation=${conversationId}&lens=taken_over`,
+          mobileHref: `/conversation/${conversationId}`,
+        };
+      }
+      if (bookingId) {
+        return {
+          href: `/bookings/${bookingId}`,
+          mobileHref: `/booking/${bookingId}`,
+        };
+      }
+      return { href: "/inbox?lens=taken_over", mobileHref: "/(tabs)/inbox" };
+    case "liv.proposal.pending":
       return { href: "/dashboard", mobileHref: "/(tabs)/approvals" };
     case "morning.briefing.ready":
       return { href: "/dashboard", mobileHref: "/(tabs)/today" };

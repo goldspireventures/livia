@@ -43,7 +43,12 @@ function buildLivLineFallback(
   persona: PersonaKind,
   data: {
     chain?: ChainRollup | null;
-    summary?: { todayBookings?: number; pendingBookings?: number } | null;
+    summary?: {
+      todayBookings?: number;
+      pendingBookings?: number;
+      pendingCount?: number;
+      handedOffCount?: number;
+    } | null;
     openConversations?: number;
     myDay?: MyDayPeek | null;
     businessName?: string;
@@ -56,17 +61,22 @@ function buildLivLineFallback(
     return data.chain.orgAdminBriefingLine;
   }
 
-  if ((persona === "owner" || persona === "manager") && data.summary) {
+    if ((persona === "owner" || persona === "manager") && data.summary) {
     const today = data.summary.todayBookings ?? 0;
-    const pending = data.summary.pendingBookings ?? 0;
+    const pending = data.summary.pendingCount ?? data.summary.pendingBookings ?? 0;
+    const handoffs = data.summary.handedOffCount ?? 0;
     const open = data.openConversations ?? 0;
+    if (handoffs > 0 && pending > 0) {
+      return `${shop}${today} today · ${pending} to confirm · ${handoffs} inbox handoff${handoffs === 1 ? "" : "s"}.`;
+    }
+    if (handoffs > 0) {
+      return `${shop}${handoffs} inbox handoff${handoffs === 1 ? "" : "s"} need${handoffs === 1 ? "s" : ""} you — ${today} on the books today.`;
+    }
     if (persona === "manager" && open > 0) {
       return `${shop}${open} conversation${open === 1 ? "" : "s"} need${open === 1 ? "s" : ""} you — ${today} on the books today.`;
     }
     if (pending > 0) {
-      return `${shop}${today} today · ${pending} pending confirmation${pending === 1 ? "" : "s"}.${
-        open > 0 ? ` ${open} inbox thread${open === 1 ? "" : "s"} open.` : ""
-      }`;
+      return `${shop}${today} today · ${pending} pending confirmation${pending === 1 ? "" : "s"}.`;
     }
     return today > 0
       ? `${shop}${today} appointment${today === 1 ? "" : "s"} today — you're on track.`
@@ -168,7 +178,12 @@ export function usePersonaBriefing() {
     (persona === "org_admin" ? orgAdminPresence?.line : tenantPresence?.line) ??
     buildLivLineFallback(persona, {
       chain: chain ?? null,
-      summary: summary as { todayBookings?: number; pendingBookings?: number } | undefined,
+      summary: summary as {
+        todayBookings?: number;
+        pendingBookings?: number;
+        pendingCount?: number;
+        handedOffCount?: number;
+      } | undefined,
       openConversations: openCount,
       myDay: myDay ?? null,
       businessName: business?.name,

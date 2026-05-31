@@ -66,7 +66,6 @@ import { NotificationCenter } from "@/components/notification-center";
 import { useNavActionCounts } from "@/hooks/use-nav-action-counts";
 import { useWebPush } from "@/hooks/useWebPush";
 import { HelpSupportDialog } from "@/components/help-support-dialog";
-import { VerticalPackBanner } from "@/components/vertical-pack-banner";
 import { ErrorBoundary } from "@/components/error-boundary";
 
 
@@ -273,7 +272,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
       .catch(() => setShowLifecycle(false));
   }, [role, persona, businesses.length]);
 
-  const accent = PERSONA_ACCENT[persona];
+  /** Vertical theme sets `--primary`; persona tint only for badge copy. */
+  const accent = "hsl(var(--primary))";
 
   const items = getRitualNav(
     persona,
@@ -313,33 +313,16 @@ export function AppLayout({ children }: { children: ReactNode }) {
       >
 
         <div
-
-          className="flex h-16 shrink-0 items-center justify-between gap-2 border-b px-6"
-
+          className="shrink-0 border-b px-4 py-4 space-y-2"
           style={{ borderColor: `${accent}22` }}
-
         >
-
-          <div className="flex items-center gap-3 min-w-0">
-
-            <div className="min-w-0 flex-1">
-              <LiviaWordmark size="sm" className="opacity-90" />
-              <span className="font-medium text-xs truncate block max-w-[140px] text-muted-foreground mt-1">
-                {business?.name || "Your shop"}
-              </span>
-
-              <Badge variant="outline" className="text-[9px] py-0 h-4 mt-0.5 truncate max-w-[140px]">
-
-                {personaBadge}
-
-              </Badge>
-
-            </div>
-
-          </div>
-
-          <VerticalPackBanner />
-
+          <LiviaWordmark size="sm" className="opacity-90" />
+          <p className="font-medium text-xs truncate text-muted-foreground">
+            {business?.name || "Your shop"}
+          </p>
+          <Badge variant="outline" className="text-[9px] py-0 h-4 w-fit max-w-full truncate">
+            {personaBadge}
+          </Badge>
         </div>
 
         <BusinessSwitcher />

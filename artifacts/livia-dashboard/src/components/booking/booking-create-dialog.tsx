@@ -21,12 +21,15 @@ export function BookingCreateDialog({ open, onOpenChange, onCreated }: Props) {
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
           <div className="space-y-1.5">
-            <DialogTitle>Quick booking</DialogTitle>
-            <DialogDescription>Add the essentials and stay on the bookings list.</DialogDescription>
+            <DialogTitle>Quick add</DialogTitle>
+            <DialogDescription>
+              Front-desk speed — client, service, and time only. For notes and every step, use guided
+              booking.
+            </DialogDescription>
           </div>
           <Link href="/bookings/new">
-            <Button type="button" variant="ghost" size="sm" className="shrink-0">
-              Full details
+            <Button type="button" variant="outline" size="sm" className="shrink-0">
+              Guided booking
             </Button>
           </Link>
         </DialogHeader>

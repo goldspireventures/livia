@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, CalendarPlus, Check, ChevronRight, Clock, UserPlus } from "lucide-react";
+import { CalendarPlus, Check, ChevronRight, Clock, UserPlus } from "lucide-react";
 
 const STEPS = ["Client", "Service", "Team", "Time", "Confirm"] as const;
 type Step = (typeof STEPS)[number];
@@ -227,28 +227,12 @@ export function BookingWizard({ mode = "page", quick = false, onCreated, onCance
       className={
         mode === "dialog"
           ? "space-y-4"
-          : "space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-2xl"
+          : "space-y-4"
       }
     >
-      {mode === "page" ? (
-        <div className="flex items-center gap-3">
-          <Link href="/bookings">
-            <Button variant="ghost" size="icon" data-testid="button-back" aria-label="Back">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">New booking</h1>
-            <p className="text-muted-foreground">
-              Step {stepIndex + 1} of {activeSteps.length} — {step}
-            </p>
-          </div>
-        </div>
-      ) : (
-        <p className="text-sm text-muted-foreground">
-          Step {stepIndex + 1} of {activeSteps.length} — {step}
-        </p>
-      )}
+      <p className="text-sm text-muted-foreground" data-testid="booking-wizard-step-label">
+        Step {stepIndex + 1} of {activeSteps.length} — <span className="text-foreground font-medium">{step}</span>
+      </p>
 
       <div className="flex gap-1">
         {activeSteps.map((s, i) => (

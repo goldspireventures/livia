@@ -143,15 +143,19 @@ export default function BookingsPage() {
       width="full"
       actions={
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            data-testid="button-new-booking-quick"
+            onClick={() => setBookingDialogOpen(true)}
+          >
+            <CalendarPlus className="h-4 w-4 mr-2" />
+            Quick add
+          </Button>
           <Link href="/bookings/new">
-            <Button variant="outline" data-testid="button-new-booking-full">
-              Full booking
+            <Button data-testid="button-new-booking-guided">
+              Guided booking
             </Button>
           </Link>
-          <Button data-testid="button-new-booking" onClick={() => setBookingDialogOpen(true)}>
-            <CalendarPlus className="h-4 w-4 mr-2" />
-            Quick booking
-          </Button>
         </div>
       }
     >

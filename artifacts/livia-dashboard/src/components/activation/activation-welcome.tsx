@@ -4,6 +4,7 @@ import { ArrowRight, Check, Sparkles } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useBusiness } from "@/lib/business-context";
+import { isDemoLoginEnabled } from "@/lib/persona";
 import { useTenantExperience } from "@/lib/tenant-experience-api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMembership } from "@/lib/membership-context";
@@ -67,6 +68,7 @@ export function ActivationWelcome() {
 
   if (!business || !["OWNER", "ADMIN"].includes(effectiveRole ?? "")) return null;
   if (readDismissed(business.id)) return null;
+  if (isDemoLoginEnabled) return null;
 
   if (isLoading && !resolved) {
     return <Skeleton className="h-32 w-full rounded-lg mb-4" />;

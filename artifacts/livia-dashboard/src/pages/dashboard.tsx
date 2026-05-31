@@ -435,7 +435,7 @@ export default function DashboardPage() {
         />
       ) : null}
 
-      <ActivationWelcome />
+      {!isOperatorHome ? <ActivationWelcome /> : null}
       <OperatorMaturityBanner />
 
       {(persona === "owner" || persona === "org_admin") && <LifecycleNudges compact />}

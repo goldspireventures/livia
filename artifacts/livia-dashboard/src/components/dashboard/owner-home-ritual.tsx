@@ -149,13 +149,15 @@ function PendingPanel({
           ))}
         </ul>
       )}
-      <div className="mt-auto border-t border-border/60 px-3 py-1.5">
-        <Link href="/bookings?status=PENDING">
-          <Button variant="ghost" size="sm" className="w-full text-xs h-8">
-            View all pending
-          </Button>
-        </Link>
-      </div>
+      {pendingBookings.length > 1 ? (
+        <div className="mt-auto border-t border-border/60 px-3 py-1.5">
+          <Link href="/bookings?status=PENDING">
+            <Button variant="ghost" size="sm" className="w-full text-xs h-8">
+              View all {pendingCount} pending
+            </Button>
+          </Link>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -174,6 +176,7 @@ export function OwnerHomeRitual({
   summary?: {
     todayBookings?: number;
     pendingCount?: number;
+    handedOffCount?: number;
     completedTodayCount?: number;
     weekBookings?: number;
     totalCustomers?: number;
@@ -216,9 +219,10 @@ export function OwnerHomeRitual({
   }));
 
   const pendingCount = summary?.pendingCount ?? 0;
+  const handoffCount = summary?.handedOffCount ?? 0;
   const moduleLayout = resolveOwnerHomeModuleLayout({
     pendingCount,
-    openInboxCount: openThreads.length,
+    openInboxCount: handoffCount,
   });
 
   const todayTotal = summary?.todayBookings ?? 0;
@@ -228,16 +232,20 @@ export function OwnerHomeRitual({
   const oneThingHref =
     pendingCount > 0
       ? "/bookings?status=PENDING"
-      : openThreads.length > 0
-        ? "/inbox"
-        : ritual.primaryAction?.href ?? "/bookings";
+      : handoffCount > 0
+        ? "/inbox?lens=taken_over"
+        : openThreads.length > 0
+          ? "/inbox"
+          : ritual.primaryAction?.href ?? "/bookings";
 
   const oneThingLabel =
     pendingCount > 0
-      ? "Confirm pending bookings"
-      : openThreads.length > 0
-        ? "Reply in inbox"
-        : ritual.primaryAction?.label ?? "View calendar";
+      ? `Confirm ${pendingCount} pending`
+      : handoffCount > 0
+        ? `Review ${handoffCount} handoff${handoffCount === 1 ? "" : "s"}`
+        : openThreads.length > 0
+          ? "Open inbox"
+          : ritual.primaryAction?.label ?? "View calendar";
 
   return (
     <div className="space-y-4 max-w-5xl" data-testid="owner-home-ritual">
@@ -271,9 +279,7 @@ export function OwnerHomeRitual({
               ) : (
                 <p className="text-sm leading-relaxed text-foreground/90 line-clamp-3">{livLine}</p>
               )}
-              {livPulse === "act" ? (
-                <p className="text-xs text-destructive font-medium mt-1">Needs your attention</p>
-              ) : livSource === "liv" ? (
+              {livPulse !== "act" && livSource === "liv" ? (
                 <p className="text-[10px] uppercase tracking-wider font-mono text-muted-foreground mt-0.5">
                   Liv · briefing
                 </p>
@@ -304,13 +310,15 @@ export function OwnerHomeRitual({
           }
           loading={isLoadingSummary}
         />
-        <KpiChip
-          label="Inbox waiting"
-          value={openThreads.length}
-          sub={openThreads.length === 1 ? "thread" : "threads"}
-          tone={openThreads.length > 0 ? "warn" : undefined}
-          loading={convosLoading}
-        />
+        <Link href={handoffCount > 0 ? "/inbox?lens=taken_over" : "/inbox"} className="block">
+          <KpiChip
+            label="Inbox handoffs"
+            value={handoffCount}
+            sub={handoffCount === 1 ? "needs you" : handoffCount > 0 ? "need you" : "clear"}
+            tone={handoffCount > 0 ? "warn" : undefined}
+            loading={isLoadingSummary}
+          />
+        </Link>
         <KpiChip
           label="To confirm"
           value={pendingCount}

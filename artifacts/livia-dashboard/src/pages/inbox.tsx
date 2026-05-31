@@ -132,6 +132,16 @@ export default function InboxPage() {
     const params = new URLSearchParams(window.location.search);
     const id = params.get("conversation") ?? params.get("conversationId");
     if (id) setSelectedId(id);
+    const lens = params.get("lens");
+    if (
+      lens === "all" ||
+      lens === "needs_you" ||
+      lens === "liv_handling" ||
+      lens === "taken_over" ||
+      lens === "closed"
+    ) {
+      setQueueLens(lens);
+    }
   }, []);
 
   const { data: convos, isLoading: isLoadingConvos } = useListConversations(
@@ -405,7 +415,11 @@ export default function InboxPage() {
                         Resume AI
                       </Button>
                     )}
-                    {selectedConversation.status !== "CLOSED" && (
+                    {selectedConversation.status !== "CLOSED" &&
+                    !(
+                      selectedConversation.caseIntent === "refund_request" ||
+                      selectedConversation.summary?.toLowerCase().includes("refund")
+                    ) ? (
                       <Button
                         variant="outline"
                         size="sm"
@@ -414,15 +428,22 @@ export default function InboxPage() {
                         data-testid="button-close-conversation"
                       >
                         <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
-                        Close (no action)
+                        Archive thread
                       </Button>
-                    )}
+                    ) : null}
                   </div>
                   </div>
                   {selectedConversation.status !== "CLOSED" &&
                   (selectedConversation.caseIntent === "refund_request" ||
                     selectedConversation.summary?.toLowerCase().includes("refund")) ? (
-                    <div className="flex flex-wrap gap-2" data-testid="inbox-case-resolve">
+                    <div
+                      className="flex flex-col gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-3"
+                      data-testid="inbox-case-resolve"
+                    >
+                      <p className="text-xs font-medium text-foreground">
+                        Refund request — choose an outcome (customer is notified automatically).
+                      </p>
+                      <div className="flex flex-wrap gap-2">
                       <Button
                         size="sm"
                         variant="default"
@@ -451,6 +472,15 @@ export default function InboxPage() {
                       >
                         Cancel only (no refund)
                       </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={resolving}
+                        onClick={() => void resolveCase("close_no_action")}
+                      >
+                        Dismiss without refund
+                      </Button>
+                    </div>
                     </div>
                   ) : null}
                 </div>
@@ -537,9 +567,13 @@ export default function InboxPage() {
               </div>
 
               {selectedId && selectedConversation?.status !== "CLOSED" ? (
-                <div className="sticky bottom-0 border-t border-border p-3 space-y-2 bg-card/95 backdrop-blur-sm mt-auto">
+                <div className="sticky bottom-0 border-t border-border p-3 space-y-2 bg-card/95 backdrop-blur-sm mt-auto z-10">
                   {(selectedConversation?.status === "OPEN" ||
-                    selectedConversation?.status === "HANDED_OFF") ? (
+                    selectedConversation?.status === "HANDED_OFF") &&
+                  !(
+                    selectedConversation?.caseIntent === "refund_request" ||
+                    selectedConversation?.summary?.toLowerCase().includes("refund")
+                  ) ? (
                     <LivInboxAssist
                       mode={
                         selectedConversation?.status === "HANDED_OFF" ? "handoff" : "open"
