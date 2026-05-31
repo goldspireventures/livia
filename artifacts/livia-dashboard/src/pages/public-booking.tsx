@@ -26,7 +26,6 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   CheckCircle2,
-  MapPin,
   ChevronLeft,
   Calendar,
   CalendarPlus,
@@ -48,7 +47,6 @@ import { PublicBookingTrustStrip } from "@/components/public-booking/public-book
 import { PublicCareNotes } from "@/components/public-booking/public-care-notes";
 import { PublicStaffStrip } from "@/components/public-booking/public-staff-strip";
 import { PublicServiceCatalog } from "@/components/public-booking/public-service-catalog";
-import { PublicStorefrontHero } from "@/components/public-booking/public-storefront-hero";
 import { PublicSocialProofStrip } from "@/components/public-booking/public-social-proof";
 import {
   formatPublicAddress,
@@ -408,23 +406,7 @@ export default function PublicBookingPage() {
         experienceSkin: b.experienceSkin,
       })}${showStickyCta ? " has-sticky-cta" : ""}`}
     >
-      {b.coverImageUrl ? (
-        <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-52 -z-0 overflow-hidden public-booking-cover"
-          aria-hidden
-        >
-          <img
-            src={b.coverImageUrl}
-            alt=""
-            className="h-full w-full object-cover opacity-50"
-          />
-        </div>
-      ) : null}
-      <div
-        className="public-booking-hero pointer-events-none absolute inset-x-0 top-0 h-48 -z-0"
-        aria-hidden
-      />
-      <main className="max-w-xl mx-auto px-4 py-8 pb-6 md:pb-8 relative z-10">
+      <main className="max-w-xl mx-auto px-4 py-6 pb-6 md:pb-8 relative z-10">
         <PublicCustomerRitual
           businessName={b.name}
           city={b.city ? `${b.city}` : null}
@@ -436,53 +418,45 @@ export default function PublicBookingPage() {
           serviceStepLabel={vocab.serviceNoun}
           includeConsentStep={needsMedspaConsent}
           tagline={vocab.hint}
+          variant={step === "services" ? "storefront" : "compact"}
+          coverImageUrl={b.coverImageUrl}
+          instagramHandle={b.instagramHandle}
+          publicAddress={publicAddress}
+          socialProof={b.socialProof}
+          bookCta={bookCta}
+          onScrollToServices={
+            step === "services"
+              ? () => document.getElementById("public-service-menu")?.scrollIntoView({ behavior: "smooth" })
+              : undefined
+          }
         />
-        {publicAddress ? (
-          <p className="text-xs text-muted-foreground text-center -mt-2 mb-4 flex items-start justify-center gap-1.5 max-w-md mx-auto px-2">
-            <MapPin className="h-3.5 w-3.5 shrink-0 mt-0.5" aria-hidden />
-            <span>{publicAddress}</span>
-          </p>
-        ) : null}
         {step === "services" ? (
-          <PublicBookingTrustStrip
-            depositPolicySummary={b.depositPolicySummary}
-            policyTrust={b.policyTrust}
-          />
+          <>
+            <PublicBookingTrustStrip
+              depositPolicySummary={b.depositPolicySummary}
+              policyTrust={b.policyTrust}
+            />
+            {(b.countryPack?.countryShowcaseNote ||
+              (b.countryPack?.upcomingHolidays && b.countryPack.upcomingHolidays.length > 0)) && (
+              <p className="text-[10px] text-muted-foreground/70 mb-4 -mt-1">
+                {[
+                  b.countryPack?.countryShowcaseNote,
+                  b.countryPack?.upcomingHolidays?.[0]
+                    ? `Closed ${b.countryPack.upcomingHolidays[0].name} (${b.countryPack.upcomingHolidays[0].date})`
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+            )}
+          </>
         ) : null}
-        {b.countryPack?.countryShowcaseNote ? (
-          <p className="text-[11px] text-muted-foreground/80 mb-4 text-center max-w-md mx-auto">
-            {b.countryPack.countryShowcaseNote}
-          </p>
-        ) : null}
-        {b.countryPack?.upcomingHolidays && b.countryPack.upcomingHolidays.length > 0 ? (
-          <p className="text-[11px] text-muted-foreground mb-4 text-center">
-            Upcoming closure: {b.countryPack.upcomingHolidays[0].name} ({b.countryPack.upcomingHolidays[0].date})
-          </p>
-        ) : null}
-
-        {step === "services" && (
-          <PublicStorefrontHero
-            name={b.name}
-            description={b.description}
-            city={b.city}
-            vertical={b.vertical}
-            category={b.category}
-            logoUrl={b.logoUrl}
-            coverImageUrl={b.coverImageUrl}
-            instagramHandle={b.instagramHandle}
-            publicCta={bookCta}
-            publicAddress={publicAddress}
-            onPrimaryAction={() => {
-              document.getElementById("public-service-menu")?.scrollIntoView({ behavior: "smooth" });
-            }}
-          />
-        )}
 
         {/* Step: Services */}
         {step === "services" && (
           <div
             id="public-service-menu"
-            className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300"
+            className="space-y-3 animate-in fade-in slide-in-from-right-4 duration-300"
           >
             {staffForward ? (
               <PublicStaffStrip
@@ -493,13 +467,11 @@ export default function PublicBookingPage() {
               />
             ) : null}
             {marketRibbon(b.country, b.experienceSkin) ? (
-              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/80 text-center -mt-2 mb-2">
+              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/80 -mt-1">
                 {marketRibbon(b.country, b.experienceSkin)}
               </p>
             ) : null}
-            <PublicSocialProofStrip proof={b.socialProof} />
-            <PublicCareNotes vertical={b.vertical} />
-            <h2 className="text-lg font-semibold">{chooseServiceTitle}</h2>
+            <h2 className="text-lg font-semibold pt-1">{chooseServiceTitle}</h2>
             <PublicServiceCatalog
               services={b.services}
               vertical={b.vertical}
@@ -509,6 +481,8 @@ export default function PublicBookingPage() {
                 setStep("slots");
               }}
             />
+            <PublicCareNotes vertical={b.vertical} />
+            <PublicSocialProofStrip proof={b.socialProof} variant="quotes" />
           </div>
         )}
 

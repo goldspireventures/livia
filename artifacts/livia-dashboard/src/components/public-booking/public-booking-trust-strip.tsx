@@ -26,7 +26,7 @@ export function PublicBookingTrustStrip({
   if (policyTrust?.lateGraceMinutes != null && policyTrust.lateGraceMinutes > 0) {
     chips.push({
       icon: Clock,
-      label: `${policyTrust.lateGraceMinutes} min grace if you're running late`,
+      label: `${policyTrust.lateGraceMinutes} min grace if late`,
     });
   }
 
@@ -34,17 +34,17 @@ export function PublicBookingTrustStrip({
 
   return (
     <div
-      className="mb-6 rounded-xl border border-border/60 bg-card/40 backdrop-blur-sm p-3 space-y-2"
+      className="mb-4 flex flex-wrap gap-2"
       data-testid="public-booking-trust-strip"
     >
       {chips.map(({ icon: Icon, label }) => (
-        <p
+        <span
           key={label}
-          className="flex items-start gap-2 text-xs text-muted-foreground leading-relaxed"
+          className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/40 px-2.5 py-1 text-[11px] text-muted-foreground"
         >
-          <Icon className="h-3.5 w-3.5 shrink-0 mt-0.5 text-primary" aria-hidden />
-          <span>{label}</span>
-        </p>
+          <Icon className="h-3 w-3 shrink-0 text-primary" aria-hidden />
+          {label}
+        </span>
       ))}
     </div>
   );
