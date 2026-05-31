@@ -142,7 +142,9 @@ jobs:
           curl -sf http://127.0.0.1:3001/api/healthz
 
       - name: Seed CI demo showcase (DB-only, no Clerk)
-        run: curl -sf -X POST http://127.0.0.1:3001/api/demo/seed-ci-db
+        run: |
+          curl -sf --max-time 600 -X POST http://127.0.0.1:3001/api/demo/seed-ci-db
+          curl -sf http://127.0.0.1:3001/api/demo/status | head -c 400
 
       - name: Founder release gate (truth + api smoke + wargame)
         run: pnpm founder:release-gate -- --level=ci --out=artifacts/founder-gate.json

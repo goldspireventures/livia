@@ -33,6 +33,11 @@ export async function ensureDemoProvisioned(request: APIRequestContext) {
   if (!sync.ok() && sync.status() !== 404) {
     console.warn(`sync-vertical-showcase: ${sync.status()} — restart API if new verticals are missing`);
   }
+  for (const slug of ["peak-fitness-dublin"]) {
+    await request
+      .get(`${apiBase}/api/demo/guest-surfaces/${slug}/waitlist`)
+      .catch(() => undefined);
+  }
   await request.post(`${apiBase}/api/demo/sync-clerk`, { timeout: 180_000 }).catch(() => undefined);
 }
 
