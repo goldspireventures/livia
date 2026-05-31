@@ -59,7 +59,10 @@ ok =
 
 if (full) {
   ok =
-    run("Headless lifecycle", ["node", "scripts/headless-lifecycle-r1.mjs", "--api", env.E2E_API_BASE]) &&
+    run("Headless lifecycle R3", ["node", "scripts/headless-lifecycle-r3.mjs", "--api", env.E2E_API_BASE]) &&
+    ok;
+  ok =
+    run("Headless lifecycle R1", ["node", "scripts/headless-lifecycle-r1.mjs", "--api", env.E2E_API_BASE]) &&
     ok;
   ok =
     run("All verticals smoke (needs staging Clerk)", [

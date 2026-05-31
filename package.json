@@ -40,6 +40,7 @@
     "railway:build-prod-env": "node scripts/build-railway-production-env.mjs --write",
     "prod:smoke": "node scripts/prod-smoke.mjs",
     "smoke:staging": "node scripts/prod-smoke.mjs --app https://app.staging.livia-hq.com --api https://api.staging.livia-hq.com",
+    "staging:test-guide": "node -e \"console.log('See docs/operations/STAGING-TEST-R3.md')\"",
     "staging:readiness": "node scripts/staging-readiness.mjs --strict",
     "prod:verify-domains": "node scripts/verify-production-domains.mjs",
     "founder:pre-ship": "node scripts/prod-smoke.mjs && node -e \"console.log('\\nNext: Founder cockpit → ship checklist → incognito sign-in. See docs/operations/FOUNDER-RELEASE-RUNBOOK.md\\n')\"",

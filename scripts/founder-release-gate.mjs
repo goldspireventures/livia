@@ -69,6 +69,13 @@ report.steps.push(
   ),
 );
 
+report.steps.push(
+  Object.assign(
+    { id: "r3-exit-verify", label: "R3 exit verify (vertical, mobile parity, v3 tier)" },
+    run("R3 exit verify", "node", ["scripts/r3-exit-verify.mjs"]),
+  ),
+);
+
 // 2) “Smoke correctness” for API surface.
 if (level === "full") {
   // This is the strongest local invariant check, but it relies on local env setup.

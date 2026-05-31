@@ -104,6 +104,19 @@ await check("Presentation presets gate (E7)", async () => {
   return "LIVIA_DEPLOY_ENV=staging (run settings-preset-picker E2E after API redeploy)";
 });
 
+await check("Demo guest surface token (proof)", async () => {
+  const res = await fetch(`${apiBase}/api/demo/guest-surfaces/ink-anchor-galway/proof`, {
+    signal: AbortSignal.timeout(20_000),
+  });
+  if (res.status === 404) {
+    throw new Error("404 — demo not provisioned; run pnpm db:seed:staging or POST /api/demo/provision");
+  }
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const body = await res.json();
+  if (!body?.url && !body?.path) throw new Error("missing guest URL in response");
+  return "proof token OK";
+});
+
 const smoke = spawnSync("pnpm", ["smoke:staging"], {
   cwd: root,
   stdio: "pipe",

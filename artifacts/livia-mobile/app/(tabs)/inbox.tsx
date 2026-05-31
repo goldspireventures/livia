@@ -22,7 +22,8 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EmptyState } from "@/components/EmptyState";
 import { OperationalScreen } from "@/components/OperationalScreen";
-import { verticalAccentHex } from "@/lib/vertical-theme";
+import { resolveTenantAccentHex } from "@/lib/vertical-theme";
+import { useTenantExperience } from "@/hooks/useTenantExperience";
 import { aurora } from "@/constants/colors";
 import { elevation } from "@/constants/elevation";
 import { fonts, type } from "@/constants/typography";
@@ -58,7 +59,13 @@ export default function InboxScreen() {
   const { kind: persona } = usePersona();
   const businessId = currentBusiness?.id ?? "";
   const bizMeta = currentBusiness as { vertical?: string; category?: string } | undefined;
-  const accent = verticalAccentHex(bizMeta?.vertical, bizMeta?.category);
+  const { data: tenantExperience } = useTenantExperience(businessId || undefined);
+  const tenantAccent =
+    (tenantExperience as { presentation?: { brandAccentHex?: string | null } } | null | undefined)
+      ?.presentation?.brandAccentHex ??
+    (tenantExperience as { publicAppearance?: { brandAccentHex?: string | null } } | null | undefined)
+      ?.publicAppearance?.brandAccentHex;
+  const accent = resolveTenantAccentHex(bizMeta?.vertical, bizMeta?.category, tenantAccent);
 
   const showQueue = persona === "manager" || persona === "owner" || persona === "org_admin";
   const canQuickBook =

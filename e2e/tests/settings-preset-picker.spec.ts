@@ -32,36 +32,35 @@ test.describe("Settings preset picker (E7)", () => {
 
     await page.goto("/settings?tab=shop", { waitUntil: "domcontentloaded", timeout: 45_000 });
 
-    const panel = page.getByTestId("presentation-preset-panel");
+    const panel = page.getByTestId("public-appearance-panel");
     const visible = await panel.isVisible().catch(() => false);
 
     if (!visible) {
       if (isStagingHost) {
-        throw new Error("Preset panel missing on staging — check LIVIA_DEPLOY_ENV=staging on API");
+        throw new Error(
+          "Preset panel missing on staging — check API LIVIA_DEPLOY_ENV=staging and redeploy api-server",
+        );
       }
       test.skip(true, "Preset picker not enabled in this environment");
     }
 
-    await expect(panel.getByTestId("presentation-preset-select")).toBeVisible();
-    const select = panel.getByTestId("presentation-preset-select");
-    await select.click();
-    const options = page.getByRole("option");
-    const count = await options.count();
+    const cards = panel.locator('[data-testid^="preset-card-"]');
+    const count = await cards.count();
     expect(count).toBeGreaterThan(1);
 
-    const pick = count > 1 ? options.nth(1) : options.first();
-    const label = (await pick.textContent())?.trim() ?? "";
+    const pick = cards.nth(1);
+    const presetTestId = await pick.getAttribute("data-testid");
+    const presetId = presetTestId?.replace("preset-card-", "") ?? "";
     await pick.click();
 
-    await panel.getByTestId("presentation-save").click();
-    await expect(page.getByText(/appearance updated/i)).toBeVisible({ timeout: 15_000 });
+    await expect(pick).toHaveClass(/border-primary/, { timeout: 15_000 });
 
     const status = await request.get(`${apiBase}/api/demo/status`);
     expect(status.ok()).toBeTruthy();
     const biz = ((await status.json()) as { businesses?: Array<{ slug: string; id: string }> }).businesses?.find(
       (b) => b.slug === demoSlug,
     );
-    if (biz?.id) {
+    if (biz?.id && presetId) {
       const pres = await page.evaluate(
         async ({ api, businessId }) => {
           const clerk = (window as unknown as { Clerk?: { session?: { getToken: () => Promise<string | null> } } })
@@ -76,7 +75,7 @@ test.describe("Settings preset picker (E7)", () => {
         { api: apiBase, businessId: biz.id },
       );
       expect(pres?.presetsEnabled).toBe(true);
-      if (label) expect(pres?.preset?.label ?? pres?.presetId).toBeTruthy();
+      expect(pres?.presetId).toBe(presetId);
     }
   });
 });

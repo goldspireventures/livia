@@ -2,6 +2,8 @@
 
 Work top to bottom. Check off as you go. Code fix for Vercel `PORT` build error is in `vite.config.ts` — **redeploy dashboard after pulling**.
 
+**After deploy — feature verification:** [`STAGING-TEST-R3.md`](./STAGING-TEST-R3.md) (presets, guest surfaces, mobile settings).
+
 ---
 
 ## Phase A — Database (Supabase ✅)

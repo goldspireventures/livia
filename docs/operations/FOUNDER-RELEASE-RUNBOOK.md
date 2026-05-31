@@ -2,7 +2,7 @@
 
 **Command center:** **Livia Internal** exec overview (`pnpm dev:internal` → secret path in `.env` — see [`EXEC-COMMAND-CENTER.md`](./EXEC-COMMAND-CENTER.md)) or **mobile** → 7× tap on version label.
 
-**Staging:** [`STAGING-SETUP.md`](./STAGING-SETUP.md) · smoke: `pnpm smoke:staging` · workforce access: [`WORKFORCE-ONBOARDING.md`](./WORKFORCE-ONBOARDING.md).
+**Staging:** [`STAGING-SETUP.md`](./STAGING-SETUP.md) · **R3 test script:** [`STAGING-TEST-R3.md`](./STAGING-TEST-R3.md) · smoke: `pnpm smoke:staging` · `pnpm staging:readiness --strict` · workforce access: [`WORKFORCE-ONBOARDING.md`](./WORKFORCE-ONBOARDING.md).
 
 Staging prep checklist: [`staging-prep-livia-hq.md`](./staging-prep-livia-hq.md).
 
