@@ -19,6 +19,7 @@
     "solidify:verify:e2e": "node scripts/solidify-verify.mjs --e2e",
     "platform:truth-audit": "node scripts/platform-truth-audit.mjs",
     "vertical:check": "node scripts/vertical-check.mjs",
+    "northstar:check": "node scripts/check-northstar-p0-assets.mjs",
     "founder:release-gate": "node scripts/founder-release-gate.mjs",
     "exec:hat-work": "node --env-file=.env scripts/exec-hat-work.mjs",
     "vertical:onboarding-kit": "node scripts/vertical-onboarding-kit.mjs",

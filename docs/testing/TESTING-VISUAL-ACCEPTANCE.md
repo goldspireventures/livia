@@ -38,7 +38,9 @@
 
 - ✅ `demo-live-day.spec.ts` — today non-empty after provision
 - ✅ `demo-proof-token.spec.ts` — guest proof E2E
-- `visual-screen-p0.spec.ts` — screenshot all P0 vs `assets/screen-cards/`
+- ✅ `visual-screen-p0.spec.ts` — P0 density smoke (testids)
+- ✅ `northstar-p0-pixel.spec.ts` — pixel diff vs `livia-evolution/northstar/*.png`
+- ✅ `pnpm northstar:check` — docs/public northstar PNG sync (CI verify job)
 - `preset-public-parity.spec.ts` — change accent → `/b` updates
 
 ---

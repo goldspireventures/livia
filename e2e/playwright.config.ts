@@ -4,6 +4,15 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const northstarBaselines = path.resolve(
+  __dirname,
+  "..",
+  "artifacts",
+  "livia-dashboard",
+  "public",
+  "livia-evolution",
+  "northstar",
+);
 const rootEnv = path.resolve(__dirname, "..", ".env");
 if (existsSync(rootEnv)) {
   for (const line of readFileSync(rootEnv, "utf8").split("\n")) {
@@ -46,6 +55,22 @@ export default defineConfig({
       testMatch:
         /(dashboard-gate|eu-owner-self-onboard|prod-onboarding-notifications|demo-owner-flow|visual-screen-p0)\.spec\.ts/,
       testIgnore: /v3-preflight\.spec\.ts/,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+      },
+    },
+    {
+      name: "northstar-p0",
+      testMatch: /northstar-p0-pixel\.spec\.ts/,
+      workers: 1,
+      timeout: 120_000,
+      snapshotDir: northstarBaselines,
+      expect: {
+        toHaveScreenshot: {
+          pathTemplate: "{snapshotDir}/{arg}{ext}",
+        },
+      },
       use: {
         ...devices["Desktop Chrome"],
         baseURL: dashboardBase,

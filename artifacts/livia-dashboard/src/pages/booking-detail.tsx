@@ -21,8 +21,8 @@ import { BookingContextRail } from "@/components/booking/booking-context-rail";
 import { BookingContinuityPanel } from "@/components/booking-continuity-panel";
 import { BookingSourceBadge } from "@/components/booking/booking-source-badge";
 import { invalidateOperationalState } from "@/lib/operational-cache";
-import { PageFrame } from "@/components/ui/page-frame";
-import { PersonaRitualHeader } from "@/components/ritual/persona-ritual-header";
+import { OperationalPageShell } from "@/components/layout/operational-page-shell";
+import { SettingsDisclosure } from "@/components/ui/settings-disclosure";
 
 const STATUS_COLORS: Record<string, string> = {
   PENDING: "bg-[hsl(var(--chart-4))]/10 text-[hsl(var(--chart-4))] border-[hsl(var(--chart-4))]/20",
@@ -89,33 +89,31 @@ export default function BookingDetailPage() {
   const allowedTransitions = (booking as any) ? TRANSITIONS[(booking as any).status] ?? [] : [];
 
   return (
-    <PageFrame width="md">
-      <div className="flex items-center gap-3">
-        <Link href="/bookings">
-          <Button variant="ghost" size="icon" data-testid="button-back" aria-label="Back to bookings">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <div className="flex-1">
-          <PersonaRitualHeader
-            variant="page"
-            title="Booking detail"
-            subtitle="Status, continuity thread, and next actions"
-            className="pb-0"
-          />
+    <OperationalPageShell
+      data-testid="booking-detail-page"
+      width="md"
+      title="Booking detail"
+      subtitle="Status, continuity, and next actions"
+      actions={
+        <div className="flex items-center gap-2">
+          <Link href="/bookings">
+            <Button variant="ghost" size="icon" data-testid="button-back" aria-label="Back to bookings">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          {booking ? (
+            <HelpSupportDialog
+              defaultCategory="liv_error"
+              context={{ bookingId: bkId, bookingStatus: (booking as { status?: string }).status }}
+            />
+          ) : null}
         </div>
-        {booking ? (
-          <HelpSupportDialog
-            defaultCategory="liv_error"
-            context={{ bookingId: bkId, bookingStatus: (booking as { status?: string }).status }}
-          />
-        ) : null}
-      </div>
-
+      }
+    >
       {isLoading ? (
-        <div className="space-y-4">
-          <Skeleton className="h-40 w-full" />
-          <Skeleton className="h-32 w-full" />
+        <div className="space-y-3">
+          <Skeleton className="h-36 w-full" />
+          <Skeleton className="h-28 w-full" />
         </div>
       ) : !booking ? (
         <Card>
@@ -195,61 +193,53 @@ export default function BookingDetailPage() {
             }
           />
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <User className="h-4 w-4" />
+          <Card data-testid="booking-detail-party">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Client & service</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4 sm:grid-cols-2 text-sm">
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                  <User className="h-3.5 w-3.5" />
                   Customer
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-1">
+                </p>
                 {(booking as any).customer ? (
                   <>
                     <Link href={`/customers/${(booking as any).customer.id}`}>
-                      <p className="font-medium hover:text-primary transition-colors cursor-pointer">
+                      <p className="font-medium hover:text-primary transition-colors">
                         {(booking as any).customer.firstName} {(booking as any).customer.lastName}
                       </p>
                     </Link>
-                    {(booking as any).customer.email && (
-                      <p className="text-sm text-muted-foreground">{(booking as any).customer.email}</p>
-                    )}
-                    {(booking as any).customer.phone && (
-                      <p className="text-sm text-muted-foreground">{(booking as any).customer.phone}</p>
-                    )}
+                    {(booking as any).customer.email ? (
+                      <p className="text-muted-foreground">{(booking as any).customer.email}</p>
+                    ) : null}
+                    {(booking as any).customer.phone ? (
+                      <p className="text-muted-foreground">{(booking as any).customer.phone}</p>
+                    ) : null}
                   </>
                 ) : (
-                  <p className="text-muted-foreground text-sm">No customer</p>
+                  <p className="text-muted-foreground">No customer</p>
                 )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Scissors className="h-4 w-4" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                  <Scissors className="h-3.5 w-3.5" />
                   Service
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-1">
+                </p>
                 {(booking as any).service ? (
                   <>
                     <p className="font-medium">{(booking as any).service.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {(booking as any).service.durationMinutes} minutes
+                    <p className="text-muted-foreground">
+                      {(booking as any).service.durationMinutes} min
+                      {(booking as any).staff ? ` · ${(booking as any).staff.displayName}` : ""}
                     </p>
-                    {(booking as any).staff && (
-                      <p className="text-sm text-muted-foreground">
-                        with {(booking as any).staff.displayName}
-                      </p>
-                    )}
                   </>
                 ) : (
-                  <p className="text-muted-foreground text-sm">No service</p>
+                  <p className="text-muted-foreground">No service</p>
                 )}
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {Array.isArray((booking as any).media) && (booking as any).media.length > 0 && (
             <Card>
@@ -272,21 +262,16 @@ export default function BookingDetailPage() {
             </Card>
           )}
 
-          {(booking as any).notes && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  Notes
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">{(booking as any).notes}</p>
-              </CardContent>
-            </Card>
-          )}
+          {(booking as any).notes ? (
+            <SettingsDisclosure title="Notes" description="Internal booking notes" defaultOpen={false}>
+              <p className="text-sm text-muted-foreground pt-1 flex items-start gap-2">
+                <FileText className="h-4 w-4 shrink-0 mt-0.5" />
+                {(booking as any).notes}
+              </p>
+            </SettingsDisclosure>
+          ) : null}
         </>
       )}
-    </PageFrame>
+    </OperationalPageShell>
   );
 }

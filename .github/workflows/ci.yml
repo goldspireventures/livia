@@ -50,6 +50,9 @@ jobs:
       - name: Vertical registry check (R3)
         run: pnpm vertical:check
 
+      - name: Northstar P0 asset gate
+        run: pnpm northstar:check
+
       - name: R3 exit verify (parity + v3 tier)
         run: pnpm r3:exit-verify
 

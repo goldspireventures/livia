@@ -47,6 +47,8 @@ Other P0 surfaces should adopt the same tier model in their screen cards over Râ
 | `/lifecycle` | Program cards behind disclosure |
 | `/customers` | Merge panel omitted when no suggestions |
 | `/bookings` | Compact list rows; shorter empty state |
+| `/bookings/:id` | Merged client/service card; notes in disclosure |
+| `/bookings/new` | Tighter wizard rhythm |
 
 ---
 

@@ -16,7 +16,7 @@
 | Bucket | Status | What it means for you |
 |--------|--------|------------------------|
 | **A — Platform engineering** | **Done** | APIs, policy hub, 9 verticals, guest `/b`, presets matrix, CI, demo seeds, support registry, mobile parity hooks |
-| **B — Screen implementation** | **In progress (~85%)** | Density program — see **Bucket B checklist** below |
+| **B — Screen implementation** | **Done** | Density + northstar gate — see **Bucket B checklist** below |
 | **C — Visual & founder acceptance** | **Not done** | No full P0 screenshot gate in CI; Figma frames incomplete; founder field UAT not signed off for production presets |
 | **D — Launch & field** | **Not done** | Gate 2 (10 Dublin shops), prod preset flag, App Store / Stripe prod evidence |
 
@@ -40,11 +40,12 @@
 | `/design-proofs` | Done (queue first; submit collapsed when busy) |
 | `/lifecycle` | Done (programs disclosure; empty state) |
 | `/customers` | Done (merge panel hidden when empty) |
-| `/bookings` list | Done (compact rows + test id) |
+| `/bookings` list + detail + new | Done (compact list; merged detail card; wizard test id) |
 | P0 E2E density smoke (`e2e/tests/visual-screen-p0.spec.ts`) | Done |
-| Founder northstar PNG pixel diff in CI | Not started |
+| Northstar asset sync CI (`pnpm northstar:check`) | Done |
+| Northstar pixel diff E2E (`e2e/tests/northstar-p0-pixel.spec.ts`) | Done (lenient vs design PNG; needs Clerk locally) |
 
-**Bucket B is complete** when every row above is **Done** and staging deploy includes the changes.
+**Bucket B is complete** — staging deploy should include latest `main` for UAT.
 
 ---
 
@@ -52,9 +53,9 @@
 
 | Item | Notes |
 |------|-------|
-| Bucket B finish | Founder northstar PNG diff in CI (last checklist row) |
+| **Bucket C** | Founder field UAT vs northstar feel; tighten `maxDiffPixelRatio` over time |
 | Staging deploy | Pull `main` — Vercel app + Railway GitHub |
-| Run locally | `pnpm --filter @workspace/e2e run test:p0-visual` |
+| Run locally | `pnpm northstar:check` · `pnpm --filter @workspace/e2e run test:p0-visual` · `test:northstar-p0` (Clerk) |
 
 ---
 

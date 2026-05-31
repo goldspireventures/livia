@@ -44,3 +44,4 @@ export * from "./operational-wiring";
 export * from "./workforce-access";
 export * from "./exec-hats";
 export * from "./tenant-surface-density";
+export * from "./northstar-p0-registry";

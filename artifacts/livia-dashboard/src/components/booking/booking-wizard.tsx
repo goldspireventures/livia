@@ -223,10 +223,11 @@ export function BookingWizard({ mode = "page", quick = false, onCreated, onCance
 
   return (
     <div
+      data-testid={mode === "page" ? "booking-new-page" : undefined}
       className={
         mode === "dialog"
           ? "space-y-4"
-          : "space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-2xl"
+          : "space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-2xl"
       }
     >
       {mode === "page" ? (

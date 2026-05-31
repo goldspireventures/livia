@@ -22,10 +22,12 @@
     "test:preflight:fast": "playwright test --project=api --project=dashboard --project=internal tests/v3-preflight.spec.ts",
     "test:demo-owner": "playwright test tests/demo-owner-flow.spec.ts --project=dashboard",
     "test:p0-visual": "playwright test tests/visual-screen-p0.spec.ts --project=dashboard --workers=1",
+    "test:northstar-p0": "playwright test tests/northstar-p0-pixel.spec.ts --project=northstar-p0 --workers=1",
     "install-browsers": "playwright install chromium --with-deps"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",
-    "@playwright/test": "^1.52.0"
+    "@playwright/test": "^1.52.0",
+    "@workspace/policy": "workspace:*"
   }
 }
