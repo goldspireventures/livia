@@ -3,6 +3,7 @@ import { PersonaRitualHeader } from "@/components/ritual/persona-ritual-header";
 import { cn } from "@/lib/utils";
 import { verticalToneClass } from "@/lib/motion";
 import { useBusiness } from "@/lib/business-context";
+import { useBeautyChrome } from "@/lib/presentation-layout";
 
 type Props = {
   title: string;
@@ -34,9 +35,14 @@ export function OperationalPageShell({
   const { business } = useBusiness();
   const vertical = (business as { vertical?: string } | null)?.vertical;
   const toneClass = tone && vertical ? verticalToneClass(vertical) : undefined;
+  const beautyChrome = useBeautyChrome(vertical);
 
   return (
-    <PageFrame width={width} className={cn(toneClass, className)} data-testid={testId}>
+    <PageFrame
+      width={width}
+      className={cn(toneClass, beautyChrome && "beauty-operational-page", className)}
+      data-testid={testId}
+    >
       <PersonaRitualHeader variant="page" title={title} subtitle={subtitle}>
         {actions}
       </PersonaRitualHeader>

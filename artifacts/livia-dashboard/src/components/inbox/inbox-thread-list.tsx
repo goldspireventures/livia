@@ -54,6 +54,7 @@ export function InboxThreadList({
   onSelect,
   emptyTitle,
   emptySubtitle,
+  beautyChrome,
 }: {
   threads: InboxThreadRow[];
   loading?: boolean;
@@ -61,6 +62,7 @@ export function InboxThreadList({
   onSelect: (id: string) => void;
   emptyTitle: string;
   emptySubtitle: string;
+  beautyChrome?: boolean;
 }) {
   if (loading) {
     return (
@@ -97,14 +99,27 @@ export function InboxThreadList({
             onClick={() => onSelect(c.id)}
             className={cn(
               "w-full text-left px-3 py-3 transition-colors",
-              isActive ? "bg-primary/10" : "hover:bg-muted/50",
+              isActive
+                ? beautyChrome
+                  ? "beauty-inbox-thread--active"
+                  : "bg-primary/10"
+                : beautyChrome
+                  ? "hover:bg-primary/5"
+                  : "hover:bg-muted/50",
               needsHuman && !isActive ? "font-medium" : "",
               MOTION.listItem,
             )}
             style={{ animationDelay: `${i * 35}ms` }}
           >
             <div className="flex items-start gap-2">
-              <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary/25 to-violet-500/20 flex items-center justify-center shrink-0 mt-0.5">
+              <div
+                className={cn(
+                  "h-9 w-9 rounded-full flex items-center justify-center shrink-0 mt-0.5",
+                  beautyChrome
+                    ? "beauty-inbox-avatar"
+                    : "bg-primary/10 border border-primary/15",
+                )}
+              >
                 <UserIcon className="h-4 w-4 text-muted-foreground" />
               </div>
               <div className="min-w-0 flex-1">
@@ -127,22 +142,31 @@ export function InboxThreadList({
                     {c.channel}
                   </Badge>
                   {c.status === "HANDED_OFF" ? (
-                    <Badge className="h-5 px-1.5 text-[10px] gap-1 bg-amber-500/15 text-amber-800 dark:text-amber-200 border-amber-500/30">
+                    <Badge
+                      data-inbox-badge="handoff"
+                      className="h-5 px-1.5 text-[10px] gap-1 bg-amber-500/15 text-amber-800 dark:text-amber-200 border-amber-500/30"
+                    >
                       <HandHelping className="h-2.5 w-2.5" />
-                      HANDOFF
+                      Taken over
                     </Badge>
                   ) : c.aiHandled ? (
-                    <Badge className="h-5 px-1.5 text-[10px] gap-1 bg-primary/15 text-primary border-primary/30">
+                    <Badge
+                      data-inbox-badge="liv"
+                      className="h-5 px-1.5 text-[10px] gap-1 bg-primary/15 text-primary border-primary/30"
+                    >
                       <Sparkles className="h-2.5 w-2.5" />
-                      AI
+                      Liv
                     </Badge>
                   ) : c.status === "OPEN" ? (
-                    <Badge className="h-5 px-1.5 text-[10px] bg-[hsl(var(--chart-4))]/15 text-[hsl(var(--chart-4))] border-[hsl(var(--chart-4))]/30">
+                    <Badge
+                      data-inbox-badge="needs-you"
+                      className="h-5 px-1.5 text-[10px] bg-[hsl(var(--chart-4))]/15 text-[hsl(var(--chart-4))] border-[hsl(var(--chart-4))]/30"
+                    >
                       Needs you
                     </Badge>
                   ) : null}
                   {c.bookingCount > 0 ? (
-                    <Badge className="h-5 px-1.5 text-[10px] gap-1 bg-[hsl(var(--chart-3))]/15 text-[hsl(var(--chart-3))] border-[hsl(var(--chart-3))]/30">
+                    <Badge className="h-5 px-1.5 text-[10px] gap-1 bg-muted/40 text-muted-foreground border-border/60">
                       <CalendarCheck className="h-2.5 w-2.5" />
                       {c.bookingCount}
                     </Badge>

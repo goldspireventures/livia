@@ -13,14 +13,32 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { UsersRound, UserPlus, ChevronRight, Mail } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import { useMembership } from "@/lib/membership-context";
+import { OWNERSHIP_SUCCESSION } from "@workspace/policy";
 import { apiFetch, ApiFetchError } from "@/lib/api-fetch";
 import { useMutation } from "@tanstack/react-query";
 import { invalidateOperationalState } from "@/lib/operational-cache";
 import { OperationalPageShell } from "@/components/layout/operational-page-shell";
+import { useBeautyChrome } from "@/lib/presentation-layout";
+import {
+  beautyListScroll,
+  beautyOutlineButton,
+  beautyPanel,
+  beautyPrimaryButton,
+  beautyRow,
+} from "@/lib/beauty-operational-ui";
+import { cn } from "@/lib/utils";
+import { onContainedScrollWheel } from "@/lib/use-contained-scroll";
 import {
   Select,
   SelectContent,
@@ -42,7 +60,13 @@ interface InviteForm {
   role: "ADMIN" | "STAFF";
 }
 
-function InviteDialog({ businessId }: { businessId: string }) {
+function InviteDialog({
+  businessId,
+  beautyChrome,
+}: {
+  businessId: string;
+  beautyChrome?: boolean;
+}) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const { register, handleSubmit, reset, control } = useForm<InviteForm>({
@@ -73,14 +97,19 @@ function InviteDialog({ businessId }: { businessId: string }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" data-testid="button-invite-teammate">
+        <Button
+          variant="outline"
+          className={beautyOutlineButton(beautyChrome)}
+          data-testid="button-invite-teammate"
+        >
           <Mail className="h-4 w-4 mr-2" />
-          Invite teammate
+          Invite team member
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Invite a teammate</DialogTitle>
+          <DialogTitle>{OWNERSHIP_SUCCESSION.teamInvite.dialogTitle}</DialogTitle>
+          <DialogDescription>{OWNERSHIP_SUCCESSION.teamInvite.dialogDescription}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit((v) => invite.mutate(v))} className="space-y-4">
           <div className="space-y-2">
@@ -103,8 +132,8 @@ function InviteDialog({ businessId }: { businessId: string }) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="STAFF">Staff — sees their own slate</SelectItem>
-                    <SelectItem value="ADMIN">Admin — full access except billing</SelectItem>
+                    <SelectItem value="STAFF">{OWNERSHIP_SUCCESSION.teamInvite.roleStaff}</SelectItem>
+                    <SelectItem value="ADMIN">{OWNERSHIP_SUCCESSION.teamInvite.roleAdmin}</SelectItem>
                   </SelectContent>
                 </Select>
               )}
@@ -131,6 +160,7 @@ export default function StaffPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const bid = business?.id ?? "";
+  const beautyChrome = useBeautyChrome((business as { vertical?: string } | null)?.vertical);
 
   const { data: staff, isLoading } = useListStaff(
     bid,
@@ -164,10 +194,10 @@ export default function StaffPage() {
 
   const headerActions = canManage ? (
     <>
-      {bid ? <InviteDialog businessId={bid} /> : null}
+      {bid ? <InviteDialog businessId={bid} beautyChrome={beautyChrome} /> : null}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogTrigger asChild>
-          <Button data-testid="button-add-staff">
+          <Button data-testid="button-add-staff" className={beautyPrimaryButton(beautyChrome)}>
             <UserPlus className="h-4 w-4 mr-2" />
             Add Staff
           </Button>
@@ -221,11 +251,11 @@ export default function StaffPage() {
     <OperationalPageShell
       data-testid="staff-page"
       title="Staff"
-      subtitle="Your roster — invite teammates and assign services from each profile."
+      subtitle="Calendar roster and day-to-day team sign-in — not for passing studio ownership (use Settings → Ownership)."
       width="full"
       actions={headerActions}
     >
-      <Card>
+      <Card className={beautyPanel(beautyChrome)}>
         <CardContent className="p-0">
           {isLoading ? (
             <div className="divide-y divide-border">
@@ -246,12 +276,12 @@ export default function StaffPage() {
               <p className="text-sm text-muted-foreground mt-1">Add your team to start scheduling</p>
             </div>
           ) : (
-            <div className="divide-y divide-border max-h-[min(70vh,640px)] overflow-y-auto">
+            <div className={beautyListScroll()} onWheel={onContainedScrollWheel}>
               {members.map((member: any) => (
                 <Link key={member.id} href={`/staff/${member.id}`}>
                   <div
                     data-testid={`row-staff-${member.id}`}
-                    className="flex items-center gap-3 p-3 hover:bg-muted/30 transition-colors cursor-pointer"
+                    className={beautyRow(beautyChrome)}
                   >
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-bold shrink-0">
                       {member.displayName?.charAt(0) ?? "?"}

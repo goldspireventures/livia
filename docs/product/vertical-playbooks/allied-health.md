@@ -1,7 +1,8 @@
 # Vertical playbook — Allied health (V8)
 
 **Status:** L2+L3 (2026-05-31)  
-**Registry:** `VERTICAL_COVERAGE_REGISTRY` V8 · demo `motion-physio-cork`  
+**Program (L0–L8):** [`ALLIED-HEALTH-VERTICAL-PROGRAM.md`](../ALLIED-HEALTH-VERTICAL-PROGRAM.md)  
+**Registry:** `VERTICAL_COVERAGE_REGISTRY` V7 · demo `motion-physio-cork`  
 **Category:** People-business — care plans, rebook cadence, not EHR
 
 ---

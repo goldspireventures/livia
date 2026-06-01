@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import { Link } from "wouter";
 import { Clock, MessageSquare, CheckCircle2, User } from "lucide-react";
 import { RunningLateSheet } from "@/components/ops/running-late-sheet";
+import { useBusiness } from "@/lib/business-context";
+import { verticalPackUi } from "@/lib/vertical-pack-ui";
 import { Button } from "@/components/ui/button";
 
 type Props = {
@@ -10,6 +12,8 @@ type Props = {
   status: string;
   customerName?: string;
   continuityConversationId?: string | null;
+  /** Inbox thread linked to this booking (refund / dispute). */
+  linkedInboxConversationId?: string | null;
 };
 
 /**
@@ -21,7 +25,13 @@ export function BookingContextRail({
   status,
   customerName,
   continuityConversationId,
+  linkedInboxConversationId,
 }: Props) {
+  const { business } = useBusiness();
+  const vocab = verticalPackUi(
+    (business as { vertical?: string } | null)?.vertical,
+    business?.category,
+  );
   const items: { key: string; node: ReactNode }[] = [];
 
   if (status === "PENDING") {
@@ -36,6 +46,8 @@ export function BookingContextRail({
     });
   }
 
+  const inboxThreadId = linkedInboxConversationId ?? continuityConversationId;
+
   if (status === "CONFIRMED") {
     items.push({
       key: "running-late",
@@ -43,10 +55,11 @@ export function BookingContextRail({
         <RunningLateSheet
           bookingId={bookingId}
           customerName={customerName}
+          actionLabel={vocab.runningLateLabel}
           trigger={
             <Button variant="outline" size="sm" data-testid="booking-context-running-late">
               <Clock className="h-4 w-4 mr-2" />
-              Running late
+              {vocab.runningLateLabel}
             </Button>
           }
         />
@@ -54,11 +67,11 @@ export function BookingContextRail({
     });
   }
 
-  if (continuityConversationId) {
+  if (inboxThreadId) {
     items.push({
       key: "thread",
       node: (
-        <Link href={`/inbox?conversation=${continuityConversationId}`}>
+        <Link href={`/inbox?conversation=${inboxThreadId}`}>
           <Button variant="ghost" size="sm" data-testid="booking-context-inbox">
             <MessageSquare className="h-4 w-4 mr-2" />
             Open thread

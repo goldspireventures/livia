@@ -18,7 +18,7 @@ export function onboardingLivHostLine(
     a1_create_business: `Welcome in. Tell me about the ${vocab.locationNoun.toLowerCase()} we're opening — I'll seed ${services} and policies from your answers.`,
     a2_shop_profile: `Let's put ${shop} on the map — name, phone, and a line clients will see on your booking page.`,
     a3_service_menu: `Your starter ${services} menu is already here. Skim it — we'll tune prices and durations in a minute.`,
-    a4_team: `You're on the ${team} roster. Invite others when you're ready, or run solo for now.`,
+    a4_team: `You're on the ${team} team. Invite others when you're ready, or run solo for now.`,
     a5_hours: `When are you open? I'll only offer slots Liv can actually book.`,
     a6_liv: `This is me. Type how I should greet people — watch the phone on the right reply.`,
     a7_channels: `Connect where clients already message you. One inbox, one colleague.`,

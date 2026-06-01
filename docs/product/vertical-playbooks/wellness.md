@@ -1,6 +1,7 @@
 # Vertical playbook — Wellness (V3)
 
 **Status:** L2+L3 (2026-05-31)  
+**Program (L0–L8):** [`WELLNESS-VERTICAL-PROGRAM.md`](../WELLNESS-VERTICAL-PROGRAM.md)  
 **Registry:** `VERTICAL_COVERAGE_REGISTRY` V3 · demo `harbour-wellness-cork`, `copenhagen-havn-wellness`  
 **Category:** People-business — rooms, vouchers, quiet hours
 

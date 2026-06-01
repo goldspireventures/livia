@@ -5,6 +5,7 @@ import { logger } from "../lib/logger";
 import { isDemoPortalEnabled } from "../lib/demo-portal-config";
 import {
   assertDemoSignInAllowed,
+  formatClerkDemoError,
   getDemoCatalog,
   getDemoPortalStatus,
   provisionDemoWorld,
@@ -74,7 +75,7 @@ router.post("/demo/provision", async (req, res): Promise<void> => {
     );
     res.json(result);
   } catch (e: unknown) {
-    const err = e as Error & { code?: string; status?: number };
+    const err = formatClerkDemoError(e) as Error & { code?: string; status?: number };
     logger.error(
       {
         event: "demo.provision.failed",
@@ -89,7 +90,41 @@ router.post("/demo/provision", async (req, res): Promise<void> => {
       sendError(res, req, 503, err.message, { code: err.code });
       return;
     }
+    if (err.code === "CLERK_USER_QUOTA" || err.code === "CLERK_FORBIDDEN") {
+      sendError(res, req, err.status ?? 503, err.message, { code: err.code });
+      return;
+    }
     sendError(res, req, 500, err.message ?? "Provision failed");
+  }
+});
+
+/** Repair path when Clerk dev quota blocks new users — seeds DB, reuses existing demo Clerk accounts. */
+router.post("/demo/repair-db", async (req, res): Promise<void> => {
+  const requestId = (req as Request & { id?: string }).id;
+  const started = Date.now();
+  try {
+    const result = await provisionDemoWorld({ repair: true });
+    logger.info(
+      {
+        event: "demo.repair.ok",
+        request_id: requestId,
+        business_count: result.businesses.length,
+        duration_ms: Date.now() - started,
+      },
+      "Demo world repaired (DB seed, existing Clerk users)",
+    );
+    res.json(result);
+  } catch (e: unknown) {
+    const err = formatClerkDemoError(e) as Error & { code?: string; status?: number };
+    logger.error(
+      { event: "demo.repair.failed", request_id: requestId, err },
+      "Demo repair failed",
+    );
+    if (err.code === "CLERK_NOT_CONFIGURED") {
+      sendError(res, req, 503, err.message, { code: err.code });
+      return;
+    }
+    sendError(res, req, err.status ?? 500, err.message ?? "Repair failed");
   }
 });
 

@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import { Link } from "wouter";
 import { usePathId } from "@/lib/detail-route-params";
 import { useBusiness } from "@/lib/business-context";
@@ -11,11 +12,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { formatDateTime } from "@/lib/format";
 import { pendingReasonLabel } from "@/lib/booking-pending";
+import { canMarkNoShow, noShowUnavailableHint } from "@/lib/booking-appointment-window";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, User, Scissors, Clock, FileText } from "lucide-react";
+import { ArrowLeft, User, Scissors, Clock, FileText, CalendarClock } from "lucide-react";
+import { BookingRescheduleDialog } from "@/components/booking/booking-reschedule-dialog";
 import { HelpSupportDialog } from "@/components/help-support-dialog";
 import { BookingContextRail } from "@/components/booking/booking-context-rail";
 import { BookingContinuityPanel } from "@/components/booking-continuity-panel";
@@ -23,6 +26,10 @@ import { BookingSourceBadge } from "@/components/booking/booking-source-badge";
 import { invalidateOperationalState } from "@/lib/operational-cache";
 import { OperationalPageShell } from "@/components/layout/operational-page-shell";
 import { SettingsDisclosure } from "@/components/ui/settings-disclosure";
+import {
+  BookingLinkedInboxBanner,
+  type LinkedInboxCaseDto,
+} from "@/components/booking/booking-linked-inbox-banner";
 
 const STATUS_COLORS: Record<string, string> = {
   PENDING: "bg-[hsl(var(--chart-4))]/10 text-[hsl(var(--chart-4))] border-[hsl(var(--chart-4))]/20",
@@ -70,6 +77,7 @@ export default function BookingDetailPage() {
   );
 
   const updateBooking = useUpdateBooking();
+  const [rescheduleOpen, setRescheduleOpen] = useState(false);
 
   function handleTransition(newStatus: string) {
     if (!bid || !bkId) return;
@@ -86,7 +94,29 @@ export default function BookingDetailPage() {
     );
   }
 
-  const allowedTransitions = (booking as any) ? TRANSITIONS[(booking as any).status] ?? [] : [];
+  const bookingStatus = (booking as { status?: string })?.status ?? "";
+  const bookingStartAt = (booking as { startAt?: string })?.startAt ?? "";
+
+  const allowedTransitions = useMemo(() => {
+    const base = booking ? (TRANSITIONS[bookingStatus] ?? []) : [];
+    if (!canMarkNoShow(bookingStartAt, bookingStatus)) {
+      return base.filter((s) => s !== "NO_SHOW");
+    }
+    return base;
+  }, [booking, bookingStatus, bookingStartAt]);
+
+  const noShowHidden =
+    booking &&
+    (TRANSITIONS[bookingStatus] ?? []).includes("NO_SHOW") &&
+    !allowedTransitions.includes("NO_SHOW");
+
+  const linkedInboxCase = (booking as { linkedInboxCase?: LinkedInboxCaseDto | null } | undefined)
+    ?.linkedInboxCase;
+  const refundCaseBlocksActions =
+    linkedInboxCase &&
+    (linkedInboxCase.status === "OPEN" || linkedInboxCase.status === "HANDED_OFF") &&
+    (linkedInboxCase.caseIntent === "refund_request" ||
+      linkedInboxCase.summary?.toLowerCase().includes("refund"));
 
   return (
     <OperationalPageShell
@@ -121,6 +151,12 @@ export default function BookingDetailPage() {
         </Card>
       ) : (
         <>
+          <BookingLinkedInboxBanner
+            bookingStatus={bookingStatus}
+            linkedCase={linkedInboxCase}
+            cancelPending={updateBooking.isPending}
+            onCancelBooking={() => handleTransition("CANCELLED")}
+          />
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Status</CardTitle>
@@ -163,24 +199,66 @@ export default function BookingDetailPage() {
                   continuityConversationId={
                     (booking as { continuityConversationId?: string }).continuityConversationId
                   }
+                  linkedInboxConversationId={linkedInboxCase?.conversationId}
                 />
               </div>
-              {allowedTransitions.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {allowedTransitions.map((status) => (
-                    <Button
-                      key={status}
-                      variant={ACTION_VARIANTS[status] ?? "outline"}
-                      size="sm"
-                      disabled={updateBooking.isPending}
-                      onClick={() => handleTransition(status)}
-                      data-testid={`button-transition-${status}`}
-                    >
-                      {ACTION_LABELS[status]}
-                    </Button>
-                  ))}
-                </div>
-              )}
+              {noShowHidden ? (
+                <p className="text-xs text-muted-foreground mb-3">
+                  {noShowUnavailableHint(bookingStartAt)}
+                </p>
+              ) : null}
+              {refundCaseBlocksActions ? (
+                <p className="text-xs text-muted-foreground mb-3" data-testid="booking-actions-held">
+                  Status changes are paused while the refund thread is open — resolve in inbox first.
+                </p>
+              ) : null}
+              <div className="flex flex-wrap gap-2">
+                {(bookingStatus === "PENDING" || bookingStatus === "CONFIRMED") &&
+                !refundCaseBlocksActions ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setRescheduleOpen(true)}
+                    data-testid="button-reschedule-booking"
+                  >
+                    <CalendarClock className="h-3.5 w-3.5 mr-1.5" />
+                    Reschedule
+                  </Button>
+                ) : null}
+                {allowedTransitions.length > 0 && !refundCaseBlocksActions
+                  ? allowedTransitions.map((status) => (
+                      <Button
+                        key={status}
+                        variant={ACTION_VARIANTS[status] ?? "outline"}
+                        size="sm"
+                        disabled={updateBooking.isPending}
+                        onClick={() => handleTransition(status)}
+                        data-testid={`button-transition-${status}`}
+                      >
+                        {ACTION_LABELS[status]}
+                      </Button>
+                    ))
+                  : null}
+              </div>
+              {(booking as { serviceId: string }).serviceId ? (
+                <BookingRescheduleDialog
+                  open={rescheduleOpen}
+                  onOpenChange={setRescheduleOpen}
+                  bookingId={bkId}
+                  serviceId={(booking as { serviceId: string }).serviceId}
+                  staffId={(booking as { staffId?: string | null }).staffId}
+                  customerLabel={
+                    [
+                      (booking as { customer?: { firstName?: string } }).customer?.firstName,
+                      (booking as { customer?: { lastName?: string } }).customer?.lastName,
+                    ]
+                      .filter(Boolean)
+                      .join(" ") || "Guest"
+                  }
+                  serviceName={(booking as { service: { name: string } }).service.name}
+                  currentStartAt={bookingStartAt}
+                />
+              ) : null}
             </CardContent>
           </Card>
 

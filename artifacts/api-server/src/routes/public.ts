@@ -11,6 +11,7 @@ import { getAvailableSlots } from "../services/slots.service";
 import { findOrCreateCustomer } from "../services/customers.service";
 import { createBooking } from "../services/bookings.service";
 import { buildPublicNextSteps } from "../services/booking-continuity.service";
+import { readPublicFeaturedServiceIds } from "../lib/business-public-featured";
 import { logEvent } from "../services/events.service";
 import { policiesFromBusiness } from "../services/policies.service";
 import { emitBookingCreated } from "../lib/booking-events";
@@ -19,8 +20,6 @@ import {
   getBookingGuardsForVertical,
   getContinuityTemplate,
   formatGuardAnswersForNotes,
-  getRegulatoryOverlay,
-  resolveJurisdictionCode,
   getVerticalPlaybook,
   resolvePresentationPreset,
   PLATFORM_DEFAULT_PRESET_ID,
@@ -48,11 +47,18 @@ import {
 import { db, visitFeedbackTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { socialProofForVertical } from "../lib/public-social-proof";
-import { publicExperienceSkin } from "../lib/experience-skin";
+import { inferDemoServiceImageUrl, publicExperienceSkin } from "../lib/experience-skin";
+import { STALE_PUBLIC_SERVICE_IMAGE } from "@workspace/policy";
+import { getSignInAppearanceHintForEmail } from "../services/sign-in-appearance-hint.service";
 
 const router: IRouter = Router();
 
-function toPublicServiceDto(row: Service) {
+function toPublicServiceDto(row: Service, vertical?: BusinessVertical | null) {
+  const trimmed = row.imageUrl?.trim();
+  const imageUrl =
+    trimmed && !STALE_PUBLIC_SERVICE_IMAGE.test(trimmed)
+      ? trimmed
+      : inferDemoServiceImageUrl(row.name, vertical ?? undefined) ?? null;
   return {
     id: row.id,
     name: row.name,
@@ -61,7 +67,7 @@ function toPublicServiceDto(row: Service) {
     durationMinutes: row.durationMinutes,
     priceMinor: row.priceMinor,
     currency: row.currency,
-    imageUrl: row.imageUrl,
+    imageUrl,
     sortOrder: row.sortOrder,
   };
 }
@@ -76,6 +82,23 @@ async function enforcePublicBookingRateLimit(req: Request, res: Response): Promi
   }
   return true;
 }
+
+/** Pre-auth tenant skin preview on W2 sign-in (no secrets). */
+router.get("/public/sign-in-appearance-hint", async (req, res): Promise<void> => {
+  if (!(await enforcePublicBookingRateLimit(req, res))) return;
+  const email = typeof req.query.email === "string" ? req.query.email : "";
+  if (!email.trim() || !email.includes("@")) {
+    res.json(null);
+    return;
+  }
+  try {
+    const hint = await getSignInAppearanceHintForEmail(email);
+    res.json(hint);
+  } catch (e) {
+    logRouteError(req, e, "sign-in appearance hint");
+    sendError(res, req, 500, safeClientMessage(e));
+  }
+});
 
 router.get("/public/p/:slug", async (req, res): Promise<void> => {
   const slug = Array.isArray(req.params.slug) ? req.params.slug[0] : req.params.slug;
@@ -133,11 +156,8 @@ async function getPublicBusinessProfile(req: Request, res: Response): Promise<vo
     bookingGuards: getBookingGuardsForVertical(biz.vertical as BusinessVertical),
     medspaProcedures:
       biz.vertical === "medspa" ? listMedspaProcedures() : undefined,
-    regulatoryFooter: getRegulatoryOverlay(resolveJurisdictionCode(biz.country), {
-      name: biz.name,
-      city: biz.city,
-      email: null,
-    }).footerLines,
+    regulatoryFooter: [],
+    publicFeaturedServiceIds: readPublicFeaturedServiceIds(biz),
     publicCta: getVerticalPlaybook(biz.vertical as BusinessVertical).publicCta,
     policyTrust: {
       cancelWindowHours: policies.operational.cancelWindowHours,
@@ -145,7 +165,7 @@ async function getPublicBusinessProfile(req: Request, res: Response): Promise<vo
       depositRequired: policies.operational.depositRequired,
     },
     services: services
-      .map(toPublicServiceDto)
+      .map((row) => toPublicServiceDto(row, biz.vertical as BusinessVertical))
       .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name)),
     staff: staff.map(toPublicStaffDto),
     dayPackages,
@@ -154,14 +174,18 @@ async function getPublicBusinessProfile(req: Request, res: Response): Promise<vo
       locale: biz.locale,
       name: biz.name,
     }),
-    experienceSkin: {
-      ...publicExperienceSkin(biz.vertical, biz.country),
-      presentation: resolvePresentationPreset(
+    experienceSkin: (() => {
+      const preset = resolvePresentationPreset(
         biz.vertical as BusinessVertical,
         biz.presentationPresetId ?? PLATFORM_DEFAULT_PRESET_ID,
-      ).cssPreset,
-      brandAccentHex: biz.brandAccentHex ?? null,
-    },
+      );
+      return {
+        ...publicExperienceSkin(biz.vertical, biz.country),
+        presentation: preset.cssPreset,
+        presentationColorMode: preset.tokens.colorMode,
+        brandAccentHex: biz.brandAccentHex ?? null,
+      };
+    })(),
     socialProof: socialProofForVertical(biz.vertical),
   });
 }
@@ -359,6 +383,9 @@ router.post("/public/b/:slug/book", async (req, res): Promise<void> => {
       instagramHandle: biz.instagramHandle,
     });
 
+    const guestToken = await ensureBookingGuestAccess(biz.id, booking.id);
+    const visitPath = `/b/${biz.slug}/visit/${encodeURIComponent(guestToken)}`;
+
     const nextSteps = buildPublicNextSteps({
       vertical: biz.vertical,
       businessName: biz.name,
@@ -371,10 +398,8 @@ router.post("/public/b/:slug/book", async (req, res): Promise<void> => {
       instagramHandle: biz.instagramHandle,
       status: booking.status,
       pendingReason: booking.pendingReason,
+      visitUrl: visitPath,
     });
-
-    const guestToken = await ensureBookingGuestAccess(biz.id, booking.id);
-    const visitPath = `/b/${biz.slug}/visit/${guestToken}`;
 
     let myLivia: { myLiviaPath: string } | null = null;
     if (saveToMyLivia !== false && customerPhone) {

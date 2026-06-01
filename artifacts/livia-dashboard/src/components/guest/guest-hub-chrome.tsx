@@ -1,8 +1,13 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { Sparkles } from "lucide-react";
+import { GUEST_HUB_COPY } from "@workspace/policy";
 import { LiviaWordmark } from "@/components/brand/LiviaMark";
 import { PublicSurfaceFooter } from "@/components/public/public-surface-chrome";
 import { GuestHubLivChat } from "@/components/guest/guest-hub-liv-chat";
+import {
+  applyGuestHubPlatformTheme,
+  clearGuestHubPlatformTheme,
+} from "@/lib/experience-theme";
 
 export function GuestHubShell({
   children,
@@ -15,15 +20,22 @@ export function GuestHubShell({
   phoneE164?: string;
   hubToken?: string | null;
 }) {
+  useEffect(() => {
+    applyGuestHubPlatformTheme();
+    return () => clearGuestHubPlatformTheme();
+  }, []);
+
   return (
     <div
-      className="min-h-screen bg-background guest-hub-shell public-booking-shell"
+      className="min-h-screen bg-background guest-hub-shell guest-hub-platform"
       data-testid={testId}
     >
       <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
         <header className="text-center space-y-2">
           <LiviaWordmark size="md" className="mx-auto opacity-90" />
-          <p className="text-[10px] uppercase tracking-widest font-mono text-primary">My Livia</p>
+          <p className="text-[10px] uppercase tracking-widest font-mono text-primary">
+            {GUEST_HUB_COPY.productName}
+          </p>
           {phoneE164 ? (
             <p className="text-xs text-muted-foreground font-mono">{phoneE164}</p>
           ) : null}
@@ -44,8 +56,8 @@ function GuestHubLivStrip() {
     >
       <Sparkles className="h-4 w-4 text-primary shrink-0 mt-0.5" aria-hidden />
       <p className="text-xs text-muted-foreground leading-relaxed">
-        <span className="text-foreground font-medium">Liv orchestrator</span> — your bookings across
-        every Livia shop live here. Book again in one tap; complex changes open the shop page.
+        <span className="text-foreground font-medium">{GUEST_HUB_COPY.livStripTitle}</span> —{" "}
+        {GUEST_HUB_COPY.livStripBody}
       </p>
     </aside>
   );
@@ -70,7 +82,9 @@ export function GuestHubUpcomingHero({
       className="block rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/15 via-card to-card p-5 shadow-sm hover:border-primary/50 transition-colors"
       data-testid="guest-hub-upcoming-hero"
     >
-      <p className="text-[10px] uppercase tracking-widest font-mono text-primary mb-2">Next visit</p>
+      <p className="text-[10px] uppercase tracking-widest font-mono text-primary mb-2">
+        {GUEST_HUB_COPY.upcomingSection}
+      </p>
       <p className="text-xl font-serif leading-tight">{businessName}</p>
       <p className="text-sm text-muted-foreground mt-1">{serviceName}</p>
       <p className="text-sm font-mono tabular-nums mt-3">{formatDateTime(startAt)}</p>

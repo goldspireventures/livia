@@ -6,6 +6,7 @@ import { usePersona, type PersonaKind } from "@/lib/persona";
 import { PERSONA_RITUALS, greetingLine, ownerHomeSubtitle } from "@/lib/persona-rituals";
 import { businessVocabulary } from "@workspace/policy";
 import { apiFetch } from "@/lib/api-fetch";
+import { stripBusinessPrefix } from "@/lib/briefing-display";
 import {
   useGetDashboardSummary,
   useListConversations,
@@ -55,7 +56,8 @@ function buildLivLineFallback(
   },
 ): string {
   const fallback = PERSONA_RITUALS[persona].livFallback;
-  const shop = data.businessName ? `${data.businessName}: ` : "";
+  const shop =
+    persona === "org_admin" && data.businessName ? `${data.businessName}: ` : "";
 
   if (persona === "org_admin" && data.chain?.orgAdminBriefingLine) {
     return data.chain.orgAdminBriefingLine;
@@ -174,7 +176,7 @@ export function usePersonaBriefing() {
 
   const openCount = Array.isArray(convos) ? convos.length : 0;
 
-  const livLine =
+  const rawLivLine =
     (persona === "org_admin" ? orgAdminPresence?.line : tenantPresence?.line) ??
     buildLivLineFallback(persona, {
       chain: chain ?? null,
@@ -188,6 +190,11 @@ export function usePersonaBriefing() {
       myDay: myDay ?? null,
       businessName: business?.name,
     });
+
+  const livLine =
+    persona === "owner" || persona === "manager"
+      ? stripBusinessPrefix(rawLivLine, business?.name)
+      : rawLivLine;
 
   const ritual = PERSONA_RITUALS[persona];
   const biz = business as { vertical?: string; category?: string } | null;

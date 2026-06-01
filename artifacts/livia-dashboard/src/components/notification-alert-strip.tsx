@@ -52,7 +52,7 @@ export function NotificationAlertStrip() {
       <div className="flex gap-2 sm:ml-auto shrink-0">
         {pending > 0 ? (
           <Button size="sm" variant="secondary" asChild>
-            <Link href="/bookings?filter=pending">
+            <Link href="/bookings?status=PENDING">
               <CalendarClock className="h-3.5 w-3.5 mr-1" />
               Pending
             </Link>

@@ -16,7 +16,6 @@ import {
   Settings,
   Inbox,
   Sun,
-  Shield,
   Building2,
   BookOpen,
   Armchair,
@@ -147,7 +146,6 @@ const NAV_POOL: RitualNavItem[] = [
   { ritualName: "The floor", href: "/bookings", icon: CalendarDays, min: "STAFF" },
   { ritualName: "Customers", href: "/customers", icon: Users, min: "STAFF" },
   { ritualName: "Team", href: "/staff", icon: UsersRound, min: "ADMIN", personas: ["org_admin", "owner", "manager"] },
-  { ritualName: "Audit", href: "/audit", icon: Shield, min: "OWNER", personas: ["org_admin", "owner"] },
   { ritualName: "Lifecycle", href: "/lifecycle", icon: BookOpen, min: "OWNER", personas: ["org_admin", "owner"] },
   { ritualName: "Settings", href: "/settings", icon: Settings, min: "STAFF" },
   { ritualName: "Host floor", href: "/host", icon: Armchair, min: "OWNER", tiers: ["chair-host"] },
@@ -195,8 +193,8 @@ const NAV_POOL: RitualNavItem[] = [
 ];
 
 const PERSONA_NAV_ORDER: Record<PersonaKind, string[]> = {
-  org_admin: ["/chain", "/brands", "/host", "/dashboard", "/inbox", "/bookings", "/customers", "/staff", "/rota", "/lifecycle", "/audit", "/toolkit", "/settings"],
-  owner: ["/host", "/brands", "/dashboard", "/inbox", "/bookings", "/customers", "/day-packages", "/staff", "/rota", "/lifecycle", "/audit", "/toolkit", "/settings"],
+  org_admin: ["/chain", "/brands", "/host", "/dashboard", "/inbox", "/bookings", "/customers", "/staff", "/rota", "/lifecycle", "/toolkit", "/settings"],
+  owner: ["/host", "/brands", "/dashboard", "/inbox", "/bookings", "/customers", "/day-packages", "/staff", "/rota", "/lifecycle", "/toolkit", "/settings"],
   manager: ["/inbox", "/dashboard", "/bookings", "/customers", "/staff", "/rota", "/settings"],
   staff: ["/my-day", "/bookings", "/customers", "/settings"],
   receptionist: ["/bookings", "/inbox", "/customers", "/settings"],

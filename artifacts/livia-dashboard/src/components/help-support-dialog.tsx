@@ -25,12 +25,23 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { LifeBuoy, Loader2 } from "lucide-react";
 
+type TicketCategory = "bug" | "billing" | "liv_error" | "feature" | "other";
+
 type Props = {
   trigger?: React.ReactNode;
-  defaultCategory?: "bug" | "billing" | "liv_error" | "feature" | "other";
+  defaultCategory?: TicketCategory;
   context?: Record<string, unknown>;
 };
 
+const CATEGORY_LABELS: Record<TicketCategory, string> = {
+  bug: "Something isn't working",
+  liv_error: "Liv got it wrong",
+  billing: "Billing or plan",
+  feature: "Feature idea",
+  other: "Something else",
+};
+
+/** In-app help — routes to Livia support with shop + page context. */
 export function HelpSupportDialog({
   trigger,
   defaultCategory = "other",
@@ -43,7 +54,7 @@ export function HelpSupportDialog({
   );
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
-  const [category, setCategory] = useState(defaultCategory);
+  const [category, setCategory] = useState<TicketCategory>(defaultCategory);
   const [severity, setSeverity] = useState<"blocking" | "annoying" | "nice_to_have">("annoying");
   const [description, setDescription] = useState("");
   const [consent, setConsent] = useState(true);
@@ -76,7 +87,7 @@ export function HelpSupportDialog({
       });
       toast({
         title: "Message sent",
-        description: "We'll respond via email. For emergencies, email support@livia-hq.com",
+        description: "We'll reply by email. Urgent? support@livia-hq.com",
       });
       setDescription("");
       setOpen(false);
@@ -98,45 +109,45 @@ export function HelpSupportDialog({
         {trigger ?? (
           <Button variant="outline" size="sm" data-testid="help-support-trigger">
             <LifeBuoy className="h-4 w-4 mr-2" />
-            Help
+            Get help
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md" data-testid="help-support-dialog">
         <DialogHeader>
-          <DialogTitle>Report an issue</DialogTitle>
+          <DialogTitle>Get help</DialogTitle>
           <DialogDescription>
-            Something broken, billing unclear, or Liv got it wrong? We attach your {vocab.locationNoun.toLowerCase()}{" "}
-            context and route it to the Livia team — often with automation on our side to reproduce and fix faster.
+            Tell us what went wrong. We attach your {vocab.locationNoun.toLowerCase()} and the page
+            you were on so we can fix it faster.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>Category</Label>
-              <Select value={category} onValueChange={(v) => setCategory(v as typeof category)}>
+              <Label>Topic</Label>
+              <Select value={category} onValueChange={(v) => setCategory(v as TicketCategory)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="bug">Bug</SelectItem>
-                  <SelectItem value="liv_error">Liv misbehaved</SelectItem>
-                  <SelectItem value="billing">Billing</SelectItem>
-                  <SelectItem value="feature">Feature idea</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  {(Object.keys(CATEGORY_LABELS) as TicketCategory[]).map((key) => (
+                    <SelectItem key={key} value={key}>
+                      {CATEGORY_LABELS[key]}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>Severity</Label>
+              <Label>Impact</Label>
               <Select value={severity} onValueChange={(v) => setSeverity(v as typeof severity)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="blocking">Blocking my {vocab.locationNoun.toLowerCase()}</SelectItem>
-                  <SelectItem value="annoying">Annoying</SelectItem>
-                  <SelectItem value="nice_to_have">Nice to have</SelectItem>
+                  <SelectItem value="annoying">Slowing me down</SelectItem>
+                  <SelectItem value="nice_to_have">Minor</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -146,7 +157,7 @@ export function HelpSupportDialog({
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe what you expected vs what happened…"
+              placeholder="What you expected, what you saw, and any booking or client names if relevant…"
               rows={4}
               data-testid="help-description"
             />
@@ -154,12 +165,12 @@ export function HelpSupportDialog({
           <div className="flex items-start gap-2">
             <Checkbox id="consent" checked={consent} onCheckedChange={(c) => setConsent(c === true)} />
             <label htmlFor="consent" className="text-xs text-muted-foreground leading-snug">
-              Allow Livia to review recent logs for this shop to reproduce the issue (recommended).
+              Include recent activity logs for this shop so we can reproduce the issue.
             </label>
           </div>
           <Button className="w-full" onClick={() => void submit()} disabled={sending}>
             {sending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-            Submit report
+            Send message
           </Button>
         </div>
       </DialogContent>

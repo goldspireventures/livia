@@ -19,6 +19,8 @@ type Props = {
   /** When set, default mode is single appointment */
   bookingId?: string;
   customerName?: string;
+  /** Vertical label — e.g. "Running late" vs "Running late for appointment" */
+  actionLabel?: string;
   trigger?: React.ReactNode;
   defaultMinutes?: number;
 };
@@ -26,6 +28,7 @@ type Props = {
 export function RunningLateSheet({
   bookingId,
   customerName,
+  actionLabel = "Running late",
   trigger,
   defaultMinutes = 15,
 }: Props) {
@@ -82,13 +85,13 @@ export function RunningLateSheet({
         {trigger ?? (
           <Button variant="outline" size="sm" data-testid="running-late-trigger">
             <Clock className="h-4 w-4 mr-2" />
-            Running late
+            {actionLabel}
           </Button>
         )}
       </SheetTrigger>
       <SheetContent side="bottom" className="max-h-[85vh] rounded-t-2xl">
         <SheetHeader>
-          <SheetTitle>Running late</SheetTitle>
+          <SheetTitle>{actionLabel}</SheetTitle>
           <SheetDescription>
             Notify customers by SMS when you have Twilio configured. Liv logs every send.
           </SheetDescription>

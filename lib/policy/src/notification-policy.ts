@@ -153,7 +153,7 @@ export function buildNotificationDeepLinks(args: {
         };
       }
       return {
-        href: "/bookings?filter=pending",
+        href: "/bookings?status=PENDING",
         mobileHref: "/(tabs)/approvals",
       };
     case "inbox.inbound":

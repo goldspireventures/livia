@@ -106,6 +106,16 @@ export async function provisionDemoWorld() {
   }>("/demo/provision", { method: "POST" });
 }
 
+/** When Clerk dev user quota blocks full provision — seed DB using existing demo Clerk accounts. */
+export async function repairDemoDatabase() {
+  return apiFetch<{
+    personas: Array<{ id: string; email: string; clerkUserId: string | null }>;
+    businesses: Array<{ slug: string; id: string; name: string }>;
+    passwordHint: string;
+    mode?: "repair";
+  }>("/demo/repair-db", { method: "POST" });
+}
+
 /** Fast path — branding + service images only (~3–8s). No Clerk. Runs full provision if missing. */
 export async function syncDemoWorld() {
   return apiFetch<{

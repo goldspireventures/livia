@@ -38,10 +38,26 @@ export function useInAppNotifications() {
     staleTime: 20_000,
   });
 
+  const listKey = ["in-app-notifications", bid] as const;
+
   const markRead = useMutation({
     mutationFn: (id: string) =>
       apiFetch<{ ok: boolean }>(`/me/notifications/${id}/read`, { method: "PATCH" }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["in-app-notifications"] }),
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: listKey });
+      const prev = qc.getQueryData<ListResponse>(listKey);
+      if (!prev) return { prev };
+      const target = prev.data.find((n) => n.id === id);
+      qc.setQueryData<ListResponse>(listKey, {
+        data: prev.data.filter((n) => n.id !== id),
+        unreadCount: Math.max(0, prev.unreadCount - (target && !target.readAt ? 1 : 0)),
+      });
+      return { prev };
+    },
+    onError: (_err, _id, ctx) => {
+      if (ctx?.prev) qc.setQueryData(listKey, ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: listKey }),
   });
 
   const markAllRead = useMutation({
@@ -50,7 +66,17 @@ export function useInAppNotifications() {
         method: "POST",
         body: JSON.stringify(bid ? { businessId: bid } : {}),
       }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["in-app-notifications"] }),
+    onMutate: async () => {
+      await qc.cancelQueries({ queryKey: listKey });
+      const prev = qc.getQueryData<ListResponse>(listKey);
+      if (!prev) return { prev };
+      qc.setQueryData<ListResponse>(listKey, { data: [], unreadCount: 0 });
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) qc.setQueryData(listKey, ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: listKey }),
   });
 
   return {

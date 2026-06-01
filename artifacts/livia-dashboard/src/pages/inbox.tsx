@@ -13,6 +13,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OperationalPageShell } from "@/components/layout/operational-page-shell";
+import { useBeautyChrome } from "@/lib/presentation-layout";
+import { cn } from "@/lib/utils";
+import { beautyOutlineButton, beautyPrimaryButton } from "@/lib/beauty-operational-ui";
 import { LivInboxAssist } from "@/components/inbox/liv-inbox-assist";
 import { HelpSupportDialog } from "@/components/help-support-dialog";
 import { usePersona } from "@/lib/persona";
@@ -31,6 +34,12 @@ import { InboxThreadList } from "@/components/inbox/inbox-thread-list";
 import { InboxContextRail } from "@/components/inbox/inbox-context-rail";
 import { invalidateOperationalState, OPERATIONAL_REFETCH_MS } from "@/lib/operational-cache";
 import { apiFetch } from "@/lib/api-fetch";
+import { getListBookingsQueryKey } from "@workspace/api-client-react";
+import {
+  InboxResolveDialog,
+  type ResolveOutcome,
+} from "@/components/inbox/inbox-resolve-dialog";
+import { resolutionSummary, type ConversationResolution } from "@/lib/conversation-resolution";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Sparkles,
@@ -57,6 +66,7 @@ interface ConversationListItem {
   bookingCount: number;
   linkedBookingId?: string | null;
   caseIntent?: string | null;
+  resolution?: ConversationResolution | null;
 }
 
 interface ConversationDetail {
@@ -114,6 +124,7 @@ export default function InboxPage() {
   const { toast } = useToast();
   const qc = useQueryClient();
   const businessId = business?.id ?? "";
+  const beautyChrome = useBeautyChrome((business as { vertical?: string } | null)?.vertical);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<"OPEN" | "HANDED_OFF" | "CLOSED" | "ALL">("OPEN");
@@ -190,9 +201,13 @@ export default function InboxPage() {
   }, [selectedId, detailData, conversations]);
 
   const [resolving, setResolving] = useState(false);
+  const [resolveDialog, setResolveDialog] = useState<{
+    outcome: ResolveOutcome;
+    refundMinor?: number;
+  } | null>(null);
 
   async function resolveCase(
-    outcome: "refund_and_cancel" | "cancel_no_refund" | "close_no_action",
+    outcome: ResolveOutcome,
     opts?: { refundMinor?: number; customerMessage?: string },
   ) {
     if (!selectedId || !businessId) return;
@@ -210,6 +225,8 @@ export default function InboxPage() {
         },
       );
       invalidateOperationalState(qc, businessId);
+      qc.invalidateQueries({ queryKey: getListBookingsQueryKey(businessId) });
+      setResolveDialog(null);
       toast({
         title: "Case resolved",
         description: result.effects?.join(" · ") ?? "Done",
@@ -293,19 +310,28 @@ export default function InboxPage() {
           : "Conversations between your customers and Liv"
       }
       actions={
-        <div className="flex items-center gap-1 bg-muted rounded-md p-1 flex-wrap max-w-full">
+        <div
+          className={cn(
+            "flex items-center gap-1 rounded-md p-1 flex-wrap max-w-full",
+            beautyChrome
+              ? "beauty-inbox-queue-lens border border-border/70"
+              : "bg-muted",
+          )}
+        >
           {showRitual
             ? QUEUE_LENSES.map((lens) => (
                 <button
                   key={lens}
                   type="button"
                   data-testid={`queue-lens-${lens}`}
+                  data-active={queueLens === lens ? "true" : undefined}
                   onClick={() => setQueueLens(lens)}
-                  className={`text-xs px-3 py-1 rounded transition-colors whitespace-nowrap ${
-                    queueLens === lens
+                  className={cn(
+                    "text-xs px-3 py-1 rounded transition-colors whitespace-nowrap",
+                    queueLens === lens && !beautyChrome
                       ? "bg-card text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
                 >
                   {lens === "liv_handling" ? "Liv handling" : INBOX_QUEUE_LENS_LABELS[lens].short}
                   {queueCounts[lens] > 0 ? ` (${queueCounts[lens]})` : ""}
@@ -330,11 +356,20 @@ export default function InboxPage() {
       }
     >
       <div
-        className={`grid grid-cols-1 ${paneGrid} gap-0 border border-border/80 rounded-xl overflow-hidden bg-card min-h-[min(560px,calc(100vh-220px))] max-h-[calc(100vh-160px)]`}
+        className={cn(
+          "grid grid-cols-1 gap-0 border border-border/80 rounded-xl overflow-hidden min-h-[min(560px,calc(100vh-220px))] max-h-[calc(100vh-160px)]",
+          paneGrid,
+          beautyChrome ? "beauty-operational-panel beauty-inbox-shell" : "bg-card",
+        )}
         data-testid="inbox-three-pane"
       >
         {/* Thread list */}
-        <div className="flex flex-col border-b lg:border-b-0 lg:border-r border-border/80">
+        <div
+          className={cn(
+            "flex flex-col border-b lg:border-b-0 lg:border-r border-border/80",
+            beautyChrome && "beauty-inbox-thread-pane",
+          )}
+        >
           <InboxThreadList
             threads={filteredConversations}
             loading={isLoadingConvos}
@@ -342,11 +377,17 @@ export default function InboxPage() {
             onSelect={setSelectedId}
             emptyTitle={emptyInboxTitle}
             emptySubtitle={emptyInboxSubtitle}
+            beautyChrome={beautyChrome}
           />
         </div>
 
         {/* Conversation */}
-        <div className="flex flex-col min-h-0 min-w-0 border-b lg:border-b-0 lg:border-r border-border/80">
+        <div
+          className={cn(
+            "flex flex-col min-h-0 min-w-0 border-b lg:border-b-0 lg:border-r border-border/80",
+            beautyChrome && "beauty-inbox-conversation-pane",
+          )}
+        >
           {!selectedId ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
               <MessageSquare className="h-10 w-10 text-muted-foreground mb-3" />
@@ -385,7 +426,12 @@ export default function InboxPage() {
                         channel: selectedConversation.channel,
                       }}
                       trigger={
-                        <Button variant="ghost" size="sm" data-testid="button-report-liv-inbox">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={beautyOutlineButton(beautyChrome)}
+                          data-testid="button-report-liv-inbox"
+                        >
                           Report Liv
                         </Button>
                       }
@@ -395,6 +441,7 @@ export default function InboxPage() {
                         <Button
                           variant="outline"
                           size="sm"
+                          className={beautyOutlineButton(beautyChrome)}
                           onClick={() => handleStatusChange("HANDED_OFF")}
                           disabled={updateConversation.isPending}
                           data-testid="button-take-over"
@@ -407,6 +454,7 @@ export default function InboxPage() {
                       <Button
                         variant="outline"
                         size="sm"
+                        className={beautyOutlineButton(beautyChrome)}
                         onClick={() => handleStatusChange("OPEN")}
                         disabled={updateConversation.isPending}
                         data-testid="button-resume-ai"
@@ -423,6 +471,7 @@ export default function InboxPage() {
                       <Button
                         variant="outline"
                         size="sm"
+                        className={beautyOutlineButton(beautyChrome)}
                         onClick={() => handleStatusChange("CLOSED")}
                         disabled={updateConversation.isPending}
                         data-testid="button-close-conversation"
@@ -441,54 +490,62 @@ export default function InboxPage() {
                       data-testid="inbox-case-resolve"
                     >
                       <p className="text-xs font-medium text-foreground">
-                        Refund request — choose an outcome (customer is notified automatically).
+                        Refund request — pick what happened. You must message the customer; the linked
+                        booking updates automatically.
                       </p>
                       <div className="flex flex-wrap gap-2">
-                      <Button
-                        size="sm"
-                        variant="default"
-                        disabled={resolving}
-                        data-testid="inbox-resolve-refund"
-                        onClick={() =>
-                          void resolveCase("refund_and_cancel", {
-                            refundMinor: 6000,
-                            customerMessage:
-                              "Hi Sean — your €60 deposit refund is processed and today's appointment is cancelled. Hope we see you again soon.",
-                          })
-                        }
-                      >
-                        Refund €60 + cancel booking
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={resolving}
-                        onClick={() =>
-                          void resolveCase("cancel_no_refund", {
-                            customerMessage:
-                              "Hi Sean — we've cancelled today's appointment per our late-cancel policy. The deposit isn't refundable this time.",
-                          })
-                        }
-                      >
-                        Cancel only (no refund)
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        disabled={resolving}
-                        onClick={() => void resolveCase("close_no_action")}
-                      >
-                        Dismiss without refund
-                      </Button>
+                        <Button
+                          size="sm"
+                          variant="default"
+                          disabled={resolving}
+                          data-testid="inbox-resolve-refund"
+                          onClick={() =>
+                            setResolveDialog({ outcome: "refund_and_cancel", refundMinor: 6000 })
+                          }
+                        >
+                          Approve refund + cancel
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={resolving}
+                          data-testid="inbox-resolve-deny-cancel"
+                          onClick={() => setResolveDialog({ outcome: "cancel_no_refund" })}
+                        >
+                          Deny refund — cancel appointment
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled={resolving}
+                          data-testid="inbox-resolve-deny-keep"
+                          onClick={() => setResolveDialog({ outcome: "close_no_action" })}
+                        >
+                          Deny refund — keep appointment
+                        </Button>
+                      </div>
                     </div>
-                    </div>
+                  ) : null}
+                  {selectedConversation.status === "CLOSED" &&
+                  resolutionSummary(selectedConversation.resolution) ? (
+                    <p
+                      className="text-xs text-muted-foreground px-4"
+                      data-testid="inbox-resolution-summary"
+                    >
+                      Outcome: {resolutionSummary(selectedConversation.resolution)}
+                    </p>
                   ) : null}
                 </div>
               )}
 
               {selectedConversation?.status === "HANDED_OFF" ? (
                 <div
-                  className="mx-4 mt-3 rounded-lg border border-amber-500/40 bg-amber-50 dark:bg-amber-950/40 px-3 py-2 text-sm text-amber-950 dark:text-amber-100 flex items-center gap-2"
+                  className={cn(
+                    "mx-4 mt-3 rounded-lg border px-3 py-2 text-sm flex items-center gap-2",
+                    beautyChrome
+                      ? "beauty-inbox-handoff-banner"
+                      : "border-amber-500/40 bg-amber-50 dark:bg-amber-950/40 text-amber-950 dark:text-amber-100",
+                  )}
                   data-testid="inbox-handoff-banner"
                 >
                   <HandHelping className="h-4 w-4 shrink-0" aria-hidden />
@@ -496,7 +553,12 @@ export default function InboxPage() {
                 </div>
               ) : null}
 
-              <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-background/30 motion-wizard-enter">
+              <div
+                className={cn(
+                  "flex-1 overflow-y-auto p-4 space-y-3 motion-wizard-enter",
+                  beautyChrome ? "beauty-inbox-messages" : "bg-background/30",
+                )}
+              >
                 {detailData?.messages
                   .filter((m) => m.role !== "SYSTEM")
                   .map((m) => {
@@ -522,19 +584,33 @@ export default function InboxPage() {
                         className={`flex ${isUser ? "justify-end" : "justify-start"} gap-2 items-end`}
                       >
                         {isLiv ? (
-                          <div className="h-7 w-7 rounded-full bg-primary/15 flex items-center justify-center shrink-0 mb-0.5">
+                          <div
+                            className={cn(
+                              "h-7 w-7 rounded-full flex items-center justify-center shrink-0 mb-0.5",
+                              beautyChrome
+                                ? "beauty-inbox-avatar"
+                                : "bg-primary/15",
+                            )}
+                          >
                             <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden />
                           </div>
                         ) : null}
                         <div
                           data-testid={`thread-msg-${m.role.toLowerCase()}`}
-                          className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-[15px] leading-[1.45] whitespace-pre-wrap ${
+                          className={cn(
+                            "max-w-[80%] rounded-2xl px-3.5 py-2 text-[15px] leading-[1.45] whitespace-pre-wrap",
                             isUser
-                              ? "bg-primary text-primary-foreground rounded-br-sm"
+                              ? beautyChrome
+                                ? "beauty-inbox-bubble--guest rounded-br-sm"
+                                : "bg-primary text-primary-foreground rounded-br-sm"
                               : isStaff
-                                ? "bg-[hsl(var(--chart-3))]/20 border border-[hsl(var(--chart-3))]/30 rounded-bl-sm"
-                                : "bg-muted rounded-bl-sm"
-                          }`}
+                                ? beautyChrome
+                                  ? "beauty-inbox-bubble--team rounded-bl-sm"
+                                  : "bg-[hsl(var(--chart-3))]/20 border border-[hsl(var(--chart-3))]/30 rounded-bl-sm"
+                                : beautyChrome
+                                  ? "beauty-inbox-bubble--liv rounded-bl-sm"
+                                  : "bg-muted rounded-bl-sm",
+                          )}
                         >
                           {isStaff ? (
                             <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
@@ -567,7 +643,12 @@ export default function InboxPage() {
               </div>
 
               {selectedId && selectedConversation?.status !== "CLOSED" ? (
-                <div className="sticky bottom-0 border-t border-border p-3 space-y-2 bg-card/95 backdrop-blur-sm mt-auto z-10">
+                <div
+                  className={cn(
+                    "sticky bottom-0 border-t p-3 space-y-2 backdrop-blur-sm mt-auto z-10",
+                    beautyChrome ? "beauty-inbox-compose" : "border-border bg-card/95",
+                  )}
+                >
                   {(selectedConversation?.status === "OPEN" ||
                     selectedConversation?.status === "HANDED_OFF") &&
                   !(
@@ -575,6 +656,7 @@ export default function InboxPage() {
                     selectedConversation?.summary?.toLowerCase().includes("refund")
                   ) ? (
                     <LivInboxAssist
+                      beautyChrome={beautyChrome}
                       mode={
                         selectedConversation?.status === "HANDED_OFF" ? "handoff" : "open"
                       }
@@ -628,7 +710,12 @@ export default function InboxPage() {
                     value={replyDraft}
                     onChange={(e) => setReplyDraft(e.target.value)}
                     rows={2}
-                    className="resize-none text-sm"
+                    className={cn(
+                      "resize-none text-sm bg-background/80",
+                      beautyChrome
+                        ? "border-border/80 focus-visible:ring-primary/30"
+                        : "border-primary/35 ring-1 ring-primary/25 focus-visible:ring-2 focus-visible:ring-primary/50",
+                    )}
                     data-testid="inbox-reply-input"
                   />
                   <div className="flex flex-wrap justify-end gap-2">
@@ -636,6 +723,7 @@ export default function InboxPage() {
                       <Button
                         size="sm"
                         variant="secondary"
+                        className={beautyOutlineButton(beautyChrome)}
                         disabled={livAssisting || sending}
                         data-testid="inbox-ask-liv"
                         onClick={async () => {
@@ -674,6 +762,7 @@ export default function InboxPage() {
                     ) : null}
                     <Button
                       size="sm"
+                      className={beautyPrimaryButton(beautyChrome)}
                       disabled={sending || !replyDraft.trim()}
                       data-testid="inbox-send-reply"
                       onClick={async () => {
@@ -716,9 +805,31 @@ export default function InboxPage() {
         </div>
 
         {showContextRail ? (
-          <InboxContextRail businessId={businessId ?? ""} conversation={selectedConversation} />
+          <InboxContextRail
+            businessId={businessId ?? ""}
+            conversation={selectedConversation}
+            beautyChrome={beautyChrome}
+          />
         ) : null}
       </div>
+
+      <InboxResolveDialog
+        open={resolveDialog !== null}
+        outcome={resolveDialog?.outcome ?? null}
+        refundMinor={resolveDialog?.refundMinor}
+        customerName={selectedConversation?.customerName ?? undefined}
+        busy={resolving}
+        onOpenChange={(open) => {
+          if (!open) setResolveDialog(null);
+        }}
+        onConfirm={(message) => {
+          if (!resolveDialog) return;
+          void resolveCase(resolveDialog.outcome, {
+            refundMinor: resolveDialog.refundMinor,
+            customerMessage: message,
+          });
+        }}
+      />
     </OperationalPageShell>
   );
 }

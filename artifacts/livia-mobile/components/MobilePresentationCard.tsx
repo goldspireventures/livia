@@ -47,7 +47,7 @@ export function MobilePresentationCard({ businessId, canEditOnWeb }: Props) {
         </View>
       ) : null}
       <Text style={[styles.meta, { color: colors.mutedForeground, marginTop: 6 }]}>
-        Phone layout uses your vertical accent; full preset morph is on web.
+        Preset colours apply on this device; pick skins and live `/b` preview on web.
       </Text>
       {canEditOnWeb ? (
         <Pressable

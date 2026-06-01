@@ -12,7 +12,7 @@ export function pendingReasonLabel(reason: string | null | undefined): string {
     case "owner_manual":
       return "Manual booking — confirm when ready";
     case "awaiting_continuity":
-      return "Waiting for thread — pics or reply";
+      return "Waiting for guest reply (photos or confirmation)";
     default:
       return reason?.trim() ? reason.replace(/_/g, " ") : "Pending — needs your confirmation";
   }

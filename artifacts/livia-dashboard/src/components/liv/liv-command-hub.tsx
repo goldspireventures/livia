@@ -1,4 +1,4 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useBusiness } from "@/lib/business-context";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/api-fetch";
@@ -22,8 +22,10 @@ export function LivCommandHub({
 }) {
   const { business } = useBusiness();
   const { toast } = useToast();
+  const [location] = useLocation();
   const bid = business?.id ?? "";
   const slug = business?.slug ?? "";
+  const onToolkitPage = location.startsWith("/toolkit");
 
   async function regenerateBriefing() {
     if (!bid) return;
@@ -49,7 +51,8 @@ export function LivCommandHub({
           Liv — your operating brain
         </CardTitle>
         <CardDescription>
-          She reads your calendar, inbox, and policy — then acts through registered tools, never guesswork.
+          Liv works from your calendar, inbox, and shop settings — so replies and bookings stay accurate
+          and on-brand.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -57,30 +60,32 @@ export function LivCommandHub({
           <Button size="sm" variant="default" asChild>
             <Link href="/inbox">
               <Inbox className="h-3.5 w-3.5 mr-1.5" />
-              Open queue
+              Open inbox
             </Link>
           </Button>
           <Button size="sm" variant="outline" asChild>
-            <Link href="/toolkit">
-              <LayoutGrid className="h-3.5 w-3.5 mr-1.5" />
-              Liv command
+            <Link href="/settings?tab=liv">
+              <Settings className="h-3.5 w-3.5 mr-1.5" />
+              Tune Liv
             </Link>
           </Button>
           <Button size="sm" variant="outline" onClick={() => void regenerateBriefing()} disabled={!bid}>
             <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
             Refresh briefing
           </Button>
-          <Button size="sm" variant="ghost" asChild>
-            <Link href="/settings?tab=liv">
-              <Settings className="h-3.5 w-3.5 mr-1.5" />
-              Tune Liv
-            </Link>
-          </Button>
-          {publicUrl ? (
+          {!onToolkitPage ? (
             <Button size="sm" variant="ghost" asChild>
-              <a href={publicUrl} target="_blank" rel="noreferrer">
+              <Link href="/toolkit">
+                <LayoutGrid className="h-3.5 w-3.5 mr-1.5" />
+                Advanced Liv
+              </Link>
+            </Button>
+          ) : null}
+          {publicUrl && density !== "focused" && !onToolkitPage ? (
+            <Button size="sm" variant="ghost" asChild>
+              <a href={publicUrl} target="_blank" rel="noreferrer" title="Opens your guest booking page in a new tab">
                 <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-                Preview customer Liv
+                Preview booking page
               </a>
             </Button>
           ) : null}

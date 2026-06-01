@@ -24,8 +24,10 @@ export function pendingReasonLabel(reason: string | null | undefined): string {
       return "Liv created — confirm to finalize";
     case PENDING_REASONS.OWNER_MANUAL:
       return "Manual booking — confirm when ready";
+    case PENDING_REASONS.AWAITING_CONTINUITY:
+      return "Waiting for guest reply (photos or confirmation)";
     default:
-      return "Pending";
+      return "Pending — needs your confirmation";
   }
 }
 

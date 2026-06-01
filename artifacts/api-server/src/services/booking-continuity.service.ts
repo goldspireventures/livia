@@ -215,25 +215,44 @@ export function buildPublicNextSteps(args: {
   instagramHandle?: string | null;
   status: string;
   pendingReason?: string | null;
+  visitUrl?: string | null;
 }): string[] {
   const template = getContinuityTemplate(
     args.vertical as Parameters<typeof getContinuityTemplate>[0],
     args.locale,
   );
   const bookingRef = args.bookingId.slice(-8).toUpperCase();
-  const steps = template.publicNextSteps({
+  const messageArgs = {
     businessName: args.businessName,
     serviceName: args.serviceName,
     staffDisplayName: args.staffDisplayName,
     startAtLocal: formatLocal(args.startAt, args.timezone, args.locale),
     bookingRef,
     instagramHandle: args.instagramHandle,
-  });
+    visitUrl: args.visitUrl ?? null,
+  };
+
+  if (args.status === "PENDING" && args.pendingReason === "awaiting_continuity") {
+    return [
+      "Almost there — we've sent a message to the phone or email you provided.",
+      "Reply once with any photos or notes your team asked for, or to confirm you're all set.",
+      "Your appointment is held until the salon confirms (usually within a few hours).",
+      "Add the appointment to your calendar below.",
+    ];
+  }
+  if (args.status === "PENDING") {
+    const reason =
+      args.pendingReason === "awaiting_staff_confirm"
+        ? `${args.businessName} will confirm your slot shortly.`
+        : args.pendingReason === "awaiting_deposit"
+          ? "Complete the deposit link we'll send to lock in your time."
+          : `${args.businessName} is reviewing your booking.`;
+    return [reason, ...template.publicNextSteps(messageArgs).slice(-1)];
+  }
+
+  const steps = template.publicNextSteps(messageArgs);
   if (args.status === "CONFIRMED") {
     return ["You're confirmed.", ...steps.slice(1)];
-  }
-  if (args.pendingReason === "awaiting_continuity") {
-    return steps;
   }
   return ["We've received your booking.", ...steps];
 }

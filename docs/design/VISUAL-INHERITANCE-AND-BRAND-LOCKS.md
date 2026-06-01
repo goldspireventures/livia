@@ -28,7 +28,7 @@ Each family has one **north-star evolution PNG** that defines layout density, to
 | Surface family | URL / artifact | Visual anchor | Inheritance doc |
 |----------------|----------------|---------------|-----------------|
 | **Marketing** | `livia-hq.com` | [`northstar/m1-home-web.png`](./assets/livia-evolution/northstar/m1-home-web.png) | [`MARKETING-SURFACE-PROGRAM.md`](./MARKETING-SURFACE-PROGRAM.md) |
-| **Gateway / demo** | `app.…/demo` | [`northstar/g1-wedge-web.png`](./assets/livia-evolution/northstar/g1-wedge-web.png) | [`GATEWAY-SURFACE-PROGRAM.md`](./GATEWAY-SURFACE-PROGRAM.md) |
+| **Gateway / demo** | `app.…/demo` | [`w2-gateway/demo/g1-wedge-web.target.png`](./assets/w2-gateway/demo/g1-wedge-web.target.png) | [`GATEWAY-SURFACE-PROGRAM.md`](./GATEWAY-SURFACE-PROGRAM.md) — **does not skin W4** |
 | **Internal support** | `ops.…/support/*` | [`northstar/i4-thread-web.png`](./assets/livia-evolution/northstar/i4-thread-web.png) | [`INTERNAL-SUPPORT-PLATFORM-SPEC.md`](../product/INTERNAL-SUPPORT-PLATFORM-SPEC.md) |
 | **Internal exec** | `ops.…` exec cockpit | [`northstar/i2-shiplane-web.png`](./assets/livia-evolution/northstar/i2-shiplane-web.png) | [`INTERNAL-EXEC-COCKPIT-SPEC.md`](../product/INTERNAL-EXEC-COCKPIT-SPEC.md) |
 | **Tenant app** | `app.…` dashboard + mobile | [`northstar/tenant-inbox-web.png`](./assets/livia-evolution/northstar/tenant-inbox-web.png) + [`northstar/tenant-today-mobile.png`](./assets/livia-evolution/northstar/tenant-today-mobile.png) | [`TENANT-EXPERIENCE-CONTRACT.md`](../product/TENANT-EXPERIENCE-CONTRACT.md) |

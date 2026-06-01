@@ -1,4 +1,4 @@
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth, useUser } from "@clerk/clerk-react";
 import { Redirect, useLocation } from "wouter";
 import { useGetMyBusinesses } from "@workspace/api-client-react";
 import { BusinessProvider, normalizeBusinessList, useBusiness } from "@/lib/business-context";
@@ -10,7 +10,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api-fetch";
 import { useQuery } from "@tanstack/react-query";
 import { PlatformLegalGate } from "@/components/platform-legal-gate";
-import { isDemoTenantSlug } from "@/lib/demo-tenant";
+import { isDemoAccountEmail, isDemoTenantSlug } from "@/lib/demo-tenant";
 import { isOnboardingAppUnlocked, type OnboardingState } from "@workspace/policy";
 import { PlatformExecHandoff } from "@/components/platform-exec-handoff";
 
@@ -104,6 +104,8 @@ function BusinessDataLoader({
 }) {
   const { data: businesses, isLoading } = useGetMyBusinesses();
   const [location] = useLocation();
+  const { user } = useUser();
+  const demoEmail = isDemoAccountEmail(user?.primaryEmailAddress?.emailAddress);
 
   if (isLoading) {
     return (
@@ -117,6 +119,10 @@ function BusinessDataLoader({
   const hasAny = list.length > 0;
 
   if (!hasAny && location !== "/onboarding" && location !== "/legal-acceptance") {
+    // Demo roster accounts need provisioned world + membership — send to launcher, not self-serve onboarding.
+    if (demoEmail && location !== "/demo" && !location.startsWith("/demo/")) {
+      return <Redirect to="/demo?reason=no-membership" />;
+    }
     return <Redirect to="/onboarding" />;
   }
 

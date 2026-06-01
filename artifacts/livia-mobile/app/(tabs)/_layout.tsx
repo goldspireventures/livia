@@ -8,6 +8,7 @@ import React, { useMemo } from "react";
 import { Platform, StyleSheet, View, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fonts } from "@/constants/typography";
+import { PresentationThemeProvider } from "@/contexts/PresentationThemeContext";
 import { useColors } from "@/hooks/useColors";
 import { useHaptics } from "@/hooks/useHaptics";
 import { usePersona, type PersonaKind } from "@/hooks/usePersona";
@@ -60,6 +61,14 @@ const ALL_TABS: TabSpec[] = [
 const DEFAULT_VISIBLE: TabKey[] = TAB_VISIBILITY.owner;
 
 export default function TabLayout() {
+  return (
+    <PresentationThemeProvider>
+      <TabLayoutInner />
+    </PresentationThemeProvider>
+  );
+}
+
+function TabLayoutInner() {
   const colors = useColors();
   const colorScheme = useColorScheme();
   const haptics = useHaptics();

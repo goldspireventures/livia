@@ -1,6 +1,7 @@
 # Vertical playbook — Body art (V4)
 
 **Status:** L2+L3 (2026-05-31)  
+**Program (L0–L8):** [`BODY-ART-VERTICAL-PROGRAM.md`](../BODY-ART-VERTICAL-PROGRAM.md)  
 **Registry:** V4 · demo `ink-anchor-galway`  
 **Reference wedge:** G1-A interstitial clarity standard
 

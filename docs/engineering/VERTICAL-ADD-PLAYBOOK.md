@@ -99,7 +99,19 @@ Add row to **`VERTICAL_COVERAGE_REGISTRY`** in `vertical-coverage.ts`:
 
 **Should NOT need edits:** core booking engine, customer model, auth — unless new guest surface type.
 
-### 2.5 Assets & ops (still manual today)
+### 2.5 Docs (propagate like code — CI enforced)
+
+**Hub:** playbook `docs/product/vertical-playbooks/{vertical}.md` · optional `{NAME}-VERTICAL-PROGRAM.md` while vertical is in active completion.
+
+**Spokes + guard:** [`DOC-PROPAGATION-CASCADE.md`](./DOC-PROPAGATION-CASCADE.md) · `pnpm vertical:doc-check` (included in `pnpm vertical:check`).
+
+| Item | Owner |
+|------|-------|
+| Playbook + demo index + DEMO-LOGINS slug | Eng/product (same PR as registry) |
+| Founder UAT section for canonical demo tenant | Product |
+| DOC-CANONICAL-INDEX + LIVIA-STATUS link | Same PR as program doc |
+
+### 2.6 Assets & ops (still manual today)
 
 | Item | Owner |
 |------|-------|

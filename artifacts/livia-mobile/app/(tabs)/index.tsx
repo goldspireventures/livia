@@ -65,6 +65,7 @@ import { VerticalHomeShortcuts } from "@/components/VerticalHomeShortcuts";
 import { LivProposalsCard } from "@/components/LivProposalsCard";
 import { useQueryClient } from "@tanstack/react-query";
 import { invalidateOperationalState } from "@/lib/operational-cache";
+import { isBeautyPublicSurface } from "@/lib/beauty-public";
 
 function timeOfDayGreeting(nowMs: number, timeZone: string): string {
   const parts = new Intl.DateTimeFormat("en-GB", {
@@ -236,6 +237,10 @@ export default function DashboardScreen() {
     (bizDetail as { category?: string } | undefined)?.category,
     tenantAccent,
   );
+  const beautyPreset = (
+    tenantExperience as { presentation?: { cssPreset?: string; label?: string } } | null | undefined
+  )?.presentation;
+  const beautyOwner = isBeautyPublicSurface(vertical, beautyPreset?.cssPreset);
 
   const { data: pendingData } = useListBookings(
     currentBusiness?.id ?? "",
@@ -365,11 +370,19 @@ export default function DashboardScreen() {
             timeZone: businessTz,
           })}
         </Text>
-        <Text style={[styles.bizName, { color: colors.foreground }]} numberOfLines={1}>
+        <Text
+          style={[
+            styles.bizName,
+            { color: colors.foreground },
+            beautyOwner && { fontFamily: fonts.serif, letterSpacing: 0.3 },
+          ]}
+          numberOfLines={1}
+        >
           {currentBusiness?.name ?? "Loading…"}
         </Text>
         <Text style={[styles.verticalLine, { color: verticalAccent }]} numberOfLines={2}>
           {pack.label} · {pack.ownerTodayLine}
+          {beautyOwner && beautyPreset?.label ? ` · ${beautyPreset.label}` : ""}
         </Text>
       </Animated.View>
 
@@ -396,9 +409,26 @@ export default function DashboardScreen() {
       ) : null}
 
       {pendingCount > 0 ? (
-        <View style={styles.pendingBlock}>
+        <View
+          style={[
+            styles.pendingBlock,
+            beautyOwner && {
+              borderWidth: 1,
+              borderColor: colors.primary + "44",
+              borderRadius: 16,
+              padding: 12,
+              backgroundColor: colors.card,
+            },
+          ]}
+        >
           <Pressable onPress={goPending} style={styles.pendingHead}>
-            <Text style={[styles.pendingTitle, { color: colors.foreground }]}>
+            <Text
+              style={[
+                styles.pendingTitle,
+                { color: colors.foreground },
+                beautyOwner && { fontFamily: fonts.serif },
+              ]}
+            >
               Needs your yes ({pendingRows.length || pendingCount})
             </Text>
             <Text style={[styles.pendingLink, { color: colors.primary }]}>Review all</Text>
@@ -574,11 +604,24 @@ export default function DashboardScreen() {
           <Text style={[styles.livSectionTitle, { color: colors.mutedForeground }]}>
             Liv & insights
           </Text>
-          <MorningBriefingCard
-            key={currentBusiness.id}
-            businessId={currentBusiness.id}
-            businessName={currentBusiness.name}
-          />
+          <View
+            style={
+              beautyOwner
+                ? {
+                    borderWidth: 1,
+                    borderColor: colors.primary + "33",
+                    borderRadius: 16,
+                    overflow: "hidden",
+                  }
+                : undefined
+            }
+          >
+            <MorningBriefingCard
+              key={currentBusiness.id}
+              businessId={currentBusiness.id}
+              businessName={currentBusiness.name}
+            />
+          </View>
           <LivMomentsCard businessId={currentBusiness.id} />
           <LivIncidentsCard businessId={currentBusiness.id} />
           <LivProposalsCard businessId={currentBusiness.id} />

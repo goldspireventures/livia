@@ -36,6 +36,7 @@ type Props = {
   /** Show manager approve actions */
   showApprovals?: boolean;
   compact?: boolean;
+  onLoaded?: (rows: TimeOffRequestRow[]) => void;
 };
 
 const KINDS = [
@@ -53,6 +54,7 @@ export function TimeOffRequestsPanel({
   staffDisplayName,
   showApprovals = false,
   compact = false,
+  onLoaded,
 }: Props) {
   const { toast } = useToast();
   const { effectiveRole, ownStaffId } = useMembership();
@@ -74,11 +76,11 @@ export function TimeOffRequestsPanel({
     setLoading(true);
     try {
       const q = fixedStaffId ? `?staffId=${encodeURIComponent(fixedStaffId)}` : "";
-      setRequests(
-        await customFetch<TimeOffRequestRow[]>(
-          `/api/businesses/${businessId}/time-off-requests${q}`,
-        ),
+      const rows = await customFetch<TimeOffRequestRow[]>(
+        `/api/businesses/${businessId}/time-off-requests${q}`,
       );
+      setRequests(rows);
+      onLoaded?.(rows);
     } catch {
       setRequests([]);
     } finally {

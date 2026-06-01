@@ -61,6 +61,19 @@ Full map: [`product/LIVIA-PLATFORM-LIFECYCLE.md`](./product/LIVIA-PLATFORM-LIFEC
 
 ---
 
+## Tenant authority (owner vs team)
+
+| Term | Meaning | Not |
+|------|---------|-----|
+| **Owner** | Legal/contractual holder of this `business` — billing, invites, succession | “Admin” colloquially |
+| **Staff roster** | People on the calendar (`staff` table) | Guaranteed Livia login |
+| **Team invite** | Clerk invite → `business_memberships` (ADMIN/STAFF sign-in) | Ownership transfer |
+| **Pass the keys** | G8 ownership succession — same tenant, new `owner_id` | “Transfer staff” |
+
+Canonical: [`product/TENANT-AUTHORITY-AND-SUCCESSION.md`](./product/TENANT-AUTHORITY-AND-SUCCESSION.md) · policy `ownership-succession.ts`.
+
+---
+
 ## Guest & channels
 
 | Term | Meaning |

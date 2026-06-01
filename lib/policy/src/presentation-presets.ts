@@ -121,11 +121,28 @@ const BASE_PRESENTATION_PRESETS: Record<BusinessVertical, PresentationPreset[]> 
   ],
   beauty: [
     {
+      id: "beauty-noir-dusk",
+      vertical: "beauty",
+      label: "Noir Dusk",
+      description: "Soft dark — mauve accents, calm evening studio.",
+      isDefault: true,
+      tokens: {
+        colorMode: "dark",
+        density: "comfortable",
+        display: "serif",
+        layout: "cards",
+        shell: "soft",
+        radius: "xl",
+        motion: "calm",
+      },
+      cssPreset: "noir-dusk",
+    },
+    {
       id: "beauty-soft-studio",
       vertical: "beauty",
       label: "Soft Studio",
-      description: "Lash and brow friendly — rounded cards, soft palette.",
-      isDefault: true,
+      description: "Lash and brow friendly — rounded cards, light blush palette.",
+      isDefault: false,
       tokens: {
         colorMode: "light",
         density: "comfortable",
@@ -155,21 +172,21 @@ const BASE_PRESENTATION_PRESETS: Record<BusinessVertical, PresentationPreset[]> 
       cssPreset: "editorial",
     },
     {
-      id: "beauty-tech-chic",
+      id: "beauty-premium-dark",
       vertical: "beauty",
-      label: "Tech Chic",
-      description: "Minimal sans — DM-to-chair operators who want speed.",
+      label: "Premium Dark",
+      description: "Rose-gold on charcoal — high-end salon cockpit.",
       isDefault: false,
       tokens: {
-        colorMode: "system",
-        density: "compact",
-        display: "sans",
-        layout: "timeline",
-        shell: "soft",
-        radius: "md",
+        colorMode: "dark",
+        density: "comfortable",
+        display: "serif",
+        layout: "cards",
+        shell: "warm",
+        radius: "lg",
         motion: "crisp",
       },
-      cssPreset: "tech-chic",
+      cssPreset: "premium-dark",
     },
   ],
   "body-art": [
@@ -558,6 +575,13 @@ export const PRESENTATION_PRESETS: Record<BusinessVertical, PresentationPreset[]
 
 export function listPresentationPresets(vertical: BusinessVertical): PresentationPreset[] {
   return PRESENTATION_PRESETS[vertical];
+}
+
+/** Owner/onboarding picker — vertical-native skins only (no Platform Default). */
+export function listPresentationPresetsForTenantPicker(
+  vertical: BusinessVertical,
+): PresentationPreset[] {
+  return PRESENTATION_PRESETS[vertical].filter((p) => p.id !== PLATFORM_DEFAULT_PRESET_ID);
 }
 
 export function resolvePresentationPreset(

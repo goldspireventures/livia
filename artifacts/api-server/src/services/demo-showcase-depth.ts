@@ -21,6 +21,7 @@ import { ensureLiveDayForBusiness } from "./demo-live-day.service";
 import { ensureDemoOperationalCases } from "./demo-operational-cases.seed";
 import { applyDemoPublicBranding } from "../lib/demo-public-assets";
 import { backfillDemoServiceImages } from "../lib/demo-service-images";
+import { inferDemoServiceImageUrl } from "../lib/experience-skin";
 import type { BusinessVertical } from "@workspace/policy";
 
 type StaffDef = {
@@ -38,6 +39,7 @@ type ServiceDef = {
   sortOrder: number;
   category?: string;
   description?: string;
+  imageUrl?: string;
 };
 
 type CustomerSeed = { id: string; displayName: string; email: string; phone: string };
@@ -106,6 +108,8 @@ export async function ensureShowcaseServices(
       priceMinor: def.priceMinor,
       currency: "EUR",
       sortOrder: def.sortOrder,
+      imageUrl:
+        def.imageUrl ?? inferDemoServiceImageUrl(def.name, vertical ?? undefined),
     });
     rows.push(created);
     byName.set(def.name.toLowerCase(), created);
@@ -217,7 +221,7 @@ export async function refreshVerticalShowcaseShop(
   },
 ): Promise<void> {
   await applyDemoPublicBranding(businessId, d.vertical);
-  await backfillDemoServiceImages(businessId, d.vertical);
+  await backfillDemoServiceImages(businessId, d.vertical, { force: true });
 
   const staffRows = await ensureShowcaseStaff(businessId, d.staff);
   const serviceRows = await ensureShowcaseServices(businessId, d.services, d.vertical);

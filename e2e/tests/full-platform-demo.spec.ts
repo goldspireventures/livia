@@ -55,6 +55,18 @@ test.describe("Full platform demo — API", () => {
     }
   });
 
+  test("bloom beauty exposes noir-dusk default skin on public API", async ({ request }) => {
+    const res = await request.get(`${apiBase}/api/public/b/bloom-beauty-dublin`);
+    expect(res.ok(), await res.text()).toBeTruthy();
+    const body = await res.json();
+    expect(body.vertical).toBe("beauty");
+    expect(body.experienceSkin?.presentation).toBe("noir-dusk");
+    const mode = body.experienceSkin?.presentationColorMode;
+    if (mode != null) {
+      expect(mode).toBe("dark");
+    }
+  });
+
   test("demo status lists at least 18 businesses", async ({ request }) => {
     const res = await request.get(`${apiBase}/api/demo/status`);
     expect(res.ok()).toBeTruthy();

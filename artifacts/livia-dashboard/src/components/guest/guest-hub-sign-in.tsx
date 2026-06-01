@@ -1,11 +1,16 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import { LiviaWordmark } from "@/components/brand/LiviaMark";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PublicSurfaceFooter } from "@/components/public/public-surface-chrome";
+import { GUEST_HUB_COPY } from "@workspace/policy";
 import { cn } from "@/lib/utils";
+import {
+  applyGuestHubPlatformTheme,
+  clearGuestHubPlatformTheme,
+} from "@/lib/experience-theme";
 
 function StepIndicator({ step }: { step: 1 | 2 }) {
   return (
@@ -71,20 +76,24 @@ export function GuestHubSignIn({
 }) {
   const step: 1 | 2 = otpSession ? 2 : 1;
 
+  useEffect(() => {
+    applyGuestHubPlatformTheme();
+    return () => clearGuestHubPlatformTheme();
+  }, []);
+
   return (
     <div
-      className="min-h-screen bg-background guest-hub-shell public-booking-shell"
+      className="min-h-screen bg-background guest-hub-shell guest-hub-platform"
       data-testid="guest-hub-sign-in"
     >
       <div className="max-w-md mx-auto px-4 py-12 space-y-6">
         <div className="text-center space-y-3">
           <LiviaWordmark size="md" className="mx-auto opacity-90" />
-          <p className="text-[10px] uppercase tracking-widest font-mono text-primary">My Livia</p>
-          <h1 className="text-2xl font-serif">Your bookings, one place</h1>
-          <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-            Verify your phone once — every Livia shop you&apos;ve booked with appears here. No
-            password to remember.
+          <p className="text-[10px] uppercase tracking-widest font-mono text-primary">
+            {GUEST_HUB_COPY.productName}
           </p>
+          <h1 className="text-2xl font-serif">{GUEST_HUB_COPY.signInTitle}</h1>
+          <p className="text-sm text-muted-foreground max-w-sm mx-auto">{GUEST_HUB_COPY.signInBody}</p>
           <StepIndicator step={step} />
         </div>
 

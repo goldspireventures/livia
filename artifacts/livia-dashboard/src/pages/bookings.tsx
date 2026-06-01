@@ -1,12 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "wouter";
+import { BookingGuidedDialog } from "@/components/booking/booking-guided-dialog";
 import { useBusiness } from "@/lib/business-context";
-import {
-  useListBookings,
-  getListBookingsQueryKey,
-  useUpdateBooking,
-  listBookings,
-} from "@workspace/api-client-react";
+import { useListBookings, listBookings } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDateTime } from "@/lib/format";
 import { useNewBookingArrivalToast } from "@/hooks/use-new-booking-arrival";
@@ -21,6 +17,16 @@ import { BookingCreateDialog } from "@/components/booking/booking-create-dialog"
 import { pendingReasonLabel } from "@/lib/booking-pending";
 import { BookingRowActions } from "@/components/booking/booking-row-actions";
 import { OperationalPageShell } from "@/components/layout/operational-page-shell";
+import { useBeautyChrome } from "@/lib/presentation-layout";
+import { cn } from "@/lib/utils";
+import {
+  beautyListScroll,
+  beautyOutlineButton,
+  beautyPanel,
+  beautyPrimaryButton,
+  beautyRow,
+} from "@/lib/beauty-operational-ui";
+import { onContainedScrollWheel } from "@/lib/use-contained-scroll";
 
 const PAGE_SIZE = 40;
 
@@ -36,25 +42,51 @@ export default function BookingsPage() {
   const { kind: persona } = usePersona();
   const { business } = useBusiness();
   const qc = useQueryClient();
-  const [, setLocation] = useLocation();
-  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [location, setLocation] = useLocation();
+  const [statusFilter, setStatusFilter] = useState<string>("PENDING");
   const [search, setSearch] = useState("");
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
+  const [guidedDialogOpen, setGuidedDialogOpen] = useState(false);
   const [offset, setOffset] = useState(0);
   const [accumulated, setAccumulated] = useState<any[]>([]);
 
   const bid = business?.id ?? "";
+  const beautyChrome = useBeautyChrome((business as { vertical?: string } | null)?.vertical);
   const statusParam = statusFilter !== "ALL" ? (statusFilter as any) : undefined;
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    let changed = false;
     if (params.get("create") === "1") {
       setBookingDialogOpen(true);
       params.delete("create");
+      changed = true;
+    }
+    if (params.get("guided") === "1") {
+      setGuidedDialogOpen(true);
+      params.delete("guided");
+      changed = true;
+    }
+    if (params.get("status") === "PENDING") {
+      setStatusFilter("PENDING");
+      params.delete("status");
+      changed = true;
+    }
+    if (changed) {
       const qs = params.toString();
       window.history.replaceState(null, "", qs ? `/bookings?${qs}` : "/bookings");
     }
   }, []);
+
+  useEffect(() => {
+    if (!bid) return;
+    void qc.invalidateQueries({
+      predicate: (query) => {
+        const key = query.queryKey[0];
+        return typeof key === "string" && key === `/api/businesses/${bid}/bookings`;
+      },
+    });
+  }, [location, bid, qc]);
 
   useEffect(() => {
     setOffset(0);
@@ -70,6 +102,7 @@ export default function BookingsPage() {
         refetchInterval: 12_000,
         refetchOnWindowFocus: true,
         refetchOnMount: "always",
+        staleTime: 0,
       } as any,
     },
   );
@@ -111,8 +144,6 @@ export default function BookingsPage() {
     });
   }, [bid, hasMore, isFetching, offset, statusParam]);
 
-  const updateBooking = useUpdateBooking();
-
   const filtered = search
     ? accumulated.filter((b: any) => {
         const name = `${b.customer?.firstName ?? ""} ${b.customer?.lastName ?? ""}`.toLowerCase();
@@ -145,17 +176,20 @@ export default function BookingsPage() {
         <div className="flex gap-2">
           <Button
             variant="outline"
+            className={beautyOutlineButton(beautyChrome)}
             data-testid="button-new-booking-quick"
             onClick={() => setBookingDialogOpen(true)}
           >
             <CalendarPlus className="h-4 w-4 mr-2" />
             Quick add
           </Button>
-          <Link href="/bookings/new">
-            <Button data-testid="button-new-booking-guided">
-              Guided booking
-            </Button>
-          </Link>
+          <Button
+            data-testid="button-new-booking-guided"
+            className={beautyPrimaryButton(beautyChrome)}
+            onClick={() => setGuidedDialogOpen(true)}
+          >
+            Guided booking
+          </Button>
         </div>
       }
     >
@@ -165,9 +199,14 @@ export default function BookingsPage() {
         onOpenChange={setBookingDialogOpen}
         onCreated={(id) => setLocation(`/bookings/${id}`)}
       />
+      <BookingGuidedDialog
+        open={guidedDialogOpen}
+        onOpenChange={setGuidedDialogOpen}
+        onCreated={(id) => setLocation(`/bookings/${id}`)}
+      />
 
-      <div className="flex gap-3">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex flex-wrap gap-3 items-center">
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search customer or service..."
@@ -179,20 +218,20 @@ export default function BookingsPage() {
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-40" aria-label="Filter by status" data-testid="select-status-filter">
-            <SelectValue />
+            <SelectValue placeholder="Pending" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ALL">All statuses</SelectItem>
             <SelectItem value="PENDING">Pending</SelectItem>
             <SelectItem value="CONFIRMED">Confirmed</SelectItem>
             <SelectItem value="COMPLETED">Completed</SelectItem>
             <SelectItem value="CANCELLED">Cancelled</SelectItem>
             <SelectItem value="NO_SHOW">No Show</SelectItem>
+            <SelectItem value="ALL">All statuses</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      <Card>
+      <Card className={beautyPanel(beautyChrome)}>
         <CardContent className="p-0">
           {listLoading ? (
             <div className="divide-y divide-border">
@@ -212,11 +251,11 @@ export default function BookingsPage() {
               <Calendar className="h-9 w-9 text-muted-foreground mb-3 opacity-40" />
               <p className="font-medium">No bookings found</p>
               <p className="text-sm text-muted-foreground mt-1">
-                {search || statusFilter !== "ALL"
+                {search || statusFilter !== "PENDING"
                   ? "Try adjusting your filters"
                   : "Create your first booking to get started"}
               </p>
-              {!search && statusFilter === "ALL" && (
+              {!search && statusFilter === "PENDING" && (
                 <Button className="mt-4" variant="outline" onClick={() => setBookingDialogOpen(true)}>
                   <CalendarPlus className="h-4 w-4 mr-2" />
                   New booking
@@ -225,12 +264,12 @@ export default function BookingsPage() {
             </div>
           ) : (
             <>
-            <div className="divide-y divide-border">
+            <div className={beautyListScroll()} onWheel={onContainedScrollWheel}>
               {filtered.map((booking: any) => (
                 <Link key={booking.id} href={`/bookings/${booking.id}`}>
                   <div
                     data-testid={`row-booking-${booking.id}`}
-                    className="flex items-center gap-3 p-3 hover:bg-muted/30 transition-colors cursor-pointer"
+                    className={beautyRow(beautyChrome, booking.status === "PENDING")}
                   >
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-sm shrink-0">
                       {booking.customer?.firstName?.charAt(0) ?? "?"}
@@ -260,6 +299,10 @@ export default function BookingsPage() {
                             data-testid={`pending-reason-${booking.id}`}
                           >
                             {pendingReasonLabel(booking.pendingReason)}
+                          </span>
+                        ) : booking.status === "CANCELLED" && booking.cancellationReason ? (
+                          <span className="text-[9px] text-muted-foreground max-w-[160px] truncate text-right">
+                            {booking.cancellationReason}
                           </span>
                         ) : null}
                       </div>

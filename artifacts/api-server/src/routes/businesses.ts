@@ -41,6 +41,7 @@ import { getOrCreateUser } from "../services/users.service";
 import {
   getPresentationForBusiness,
   patchPresentationForBusiness,
+  patchPublicFeaturedServices,
 } from "../services/presentation.service";
 
 const router: IRouter = Router();
@@ -366,6 +367,27 @@ router.patch(
       }
       throw e;
     }
+  },
+);
+
+router.patch(
+  "/businesses/:businessId/public-featured-services",
+  requireAuth,
+  requireRole("ADMIN"),
+  async (req, res): Promise<void> => {
+    const userId = getUserId(req);
+    const id = Array.isArray(req.params.businessId) ? req.params.businessId[0] : req.params.businessId;
+    const raw = req.body?.serviceIds;
+    const serviceIds = Array.isArray(raw) ? raw.map(String) : [];
+    const payload = await patchPublicFeaturedServices(id, serviceIds);
+    if (!payload) {
+      sendError(res, req, 404, "Business not found");
+      return;
+    }
+    await appendHumanAudit(id, userId, "human.public_featured_services.update", "business", id, {
+      count: payload.publicFeaturedServiceIds.length,
+    });
+    res.json(payload);
   },
 );
 

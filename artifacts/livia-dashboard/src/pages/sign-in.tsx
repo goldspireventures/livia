@@ -10,6 +10,11 @@ import { isDemoLoginEnabled } from "@/lib/persona";
 import { clerkGatewayAppearance } from "@/lib/clerk-gateway-appearance";
 import { getMarketingOrigin } from "@/lib/surface-urls";
 import { Button } from "@/components/ui/button";
+import { SignInTenantPreview } from "@/components/sign-in-tenant-preview";
+import {
+  useDebouncedClerkIdentifierEmail,
+  useSignInAppearanceHint,
+} from "@/lib/sign-in-appearance-hint";
 
 function useBetaSignInMode(): boolean {
   return useMemo(() => {
@@ -24,6 +29,8 @@ export default function SignInPage() {
   const [devPassword, setDevPassword] = useState<string | undefined>();
   const marketing = getMarketingOrigin();
   const betaMode = useBetaSignInMode();
+  const clerkEmail = useDebouncedClerkIdentifierEmail();
+  const { hint: appearanceHint, loading: appearanceLoading } = useSignInAppearanceHint(clerkEmail);
 
   useEffect(() => {
     if (!isDemoLoginEnabled) return;
@@ -96,7 +103,7 @@ export default function SignInPage() {
             </div>
           ) : null}
 
-          <div className="rounded-2xl border border-border/50 bg-card/30 p-1 backdrop-blur-sm">
+          <SignInTenantPreview hint={appearanceHint} loading={appearanceLoading}>
             <SignIn
               appearance={clerkGatewayAppearance(theme)}
               routing="path"
@@ -104,7 +111,7 @@ export default function SignInPage() {
               signUpUrl="/sign-up"
               fallbackRedirectUrl="/dashboard"
             />
-          </div>
+          </SignInTenantPreview>
 
           <p className="mt-4 text-center text-xs text-muted-foreground">
             New here?{" "}

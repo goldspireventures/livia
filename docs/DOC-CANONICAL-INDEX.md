@@ -18,6 +18,10 @@
 | **Category (people-business OS)** | [`product/PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md`](./product/PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md) |
 | **UI/UX authority** | [`design/UI-UX-MASTER-PROGRAM.md`](./design/UI-UX-MASTER-PROGRAM.md) |
 | **Skin / `/b` inheritance** | [`design/SKIN-BRAND-INHERITANCE-SPEC.md`](./design/SKIN-BRAND-INHERITANCE-SPEC.md) |
+| **All vertical programs** | [`product/VERTICAL-PROGRAMS-INDEX.md`](./product/VERTICAL-PROGRAMS-INDEX.md) |
+| **Verticals build plan** | [`product/LIVIA-VERTICALS-BUILD-PLAN.md`](./product/LIVIA-VERTICALS-BUILD-PLAN.md) |
+| **Partner / defer verticals** | [`product/PARTNER-AND-ADJACENT-VERTICALS.md`](./product/PARTNER-AND-ADJACENT-VERTICALS.md) |
+| **Doc propagation (vertical/platform)** | [`engineering/DOC-PROPAGATION-CASCADE.md`](./engineering/DOC-PROPAGATION-CASCADE.md) · `pnpm vertical:doc-check` |
 | **Systems gap audit** | [`product/SYSTEMS-COMPLETENESS-AUDIT.md`](./product/SYSTEMS-COMPLETENESS-AUDIT.md) |
 | **Build after doc gate** | [`product/LIVIA-BUILD-PLAN-V2.md`](./product/LIVIA-BUILD-PLAN-V2.md) |
 | **Vision + build sequencing** | [`product/LIVIA-WIDE-BUILD-PLAN.md`](./product/LIVIA-WIDE-BUILD-PLAN.md) |

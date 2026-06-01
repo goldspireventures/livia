@@ -1,5 +1,5 @@
 import {
-  listPresentationPresets,
+  listPresentationPresetsForTenantPicker,
   resolvePresentationPreset,
   isValidPresentationPreset,
   presetPreservesVerticalGates,
@@ -8,6 +8,7 @@ import {
   type BusinessVertical,
 } from "@workspace/policy";
 import { getBusinessById, updateBusiness } from "./businesses.service";
+import { publicFeaturedPatch, readPublicFeaturedServiceIds } from "../lib/business-public-featured";
 
 export async function getPresentationForBusiness(businessId: string) {
   const biz = await getBusinessById(businessId);
@@ -21,8 +22,9 @@ export async function getPresentationForBusiness(businessId: string) {
     presetId: preset.id,
     preset,
     brandAccentHex: biz.brandAccentHex ?? null,
+    publicFeaturedServiceIds: readPublicFeaturedServiceIds(biz),
     presetsEnabled: presentationPresetsActive(),
-    availablePresets: listPresentationPresets(vertical),
+    availablePresets: listPresentationPresetsForTenantPicker(vertical),
   };
 }
 
@@ -66,4 +68,20 @@ export async function patchPresentationForBusiness(
   if (Object.keys(patch).length === 0) return getPresentationForBusiness(businessId);
   await updateBusiness(businessId, patch);
   return getPresentationForBusiness(businessId);
+}
+
+const MAX_PUBLIC_FEATURED = 4;
+
+export async function patchPublicFeaturedServices(
+  businessId: string,
+  serviceIds: string[],
+) {
+  const biz = await getBusinessById(businessId);
+  if (!biz) return null;
+  const unique = [...new Set(serviceIds.filter((id) => typeof id === "string" && id.trim()))].slice(
+    0,
+    MAX_PUBLIC_FEATURED,
+  );
+  await updateBusiness(businessId, publicFeaturedPatch(unique) as Parameters<typeof updateBusiness>[1]);
+  return { businessId, publicFeaturedServiceIds: unique };
 }

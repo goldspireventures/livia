@@ -13,6 +13,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { showBookingResourcesSettings } from "@workspace/policy";
+import { resolveVerticalKey } from "@workspace/policy";
 
 type Resource = {
   id: string;
@@ -63,16 +65,36 @@ export function BookingResourcesPanel() {
     }
   }
 
-  if (!business) return null;
+  const vertical = resolveVerticalKey(
+    (business as { vertical?: string } | null)?.vertical,
+    business?.category,
+  );
+
+  if (!business || !showBookingResourcesSettings(vertical)) return null;
+
+  const copy =
+    vertical === "medspa"
+      ? {
+          title: "Rooms & equipment",
+          description:
+            "Treatment rooms and devices with shared capacity — used when services need a specific suite or machine.",
+        }
+      : vertical === "allied-health"
+        ? {
+            title: "Rooms & capacity",
+            description: "Consulting rooms and shared spaces — used when a service must book a room.",
+          }
+        : {
+            title: "Rooms & capacity",
+            description:
+              "Spa rooms, thermal suites, and equipment — used when treatments share physical capacity.",
+          };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Rooms & capacity</CardTitle>
-        <CardDescription>
-          Treatment rooms, thermal suites, and equipment with shared capacity — required for spa and
-          wellness scheduling.
-        </CardDescription>
+        <CardTitle className="text-base">{copy.title}</CardTitle>
+        <CardDescription>{copy.description}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <ul className="space-y-2 text-sm">

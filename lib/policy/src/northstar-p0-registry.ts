@@ -1,7 +1,8 @@
 /**
- * P0 tenant screens traced to northstar PNG anchors.
+ * P0 visual baselines — evolution northstars + per-screen-card PNGs.
+ * Screen-card PNGs *are* the northstar when no separate mock exists.
  * @see docs/design/G-VISUAL-NORTHSTAR-MAP.md
- * @see docs/testing/TESTING-VISUAL-ACCEPTANCE.md
+ * @see docs/design/screen-cards/README.md
  */
 
 export type NorthstarP0Entry = {
@@ -11,8 +12,10 @@ export type NorthstarP0Entry = {
   viewport: { width: number; height: number };
   /** Demo slug override (default luxe-salon-spa). */
   demoSlug?: string;
-  /** Lenient pixel diff vs design northstar (live app ≠ mock). */
+  /** Lenient pixel diff vs baseline (live app evolves). */
   maxDiffPixelRatio: number;
+  /** How E2E reaches the route. */
+  auth?: "demo" | "public" | "gateway";
 };
 
 /** Tenant P0 routes compared to `livia-evolution/northstar/*.png` in E2E. */
@@ -52,8 +55,27 @@ export const NORTHSTAR_PUBLIC_DIR = "artifacts/livia-dashboard/public/livia-evol
 export const NORTHSTAR_DOCS_DIR = "docs/design/assets/livia-evolution/northstar";
 export const SCREEN_CARD_BASELINE_DIR = "docs/design/assets/screen-cards";
 
-/** P0 screens with screen-card PNG only (no livia-evolution northstar yet). */
+/**
+ * Per-screen PNG baselines under `docs/design/assets/screen-cards/`.
+ * Capture: `pnpm screen-cards:update` (dashboard + API + Clerk).
+ */
 export const SCREEN_CARD_P0: NorthstarP0Entry[] = [
+  {
+    screenId: "w4.owner.dashboard.web",
+    route: "/dashboard",
+    northstarFile: "w4.owner.dashboard.web.png",
+    viewport: { width: 1440, height: 900 },
+    demoSlug: "bloom-beauty-dublin",
+    maxDiffPixelRatio: 0.72,
+  },
+  {
+    screenId: "w4.ops.inbox.web",
+    route: "/inbox",
+    northstarFile: "w4.ops.inbox.web.png",
+    viewport: { width: 1440, height: 900 },
+    demoSlug: "bloom-beauty-dublin",
+    maxDiffPixelRatio: 0.58,
+  },
   {
     screenId: "w4.ops.settings.web",
     route: "/settings",
@@ -69,6 +91,13 @@ export const SCREEN_CARD_P0: NorthstarP0Entry[] = [
     maxDiffPixelRatio: 0.55,
   },
   {
+    screenId: "w4.ops.bookings.new.web",
+    route: "/bookings/new",
+    northstarFile: "w4.ops.bookings.new.web.png",
+    viewport: { width: 1280, height: 900 },
+    maxDiffPixelRatio: 0.62,
+  },
+  {
     screenId: "w4.ops.medspa.hub.web",
     route: "/medspa",
     northstarFile: "w4.ops.medspa.hub.web.png",
@@ -76,6 +105,89 @@ export const SCREEN_CARD_P0: NorthstarP0Entry[] = [
     demoSlug: "clarity-medspa-dublin",
     maxDiffPixelRatio: 0.58,
   },
+  {
+    screenId: "w4.ops.design-proofs.web",
+    route: "/design-proofs",
+    northstarFile: "w4.ops.design-proofs.web.png",
+    viewport: { width: 1440, height: 900 },
+    demoSlug: "ink-anchor-galway",
+    maxDiffPixelRatio: 0.58,
+  },
+  {
+    screenId: "w4.owner.chain.web",
+    route: "/chain",
+    northstarFile: "w4.owner.chain.web.png",
+    viewport: { width: 1440, height: 900 },
+    demoSlug: "aurora-studio",
+    maxDiffPixelRatio: 0.68,
+  },
+  {
+    screenId: "w4.staff.my-day.mobile",
+    route: "/my-day",
+    northstarFile: "w4.staff.my-day.mobile.png",
+    viewport: { width: 390, height: 844 },
+    demoSlug: "luxe-salon-spa",
+    maxDiffPixelRatio: 0.62,
+  },
+  {
+    screenId: "w2.gateway.sign-in.web",
+    route: "/sign-in",
+    northstarFile: "w2.gateway.sign-in.web.png",
+    viewport: { width: 1280, height: 800 },
+    auth: "gateway",
+    maxDiffPixelRatio: 0.5,
+  },
+  {
+    screenId: "w2.gateway.demo.launcher.web",
+    route: "/demo",
+    northstarFile: "w2.gateway.demo.launcher.web.png",
+    viewport: { width: 1440, height: 900 },
+    auth: "gateway",
+    maxDiffPixelRatio: 0.55,
+  },
+  {
+    screenId: "w2.gateway.demo.wedge.web",
+    route: "/demo/wedge/beauty",
+    northstarFile: "w2.gateway.demo.wedge.web.png",
+    viewport: { width: 1440, height: 900 },
+    auth: "gateway",
+    maxDiffPixelRatio: 0.55,
+  },
+  {
+    screenId: "w5.public.book.mobile",
+    route: "/b/bloom-beauty-dublin",
+    northstarFile: "w5.public.book.mobile.png",
+    viewport: { width: 390, height: 844 },
+    auth: "public",
+    maxDiffPixelRatio: 0.65,
+  },
+];
+
+/** W4 tenant routes with YAML spec but no PNG baseline yet — capture next. */
+export const SCREEN_CARD_CAPTURE_QUEUE: Array<{
+  screenId: string;
+  route: string;
+  demoSlug?: string;
+}> = [
+  { screenId: "w4.ops.customers.list.web", route: "/customers" },
+  { screenId: "w4.ops.customers.detail.web", route: "/customers", demoSlug: "bloom-beauty-dublin" },
+  { screenId: "w4.ops.staff.list.web", route: "/staff" },
+  { screenId: "w4.ops.services.web", route: "/services", demoSlug: "bloom-beauty-dublin" },
+  { screenId: "w4.ops.toolkit.web", route: "/toolkit" },
+  { screenId: "w4.ops.my-day.web", route: "/my-day", demoSlug: "motion-physio-cork" },
+  { screenId: "w4.ops.bookings.detail.web", route: "/bookings" },
+  { screenId: "w4.ops.audit.web", route: "/audit" },
+  { screenId: "w4.ops.rota.web", route: "/rota" },
+  { screenId: "w4.ops.classes.web", route: "/classes", demoSlug: "peak-fitness-dublin" },
+  { screenId: "w4.ops.franchise.web", route: "/franchise", demoSlug: "bloom-beauty-dublin" },
+  { screenId: "w4.ops.lifecycle.web", route: "/lifecycle" },
+  { screenId: "w2.gateway.onboarding.web", route: "/onboarding", demoSlug: "conors-cut-co" },
+  { screenId: "w2.gateway.legal-accept.web", route: "/legal-acceptance", demoSlug: "conors-cut-co" },
+  { screenId: "w5.public.intake.mobile", route: "/b/clarity-medspa-dublin/intake/demo" },
+  { screenId: "w5.public.visit.mobile", route: "/b/luxe-salon-spa/visit/demo" },
+  { screenId: "w5.public.pay.mobile", route: "/b/luxe-salon-spa/pay/demo" },
+  { screenId: "w5.public.proof.mobile", route: "/b/ink-anchor-galway/proof/demo" },
+  { screenId: "w1.marketing.home.web", route: "/" },
 ];
 
 export const ALL_VISUAL_P0 = [...TENANT_NORTHSTAR_P0, ...SCREEN_CARD_P0];

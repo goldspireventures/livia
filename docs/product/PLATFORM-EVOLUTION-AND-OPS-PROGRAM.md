@@ -707,7 +707,7 @@ Use this section as the **single checklist** for the program. Mirror in PLATFORM
 - [ ] D6.3 body-art proof desk (reception) — tablet split
 - [ ] D6.4 body-art session day (staff) — mobile hero
 - [ ] D6.5 hair flight plan + preset chrome — no regression
-- [ ] D6.6 beauty inbox-forward home order
+- [ ] D6.6 beauty inbox-forward home order — **active:** [`BEAUTY-VERTICAL-PROGRAM.md`](./BEAUTY-VERTICAL-PROGRAM.md) (Bloom UAT + preset parity)
 - [ ] D6.7 fitness class roster home
 - [ ] D6.8 remaining verticals module order (matrix)
 

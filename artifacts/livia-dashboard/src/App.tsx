@@ -53,6 +53,7 @@ import BrandLogoGalleryPage from "@/pages/dev/brand-logo-gallery";
 import LiviaEvolutionGalleryPage from "@/pages/dev/livia-evolution-gallery";
 import LegalAcceptancePage from "@/pages/legal-acceptance";
 import DashboardPage from "@/pages/dashboard";
+import AppearancePreviewPage from "@/pages/appearance-preview";
 import PublicBookingPage from "@/pages/public-booking";
 import PublicVisitPage from "@/pages/public-visit";
 import PublicProofPage from "@/pages/public-proof";
@@ -252,6 +253,14 @@ function AppRouter() {
         {() => (
           <AuthGuard>
             <OnboardingPage />
+          </AuthGuard>
+        )}
+      </Route>
+
+      <Route path="/appearance-preview">
+        {() => (
+          <AuthGuard>
+            <AppearancePreviewPage />
           </AuthGuard>
         )}
       </Route>

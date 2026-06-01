@@ -10,6 +10,8 @@ import {
   type OutgoingOwnerDisposition,
 } from "../services/ownership-transfer.service";
 import { logger } from "../lib/logger";
+import { getBusinessById } from "../services/businesses.service";
+import { createInvitation, type InvitableRole } from "../services/invitations.service";
 
 import { sendError } from "../lib/http-errors";
 const router: IRouter = Router();
@@ -42,7 +44,54 @@ router.get(
   async (req, res): Promise<void> => {
     const userId = getUserId(req);
     const businessId = getBizId(req.params.businessId);
-    res.json({ candidates: await listOwnershipCandidates(businessId, userId) });
+    res.json(await listOwnershipCandidates(businessId, userId));
+  },
+);
+
+/** Owner-only — succession invite (separate from Team → Invite on Staff page). */
+router.post(
+  "/businesses/:businessId/ownership-invitations",
+  requireAuth,
+  requireRole("OWNER"),
+  async (req, res): Promise<void> => {
+    const userId = getUserId(req);
+    const businessId = getBizId(req.params.businessId);
+    const { email, role } = req.body ?? {};
+
+    if (!email || typeof email !== "string") {
+      sendError(res, req, 400, "email is required");
+      return;
+    }
+    const inviteRole: InvitableRole = role === "STAFF" ? "STAFF" : "ADMIN";
+
+    const biz = await getBusinessById(businessId);
+    if (!biz) {
+      sendError(res, req, 404, "Business not found");
+      return;
+    }
+
+    try {
+      const inv = await createInvitation({
+        businessId,
+        businessName: biz.name,
+        email: email.trim().toLowerCase(),
+        role: inviteRole,
+        deskRole: inviteRole === "ADMIN" ? "manager" : undefined,
+        inviterUserId: userId,
+        successionIntent: true,
+      });
+      res.status(201).json(inv);
+    } catch (err) {
+      const e = err as Error & { code?: string };
+      if (e.code === "CLERK_NOT_CONFIGURED") {
+        sendError(res, req, 503, e.message, { code: e.code });
+        return;
+      }
+      logger.error({ err, businessId, email }, "ownership-invitation failed");
+      sendError(res, req, 502, e.message ?? "Could not create invitation", {
+        code: "INVITATION_FAILED",
+      });
+    }
   },
 );
 
@@ -79,7 +128,11 @@ router.post(
         sendError(res, req, 403, e.message, { code: e.code });
         return;
       }
-      if (e.code === "INCOMING_NOT_MEMBER" || e.code === "SAME_USER") {
+      if (
+        e.code === "INCOMING_NOT_MEMBER" ||
+        e.code === "INCOMING_NOT_ELIGIBLE" ||
+        e.code === "SAME_USER"
+      ) {
         sendError(res, req, 400, e.message, { code: e.code });
         return;
       }

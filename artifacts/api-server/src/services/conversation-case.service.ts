@@ -31,6 +31,31 @@ export async function resolveConversationCase(args: {
   const bookingId = args.bookingId ?? conv.linkedBookingId ?? undefined;
   const effects: string[] = [];
 
+  if (
+    (args.outcome === "refund_and_cancel" || args.outcome === "cancel_no_refund") &&
+    !bookingId
+  ) {
+    return {
+      ok: false,
+      effects: [],
+      error: "This thread has no linked booking — link the appointment before closing the refund case",
+    };
+  }
+
+  const needsMessage =
+    args.outcome === "refund_and_cancel" ||
+    args.outcome === "cancel_no_refund" ||
+    (args.outcome === "close_no_action" &&
+      (conv.caseIntent === "refund_request" ||
+        conv.summary?.toLowerCase().includes("refund")));
+  if (needsMessage && !args.customerMessage?.trim()) {
+    return {
+      ok: false,
+      effects: [],
+      error: "A message to the customer is required before closing this case",
+    };
+  }
+
   if (args.customerMessage?.trim()) {
     await appendMessage({
       conversationId: args.conversationId,

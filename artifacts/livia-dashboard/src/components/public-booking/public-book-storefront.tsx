@@ -1,7 +1,6 @@
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-/** W5 storefront shell — sticky header, hero, floating CTA (screen card w5.public.book.mobile). */
+/** W5 storefront shell — default sticky header or beauty centered brand + hero. */
 export function PublicBookStorefront({
   businessName,
   logoUrl,
@@ -10,6 +9,10 @@ export function PublicBookStorefront({
   onHeroCta,
   onOpenChat,
   showMessage = true,
+  layout = "default",
+  tagline,
+  heroTagline,
+  heroTitle,
 }: {
   businessName: string;
   logoUrl?: string | null;
@@ -18,7 +21,72 @@ export function PublicBookStorefront({
   onHeroCta: () => void;
   onOpenChat?: () => void;
   showMessage?: boolean;
+  layout?: "default" | "beauty";
+  tagline?: string | null;
+  /** Uppercase eyebrow under brand (preset-specific). */
+  heroTagline?: string | null;
+  /** Main H1 — defaults to beauty treatment line when layout is beauty. */
+  heroTitle?: string | null;
 }) {
+  if (layout === "beauty") {
+    const brandSub =
+      tagline?.trim() ||
+      businessName
+        .split(/\s+/)
+        .slice(0, 2)
+        .map((w) => w.toUpperCase())
+        .join(" · ");
+    const heroLine = heroTagline?.trim() || "BEAUTY · CONFIDENCE · BLOOM";
+    const titleLine = heroTitle?.trim() || "Book a treatment";
+    return (
+      <div className="public-book-storefront motion-hero-fade-in" data-testid="public-book-storefront">
+        <div className="beauty-public-brand">
+          {logoUrl ? (
+            <img src={logoUrl} alt="" className="beauty-public-brand-logo" />
+          ) : (
+            <div
+              className="beauty-public-brand-logo flex items-center justify-center text-xl font-serif bg-primary/15"
+              style={{ fontFamily: "var(--app-font-serif)" }}
+              aria-hidden
+            >
+              {businessName.charAt(0)}
+            </div>
+          )}
+          <p
+            className="beauty-public-brand-name"
+            style={{ fontFamily: "var(--app-font-serif)" }}
+            data-testid="text-business-name"
+          >
+            {businessName}
+          </p>
+          <p className="beauty-public-brand-sub">{brandSub}</p>
+        </div>
+
+        <section className="beauty-public-hero-copy" data-testid="public-storefront-hero">
+          <h1
+            className="beauty-public-hero-title"
+            style={{ fontFamily: "var(--app-font-serif)" }}
+          >
+            {titleLine}
+          </h1>
+          <Sparkles className="beauty-public-hero-divider mx-auto" aria-hidden />
+          <p className="beauty-public-hero-tagline">{heroLine}</p>
+        </section>
+
+        {coverImageUrl ? (
+          <div className="relative mx-4 mb-2 overflow-hidden rounded-2xl">
+            <img
+              src={coverImageUrl}
+              alt=""
+              className="w-full h-36 object-cover public-booking-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
   return (
     <div className="public-book-storefront -mx-4 sm:mx-0" data-testid="public-book-storefront">
       <div

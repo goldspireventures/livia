@@ -10,6 +10,7 @@ import { appendHumanAudit } from "../lib/audit";
 import { getStripe } from "../lib/stripe";
 import { getOrCreateUser } from "./users.service";
 import { logger } from "../lib/logger";
+import { isOwnershipIncomingRole, OWNERSHIP_SUCCESSION } from "@workspace/policy";
 
 export type OutgoingOwnerDisposition = "STAFF" | "ADMIN" | "REVOKE";
 
@@ -33,7 +34,7 @@ export async function transferBusinessOwnership(
   const { businessId, actingUserId, incomingUserId, outgoingDisposition } = input;
 
   if (actingUserId === incomingUserId) {
-    throw ownershipError("Cannot transfer ownership to yourself.", "SAME_USER");
+    throw ownershipError(OWNERSHIP_SUCCESSION.errors.SAME_USER, "SAME_USER");
   }
 
   const [biz] = await db
@@ -44,7 +45,7 @@ export async function transferBusinessOwnership(
     throw ownershipError("Business not found.", "NOT_FOUND");
   }
   if (biz.ownerId !== actingUserId) {
-    throw ownershipError("Only the current owner can transfer ownership.", "NOT_OWNER");
+    throw ownershipError(OWNERSHIP_SUCCESSION.errors.NOT_OWNER, "NOT_OWNER");
   }
 
   await getOrCreateUser(incomingUserId);
@@ -60,9 +61,12 @@ export async function transferBusinessOwnership(
     );
 
   if (!incomingMembership) {
+    throw ownershipError(OWNERSHIP_SUCCESSION.errors.INCOMING_NOT_MEMBER, "INCOMING_NOT_MEMBER");
+  }
+  if (!isOwnershipIncomingRole(incomingMembership.role)) {
     throw ownershipError(
-      "Incoming owner must already be a team member (invite them first).",
-      "INCOMING_NOT_MEMBER",
+      OWNERSHIP_SUCCESSION.errors.INCOMING_NOT_ELIGIBLE,
+      "INCOMING_NOT_ELIGIBLE",
     );
   }
 

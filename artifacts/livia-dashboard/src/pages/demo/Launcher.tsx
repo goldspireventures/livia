@@ -22,6 +22,7 @@ import {
   fetchDemoCatalog,
   fetchDemoStatus,
   provisionDemoWorld,
+  repairDemoDatabase,
   syncDemoWorld,
   syncDemoLogins,
   requestDemoQuickSignIn,
@@ -33,10 +34,9 @@ import {
   type DemoSignInResult,
 } from "@/lib/demo-portal";
 import { useToast } from "@/hooks/use-toast";
-import { resolveWedgeDemoStory } from "@workspace/policy";
 import { completeDemoClerkSignIn } from "@/lib/demo-clerk-sign-in";
 import { DemoFlowStepper, type DemoFlowStep } from "@/components/demo/demo-flow-stepper";
-import { DemoWedgeGrid } from "@/components/demo/demo-wedge-grid";
+import { DemoGuidedExperience } from "@/components/demo/demo-guided-experience";
 
 const VERTICAL_LABELS: Record<string, string> = {
   hair: "Hair & barber",
@@ -118,14 +118,6 @@ export default function DemoLauncher() {
     void refresh();
   }, [refresh]);
 
-  useEffect(() => {
-    const v = new URLSearchParams(window.location.search).get("vertical");
-    const story = resolveWedgeDemoStory(v);
-    if (story) {
-      navigate(`/demo/wedge/${story.vertical}`);
-    }
-  }, [navigate]);
-
   async function handleSync() {
     setBusy("provision");
     try {
@@ -139,9 +131,33 @@ export default function DemoLauncher() {
       });
       await refresh();
     } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Is the API running with CLERK_SECRET_KEY?";
+      const quota = /user limit|repair-db|CLERK_USER_QUOTA/i.test(msg);
       toast({
         title: "Setup failed",
-        description: e instanceof Error ? e.message : "Is the API running with CLERK_SECRET_KEY?",
+        description: quota
+          ? `${msg} Try “Repair demo (no new Clerk users)” below.`
+          : msg,
+        variant: "destructive",
+      });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function handleRepairDb() {
+    setBusy("repair");
+    try {
+      const result = await repairDemoDatabase();
+      toast({
+        title: "Demo repaired",
+        description: `${result.businesses.length} businesses seeded — pick Beauty → Bloom owner.`,
+      });
+      await refresh();
+    } catch (e: unknown) {
+      toast({
+        title: "Repair failed",
+        description: e instanceof Error ? e.message : "Check API logs",
         variant: "destructive",
       });
     } finally {
@@ -354,16 +370,28 @@ export default function DemoLauncher() {
             Explore Livia live
           </h1>
           <p className="text-sm md:text-base text-white/60 leading-relaxed">
-            Pick your trade — see a short story — enter a seeded shop as owner, manager, desk, or staff.
-            Shared password: <code className="text-white/80">{devPassword ?? "LiviaDemo2026!"}</code>
+            Pick your trade in the guided box — four beats, then enter a live seeded studio. Shared
+            password: <code className="text-white/80">{devPassword ?? "LiviaDemo2026!"}</code>
             {" · "}
             <Link href="/sign-in?beta=1" className="text-white/50 underline underline-offset-2 hover:text-white/80">
-              Real beta account
+              Sign in with your own account
             </Link>
           </p>
         </header>
 
-        <DemoWedgeGrid />
+        <DemoGuidedExperience
+          provisioned={provisioned}
+          devPassword={devPassword}
+          tenants={tenants}
+          busy={busy}
+          onProvision={() => void handleSync()}
+          onEnterAs={(email, busyKey) => void quickEnterEmail(email, busyKey)}
+        />
+
+        <details className="mb-10 group" open={!provisioned} data-testid="demo-advanced-paths">
+          <summary className="cursor-pointer text-xs font-mono uppercase tracking-widest text-white/40 mb-4 list-none">
+            Advanced · setup, scenarios & all tenants
+          </summary>
 
         <DemoFlowStepper
           current={flowStep}
@@ -371,7 +399,6 @@ export default function DemoLauncher() {
           scenarioSelected={!!selectedScenario}
         />
 
-        {/* Step 2 — Setup */}
         <section className="mb-10 rounded-2xl border border-white/12 bg-white/[0.03] p-5" data-testid="demo-step-setup">
           <h2 className="text-xs font-mono uppercase tracking-widest text-white/40 mb-2">
             2 · Set up demo world
@@ -396,6 +423,22 @@ export default function DemoLauncher() {
               )}
               {provisioned ? "Quick sync" : "Set up demo world"}
             </button>
+            {!provisioned ? (
+              <button
+                type="button"
+                onClick={() => void handleRepairDb()}
+                disabled={!!busy}
+                className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-400/10 px-4 py-2 text-sm text-amber-100 hover:bg-amber-400/20 disabled:opacity-60"
+                data-testid="demo-repair-db-btn"
+              >
+                {busy === "repair" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4" />
+                )}
+                Repair demo (no new Clerk users)
+              </button>
+            ) : null}
             {provisioned ? (
               <button
                 type="button"
@@ -579,7 +622,9 @@ export default function DemoLauncher() {
           )}
         </section>
 
-        <p className="mt-10 text-center text-[11px] text-white/35 font-mono" data-testid="demo-footer-honesty">
+        </details>
+
+        <p className="mt-6 text-center text-[11px] text-white/35 font-mono" data-testid="demo-footer-honesty">
           Demo data — not production · reset anytime via quick sync
         </p>
 

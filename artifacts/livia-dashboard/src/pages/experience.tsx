@@ -206,8 +206,7 @@ export default function ExperiencePage() {
             Shop team — real app (web)
           </h2>
           <p className="text-sm text-muted-foreground">
-            Uses your Clerk account. Switching persona / view-as changes what you see — same as
-            production RBAC.
+            Uses your Clerk account — same routes and RBAC as production.
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
             <ExperienceDoor

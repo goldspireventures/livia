@@ -12,6 +12,8 @@ import {
   type DemoSignInResult,
 } from "@/lib/demo-portal";
 import { completeDemoClerkSignIn } from "@/lib/demo-clerk-sign-in";
+import { SignInTenantPreview } from "@/components/sign-in-tenant-preview";
+import { useSignInAppearanceHint } from "@/lib/sign-in-appearance-hint";
 
 type Props = {
   defaultEmail?: string;
@@ -32,6 +34,7 @@ export function DemoPasswordSignIn({
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const { hint: appearanceHint, loading: appearanceLoading } = useSignInAppearanceHint(email);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -66,7 +69,7 @@ export function DemoPasswordSignIn({
     }
   }
 
-  return (
+  const form = (
     <form
       onSubmit={handleSubmit}
       className={
@@ -125,5 +128,13 @@ export function DemoPasswordSignIn({
       </div>
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
     </form>
+  );
+
+  if (!embedded) return form;
+
+  return (
+    <SignInTenantPreview hint={appearanceHint} loading={appearanceLoading}>
+      {form}
+    </SignInTenantPreview>
   );
 }

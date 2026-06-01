@@ -45,6 +45,8 @@ export async function createInvitation(opts: {
   deskRole?: DeskRole;
   inviterUserId: string;
   redirectUrl?: string;
+  /** G8 — invited from Settings → Ownership (not Team page). */
+  successionIntent?: boolean;
 }) {
   const clerk = getClerk();
   if (!clerk) {
@@ -67,6 +69,7 @@ export async function createInvitation(opts: {
         role: opts.role,
         deskRole: opts.deskRole ?? (opts.role === "ADMIN" ? "manager" : undefined),
         invitedBy: opts.inviterUserId,
+        successionIntent: opts.successionIntent === true,
       },
     },
     notify: true,

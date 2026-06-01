@@ -3,6 +3,7 @@ import {
   getPresentationPromotionMatrix,
   isValidPresentationPreset,
   listPresentationPresets,
+  listPresentationPresetsForTenantPicker,
   PLATFORM_DEFAULT_PRESET_ID,
   presetPreservesVerticalGates,
   presentationPresetsActive,
@@ -25,7 +26,13 @@ const verticals = [
 
 for (const vertical of verticals) {
   const presets = listPresentationPresets(vertical);
-  assert.equal(presets.length, 4, `${vertical} should have 4 presets`);
+  const expectedLen = vertical === "beauty" ? 5 : 4;
+  assert.equal(presets.length, expectedLen, `${vertical} preset count`);
+  const picker = listPresentationPresetsForTenantPicker(vertical);
+  assert.ok(
+    !picker.some((p) => p.id === PLATFORM_DEFAULT_PRESET_ID),
+    `${vertical} picker hides platform-default`,
+  );
   assert.equal(
     presets.filter((p) => p.isDefault).length,
     1,

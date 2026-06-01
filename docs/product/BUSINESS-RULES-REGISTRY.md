@@ -72,7 +72,8 @@
 | Onboarding vertical seed | Complete Spec §3 | `onboarding.service.ts` |
 | EU timezone from jurisdiction | `lib/policy/jurisdictions` | `resolveOnboardingDefaults` |
 | Tier nudges Solo → Studio | `lifecycle.ts` | partial |
-| Ownership transfer irreversible | Complete Spec §8 | `ownership-transfer.service` |
+| Ownership transfer irreversible | [`TENANT-AUTHORITY-AND-SUCCESSION.md`](./TENANT-AUTHORITY-AND-SUCCESSION.md) G8 | `ownership-transfer.service` + `ownership-succession.ts` |
+| Staff roster ≠ Livia login | Same | `staff.user_id` optional; transfer requires `business_memberships` |
 
 ### Channels
 

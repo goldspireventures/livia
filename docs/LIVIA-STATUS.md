@@ -62,7 +62,9 @@
 
 | Item | Notes |
 |------|-------|
-| **Your UAT** | Medspa + Luxe paths in [`FOUNDER-UAT-CHECKLIST.md`](operations/FOUNDER-UAT-CHECKLIST.md) |
+| **Vertical programs (all 9)** | [`VERTICAL-PROGRAMS-INDEX.md`](product/VERTICAL-PROGRAMS-INDEX.md) · build [`LIVIA-VERTICALS-BUILD-PLAN.md`](product/LIVIA-VERTICALS-BUILD-PLAN.md) |
+| **Execution focus** | Phase V1: **beauty** + **hair** UAT; Phase V2: beta-full parity |
+| **Your UAT** | Medspa + Bloom + Luxe in [`FOUNDER-UAT-CHECKLIST.md`](operations/FOUNDER-UAT-CHECKLIST.md); beta smokes in each program doc |
 | Staging | **`livia-stg`** only — [`VERCEL-DEPLOY-ENVIRONMENTS.md`](operations/VERCEL-DEPLOY-ENVIRONMENTS.md) |
 | Local automation | `pnpm founder:uat-preflight` then `test:founder-uat` |
 
@@ -97,7 +99,7 @@ Detail logs: `docs/operations/R1-BUILD-STATUS.md`, `PROGRAM-ENGINEERING-EXIT.md`
 |----------|-----|
 | **“Where are we?”** | **This file** |
 | Scope locks | `docs/product/LIVIA-FINAL-BUILD-PLAN.md` |
-| Screen truth | `docs/design/screen-cards/*.yaml` |
+| Screen truth | `docs/design/screen-cards/*.yaml` + PNG baselines `docs/design/assets/screen-cards/` (`pnpm screen-cards:status`) |
 
 ---
 
@@ -105,5 +107,8 @@ Detail logs: `docs/operations/R1-BUILD-STATUS.md`, `PROGRAM-ENGINEERING-EXIT.md`
 
 | Date | Change |
 |------|--------|
+| 2026-06-01 | All nine vertical program docs + VERTICALS build plan + `vertical:doc-check` for every enum |
+| 2026-06-01 | Beauty program + Bloom UAT; mobile preset tint; doc propagation cascade |
+| 2026-05-31 | Screen-card P0 registry + `screen-cards:status` / `screen-cards:update` (PNG = per-screen northstar) |
 | 2026-05-31 | Bucket C: founder UAT checklist, E2E, screen-card pixel gate |
 | 2026-05-31 | Bucket B complete |

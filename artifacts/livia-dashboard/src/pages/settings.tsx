@@ -30,12 +30,11 @@ import {
   ExternalLink,
   Globe,
   Sparkles,
-  FlaskConical,
   KeyRound,
   Palette,
+  UserCircle,
 } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
-import DemoDataControls from "@/components/demo-data-controls";
 import CommunicationsControls from "@/components/communications-controls";
 import { NotificationPreferencesControls } from "@/components/notification-preferences-controls";
 import BillingControls from "@/components/billing-controls";
@@ -43,9 +42,6 @@ import PeerInsightsControls from "@/components/peer-insights-controls";
 import IntegrationsControls from "@/components/integrations-controls";
 import OperationalPolicyControls from "@/components/operational-policy-controls";
 import { BookingResourcesPanel } from "@/components/settings/booking-resources-panel";
-import LivPromptControls from "@/components/liv-prompt-controls";
-import LivMandateControls from "@/components/liv-mandate-controls";
-import { LivToolCatalogControls } from "@/components/liv/liv-tool-catalog-controls";
 import { MessageSquare, CreditCard, Plug, Shield } from "lucide-react";
 import { useMembership } from "@/lib/membership-context";
 import { usePersona } from "@/lib/persona";
@@ -55,32 +51,26 @@ import {
   canEditShop,
   canEditLiv,
   canViewComms,
-  canViewTeam,
   canViewBilling,
   type SettingsTabId,
 } from "@/lib/settings-persona";
-import { PersonaSettingsBanner } from "@/components/ritual/persona-settings-banner";
 import { PersonaRitualHeader } from "@/components/ritual/persona-ritual-header";
 import { PageFrame } from "@/components/ui/page-frame";
 import { SettingsDisclosure } from "@/components/ui/settings-disclosure";
-import { EU_TIMEZONES } from "@/lib/eu-timezones";
 import { verticalPackUi } from "@/lib/vertical-pack-ui";
-import { SETTINGS_SHOP_SECONDARY_DEFAULT_OPEN, showPeerInsightsForTenant } from "@workspace/policy";
+import {
+  showBookingResourcesSettings,
+  showPeerInsightsForTenant,
+} from "@workspace/policy";
 import { OwnershipTransferPanel } from "@/components/lifecycle/ownership-transfer-panel";
+import { AccountSettingsPanel } from "@/components/settings/account-settings-panel";
+import {
+  StudioProfileForm,
+  type StudioProfileFormValues,
+} from "@/components/settings/studio-profile-form";
 import { PublicAppearancePanel } from "@/components/settings/public-appearance-panel";
+import { AuditLogPanel } from "@/components/audit/audit-log-panel";
 import { Users, FileText } from "lucide-react";
-
-interface SettingsForm {
-  name: string;
-  slug: string;
-  timezone: string;
-  phone: string;
-  city: string;
-  country: string;
-  description: string;
-  instagramHandle: string;
-  logoUrl: string;
-}
 
 interface AIForm {
   aiEnabled: boolean;
@@ -96,32 +86,41 @@ export default function SettingsPage() {
   const qc = useQueryClient();
   const { effectiveRole } = useMembership();
   const { kind: persona } = usePersona();
-  const showDemo = import.meta.env.DEV;
-  const visibleTabs = useMemo(
-    () => settingsTabsForPersona(persona, { showDemo }),
-    [persona, showDemo],
-  );
+  const visibleTabs = useMemo(() => settingsTabsForPersona(persona), [persona]);
   const shopEditable = canEditShop(persona);
   const livEditable = canEditLiv(persona);
   const showComms = canViewComms(persona);
-  const showTeam = canViewTeam(persona);
   const showBilling = canViewBilling(persona);
   const canTransferOwnership = effectiveRole === "OWNER";
   const [brandFields, setBrandFields] = useState({ logoUrl: "", coverImageUrl: "" });
 
-  const defaultTab = useMemo((): SettingsTabId => {
+  const resolvedDefaultTab = useMemo((): SettingsTabId => {
     if (typeof window === "undefined") return visibleTabs[0] ?? "shop";
     const raw = new URLSearchParams(window.location.search).get("tab");
-    const mapped =
-      raw === "general" ? "shop" : raw === "ai" ? "liv" : (raw as SettingsTabId | null);
+    const legacy: Record<string, SettingsTabId> = {
+      general: "shop",
+      ai: "liv",
+      audit: "legal",
+      policy: "shop",
+      team: "shop",
+      integrations: "billing",
+      demo: "account",
+    };
+    const mapped = raw ? (legacy[raw] ?? (raw as SettingsTabId)) : null;
     if (mapped && visibleTabs.includes(mapped)) return mapped;
     return visibleTabs[0] ?? "shop";
   }, [visibleTabs]);
+
+  const [settingsTab, setSettingsTab] = useState<SettingsTabId>(resolvedDefaultTab);
+  useEffect(() => {
+    setSettingsTab(resolvedDefaultTab);
+  }, [resolvedDefaultTab]);
 
   const bid = business?.id ?? "";
   const businessVertical = (business as { vertical?: string } | null)?.vertical;
   const vocab = verticalPackUi(businessVertical, business?.category);
   const showPeerInsights = showPeerInsightsForTenant(businessVertical);
+  const showBookingResources = showBookingResourcesSettings(businessVertical);
 
   const { data: biz, isLoading } = useGetBusiness(
     bid,
@@ -129,7 +128,7 @@ export default function SettingsPage() {
   );
 
   const updateBusiness = useUpdateBusiness();
-  const generalForm = useForm<SettingsForm>();
+  const generalForm = useForm<StudioProfileFormValues>();
   const aiForm = useForm<AIForm>({
     defaultValues: {
       aiEnabled: true,
@@ -168,7 +167,7 @@ export default function SettingsPage() {
     }
   }, [biz, generalForm, aiForm]);
 
-  function onSubmitGeneral(vals: SettingsForm) {
+  function onSubmitGeneral(vals: StudioProfileFormValues) {
     if (!bid) return;
     updateBusiness.mutate(
       { businessId: bid, data: vals },
@@ -221,9 +220,14 @@ export default function SettingsPage() {
       <PersonaRitualHeader
         variant="page"
         title="Settings"
-        subtitle="Shop profile, Liv, channels, and plan — grouped by what you configure most."
+        subtitle={
+          persona === "owner" || persona === "org_admin"
+            ? "Your login, studio profile, guest look, Liv, channels, and billing."
+            : persona === "manager"
+              ? "Your login, Liv tone, and channels — calendar stays on Bookings."
+              : "Your login, notifications, and shop basics."
+        }
       />
-      <PersonaSettingsBanner />
 
       {isLoading ? (
         <div className="space-y-4">
@@ -231,10 +235,15 @@ export default function SettingsPage() {
           <Skeleton className="h-96" />
         </div>
       ) : (
-        <Tabs defaultValue={defaultTab} className="space-y-4">
-          <TabsList className="flex flex-wrap h-auto gap-1">
+        <Tabs
+          value={settingsTab}
+          onValueChange={(v) => setSettingsTab(v as SettingsTabId)}
+          className="space-y-4"
+        >
+          <TabsList className="flex h-auto w-full max-w-full flex-nowrap gap-1 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {visibleTabs.map((tab) => {
               const icons: Partial<Record<SettingsTabId, ReactNode>> = {
+                account: <UserCircle className="h-4 w-4 mr-1.5 shrink-0" />,
                 shop: <Settings className="h-4 w-4 mr-1.5 shrink-0" />,
                 appearance: <Palette className="h-4 w-4 mr-1.5 shrink-0" />,
                 policy: <Shield className="h-4 w-4 mr-1.5 shrink-0" />,
@@ -245,14 +254,11 @@ export default function SettingsPage() {
                 ownership: <KeyRound className="h-4 w-4 mr-1.5 shrink-0" />,
                 integrations: <Plug className="h-4 w-4 mr-1.5 shrink-0" />,
                 legal: <FileText className="h-4 w-4 mr-1.5 shrink-0" />,
-                demo: <FlaskConical className="h-4 w-4 mr-1.5 shrink-0" />,
               };
               const label =
                 tab === "shop" ? vocab.locationNoun : SETTINGS_TAB_LABELS[tab];
               if (tab === "billing" && !showBilling) return null;
-              if (tab === "integrations" && !showBilling) return null;
               if (tab === "ownership" && !canTransferOwnership) return null;
-              if (tab === "team" && !showTeam) return null;
               if (tab === "comms" && !showComms) return null;
               return (
                 <TabsTrigger
@@ -267,6 +273,12 @@ export default function SettingsPage() {
               );
             })}
           </TabsList>
+
+          {visibleTabs.includes("account") && (
+            <TabsContent value="account" className="space-y-4 mt-0">
+              <AccountSettingsPanel />
+            </TabsContent>
+          )}
 
           {/* ===== Shop tab ===== */}
           <TabsContent value="shop" className="space-y-4 mt-0">
@@ -284,8 +296,9 @@ export default function SettingsPage() {
                 <span
                   className="flex-1 text-xs font-mono truncate text-muted-foreground"
                   data-testid="text-booking-url"
+                  title={bookingUrl}
                 >
-                  {bookingUrl}
+                  Public booking · /b/{b?.slug}
                 </span>
                 <Button
                   variant="outline"
@@ -315,154 +328,49 @@ export default function SettingsPage() {
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Settings className="h-4 w-4" />
-                  Business details
+                  {vocab.locationNoun} profile
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <form
-                  onSubmit={generalForm.handleSubmit(onSubmitGeneral)}
-                  className="space-y-4"
-                >
-                  <fieldset disabled={!shopEditable} className="space-y-4 disabled:opacity-80">
-                  <div className="space-y-2">
-                    <Label>Business Name *</Label>
-                    <Input
-                      {...generalForm.register("name", { required: true })}
-                      data-testid="input-business-name"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>URL Slug *</Label>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground whitespace-nowrap">/b/</span>
-                      <Input
-                        {...generalForm.register("slug", { required: true })}
-                        data-testid="input-slug"
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Your public booking URL identifier
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Description</Label>
-                    <Input
-                      {...generalForm.register("description")}
-                      data-testid="input-description"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Logo image URL</Label>
-                    <Input
-                      {...generalForm.register("logoUrl")}
-                      placeholder="https://… (HTTPS image for booking page)"
-                      data-testid="input-logo-url"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Shown on your public booking page. Upload to your CDN or storage, then paste the URL here.
-                    </p>
-                    {generalForm.watch("logoUrl") ? (
-                      <img
-                        src={generalForm.watch("logoUrl")}
-                        alt=""
-                        className="h-12 w-12 rounded-lg object-cover border"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = "none";
-                        }}
-                      />
-                    ) : null}
-                  </div>
-                  <SettingsDisclosure
-                    title="Contact & location"
-                    description="Phone, socials, city, and timezone."
-                    defaultOpen={SETTINGS_SHOP_SECONDARY_DEFAULT_OPEN}
-                  >
-                    <div className="space-y-4 pt-1">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>Phone</Label>
-                          <Input {...generalForm.register("phone")} data-testid="input-phone" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Instagram</Label>
-                          <Input
-                            {...generalForm.register("instagramHandle")}
-                            placeholder="@handle"
-                            data-testid="input-instagram"
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>City</Label>
-                          <Input {...generalForm.register("city")} data-testid="input-city" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Country</Label>
-                          <Input
-                            {...generalForm.register("country")}
-                            data-testid="input-country"
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Timezone</Label>
-                        <Controller
-                          control={generalForm.control}
-                          name="timezone"
-                          render={({ field }) => (
-                            <Select value={field.value} onValueChange={field.onChange}>
-                              <SelectTrigger aria-label="Time zone" data-testid="input-timezone">
-                                <SelectValue placeholder="Select timezone" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {EU_TIMEZONES.map((tz) => (
-                                  <SelectItem key={tz.value} value={tz.value}>
-                                    {tz.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          )}
-                        />
-                      </div>
-                    </div>
-                  </SettingsDisclosure>
-                  {shopEditable && (
-                  <Button
-                    type="submit"
-                    disabled={updateBusiness.isPending}
-                    className="w-full"
-                    data-testid="button-save-settings"
-                  >
-                    {updateBusiness.isPending ? "Saving..." : "Save shop details"}
-                  </Button>
-                  )}
-                  </fieldset>
-                </form>
+                <StudioProfileForm
+                  form={generalForm}
+                  vertical={businessVertical}
+                  category={business?.category}
+                  locationNoun={vocab.locationNoun}
+                  shopEditable={shopEditable}
+                  saving={updateBusiness.isPending}
+                  onSubmit={onSubmitGeneral}
+                />
               </CardContent>
             </Card>
+
+            {(persona === "owner" || persona === "org_admin" || persona === "manager") && (
+              <SettingsDisclosure
+                title="Booking policies"
+                description="Deposits, buffers, and resources Liv uses when confirming."
+                defaultOpen={false}
+              >
+                <div className="space-y-4 pt-1">
+                  <OperationalPolicyControls />
+                  {showBookingResources ? <BookingResourcesPanel /> : null}
+                </div>
+              </SettingsDisclosure>
+            )}
           </TabsContent>
 
           {visibleTabs.includes("appearance") && (
             <TabsContent value="appearance" className="space-y-4 mt-0">
               {!shopEditable && (
                 <p className="text-sm text-muted-foreground rounded-lg border border-border p-3">
-                  View-only — ask the owner to change public appearance.
+                  View-only — ask the owner to change store appearance.
                 </p>
               )}
               <PublicAppearancePanel
                 editable={shopEditable}
                 brandFields={brandFields}
                 onBrandFieldsChange={setBrandFields}
+                appearanceTabActive={settingsTab === "appearance"}
               />
-            </TabsContent>
-          )}
-
-          {visibleTabs.includes("policy") && (
-            <TabsContent value="policy" className="space-y-4 mt-0">
-              <OperationalPolicyControls />
-              <BookingResourcesPanel />
             </TabsContent>
           )}
 
@@ -476,11 +384,10 @@ export default function SettingsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Sparkles className="h-4 w-4 text-primary" />
-                  AI Booking Assistant
+                  Liv on your booking page
                 </CardTitle>
                 <CardDescription>
-                  Customers can chat with an AI on your booking page that answers questions
-                  and books appointments on your behalf.
+                  How Liv greets guests on `/b`, answers questions, and books when you allow it.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -594,31 +501,13 @@ export default function SettingsPage() {
                 </form>
               </CardContent>
             </Card>
-            {livEditable ? (
-              <SettingsDisclosure
-                title="Liv mandate & autonomy"
-                description="How much Liv can act without asking."
-                defaultOpen={false}
-              >
-                <LivMandateControls />
-              </SettingsDisclosure>
-            ) : null}
-            {livEditable ? (
-              <SettingsDisclosure
-                title="Prompt overrides"
-                description="Advanced — custom system prompts per workflow."
-              >
-                <LivPromptControls />
-              </SettingsDisclosure>
-            ) : null}
-            {livEditable ? (
-              <SettingsDisclosure
-                title="Tool catalog"
-                description="Which actions Liv can take on your behalf."
-              >
-                <LivToolCatalogControls />
-              </SettingsDisclosure>
-            ) : null}
+            <p className="text-sm text-muted-foreground rounded-lg border border-border/80 bg-muted/20 px-3 py-2.5">
+              Day-to-day rules and inbox behaviour are in{" "}
+              <Link href="/toolkit" className="text-primary font-medium hover:underline">
+                Liv hub
+              </Link>
+              . This tab is only tone and guest-facing chat on `/b`.
+            </p>
           </TabsContent>
           )}
 
@@ -649,49 +538,19 @@ export default function SettingsPage() {
             </TabsContent>
           )}
 
-          {visibleTabs.includes("team") && showTeam && (
-            <TabsContent value="team" className="space-y-4 mt-0">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Team & services</CardTitle>
-                  <CardDescription>
-                    Roster, service assignments, and schedules live on the Team page.
-                    {persona === "manager" ? " You can view; owners invite and edit profiles." : ""}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-wrap gap-3">
-                  <a href="/staff">
-                    <Button variant="default">Open team roster</Button>
-                  </a>
-                  <a href="/services">
-                    <Button variant="outline">Manage services</Button>
-                  </a>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          )}
-
           {visibleTabs.includes("legal") && (
             <TabsContent value="legal" className="space-y-4 mt-0">
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base">Legal & trust</CardTitle>
-                  <CardDescription>Published policies for customers and design partners.</CardDescription>
+                  <CardDescription>Policies your guests and team can rely on.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4 text-sm">
-                  <div className="rounded-lg border border-border p-3 space-y-2">
-                    <p className="font-medium text-foreground">Operator ready pack</p>
-                    <p className="text-muted-foreground text-xs leading-relaxed">
-                      Starter policies, leave procedure, running late, and team invite copy — ready for your
-                      practice (adapt with your solicitor). In-repo:{" "}
-                      <code className="text-[11px]">docs/business/OPERATOR-READY-PACK.md</code>
-                    </p>
-                    <Link href="/guides">
-                      <Button variant="outline" size="sm">
-                        Open guides & vertical demos
-                      </Button>
-                    </Link>
-                  </div>
+                  <Link href="/guides">
+                    <Button variant="outline" size="sm">
+                      Help & setup guides
+                    </Button>
+                  </Link>
                   <a
                     href={legalUrl("privacy")}
                     target="_blank"
@@ -718,6 +577,15 @@ export default function SettingsPage() {
                   </a>
                 </CardContent>
               </Card>
+              {(persona === "owner" || persona === "org_admin") && bid ? (
+                <SettingsDisclosure
+                  title="Activity log"
+                  description="Who changed what — expand to review recent actions."
+                  defaultOpen={false}
+                >
+                  <AuditLogPanel businessId={bid} embedded />
+                </SettingsDisclosure>
+              ) : null}
             </TabsContent>
           )}
 
@@ -731,37 +599,16 @@ export default function SettingsPage() {
             <TabsContent value="billing" className="space-y-6 mt-0">
               <BillingControls />
               {showPeerInsights ? <PeerInsightsControls /> : null}
+              <SettingsDisclosure
+                title="Imports & integrations"
+                description="Calendar sync, CSV clients, and third-party tools."
+                defaultOpen={false}
+              >
+                <IntegrationsControls />
+              </SettingsDisclosure>
             </TabsContent>
           )}
 
-          {showBilling && visibleTabs.includes("integrations") && (
-            <TabsContent value="integrations" className="space-y-6 mt-0">
-              <IntegrationsControls />
-            </TabsContent>
-          )}
-
-          {/* ===== Demo & Data tab ===== */}
-          <TabsContent value="demo" className="space-y-6 mt-0">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <FlaskConical className="h-4 w-4" />
-                  Demo data
-                </CardTitle>
-                <CardDescription>
-                  Reload sample data or wipe your workspace to start fresh. Demo data
-                  creates 3 example businesses with staff, services, customers, and bookings.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <DemoDataControls variant="settings" />
-                <p className="text-xs text-muted-foreground">
-                  Note: "Reload demo data" will skip if you already have businesses. Wipe
-                  first if you want a fresh seed.
-                </p>
-              </CardContent>
-            </Card>
-          </TabsContent>
         </Tabs>
       )}
     </PageFrame>

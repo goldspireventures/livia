@@ -18,7 +18,7 @@ Every owner-facing surface receives **`TenantExperience`** from one resolver (`r
 | **Vertical capability** | From `vertical` field — routes, vocabulary, modules, public P7 flows |
 | **Owner may later** | Switch to vertical-native preset in Settings → Appearance (Track D) |
 
-Public `/b/{slug}` uses **business brand + vertical public template** (W5) — not the same resolver path as dashboard skin, but preset/brand tokens merge on Track D5.
+Public `/b/{slug}` uses the **same** `presentation_preset_id` and brand fields as the dashboard (W4) — one shop skin, two surfaces. Resolver paths differ (`tenant-experience` vs `GET /public/b/{slug}`) but the **preset + brand bundle must match**. Settings → **Appearance** (Public appearance card) is the owner control; there is no separate public-only preset at launch. See [`../design/SKIN-BRAND-INHERITANCE-SPEC.md`](../design/SKIN-BRAND-INHERITANCE-SPEC.md) §4.4–4.5.
 
 ## Bundle fields
 

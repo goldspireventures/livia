@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useBusiness } from "@/lib/business-context";
 import { staffListParams } from "@/lib/staff-params";
@@ -32,7 +32,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { CalendarPlus, Check, ChevronRight, Clock, UserPlus } from "lucide-react";
 
 const STEPS = ["Client", "Service", "Team", "Time", "Confirm"] as const;
-type Step = (typeof STEPS)[number];
+const QUICK_STEPS = ["Client", "Schedule", "Confirm"] as const;
+type Step = (typeof STEPS)[number] | "Schedule";
 
 const PAGE_SIZE = 30;
 
@@ -51,6 +52,7 @@ export function BookingWizard({ mode = "page", quick = false, onCreated, onCance
   const qc = useQueryClient();
 
   const [step, setStep] = useState<Step>("Client");
+  const dateInputRef = useRef<HTMLInputElement>(null);
   const [customerId, setCustomerId] = useState("");
   const [customerSearch, setCustomerSearch] = useState("");
   const [serviceId, setServiceId] = useState("");
@@ -63,8 +65,11 @@ export function BookingWizard({ mode = "page", quick = false, onCreated, onCance
 
   useEffect(() => {
     const prefill = new URLSearchParams(window.location.search).get("customerId");
-    if (prefill) setCustomerId(prefill);
-  }, []);
+    if (prefill) {
+      setCustomerId(prefill);
+      if (quick) setStep("Schedule");
+    }
+  }, [quick]);
   const debouncedCustomerSearch = useDebouncedValue(customerSearch, 300);
 
   const { data: customersData, isLoading: customersLoading } = useListCustomers(
@@ -88,7 +93,11 @@ export function BookingWizard({ mode = "page", quick = false, onCreated, onCance
   const { data: slotsData, isLoading: isLoadingSlots } = useGetAvailableSlots(
     bid,
     { serviceId, date, staffId: staffId || undefined },
-    { query: { enabled: !!bid && !!serviceId && !!date && step === "Time" } as never },
+    {
+      query: {
+        enabled: !!bid && !!serviceId && !!date && (step === "Time" || step === "Schedule"),
+      } as never,
+    },
   );
 
   const createBooking = useCreateBooking();
@@ -96,9 +105,14 @@ export function BookingWizard({ mode = "page", quick = false, onCreated, onCance
   const customers = (customersData as { data?: unknown[] })?.data ?? customersData ?? [];
   const services = servicesData ?? [];
   const staff = staffData ?? [];
-  const availableSlots = ((slotsData as { slots?: { startAt: string; available: boolean }[] })?.slots ?? []).filter(
-    (s) => s.available,
-  );
+  const availableSlots = useMemo(() => {
+    const raw = (
+      (slotsData as { slots?: { startAt: string; available: boolean }[] })?.slots ?? []
+    ).filter((s) => s.available);
+    const byStart = new Map<string, (typeof raw)[number]>();
+    for (const slot of raw) byStart.set(slot.startAt, slot);
+    return [...byStart.values()];
+  }, [slotsData]);
 
   const selectedCustomer = (customers as { id: string; firstName?: string; lastName?: string }[]).find(
     (c) => c.id === customerId,
@@ -114,16 +128,12 @@ export function BookingWizard({ mode = "page", quick = false, onCreated, onCance
   );
 
   const activeSteps = useMemo((): Step[] => {
-    // Quick book: skip Team when there's only one eligible staff member or none are configured.
-    // Full wizard: keep Team unless there are truly zero eligible staff.
-    const base = [...STEPS];
+    if (quick) return [...QUICK_STEPS];
+    const base = [...STEPS] as Step[];
     if (!serviceId || staffLoading) return base;
     const eligibleCount = staff.length;
-    if (quick && eligibleCount <= 1) {
-      return base.filter((s) => s !== "Team") as Step[];
-    }
     if (eligibleCount === 0) {
-      return base.filter((s) => s !== "Team") as Step[];
+      return base.filter((s) => s !== "Team");
     }
     return base;
   }, [quick, serviceId, staffLoading, staff.length]);
@@ -167,6 +177,16 @@ export function BookingWizard({ mode = "page", quick = false, onCreated, onCance
       toast({ title: "Choose a service to continue", variant: "destructive" });
       return;
     }
+    if (step === "Schedule") {
+      if (!serviceId) {
+        toast({ title: "Choose a service to continue", variant: "destructive" });
+        return;
+      }
+      if (!selectedSlot) {
+        toast({ title: "Pick an available time", variant: "destructive" });
+        return;
+      }
+    }
     if (step === "Time" && !selectedSlot) {
       toast({ title: "Pick an available time", variant: "destructive" });
       return;
@@ -179,6 +199,26 @@ export function BookingWizard({ mode = "page", quick = false, onCreated, onCance
     const prev = activeSteps[stepIndex - 1];
     if (prev) setStep(prev);
   }
+
+  function selectClient(id: string) {
+    setCustomerId(id);
+    if (quick && step === "Client") {
+      setStep("Schedule");
+    }
+  }
+
+  function selectService(id: string) {
+    setServiceId(id);
+    setStaffId("");
+    setSelectedSlot("");
+  }
+
+  // Solo studios: skip picking the only active service in quick add.
+  useEffect(() => {
+    if (!quick || step !== "Schedule" || serviceId) return;
+    const active = (services as { id: string }[]).filter(Boolean);
+    if (active.length === 1) setServiceId(active[0]!.id);
+  }, [quick, step, serviceId, services]);
 
   function handleSubmit() {
     if (!bid || !customerId || !serviceId || !selectedSlot) {
@@ -272,7 +312,7 @@ export function BookingWizard({ mode = "page", quick = false, onCreated, onCance
                       key={c.id}
                       type="button"
                       data-testid={`booking-wizard-client-${c.id}`}
-                      onClick={() => setCustomerId(c.id)}
+                      onClick={() => selectClient(c.id)}
                       className={`w-full flex items-center justify-between px-4 py-3 text-left hover:bg-muted/40 ${
                         customerId === c.id ? "bg-primary/10" : ""
                       }`}
@@ -292,6 +332,120 @@ export function BookingWizard({ mode = "page", quick = false, onCreated, onCance
                 Add new client
               </Button>
             </Link>
+          </CardContent>
+        </Card>
+      )}
+
+      {step === "Schedule" && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Service & time</CardTitle>
+          </CardHeader>
+          <CardContent className="livia-form-stack space-y-5">
+            <div className="space-y-2">
+              <Label>Service</Label>
+              <Select value={serviceId} onValueChange={selectService}>
+                <SelectTrigger data-testid="select-service">
+                  <SelectValue placeholder="Select service…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(services as { id: string; name: string; durationMinutes?: number }[]).map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.name} ({s.durationMinutes} min)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {serviceId && staff.length > 1 ? (
+              <div className="space-y-2">
+                <Label>{vocab.teamNoun}</Label>
+                <Select
+                  value={staffId || "__any__"}
+                  onValueChange={(v) => {
+                    setStaffId(v === "__any__" ? "" : v);
+                    setSelectedSlot("");
+                  }}
+                >
+                  <SelectTrigger data-testid="select-staff">
+                    <SelectValue placeholder="First available" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__any__">First available</SelectItem>
+                    {(staff as { id: string; displayName: string }[]).map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.displayName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : null}
+            <div className="space-y-2 pt-1">
+              <Label
+                className="cursor-pointer"
+                onClick={() => {
+                  const el = dateInputRef.current;
+                  if (el && typeof el.showPicker === "function") el.showPicker();
+                  else el?.focus();
+                }}
+              >
+                Date
+              </Label>
+              <Input
+                ref={dateInputRef}
+                type="date"
+                className="cursor-pointer"
+                value={date}
+                min={new Date().toISOString().split("T")[0]}
+                onClick={(e) => {
+                  const el = e.currentTarget;
+                  if (typeof el.showPicker === "function") el.showPicker();
+                }}
+                onChange={(e) => {
+                  setDate(e.target.value);
+                  setSelectedSlot("");
+                }}
+                data-testid="input-date"
+              />
+            </div>
+            {serviceId && date ? (
+              <div className="space-y-2 pt-1">
+                <Label>Available times</Label>
+                {isLoadingSlots ? (
+                  <div className="grid grid-cols-3 gap-2">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                      <Skeleton key={i} className="h-10" />
+                    ))}
+                  </div>
+                ) : availableSlots.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-4 text-center border rounded-md">
+                    No slots on this day — try another date.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-3 gap-2 max-h-40 overflow-y-auto">
+                    {availableSlots.map((slot) => (
+                      <button
+                        key={slot.startAt}
+                        type="button"
+                        data-testid={`button-slot-${slot.startAt}`}
+                        onClick={() => {
+                          setSelectedSlot(slot.startAt);
+                          if (quick) setStep("Confirm");
+                        }}
+                        className={`px-3 py-2 rounded-md text-sm font-medium border transition-colors ${
+                          selectedSlot === slot.startAt
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "border-border hover:bg-muted"
+                        }`}
+                      >
+                        {formatTime(slot.startAt)}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : null}
           </CardContent>
         </Card>
       )}
@@ -452,15 +606,17 @@ export function BookingWizard({ mode = "page", quick = false, onCreated, onCance
                 {selectedSlot ? formatDateTime(selectedSlot) : "—"}
               </span>
             </div>
-            <div className="space-y-2 pt-2">
-              <Label>Notes (optional)</Label>
-              <Textarea
-                placeholder="Colour formula, preferences…"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                data-testid="input-notes"
-              />
-            </div>
+            {!quick ? (
+              <div className="space-y-2 pt-2">
+                <Label>Notes (optional)</Label>
+                <Textarea
+                  placeholder="Colour formula, preferences…"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  data-testid="input-notes"
+                />
+              </div>
+            ) : null}
           </CardContent>
         </Card>
       )}

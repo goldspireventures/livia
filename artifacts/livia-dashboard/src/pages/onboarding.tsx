@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
+import { Link } from "wouter";
+import { useUser } from "@clerk/clerk-react";
 import { useToast } from "@/hooks/use-toast";
 import { useBusiness } from "@/lib/business-context";
+import { isDemoAccountEmail } from "@/lib/demo-tenant";
 import { apiFetch } from "@/lib/api-fetch";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +29,8 @@ function readOnboardingIntent(): { secondShop?: boolean } {
 
 export default function OnboardingPage() {
   const intent = readOnboardingIntent();
+  const { user } = useUser();
+  const demoAccount = isDemoAccountEmail(user?.primaryEmailAddress?.emailAddress);
   const { businesses } = useBusiness();
   const parentBusinessId =
     intent.secondShop && businesses.length > 0 ? businesses[0]!.id : undefined;
@@ -108,7 +113,47 @@ export default function OnboardingPage() {
 
   const arrivalSlot = (
     <>
-      {!businessId && isDemoLoginEnabled ? (
+      {!businessId && demoAccount ? (
+        <Card className="border-primary/30 bg-primary/5" data-testid="onboarding-demo-hint">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              Demo login — link your shop
+            </CardTitle>
+            <CardDescription>
+              <code className="text-xs">{user?.primaryEmailAddress?.emailAddress}</code> is signed in, but
+              this environment has no Bloom membership yet. Use the demo launcher (recommended) or load
+              the full demo world here.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2 sm:flex-row">
+            <Link href="/demo" className="flex-1">
+              <Button type="button" variant="default" className="w-full">
+                Open demo launcher
+              </Button>
+            </Link>
+            {isDemoLoginEnabled ? (
+              <Button
+                type="button"
+                variant="secondary"
+                className="flex-1"
+                onClick={loadDemoData}
+                disabled={seedLoading}
+              >
+                {seedLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Loading demo…
+                  </>
+                ) : (
+                  "Load full demo world"
+                )}
+              </Button>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : null}
+      {!businessId && isDemoLoginEnabled && !demoAccount ? (
         <Card className="border-dashed border-muted-foreground/30 bg-background/40 backdrop-blur-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">

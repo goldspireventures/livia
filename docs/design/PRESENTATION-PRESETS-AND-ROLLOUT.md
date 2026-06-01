@@ -95,7 +95,7 @@ Surface rules: [`SURFACE-AND-BREAKPOINTS.md`](./SURFACE-AND-BREAKPOINTS.md).
 1. **Max four presets per vertical** at launch — Platform Default + three vertical-native skins; not infinite themes.  
 2. **Feature parity** — all presets expose identical routes and entitlements.  
 3. **Preset validity** — `presetId` must belong to business `vertical`; invalid → vertical-native default (not Platform Default).  
-4. **Public + ops alignment** — `/b` uses same preset as dashboard for that tenant.  
+4. **Public + ops alignment** — `/b` uses same preset as dashboard for that tenant (**no split** W4 vs W5 skins — see [`SKIN-BRAND-INHERITANCE-SPEC.md`](./SKIN-BRAND-INHERITANCE-SPEC.md) §4.4–4.5).  
 5. **Accessibility** — each preset must pass contrast check in light and dark variants.  
 6. **Motion** — inherit [`V3-EXPERIENCE-SPEC.md`](../product/V3-EXPERIENCE-SPEC.md); presets may only tune duration/density, not disable reduced-motion.  
 7. **Staging gate** — picker UI and `data-presentation` bundles ship when `presentationPresetsEnabled()` is true ([Part VII](#part-vii--staging-rollout-plan)).  
@@ -196,9 +196,10 @@ Preset ids and labels are canonical in `lib/policy/src/presentation-presets.ts`.
 | Id | Label | Best for |
 |----|-------|----------|
 | `platform-default` | Platform Default | Aurora Livia |
-| `beauty-soft-studio` *(vertical default)* | Soft Studio | Lash/brow, rounded cards |
-| `beauty-editorial` | Editorial | Menu-card treatments, wide margins |
-| `beauty-tech-chic` | Tech Chic | DM-heavy solo techs, compact |
+| `beauty-noir-dusk` *(vertical default)* | Noir Dusk | Soft dark — mauve, calm studio |
+| `beauty-soft-studio` | Soft Studio | Light blush — lash/brow, rounded cards |
+| `beauty-editorial` | Editorial | Cream/terracotta — menu-card treatments |
+| `beauty-premium-dark` | Premium Dark | Rose-gold on charcoal |
 
 **Persona ritual homes**
 
@@ -747,7 +748,7 @@ Every vertical includes **`platform-default`** (Platform Default / Aurora) plus 
 | Vertical | Platform Default | Vertical default | Alt 1 | Alt 2 |
 |----------|------------------|------------------|-------|-------|
 | hair | ✓ Aurora | Warm Chair | Clean Salon | Barber Bold |
-| beauty | ✓ Aurora | Soft Studio | Editorial | Tech Chic |
+| beauty | ✓ Aurora | Noir Dusk | Soft Studio | Editorial | Premium Dark |
 | body-art | ✓ Aurora | Studio Dark | Flash Light | Minimal Mono |
 | wellness | ✓ Aurora | Spa Calm | Zen Light | Retreat Dark |
 | fitness | ✓ Aurora | Gym Bold | Studio Clean | Coach Compact |

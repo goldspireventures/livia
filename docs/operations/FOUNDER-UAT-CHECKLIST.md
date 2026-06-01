@@ -33,7 +33,25 @@ pnpm --filter @workspace/e2e run test:founder-uat    # needs Clerk + API + dashb
 
 ---
 
-## Salon owner — Luxe (`luxe-salon-spa`)
+## Beauty owner — Bloom (`bloom-beauty-dublin`)
+
+**Canonical beauty UAT tenant** — see [`BEAUTY-VERTICAL-PROGRAM.md`](../product/BEAUTY-VERTICAL-PROGRAM.md).
+
+| # | Path | Pass? | Notes |
+|---|------|-------|-------|
+| 1 | `/dashboard` | | Noir Dusk (or chosen preset); briefing + inbox/pending modules contextual |
+| 2 | `/inbox` | | Patch-test / lash context in threads if seeded |
+| 3 | `/services` | | Compact list; Lashes / Nails / Brows categories |
+| 4 | `/customers` | | Compact roster |
+| 5 | `/bookings` | | Confirm flow; patch-test notes on guest book if tested |
+| 6 | `/settings?tab=appearance` | | All four beauty presets; iframe `/b` tracks accent |
+| 7 | `/b/bloom-beauty-dublin` | | Mobile 390px — preset matches settings; patch-test guard on book |
+| 8 | Mobile app (Bloom owner) | | Today + Inbox; tab accent matches preset tint |
+| 9 | `/demo/wedge/beauty` | | Gateway story — inbox → book → SMS → today |
+
+---
+
+## Salon owner — Luxe (`luxe-salon-spa`) — hair reference
 
 | # | Path | Pass? | Notes |
 |---|------|-------|-------|
@@ -49,12 +67,28 @@ pnpm --filter @workspace/e2e run test:founder-uat    # needs Clerk + API + dashb
 
 ---
 
+## Beta-full verticals — 5-path smoke
+
+Use each program doc § **L8 — Completion** for slug + owner login. Index: [`VERTICAL-PROGRAMS-INDEX.md`](../product/VERTICAL-PROGRAMS-INDEX.md).
+
+| Vertical | Demo slug | Program |
+|----------|-----------|---------|
+| Wellness | `harbour-wellness-cork` | [WELLNESS](../product/WELLNESS-VERTICAL-PROGRAM.md) |
+| Body art | `ink-anchor-galway` | [BODY-ART](../product/BODY-ART-VERTICAL-PROGRAM.md) |
+| Fitness | `peak-fitness-dublin` | [FITNESS](../product/FITNESS-VERTICAL-PROGRAM.md) |
+| Pet grooming | `paws-parlour-dublin` | [PET-GROOMING](../product/PET-GROOMING-VERTICAL-PROGRAM.md) |
+| Allied health | `motion-physio-cork` | [ALLIED-HEALTH](../product/ALLIED-HEALTH-VERTICAL-PROGRAM.md) |
+| Automotive | `shine-studio-belfast` | [AUTOMOTIVE](../product/AUTOMOTIVE-DETAILING-VERTICAL-PROGRAM.md) |
+
+---
+
 ## Sign-off
 
 | Item | Founder | Date |
 |------|---------|------|
 | Medspa paths 1–10 feel “finished” for R1 demo | | |
-| Salon paths 1–9 feel “finished” for R1 demo | | |
+| Beauty (Bloom) paths 1–9 feel “finished” for R1 demo | | |
+| Salon (hair Luxe) paths 1–9 feel “finished” for R1 demo | | |
 | Bucket C → production preset flag OK | | |
 
 When both vertical rows are checked, reply **“Bucket C UAT passed”** (with exceptions listed).

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PublicSurfaceLoading } from "@/components/public/public-surface-chrome";
@@ -9,7 +9,25 @@ import {
 } from "@/components/guest/guest-hub-chrome";
 import { GuestHubSignIn } from "@/components/guest/guest-hub-sign-in";
 import { formatDateTime } from "@/lib/format";
+import { GUEST_HUB_COPY } from "@workspace/policy";
+import { extractGuestVisitToken, normalizeGuestVisitUrl } from "@/lib/guest-visit-path";
 import { Heart, Loader2, Store } from "lucide-react";
+
+function normalizeHubView(view: HubView): HubView {
+  return {
+    ...view,
+    upcomingBookings: view.upcomingBookings.map((b) => ({
+      ...b,
+      visitUrl: normalizeGuestVisitUrl(b.visitUrl, b.slug),
+    })),
+    shops: view.shops.map((s) => ({
+      ...s,
+      manageVisitUrl: s.manageVisitUrl
+        ? normalizeGuestVisitUrl(s.manageVisitUrl, s.slug)
+        : null,
+    })),
+  };
+}
 
 type HubShop = {
   businessId: string;
@@ -18,6 +36,7 @@ type HubShop = {
   vertical: string;
   logoUrl: string | null;
   bookUrl: string;
+  manageVisitUrl: string | null;
   isFavorite: boolean;
   lastServiceName: string | null;
 };
@@ -54,6 +73,7 @@ type SurfaceConfig = {
 const HUB_TOKEN_KEY = "livia_guest_hub_token";
 
 export default function MyLiviaPage() {
+  const [location, setLocation] = useLocation();
   const [surfaceConfig, setSurfaceConfig] = useState<SurfaceConfig | null>(null);
   const [hubToken, setHubToken] = useState<string | null>(() =>
     typeof window !== "undefined" ? localStorage.getItem(HUB_TOKEN_KEY) : null,
@@ -75,8 +95,42 @@ export default function MyLiviaPage() {
       headers: { "X-Guest-Hub-Token": token },
     });
     if (!r.ok) throw new Error("session");
-    return r.json() as Promise<HubView>;
+    const raw = (await r.json()) as HubView;
+    return normalizeHubView(raw);
   }, []);
+
+  const redirectLegacyVisit = useCallback(
+    (visitToken: string, hubView: HubView | null) => {
+      const fromHub = hubView?.upcomingBookings.find(
+        (b) => extractGuestVisitToken(b.visitUrl) === visitToken,
+      );
+      if (fromHub) {
+        window.location.assign(fromHub.visitUrl);
+        return;
+      }
+      const shop = hubView?.shops.find((s) => {
+        const t = s.manageVisitUrl ? extractGuestVisitToken(s.manageVisitUrl) : null;
+        return t === visitToken;
+      });
+      if (shop?.manageVisitUrl) {
+        window.location.assign(shop.manageVisitUrl);
+        return;
+      }
+      void fetch(`/api/public/guest-hub/visit/${encodeURIComponent(visitToken)}`)
+        .then(async (res) => (res.ok ? ((await res.json()) as { path?: string }) : null))
+        .then((j) => {
+          if (j?.path) window.location.assign(j.path);
+        })
+        .catch(() => undefined);
+    },
+    [],
+  );
+
+  useEffect(() => {
+    const visitToken = new URLSearchParams(window.location.search).get("visit");
+    if (!visitToken) return;
+    redirectLegacyVisit(visitToken, view);
+  }, [location, view, redirectLegacyVisit]);
 
   useEffect(() => {
     fetch("/api/public/surface-config")
@@ -209,7 +263,7 @@ export default function MyLiviaPage() {
               className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/90"
               data-testid="guest-hub-staging-banner"
             >
-              Staging QA — loose phone + magic OTP
+              {GUEST_HUB_COPY.stagingBannerTitle} — {GUEST_HUB_COPY.stagingBannerBody}
               {magicOtp || surfaceConfig?.guestHub.magicOtpCode ? (
                 <span className="block font-mono mt-1">
                   Use code{" "}
@@ -240,8 +294,8 @@ export default function MyLiviaPage() {
   return (
     <GuestHubShell testId="guest-hub-home" phoneE164={view.phoneE164} hubToken={hubToken}>
       <div className="text-center">
-        <h1 className="text-2xl font-serif">Your vault</h1>
-        <p className="text-xs text-muted-foreground mt-1">Every Livia shop you&apos;ve booked with</p>
+        <h1 className="text-2xl font-serif">{GUEST_HUB_COPY.vaultTitle}</h1>
+        <p className="text-xs text-muted-foreground mt-1">{GUEST_HUB_COPY.vaultSubtitle}</p>
       </div>
 
       {heroBooking ? (
@@ -270,21 +324,25 @@ export default function MyLiviaPage() {
         {view.shops.length === 0 ? (
           <Card>
             <CardContent className="py-8 text-center text-sm text-muted-foreground">
-              Book at any Livia shop — when you opt in, it appears here for easy rebooking.
+              {GUEST_HUB_COPY.emptyShops}
             </CardContent>
           </Card>
         ) : (
           <>
             {favoriteShops.length > 0 ? (
               <ShopSection
-                title="Favorites"
+                title={GUEST_HUB_COPY.favoritesSection}
                 shops={favoriteShops}
                 favoriteBusy={favoriteBusy}
                 onToggleFavorite={toggleFavorite}
               />
             ) : null}
             <ShopSection
-              title={favoriteShops.length > 0 ? "All shops" : "Your shops"}
+              title={
+                favoriteShops.length > 0
+                  ? GUEST_HUB_COPY.moreShopsSection
+                  : GUEST_HUB_COPY.allShopsSection
+              }
               shops={otherShops.length > 0 ? otherShops : view.shops}
               favoriteBusy={favoriteBusy}
               onToggleFavorite={toggleFavorite}
@@ -301,7 +359,7 @@ export default function MyLiviaPage() {
             setView(null);
           }}
         >
-          Sign out
+          {GUEST_HUB_COPY.signOutCta}
         </Button>
     </GuestHubShell>
   );
@@ -321,48 +379,62 @@ function ShopSection({
   return (
     <section className="space-y-3">
       <h2 className="text-sm font-medium text-muted-foreground">{title}</h2>
-      {shops.map((shop) => (
-        <Card key={shop.businessId} className="overflow-hidden">
-          <CardContent className="py-4 flex items-center gap-3">
-            {shop.logoUrl ? (
-              <img src={shop.logoUrl} alt="" className="h-12 w-12 rounded-lg object-contain shrink-0 bg-muted/30" />
-            ) : (
-              <Store className="h-8 w-8 text-muted-foreground shrink-0" />
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="font-medium truncate">{shop.businessName}</p>
-              <p className="text-xs text-muted-foreground capitalize">
-                {shop.vertical.replace(/-/g, " ")}
-                {shop.lastServiceName ? ` · last: ${shop.lastServiceName}` : ""}
-              </p>
-            </div>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="shrink-0"
-              disabled={favoriteBusy === shop.businessId}
-              aria-label={shop.isFavorite ? "Remove favorite" : "Add favorite"}
-              data-testid={`guest-hub-favorite-${shop.slug}`}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                void onToggleFavorite(shop.businessId, !shop.isFavorite);
-              }}
-            >
-              {favoriteBusy === shop.businessId ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Heart
-                  className={`h-4 w-4 ${shop.isFavorite ? "text-primary fill-primary" : "text-muted-foreground"}`}
-                />
-              )}
-            </Button>
-            <Button size="sm" variant="secondary" asChild className="shrink-0">
-              <Link href={shop.bookUrl}>Book again</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      ))}
+      {shops.map((shop) => {
+        const primaryHref = shop.manageVisitUrl ?? shop.bookUrl;
+        const primaryLabel = shop.manageVisitUrl ? "Manage visit" : GUEST_HUB_COPY.bookAgainCta;
+        return (
+          <Card
+            key={shop.businessId}
+            className="overflow-hidden hover:border-primary/35 transition-colors"
+            data-testid={`guest-hub-shop-${shop.slug}`}
+          >
+            <CardContent className="py-4 flex items-center gap-3">
+              <Link href={primaryHref} className="flex items-center gap-3 flex-1 min-w-0">
+                {shop.logoUrl ? (
+                  <img
+                    src={shop.logoUrl}
+                    alt=""
+                    className="h-12 w-12 rounded-lg object-contain shrink-0 bg-muted/30"
+                  />
+                ) : (
+                  <Store className="h-8 w-8 text-muted-foreground shrink-0" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium truncate">{shop.businessName}</p>
+                  <p className="text-xs text-muted-foreground capitalize">
+                    {shop.vertical.replace(/-/g, " ")}
+                    {shop.lastServiceName ? ` · last: ${shop.lastServiceName}` : ""}
+                  </p>
+                </div>
+              </Link>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="shrink-0"
+                disabled={favoriteBusy === shop.businessId}
+                aria-label={shop.isFavorite ? "Remove favorite" : "Add favorite"}
+                data-testid={`guest-hub-favorite-${shop.slug}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  void onToggleFavorite(shop.businessId, !shop.isFavorite);
+                }}
+              >
+                {favoriteBusy === shop.businessId ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Heart
+                    className={`h-4 w-4 ${shop.isFavorite ? "text-primary fill-primary" : "text-muted-foreground"}`}
+                  />
+                )}
+              </Button>
+              <Button size="sm" variant={shop.manageVisitUrl ? "default" : "secondary"} asChild className="shrink-0">
+                <Link href={primaryHref}>{primaryLabel}</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        );
+      })}
     </section>
   );
 }

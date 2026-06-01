@@ -92,13 +92,13 @@ export function verticalHomeModules(
   const key = resolveVerticalKey(vertical, category);
   const playbook = getVerticalPlaybook(key);
   const ids = [
-    ...new Set(
-      playbook.homeModules
+    ...new Set([
+      ...playbook.homeModules
         .map((id) => PLAYBOOK_MODULE_ALIAS[id] ?? id)
         .filter((id) => MODULES[id]),
-    ),
-    "team",
-    "liv",
+      "team",
+      "liv",
+    ]),
   ];
   return ids.map((id) => ({
     id,

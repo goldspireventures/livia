@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import {
+  resolveOwnerHomeBriefingCta,
+  resolveOwnerHomeKpiChips,
   resolveOwnerHomeModuleLayout,
   shouldShowActivationWelcomeCard,
   shouldShowOwnerLivGuardrails,
@@ -11,6 +13,45 @@ import {
   chainShopsVisibleSlice,
   designProofsSubmitDefaultOpen,
 } from "../tenant-surface-density";
+
+assert.deepEqual(resolveOwnerHomeKpiChips({ todayBookings: 0, pendingCount: 0, handedOffCount: 0 }), [
+  "todayBookings",
+]);
+
+assert.deepEqual(
+  resolveOwnerHomeKpiChips({ todayBookings: 5, pendingCount: 2, handedOffCount: 1 }),
+  ["todayBookings", "inboxHandoffs", "toConfirm", "completedToday"],
+);
+
+assert.deepEqual(
+  resolveOwnerHomeBriefingCta({
+    pendingCount: 2,
+    handedOffCount: 0,
+    fallbackHref: "/bookings",
+    fallbackLabel: "View calendar",
+  }),
+  { href: "/bookings?status=PENDING", label: "Confirm 2 pending" },
+);
+
+assert.deepEqual(
+  resolveOwnerHomeBriefingCta({
+    pendingCount: 0,
+    handedOffCount: 1,
+    fallbackHref: "/bookings",
+    fallbackLabel: "View calendar",
+  }),
+  { href: "/inbox?lens=taken_over", label: "Review 1 handoff" },
+);
+
+assert.deepEqual(
+  resolveOwnerHomeBriefingCta({
+    pendingCount: 0,
+    handedOffCount: 0,
+    fallbackHref: "/bookings",
+    fallbackLabel: "View calendar",
+  }),
+  { href: "/bookings", label: "View calendar" },
+);
 
 assert.deepEqual(resolveOwnerHomeModuleLayout({ pendingCount: 0, openInboxCount: 0 }), {
   mode: "all_clear",
@@ -36,6 +77,7 @@ assert.equal(shouldShowActivationWelcomeCard({ activationStepsPending: 1, dismis
 assert.equal(shouldShowActivationWelcomeCard({ activationStepsPending: 0, dismissed: false }), false);
 
 assert.equal(shouldShowRunningLateAffordance(0), false);
+assert.equal(shouldShowRunningLateAffordance(0, { pendingConfirmations: 2 }), true);
 assert.equal(shouldShowRunningLateAffordance(4), true);
 
 assert.equal(shouldShowInboxContextRail(false), false);

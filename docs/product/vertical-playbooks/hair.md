@@ -1,6 +1,7 @@
 # Vertical playbook — Hair (V1)
 
 **Status:** L2+L3 (2026-05-31)  
+**Program (L0–L8):** [`HAIR-VERTICAL-PROGRAM.md`](../HAIR-VERTICAL-PROGRAM.md)  
 **Registry:** `VERTICAL_COVERAGE_REGISTRY` V1 · demo `luxe-salon-spa`, `aurora-studio`, `conors-cut-co`  
 **Category:** People-business — colour cycles, chair utilisation, regulars memory
 

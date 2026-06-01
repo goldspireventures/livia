@@ -41,10 +41,12 @@ const HAIR: ContinuityTemplate = {
   emailBody: (a) =>
     `${BASE_SMS(a, "Reply to this email with style references or questions.")}`,
   publicNextSteps: (a) => [
-    "Check your phone — we've opened a thread for style pics and final details.",
+    a.visitUrl
+      ? `We'll text or email you at the number you gave — reply there with inspiration photos or questions (ref ${a.bookingRef}).`
+      : `Watch for a message from ${a.businessName} — reply with inspiration photos or questions (ref ${a.bookingRef}).`,
     a.instagramHandle
-      ? `Prefer Instagram? You can also message @${a.instagramHandle.replace(/^@/, "")} with ref ${a.bookingRef}.`
-      : "Reply in that thread so your stylist sees everything in one place.",
+      ? `Prefer Instagram? Message @${a.instagramHandle.replace(/^@/, "")} with ref ${a.bookingRef}.`
+      : "Keep replies in that same conversation so your team has everything in one place.",
     "Add the appointment to your calendar below.",
   ],
   igDeepLinkHint: (a) =>
@@ -137,7 +139,7 @@ const DE_HAIR: ContinuityTemplate = {
   emailSubject: (a) => `Ihr Termin bei ${a.businessName}`,
   emailBody: (a) => DE_HAIR.smsBody(a),
   publicNextSteps: (a) => [
-    "Prüfen Sie Ihre Nachrichten — wir haben einen Thread für Fotos und Details geöffnet.",
+    `Prüfen Sie Ihre Nachrichten von ${a.businessName} — antworten Sie dort mit Fotos oder Fragen (Ref ${a.bookingRef}).`,
     a.instagramHandle
       ? `Optional Instagram: @${a.instagramHandle.replace(/^@/, "")} mit Ref ${a.bookingRef}.`
       : "Bitte in diesem Thread antworten, damit Ihr Team alles an einem Ort sieht.",

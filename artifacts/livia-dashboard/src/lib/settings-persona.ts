@@ -1,6 +1,7 @@
 import type { PersonaKind } from "@/lib/persona";
 
 export type SettingsTabId =
+  | "account"
   | "shop"
   | "appearance"
   | "policy"
@@ -11,37 +12,32 @@ export type SettingsTabId =
   | "ownership"
   | "integrations"
   | "legal"
-  | "demo";
+  | "audit";
 
-export function settingsTabsForPersona(
-  persona: PersonaKind,
-  opts?: { showDemo?: boolean },
-): SettingsTabId[] {
-  const demo = opts?.showDemo ? (["demo"] as SettingsTabId[]) : [];
+const ACCOUNT_FIRST: SettingsTabId[] = ["account"];
+
+export function settingsTabsForPersona(persona: PersonaKind): SettingsTabId[] {
   switch (persona) {
     case "org_admin":
     case "owner":
       return [
+        ...ACCOUNT_FIRST,
         "shop",
         "appearance",
-        "policy",
         "liv",
         "comms",
-        "team",
         "billing",
         "ownership",
-        "integrations",
         "legal",
-        ...demo,
       ];
     case "manager":
-      return ["comms", "shop", "appearance", "policy", "liv", "team", "legal"];
+      return [...ACCOUNT_FIRST, "comms", "shop", "appearance", "liv", "legal"];
     case "receptionist":
-      return ["comms", "shop", "legal"];
+      return [...ACCOUNT_FIRST, "comms", "shop", "legal"];
     case "staff":
-      return ["shop", "legal"];
+      return [...ACCOUNT_FIRST, "shop", "legal"];
     default:
-      return ["shop", "legal"];
+      return [...ACCOUNT_FIRST, "shop", "legal"];
   }
 }
 
@@ -67,15 +63,16 @@ export function canViewBilling(persona: PersonaKind): boolean {
 
 /** Consistent tab labels — order in settingsTabsForPersona is the display order */
 export const SETTINGS_TAB_LABELS: Record<SettingsTabId, string> = {
-  shop: "Shop",
-  appearance: "Public appearance",
+  account: "Account",
+  shop: "Studio",
+  appearance: "Appearance",
+  audit: "Activity log",
   policy: "Policies",
-  liv: "Liv AI",
+  liv: "Liv",
   comms: "Channels",
   team: "Team",
-  billing: "Plan & billing",
+  billing: "Plan",
   ownership: "Ownership",
   integrations: "Integrations",
   legal: "Legal",
-  demo: "Demo data",
 };

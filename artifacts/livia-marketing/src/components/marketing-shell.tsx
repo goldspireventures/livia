@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "wouter";
 import { Menu, ArrowRight } from "lucide-react";
 import { LiviaWordmark } from "@/components/brand/LiviaMark";
@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { LEGAL_FOOTER_LINE } from "@/lib/company";
 import { dashboardDemoUrl, legalBase } from "@/lib/marketing-links";
 import { editorialCopy, type MarketingLocale } from "@/lib/marketing-editorial-i18n";
+import { applyMarketingPlatformTheme } from "@/lib/marketing-platform-theme";
 
 type MarketingShellProps = {
   locale: MarketingLocale;
@@ -16,6 +17,10 @@ type MarketingShellProps = {
 export function MarketingShell({ locale, children, onJoinBeta }: MarketingShellProps) {
   const t = editorialCopy(locale);
   const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    applyMarketingPlatformTheme();
+  }, []);
   const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   const homeHref = locale === "de" ? "/de" : base || "/";
   const altLocaleHref = locale === "de" ? "/" : "/de";
@@ -71,8 +76,11 @@ export function MarketingShell({ locale, children, onJoinBeta }: MarketingShellP
   );
 
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-aurora-cyan/30 selection:text-aurora-cyan">
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-background/80 backdrop-blur-md pt-[env(safe-area-inset-top)]">
+    <div
+      className="marketing-w1-shell min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-aurora-cyan/30 selection:text-aurora-cyan"
+      data-surface-world="w1"
+    >
+      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/80 bg-background/85 backdrop-blur-md pt-[env(safe-area-inset-top)] marketing-w1-nav">
         <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 py-4 gap-4">
           <Link href={homeHref}>
             <LiviaWordmark size="md" />
@@ -111,7 +119,7 @@ export function MarketingShell({ locale, children, onJoinBeta }: MarketingShellP
 
       <main>{children}</main>
 
-      <footer className="border-t border-white/5 bg-[#0a0a0c] py-12 px-4 sm:px-6 text-sm pb-[calc(3rem+env(safe-area-inset-bottom))]">
+      <footer className="border-t border-border/80 bg-background py-12 px-4 sm:px-6 text-sm pb-[calc(3rem+env(safe-area-inset-bottom))] marketing-w1-footer">
         <div className="max-w-6xl mx-auto flex flex-col gap-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
             <div className="flex items-center gap-6">

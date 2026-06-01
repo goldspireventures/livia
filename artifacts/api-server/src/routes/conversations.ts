@@ -148,6 +148,18 @@ router.post(
       sendError(res, req, 400, "outcome is required (refund_and_cancel | cancel_no_refund | reschedule | close_no_action)");
       return;
     }
+    const needsMessage =
+      outcome === "refund_and_cancel" ||
+      outcome === "cancel_no_refund" ||
+      outcome === "close_no_action";
+    if (needsMessage && typeof body.customerMessage !== "string") {
+      sendError(res, req, 400, "customerMessage is required");
+      return;
+    }
+    if (needsMessage && !String(body.customerMessage).trim()) {
+      sendError(res, req, 400, "customerMessage cannot be empty");
+      return;
+    }
     const result = await resolveConversationCase({
       businessId,
       conversationId,

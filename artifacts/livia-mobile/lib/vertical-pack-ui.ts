@@ -10,5 +10,7 @@ export function verticalPackUi(vertical: string | undefined | null, category?: s
     teamNoun: v.teamNoun,
     hint: v.hint,
     ownerTodayLine: v.ownerTodayLine,
+    ownerTodayScheduleTitle: v.ownerTodayScheduleTitle,
+    ownerTodayScheduleCalendarCta: v.ownerTodayScheduleCalendarCta,
   };
 }

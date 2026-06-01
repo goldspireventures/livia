@@ -1,6 +1,7 @@
 # Vertical playbook — Medspa (V6)
 
 **Status:** L2+L3 (2026-05-31)  
+**Program (L0–L8):** [`MEDSPA-VERTICAL-PROGRAM.md`](../MEDSPA-VERTICAL-PROGRAM.md)  
 **Registry:** `VERTICAL_COVERAGE_REGISTRY` V6 · demo `clarity-medspa-dublin`  
 **Category:** People-business — consent-first, not EHR
 

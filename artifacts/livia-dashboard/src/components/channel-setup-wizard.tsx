@@ -20,6 +20,7 @@ import {
   META_PREREQUISITE_STEPS,
   POST_CONNECT_TIPS,
   resolveChannelPriorities,
+  type ChannelPriority,
   type MessagingChannelsSnapshot,
 } from "@/lib/channel-setup-guide";
 import { OnboardingVideoPlayer } from "@/components/onboarding-video-player";
@@ -47,10 +48,10 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
 
 const WIZARD_STEPS = [
   { id: "priorities", title: "Your channels" },
-  { id: "meta", title: "Meta prerequisites" },
-  { id: "webhook", title: "Platform webhook" },
-  { id: "connect", title: "Connect IDs" },
-  { id: "test", title: "Test & go live" },
+  { id: "meta", title: "Meta setup" },
+  { id: "webhook", title: "Webhook" },
+  { id: "connect", title: "Connect" },
+  { id: "test", title: "Test" },
 ] as const;
 
 type WizardStepId = (typeof WIZARD_STEPS)[number]["id"];
@@ -71,6 +72,8 @@ export function ChannelSetupWizard({
 }) {
   const { toast } = useToast();
   const [stepIndex, setStepIndex] = useState(0);
+  const [activeChannel, setActiveChannel] = useState<ChannelPriority["id"] | null>(null);
+  const [channelSearch, setChannelSearch] = useState("");
   const [waId, setWaId] = useState("");
   const [waDisplay, setWaDisplay] = useState("");
   const [igPage, setIgPage] = useState("");
@@ -93,11 +96,32 @@ export function ChannelSetupWizard({
     setFbPage(ch?.messenger?.pageId ?? ch?.instagram?.pageId ?? "");
   }, [comms]);
 
-  useEffect(() => {
-    if (status.anySocial) {
-      setStepIndex(WIZARD_STEPS.findIndex((s) => s.id === "test"));
+  const filteredPriorities = useMemo(() => {
+    const q = channelSearch.trim().toLowerCase();
+    if (!q) return priorities;
+    return priorities.filter(
+      (p) => p.label.toLowerCase().includes(q) || p.hint.toLowerCase().includes(q),
+    );
+  }, [priorities, channelSearch]);
+
+  function isChannelConnected(id: ChannelPriority["id"]): boolean {
+    if (id === "whatsapp") return status.whatsapp;
+    if (id === "instagram") return status.instagram;
+    if (id === "messenger") return status.messenger;
+    return false;
+  }
+
+  function openChannel(id: ChannelPriority["id"]) {
+    if (id === "sms") {
+      toast({
+        title: "SMS reminders",
+        description: "Livia provisions SMS on your account — ask support to enable, or use Settings → Integrations.",
+      });
+      return;
     }
-  }, [comms?.messagingChannels]);
+    setActiveChannel(id);
+    setStepIndex(WIZARD_STEPS.findIndex((s) => s.id === "connect"));
+  }
 
   async function save() {
     setSaving(true);
@@ -112,8 +136,15 @@ export function ChannelSetupWizard({
           messenger: fbPage.trim() ? { pageId: fbPage.trim() } : undefined,
         }),
       });
-      toast({ title: "Channels saved", description: "Liv can route WhatsApp and Instagram into one inbox." });
+      const label =
+        priorities.find((p) => p.id === activeChannel)?.label ?? "Channel";
+      toast({
+        title: `${label} saved`,
+        description: "Liv routes new messages into your inbox. Connect another channel or run a test.",
+      });
       onRefresh();
+      setActiveChannel(null);
+      setStepIndex(0);
     } catch (e) {
       toast({ title: "Save failed", description: String(e), variant: "destructive" });
     } finally {
@@ -165,11 +196,16 @@ export function ChannelSetupWizard({
     setStepIndex((i) => Math.min(i + 1, WIZARD_STEPS.length - 1));
   }
   function goBack() {
+    if (step === "connect" && activeChannel) {
+      setActiveChannel(null);
+      setStepIndex(0);
+      return;
+    }
     setStepIndex((i) => Math.max(i - 1, 0));
   }
 
   return (
-    <div className="space-y-4" data-testid="channel-setup-wizard">
+    <div className="space-y-5 pb-2" data-testid="channel-setup-wizard">
       <div className="flex flex-wrap gap-1.5">
         {WIZARD_STEPS.map((s, i) => (
           <button
@@ -190,7 +226,7 @@ export function ChannelSetupWizard({
       </div>
 
       {step === "priorities" && (
-        <div className="space-y-3 text-sm">
+        <div className="space-y-4 text-sm">
           {getOnboardingVideoUrl("channels") ? (
             <OnboardingVideoPlayer
               url={getOnboardingVideoUrl("channels")!}
@@ -200,17 +236,47 @@ export function ChannelSetupWizard({
           ) : null}
           <p className="text-muted-foreground">
             {compact
-              ? "Customers message you where they already are. Liv answers in one inbox — no tab hopping."
-              : "Connect the channels your market actually uses. Liv keeps one thread per customer across WhatsApp, Instagram, SMS, and your booking page."}
+              ? "Tap a channel to connect it. Liv answers in one inbox — no tab hopping."
+              : "Tap each channel you use. Paste one ID from Meta — Livia handles webhooks and routing on our servers."}
           </p>
+          {priorities.length >= 3 ? (
+            <Input
+              placeholder="Search channels…"
+              value={channelSearch}
+              onChange={(e) => setChannelSearch(e.target.value)}
+              data-testid="channel-setup-search"
+            />
+          ) : null}
           <ul className="space-y-2">
-            {priorities.map((p) => (
-              <li key={p.id} className="flex gap-2 rounded-md border bg-card/50 p-3">
-                <span className="font-medium shrink-0">{p.label}</span>
-                <span className="text-muted-foreground text-xs">{p.hint}</span>
+            {filteredPriorities.map((p) => (
+              <li key={p.id}>
+                <button
+                  type="button"
+                  data-testid={`channel-pick-${p.id}`}
+                  onClick={() => openChannel(p.id)}
+                  className="w-full flex items-start gap-3 rounded-lg border border-border/80 bg-card/50 p-3 text-left transition-colors hover:border-primary/40 hover:bg-primary/5"
+                >
+                  <span className="font-medium shrink-0">{p.label}</span>
+                  <span className="text-muted-foreground text-xs flex-1">{p.hint}</span>
+                  {isChannelConnected(p.id) ? (
+                    <Check className="h-4 w-4 shrink-0 text-primary mt-0.5" aria-label="Connected" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" aria-hidden />
+                  )}
+                </button>
               </li>
             ))}
           </ul>
+          {status.anySocial ? (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => setStepIndex(WIZARD_STEPS.findIndex((s) => s.id === "test"))}
+            >
+              Test messages → Inbox
+            </Button>
+          ) : null}
           <p className="text-xs text-muted-foreground">
             Calendar imports (Booksy, CSV) live under Settings → Integrations — separate from messaging.
           </p>
@@ -254,59 +320,72 @@ export function ChannelSetupWizard({
       )}
 
       {step === "connect" && (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2 sm:col-span-2">
-            <Label className="flex items-center gap-2">
-              <MessageCircle className="h-3.5 w-3.5" />
-              WhatsApp Phone number ID
-              {status.whatsapp ? <Check className="h-3.5 w-3.5 text-primary" /> : null}
-            </Label>
-            <Input
-              value={waId}
-              onChange={(e) => setWaId(e.target.value)}
-              placeholder="Meta → WhatsApp → API setup → Phone number ID"
-              data-testid="input-wa-phone-id"
-            />
-            <Input
-              value={waDisplay}
-              onChange={(e) => setWaDisplay(e.target.value)}
-              placeholder="Display number +353… (shown on booking page)"
-            />
-            <p className="text-xs text-muted-foreground">
-              Meta Business Suite → WhatsApp Manager → API setup. Use the <strong>Phone number ID</strong>, not the customer-facing number alone.
-            </p>
-          </div>
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2">
-              <Instagram className="h-3.5 w-3.5" />
-              Instagram / Facebook Page ID
-              {status.instagram ? <Check className="h-3.5 w-3.5 text-primary" /> : null}
-            </Label>
-            <Input
-              value={igPage}
-              onChange={(e) => setIgPage(e.target.value)}
-              placeholder="Page ID linked to professional IG"
-              data-testid="input-ig-page-id"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2">
-              <Facebook className="h-3.5 w-3.5" />
-              Messenger Page ID
-              {status.messenger ? <Check className="h-3.5 w-3.5 text-primary" /> : null}
-            </Label>
-            <Input
-              value={fbPage}
-              onChange={(e) => setFbPage(e.target.value)}
-              placeholder="Usually same as Instagram page"
-            />
-          </div>
-          <div className="sm:col-span-2">
-            <Button onClick={() => void save()} disabled={saving} data-testid="button-save-social-channels">
-              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Save channel IDs
-            </Button>
-          </div>
+        <div className="livia-form-stack space-y-5 text-sm">
+          <p className="text-muted-foreground">
+            {activeChannel === "whatsapp"
+              ? "Paste your WhatsApp Phone number ID from Meta. Livia registers webhooks and delivers DMs to Inbox."
+              : activeChannel === "instagram"
+                ? "Paste the Facebook Page ID linked to your professional Instagram account."
+                : activeChannel === "messenger"
+                  ? "Paste your Facebook Page ID for Messenger (often the same as Instagram)."
+                  : "Choose a channel from step 1, or use the advanced fields below."}
+          </p>
+          {(activeChannel === "whatsapp" || !activeChannel) && (
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <MessageCircle className="h-3.5 w-3.5" />
+                WhatsApp Phone number ID
+                {status.whatsapp ? <Check className="h-3.5 w-3.5 text-primary" /> : null}
+              </Label>
+              <Input
+                value={waId}
+                onChange={(e) => setWaId(e.target.value)}
+                placeholder="From Meta → WhatsApp → API setup"
+                data-testid="input-wa-phone-id"
+              />
+              <Input
+                value={waDisplay}
+                onChange={(e) => setWaDisplay(e.target.value)}
+                placeholder="Customer-facing number +353… (optional, for booking page)"
+              />
+              <p className="text-xs text-muted-foreground">
+                Use the <strong>Phone number ID</strong> from WhatsApp Manager — not the display number alone.
+              </p>
+            </div>
+          )}
+          {(activeChannel === "instagram" || activeChannel === "messenger" || !activeChannel) && (
+            <div className="space-y-2 pt-1">
+              <Label className="flex items-center gap-2">
+                <Instagram className="h-3.5 w-3.5" />
+                Instagram / Facebook Page ID
+                {status.instagram ? <Check className="h-3.5 w-3.5 text-primary" /> : null}
+              </Label>
+              <Input
+                value={igPage}
+                onChange={(e) => setIgPage(e.target.value)}
+                placeholder="Page ID from Meta Business Suite"
+                data-testid="input-ig-page-id"
+              />
+            </div>
+          )}
+          {(activeChannel === "messenger" || !activeChannel) && (
+            <div className="space-y-2 pt-1">
+              <Label className="flex items-center gap-2">
+                <Facebook className="h-3.5 w-3.5" />
+                Messenger Page ID
+                {status.messenger ? <Check className="h-3.5 w-3.5 text-primary" /> : null}
+              </Label>
+              <Input
+                value={fbPage}
+                onChange={(e) => setFbPage(e.target.value)}
+                placeholder="Usually same as Instagram page"
+              />
+            </div>
+          )}
+          <Button onClick={() => void save()} disabled={saving} data-testid="button-save-social-channels">
+            {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            Save & return to channels
+          </Button>
         </div>
       )}
 

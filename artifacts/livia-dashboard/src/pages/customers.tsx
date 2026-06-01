@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 import { useBusiness } from "@/lib/business-context";
+import { businessVocabulary } from "@workspace/policy";
 import {
   useListCustomers,
   getListCustomersQueryKey,
@@ -21,6 +22,15 @@ import { MergeSuggestionsPanel } from "@/components/merge-suggestions-panel";
 import { useForm } from "react-hook-form";
 import { invalidateOperationalState } from "@/lib/operational-cache";
 import { OperationalPageShell } from "@/components/layout/operational-page-shell";
+import { useBeautyChrome } from "@/lib/presentation-layout";
+import {
+  beautyListScroll,
+  beautyPanel,
+  beautyPrimaryButton,
+  beautyRow,
+} from "@/lib/beauty-operational-ui";
+import { cn } from "@/lib/utils";
+import { onContainedScrollWheel } from "@/lib/use-contained-scroll";
 
 const PAGE_SIZE = 40;
 
@@ -51,6 +61,12 @@ export default function CustomersPage() {
 
   const debouncedSearch = useDebouncedValue(search, 300);
   const bid = business?.id ?? "";
+  const beautyChrome = useBeautyChrome((business as { vertical?: string } | null)?.vertical);
+  const clientNoun = businessVocabulary(
+    (business as { vertical?: string } | null)?.vertical,
+    business?.category,
+  ).clientNoun.toLowerCase();
+  const clientNounPlural = clientNoun.endsWith("s") ? `${clientNoun}es` : `${clientNoun}s`;
 
   useEffect(() => {
     setOffset(0);
@@ -127,12 +143,19 @@ export default function CustomersPage() {
     <OperationalPageShell
       data-testid="customers-page"
       title="Clients"
-      subtitle={total !== undefined ? `${total} in your roster` : "Search, merge, and rebook from one place."}
+      subtitle={
+        total !== undefined
+          ? `${total} ${clientNounPlural} — search, book, and view visit history.`
+          : `Search, add ${clientNounPlural}, and open profiles for bookings and history.`
+      }
       width="full"
       actions={
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button data-testid="button-add-customer">
+            <Button
+              data-testid="button-add-customer"
+              className={beautyPrimaryButton(beautyChrome)}
+            >
               <UserPlus className="h-4 w-4 mr-2" />
               Add client
             </Button>
@@ -173,6 +196,42 @@ export default function CustomersPage() {
         </Dialog>
       }
     >
+      {total !== undefined ? (
+        <div className="grid grid-cols-2 gap-3 max-w-md">
+          <Card className={beautyPanel(beautyChrome)}>
+            <CardContent className="py-4">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Total {clientNounPlural}</p>
+              <p
+                className={cn(
+                  "text-2xl font-semibold tabular-nums",
+                  beautyChrome && "font-serif tracking-tight",
+                )}
+                style={beautyChrome ? { fontFamily: "var(--app-font-serif)" } : undefined}
+              >
+                {total}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className={beautyPanel(beautyChrome)}>
+            <CardContent className="py-4">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">In directory</p>
+              <p
+                className={cn(
+                  "text-2xl font-semibold tabular-nums",
+                  beautyChrome && "font-serif tracking-tight",
+                )}
+                style={beautyChrome ? { fontFamily: "var(--app-font-serif)" } : undefined}
+              >
+                {accumulated.length}
+              </p>
+              {hasMore ? (
+                <p className="text-[10px] text-muted-foreground mt-1">Scroll the list for more</p>
+              ) : null}
+            </CardContent>
+          </Card>
+        </div>
+      ) : null}
+
       <MergeSuggestionsPanel />
 
       <div className="relative max-w-sm">
@@ -186,7 +245,7 @@ export default function CustomersPage() {
         />
       </div>
 
-      <Card>
+      <Card className={beautyPanel(beautyChrome)}>
         <CardContent className="p-0">
           {listLoading ? (
             <div className="divide-y divide-border">
@@ -210,14 +269,21 @@ export default function CustomersPage() {
             </div>
           ) : (
             <>
-              <div className="divide-y divide-border max-h-[min(70vh,640px)] overflow-y-auto">
+              <div className={beautyListScroll()} onWheel={onContainedScrollWheel}>
                 {accumulated.map((customer) => (
                   <Link key={customer.id} href={`/customers/${customer.id}`}>
                     <div
                       data-testid={`row-customer-${customer.id}`}
-                      className="flex items-center gap-3 p-3 hover:bg-muted/30 transition-colors cursor-pointer"
+                      className={beautyRow(beautyChrome)}
                     >
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted font-semibold text-sm shrink-0">
+                      <div
+                        className={cn(
+                          "flex h-10 w-10 items-center justify-center rounded-full font-semibold text-sm shrink-0",
+                          beautyChrome
+                            ? "bg-primary/12 text-primary"
+                            : "bg-muted",
+                        )}
+                      >
                         {customer.firstName?.charAt(0) ?? "?"}
                       </div>
                       <div className="flex-1 min-w-0">

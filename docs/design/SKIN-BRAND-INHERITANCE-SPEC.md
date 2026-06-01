@@ -95,7 +95,39 @@ Persona layer (4) does **not** apply to P7 — guest flows use **customer typolo
 - Apply internal/platform Aurora gradients on `/b` (business brand forward)
 - Pick a preset that hides required vertical modules (validator rejects)
 
-### 4.4 Preview parity (engineering requirement)
+### 4.4 Settings → Appearance tab (founder lock 2026-06-01)
+
+**One skin per business** — not separate “dashboard skin” and “public skin.”
+
+| UI label | What it actually changes |
+|----------|-------------------------|
+| Settings tab **Appearance** | Same section as the **Public appearance** card inside it |
+| **Preset** grid | `presentation_preset_id` on the business row → **W4** authenticated app **and** **W5** `/b/{slug}` |
+| **Logo / cover / accent** | Brand layer on top of that preset — both surfaces |
+| **Live `/b` iframe** | Preview of the guest page; saving preset also morphs the dashboard you are in |
+
+**Owner-facing truth:** *Changing Appearance updates how your studio looks to you and to clients on your booking link.*
+
+**Not true today:** picking a preset that only changes `/b` while the dashboard stays on Platform Default or another preset.
+
+**Why the card still says “Public appearance”:** it emphasises the guest link (`/b/{slug}`) and the mobile preview frame. The preset still applies shop-wide — copy under the title should say so.
+
+**`?preview=1&preset=` on `/b`:** QA-only override in the browser; not saved until the owner PATCHes presentation in Settings.
+
+### 4.5 Split W4 vs W5 presentation (deferred — not built)
+
+Some products offer **two** theme pickers: “how my team app looks” vs “how my booking page looks.”
+
+That would mean, for example:
+
+- `presentationPresetId` → dashboard + mobile tenant app  
+- `publicPresentationPresetId` → `/b` only  
+
+**Founder decision (2026-06-01):** **No split at launch.** One preset, one brand row, full parity (see §4.4). Reasons: fewer contradictions, simpler support (“what did I change?”), existing spec + E2E assume a single bundle.
+
+Revisit only if a vertical truly needs it (e.g. always-dark ops desk + always-light guest book) — would need policy fields, two pickers in Settings, and CI that both surfaces stay accessible.
+
+### 4.6 Preview parity (engineering requirement)
 
 **When owner changes preset or brand in W4 Settings → Public appearance:**
 
@@ -104,6 +136,25 @@ Persona layer (4) does **not** apply to P7 — guest flows use **customer typolo
 3. CI screenshot test: preset change updates public book page tokens.
 
 **Doc gate:** [`UI-UX-MASTER-PROGRAM.md`](./UI-UX-MASTER-PROGRAM.md) §4.5.
+
+### 4.7 Adaptive sign-in (W2 → W4 handoff)
+
+**Problem:** Fixed bright gateway → tenant dark preset feels like two apps.
+
+**Decision:**
+
+| State | Chrome |
+|-------|--------|
+| Anonymous `/sign-in` | W2 gateway Aurora (fixed) |
+| After Clerk identifies user (email or OAuth account known) | **Preview** tenant `presentation_preset_id` + logo/accent on sign-in panel only — cross-fade, no full route skin merge |
+| Post-auth redirect | W4 dashboard already on stored preset — **no second theme flash** |
+| No business yet (new signup) | Stay W2 until onboarding selects vertical + preset |
+
+**API:** safe hint endpoint or post-identify bundle: `{ presetId, accentHex, logoUrl, colorScheme }` — no secrets.
+
+**Demo path:** `/demo` stays W2 (`g1-wedge-web`); entering demo sets tenant session → W4 preset for seeded business. Wedge interstitial does **not** skin `/dashboard`.
+
+Full flow: [`LIVIA-TARGET-VISUALS.md`](./LIVIA-TARGET-VISUALS.md) · assets [`assets/w2-gateway/`](./assets/w2-gateway/).
 
 ---
 
@@ -178,3 +229,4 @@ W6 does **not** reuse W4 preset — it is **person-owned**, not business-owned U
 | Date | Change |
 |------|--------|
 | 2026-05-31 | Full inheritance spec; `/b` editability tiers; P7 mobile entry decision |
+| 2026-06-01 | §4.4 Appearance tab = single shop skin; §4.5 split W4/W5 deferred; Bloom demo = noir-dusk default |

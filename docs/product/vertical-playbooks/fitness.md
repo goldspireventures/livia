@@ -1,7 +1,8 @@
 # Vertical playbook — Fitness (V7)
 
 **Status:** L2+L3 (2026-05-31)  
-**Registry:** `VERTICAL_COVERAGE_REGISTRY` V7 · demo `peak-fitness-dublin`  
+**Program (L0–L8):** [`FITNESS-VERTICAL-PROGRAM.md`](../FITNESS-VERTICAL-PROGRAM.md)  
+**Registry:** `VERTICAL_COVERAGE_REGISTRY` V5 · demo `peak-fitness-dublin`  
 **Category:** People-business — classes, waitlists, PT blocks
 
 ---

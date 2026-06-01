@@ -76,7 +76,6 @@ function NotificationRow({
         "flex gap-3 min-h-[72px] items-center rounded-lg border border-border border-l-4 px-3 py-2.5 text-left transition-opacity",
         priorityClass(n.priority),
         !n.readAt && "bg-muted/40 font-medium",
-        n.readAt && "opacity-80",
         MOTION.listItem,
       )}
       data-testid={`notification-row-${n.id}`}

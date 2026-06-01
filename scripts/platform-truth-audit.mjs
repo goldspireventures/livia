@@ -64,7 +64,7 @@ const checks = [
   },
   {
     id: "shift-templates",
-    label: "Shift templates + materialize",
+    label: "Shift templates + publish week",
     pass: () =>
       existsSync(join(api, "services/shift-templates.service.ts")) &&
       readFileSync(join(api, "services/slots.service.ts"), "utf8").includes("staffShiftsTable"),

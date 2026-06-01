@@ -1,30 +1,13 @@
-import { Link } from "wouter";
-import { ArrowLeft } from "lucide-react";
-import { BookingWizard } from "@/components/booking/booking-wizard";
-import { OperationalPageShell } from "@/components/layout/operational-page-shell";
-import { Button } from "@/components/ui/button";
-import { useBusiness } from "@/lib/business-context";
+import { useEffect } from "react";
+import { useLocation } from "wouter";
 
-/** Full-page guided booking — notes, full client search, every step visible. */
+/** Guided booking opens as a modal on /bookings. */
 export default function BookingNewPage() {
-  const { business } = useBusiness();
-
-  return (
-    <OperationalPageShell
-      data-testid="booking-new-page"
-      title="New booking"
-      subtitle={`Guided flow · ${business?.name ?? "your shop"} — client, service, team, time, then confirm.`}
-      width="lg"
-      actions={
-        <Link href="/bookings">
-          <Button variant="ghost" size="sm" className="gap-1.5">
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Back to list
-          </Button>
-        </Link>
-      }
-    >
-      <BookingWizard mode="page" quick={false} />
-    </OperationalPageShell>
-  );
+  const [, setLocation] = useLocation();
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const qs = params.toString();
+    setLocation(qs ? `/bookings?guided=1&${qs}` : "/bookings?guided=1", { replace: true });
+  }, [setLocation]);
+  return null;
 }

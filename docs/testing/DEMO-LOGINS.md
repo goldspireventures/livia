@@ -58,7 +58,7 @@ Pattern: `owner-<short>@livia.io` — only that tenant after sign-in.
 | `motion-physio-cork` | `owner-physio@livia.io` | allied-health |
 | `peak-fitness-dublin` | `owner-peak@livia.io` | fitness |
 | `shine-studio-belfast` | `owner-shine@livia.io` | beauty |
-| `luxe-salon-spa` | `owner-luxe@livia.io` | beauty |
+| `luxe-salon-spa` | `owner-luxe@livia.io` | hair |
 | `stoneybatter-cuts` | `owner-stoney@livia.io` | hair |
 | `dublin-barber-collective` | `owner-barber@livia.io` | hair |
 | `dundrum-hair-studio` | `owner-dundrum@livia.io` | hair |
@@ -76,6 +76,7 @@ Pattern: `owner-<short>@livia.io` — only that tenant after sign-in.
 
 | Goal | Account |
 |------|---------|
+| Beauty presets + `/b` + inbox (Bloom) | `owner-bloom@livia.io` |
 | Tattoo design proofs + camera upload | `owner-ink@livia.io` |
 | Medspa clinical hub | `owner-clarity@livia.io` |
 | Hair salon Today / bookings | `owner-conorcuts@livia.io` |

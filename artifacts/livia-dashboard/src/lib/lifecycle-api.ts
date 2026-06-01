@@ -25,6 +25,17 @@ export type OwnershipCandidate = {
   deskRole: "manager" | "reception";
 };
 
+export type RosterWithoutSignIn = {
+  staffId: string;
+  displayName: string;
+  email: string | null;
+};
+
+export type OwnershipCandidatesPayload = {
+  candidates: OwnershipCandidate[];
+  rosterWithoutSignIn: RosterWithoutSignIn[];
+};
+
 export function fetchUserLifecycle() {
   return apiFetch<{
     ownerBusinessCount: number;
@@ -41,9 +52,12 @@ export function fetchBusinessLifecycle(businessId: string) {
 }
 
 export function fetchOwnershipCandidates(businessId: string) {
-  return apiFetch<{ candidates: OwnershipCandidate[] }>(
+  return apiFetch<OwnershipCandidatesPayload>(
     `/businesses/${businessId}/ownership-candidates`,
-  );
+  ).then((payload) => ({
+    candidates: payload?.candidates ?? [],
+    rosterWithoutSignIn: payload?.rosterWithoutSignIn ?? [],
+  }));
 }
 
 export function transferOwnership(

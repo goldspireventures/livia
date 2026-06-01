@@ -11,6 +11,7 @@ import {
   type OnboardingState,
   validateBusinessNaming,
   defaultStructureKindForCreate,
+  resolvePresentationPreset,
   type BusinessStructureKind,
   type TenantAttestation,
 } from "@workspace/policy";
@@ -147,7 +148,7 @@ export async function createBusiness(
       euRegion: packDefaults.euRegion,
       aiGreeting: packDefaults.aiGreeting,
       logoUrl: data.logoUrl,
-      presentationPresetId: "platform-default",
+      presentationPresetId: resolvePresentationPreset(vertical).id,
       instagramHandle: data.instagramHandle,
       onboardingState: afterBusinessCreatedState() as unknown as Record<string, unknown>,
       tenantAttestation: data.tenantAttestation as unknown as Record<string, unknown> | undefined,

@@ -110,6 +110,8 @@ export const businessesTable = pgTable(
     parentBusinessId: text("parent_business_id"),
     structureKind: businessStructureKindEnum("structure_kind").notNull().default("standalone"),
     livPackConfig: jsonb("liv_pack_config").$type<Record<string, unknown>>(),
+    /** Up to 4 service ids pinned to the top grid on public /b (order preserved). */
+    publicFeaturedServiceIds: jsonb("public_featured_service_ids").$type<string[]>(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

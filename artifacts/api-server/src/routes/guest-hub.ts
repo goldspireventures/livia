@@ -4,6 +4,7 @@ import { logRouteError, safeClientMessage, sendError } from "../lib/http-errors"
 import {
   getGuestHubView,
   requestGuestHubOtp,
+  resolveGuestVisitPath,
   toggleGuestFavorite,
   verifyGuestHubOtp,
 } from "../services/guest-hub.service";
@@ -49,6 +50,20 @@ router.post("/public/guest-hub/otp/verify", async (req, res): Promise<void> => {
     return;
   }
   res.json(result);
+});
+
+router.get("/public/guest-hub/visit/:token", async (req, res): Promise<void> => {
+  const token = Array.isArray(req.params.token) ? req.params.token[0] : req.params.token;
+  if (!token) {
+    sendError(res, req, 400, "token required");
+    return;
+  }
+  const path = await resolveGuestVisitPath(token);
+  if (!path) {
+    sendError(res, req, 404, "Visit not found");
+    return;
+  }
+  res.json({ path });
 });
 
 router.get("/public/guest-hub/me", async (req, res): Promise<void> => {

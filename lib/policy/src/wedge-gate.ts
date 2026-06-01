@@ -98,3 +98,10 @@ export function isBusinessApiFeatureAllowed(
   if (!allowed) return true;
   return allowed.includes((vertical ?? "hair").toLowerCase());
 }
+
+/** Room / equipment capacity — spa, clinic, allied-health only (not chair-based beauty or hair). */
+const BOOKING_RESOURCES_VERTICALS = new Set(["wellness", "medspa", "allied-health"]);
+
+export function showBookingResourcesSettings(vertical: string | null | undefined): boolean {
+  return BOOKING_RESOURCES_VERTICALS.has((vertical ?? "").toLowerCase());
+}

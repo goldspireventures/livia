@@ -11,3 +11,6 @@
 11 screens per tier (33 PNGs). Mirrored to `artifacts/livia-dashboard/public/livia-evolution/`.
 
 See [`LIVIA-EVOLUTION-SCREENS.md`](../LIVIA-EVOLUTION-SCREENS.md).
+
+
+> **Canonical mirror:** ../evolution/ — prefer new paths in ../README.md.

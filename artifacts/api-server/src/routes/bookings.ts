@@ -12,6 +12,7 @@ import {
   getBookingById,
   createBooking,
   updateBookingStatus,
+  rescheduleBooking,
 } from "../services/bookings.service";
 import { logEvent } from "../services/events.service";
 import { EventType } from "@workspace/db";
@@ -21,6 +22,7 @@ import { emitBookingCreated, emitBookingStatusChange } from "../lib/booking-even
 import { listStuckContinuityBookings } from "../services/booking-continuity.service";
 import { listCustomerDriftCandidates } from "../services/customer-drift.service";
 import { getBookingTimeline } from "../services/booking-timeline.service";
+import { getLinkedInboxCaseForBooking } from "../services/booking-linked-inbox.service";
 import { listBookingMedia, attachBookingMedia } from "../services/booking-media.service";
 import { replyDomainError } from "../lib/domain-errors";
 import { markOnboardingTestBooking } from "../services/onboarding-progress.service";
@@ -224,7 +226,8 @@ router.get(
       sendError(res, req, 404, "Booking not found");
       return;
     }
-    res.json(b);
+    const linkedInboxCase = await getLinkedInboxCaseForBooking(businessId, bookingId);
+    res.json({ ...b, linkedInboxCase });
   },
 );
 
@@ -283,6 +286,56 @@ router.patch(
       }
       res.json(updated);
     } catch (err: unknown) {
+      if (replyDomainError(req, res, err)) return;
+      throw err;
+    }
+  },
+);
+
+router.post(
+  "/businesses/:businessId/bookings/:bookingId/reschedule",
+  requireAuth,
+  requireRole("STAFF"),
+  async (req, res): Promise<void> => {
+    const userId = getUserId(req);
+    const businessId = getBizId(req.params.businessId);
+    const bookingId = getBizId(req.params.bookingId);
+    const ctx = getRoleContext(req);
+    const startAt = req.body?.startAt;
+    if (!startAt || typeof startAt !== "string") {
+      sendError(res, req, 400, "startAt is required");
+      return;
+    }
+
+    if (ctx.role === "STAFF") {
+      const existing = await getBookingById(businessId, bookingId);
+      if (!existing || existing.staffId !== ctx.actingStaffId) {
+        sendError(res, req, 404, "Booking not found");
+        return;
+      }
+    }
+
+    try {
+      const updated = await rescheduleBooking(businessId, bookingId, startAt);
+      await appendHumanAudit(businessId, userId, "human.booking.reschedule", "booking", bookingId, {
+        startAt,
+        status: updated.status,
+      });
+      res.json(updated);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "";
+      if (msg === "BOOKING_NOT_FOUND") {
+        sendError(res, req, 404, "Booking not found");
+        return;
+      }
+      if (msg === "INVALID_STATUS_FOR_RESCHEDULE") {
+        sendError(res, req, 400, "Only pending or confirmed bookings can be rescheduled");
+        return;
+      }
+      if (msg === "SLOT_CONFLICT") {
+        sendError(res, req, 409, "That time is no longer available");
+        return;
+      }
       if (replyDomainError(req, res, err)) return;
       throw err;
     }

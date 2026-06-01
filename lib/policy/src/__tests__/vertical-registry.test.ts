@@ -22,7 +22,12 @@ for (const vertical of businessVerticalSchema.options) {
     `${vertical} pack must pass defineVerticalPack`,
   );
   const presets = listPresentationPresets(vertical);
-  assert.equal(presets.length, 4, `${vertical} must have 4 presentation presets`);
+  const expected = vertical === "beauty" ? 5 : 4;
+  assert.equal(
+    presets.length,
+    expected,
+    `${vertical} must have ${expected} presentation presets (platform-default + natives)`,
+  );
   assert.ok(
     presets.some((p) => p.id === PLATFORM_DEFAULT_PRESET_ID),
     `${vertical} missing platform-default preset`,

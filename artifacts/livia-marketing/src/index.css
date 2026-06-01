@@ -327,6 +327,38 @@
   }
 }
 
+/* W1 — northstar ink + aurora wash (MARKETING-SURFACE-PROGRAM §2) */
+html[data-surface-world="w1"].dark {
+  --background: 240 22% 7%;
+  --foreground: 0 0% 98%;
+  --card: 240 14% 9%;
+  --card-foreground: 0 0% 98%;
+  --border: 240 8% 16%;
+  --muted: 240 10% 12%;
+  --muted-foreground: 240 6% 62%;
+  --primary: 188 95% 43%;
+  --primary-foreground: 240 22% 7%;
+  color-scheme: dark;
+}
+
+html[data-surface-world="w1"].dark .marketing-w1-shell {
+  background-color: hsl(var(--background));
+  background-image:
+    radial-gradient(ellipse 120% 80% at 50% -30%, hsl(258 90% 66% / 0.14), transparent 55%),
+    radial-gradient(ellipse 70% 50% at 100% 0%, hsl(188 95% 43% / 0.1), transparent 50%),
+    linear-gradient(180deg, hsl(240 22% 8%) 0%, hsl(var(--background)) 40%);
+}
+
+html[data-surface-world="w1"].dark .marketing-w1-nav {
+  border-color: hsl(var(--border) / 0.85);
+  background: hsl(var(--background) / 0.88);
+}
+
+html[data-surface-world="w1"].dark .marketing-w1-footer {
+  background: hsl(240 18% 5%);
+  border-color: hsl(var(--border) / 0.7);
+}
+
 /* ============================================================
    CELEBRATE — champagne shimmer for the booking-confirmed moment.
    Wraps a confirmation surface; the gradient sweeps across once.
@@ -514,10 +546,11 @@
     inset: -1px;
   }
 
+  /* Hero aurora wash — same 2.2s rhythm as Liv briefing pulse on W4 */
   @keyframes marketing-aurora-breathe {
     0%,
     100% {
-      opacity: 0.88;
+      opacity: 0.72;
     }
     50% {
       opacity: 1;
@@ -525,7 +558,7 @@
   }
 
   .marketing-aurora-breathe {
-    animation: marketing-aurora-breathe 8s ease-in-out infinite;
+    animation: marketing-aurora-breathe 2.2s ease-in-out infinite;
   }
 
   @media (prefers-reduced-motion: reduce) {

@@ -1,7 +1,8 @@
 # Vertical playbook — Automotive detailing (V10)
 
 **Status:** L2+L3 (2026-05-31)  
-**Registry:** `VERTICAL_COVERAGE_REGISTRY` V10 · demo `shine-studio-belfast`  
+**Program (L0–L8):** [`AUTOMOTIVE-DETAILING-VERTICAL-PROGRAM.md`](../AUTOMOTIVE-DETAILING-VERTICAL-PROGRAM.md)  
+**Registry:** `VERTICAL_COVERAGE_REGISTRY` V-AD · demo `shine-studio-belfast`  
 **Category:** People-business — vehicle continuity, long bays, package tiers
 
 ---

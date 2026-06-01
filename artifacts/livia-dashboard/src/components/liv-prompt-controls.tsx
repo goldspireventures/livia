@@ -13,11 +13,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { FileText } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 const KEYS = [
-  { id: "vertical.module", label: "Vertical module (replaces pack text)" },
-  { id: "system.core", label: "Core instructions (prepended)" },
+  {
+    id: "vertical.module",
+    label: "How Liv talks about your business",
+    hint: "Replaces the default tone for your vertical (beauty, fitness, etc.).",
+  },
+  {
+    id: "system.core",
+    label: "Extra rules for every reply",
+    hint: "Added on top of Liv's standard safety and booking rules.",
+  },
 ] as const;
 
 export default function LivPromptControls() {
@@ -28,6 +36,8 @@ export default function LivPromptControls() {
   const [content, setContent] = useState("");
   const [packModule, setPackModule] = useState("");
   const [saving, setSaving] = useState(false);
+
+  const activeKeyMeta = KEYS.find((k) => k.id === promptKey) ?? KEYS[0];
 
   async function load() {
     if (!bid) return;
@@ -55,7 +65,7 @@ export default function LivPromptControls() {
         method: "PATCH",
         body: JSON.stringify({ promptKey, content: content.trim() }),
       });
-      toast({ title: "Prompt version saved" });
+      toast({ title: "Liv instructions saved" });
       void load();
     } catch (e) {
       toast({
@@ -74,16 +84,17 @@ export default function LivPromptControls() {
     <Card>
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
-          <FileText className="h-4 w-4" />
-          Versioned Liv prompts
+          <Sparkles className="h-4 w-4" />
+          Custom instructions for Liv
         </CardTitle>
         <CardDescription>
-          Overrides TS templates in the database. Default pack module shown for reference.
+          Optional — only change this if you want Liv to sound more like your brand. Leave blank to
+          use Livia&apos;s default for your business type.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="livia-form-stack space-y-5">
         <div className="space-y-2">
-          <Label>Prompt key</Label>
+          <Label>What to customise</Label>
           <Select value={promptKey} onValueChange={(v) => setPromptKey(v as typeof promptKey)}>
             <SelectTrigger>
               <SelectValue />
@@ -96,23 +107,25 @@ export default function LivPromptControls() {
               ))}
             </SelectContent>
           </Select>
+          <p className="text-xs text-muted-foreground leading-relaxed">{activeKeyMeta.hint}</p>
         </div>
         {packModule ? (
-          <p className="text-xs text-muted-foreground border rounded p-2 bg-muted/30 max-h-24 overflow-y-auto">
-            Pack default: {packModule}
+          <p className="text-xs text-muted-foreground border rounded-md p-3 bg-muted/30 max-h-24 overflow-y-auto">
+            <span className="font-medium text-foreground/80">Livia default: </span>
+            {packModule}
           </p>
         ) : null}
-        <div className="space-y-2">
-          <Label>Override content</Label>
+        <div className="space-y-2 pt-1">
+          <Label>Your wording</Label>
           <Textarea
             rows={6}
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="Leave empty to use pack/template only"
+            placeholder="Example: Warm and concise. Never upsell. Always confirm patch test policy for tinting."
           />
         </div>
         <Button onClick={() => void save()} disabled={saving || !content.trim()}>
-          {saving ? "Saving…" : "Save new version"}
+          {saving ? "Saving…" : "Save instructions"}
         </Button>
       </CardContent>
     </Card>

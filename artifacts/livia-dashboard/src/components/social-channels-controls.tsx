@@ -33,7 +33,7 @@ export function SocialChannelsControls({
 
   return (
     <div
-      className="space-y-4 rounded-lg border border-primary/20 bg-primary/5 p-4"
+      className="space-y-4 rounded-lg border border-primary/20 bg-primary/5 p-4 mb-4"
       data-testid="social-channels-panel"
     >
       <div>

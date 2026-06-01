@@ -1,7 +1,8 @@
 # Vertical playbook — Pet grooming (V9)
 
 **Status:** L2+L3 (2026-05-31)  
-**Registry:** `VERTICAL_COVERAGE_REGISTRY` V9 · demo `paws-parlour-dublin`  
+**Program (L0–L8):** [`PET-GROOMING-VERTICAL-PROGRAM.md`](../PET-GROOMING-VERTICAL-PROGRAM.md)  
+**Registry:** `VERTICAL_COVERAGE_REGISTRY` V10 · demo `paws-parlour-dublin`  
 **Category:** People-business — pet profiles, temperament, multi-pet households
 
 ---

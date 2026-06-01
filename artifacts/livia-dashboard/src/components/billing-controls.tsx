@@ -1,16 +1,13 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { invalidateOperationalState } from "@/lib/operational-cache";
-import { CreditCard, Mic, TrendingUp, Shield } from "lucide-react";
+import { CreditCard, Mic, TrendingUp } from "lucide-react";
 import { useBusiness } from "@/lib/business-context";
-import { getMarketingOrigin, marketingPricingUrl } from "@/lib/surface-urls";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { customFetch } from "@workspace/api-client-react";
-import { PLANNED_ENTITLEMENTS } from "@workspace/policy";
 
 type BillingState = {
   planId: string;
@@ -83,45 +80,6 @@ export default function BillingControls() {
   const waSent = billing.usage.whatsapp_message_outbound ?? 0;
   const voiceOutcomes = billing.usage.voice_booking_outcome ?? 0;
 
-  const entitlementLabels: Record<string, string> = {
-    voice_receptionist: "Voice",
-    whatsapp_inbound: "WhatsApp",
-    whatsapp_outbound: "WA outbound",
-    sms_outbound: "SMS",
-    audit_log_owner_view: "Audit",
-    audit_log_export: "Audit export",
-    peer_set_insights: "Peer insights",
-    cross_tenant_intelligence_opt_in: "Cross-tenant intel",
-    deposits: "Deposits",
-    stripe_connect_payouts: "Payouts",
-    apple_wallet_passes: "Wallet",
-    google_calendar_export: "Calendar",
-    phorest_migration_broker: "Phorest",
-    booksy_migration_broker: "Booksy",
-    csv_importer: "CSV import",
-    delegations_advanced: "Delegations",
-    multi_brand: "Multi-brand",
-    chair_rental: "Chair host",
-    vertical_pack_beauty: "Beauty pack",
-    vertical_pack_body_art: "Body art pack",
-    vertical_pack_wellness: "Wellness pack",
-    vertical_pack_fitness: "Fitness pack",
-    vertical_pack_medspa: "Medspa pack",
-    vertical_pack_allied_health: "Allied health",
-    vertical_pack_pet_grooming: "Pet grooming",
-    vertical_pack_automotive_detailing: "Detailing",
-    class_booking: "Classes",
-    tattoo_design_proof: "Design proofs",
-    package_credits: "Packages",
-    franchise_rollup: "Franchise",
-    locale_pack_nordic: "Nordic locale",
-    public_api_alpha: "Partner API",
-    payroll_export: "Payroll",
-    booking_continuity: "Continuity",
-    enterprise_audit_export: "Enterprise audit",
-    enterprise_sso: "Enterprise SSO",
-  };
-
   async function startCheckout(
     planId: "solo" | "studio" | "chain" | "chair-host",
     extra?: { shopCount?: number; renterCount?: number },
@@ -185,28 +143,6 @@ export default function BillingControls() {
               ? ` · ${billing.activeStaffSeats} staff seats × ${eur(billing.seatEurCentsPerMonth)}`
               : null}
           </p>
-          <div className="flex flex-wrap gap-1.5 pt-1" data-testid="billing-entitlements">
-            {billing.entitlements.slice(0, 12).map((key) => (
-              <Badge
-                key={key}
-                variant={PLANNED_ENTITLEMENTS.has(key) ? "outline" : "secondary"}
-                className="text-[10px] font-normal"
-                title={
-                  PLANNED_ENTITLEMENTS.has(key)
-                    ? "Included on plan — product integration ships next"
-                    : undefined
-                }
-              >
-                {entitlementLabels[key] ?? key.replace(/_/g, " ")}
-                {PLANNED_ENTITLEMENTS.has(key) ? " (planned)" : ""}
-              </Badge>
-            ))}
-            {billing.entitlements.length > 12 ? (
-              <Badge variant="outline" className="text-[10px]">
-                +{billing.entitlements.length - 12} more
-              </Badge>
-            ) : null}
-          </div>
           <div className="flex flex-wrap gap-2">
             {billing.planId !== "solo" && (
               <Button
@@ -284,70 +220,29 @@ export default function BillingControls() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Shield className="h-4 w-4" />
-            Plan integrity
-          </CardTitle>
-          <CardDescription>
-            Matches{" "}
-            <a
-              href={marketingPricingUrl()}
-              className="text-primary hover:underline"
-              target="_blank"
-              rel="noreferrer"
-            >
-              {getMarketingOrigin().replace(/^https?:\/\//, "")}/pricing
-            </a>
-            . API returns 403 with code <code className="text-xs">ENTITLEMENT_REQUIRED</code> when a
-            feature is not on your plan.
-          </CardDescription>
-        </CardHeader>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Add-ons</CardTitle>
-          <CardDescription>Unlock when your segment has enough anonymized peers (k≥10).</CardDescription>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground space-y-2">
-          <p>
-            <strong className="text-foreground">Peer insights</strong> — €49/mo · benchmarks vs similar shops
-          </p>
-          <p>
-            <strong className="text-foreground">Concierge migration</strong> — Phorest / Booksy / CSV · quoted €500–€2,500
-          </p>
-          <p className="text-xs">
-            Nordic locale pack, enterprise SSO, and audit export — on Chain and custom plans. See{" "}
-            <a href={marketingPricingUrl()} className="text-primary hover:underline" target="_blank" rel="noreferrer">
-              {getMarketingOrigin().replace(/^https?:\/\//, "")}/pricing
-            </a>
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Mic className="h-4 w-4" />
-            Voice outcome share
-          </CardTitle>
-          <CardDescription>
-            {hasVoice
-              ? `${(billing.voiceOutcomeShareRate * 100).toFixed(0)}% of recovered voice bookings (capped).`
-              : "Upgrade to Solo or Studio to enable the voice receptionist."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-2xl font-semibold">
-            {eur(billing.voiceOutcomeShareEurCents)}
-            {billing.voiceOutcomeCapEurCents != null
-              ? ` / ${eur(billing.voiceOutcomeCapEurCents)} cap`
-              : null}
-          </p>
-        </CardContent>
-      </Card>
+      {hasVoice || voiceOutcomes > 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Mic className="h-4 w-4" />
+              Voice bookings
+            </CardTitle>
+            <CardDescription>
+              {hasVoice
+                ? `${(billing.voiceOutcomeShareRate * 100).toFixed(0)}% share on bookings Liv recovers by phone this period.`
+                : "Voice receptionist is not on your plan."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-semibold">
+              {eur(billing.voiceOutcomeShareEurCents)}
+              {billing.voiceOutcomeCapEurCents != null
+                ? ` / ${eur(billing.voiceOutcomeCapEurCents)} cap`
+                : null}
+            </p>
+          </CardContent>
+        </Card>
+      ) : null}
     </div>
   );
 }

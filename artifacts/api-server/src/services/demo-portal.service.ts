@@ -96,7 +96,38 @@ function makeDt(base: Date, daysOffset: number, hour: number, minute = 0) {
   return t;
 }
 
-async function ensureClerkUser(def: DemoPersonaDef): Promise<string | null> {
+type ClerkLikeError = {
+  status?: number;
+  message?: string;
+  errors?: Array<{ code?: string; longMessage?: string; message?: string }>;
+};
+
+export function formatClerkDemoError(err: unknown): Error {
+  const e = err as ClerkLikeError;
+  const quota = e.errors?.find((x) => x.code === "user_quota_exceeded");
+  if (quota) {
+    return Object.assign(
+      new Error(
+        "Clerk dev user limit reached (100 users). Delete unused users in Clerk Dashboard → Users, then retry — or POST /api/demo/repair-db to seed shops using existing demo logins only.",
+      ),
+      { code: "CLERK_USER_QUOTA", status: 503 },
+    );
+  }
+  if (e.status === 403 && /forbidden/i.test(e.message ?? "")) {
+    return Object.assign(
+      new Error(
+        "Clerk rejected user creation (403). Often the dev instance user quota — try POST /api/demo/repair-db or free space in Clerk Dashboard → Users.",
+      ),
+      { code: "CLERK_FORBIDDEN", status: 503 },
+    );
+  }
+  return err instanceof Error ? err : new Error(String(err));
+}
+
+async function ensureClerkUser(
+  def: DemoPersonaDef,
+  opts?: { create?: boolean },
+): Promise<string | null> {
   if (!def.requiresClerk) return null;
   const clerk = getClerk();
   if (!clerk) {
@@ -111,16 +142,24 @@ async function ensureClerkUser(def: DemoPersonaDef): Promise<string | null> {
     await syncDemoClerkUser(clerk, id, { email: def.email, password });
     return id;
   }
-  const created = await clerk.users.createUser({
-    emailAddress: [def.email],
-    firstName: def.firstName,
-    lastName: def.lastName,
-    password,
-    skipPasswordChecks: true,
-    skipPasswordRequirement: true,
-  });
-  await syncDemoClerkUser(clerk, created.id, { email: def.email, password });
-  return created.id;
+  if (opts?.create === false) {
+    logger.warn({ email: def.email }, "demo.clerk.user_missing_skip_create");
+    return null;
+  }
+  try {
+    const created = await clerk.users.createUser({
+      emailAddress: [def.email],
+      firstName: def.firstName,
+      lastName: def.lastName,
+      password,
+      skipPasswordChecks: true,
+      skipPasswordRequirement: true,
+    });
+    await syncDemoClerkUser(clerk, created.id, { email: def.email, password });
+    return created.id;
+  } catch (err) {
+    throw formatClerkDemoError(err);
+  }
 }
 
 function getDemoAccountByEmail(email: string): DemoPersonaDef | undefined {
@@ -497,12 +536,18 @@ export async function wipeDemoWorld(): Promise<void> {
   await db.delete(businessesTable).where(inArray(businessesTable.slug, [...DEMO_WORLD_SLUGS]));
 }
 
-export async function provisionDemoWorld(): Promise<{
+export async function provisionDemoWorld(opts?: {
+  /** Seed DB + wire existing Clerk users — no wipe, no new Clerk users. */
+  repair?: boolean;
+}): Promise<{
   personas: Array<{ id: DemoPersonaId; email: string; clerkUserId: string | null }>;
   businesses: Array<{ slug: string; id: string; name: string }>;
   passwordHint: string;
+  mode?: "full" | "repair";
 }> {
-  await wipeDemoWorld();
+  if (!opts?.repair) {
+    await wipeDemoWorld();
+  }
 
   const clerkIds: Record<string, string> = {};
   const clerkIdsByEmail: Record<string, string> = {};
@@ -511,7 +556,7 @@ export async function provisionDemoWorld(): Promise<{
     allAccounts
       .filter((def) => def.requiresClerk)
       .map(async (def) => {
-        const id = await ensureClerkUser(def);
+        const id = await ensureClerkUser(def, { create: opts?.repair ? false : true });
         if (id) {
           await ensureDemoPlatformLegal(id, def.email, def.displayName);
         }
@@ -793,7 +838,7 @@ export async function provisionDemoWorld(): Promise<{
   const ownerResults = await Promise.all(
     businesses.map(async (b) => {
       const def = buildBusinessOwnerDef(b.slug, b.name);
-      const ownerId = await ensureClerkUser(def);
+      const ownerId = await ensureClerkUser(def, { create: opts?.repair ? false : true });
       if (!ownerId) return false;
       await ensureDemoPlatformLegal(ownerId, def.email, def.displayName);
       await wireDemoAccountMemberships(def, ownerId, "OWNER");
@@ -841,6 +886,7 @@ export async function provisionDemoWorld(): Promise<{
     })),
     businesses,
     passwordHint: publicDemoPasswordHint(),
+    mode: opts?.repair ? "repair" : "full",
   };
 }
 
@@ -860,7 +906,21 @@ export async function syncDemoWorld(): Promise<{
 }> {
   const status = await getDemoPortalStatus();
   if (!status.provisioned) {
-    const full = await provisionDemoWorld();
+    let full: Awaited<ReturnType<typeof provisionDemoWorld>>;
+    try {
+      full = await provisionDemoWorld();
+    } catch (e) {
+      const err = formatClerkDemoError(e) as Error & { code?: string };
+      if (err.code === "CLERK_USER_QUOTA" || err.code === "CLERK_FORBIDDEN") {
+        throw Object.assign(
+          new Error(
+            `${err.message} Or POST /api/demo/repair-db from the demo launcher (seeds DB without new Clerk users).`,
+          ),
+          { code: err.code, status: 503 },
+        );
+      }
+      throw err;
+    }
     return {
       mode: "full",
       provisioned: true,

@@ -17,6 +17,13 @@ export type GraduationSuggestion = {
   status: string;
   priority: number;
 };
+import {
+  countOwnershipEligibleSuccessors,
+  formatLifecycleRosterVsSignIn,
+  isOwnershipIncomingRole,
+  shouldSuggestOwnershipSuccession,
+  sortOwnershipCandidates,
+} from "@workspace/policy";
 import { getBusinessesForUser } from "./businesses.service";
 import { getBusinessById } from "./businesses.service";
 
@@ -26,6 +33,8 @@ type LifecycleContext = {
   planId: string | null;
   staffCount: number;
   adminCount: number;
+  /** ADMIN + STAFF memberships with sign-in (excludes owner) — succession-eligible. */
+  eligibleSuccessorCount: number;
   ownerBusinessCount: number;
   role: "OWNER" | "ADMIN" | "STAFF" | null;
 };
@@ -45,11 +54,15 @@ export async function getLifecycleForBusiness(
     .from(staffTable)
     .where(and(eq(staffTable.businessId, businessId), eq(staffTable.isActive, true)));
   const memberships = await db
-    .select({ role: businessMembershipsTable.role })
+    .select({
+      userId: businessMembershipsTable.userId,
+      role: businessMembershipsTable.role,
+    })
     .from(businessMembershipsTable)
     .where(eq(businessMembershipsTable.businessId, businessId));
 
   const adminCount = memberships.filter((m) => m.role === "ADMIN").length;
+  const eligibleSuccessorCount = countOwnershipEligibleSuccessors(memberships, biz.ownerId);
   const owned = await getBusinessesForUser(userId);
   const ownerBusinessCount = owned.filter((b) => b.ownerId === userId).length;
 
@@ -59,6 +72,7 @@ export async function getLifecycleForBusiness(
     planId: biz.planId,
     staffCount: staffRows.length,
     adminCount,
+    eligibleSuccessorCount,
     ownerBusinessCount,
     role,
   };
@@ -168,7 +182,7 @@ function buildGraduationSuggestions(ctx: LifecycleContext): GraduationSuggestion
       id: "G1",
       title: "First hire on board",
       summary: "You have team members — Studio tier unlocks manager workflows and per-seat Liv.",
-      whyNow: `${ctx.staffCount} active staff on a Solo configuration.`,
+      whyNow: formatLifecycleRosterVsSignIn(ctx.staffCount, ctx.eligibleSuccessorCount),
       primaryCta: { label: "Review billing", href: "/settings?tab=billing" },
       secondaryCta: { label: "Invite team", href: "/staff" },
       status: "suggested",
@@ -217,20 +231,23 @@ function buildGraduationSuggestions(ctx: LifecycleContext): GraduationSuggestion
     });
   }
 
-  out.push({
-    id: "G8",
-    title: "Ownership & succession",
-    summary: "Selling the business or handing keys to your manager? Transfer ownership with a full audit trail.",
-    whyNow: "Documented in Settings — never share accounts.",
-    primaryCta: { label: "Transfer ownership", href: "/settings?tab=ownership" },
-    status: "suggested",
-    priority: 40,
-  });
+  if (shouldSuggestOwnershipSuccession(ctx.eligibleSuccessorCount)) {
+    out.push({
+      id: "G8",
+      title: "Pass the keys",
+      summary:
+        "Selling the studio or stepping back? Hand legal ownership to someone who already signs in — not the same as calendar staff.",
+      whyNow: `${ctx.eligibleSuccessorCount} team member(s) signed in as Admin or Staff can receive ownership.`,
+      primaryCta: { label: "Ownership settings", href: "/settings?tab=ownership" },
+      status: "suggested",
+      priority: 40,
+    });
+  }
 
   return out.sort((a, b) => b.priority - a.priority);
 }
 
-/** Members eligible to receive ownership (ADMIN or STAFF with user link). */
+/** Members eligible to receive ownership (ADMIN or STAFF with Clerk sign-in). */
 export async function listOwnershipCandidates(businessId: string, ownerId: string) {
   const rows = await db
     .select({
@@ -244,16 +261,38 @@ export async function listOwnershipCandidates(businessId: string, ownerId: strin
     .innerJoin(usersTable, eq(usersTable.id, businessMembershipsTable.userId))
     .where(eq(businessMembershipsTable.businessId, businessId));
 
-  return rows
-    .filter((r) => r.userId !== ownerId && (r.role === "ADMIN" || r.role === "STAFF"))
-    .map((r) => ({
-      userId: r.userId,
-      role: r.role,
-      email: r.email,
-      fullName: r.fullName,
-      deskRole:
-        (r.scope as { deskRole?: string } | null)?.deskRole === "reception"
-          ? ("reception" as const)
-          : ("manager" as const),
+  const candidates = sortOwnershipCandidates(
+    rows
+      .filter((r) => r.userId !== ownerId && isOwnershipIncomingRole(r.role))
+      .map((r) => ({
+        userId: r.userId,
+        role: r.role,
+        email: r.email,
+        fullName: r.fullName,
+        deskRole:
+          (r.scope as { deskRole?: string } | null)?.deskRole === "reception"
+            ? ("reception" as const)
+            : ("manager" as const),
+      })),
+  );
+
+  const rosterRows = await db
+    .select({
+      id: staffTable.id,
+      userId: staffTable.userId,
+      displayName: staffTable.displayName,
+      email: staffTable.email,
+    })
+    .from(staffTable)
+    .where(and(eq(staffTable.businessId, businessId), eq(staffTable.isActive, true)));
+
+  const rosterWithoutSignIn = rosterRows
+    .filter((s) => s.userId == null)
+    .map((s) => ({
+      staffId: s.id,
+      displayName: s.displayName,
+      email: s.email,
     }));
+
+  return { candidates, rosterWithoutSignIn };
 }

@@ -38,4 +38,4 @@ for (const entry of SCREEN_CARD_P0) {
 }
 
 assert.ok(TENANT_NORTHSTAR_P0.length >= 4, "tenant northstar P0 registry populated");
-assert.ok(SCREEN_CARD_P0.length >= 3, "screen-card P0 registry populated");
+assert.ok(SCREEN_CARD_P0.length >= 12, "screen-card P0 registry populated");

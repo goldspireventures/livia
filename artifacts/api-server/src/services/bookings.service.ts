@@ -396,7 +396,11 @@ export async function updateBookingStatus(
   }
 
   const clearPending =
-    updates.status === "CONFIRMED" && existing.pendingReason != null;
+    existing.pendingReason != null &&
+    (updates.status === "CONFIRMED" ||
+      updates.status === "CANCELLED" ||
+      updates.status === "COMPLETED" ||
+      updates.status === "NO_SHOW");
 
   const [updated] = await db
     .update(bookingsTable)

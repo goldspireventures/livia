@@ -11,6 +11,28 @@ import {
   refreshVerticalShowcaseShop,
 } from "./demo-showcase-depth";
 import type { BusinessVertical } from "@workspace/policy";
+import { inferDemoServiceImageUrl } from "../lib/experience-skin";
+
+type ShowcaseServiceDef = {
+  name: string;
+  durationMinutes: number;
+  priceMinor: number;
+  sortOrder: number;
+  category?: string;
+  description?: string;
+  imageUrl?: string;
+};
+
+/** Stable Unsplash card art per service name — written on seed and repair. */
+function withDemoServiceImages(
+  vertical: BusinessVertical,
+  services: Omit<ShowcaseServiceDef, "imageUrl">[],
+): ShowcaseServiceDef[] {
+  return services.map((s) => ({
+    ...s,
+    imageUrl: inferDemoServiceImageUrl(s.name, vertical),
+  }));
+}
 
 type ShowcaseDef = {
   vertical: BusinessVertical;
@@ -20,14 +42,7 @@ type ShowcaseDef = {
   category: string;
   city: string;
   staff: Array<{ firstName: string; lastName: string; displayName: string; email: string; color: string }>;
-  services: Array<{
-    name: string;
-    durationMinutes: number;
-    priceMinor: number;
-    sortOrder: number;
-    category?: string;
-    description?: string;
-  }>;
+  services: ShowcaseServiceDef[];
   seedPets?: Array<{ name: string; breed: string; species?: "dog" | "cat"; customerIndex?: number }>;
   country?: string;
   timezone?: string;
@@ -107,7 +122,7 @@ export async function seedVerticalShowcaseShops(
         { firstName: "Mia", lastName: "Walsh", displayName: "Mia Walsh", email: "mia@bloom.ie", color: "#F472B6" },
         { firstName: "Leah", lastName: "Nguyen", displayName: "Leah Nguyen", email: "leah@bloom.ie", color: "#DB2777" },
       ],
-      services: [
+      services: withDemoServiceImages("beauty", [
         {
           name: "Lash fill",
           durationMinutes: 60,
@@ -131,7 +146,7 @@ export async function seedVerticalShowcaseShops(
         },
         { name: "Gel nails", durationMinutes: 60, priceMinor: 4500, sortOrder: 4, category: "Nails" },
         { name: "Lash lift", durationMinutes: 75, priceMinor: 6500, sortOrder: 5, category: "Lashes & brows" },
-      ],
+      ]),
     },
     {
       vertical: "wellness",
@@ -392,7 +407,13 @@ export async function seedVerticalShowcaseShops(
   const created: Array<{ slug: string; id: string; name: string; vertical: BusinessVertical }> = [];
   const now = new Date();
 
-  for (const d of defs) {
+  for (const raw of defs) {
+    const d: ShowcaseDef = {
+      ...raw,
+      services: raw.services.some((s) => s.imageUrl)
+        ? raw.services
+        : withDemoServiceImages(raw.vertical, raw.services),
+    };
     const [existing] = await db
       .select({ id: businessesTable.id, slug: businessesTable.slug, name: businessesTable.name, vertical: businessesTable.vertical })
       .from(businessesTable)

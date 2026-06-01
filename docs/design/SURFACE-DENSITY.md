@@ -28,6 +28,7 @@ Rules live in **`lib/policy/src/tenant-surface-density.ts`** so web and mobile c
 ## Owner `/dashboard` (reference)
 
 - Module layout: `resolveOwnerHomeModuleLayout` — one panel, two, or compact “all clear” (no twin 220px empty cards).
+- KPI row: `resolveOwnerHomeKpiChips` — inbox / to-confirm / completed chips mount only when count &gt; 0 (today’s bookings always).
 - Guardrails: `shouldShowOwnerLivGuardrails` — not a permanent strip.
 - Chrome: activation / maturity / running-late gated by onboarding %, steps pending, bookings today.
 - Shortcuts: `VERTICAL_HOME_SHORTCUTS_VISIBLE` then disclosure.

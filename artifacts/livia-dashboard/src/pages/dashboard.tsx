@@ -27,7 +27,6 @@ import DemoDataControls from "@/components/demo-data-controls";
 import { PersonaRitualHeader } from "@/components/ritual/persona-ritual-header";
 import { OperatorMaturityBanner } from "@/components/operator-maturity-banner";
 import { RunningLateSheet } from "@/components/ops/running-late-sheet";
-import { LifecycleNudges } from "@/components/lifecycle/lifecycle-nudges";
 import { VerticalTodayInsights } from "@/components/vertical-today-insights";
 import { LivProposalsPanel } from "@/components/liv-proposals-panel";
 import { AccountantPreviewCard } from "@/components/accountant-preview-card";
@@ -45,6 +44,7 @@ import { timeGreeting } from "@/lib/persona-rituals";
 import { invalidateOperationalState } from "@/lib/operational-cache";
 import { ActivationWelcome } from "@/components/activation/activation-welcome";
 import { shouldShowRunningLateAffordance } from "@workspace/policy";
+import { isAppearanceEmbed } from "@/lib/appearance-preview-mode";
 
 // ------------ helpers ------------
 
@@ -287,8 +287,34 @@ export default function DashboardPage() {
   // Brand-new account: no bookings, no customers — show a beautiful onboarding
   // empty state instead of a sea of zeros.
   const isOperatorHome = persona === "owner" || persona === "manager";
+  const appearanceEmbed = isAppearanceEmbed();
   const showTenantOpsPanels =
     persona === "owner" || persona === "manager" || persona === "org_admin";
+
+  if (appearanceEmbed && isOperatorHome) {
+    if (isLoadingSummary && !summary) {
+      return (
+        <div className="max-w-5xl w-full min-w-0" data-testid="appearance-embed-today">
+          <OwnerDashboardLoading />
+        </div>
+      );
+    }
+    return (
+      <div className="max-w-5xl w-full min-w-0" data-testid="appearance-embed-today">
+        <OwnerHomeRitual
+          summary={summary as Parameters<typeof OwnerHomeRitual>[0]["summary"]}
+          isLoadingSummary={isLoadingSummary}
+          pendingBookings={pendingBookings as Parameters<typeof OwnerHomeRitual>[0]["pendingBookings"]}
+          formatTime={formatTime}
+          formatHeaderDate={formatHeaderDate}
+          now={now}
+          onConfirmBooking={(id) => handleStatusUpdate(id, "CONFIRMED")}
+          onDeclineBooking={(id) => handleStatusUpdate(id, "CANCELLED")}
+          updatePending={updateBooking.isPending}
+        />
+      </div>
+    );
+  }
 
   const isFirstRun =
     !!summary &&
@@ -413,7 +439,7 @@ export default function DashboardPage() {
         <OwnerHomeRitual
           summary={summary as Parameters<typeof OwnerHomeRitual>[0]["summary"]}
           isLoadingSummary={isLoadingSummary}
-          pendingBookings={pendingBookings}
+          pendingBookings={pendingBookings as Parameters<typeof OwnerHomeRitual>[0]["pendingBookings"]}
           formatTime={formatTime}
           formatHeaderDate={formatHeaderDate}
           now={now}
@@ -438,8 +464,6 @@ export default function DashboardPage() {
       {!isOperatorHome ? <ActivationWelcome /> : null}
       <OperatorMaturityBanner />
 
-      {(persona === "owner" || persona === "org_admin") && <LifecycleNudges compact />}
-
       {!isOperatorHome && persona === "org_admin" && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <LivProposalsPanel />
@@ -451,7 +475,11 @@ export default function DashboardPage() {
 
       {showTenantOpsPanels && !isOperatorHome && <LivIncidentsStrip />}
 
-      {showTenantOpsPanels && shouldShowRunningLateAffordance(todayTotal) ? (
+      {showTenantOpsPanels &&
+      !isOperatorHome &&
+      shouldShowRunningLateAffordance(todayTotal, {
+        pendingConfirmations: summary?.pendingCount ?? 0,
+      }) ? (
         <div className="flex flex-wrap gap-2">
           <RunningLateSheet />
         </div>

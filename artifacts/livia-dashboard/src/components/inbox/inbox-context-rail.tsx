@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CalendarCheck, ExternalLink, User } from "lucide-react";
 import { OPERATIONAL_REFETCH_MS } from "@/lib/operational-cache";
+import { beautyOutlineButton } from "@/lib/beauty-operational-ui";
+import { cn } from "@/lib/utils";
 
 type LinkedBooking = {
   id: string;
@@ -17,8 +19,10 @@ type LinkedBooking = {
 export function InboxContextRail({
   businessId,
   conversation,
+  beautyChrome,
 }: {
   businessId: string;
+  beautyChrome?: boolean;
   conversation: {
     customerName: string | null;
     customerEmail: string | null;
@@ -48,7 +52,13 @@ export function InboxContextRail({
   });
 
   return (
-    <aside className="hidden lg:flex flex-col bg-card/30 overflow-hidden min-h-0" data-testid="inbox-context-rail">
+    <aside
+      className={cn(
+        "hidden lg:flex flex-col overflow-hidden min-h-0",
+        beautyChrome ? "beauty-inbox-context-rail" : "bg-card/30",
+      )}
+      data-testid="inbox-context-rail"
+    >
       <div className="px-4 py-3 border-b border-border/60">
         <h2 className="text-xs uppercase tracking-widest text-muted-foreground font-medium">Context</h2>
       </div>
@@ -66,7 +76,14 @@ export function InboxContextRail({
           {bookingId && isLoading ? (
             <Skeleton className="h-20 w-full rounded-lg" />
           ) : booking ? (
-            <div className="rounded-lg border border-primary/25 bg-primary/5 p-3 text-sm space-y-1">
+            <div
+              className={cn(
+                "rounded-lg border p-3 text-sm space-y-1",
+                beautyChrome
+                  ? "beauty-inbox-context-card"
+                  : "border-primary/25 bg-primary/5",
+              )}
+            >
               <div className="flex items-center gap-2 font-medium">
                 <CalendarCheck className="h-4 w-4 text-primary shrink-0" />
                 {booking.service?.name ?? "Appointment"}
@@ -80,7 +97,9 @@ export function InboxContextRail({
                   minute: "2-digit",
                 })}
               </p>
-              <p className="text-xs text-muted-foreground">{booking.status}</p>
+              <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                {booking.status}
+              </p>
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">No linked booking on this thread.</p>
@@ -89,14 +108,24 @@ export function InboxContextRail({
 
         <div className="space-y-2 pt-2">
           <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Quick links</p>
-          <Button variant="outline" size="sm" className="w-full justify-start gap-2" asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn("w-full justify-start gap-2", beautyOutlineButton(beautyChrome))}
+            asChild
+          >
             <Link href="/customers">
               <User className="h-3.5 w-3.5" />
               Customer directory
             </Link>
           </Button>
           {bookingId ? (
-            <Button variant="outline" size="sm" className="w-full justify-start gap-2" asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn("w-full justify-start gap-2", beautyOutlineButton(beautyChrome))}
+              asChild
+            >
               <Link href={`/bookings/${bookingId}`}>
                 <ExternalLink className="h-3.5 w-3.5" />
                 Open booking

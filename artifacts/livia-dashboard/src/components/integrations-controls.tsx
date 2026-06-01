@@ -341,7 +341,7 @@ export default function IntegrationsControls() {
         <CardHeader>
           <CardTitle className="text-base">Booksy CSV import</CardTitle>
           <CardDescription>
-            Paste a CSV with columns: firstName, lastName, email, phone. Clients are created in your roster.
+            Paste a CSV with columns: firstName, lastName, email, phone. New clients are added to your list.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">

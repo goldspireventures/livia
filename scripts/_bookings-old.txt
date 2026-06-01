@@ -1,0 +1,8 @@
+export function beautyListScroll(extra?: string) {
+  return cn("beauty-op-list-scroll divide-y divide-border/70", extra);
+}","new_string":"export function beautyListScroll(extra?: string) {
+  return cn(
+    "beauty-op-list-scroll divide-y divide-border/70 overscroll-contain",
+    extra,
+  );
+}

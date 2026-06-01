@@ -1,6 +1,6 @@
 # Vertical playbook — Beauty (V2)
 
-**Status:** L2+L3 (2026-05-31)  
+**Status:** L2+L3 (2026-05-31) · **program (L0–L8):** [`BEAUTY-VERTICAL-PROGRAM.md`](../BEAUTY-VERTICAL-PROGRAM.md)  
 **Registry:** `VERTICAL_COVERAGE_REGISTRY` V2 · demo `bloom-beauty-dublin`  
 **Category:** People-business — lash cycles, patch tests, retail attach
 
@@ -62,8 +62,15 @@
 
 ---
 
-## 8. Changelog
+## 8. Completion checklist (R1)
+
+See [`BEAUTY-VERTICAL-PROGRAM.md`](../BEAUTY-VERTICAL-PROGRAM.md) § Completion definition — founder UAT: [`FOUNDER-UAT-CHECKLIST.md`](../../operations/FOUNDER-UAT-CHECKLIST.md) Bloom section.
+
+---
+
+## 9. Changelog
 
 | Date | Change |
 |------|--------|
+| 2026-06-01 | Linked hierarchical program + Bloom UAT |
 | 2026-05-31 | Initial beauty vertical playbook |

@@ -16,6 +16,45 @@ export type OwnerHomeSignals = {
   onboardingPercentComplete?: number | null;
 };
 
+export type OwnerHomeKpiId = "todayBookings" | "inboxHandoffs" | "toConfirm" | "completedToday";
+
+/** KPI chips on owner home — only mount when they carry signal (no empty inbox / confirm rows). */
+export function resolveOwnerHomeKpiChips(signals: {
+  todayBookings: number;
+  pendingCount: number;
+  handedOffCount: number;
+}): OwnerHomeKpiId[] {
+  const chips: OwnerHomeKpiId[] = ["todayBookings"];
+  if (Math.max(0, signals.handedOffCount) > 0) chips.push("inboxHandoffs");
+  if (Math.max(0, signals.pendingCount) > 0) chips.push("toConfirm");
+  if (Math.max(0, signals.todayBookings) > 0) chips.push("completedToday");
+  return chips;
+}
+
+/** Owner briefing primary CTA — handoffs/pending only; never "open inbox" for Liv-only threads. */
+export function resolveOwnerHomeBriefingCta(signals: {
+  pendingCount: number;
+  handedOffCount: number;
+  fallbackHref: string;
+  fallbackLabel: string;
+}): { href: string; label: string } {
+  const p = Math.max(0, signals.pendingCount);
+  const h = Math.max(0, signals.handedOffCount);
+  if (p > 0) {
+    return {
+      href: "/bookings?status=PENDING", // keep in sync with pending-booking-flow.PENDING_BOOKINGS_LIST_HREF
+      label: p === 1 ? "Confirm 1 pending" : `Confirm ${p} pending`,
+    };
+  }
+  if (h > 0) {
+    return {
+      href: "/inbox?lens=taken_over",
+      label: h === 1 ? "Review 1 handoff" : `Review ${h} handoffs`,
+    };
+  }
+  return { href: signals.fallbackHref, label: signals.fallbackLabel };
+}
+
 /** Which inbox/pending panels to render — avoids two empty min-height cards. */
 export function resolveOwnerHomeModuleLayout(signals: {
   pendingCount: number;
@@ -55,9 +94,12 @@ export function shouldShowActivationWelcomeCard(args: {
   return args.activationStepsPending > 0 && !args.dismissed;
 }
 
-/** Floor ops affordances need at least one booking today. */
-export function shouldShowRunningLateAffordance(todayBookings: number): boolean {
-  return todayBookings > 0;
+/** Floor ops — running late when there is day-of work on the calendar. */
+export function shouldShowRunningLateAffordance(
+  todayBookings: number,
+  opts?: { pendingConfirmations?: number },
+): boolean {
+  return todayBookings > 0 || (opts?.pendingConfirmations ?? 0) > 0;
 }
 
 /** Max vertical shortcut tiles visible before "show more" (all verticals). */

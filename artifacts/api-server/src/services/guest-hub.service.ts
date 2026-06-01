@@ -1,6 +1,7 @@
 import { randomBytes, randomInt } from "node:crypto";
 import {
   db,
+  bookingGuestAccessTable,
   guestFavoritesTable,
   guestIdentitiesTable,
   guestSessionsTable,
@@ -227,9 +228,13 @@ export async function getGuestHubView(hubToken: string) {
         startAt: b.startAt.toISOString(),
         serviceName: b.serviceName,
         staffDisplayName: b.staffDisplayName,
-        visitUrl: `/b/${b.slug}/visit/${visitToken}`,
+        visitUrl: `/b/${b.slug}/visit/${encodeURIComponent(visitToken)}`,
       };
     }),
+  );
+
+  const visitByBusiness = new Map(
+    upcomingBookings.map((b) => [b.businessId, b.visitUrl] as const),
   );
 
   return {
@@ -247,10 +252,23 @@ export async function getGuestHubView(hubToken: string) {
         consentAt: s.consentAt.toISOString(),
         isFavorite: favoriteSet.has(s.businessId),
         bookUrl,
+        manageVisitUrl: visitByBusiness.get(s.businessId) ?? null,
         lastServiceName: last?.serviceName ?? null,
       };
     }),
   };
+}
+
+/** Resolve legacy `/my?visit=token` links to the public visit route. */
+export async function resolveGuestVisitPath(token: string): Promise<string | null> {
+  const [row] = await db
+    .select({ slug: businessesTable.slug })
+    .from(bookingGuestAccessTable)
+    .innerJoin(businessesTable, eq(bookingGuestAccessTable.businessId, businessesTable.id))
+    .where(eq(bookingGuestAccessTable.token, token))
+    .limit(1);
+  if (!row?.slug) return null;
+  return `/b/${row.slug}/visit/${encodeURIComponent(token)}`;
 }
 
 export async function linkGuestToShop(guestId: string, businessId: string, firstBookingAt?: Date) {

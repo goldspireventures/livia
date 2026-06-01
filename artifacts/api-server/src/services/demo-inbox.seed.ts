@@ -68,7 +68,7 @@ const SALON_THREADS: InboxThread[] = [
       {
         role: "ASSISTANT",
         content:
-          "I'm sorry that happened, Sean. Refunds over €50 need your manager — I've flagged this for Niamh.",
+          "I'm sorry that happened, Sean. Refunds over €50 need a manager sign-off — I've flagged this for Niamh.",
         minsAgo: 175,
       },
     ],

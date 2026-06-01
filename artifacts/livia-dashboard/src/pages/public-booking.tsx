@@ -10,6 +10,7 @@ import {
   useCreatePublicBooking,
 } from "@workspace/api-client-react";
 import { formatTime, formatDate, formatCurrency } from "@/lib/format";
+import { pendingReasonLabel } from "@/lib/booking-pending";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -52,6 +54,17 @@ import { PublicCareNotes } from "@/components/public-booking/public-care-notes";
 import { PublicStaffStrip } from "@/components/public-booking/public-staff-strip";
 import { PublicServiceCatalog } from "@/components/public-booking/public-service-catalog";
 import {
+  PublicBookBeautyDualCta,
+  PublicBookBeautyTrustFooter,
+} from "@/components/public-booking/public-book-beauty-chrome";
+import {
+  beautyPublicHeroTagline,
+  beautyPublicHeroTitle,
+  isBeautyPresentationPreset,
+  isBeautyVertical,
+  resolveBeautyPublicCatalogLayout,
+} from "@/lib/presentation-layout";
+import {
   guardSectionTitle,
   guessMedspaProcedureCode,
   publicBookingLayout,
@@ -61,6 +74,7 @@ import {
 } from "@/lib/public-booking-helpers";
 import { verticalPackUi } from "@/lib/vertical-pack-ui";
 import { businessVocabulary } from "@workspace/policy";
+import { cn } from "@/lib/utils";
 
 type Step = "services" | "slots" | "details" | "consent" | "confirmed";
 
@@ -115,6 +129,7 @@ interface PublicBusiness {
   bookingGuards?: BookingGuardField[];
   medspaProcedures?: MedspaProcedure[];
   regulatoryFooter?: string[];
+  publicFeaturedServiceIds?: string[];
   services: PublicService[];
   staff: PublicStaff[];
   countryPack?: {
@@ -188,10 +203,25 @@ function buildIcsDataUri(args: {
   return `data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`;
 }
 
+/** Keep `?service=` in sync with beauty treatment pick / back navigation. */
+function syncPublicBookingServiceQuery(serviceId: string | null) {
+  const url = new URL(window.location.href);
+  if (serviceId) url.searchParams.set("service", serviceId);
+  else url.searchParams.delete("service");
+  const search = url.searchParams.toString();
+  window.history.replaceState(
+    null,
+    "",
+    `${url.pathname}${search ? `?${search}` : ""}${url.hash}`,
+  );
+}
+
 export default function PublicBookingPage() {
   const { slug } = useParams<{ slug: string }>();
   const [step, setStep] = useState<Step>("services");
+  const { toast } = useToast();
   const [selectedService, setSelectedService] = useState<PublicService | null>(null);
+  const [pickServiceHint, setPickServiceHint] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<string>(
     () => new Date().toISOString().split("T")[0],
@@ -208,6 +238,7 @@ export default function PublicBookingPage() {
   const [medspaProcedure, setMedspaProcedure] = useState("");
   const [consentSignature, setConsentSignature] = useState("");
   const [saveToMyLivia, setSaveToMyLivia] = useState(true);
+  const dateInputRef = useRef<HTMLInputElement>(null);
   const [consentAgreed, setConsentAgreed] = useState(false);
   const [chatMount, setChatMount] = useState(false);
   const [chatOpenRequest, setChatOpenRequest] = useState(0);
@@ -262,20 +293,29 @@ export default function PublicBookingPage() {
     const isPreview = params.get("preview") === "1";
     const previewPreset = params.get("preset")?.trim();
     const previewAccent = params.get("accent")?.trim();
+    const skin = b?.experienceSkin as
+      | { presentation?: string; presentationColorMode?: string; brandAccentHex?: string | null }
+      | undefined;
+    const colorMode =
+      skin?.presentationColorMode === "light" || skin?.presentationColorMode === "dark"
+        ? skin.presentationColorMode
+        : null;
     if (isPreview && (previewPreset || previewAccent)) {
       applyPresentationTheme({
-        cssPreset: previewPreset || b?.experienceSkin?.presentation,
-        brandAccentHex: previewAccent || b?.experienceSkin?.brandAccentHex,
+        cssPreset: previewPreset || skin?.presentation,
+        brandAccentHex: previewAccent || skin?.brandAccentHex,
+        colorMode,
       });
       return;
     }
-    if (b?.experienceSkin?.presentation || b?.experienceSkin?.brandAccentHex) {
+    if (skin?.presentation || skin?.brandAccentHex) {
       applyPresentationTheme({
-        cssPreset: b.experienceSkin.presentation,
-        brandAccentHex: b.experienceSkin.brandAccentHex,
+        cssPreset: skin.presentation,
+        brandAccentHex: skin.brandAccentHex,
+        colorMode,
       });
     }
-  }, [b?.experienceSkin?.presentation, b?.experienceSkin?.brandAccentHex]);
+  }, [b?.experienceSkin]);
 
   useEffect(() => {
     if (!b?.services?.length || servicePrefApplied.current) return;
@@ -325,6 +365,12 @@ export default function PublicBookingPage() {
   const layout = publicBookingLayout(b?.vertical);
   const heroCta = verticalHeroCta(b?.vertical, b?.publicCta);
   const staffForward = layout === "staff-forward";
+  const beautyCssPreset = b?.experienceSkin?.presentation ?? null;
+  const beautyPublic =
+    isBeautyVertical(b?.vertical) && isBeautyPresentationPreset(beautyCssPreset);
+  const beautyCatalogLayout = beautyPublic
+    ? resolveBeautyPublicCatalogLayout(beautyCssPreset)
+    : "list";
 
   const requestChatOpen = () => setChatOpenRequest((n) => n + 1);
 
@@ -414,10 +460,27 @@ export default function PublicBookingPage() {
     );
   }
 
+  function selectPublicService(svc: PublicService) {
+    setPickServiceHint(false);
+    setSelectedService(svc);
+    syncPublicBookingServiceQuery(svc.id);
+    if (!beautyPublic) {
+      setStep("slots");
+    }
+  }
+
+  function goBackToServices() {
+    setStep("services");
+    setSelectedService(null);
+    setSelectedSlot("");
+    syncPublicBookingServiceQuery(null);
+  }
+
   function resetFlow() {
     setStep("services");
     setSelectedService(null);
     setSelectedSlot("");
+    syncPublicBookingServiceQuery(null);
     setSelectedStaff("");
     setFirstName("");
     setLastName("");
@@ -451,7 +514,16 @@ export default function PublicBookingPage() {
         experienceSkin: b.experienceSkin,
       })}${showStickyCta ? " has-sticky-cta" : ""}`}
     >
-      <main className="max-w-xl mx-auto px-4 py-6 pb-6 md:pb-8 relative z-10">
+      <main
+        className={cn(
+          "max-w-xl mx-auto px-4 py-6 pb-6 md:pb-8 relative z-10",
+          beautyPublic && step === "services" && "beauty-public-shell",
+          beautyPublic &&
+            step === "services" &&
+            beautyCssPreset === "editorial" &&
+            "beauty-public-shell--editorial",
+        )}
+      >
         {step === "services" ? (
           <>
             <PublicBookStorefront
@@ -459,20 +531,26 @@ export default function PublicBookingPage() {
               logoUrl={b.logoUrl}
               coverImageUrl={b.coverImageUrl}
               heroCta={heroCta}
+              layout={beautyPublic ? "beauty" : "default"}
+              tagline={b.description}
+              heroTagline={beautyPublic ? beautyPublicHeroTagline(beautyCssPreset) : undefined}
+              heroTitle={beautyPublic ? beautyPublicHeroTitle(vocab.serviceNoun) : undefined}
               onHeroCta={() =>
                 document.getElementById("public-service-menu")?.scrollIntoView({ behavior: "smooth" })
               }
               onOpenChat={aiOn ? requestChatOpen : undefined}
-              showMessage={aiOn}
+              showMessage={aiOn && !beautyPublic}
             />
             <div ref={heroSentinelRef} className="h-px w-full" aria-hidden />
-            <div className="mt-4 mb-5">
-              <PublicBookingStepper
-                step={step as PublicRitualStep}
-                serviceStepLabel={vocab.serviceNoun}
-                includeConsentStep={needsMedspaConsent}
-              />
-            </div>
+            {!beautyPublic ? (
+              <div className="mt-4 mb-5">
+                <PublicBookingStepper
+                  step={step as PublicRitualStep}
+                  serviceStepLabel={vocab.serviceNoun}
+                  includeConsentStep={needsMedspaConsent}
+                />
+              </div>
+            ) : null}
           </>
         ) : (
           <PublicCustomerRitual
@@ -489,7 +567,7 @@ export default function PublicBookingPage() {
             variant="compact"
           />
         )}
-        {step === "services" ? (
+        {step === "services" && !beautyPublic ? (
           <>
             <PublicBookingTrustStrip
               depositPolicySummary={b.depositPolicySummary}
@@ -513,7 +591,13 @@ export default function PublicBookingPage() {
 
         {/* Step: Services */}
         {step === "services" && (
-          <div id="public-service-menu" className="space-y-3">
+          <div
+            id="public-service-menu"
+            className={cn(
+              "space-y-3 rounded-xl transition-shadow",
+              pickServiceHint && "ring-2 ring-primary/50 ring-offset-2 ring-offset-background",
+            )}
+          >
             {staffForward ? (
               <PublicStaffStrip
                 staff={b.staff}
@@ -522,7 +606,7 @@ export default function PublicBookingPage() {
                 teamNoun={vocab.teamNoun}
               />
             ) : null}
-            {marketRibbon(b.country, b.experienceSkin) ? (
+            {!beautyPublic && marketRibbon(b.country, b.experienceSkin) ? (
               <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/80 -mt-1">
                 {marketRibbon(b.country, b.experienceSkin)}
               </p>
@@ -530,12 +614,39 @@ export default function PublicBookingPage() {
             <PublicServiceCatalog
               services={b.services}
               vertical={b.vertical}
-              onSelect={(svc) => {
-                setSelectedService(svc);
-                setStep("slots");
-              }}
+              featuredServiceIds={b.publicFeaturedServiceIds}
+              layout={beautyCatalogLayout}
+              selectedServiceId={beautyPublic ? selectedService?.id : undefined}
+              onSelect={selectPublicService}
             />
-            <PublicCareNotes vertical={b.vertical} />
+            {beautyPublic ? (
+              <>
+                <PublicBookBeautyDualCta
+                  bookLabel="Book now"
+                  showChat={aiOn}
+                  onChat={aiOn ? requestChatOpen : undefined}
+                  bookDisabled={!selectedService}
+                  onBook={() => {
+                    if (selectedService) {
+                      setPickServiceHint(false);
+                      setStep("slots");
+                      return;
+                    }
+                    setPickServiceHint(true);
+                    toast({
+                      title: "Choose a treatment first",
+                      description: "Tap a service above, then continue to pick a time.",
+                    });
+                    document
+                      .getElementById("public-service-menu")
+                      ?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                />
+                <PublicBookBeautyTrustFooter cancelWindowHours={b.policyTrust?.cancelWindowHours} />
+              </>
+            ) : (
+              <PublicCareNotes vertical={b.vertical} />
+            )}
           </div>
         )}
 
@@ -543,7 +654,7 @@ export default function PublicBookingPage() {
         {step === "slots" && selectedService && (
           <div className="space-y-4 motion-wizard-enter">
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" aria-label="Back to services" onClick={() => setStep("services")}>
+              <Button variant="ghost" size="icon" aria-label="Back to services" onClick={goBackToServices}>
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <div>
@@ -582,11 +693,20 @@ export default function PublicBookingPage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="public-date" className="flex items-center gap-2">
+              <Label
+                htmlFor="public-date"
+                className="flex items-center gap-2 cursor-pointer"
+                onClick={() => {
+                  const el = dateInputRef.current;
+                  if (el && typeof el.showPicker === "function") el.showPicker();
+                  else el?.focus();
+                }}
+              >
                 <Calendar className="h-4 w-4" aria-hidden />
                 Select date
               </Label>
               <Input
+                ref={dateInputRef}
                 id="public-date"
                 type="date"
                 value={selectedDate}
@@ -595,6 +715,11 @@ export default function PublicBookingPage() {
                   setSelectedDate(e.target.value);
                   setSelectedSlot("");
                 }}
+                onClick={(e) => {
+                  const el = e.currentTarget;
+                  if (typeof el.showPicker === "function") el.showPicker();
+                }}
+                className="cursor-pointer"
                 data-testid="input-date"
                 aria-label="Appointment date"
               />
@@ -731,7 +856,15 @@ export default function PublicBookingPage() {
                 <label className="flex items-start gap-3 rounded-lg border border-border/60 p-3 cursor-pointer">
                   <Checkbox
                     checked={saveToMyLivia}
-                    onCheckedChange={(v) => setSaveToMyLivia(v === true)}
+                    onCheckedChange={(v) => {
+                      if (v !== true) {
+                        const ok = window.confirm(
+                          "Without My Livia you won't have one place to see all your bookings or rebook quickly. You can still manage this visit from the link after booking. Continue without saving?",
+                        );
+                        if (!ok) return;
+                      }
+                      setSaveToMyLivia(v === true);
+                    }}
                     data-testid="save-to-my-livia"
                   />
                   <span className="text-sm leading-snug">
@@ -964,12 +1097,12 @@ export default function PublicBookingPage() {
             </div>
             <div>
               <h2 className="text-2xl font-bold" data-testid="text-confirmed">
-                Booking Confirmed!
+                {confirmation.status === "PENDING" ? "Booking received" : "You're booked"}
               </h2>
               <p className="text-muted-foreground mt-2">
-                {confirmation.pendingReason === "awaiting_continuity"
-                  ? "Check your messages to finish confirming"
-                  : "Your appointment has been received"}
+                {confirmation.status === "PENDING"
+                  ? pendingReasonLabel(confirmation.pendingReason)
+                  : "Your appointment is confirmed — details below."}
               </p>
             </div>
             {confirmation.instagramDeepLink && b?.instagramHandle ? (
@@ -989,13 +1122,6 @@ export default function PublicBookingPage() {
                   </ul>
                 </CardContent>
               </Card>
-            )}
-            {(b?.regulatoryFooter?.length ?? 0) > 0 && (
-              <div className="text-left text-xs text-muted-foreground space-y-1 max-w-md mx-auto">
-                {b!.regulatoryFooter!.map((line) => (
-                  <p key={line}>{line}</p>
-                ))}
-              </div>
             )}
             <Card>
               <CardContent className="pt-4 space-y-3 text-sm">
@@ -1018,14 +1144,13 @@ export default function PublicBookingPage() {
                     </span>
                   </div>
                 )}
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Status</span>
-                  <Badge
-                    variant="outline"
-                    className="text-[hsl(var(--chart-4))] border-[hsl(var(--chart-4))]/30"
-                  >
-                    {confirmation.status}
-                  </Badge>
+                <div className="flex justify-between gap-3">
+                  <span className="text-muted-foreground shrink-0">Status</span>
+                  <span className="text-right text-sm font-medium">
+                    {confirmation.status === "PENDING"
+                      ? pendingReasonLabel(confirmation.pendingReason)
+                      : "Confirmed"}
+                  </span>
                 </div>
                 <div className="flex justify-between pt-2 border-t border-border">
                   <span className="text-muted-foreground">Confirmation</span>
@@ -1036,10 +1161,12 @@ export default function PublicBookingPage() {
               </CardContent>
             </Card>
 
-            {confirmation.visitPath ? (
-              <Link href={confirmation.visitPath}>
+            {confirmation.visitPath || confirmation.myLiviaPath ? (
+              <Link href={confirmation.visitPath ?? confirmation.myLiviaPath ?? "/my"}>
                 <Button variant="default" className="w-full" data-testid="link-manage-visit">
-                  Manage your visit (running late · receipt)
+                  {confirmation.savedToMyLivia
+                    ? "Manage your booking in My Livia"
+                    : "Manage your booking"}
                 </Button>
               </Link>
             ) : null}
@@ -1049,16 +1176,8 @@ export default function PublicBookingPage() {
                 className="text-xs text-muted-foreground text-center max-w-sm mx-auto leading-relaxed"
                 data-testid="public-pwa-hint"
               >
-                Tip: add {b.name} to your home screen for quick access to your visit link.
+                Tip: add {b.name} to your home screen for quick access to My Livia.
               </p>
-            ) : null}
-
-            {confirmation.savedToMyLivia && confirmation.myLiviaPath ? (
-              <Link href={confirmation.myLiviaPath}>
-                <Button variant="outline" className="w-full" data-testid="link-my-livia">
-                  Open My Livia — verify your phone
-                </Button>
-              </Link>
             ) : null}
 
             <a
@@ -1088,23 +1207,23 @@ export default function PublicBookingPage() {
           </div>
         )}
 
-        {aiOn && aiFooterLine && step !== "confirmed" ? (
-          <p
-            className="mt-10 text-center text-[11px] text-muted-foreground leading-relaxed max-w-md mx-auto px-2"
-            data-testid="text-ai-disclosure-footer"
-          >
-            {aiFooterLine}
-          </p>
-        ) : null}
-
         <PublicBookPolicyFooter
           depositPolicySummary={b.depositPolicySummary}
           policyTrust={b.policyTrust}
           regulatoryFooter={b.regulatoryFooter}
         />
+
+        {aiOn && aiFooterLine && step !== "confirmed" ? (
+          <p
+            className="mt-4 text-center text-[10px] text-muted-foreground/75 leading-relaxed max-w-md mx-auto px-2"
+            data-testid="text-ai-disclosure-footer"
+          >
+            {aiFooterLine}
+          </p>
+        ) : null}
       </main>
 
-      {step === "services" && aiOn ? (
+      {step === "services" && aiOn && !beautyPublic ? (
         <PublicBookLivBar
           visible={pastHero}
           livActive={chatOpenRequest > 0}

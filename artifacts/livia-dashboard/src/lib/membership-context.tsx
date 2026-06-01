@@ -22,6 +22,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { setRequestQueryParamGetter } from "@workspace/api-client-react";
 import { apiFetch } from "./api-fetch";
 import { useBusiness } from "./business-context";
+import { isDemoLoginEnabled } from "./persona";
 
 export type Role = "OWNER" | "ADMIN" | "STAFF";
 
@@ -63,9 +64,16 @@ export function MembershipProvider({ children }: { children: ReactNode }) {
   });
 
   const [viewingAsStaffId, setViewingAsStaffIdState] = useState<string | null>(() => {
-    if (typeof window === "undefined") return null;
+    if (typeof window === "undefined" || !isDemoLoginEnabled) return null;
     return window.localStorage.getItem(LS_KEY);
   });
+
+  useEffect(() => {
+    if (!isDemoLoginEnabled && typeof window !== "undefined") {
+      window.localStorage.removeItem(LS_KEY);
+      setViewingAsStaffIdState(null);
+    }
+  }, []);
 
   // Reset persona only when the business *actually changes* — not on initial
   // mount or refetches. We track the previous businessId in a ref so the very
@@ -83,6 +91,7 @@ export function MembershipProvider({ children }: { children: ReactNode }) {
   }, [businessId]);
 
   const setViewingAsStaffId = (id: string | null) => {
+    if (!isDemoLoginEnabled) return;
     setViewingAsStaffIdState(id);
     if (typeof window !== "undefined") {
       if (id) window.localStorage.setItem(LS_KEY, id);
@@ -95,7 +104,8 @@ export function MembershipProvider({ children }: { children: ReactNode }) {
   const role = data?.role ?? null;
   const ownStaffId = data?.staffId ?? null;
   const canImpersonate = role === "OWNER" || role === "ADMIN";
-  const activeStaffId = canImpersonate ? viewingAsStaffId : null;
+  const activeStaffId =
+    isDemoLoginEnabled && canImpersonate ? viewingAsStaffId : null;
   const effectiveRole: Role | null =
     role === "STAFF" ? "STAFF" : activeStaffId ? "STAFF" : role;
 

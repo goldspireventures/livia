@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useBusiness } from "@/lib/business-context";
 import {
   useListServices,
@@ -17,7 +17,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Scissors, Plus, Clock, DollarSign } from "lucide-react";
+import { Scissors, Plus, Clock, DollarSign, Star } from "lucide-react";
+import { customFetch } from "@workspace/api-client-react";
 import { useForm } from "react-hook-form";
 import { invalidateOperationalState } from "@/lib/operational-cache";
 import { OperationalPageShell } from "@/components/layout/operational-page-shell";
@@ -37,8 +38,25 @@ export default function ServicesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [showInactive, setShowInactive] = useState(false);
+  const [featuredIds, setFeaturedIds] = useState<string[]>([]);
 
   const bid = business?.id ?? "";
+
+  const loadFeatured = useCallback(async () => {
+    if (!bid) return;
+    try {
+      const row = await customFetch<{ publicFeaturedServiceIds?: string[] }>(
+        `/api/businesses/${bid}/presentation`,
+      );
+      setFeaturedIds(Array.isArray(row.publicFeaturedServiceIds) ? row.publicFeaturedServiceIds : []);
+    } catch {
+      setFeaturedIds([]);
+    }
+  }, [bid]);
+
+  useEffect(() => {
+    void loadFeatured();
+  }, [loadFeatured]);
 
   const { data: services, isLoading } = useListServices(
     bid,
@@ -117,6 +135,35 @@ export default function ServicesPage() {
     );
   }
 
+  async function toggleFeatured(serviceId: string) {
+    if (!bid) return;
+    let next = featuredIds.includes(serviceId)
+      ? featuredIds.filter((id) => id !== serviceId)
+      : [...featuredIds, serviceId];
+    if (next.length > 4) {
+      toast({
+        title: "Up to 4 services on your booking page",
+        description: "Unpin one before adding another.",
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      const res = await customFetch<{ publicFeaturedServiceIds: string[] }>(
+        `/api/businesses/${bid}/public-featured-services`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ serviceIds: next }),
+        },
+      );
+      setFeaturedIds(res.publicFeaturedServiceIds);
+      toast({ title: "Booking page highlights updated" });
+    } catch {
+      toast({ title: "Could not update featured services", variant: "destructive" });
+    }
+  }
+
   function toggleActive(serviceId: string, isActive: boolean) {
     if (!bid) return;
     updateService.mutate(
@@ -135,7 +182,7 @@ export default function ServicesPage() {
     <OperationalPageShell
       data-testid="services-page"
       title="Services"
-      subtitle="Your catalog — duration and price drive availability and Liv's booking suggestions."
+      subtitle="Your catalog — pin up to 4 services to the top of your public booking page."
       width="full"
       actions={
         <div className="flex gap-2">
@@ -302,6 +349,21 @@ export default function ServicesPage() {
                   ) : null}
                 </div>
                 <div className="flex gap-2 shrink-0">
+                  <Button
+                    variant={featuredIds.includes(svc.id) ? "default" : "outline"}
+                    size="sm"
+                    title={
+                      featuredIds.includes(svc.id)
+                        ? "Pinned on booking page"
+                        : "Pin to booking page (max 4)"
+                    }
+                    onClick={() => void toggleFeatured(svc.id)}
+                    data-testid={`button-feature-service-${svc.id}`}
+                  >
+                    <Star
+                      className={`h-3.5 w-3.5 ${featuredIds.includes(svc.id) ? "fill-current" : ""}`}
+                    />
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"

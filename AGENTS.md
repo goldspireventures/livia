@@ -17,6 +17,7 @@ Read this before large edits or refactors.
 9. [`docs/PLATFORM-TERMINOLOGY.md`](docs/PLATFORM-TERMINOLOGY.md)
 10. [`docs/START-HERE.md`](docs/START-HERE.md)
 11. [`docs/DOC-CANONICAL-INDEX.md`](docs/DOC-CANONICAL-INDEX.md)
+12. [`docs/product/VERTICAL-PROGRAMS-INDEX.md`](docs/product/VERTICAL-PROGRAMS-INDEX.md) — per-vertical L0–L8 + [`LIVIA-VERTICALS-BUILD-PLAN.md`](docs/product/LIVIA-VERTICALS-BUILD-PLAN.md)
 
 ## Before you edit (narrow task + system-wide vision)
 
@@ -39,7 +40,7 @@ lib/policy (vertical, onboarding, presets, guest surfaces)
 
 | If you touched… | Also verify… |
 |-----------------|--------------|
-| New/changed **vertical** | All `Record<BusinessVertical, …>` in policy; registry row; demo slug; `/b` + tenant-experience; see [`VERTICAL-ADD-PLAYBOOK.md`](docs/engineering/VERTICAL-ADD-PLAYBOOK.md) |
+| New/changed **vertical** | All `Record<BusinessVertical, …>` in policy; registry row; demo slug; `/b` + tenant-experience; see [`VERTICAL-ADD-PLAYBOOK.md`](docs/engineering/VERTICAL-ADD-PLAYBOOK.md) · doc spokes: [`DOC-PROPAGATION-CASCADE.md`](docs/engineering/DOC-PROPAGATION-CASCADE.md) · `pnpm vertical:doc-check` |
 | New/changed **business create/seed** | `POST /businesses` path, onboarding acts, public `/b`, demo parity; [`LIVIA-PLATFORM-LIFECYCLE.md`](docs/product/LIVIA-PLATFORM-LIFECYCLE.md) §3 |
 | **Demo gateway / roster** | Structure vs vertical scenarios; Clerk sync scope; chain HQ vs location owner emails |
 | **Public `/b` or guest flow** | Playbook + guest surfaces in policy; all verticals with same pattern, not one-off |

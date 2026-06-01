@@ -82,6 +82,7 @@ export async function listConversationsForBusiness(
       summary: conversationsTable.summary,
       linkedBookingId: conversationsTable.linkedBookingId,
       caseIntent: conversationsTable.caseIntent,
+      resolution: conversationsTable.resolution,
       lastMessageAt: conversationsTable.lastMessageAt,
       createdAt: conversationsTable.createdAt,
       lastMessage: sql<string | null>`(

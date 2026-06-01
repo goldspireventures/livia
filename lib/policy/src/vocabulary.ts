@@ -11,6 +11,12 @@ const VOCAB: Record<
     teamNoun: string;
     hint: string;
     ownerTodayLine: string;
+    /** Owner home — today's timeline card heading (avoid pluralising serviceNoun). */
+    ownerTodayScheduleTitle: string;
+    /** Owner home — link to /bookings for the full day. */
+    ownerTodayScheduleCalendarCta: string;
+    /** Per-appointment SMS when you're behind (CONFIRMED bookings). */
+    runningLateLabel: string;
   }
 > = {
   hair: {
@@ -20,6 +26,9 @@ const VOCAB: Record<
     teamNoun: "Team",
     hint: "Cuts, colour, and chair time — Liv speaks your vertical.",
     ownerTodayLine: "Today's bookings, inbox, and anything that needs a yes or no.",
+    ownerTodayScheduleTitle: "Today's chair",
+    ownerTodayScheduleCalendarCta: "Full day calendar",
+    runningLateLabel: "Running late",
   },
   beauty: {
     clientNoun: "Client",
@@ -27,7 +36,10 @@ const VOCAB: Record<
     locationNoun: "Studio",
     teamNoun: "Team",
     hint: "Treatments and tech assignments — patch tests where required.",
-    ownerTodayLine: "Today's treatments, approvals, and inbox — one calm view.",
+    ownerTodayLine: "Today's schedule, approvals, and inbox — one calm view.",
+    ownerTodayScheduleTitle: "Today's schedule",
+    ownerTodayScheduleCalendarCta: "Full day calendar",
+    runningLateLabel: "Running late",
   },
   "body-art": {
     clientNoun: "Client",
@@ -36,6 +48,9 @@ const VOCAB: Record<
     teamNoun: "Artists",
     hint: "Consult before long sessions; never rush the relationship.",
     ownerTodayLine: "Sessions, consults, and messages — studio-wide.",
+    ownerTodayScheduleTitle: "Today's sessions",
+    ownerTodayScheduleCalendarCta: "Full day calendar",
+    runningLateLabel: "Running late",
   },
   wellness: {
     clientNoun: "Guest",
@@ -44,6 +59,9 @@ const VOCAB: Record<
     teamNoun: "Practitioners",
     hint: "Calmer tone; policy-heavy reschedules.",
     ownerTodayLine: "Today's sessions and handoffs — steady rhythm.",
+    ownerTodayScheduleTitle: "Today's sessions",
+    ownerTodayScheduleCalendarCta: "Full day calendar",
+    runningLateLabel: "Running behind",
   },
   fitness: {
     clientNoun: "Member",
@@ -52,6 +70,9 @@ const VOCAB: Record<
     teamNoun: "Coaches",
     hint: "Sessions and coaches — brisk energy.",
     ownerTodayLine: "Classes and PT slots — who's in today.",
+    ownerTodayScheduleTitle: "Today's schedule",
+    ownerTodayScheduleCalendarCta: "Full day calendar",
+    runningLateLabel: "Running behind",
   },
   medspa: {
     clientNoun: "Patient",
@@ -59,7 +80,10 @@ const VOCAB: Record<
     locationNoun: "Clinic",
     teamNoun: "Practitioners",
     hint: "Clinical precision; consent language explicit.",
-    ownerTodayLine: "Today's treatments and approvals — clinical calm.",
+    ownerTodayLine: "Today's schedule and approvals — clinical calm.",
+    ownerTodayScheduleTitle: "Today's schedule",
+    ownerTodayScheduleCalendarCta: "Full day calendar",
+    runningLateLabel: "Running late for appointment",
   },
   "allied-health": {
     clientNoun: "Patient",
@@ -68,6 +92,9 @@ const VOCAB: Record<
     teamNoun: "Clinicians",
     hint: "Session-based care; not a substitute for clinical records systems.",
     ownerTodayLine: "Today's appointments and patient messages.",
+    ownerTodayScheduleTitle: "Today's appointments",
+    ownerTodayScheduleCalendarCta: "Full day calendar",
+    runningLateLabel: "Running late for appointment",
   },
   "pet-grooming": {
     clientNoun: "Parent",
@@ -75,7 +102,10 @@ const VOCAB: Record<
     locationNoun: "Salon",
     teamNoun: "Groomers",
     hint: "Pet records, breed notes, and rebook cycles every 4–8 weeks.",
-    ownerTodayLine: "Today's grooms and pet parent messages.",
+    ownerTodayLine: "Today's schedule and pet parent messages.",
+    ownerTodayScheduleTitle: "Today's schedule",
+    ownerTodayScheduleCalendarCta: "Full day calendar",
+    runningLateLabel: "Running late",
   },
   "automotive-detailing": {
     clientNoun: "Client",
@@ -83,7 +113,10 @@ const VOCAB: Record<
     locationNoun: "Studio",
     teamNoun: "Team",
     hint: "Vehicle details and bay time — confirm make/model on book.",
-    ownerTodayLine: "Today's details and client threads.",
+    ownerTodayLine: "Today's bay schedule and client threads.",
+    ownerTodayScheduleTitle: "Today's schedule",
+    ownerTodayScheduleCalendarCta: "Full day calendar",
+    runningLateLabel: "Running late for booking",
   },
 };
 
