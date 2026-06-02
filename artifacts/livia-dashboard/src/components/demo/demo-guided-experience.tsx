@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, ArrowRight, Loader2, RefreshCw } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, RefreshCw, Lock } from "lucide-react";
 import {
   getWedgeDemoStory,
   listWedgeDemoVerticalsForDisplay,
@@ -47,6 +47,9 @@ export function DemoGuidedExperience({
   onEnterAs,
 }: Props) {
   const verticals = listWedgeDemoVerticalsForDisplay();
+  // Gate the guided demo path to currently-designed vertical(s).
+  // Unlock more by extending this set as vertical demo stories are signed off.
+  const unlocked = useMemo(() => new Set<BusinessVertical>(["beauty"]), []);
   const [vertical, setVertical] = useState<BusinessVertical | null>(null);
   const [tenant, setTenant] = useState<DemoBusinessTenant | null>(null);
   const [phase, setPhase] = useState<Phase>("vertical");
@@ -158,18 +161,39 @@ export function DemoGuidedExperience({
                 const s = getWedgeDemoStory(v);
                 if (!s) return null;
                 const count = tenants.filter((t) => verticalGroupKey(t.vertical) === v).length;
+                const isUnlocked = unlocked.has(v);
                 return (
                   <button
                     key={v}
                     type="button"
-                    onClick={() => pickVertical(v)}
-                    disabled={!provisioned && count === 0}
+                    onClick={() => {
+                      if (!isUnlocked) return;
+                      pickVertical(v);
+                    }}
+                    disabled={!isUnlocked || (!provisioned && count === 0)}
                     data-testid={`demo-guided-trade-${v}`}
-                    className="rounded-xl border border-white/12 bg-white/[0.03] p-3 text-left hover:border-[#22d3ee]/45 transition"
+                    className={cn(
+                      "rounded-xl border bg-white/[0.03] p-3 text-left transition",
+                      isUnlocked
+                        ? "border-white/12 hover:border-[#22d3ee]/45 cursor-pointer"
+                        : "border-white/10 opacity-55 cursor-not-allowed",
+                    )}
                   >
-                    <p className="text-sm font-medium text-white leading-snug">{s.label}</p>
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-sm font-medium text-white leading-snug">{s.label}</p>
+                      {!isUnlocked ? (
+                        <span className="inline-flex items-center gap-1 rounded-md border border-white/15 bg-white/5 px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-white/70">
+                          <Lock className="h-3 w-3" />
+                          Coming soon
+                        </span>
+                      ) : null}
+                    </div>
                     <p className="mt-1 text-[10px] font-mono text-white/40">
-                      {provisioned ? `${count} demo ${count === 1 ? "shop" : "shops"}` : "Set up demo first"}
+                      {!isUnlocked
+                        ? "Locked until this vertical ships"
+                        : provisioned
+                          ? `${count} demo ${count === 1 ? "shop" : "shops"}`
+                          : "Set up demo first"}
                     </p>
                   </button>
                 );
@@ -243,8 +267,13 @@ export function DemoGuidedExperience({
                   Enter as…
                 </h2>
                 <p className="text-sm text-white/55 mb-4">
-                  {tenant.name} · password{" "}
-                  <code className="text-white/75">{devPassword ?? "LiviaDemo2026!"}</code>
+                  {tenant.name}
+                  {devPassword ? (
+                    <>
+                      {" "}
+                      · password <code className="text-white/75">{devPassword}</code>
+                    </>
+                  ) : null}
                 </p>
                 {roster.length > 0 ? (
                   <div className="grid grid-cols-2 gap-2 flex-1 content-start">
