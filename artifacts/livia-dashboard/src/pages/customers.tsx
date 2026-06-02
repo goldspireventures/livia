@@ -24,6 +24,7 @@ import { invalidateOperationalState } from "@/lib/operational-cache";
 import { OperationalPageShell } from "@/components/layout/operational-page-shell";
 import { useBeautyChrome } from "@/lib/presentation-layout";
 import {
+  beautyAmbientPanel,
   beautyListScroll,
   beautyPanel,
   beautyPrimaryButton,
@@ -245,7 +246,7 @@ export default function CustomersPage() {
         />
       </div>
 
-      <Card className={beautyPanel(beautyChrome)}>
+      <Card className={beautyAmbientPanel(beautyChrome)}>
         <CardContent className="p-0">
           {listLoading ? (
             <div className="divide-y divide-border">

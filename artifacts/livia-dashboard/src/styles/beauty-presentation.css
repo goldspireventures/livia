@@ -342,6 +342,19 @@ html[data-vertical="beauty"][data-beauty-native-skin] .beauty-operational-panel 
   -webkit-backdrop-filter: blur(10px);
 }
 
+html[data-vertical="beauty"][data-beauty-native-skin] .beauty-operational-panel--ambient {
+  border-color: hsl(var(--primary) / 0.08);
+  background: radial-gradient(
+    ellipse 108% 92% at 50% 38%,
+    hsl(var(--beauty-surface-1) / 0.58) 0%,
+    hsl(var(--beauty-surface-1) / 0.22) 48%,
+    transparent 76%
+  );
+  box-shadow: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
 html[data-vertical="beauty"][data-beauty-native-skin] .beauty-operational-panel [data-testid^="row-booking-"] {
   border-color: hsl(var(--border) / 0.65);
 }

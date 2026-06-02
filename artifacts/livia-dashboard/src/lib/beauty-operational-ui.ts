@@ -16,6 +16,15 @@ export function beautyPanel(beauty?: boolean, extra?: string) {
   return cn(beauty && "beauty-operational-panel", extra);
 }
 
+/** Panel surface dissolves into operational page background (beauty native skin). */
+export function beautyAmbientPanel(beauty?: boolean, extra?: string) {
+  return cn(
+    beauty &&
+      "beauty-operational-panel beauty-operational-panel--ambient bg-transparent shadow-none",
+    extra,
+  );
+}
+
 export function beautyListScroll(extra?: string) {
   return cn(
     "beauty-op-list-scroll divide-y divide-border/70 overscroll-contain",
