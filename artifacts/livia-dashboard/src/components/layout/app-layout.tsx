@@ -225,6 +225,17 @@ export function AppLayout({ children }: { children: ReactNode }) {
     return badges;
   }, [handedOffCount, pendingCount]);
 
+  const navBadgeLabels = useMemo(() => {
+    const labels: Record<string, string> = {};
+    if (handedOffCount > 0) {
+      labels["/inbox"] = `${handedOffCount} handoff${handedOffCount === 1 ? "" : "s"} waiting`;
+    }
+    if (pendingCount > 0) {
+      labels["/bookings"] = `${pendingCount} pending booking${pendingCount === 1 ? "" : "s"}`;
+    }
+    return labels;
+  }, [handedOffCount, pendingCount]);
+
   const vertical =
     (business as { vertical?: string } | null)?.vertical ?? tenantExperience?.vertical ?? null;
   const showBeautyFlower = isBeautyVertical(vertical);
@@ -257,6 +268,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 items={items}
                 accent={accent}
                 badges={navBadges}
+                badgeLabels={navBadgeLabels}
                 beautyNav
               />
             </div>
@@ -270,7 +282,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </p>
             </div>
             <BusinessSwitcher />
-            <SidebarNav items={items} accent={accent} badges={navBadges} />
+            <SidebarNav items={items} accent={accent} badges={navBadges} badgeLabels={navBadgeLabels} />
           </>
         )}
       </aside>

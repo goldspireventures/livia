@@ -8,12 +8,14 @@ type Props = {
   accent: string;
   /** href → count badge (inbox handoffs, pending bookings, etc.) */
   badges?: Record<string, number>;
+  /** href → tooltip / a11y label for badge semantics. */
+  badgeLabels?: Record<string, string>;
   collapsed?: boolean;
   /** Beauty W4: flat list, gradient active pill (northstar sidebar). */
   beautyNav?: boolean;
 };
 
-export function SidebarNav({ items, accent, badges, collapsed, beautyNav }: Props) {
+export function SidebarNav({ items, accent, badges, badgeLabels, collapsed, beautyNav }: Props) {
   const [location] = useLocation();
   const groups = beautyNav
     ? [{ id: "flat" as const, label: "", items }]
@@ -39,6 +41,7 @@ export function SidebarNav({ items, accent, badges, collapsed, beautyNav }: Prop
               const isActive =
                 location === item.href || location.startsWith(`${item.href}/`);
               const navAttention = beautyNav && !isActive && (badges?.[item.href] ?? 0) > 0;
+              const badgeLabel = badgeLabels?.[item.href];
               return (
                 <Link key={item.href} href={item.href}>
                   <div
@@ -78,12 +81,14 @@ export function SidebarNav({ items, accent, badges, collapsed, beautyNav }: Prop
                       collapsed ? (
                         <span
                           className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary"
-                          aria-label={`${badges![item.href]} items need attention`}
+                          title={badgeLabel}
+                          aria-label={badgeLabel ?? `${badges![item.href]} items need attention`}
                         />
                       ) : (
                         <span
                           className="ml-auto min-w-[1.25rem] h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold flex items-center justify-center tabular-nums"
-                          aria-label={`${badges![item.href]} items need attention`}
+                          title={badgeLabel}
+                          aria-label={badgeLabel ?? `${badges![item.href]} items need attention`}
                         >
                           {badges![item.href] > 99 ? "99+" : badges![item.href]}
                         </span>
