@@ -32,6 +32,15 @@ export function beautyListScroll(extra?: string) {
   );
 }
 
+/** Customers ambient list — soft dividers + bottom dissolve mask (beauty native skin). */
+export function beautyCustomerListScroll(beauty?: boolean, extra?: string) {
+  return cn(
+    "beauty-op-list-scroll overscroll-contain",
+    beauty ? "beauty-op-list-scroll--ambient divide-y-0" : "divide-y divide-border/70",
+    extra,
+  );
+}
+
 export function beautyRow(beauty?: boolean, attention?: boolean, extra?: string) {
   return cn(
     "flex items-center gap-3 p-3 transition-colors cursor-pointer",

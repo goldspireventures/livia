@@ -25,7 +25,7 @@ import { OperationalPageShell } from "@/components/layout/operational-page-shell
 import { useBeautyChrome } from "@/lib/presentation-layout";
 import {
   beautyAmbientPanel,
-  beautyListScroll,
+  beautyCustomerListScroll,
   beautyPanel,
   beautyPrimaryButton,
   beautyRow,
@@ -270,8 +270,15 @@ export default function CustomersPage() {
             </div>
           ) : (
             <>
-              <div className={beautyListScroll()} onWheel={onContainedScrollWheel}>
-                {accumulated.map((customer) => (
+              <div
+                className={beautyCustomerListScroll(beautyChrome)}
+                onWheel={onContainedScrollWheel}
+              >
+                {accumulated.map((customer) => {
+                  const initials =
+                    `${customer.firstName?.charAt(0) ?? ""}${customer.lastName?.charAt(0) ?? ""}`.toUpperCase() ||
+                    "?";
+                  return (
                   <Link key={customer.id} href={`/customers/${customer.id}`}>
                     <div
                       data-testid={`row-customer-${customer.id}`}
@@ -279,13 +286,13 @@ export default function CustomersPage() {
                     >
                       <div
                         className={cn(
-                          "flex h-10 w-10 items-center justify-center rounded-full font-semibold text-sm shrink-0",
+                          "flex h-10 w-10 items-center justify-center rounded-full text-sm shrink-0",
                           beautyChrome
-                            ? "bg-primary/12 text-primary"
-                            : "bg-muted",
+                            ? "beauty-customer-avatar"
+                            : "bg-muted font-semibold",
                         )}
                       >
-                        {customer.firstName?.charAt(0) ?? "?"}
+                        {initials}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate">
@@ -300,10 +307,16 @@ export default function CustomersPage() {
                           Blocked
                         </span>
                       )}
-                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <ChevronRight
+                        className={cn(
+                          "h-4 w-4 shrink-0",
+                          beautyChrome ? "beauty-customer-chevron" : "text-muted-foreground",
+                        )}
+                      />
                     </div>
                   </Link>
-                ))}
+                  );
+                })}
               </div>
               {hasMore && (
                 <div className="p-4 border-t flex justify-center">
