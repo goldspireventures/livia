@@ -28,12 +28,13 @@ function relativeTime(dateStr?: string): string {
 export function InboxPreviewPanel({
   threads,
   loading,
-  totalOpen,
+  attentionCount,
   compact = false,
 }: {
   threads: Thread[];
   loading?: boolean;
-  totalOpen: number;
+  /** Threads that actually need a human (handoffs / needs-you). */
+  attentionCount: number;
   compact?: boolean;
 }) {
   return (
@@ -46,9 +47,9 @@ export function InboxPreviewPanel({
     >
       <div className="flex items-center justify-between px-3 py-2 border-b border-border/60">
         <h2 className="text-sm font-semibold">Inbox</h2>
-        {totalOpen > 0 ? (
+        {attentionCount > 0 ? (
           <Badge variant="secondary" className="text-[10px] font-mono tabular-nums">
-            {totalOpen} open
+            {attentionCount} need{attentionCount === 1 ? "s" : ""} you
           </Badge>
         ) : null}
       </div>

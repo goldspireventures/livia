@@ -564,7 +564,7 @@ export function OwnerHomeRitual({
           <InboxPreviewPanel
             threads={previewThreads}
             loading={convosLoading}
-            totalOpen={openThreads.length}
+            attentionCount={handoffCount}
             compact
           />
         ) : hasTodaySchedule ? null : (
@@ -583,7 +583,7 @@ export function OwnerHomeRitual({
           <InboxPreviewPanel
             threads={previewThreads}
             loading={convosLoading}
-            totalOpen={openThreads.length}
+            attentionCount={handoffCount}
             compact
           />
           {hasTodaySchedule ? null : beauty && heroPending && !isLoadingSummary ? (

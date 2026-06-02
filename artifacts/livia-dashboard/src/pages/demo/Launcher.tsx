@@ -109,7 +109,9 @@ export default function DemoLauncher() {
     ]);
     setCatalog(cat.personas);
     setScenarios(cat.scenarios ?? []);
-    setDevPassword(cat.sharedPassword ?? cat.devPassword);
+    // Only show a password if the API explicitly returns one.
+    // Never fall back to a hardcoded shared password on the client.
+    setDevPassword(cat.sharedPassword ?? cat.devPassword ?? undefined);
     setProvisioned(st.provisioned);
     setTenants(st.businesses ?? []);
   }, []);
@@ -370,8 +372,25 @@ export default function DemoLauncher() {
             Explore Livia live
           </h1>
           <p className="text-sm md:text-base text-white/60 leading-relaxed">
-            Pick your trade in the guided box — four beats, then enter a live seeded studio. Shared
-            password: <code className="text-white/80">{devPassword ?? "LiviaDemo2026!"}</code>
+            Pick your trade in the guided box — four beats, then enter a live seeded studio.
+            {devPassword ? (
+              <>
+                {" "}
+                Shared password: <code className="text-white/80">{devPassword}</code>
+              </>
+            ) : (
+              <>
+                {" "}
+                Shared password hidden —{" "}
+                <Link
+                  href="/sign-in?beta=1"
+                  className="text-white/70 underline underline-offset-2 hover:text-white/90"
+                >
+                  sign in
+                </Link>{" "}
+                to continue.
+              </>
+            )}
             {" · "}
             <Link href="/sign-in?beta=1" className="text-white/50 underline underline-offset-2 hover:text-white/80">
               Sign in with your own account
@@ -563,8 +582,14 @@ export default function DemoLauncher() {
           ) : selectedTenant?.roster?.length ? (
             <div className="rounded-2xl border border-white/12 bg-white/[0.04] p-5">
               <p className="text-sm font-medium text-white">{selectedScenario.title}</p>
-              <p className="text-xs text-white/45 mt-1 mb-4">{selectedTenant.name} · password{" "}
-                <code className="text-white/70">{devPassword ?? "LiviaDemo2026!"}</code>
+              <p className="text-xs text-white/45 mt-1 mb-4">
+                {selectedTenant.name}
+                {devPassword ? (
+                  <>
+                    {" "}
+                    · password <code className="text-white/70">{devPassword}</code>
+                  </>
+                ) : null}
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {selectedTenant.roster.map((entry) => {
