@@ -1,0 +1,392 @@
+/**
+ * W2 /demo/wedge/* — inherits W1 /demo concierge gate ambient.
+ * Keep in sync with artifacts/livia-marketing/src/styles/constellation-demo-concierge.css
+ */
+
+.w2-demo-flow {
+  --w2-gold-light: #e6d0a5;
+  --w2-gold-mid: #d9b97a;
+  --w2-gold-deep: #a9834d;
+  --w2-navy-deep: #030615;
+  --w2-navy-mid: #05081c;
+  --w2-navy-soft: #071028;
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  color: rgba(255, 255, 255, 0.92);
+  background: linear-gradient(168deg, var(--w2-navy-soft) 0%, var(--w2-navy-mid) 45%, var(--w2-navy-deep) 100%);
+  overflow-x: hidden;
+  isolation: isolate;
+}
+
+.w2-demo-flow__main {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  width: 100%;
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 0.5rem 1.25rem 2rem;
+}
+
+@media (min-width: 640px) {
+  .w2-demo-flow__main {
+    padding: 0.75rem 2rem 2.5rem;
+  }
+}
+
+.w2-demo-flow__bar {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: calc(1.25rem + env(safe-area-inset-top)) 1.25rem 0;
+  max-width: 56rem;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.w2-demo-flow__bar--minimal {
+  align-items: center;
+  justify-content: flex-start;
+}
+
+@media (min-width: 640px) {
+  .w2-demo-flow__bar {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+.w2-demo-flow__live {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.78);
+  padding: 0.42rem 0.8rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(3, 6, 21, 0.48);
+  backdrop-filter: blur(12px);
+}
+
+.w2-demo-flow__live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: #ef4444;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.65);
+  animation: w2-demo-live-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes w2-demo-live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.w2-demo-flow__footer {
+  position: relative;
+  z-index: 2;
+  max-width: 56rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 1.25rem 2rem;
+}
+
+.w2-demo-flow__back {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  border-radius: 9999px;
+  border: 1px solid rgba(217, 185, 122, 0.35);
+  padding: 0 1rem;
+  font-size: 0.875rem;
+  color: rgba(230, 208, 165, 0.88);
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.w2-demo-flow__back:hover {
+  border-color: rgba(217, 185, 122, 0.55);
+  color: #f6f3ec;
+}
+
+/* ── Ambient ── */
+.w2-demo-flow__ambient {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+.w2-demo-flow__texture {
+  position: absolute;
+  inset: 0;
+  opacity: 0.8;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.015) 0%,
+      transparent 28%,
+      rgba(255, 255, 255, 0.012) 52%,
+      transparent 78%,
+      rgba(255, 255, 255, 0.01) 100%
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.008) 0px,
+      transparent 1px,
+      transparent 4px,
+      rgba(255, 255, 255, 0.006) 5px
+    );
+  background-size: 100% 100%, 8px 100%;
+}
+
+/* Nebula cluster — ~22–26% viewport mass per corner */
+.w2-demo-flow__nebula {
+  position: absolute;
+  width: min(52vw, 680px);
+  height: min(48vh, 520px);
+  overflow: visible;
+}
+
+.w2-demo-flow__nebula--tr {
+  top: -6%;
+  right: -10%;
+}
+
+.w2-demo-flow__nebula--bl {
+  bottom: -8%;
+  left: -12%;
+}
+
+.w2-demo-flow__wisp {
+  position: absolute;
+  border-radius: 42% 58% 55% 45% / 48% 42% 58% 52%;
+  filter: blur(52px);
+  will-change: transform;
+}
+
+.w2-demo-flow__nebula--tr .w2-demo-flow__wisp--1 {
+  width: 68%;
+  height: 52%;
+  top: 8%;
+  left: 18%;
+  background: radial-gradient(
+    ellipse 70% 65% at 45% 40%,
+    rgba(230, 208, 165, 0.26) 0%,
+    rgba(217, 185, 122, 0.13) 38%,
+    transparent 68%
+  );
+  transform: rotate(-22deg);
+  animation: w2-demo-drift-tr-a 36s ease-in-out infinite;
+}
+
+.w2-demo-flow__nebula--tr .w2-demo-flow__wisp--2 {
+  width: 55%;
+  height: 44%;
+  top: 22%;
+  left: 38%;
+  background: radial-gradient(
+    ellipse 60% 55% at 50% 45%,
+    rgba(217, 185, 122, 0.2) 0%,
+    rgba(169, 131, 77, 0.1) 42%,
+    transparent 72%
+  );
+  transform: rotate(12deg);
+  animation: w2-demo-drift-tr-b 42s ease-in-out infinite;
+}
+
+.w2-demo-flow__nebula--tr .w2-demo-flow__wisp--3 {
+  width: 48%;
+  height: 38%;
+  top: 0%;
+  left: 52%;
+  background: radial-gradient(
+    ellipse 55% 50% at 40% 50%,
+    rgba(230, 208, 165, 0.18) 0%,
+    transparent 65%
+  );
+  filter: blur(64px);
+  transform: rotate(-8deg);
+  animation: w2-demo-drift-tr-c 28s ease-in-out infinite;
+}
+
+.w2-demo-flow__nebula--tr .w2-demo-flow__wisp--4 {
+  width: 40%;
+  height: 32%;
+  top: 38%;
+  left: 8%;
+  background: radial-gradient(
+    ellipse 50% 45% at 55% 50%,
+    rgba(169, 131, 77, 0.15) 0%,
+    rgba(217, 185, 122, 0.08) 35%,
+    transparent 70%
+  );
+  filter: blur(44px);
+  transform: rotate(28deg);
+  animation: w2-demo-drift-tr-d 48s ease-in-out infinite;
+}
+
+.w2-demo-flow__nebula--bl .w2-demo-flow__wisp--1 {
+  width: 72%;
+  height: 54%;
+  bottom: 10%;
+  left: 6%;
+  background: radial-gradient(
+    ellipse 68% 62% at 42% 55%,
+    rgba(230, 208, 165, 0.23) 0%,
+    rgba(217, 185, 122, 0.11) 40%,
+    transparent 70%
+  );
+  transform: rotate(18deg);
+  animation: w2-demo-drift-bl-a 38s ease-in-out infinite;
+}
+
+.w2-demo-flow__nebula--bl .w2-demo-flow__wisp--2 {
+  width: 58%;
+  height: 46%;
+  bottom: 24%;
+  left: 28%;
+  background: radial-gradient(
+    ellipse 62% 58% at 48% 42%,
+    rgba(217, 185, 122, 0.19) 0%,
+    rgba(169, 131, 77, 0.09) 45%,
+    transparent 74%
+  );
+  transform: rotate(-14deg);
+  animation: w2-demo-drift-bl-b 44s ease-in-out infinite;
+}
+
+.w2-demo-flow__nebula--bl .w2-demo-flow__wisp--3 {
+  width: 46%;
+  height: 36%;
+  bottom: 4%;
+  left: 48%;
+  background: radial-gradient(
+    ellipse 58% 52% at 50% 50%,
+    rgba(230, 208, 165, 0.16) 0%,
+    transparent 68%
+  );
+  filter: blur(58px);
+  transform: rotate(6deg);
+  animation: w2-demo-drift-bl-c 32s ease-in-out infinite;
+}
+
+.w2-demo-flow__nebula--bl .w2-demo-flow__wisp--4 {
+  width: 38%;
+  height: 30%;
+  bottom: 32%;
+  left: 2%;
+  background: radial-gradient(
+    ellipse 48% 44% at 45% 55%,
+    rgba(169, 131, 77, 0.14) 0%,
+    transparent 72%
+  );
+  filter: blur(48px);
+  transform: rotate(-24deg);
+  animation: w2-demo-drift-bl-d 50s ease-in-out infinite;
+}
+
+@keyframes w2-demo-drift-tr-a {
+  0%,
+  100% {
+    transform: rotate(-22deg) translate(0, 0);
+  }
+  50% {
+    transform: rotate(-18deg) translate(-2%, 1.5%);
+  }
+}
+
+@keyframes w2-demo-drift-tr-b {
+  0%,
+  100% {
+    transform: rotate(12deg) translate(0, 0);
+  }
+  50% {
+    transform: rotate(16deg) translate(1.5%, -1%);
+  }
+}
+
+@keyframes w2-demo-drift-tr-c {
+  0%,
+  100% {
+    transform: rotate(-8deg) translate(0, 0);
+  }
+  50% {
+    transform: rotate(-4deg) translate(-1%, 2%);
+  }
+}
+
+@keyframes w2-demo-drift-tr-d {
+  0%,
+  100% {
+    transform: rotate(28deg) translate(0, 0);
+  }
+  50% {
+    transform: rotate(24deg) translate(2%, 1%);
+  }
+}
+
+@keyframes w2-demo-drift-bl-a {
+  0%,
+  100% {
+    transform: rotate(18deg) translate(0, 0);
+  }
+  50% {
+    transform: rotate(14deg) translate(1.5%, -1.5%);
+  }
+}
+
+@keyframes w2-demo-drift-bl-b {
+  0%,
+  100% {
+    transform: rotate(-14deg) translate(0, 0);
+  }
+  50% {
+    transform: rotate(-10deg) translate(-2%, 1%);
+  }
+}
+
+@keyframes w2-demo-drift-bl-c {
+  0%,
+  100% {
+    transform: rotate(6deg) translate(0, 0);
+  }
+  50% {
+    transform: rotate(10deg) translate(1%, -1.5%);
+  }
+}
+
+@keyframes w2-demo-drift-bl-d {
+  0%,
+  100% {
+    transform: rotate(-24deg) translate(0, 0);
+  }
+  50% {
+    transform: rotate(-20deg) translate(-1.5%, -1%);
+  }
+}
+
+.w2-demo-flow__stars {
+  position: absolute;
+  inset: 0;
+  opacity: 0.65;
+}
+
+.w2-demo-flow__noise {
+  position: absolute;
+  inset: 0;
+  opacity: 0.048;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 240px 240px;
+}
+
+/* ── Chrome ── */

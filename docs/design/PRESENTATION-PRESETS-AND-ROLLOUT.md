@@ -104,28 +104,29 @@ Surface rules: [`SURFACE-AND-BREAKPOINTS.md`](./SURFACE-AND-BREAKPOINTS.md).
 
 ---
 
-## Part IIb — Platform Default (Aurora)
+## Part IIb — Platform Default (Constellation)
 
 **Id:** `platform-default` (`PLATFORM_DEFAULT_PRESET_ID` in `@workspace/policy`)  
-**Available in:** every vertical pack — same Livia product chrome, vertical capability unchanged.
+**Available in:** every vertical pack — same Livia product chrome, vertical capability unchanged.  
+**Visual anchor:** [`assets/w4-tenant/platform-default/README.md`](./assets/w4-tenant/platform-default/README.md) · inherits W1 M4 Constellation.
 
 | Token | Value |
 |-------|--------|
 | Label | Platform Default |
-| Shell | `aurora` |
-| Color mode | `system` (light + dark — existing Aurora tokens in `index.css`) |
-| Primary | Aurora cyan `188 95% 43%` |
-| Accent | Aurora violet (AI / Liv moments) |
-| Surfaces | `.aurora-glass`, `.aurora-glow`, gradient Liv command hub |
-| Typography | Geist / Plus Jakarta sans; Cormorant available for display |
-| Layout primitive | `cards` — vertical-native home **modules** still apply (e.g. body-art pipeline data in Aurora chrome) |
-| Motion | `crisp` — v3 motion tokens |
+| Shell | `aurora` (policy id; CSS = Constellation bundle) |
+| Color mode | `dark` |
+| Primary | Champagne `#d9c39a` |
+| Accent | Aurora cyan (Liv operational states) |
+| Surfaces | Ink `#0a0a10`, glass briefing, ambient orbit watermark |
+| Typography | Geist / Plus Jakarta sans; Cormorant for display |
+| Layout primitive | `cards` |
+| Motion | `crisp` |
 
-**When to pick it:** **Default for all new signups.** Also for demos, design partners, and owners who want canonical Livia chrome before exploring vertical-curated skins.
+**When to pick it:** **Default for all new signups.** Demos and owners who want canonical Livia chrome before vertical-native skins.
 
-**CSS implementation:** `html[data-presentation="platform-default"]` maps to **baseline** `:root` / `.dark` Aurora variables in `artifacts/livia-dashboard/src/index.css` — no alternate bundle required for Phase 3 (bundle is identity mapping). Other presets override tokens; Platform Default resets to Aurora defaults.
+**CSS implementation:** `html[data-presentation="platform-default"]` → `artifacts/livia-dashboard/src/styles/platform-default-constellation.css` + `PlatformDefaultAmbient` in app shell.
 
-**Not included in Platform Default:** marketing-only aurora hero blobs on livia.io (per v3 spec — ops UI only).
+**Not included:** full marketing orbital hero — product uses ambient inheritance only.
 
 ---
 

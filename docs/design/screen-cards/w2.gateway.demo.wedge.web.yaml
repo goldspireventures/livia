@@ -9,14 +9,18 @@ meta:
   status: designed
 
 job: >
-  Prospect sees their picked world become the story — G1 trade card fuses with gateway
-  carousel beats (Liv briefing, gold+cyan) before enter demo.
+  Prospect sees their picked world become the story — G2 beats then G3 role enter.
+  Inherits W1 /demo concierge gate ambient (gold nebula, LIVE, navy) — not G1 aurora.
 
 visual:
   canvas:
     device: responsive
     viewport: 1440x900
-    background: infused aurora — gold warmth + cyan gateway (one atmosphere, not split)
+    background: W1 demo flow — midnight navy + champagne gold nebula corners (DemoFlowShell)
+  inheritance:
+    from: w1.marketing.demo.web
+    shell: artifacts/livia-dashboard/src/components/gateway/demo-flow-shell.tsx
+    css: artifacts/livia-dashboard/src/styles/gateway-demo-flow.css
   zones:
     - id: fused_card_stage
       layout: centered

@@ -50,10 +50,10 @@ function platformDefaultPreset(vertical: BusinessVertical): PresentationPreset {
     vertical,
     label: "Platform Default",
     description:
-      "Classic Livia — Aurora cyan and violet, glass surfaces, Liv glow on command moments.",
+      "Constellation — ink shell, champagne Liv moments, ambient orbit inherited from marketing M4.",
     isDefault: false,
     tokens: {
-      colorMode: "system",
+      colorMode: "dark",
       density: "comfortable",
       display: "sans",
       layout: "cards",

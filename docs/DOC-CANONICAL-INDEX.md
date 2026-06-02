@@ -150,7 +150,7 @@
 | GTM / markets | `business/MARKET-COUNTRY-PLAYBOOKS.md` | `business/sales-motion.md` |
 | Operator go-live | `business/OPERATOR-READY-PACK.md` | templates/ |
 | Commercial plan | `product/LIVIA-MASTER-PLAN.md` | `launch-plan.md` |
-| Monetization | `product/LIVIA-OS-MONETIZATION.md` | `business/pricing-and-packaging.md` |
+| Monetization | `product/LIVIA-OS-MONETIZATION.md` | `business/pricing-and-packaging.md` · lock record `business/PRICING-RECONCILIATION-2026-06-02.md` |
 
 ### Testing & honesty
 

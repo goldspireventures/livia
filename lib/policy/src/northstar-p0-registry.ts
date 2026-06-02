@@ -19,7 +19,7 @@ export type NorthstarP0Entry = {
   /** Lenient pixel diff vs baseline (live app evolves). */
   maxDiffPixelRatio: number;
   /** How E2E reaches the route. */
-  auth?: "demo" | "public" | "gateway";
+  auth?: "demo" | "public" | "gateway" | "marketing";
 };
 
 /** Tenant P0 routes compared to `livia-evolution/northstar/*.png` in E2E. */
@@ -192,6 +192,7 @@ export const SCREEN_CARD_P0: NorthstarP0Entry[] = [
   },
 ];
 
+/** W1 marketing M1-R2 — superseded by M3 One Floor (2026-06). Target PNG retained for history only. */
 /** W4 tenant routes with YAML spec but no PNG baseline yet — capture next. */
 export const SCREEN_CARD_CAPTURE_QUEUE: Array<{
   screenId: string;
@@ -216,7 +217,6 @@ export const SCREEN_CARD_CAPTURE_QUEUE: Array<{
   { screenId: "w5.public.visit.mobile", route: "/b/luxe-salon-spa/visit/demo" },
   { screenId: "w5.public.pay.mobile", route: "/b/luxe-salon-spa/pay/demo" },
   { screenId: "w5.public.proof.mobile", route: "/b/ink-anchor-galway/proof/demo" },
-  { screenId: "w1.marketing.home.web", route: "/" },
 ];
 
 export const ALL_VISUAL_P0 = [...TENANT_NORTHSTAR_P0, ...SCREEN_CARD_P0];

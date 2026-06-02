@@ -1,12 +1,13 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "wouter";
-import { Menu, ArrowRight } from "lucide-react";
+import { Menu } from "lucide-react";
 import { LiviaWordmark } from "@/components/brand/LiviaMark";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { LEGAL_FOOTER_LINE } from "@/lib/company";
-import { dashboardDemoUrl, legalBase } from "@/lib/marketing-links";
+import { MarketingFooter, type MarketingFooterLink } from "@/components/marketing-footer";
+import { legalBase, marketingDemoPath } from "@/lib/marketing-links";
 import { editorialCopy, type MarketingLocale } from "@/lib/marketing-editorial-i18n";
 import { applyMarketingPlatformTheme } from "@/lib/marketing-platform-theme";
+import { MarketingSkipLink } from "@/components/marketing-skip-link";
 
 type MarketingShellProps = {
   locale: MarketingLocale;
@@ -33,14 +34,14 @@ export function MarketingShell({ locale, children, onJoinBeta }: MarketingShellP
 
   const navLinks = (
     <>
-      <a
-        href={dashboardDemoUrl}
+      <Link
+        href={marketingDemoPath}
         className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors min-h-[44px] inline-flex items-center"
         data-testid="marketing-demo-link"
         onClick={() => setMenuOpen(false)}
       >
         {t.nav.seeDemo}
-      </a>
+      </Link>
       <Link
         href="/pricing"
         className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors min-h-[44px] inline-flex items-center"
@@ -80,7 +81,11 @@ export function MarketingShell({ locale, children, onJoinBeta }: MarketingShellP
       className="marketing-w1-shell min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-aurora-cyan/30 selection:text-aurora-cyan"
       data-surface-world="w1"
     >
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/80 bg-background/85 backdrop-blur-md pt-[env(safe-area-inset-top)] marketing-w1-nav">
+      <MarketingSkipLink />
+      <nav
+        className="fixed top-0 left-0 right-0 z-50 border-b pt-[env(safe-area-inset-top)] marketing-w1-nav border-border/80 bg-background/85 backdrop-blur-md"
+        aria-label="Site"
+      >
         <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 py-4 gap-4">
           <Link href={homeHref}>
             <LiviaWordmark size="md" />
@@ -88,7 +93,7 @@ export function MarketingShell({ locale, children, onJoinBeta }: MarketingShellP
 
           <div className="hidden md:flex items-center gap-5">{navLinks}</div>
 
-          <div className="flex md:hidden items-center gap-2">
+          <div className="flex items-center gap-2 md:hidden ml-auto">
             <button
               type="button"
               onClick={joinHandler}
@@ -117,47 +122,24 @@ export function MarketingShell({ locale, children, onJoinBeta }: MarketingShellP
         </div>
       </nav>
 
-      <main>{children}</main>
+      <main id="main-content">{children}</main>
 
-      <footer className="border-t border-border/80 bg-background py-12 px-4 sm:px-6 text-sm pb-[calc(3rem+env(safe-area-inset-bottom))] marketing-w1-footer">
-        <div className="max-w-6xl mx-auto flex flex-col gap-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-            <div className="flex items-center gap-6">
-              <Link href={homeHref}>
-                <LiviaWordmark size="sm" className="opacity-80 hover:opacity-100 transition-opacity" />
-              </Link>
-              <span className="text-muted-foreground text-xs">{LEGAL_FOOTER_LINE}</span>
-            </div>
-            <div className="flex flex-wrap gap-x-6 gap-y-2 text-muted-foreground">
-              <Link href="/changelog" className="hover:text-foreground transition-colors min-h-[44px] inline-flex items-center">
-                Changelog
-              </Link>
-              <Link href="/status" className="hover:text-foreground transition-colors min-h-[44px] inline-flex items-center">
-                Status
-              </Link>
-              <Link href="/for/chair-rental" className="hover:text-foreground transition-colors min-h-[44px] inline-flex items-center">
-                Chair rental
-              </Link>
-              <a href={`${legalBase}/privacy`} className="hover:text-foreground transition-colors min-h-[44px] inline-flex items-center" rel="noopener noreferrer">
-                Privacy
-              </a>
-              <a href={`${legalBase}/tos`} className="hover:text-foreground transition-colors min-h-[44px] inline-flex items-center" rel="noopener noreferrer">
-                Terms
-              </a>
-              <Link href="/pricing" className="hover:text-foreground transition-colors min-h-[44px] inline-flex items-center">
-                {t.nav.pricing}
-              </Link>
-              <Link href="/europe" className="hover:text-foreground transition-colors min-h-[44px] inline-flex items-center">
-                Europe
-              </Link>
-              <Link href={altLocaleHref} className="hover:text-foreground transition-colors min-h-[44px] inline-flex items-center text-aurora-cyan/90">
-                {altLocaleLabel}
-              </Link>
-            </div>
-          </div>
-          <p className="text-muted-foreground/60 text-xs">Made with care in Dublin</p>
-        </div>
-      </footer>
+      <MarketingFooter
+        homeHref={homeHref}
+        layout="inline-legal"
+        links={
+          [
+            { href: "/changelog", label: "Changelog" },
+            { href: "/status", label: "Status" },
+            { href: "/for/chair-rental", label: "Chair rental" },
+            { href: `${legalBase}/privacy`, label: "Privacy", external: true },
+            { href: `${legalBase}/tos`, label: "Terms", external: true },
+            { href: "/pricing", label: t.nav.pricing },
+            { href: "/europe", label: "Europe" },
+            { href: altLocaleHref, label: altLocaleLabel, className: "text-aurora-cyan/90" },
+          ] satisfies MarketingFooterLink[]
+        }
+      />
     </div>
   );
 }
@@ -176,7 +158,6 @@ export function DeContactBand({ locale }: { locale: MarketingLocale }) {
           className="inline-flex items-center gap-2 text-aurora-cyan font-medium min-h-[44px]"
         >
           {contact.cta}
-          <ArrowRight className="w-4 h-4" />
         </a>
       </div>
     </section>

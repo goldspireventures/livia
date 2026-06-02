@@ -87,7 +87,7 @@ export const PLAN_CATALOGUE: Record<string, ProductPlan> = {
     baseEurCentsPerMonth: 7900, // €79
     seatEurCentsPerMonth: null,
     voiceOutcomeShare: 0.04,
-    voiceOutcomeCapEurCents: 5000, // €50/mo cap
+    voiceOutcomeCapEurCents: 5000, // €50/mo digest cap (see PRICING-RECONCILIATION-2026-06-02.md)
     entitlements: new Set<EntitlementKey>([
       "voice_receptionist",
       "whatsapp_inbound",
@@ -109,7 +109,7 @@ export const PLAN_CATALOGUE: Record<string, ProductPlan> = {
     id: "studio",
     name: "Studio",
     baseEurCentsPerMonth: 14900, // €149
-    seatEurCentsPerMonth: 1500, // €15/seat
+    seatEurCentsPerMonth: 1500, // €15/seat flat in Stripe v1; role ladder at v1.5
     voiceOutcomeShare: 0.04,
     voiceOutcomeCapEurCents: 15000, // €150/mo cap
     entitlements: new Set<EntitlementKey>([
@@ -272,6 +272,29 @@ export const CHECKOUT_PLAN_IDS = [
 
 /** Peer insights add-on — €49/mo per pricing-and-packaging.md */
 export const PEER_INSIGHTS_ADDON_EUR_CENTS = 4900;
+
+/** F9 role-based seat rates (v1.5 target). Stripe v1 uses flat seatEurCentsPerMonth from catalogue. */
+export const SEAT_ROLE_RATES_EUR_CENTS = {
+  manager: 1500,
+  seniorWithAdmin: 1200,
+  staff: 800,
+  receptionist: 1000,
+  apprentice: 400,
+} as const;
+
+export function formatEurFromCents(cents: number): string {
+  return `€${Math.round(cents / 100)}`;
+}
+
+/** Customer-facing voice cap line for a plan. */
+export function voiceOutcomeCapLabel(plan: ProductPlan): string | null {
+  if (plan.voiceOutcomeShare <= 0) return null;
+  const pct = Math.round(plan.voiceOutcomeShare * 100);
+  if (plan.voiceOutcomeCapEurCents == null) {
+    return `${pct}% on voice-recovered bookings`;
+  }
+  return `${pct}% on voice-recovered bookings — capped at ${formatEurFromCents(plan.voiceOutcomeCapEurCents)}/mo in your digest`;
+}
 
 export function planHasEntitlement(plan: ProductPlan, key: EntitlementKey): boolean {
   return plan.entitlements.has(key);

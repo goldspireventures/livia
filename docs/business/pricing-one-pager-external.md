@@ -1,8 +1,8 @@
 # Pricing — customer-facing summary (external)
 
-**Status:** Draft for founder sign-off (2026-05-26)  
+**Status:** Locked 2026-06-02 (design-partner phase)  
 **Internal model:** [`pricing-and-packaging.md`](./pricing-and-packaging.md) (F9 hybrid)  
-**Gate 3 marketing tiers:** `launch-plan.md` (€49 / €99 / €149) — **reconcile before public launch**
+**Reconciliation:** [`PRICING-RECONCILIATION-2026-06-02.md`](./PRICING-RECONCILIATION-2026-06-02.md) — legacy €49/99/149 retired
 
 ---
 
@@ -14,7 +14,7 @@
 
 ---
 
-## Simplified tiers (maps to F9)
+## Simplified tiers (maps to F9 + `PLAN_CATALOGUE`)
 
 | Tier | Who | From (list, monthly) | Includes |
 |------|-----|----------------------|----------|
@@ -23,9 +23,10 @@
 | **Chain** | Per shop | **€249** / shop | + rollup, chain briefing |
 | **Host** | Chair-rental | **€99** + **€19** / renter | + rent automation, per-renter scope |
 
-**Seats (monthly):** Manager €15 · Senior-w-admin €12 · Staff €8 · Receptionist €10 · Apprentice €4.
+**Seats (monthly):** Manager €15 · Senior-w-admin €12 · Staff €8 · Receptionist €10 · Apprentice €4.  
+*Stripe v1 bills flat €15/seat on team tiers until role-based metering ships (v1.5).*
 
-**Voice recovery (optional component):** **4%** of recovered booking value, cap **€5** per booking — only when measurement is shown in your weekly digest.
+**Voice recovery (optional):** **4%** of recovered booking value — **monthly cap** per plan, visible in your weekly digest (e.g. Solo €50/mo, Studio €150/mo).
 
 ---
 
@@ -41,13 +42,14 @@ Full export day one; annual prepay refunded pro-rata; see contract DPA.
 
 ---
 
-## Founder decision needed
+## Locked founder decisions (2026-06-02)
 
-| Question | Options |
-|----------|---------|
-| Public site shows €49/99/149 or F9 names? | Recommend **Studio €149** hero; detail in FAQ |
-| Voice % on by default? | Recommend **off** until 3 partners show digest proof |
-| Chair-renter billing | Host pays vs pass-through — see F9 open question |
+| Question | Decision |
+|----------|----------|
+| Public site pricing | **F9 names + cents** — Studio €149 hero; Solo floor in FAQ |
+| Voice % on by default? | **Off** until 3+ partners show digest proof |
+| Chair-renter billing | Host pays (renters get Liv-lite included) |
+| GA list price review | After 10 paying cells — structure unchanged, numbers may nudge up |
 
 ---
 
@@ -55,4 +57,5 @@ Full export day one; annual prepay refunded pro-rata; see contract DPA.
 
 | Date | Note |
 |------|------|
+| 2026-06-02 | Locked — F9 canonical, voice monthly cap, seat v1/v1.5 note |
 | 2026-05-26 | Phase 0 A-05 draft |

@@ -1,8 +1,8 @@
 # Pricing and packaging — F9
 
-**Status:** F9 (2026-05-07), people-business alignment 2026-05-31.  
+**Status:** F9 (2026-05-07), people-business alignment 2026-05-31, **locked 2026-06-02** — [`PRICING-RECONCILIATION-2026-06-02.md`](./PRICING-RECONCILIATION-2026-06-02.md).  
 **Category:** Pricing applies to **all appointment-led people businesses** — tiers map to org shape (solo, studio, chain), not hair-only. See [`PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md`](../product/PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md).  
-**Marketing display:** € tiers on **livia-hq.com** (M2-A) must match this doc — [`marketing-vs-reality.md`](../audits/marketing-vs-reality.md).
+**Marketing display:** € tiers on **livia-hq.com** (M2-A) must match `PLAN_CATALOGUE` — [`marketing-vs-reality.md`](../audits/marketing-vs-reality.md).
 
 ## The pricing model
 
@@ -32,9 +32,11 @@ Covers the per-persona runtime overhead (each staff member has their own Liv-rel
 | Receptionist (P6) | €10 |
 | Apprentice | €4 |
 
+**Stripe v1 (until role-based metering):** Studio and Chain bill **flat €15/seat**; Host bills **€19/renter**. Role ladder above is the **v1.5 target** for fair ARPU and F9 worked examples.
+
 ### Component 3 — Voice outcome share
 
-Voice receptionist is the v1 wedge. We capture value when Liv recovers a missed-call booking. **Bookings recovered via voice that would otherwise be missed: 4% of booking value** (capped at €5/booking). Owner sees the recovery in the weekly digest; no surprise billing.
+Voice receptionist is the v1 wedge. We capture value when Liv recovers a missed-call booking. **Bookings recovered via voice that would otherwise be missed: 4% of booking value**, with a **monthly cap per plan** (`voiceOutcomeCapEurCents` in `PLAN_CATALOGUE` — e.g. Solo €50/mo, Studio €150/mo). Owner sees recovery and cap progress in the weekly digest; no surprise billing.
 
 This is the only outcome-priced component. Everything else is fixed. We chose this because:
 - F6 shows missed-call recovery is the dominant single-cell economic gain (~€7-15k/yr per shop).

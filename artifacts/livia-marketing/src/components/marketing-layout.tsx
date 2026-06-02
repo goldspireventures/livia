@@ -1,10 +1,13 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "wouter";
 import { Menu } from "lucide-react";
 import { LiviaWordmark } from "@/components/brand/LiviaMark";
+import { ConstellationPageShell } from "@/components/constellation/constellation-page-shell";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { LEGAL_FOOTER_LINE } from "@/lib/company";
-import { dashboardDemoUrl, dashboardSignInUrl, dashboardSignUpUrl, legalBase } from "@/lib/marketing-links";
+import { MarketingFooter, W1_FOOTER_LINKS } from "@/components/marketing-footer";
+import { marketingDemoPath } from "@/lib/marketing-links";
+import { applyMarketingPlatformTheme } from "@/lib/marketing-platform-theme";
+import { MarketingSkipLink } from "@/components/marketing-skip-link";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -22,21 +25,27 @@ const NAV = [
 export function MarketingLayout({
   children,
   active,
+  shellTone = "strong",
 }: {
   children: ReactNode;
   active?: string;
+  shellTone?: "default" | "strong";
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const homeHref = base || "/";
+
+  useEffect(() => {
+    applyMarketingPlatformTheme();
+  }, []);
 
   const navLink = (item: (typeof NAV)[number]) => (
     <Link
       key={item.href}
       href={item.href}
       onClick={() => setMenuOpen(false)}
-      className={`min-h-[44px] inline-flex items-center text-sm ${
+      className={`min-h-[44px] inline-flex items-center whitespace-nowrap text-sm ${
         active === item.label
-          ? "text-foreground font-medium"
+          ? "text-[#d9c39a] font-medium"
           : "text-muted-foreground hover:text-white transition-colors"
       }`}
     >
@@ -45,38 +54,30 @@ export function MarketingLayout({
   );
 
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-background/80 backdrop-blur-md pt-[env(safe-area-inset-top)]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
-          <Link href={homeHref}>
+    <div className="marketing-w1-shell min-h-screen bg-background text-foreground overflow-x-hidden">
+      <MarketingSkipLink />
+      <nav
+        className="marketing-w1-nav fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-background/80 backdrop-blur-md pt-[env(safe-area-inset-top)]"
+        aria-label="Site"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+          <Link href={homeHref} className="justify-self-start shrink-0">
             <LiviaWordmark size="md" />
           </Link>
 
-          <div className="hidden lg:flex items-center gap-5">{NAV.map(navLink)}</div>
+          <div className="hidden xl:flex items-center justify-center gap-x-4 gap-y-1">{NAV.map(navLink)}</div>
 
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            <a
-              href={dashboardDemoUrl}
-              className="hidden md:inline text-sm font-medium text-muted-foreground hover:text-white transition-colors min-h-[44px] items-center"
+          <div className="justify-self-end flex items-center gap-4 sm:gap-5 shrink-0">
+            <Link
+              href={marketingDemoPath}
+              className="hidden sm:inline-flex text-sm font-medium text-muted-foreground hover:text-white transition-colors min-h-[44px] items-center"
               data-testid="marketing-demo-link"
             >
               Try demo
-            </a>
-            <a
-              href={dashboardSignInUrl}
-              className="hidden md:inline text-sm font-medium text-muted-foreground hover:text-white transition-colors min-h-[44px] items-center"
-            >
-              Sign in
-            </a>
-            <a
-              href={dashboardSignUpUrl}
-              className="hidden sm:inline text-sm font-medium text-aurora-cyan hover:text-white transition-colors min-h-[44px] items-center"
-            >
-              Get started
-            </a>
+            </Link>
             <a
               href={`${homeHref}#waitlist`}
-              className="text-sm font-medium text-muted-foreground hover:text-white transition-colors min-h-[44px] inline-flex items-center px-1"
+              className="text-sm font-medium text-aurora-cyan hover:text-white transition-colors min-h-[44px] inline-flex items-center"
             >
               Join beta
             </a>
@@ -84,7 +85,7 @@ export function MarketingLayout({
               <SheetTrigger asChild>
                 <button
                   type="button"
-                  className="lg:hidden inline-flex h-11 w-11 items-center justify-center rounded-sm border border-white/10"
+                  className="xl:hidden inline-flex h-11 w-11 items-center justify-center rounded-sm border border-white/10"
                   aria-label="Menu"
                 >
                   <Menu className="h-5 w-5" />
@@ -96,26 +97,19 @@ export function MarketingLayout({
                 </SheetHeader>
                 <div className="flex flex-col gap-1 mt-8">
                   {NAV.map(navLink)}
-                  <a
-                    href={dashboardDemoUrl}
+                  <Link
+                    href={marketingDemoPath}
                     className="min-h-[44px] inline-flex items-center text-sm text-muted-foreground hover:text-white"
                     onClick={() => setMenuOpen(false)}
                   >
                     Try demo
-                  </a>
+                  </Link>
                   <a
-                    href={dashboardSignInUrl}
-                    className="min-h-[44px] inline-flex items-center text-sm text-muted-foreground hover:text-white"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    Sign in
-                  </a>
-                  <a
-                    href={dashboardSignUpUrl}
+                    href={`${homeHref}#waitlist`}
                     className="min-h-[44px] inline-flex items-center text-sm text-aurora-cyan hover:text-white"
                     onClick={() => setMenuOpen(false)}
                   >
-                    Get started
+                    Join beta
                   </a>
                 </div>
               </SheetContent>
@@ -123,46 +117,10 @@ export function MarketingLayout({
           </div>
         </div>
       </nav>
-      <div className="pt-[calc(5rem+env(safe-area-inset-top))]">{children}</div>
-      <footer className="border-t border-white/5 bg-[#050505] py-12 px-4 sm:px-6 text-sm mt-24 pb-[calc(3rem+env(safe-area-inset-bottom))]">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between gap-8">
-          <div>
-            <Link href={homeHref}>
-              <LiviaWordmark size="sm" className="opacity-80 mb-2" />
-            </Link>
-            <p className="text-muted-foreground text-xs">{LEGAL_FOOTER_LINE}</p>
-          </div>
-          <div className="flex flex-wrap gap-x-6 gap-y-2 text-muted-foreground">
-            <Link href="/pricing" className="hover:text-white min-h-[44px] inline-flex items-center">
-              Pricing
-            </Link>
-            <Link href="/how-it-works" className="hover:text-white min-h-[44px] inline-flex items-center">
-              How it works
-            </Link>
-            <Link href="/verticals" className="hover:text-white min-h-[44px] inline-flex items-center">
-              Verticals
-            </Link>
-            <Link href="/de" className="hover:text-white min-h-[44px] inline-flex items-center text-aurora-cyan/90">
-              Deutsch
-            </Link>
-            <Link href="/changelog" className="hover:text-white min-h-[44px] inline-flex items-center">
-              Changelog
-            </Link>
-            <Link href="/status" className="hover:text-white min-h-[44px] inline-flex items-center">
-              Status
-            </Link>
-            <Link href="/eu-ai" className="hover:text-white min-h-[44px] inline-flex items-center">
-              EU AI
-            </Link>
-            <a href={`${legalBase}/privacy`} className="hover:text-white min-h-[44px] inline-flex items-center" rel="noopener noreferrer">
-              Privacy
-            </a>
-            <a href={`${legalBase}/tos`} className="hover:text-white min-h-[44px] inline-flex items-center" rel="noopener noreferrer">
-              Terms
-            </a>
-          </div>
-        </div>
-      </footer>
+      <main id="main-content" className="pt-[calc(5rem+env(safe-area-inset-top))]">
+        <ConstellationPageShell tone={shellTone}>{children}</ConstellationPageShell>
+      </main>
+      <MarketingFooter homeHref={homeHref} links={W1_FOOTER_LINKS} />
     </div>
   );
 }

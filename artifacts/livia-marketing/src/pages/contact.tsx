@@ -1,25 +1,31 @@
 import { MarketingLayout } from "@/components/marketing-layout";
-import { EditorialPageHeader } from "@/components/editorial-page-header";
+import { ConstellationPageHeader } from "@/components/constellation/constellation-page-header";
+import { ConstellationInnerPage } from "@/components/constellation/constellation-inner-page";
+import { ConstellationGlassCard } from "@/components/constellation/constellation-spine";
 import { MarketingForm } from "@/components/marketing-form";
 
 export default function ContactPage() {
   return (
     <MarketingLayout active="Contact">
-      <div className="max-w-xl mx-auto px-4 sm:px-6 pb-20">
-        <EditorialPageHeader
-          title="Contact"
-          subtitle="We read every message. Onboarded? Help is in the app."
+      <ConstellationInnerPage narrow>
+        <ConstellationPageHeader
+          eyebrow="We read every message"
+          title={
+            <>
+              Get in <em>touch</em>
+            </>
+          }
+          subtitle="Onboarded? Help is in the app. Otherwise — email or the form below."
         />
-        <p className="text-sm text-muted-foreground mb-10 -mt-6">
-          <a
-            href="mailto:hello@livia-hq.com"
-            className="text-aurora-cyan hover:text-white min-h-[44px] inline-flex items-center"
-          >
+        <p className="text-sm text-muted-foreground mb-8 -mt-4">
+          <a href="mailto:hello@livia-hq.com" className="cst-page-link">
             hello@livia-hq.com
           </a>
         </p>
-        <MarketingForm />
-      </div>
+        <ConstellationGlassCard className="p-6 sm:p-8">
+          <MarketingForm />
+        </ConstellationGlassCard>
+      </ConstellationInnerPage>
     </MarketingLayout>
   );
 }

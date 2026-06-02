@@ -1,122 +1,80 @@
 import { Link } from "wouter";
 
 import { MarketingLayout } from "@/components/marketing-layout";
-import { EditorialPageHeader } from "@/components/editorial-page-header";
-
+import { ConstellationGlassCard } from "@/components/constellation/constellation-spine";
+import { ConstellationPageHeader } from "@/components/constellation/constellation-page-header";
 import { MarketingForm } from "@/components/marketing-form";
-
 import {
-
   ADD_ONS,
-
   CORE_PLANS,
-
   EXPANSION_PLANS,
-
   REVENUE_STREAMS,
-
   planMarketingCard,
-
 } from "@/lib/pricing-catalog";
-
 import { Check } from "lucide-react";
 
-
-
 const PLAN_FEATURES: Record<string, string[]> = {
-
   solo: [
-
-    "Liv inbox: SMS, email & public chat",
-
-    "Voice receptionist (outcome share, capped)",
-
-    "Public booking page + mobile app",
-
-    "Deposits via Stripe Connect",
-
+    "Your Liv inbox: SMS, email, and public chat",
+    "Voice receptionist (outcome share, capped in your digest)",
+    "Your public booking page + mobile app",
+    "Deposit-ready at public launch (Stripe Connect)",
     "Audit log + booking continuity",
-
   ],
-
   studio: [
-
     "Everything in Solo",
-
     "Per-seat team tools + delegations",
-
     "Payroll export + advanced handoffs",
-
-    "Inbox take-over for managers",
-
+    "Inbox take-over for your managers",
   ],
-
   chain: [
-
     "Per-location billing",
-
     "Chain rollup + multi-brand",
-
     "Enterprise audit export + SSO",
-
     "Partner API (alpha)",
-
   ],
-
   "chair-host": [
-
-    "Chair rental rent collection",
-
+    "Your chair-rental rent collection",
     "Landlord dashboard without renter PII",
-
     "Per-renter seat pricing",
-
   ],
-
 };
 
-
-
 export default function PricingPage() {
-
   return (
-
     <MarketingLayout active="Pricing">
+      <ConstellationPageHeader
+        eyebrow="Same OS · honest rates"
+        title={
+          <>
+            Pricing that <em>scales with you</em>
+          </>
+        }
+        subtitle="EUR list prices. Closed beta is on the house — your rate locks at launch. No commission on your appointments."
+      >
+        <p className="text-sm text-muted-foreground/80 mt-4">
+          <Link href="/europe" className="cst-page-link">
+            Your market: Europe, languages & VAT →
+          </Link>
+        </p>
+      </ConstellationPageHeader>
 
-      <div className="max-w-6xl mx-auto">
-        <EditorialPageHeader
-          title="Pricing"
-          subtitle="EUR. Beta free. Rates lock at launch. No commission on your appointments."
-        >
-          <p className="text-sm text-muted-foreground/80 mt-4">
-            <Link href="/europe" className="text-aurora-cyan hover:text-white min-h-[44px] inline-flex items-center">
-              Europe, languages & VAT →
-            </Link>
-          </p>
-        </EditorialPageHeader>
-      </div>
-
-
-
-      <section className="px-6 pb-8 max-w-5xl mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-
+      <section
+        className="px-4 sm:px-6 pb-8 max-w-5xl mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-6"
+        aria-label="Core plans"
+      >
         {CORE_PLANS.map((id) => {
-
           const card = planMarketingCard(id);
-
+          const featured = id === "studio";
           return (
-
-            <div
-
-              key={id}
-
-              className="rounded-sm border border-white/10 p-8 flex flex-col bg-[#0c0c10]/80 backdrop-blur-sm"
-
-            >
-
+            <ConstellationGlassCard key={id} featured={featured} className="p-8 flex flex-col">
+              {featured ? (
+                <p className="text-[10px] font-mono uppercase tracking-widest text-[#d9c39a]/80 mb-2">
+                  Most teams
+                </p>
+              ) : null}
               <h2 className="text-xl font-serif">{card.name}</h2>
-
-              <p className="text-3xl font-semibold mt-2">
+              <p className="cst-glass-card__price mt-2">
                 {card.priceLabel.replace(/\/mo.*$/, "")}
                 <span className="text-sm text-muted-foreground font-normal">/mo</span>
               </p>
@@ -127,145 +85,79 @@ export default function PricingPage() {
               ) : null}
 
               <ul className="space-y-2 text-sm flex-1 mt-6">
-
                 {(PLAN_FEATURES[id] ?? []).map((f) => (
-
                   <li key={f} className="flex gap-2">
-
-                    <Check className="h-4 w-4 text-aurora-cyan shrink-0" />
-
+                    <Check className="h-4 w-4 cst-check shrink-0" aria-hidden />
                     {f}
-
                   </li>
-
                 ))}
-
               </ul>
 
               {card.voiceNote ? (
-
                 <p className="text-xs text-muted-foreground mt-4 border-t border-white/10 pt-3">{card.voiceNote}</p>
-
               ) : null}
 
               {id === "chair-host" ? (
-                <Link
-                  href="/for/chair-rental"
-                  className="text-sm text-aurora-cyan mt-4 inline-block hover:text-white"
-                >
+                <Link href="/for/chair-rental" className="cst-page-link mt-4">
                   Chair rental →
                 </Link>
               ) : null}
-
-            </div>
-
+            </ConstellationGlassCard>
           );
-
         })}
-
       </section>
 
-
-
-      <section className="px-6 py-12 max-w-4xl mx-auto border-t border-white/5">
-
-        <h2 className="text-2xl font-serif mb-6">Host, mid-chain & franchise</h2>
-
+      <section className="cst-page-section px-4 sm:px-6 max-w-4xl mx-auto">
+        <p className="cst-section-label">Expansion</p>
+        <h2 className="cst-page-section__title">Host, mid-chain & franchise</h2>
         <div className="grid md:grid-cols-3 gap-4">
-
           {EXPANSION_PLANS.map((e) => (
-
-            <div key={e.id} className="rounded-xl border border-white/10 p-6">
-
+            <ConstellationGlassCard key={e.id} className="p-6">
               <h3 className="font-medium">{e.name}</h3>
-
               <p className="text-2xl font-semibold mt-1">{e.price}</p>
-
               <p className="text-sm text-muted-foreground mt-2">{e.desc}</p>
-
-            </div>
-
+            </ConstellationGlassCard>
           ))}
-
         </div>
-
       </section>
 
-
-
-      <section className="px-6 py-12 max-w-3xl mx-auto border-t border-white/5">
-
-        <h2 className="text-2xl font-serif mb-6">How Livia earns (transparent)</h2>
-
+      <section className="cst-page-section px-4 sm:px-6 max-w-3xl mx-auto">
+        <p className="cst-section-label">Transparent</p>
+        <h2 className="cst-page-section__title">How Livia earns</h2>
         <ul className="space-y-5">
-
           {REVENUE_STREAMS.map((r) => (
-
-            <li key={r.id} className="rounded-sm border border-white/10 p-5 border-l-2 border-l-aurora-cyan/20 pl-5">
-
+            <li key={r.id} className="cst-glass-card p-5 border-l-2 border-l-[#d9c39a]/30">
               <h3 className="font-medium text-foreground">{r.title}</h3>
-
               <p className="text-sm text-muted-foreground mt-2">{r.body}</p>
-
             </li>
-
           ))}
-
         </ul>
-
       </section>
 
-
-
-      <section className="px-6 py-12 max-w-4xl mx-auto border-t border-white/5">
-
-        <h2 className="text-xl font-serif mb-4">Add-ons</h2>
-
+      <section className="cst-page-section px-4 sm:px-6 max-w-4xl mx-auto">
+        <h2 className="cst-page-section__title">Add-ons</h2>
         <div className="grid sm:grid-cols-2 gap-4">
-
           {ADD_ONS.map((a) => (
-
-            <div key={a.name} className="rounded-lg border border-white/10 p-4 text-sm">
-
+            <ConstellationGlassCard key={a.name} className="p-4 text-sm">
               <div className="flex justify-between gap-2">
-
                 <span className="font-medium">{a.name}</span>
-
-                <span className="text-aurora-cyan">{a.price}</span>
-
+                <span className="text-[#d9c39a]">{a.price}</span>
               </div>
-
               <p className="text-muted-foreground mt-2">{a.desc}</p>
-
-            </div>
-
+            </ConstellationGlassCard>
           ))}
-
         </div>
-
       </section>
 
-
-
-      <section className="px-6 py-16 border-t border-white/5" id="waitlist">
-
-        <div className="max-w-xl px-4 sm:px-6 mx-auto">
-
-          <h2 className="text-2xl font-serif mb-4">Join the closed beta</h2>
-
-          <p className="text-sm text-muted-foreground mb-6 editorial-measure">
-            Design partners: 12 months at 50% + free migration concierge.
+      <section className="cst-waitlist" id="waitlist">
+        <div className="cst-waitlist__inner">
+          <h2 className="cst-waitlist__title">Join the closed beta</h2>
+          <p className="cst-waitlist__sub">
+            Design partners: 12 months at 50% off your tier + free migration concierge.
           </p>
-
           <MarketingForm />
-
         </div>
-
       </section>
-
     </MarketingLayout>
-
   );
-
 }
-

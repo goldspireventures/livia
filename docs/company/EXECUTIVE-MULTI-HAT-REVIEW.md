@@ -41,7 +41,7 @@ Livia has **category-grade strategy** and **platform-grade engineering ambition*
 | Narrative | “Operating system for EU appointment businesses” | “The colleague your salon hires” | **Pick one external line**; keep the other internal |
 | Scope | `V3-EXECUTION-PROGRAM` — whole product, DACH, medspa | `v1-scope` — Hair, English-IE, four configurations | **Freeze v3 breadth** until wedge metrics exist |
 | Surface | API/kernel ahead (honest in alignment doc) | Mobile flagship (ADR 0011) | **Mobile-first wedge rituals** for 90 days |
-| Pricing | F9 hybrid (€79–€249 + seats + 4% voice) | Launch-plan Gate 3 (€49/€99/€149) | **One customer-facing price story** |
+| Pricing | F9 hybrid (€79–€249 + seats + 4% voice) | ~~Launch-plan Gate 3 (€49/€99/€149)~~ **Retired 2026-06-02** — [`PRICING-RECONCILIATION-2026-06-02.md`](../business/PRICING-RECONCILIATION-2026-06-02.md) | **One customer-facing price story** ✓ |
 | Partners | Design-partner mix spans C2–C13 (10 cells) | Wedge = P2b solo Hair C2 | **Weight slots 1–3**; treat 6–10 as signal-only until paid |
 
 ### Consolidated scorecard (subjective, May 2026)
@@ -198,7 +198,7 @@ Unit economics, pricing integrity, cash runway, billing truth, and **value-based
 
 | Risk | Sev | Detail |
 |------|-----|--------|
-| **Pricing story fracture** | P1 | F9 hybrid vs launch-plan €49/€99/€149 — confuses packaging and investor slides |
+| **Pricing story fracture** | ~~P1~~ **Resolved 2026-06-02** | F9 locked; legacy tiers retired | Reconcile Stripe products at Gate 3 |
 | **Voice outcome unproven** | P1 | 4% of booking value requires attribution chain; if digest lies, trust dies |
 | **Fresha economic warfare** | P1 | Free + payments + marketplace on solo cell — cannot win on price |
 | **Scope burn** | P1 | Every vertical pack = support + eval cost not in financial model |

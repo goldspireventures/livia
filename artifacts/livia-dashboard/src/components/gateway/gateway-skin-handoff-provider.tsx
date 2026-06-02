@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@clerk/clerk-react";
 import {
   clearGatewaySkinHandoff,
   gatewayHandoffEnterMs,
@@ -17,6 +18,7 @@ import {
   markGatewaySkinHandoff,
   peekGatewaySkinHandoff,
 } from "@/lib/gateway-skin-handoff";
+import { applyGatewaySurfaceTheme } from "@/lib/gateway-surface-theme";
 import { applyTenantShellFromCache } from "@/lib/prefetch-tenant-dashboard";
 import { cn } from "@/lib/utils";
 
@@ -48,6 +50,7 @@ function runVeilAnimation(phase: "exit" | "enter"): Promise<void> {
 
 export function GatewaySkinHandoffProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
+  const { userId } = useAuth();
   const [phase, setPhase] = useState<VeilPhase>("hidden");
   const [vertical, setVertical] = useState<string | undefined>();
   const [runAnim, setRunAnim] = useState(false);
@@ -95,6 +98,16 @@ export function GatewaySkinHandoffProvider({ children }: { children: ReactNode }
     coldEnterStarted.current = true;
     void playEnter({ vertical: payload.vertical, businessId: payload.businessId });
   }, [playEnter]);
+
+  useEffect(() => {
+    if (userId) return;
+    coldEnterStarted.current = false;
+    clearGatewaySkinHandoff();
+    setPhase("hidden");
+    setRunAnim(false);
+    document.documentElement.removeAttribute("data-gateway-handoff-reveal");
+    applyGatewaySurfaceTheme();
+  }, [userId]);
 
   const transitionToTenant = useCallback(
     async (go: () => void, opts?: HandoffOpts) => {

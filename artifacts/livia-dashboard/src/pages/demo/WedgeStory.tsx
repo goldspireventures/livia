@@ -8,7 +8,7 @@ import {
   GatewayDemoStoryBeats,
   GatewaySlideDots,
 } from "@/components/gateway/gateway-demo-card-stage";
-import { GatewayShell } from "@/components/gateway/gateway-shell";
+import { DemoFlowShell } from "@/components/gateway/demo-flow-shell";
 import {
   getWedgeDemoStory,
   type WedgeDemoStory,
@@ -145,12 +145,12 @@ export default function DemoWedgeStoryPage() {
 
   if (!story) {
     return (
-      <GatewayShell breadcrumb="Worlds" backHref="/demo">
+      <DemoFlowShell>
         <p className="text-muted-foreground">Unknown vertical wedge.</p>
-        <Link href="/demo" className="mt-4 text-primary underline-offset-4 hover:underline">
-          Back to demo gateway
+        <Link href="/demo" className="mt-4 text-[#d9b97a] underline-offset-4 hover:underline">
+          Back to worlds
         </Link>
-      </GatewayShell>
+      </DemoFlowShell>
     );
   }
 
@@ -158,25 +158,12 @@ export default function DemoWedgeStoryPage() {
   const enterMode = slide === "enter";
 
   return (
-    <GatewayShell
-      breadcrumb={`Worlds › ${story.label}`}
-      step={enterMode ? "G3 · Enter" : "G2 · Story"}
-      backHref="/demo"
-      backLabel="← Worlds"
-      className="[&_main]:max-w-4xl"
-    >
+    <DemoFlowShell>
       {busy ? <GatewayBusyOverlay label="Signing in…" /> : null}
 
-      <div className="mb-6 text-center sm:text-left">
-        <h1 className="font-serif text-3xl tracking-tight text-foreground sm:text-4xl">
-          {enterMode ? "Walk in as your role" : "See your week in four beats"}
-        </h1>
-        <p className="mt-2 text-sm font-serif text-aurum-champagne/80">
-          {enterMode
-            ? "Same world you picked — choose how you enter the live demo."
-            : "The world you picked — Liv shows the full story on one screen."}
-        </p>
-      </div>
+      <p className="mb-6 text-center font-serif text-xl tracking-tight text-[#e6d0a5]/90 sm:text-2xl">
+        {enterMode ? "Walk in as your role" : "Your world — in one screen"}
+      </p>
 
       {!provisioned ? (
         <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm">
@@ -197,23 +184,22 @@ export default function DemoWedgeStoryPage() {
           roster={roster}
           busy={busy}
           disabled={!provisioned}
+          backHref="/demo"
+          backLabel="← Worlds"
           onSelectRole={(email) => void enterAsRole(email)}
           onBack={() => setSlide("story")}
         />
       ) : (
         <GatewayDemoStoryBeats
-          tradeLabel={story.label}
           beats={story.beats}
           disabled={!provisioned}
+          backHref="/demo"
+          backLabel="← Worlds"
           onContinue={() => setSlide("enter")}
         />
       )}
 
       <GatewaySlideDots slide={slide} className="mt-6" />
-
-      <p className="mt-8 text-center text-[11px] text-muted-foreground/70">
-        Then W4 tenant skin — intentional handoff from gateway aurora
-      </p>
-    </GatewayShell>
+    </DemoFlowShell>
   );
 }

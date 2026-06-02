@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 
-import { ReactNode, useEffect, useMemo, useState } from "react";
+import { ReactNode, useEffect, useLayoutEffect, useMemo, useState } from "react";
 
 import { useBusiness } from "@/lib/business-context";
 
@@ -12,14 +12,20 @@ import { getRitualNav } from "@/lib/persona-rituals";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { LiviaWordmark } from "@/components/brand/LiviaMark";
-import { applyExperienceTheme, applyPresentationTheme, resolvePresentationColorMode } from "@/lib/experience-theme";
 import {
+  applyExperienceTheme,
+  applyTenantPresentationSurface,
+  resolvePresentationColorMode,
+} from "@/lib/experience-theme";
+import {
+  applyAppearancePreviewFromSearch,
   isAppearanceEmbed,
   readAppearancePreviewParams,
-  shouldApplyUrlPreviewToDocument,
 } from "@/lib/appearance-preview-mode";
+import { PlatformDefaultAmbient } from "@/components/layout/platform-default-ambient";
 import { isBeautyPresentationPreset, isBeautyVertical } from "@/lib/presentation-layout";
 import { applyBeautyAmbient } from "@/lib/beauty-ambient";
+import { applyGatewaySurfaceTheme } from "@/lib/gateway-surface-theme";
 import { useTheme } from "next-themes";
 import { fetchUserLifecycle } from "@/lib/lifecycle-api";
 import { useTenantExperience } from "@/lib/tenant-experience-api";
@@ -156,22 +162,40 @@ export function AppLayout({ children }: { children: ReactNode }) {
     });
   }, [business, persona]);
 
-  useEffect(() => {
-    const draft = readAppearancePreviewParams();
-    if (shouldApplyUrlPreviewToDocument() && draft.isPreview && draft.cssPreset) {
-      const colorMode = resolvePresentationColorMode(draft.cssPreset);
-      applyPresentationTheme({
-        cssPreset: draft.cssPreset,
-        brandAccentHex: draft.brandAccentHex,
-        colorMode,
-      });
-      if (colorMode) setTheme(colorMode);
+  const previewSearch =
+    typeof window !== "undefined" ? window.location.search : "";
+
+  useLayoutEffect(() => {
+    return () => {
+      const path = window.location.pathname.replace(/\/+$/, "") || "/";
+      if (path === "/demo" || path.startsWith("/demo/") || path === "/sign-in" || path === "/sign-up") {
+        applyGatewaySurfaceTheme();
+      }
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    const biz = business as { vertical?: string; category?: string; country?: string } | null;
+    const teVertical = (tenantExperience as { vertical?: string } | undefined)?.vertical;
+    const draft = readAppearancePreviewParams(previewSearch);
+    if (
+      applyAppearancePreviewFromSearch(previewSearch, {
+        vertical: biz?.vertical ?? teVertical ?? null,
+        category: biz?.category ?? null,
+        country: biz?.country ?? null,
+      })
+    ) {
+      const mode = draft.cssPreset ? resolvePresentationColorMode(draft.cssPreset) : null;
+      if (mode) setTheme(mode);
       return;
     }
 
     const p = tenantExperience?.presentation;
     const colorMode = p?.tokens?.colorMode;
-    applyPresentationTheme({
+    applyTenantPresentationSurface({
+      vertical: biz?.vertical ?? teVertical ?? null,
+      category: biz?.category ?? null,
+      country: biz?.country ?? null,
       cssPreset: p?.cssPreset ?? "platform-default",
       brandAccentHex: p?.brandAccentHex,
       colorMode: colorMode === "light" || colorMode === "dark" ? colorMode : null,
@@ -183,8 +207,11 @@ export function AppLayout({ children }: { children: ReactNode }) {
     tenantExperience?.presentation?.cssPreset,
     tenantExperience?.presentation?.brandAccentHex,
     tenantExperience?.presentation?.tokens?.colorMode,
+    tenantExperience,
+    business,
     setTheme,
     location,
+    previewSearch,
   ]);
 
   useEffect(() => {
@@ -239,6 +266,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const vertical =
     (business as { vertical?: string } | null)?.vertical ?? tenantExperience?.vertical ?? null;
   const showBeautyFlower = isBeautyVertical(vertical);
+  const appearanceDraft = readAppearancePreviewParams(previewSearch);
+  const effectiveCssPreset =
+    appearanceDraft.cssPreset ?? tenantExperience?.presentation?.cssPreset ?? "platform-default";
+  const isPlatformDefault = effectiveCssPreset === "platform-default";
 
   return (
 
@@ -297,6 +328,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             : "pb-16 md:pb-0 overflow-y-auto overscroll-y-contain",
         )}
       >
+        {isPlatformDefault && !appearanceEmbed ? <PlatformDefaultAmbient /> : null}
 
         <header className="flex h-14 items-center justify-between border-b border-border bg-card/50 px-4 md:hidden sticky top-0 z-10">
 

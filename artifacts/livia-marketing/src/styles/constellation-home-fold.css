@@ -1,0 +1,253 @@
+/* M4 below-fold — tight Constellation inheritance */
+
+.cst-fold {
+  --c-champagne: #d9c39a;
+  background: var(--c-ink, #1c1c2c);
+}
+
+.cst-fold__section {
+  padding: 2.75rem 1.25rem;
+  border-bottom: 1px solid rgba(217, 195, 154, 0.08);
+}
+
+@media (min-width: 768px) {
+  .cst-fold__section {
+    padding: 3.25rem 1.5rem;
+  }
+}
+
+.cst-fold__inner {
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.cst-fold__inner--narrow {
+  max-width: 40rem;
+}
+
+.cst-fold__eyebrow {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(217, 195, 154, 0.6);
+  margin-bottom: 0.65rem;
+}
+
+.cst-fold__title {
+  font-family: var(--app-font-serif);
+  font-size: clamp(1.5rem, 2.8vw, 2rem);
+  letter-spacing: -0.02em;
+  margin-bottom: 1.5rem;
+  color: rgba(255, 255, 255, 0.96);
+}
+
+.cst-fold__physics {
+  display: grid;
+  gap: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .cst-fold__physics {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+}
+
+.cst-fold__physics-card {
+  padding: 1.125rem 1.25rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(217, 195, 154, 0.14);
+  background: rgba(36, 36, 52, 0.35);
+}
+
+.cst-fold__physics-card h3 {
+  font-family: var(--app-font-serif);
+  font-size: 1.05rem;
+  margin-bottom: 0.35rem;
+}
+
+.cst-fold__physics-card p {
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.cst-fold__liv {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  align-items: flex-start;
+}
+
+@media (min-width: 768px) {
+  .cst-fold__liv {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+}
+
+.cst-fold__liv-copy {
+  max-width: 36rem;
+}
+
+.cst-fold__liv-title {
+  font-family: var(--app-font-serif);
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  letter-spacing: -0.02em;
+  margin-bottom: 0.5rem;
+}
+
+.cst-fold__liv-body {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.cst-fold__liv-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  flex-shrink: 0;
+}
+
+.cst-fold__link {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--c-champagne);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.cst-fold__link:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.cst-fold__link--muted {
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.cst-fold__link--muted:hover {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.cst-fold__pricing-row {
+  display: grid;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .cst-fold__pricing-row {
+    grid-template-columns: 1fr 1fr auto;
+    align-items: center;
+    gap: 1rem;
+  }
+}
+
+.cst-fold__price-card {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(217, 195, 154, 0.14);
+  background: rgba(36, 36, 52, 0.35);
+}
+
+.cst-fold__price-card--featured {
+  border-color: rgba(217, 195, 154, 0.28);
+}
+
+.cst-fold__price-name {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.cst-fold__price-value {
+  font-family: var(--app-font-serif);
+  font-size: 1.35rem;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.cst-fold__price-card--featured .cst-fold__price-value {
+  color: var(--c-champagne);
+}
+
+.cst-fold__pricing-note {
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.45);
+  margin-top: 0.75rem;
+}
+
+.cst-fold__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.cst-fold__pill {
+  border-radius: 9999px;
+  border: 1px solid rgba(217, 195, 154, 0.16);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.72);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.cst-fold__pill:hover {
+  border-color: rgba(217, 195, 154, 0.4);
+  color: var(--c-champagne);
+}
+
+.cst-fold__faq-item {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1rem 0;
+}
+
+.cst-fold__faq-item:first-of-type {
+  padding-top: 0;
+}
+
+.cst-fold__faq-q {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  margin-bottom: 0.35rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.cst-fold__faq-a {
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.cst-fold__beta {
+  padding: 3rem 1.25rem 3.5rem;
+  border-bottom: none;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 100%, rgba(139, 92, 246, 0.1), transparent 55%);
+}
+
+.cst-fold__beta-title {
+  font-family: var(--app-font-serif);
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  letter-spacing: -0.02em;
+  margin-bottom: 0.35rem;
+}
+
+.cst-fold__beta-sub {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.48);
+  margin-bottom: 1.5rem;
+}

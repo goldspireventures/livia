@@ -1,6 +1,7 @@
 import { MarketingLayout } from "@/components/marketing-layout";
-import { EditorialArticle } from "@/components/editorial-article";
-import { EditorialPageHeader } from "@/components/editorial-page-header";
+import { ConstellationPageHeader } from "@/components/constellation/constellation-page-header";
+import { ConstellationInnerPage } from "@/components/constellation/constellation-inner-page";
+import { ConstellationGlassCard } from "@/components/constellation/constellation-spine";
 import { dashboardSignInUrl, dashboardSignUpUrl, marketingOrigin } from "@/lib/marketing-links";
 import { LEGAL_ENTITY_NAME } from "@/lib/company";
 
@@ -15,33 +16,38 @@ const TITLES: Record<LegalKind, string> = {
 export function LegalPage({ kind }: { kind: LegalKind }) {
   return (
     <MarketingLayout active="Legal">
-      <EditorialArticle>
-        <EditorialPageHeader title={TITLES[kind]} />
-        <div className="prose prose-invert max-w-none text-sm text-muted-foreground space-y-4 mt-8">
-          <p>
-            <strong className="text-foreground">{LEGAL_ENTITY_NAME}</strong> operates Livia for EU appointment
-            businesses. This page is a <strong className="text-foreground">beta scaffold</strong> — counsel-reviewed
-            versions ship before general availability.
-          </p>
-          <p>
-            For product access:{" "}
-            <a href={dashboardSignUpUrl} className="text-aurora-cyan hover:text-white">
-              create an account
-            </a>{" "}
-            or{" "}
-            <a href={dashboardSignInUrl} className="text-aurora-cyan hover:text-white">
-              sign in
-            </a>{" "}
-            at {marketingOrigin.replace(/^https?:\/\//, "")}.
-          </p>
-          <p>
-            Questions:{" "}
-            <a href="mailto:hello@livia-hq.com" className="text-aurora-cyan hover:text-white">
-              hello@livia-hq.com
-            </a>
-          </p>
-        </div>
-      </EditorialArticle>
+      <ConstellationInnerPage narrow>
+        <ConstellationPageHeader
+          eyebrow="Legal"
+          title={TITLES[kind]}
+          subtitle={`${LEGAL_ENTITY_NAME} operates Livia for EU appointment businesses.`}
+        />
+        <ConstellationGlassCard className="p-6 sm:p-8 mt-8">
+          <div className="prose prose-invert max-w-none text-sm text-muted-foreground space-y-4">
+            <p>
+              This page is a <strong className="text-foreground">beta scaffold</strong> — counsel-reviewed
+              versions ship before general availability.
+            </p>
+            <p>
+              For product access:{" "}
+              <a href={dashboardSignUpUrl} className="cst-page-link">
+                create an account
+              </a>{" "}
+              or{" "}
+              <a href={dashboardSignInUrl} className="cst-page-link">
+                sign in
+              </a>{" "}
+              at {marketingOrigin.replace(/^https?:\/\//, "")}.
+            </p>
+            <p>
+              Questions:{" "}
+              <a href="mailto:hello@livia-hq.com" className="cst-page-link">
+                hello@livia-hq.com
+              </a>
+            </p>
+          </div>
+        </ConstellationGlassCard>
+      </ConstellationInnerPage>
     </MarketingLayout>
   );
 }

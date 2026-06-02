@@ -1,6 +1,6 @@
 import { MarketingLayout } from "@/components/marketing-layout";
-import { EditorialPageHeader } from "@/components/editorial-page-header";
-import { EditorialArticle } from "@/components/editorial-article";
+import { ConstellationPageHeader } from "@/components/constellation/constellation-page-header";
+import { ConstellationInnerPage } from "@/components/constellation/constellation-inner-page";
 
 const ENTRIES = [
   {
@@ -19,14 +19,19 @@ const ENTRIES = [
 export default function ChangelogPage() {
   return (
     <MarketingLayout>
-      <EditorialArticle>
-        <EditorialPageHeader
-          title="Changelog"
-          subtitle="What we ship to design partners — honest entries, not marketing vapor."
+      <ConstellationInnerPage narrow>
+        <ConstellationPageHeader
+          eyebrow="Ship log"
+          title={
+            <>
+              What we <em>ship</em>
+            </>
+          }
+          subtitle="Honest entries for design partners — not marketing vapor."
         />
         <div className="space-y-10 mt-12">
           {ENTRIES.map((e) => (
-            <article key={e.date} className="border-l-2 border-aurora-cyan/30 pl-4 sm:pl-5">
+            <article key={e.date} className="cst-changelog-entry">
               <time className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
                 {e.date}
               </time>
@@ -35,7 +40,7 @@ export default function ChangelogPage() {
             </article>
           ))}
         </div>
-      </EditorialArticle>
+      </ConstellationInnerPage>
     </MarketingLayout>
   );
 }

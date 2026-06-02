@@ -1,6 +1,6 @@
 # Policy — Tenancy & billing
 
-**Status:** v1 (2026-05-06)
+**Status:** v1 (2026-05-06), pricing tiers aligned F9 2026-06-02 — [`PRICING-RECONCILIATION-2026-06-02.md`](../business/PRICING-RECONCILIATION-2026-06-02.md)
 **Anchors:** ADR 0002 (`businessId` scoping), ADR 0010 (multi-tenant + persona model), Lane 4 L7 (Stripe Billing).
 
 ## The unit of tenancy is the business, not the user
@@ -15,7 +15,7 @@ Consequences:
 
 ## Billing scope (v1)
 
-One Stripe Customer per `businesses` row. One subscription per business. Pricing tiers (€49 / €99 / €149) are picked per business at signup.
+One Stripe Customer per `businesses` row. One subscription per business. Pricing tiers follow F9 / `PLAN_CATALOGUE` (Solo €79 · Studio €149 · Chain €249/shop · Host €99 + €19/renter) — picked per business at signup.
 
 A founder running three businesses sees three subscriptions and three invoices each month. We accept this UX cost in v1 because:
 

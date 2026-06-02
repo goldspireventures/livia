@@ -1,7 +1,8 @@
 /**
- * Single source for livia.io pricing copy — mirrors @workspace/entitlements PLAN_CATALOGUE.
+ * Single source for livia.io pricing copy — mirrors @workspace/entitlements PLAN_CATALOGUE
+ * and docs/business/pricing-and-packaging.md (F9 hybrid).
  */
-import { PEER_INSIGHTS_ADDON_EUR_CENTS, PLAN_CATALOGUE } from "@workspace/entitlements";
+import { PEER_INSIGHTS_ADDON_EUR_CENTS, PLAN_CATALOGUE, voiceOutcomeCapLabel } from "@workspace/entitlements";
 
 export function formatEur(cents: number): string {
   return `€${Math.round(cents / 100)}`;
@@ -9,66 +10,109 @@ export function formatEur(cents: number): string {
 
 export const CORE_PLANS = ["solo", "studio", "chain", "chair-host"] as const;
 
-export function planMarketingCard(id: (typeof CORE_PLANS)[number]) {
+export type CorePlanId = (typeof CORE_PLANS)[number];
+
+const EXPANSION_PLAN_IDS = ["mid-chain", "franchise", "white-label"] as const;
+
+const EXPANSION_DESC: Record<(typeof EXPANSION_PLAN_IDS)[number], string> = {
+  "mid-chain":
+    "Regional groups — policy templates and rollup between franchise and single-shop locations.",
+  franchise:
+    "Franchisors — performance rollup without exporting downstream customer PII.",
+  "white-label":
+    "Agencies and landlords running multiple consumer-facing brands under one portfolio.",
+};
+
+function seatSuffix(planId: string, seatCents: number): string {
+  if (planId === "chair-host") return ` + ${formatEur(seatCents)}/renter`;
+  return ` + ${formatEur(seatCents)}/seat`;
+}
+
+function baseUnitSuffix(planId: string): string {
+  if (planId === "chain" || planId === "mid-chain" || planId === "franchise") return "/shop";
+  return "";
+}
+
+function voiceNoteForPlan(p: (typeof PLAN_CATALOGUE)[string]): string {
+  return voiceOutcomeCapLabel(p) ? `Voice receptionist: ${voiceOutcomeCapLabel(p)}.` : "";
+}
+
+export function planMarketingCard(id: CorePlanId) {
   const p = PLAN_CATALOGUE[id];
+  const unit = baseUnitSuffix(id);
   const seat =
-    p.seatEurCentsPerMonth != null ? ` + ${formatEur(p.seatEurCentsPerMonth)}/seat` : "";
-  const voice =
-    p.voiceOutcomeShare > 0
-      ? `Voice receptionist: ${Math.round(p.voiceOutcomeShare * 100)}% on recovered missed-call bookings${
-          p.voiceOutcomeCapEurCents ? ` (cap ${formatEur(p.voiceOutcomeCapEurCents)}/mo)` : ""
-        }`
-      : "";
+    p.seatEurCentsPerMonth != null ? seatSuffix(id, p.seatEurCentsPerMonth) : "";
   return {
     id: p.id,
     name: p.name,
-    priceLabel: `${formatEur(p.baseEurCentsPerMonth)}/mo${seat}`,
-    voiceNote: voice,
+    priceLabel: `${formatEur(p.baseEurCentsPerMonth)}${unit}/mo${seat}`,
+    voiceNote: voiceNoteForPlan(p),
   };
 }
 
-export const EXPANSION_PLANS = [
-  { id: "mid-chain", name: "Mid-chain", price: "From €249/shop", desc: "Regional groups — policy templates + rollup between franchise and single-shop." },
-  { id: "franchise", name: "Franchise", price: "From €199/shop", desc: "Franchisors — performance rollup without exporting downstream customer PII." },
-  { id: "white-label", name: "Multi-brand", price: "€99/mo base", desc: "Agencies and landlords running multiple consumer-facing brands." },
-] as const;
+export function expansionPlanMarketingCard(id: (typeof EXPANSION_PLAN_IDS)[number]) {
+  const p = PLAN_CATALOGUE[id];
+  const unit = baseUnitSuffix(id);
+  const seat =
+    p.seatEurCentsPerMonth != null ? seatSuffix(id, p.seatEurCentsPerMonth) : "";
+  return {
+    id: p.id,
+    name: p.name,
+    price: `From ${formatEur(p.baseEurCentsPerMonth)}${unit}/mo${seat}`,
+    desc: EXPANSION_DESC[id],
+  };
+}
+
+export const EXPANSION_PLANS = EXPANSION_PLAN_IDS.map((id) => expansionPlanMarketingCard(id));
+
+/** FAQ / hero — never hardcode €79 in copy. */
+export function marketingSoloFloorPrice(): string {
+  return formatEur(PLAN_CATALOGUE.solo.baseEurCentsPerMonth);
+}
+
+export const SEAT_ROLE_RATES =
+  "Manager €15 · Senior-w-admin €12 · Staff €8 · Receptionist €10 · Apprentice €4 — per active seat/month on team tiers (Stripe v1: flat €15/seat until role-based billing ships).";
 
 /** How Livia earns — advertise every stream on pricing. */
 export const REVENUE_STREAMS = [
   {
     id: "subscriptions",
     title: "Platform subscription",
-    body: "Solo, Studio, Chain, and Host plans — EUR list prices, VAT ex. where applicable. Billed via Stripe Billing.",
+    body: "Solo, Studio, Chain, and Host plans — EUR list prices, VAT ex. where applicable. You are not charged during closed beta; rates lock at public launch.",
   },
   {
     id: "seats",
     title: "Per-seat fees",
-    body: "Studio and chain tiers add per active staff seat (€15/mo) so pricing scales with team size, not arbitrary user caps.",
+    body: SEAT_ROLE_RATES,
   },
   {
     id: "voice",
     title: "Voice outcome share",
-    body: "4% on bookings Liv recovers from missed calls — capped monthly so you keep upside without surprise bills.",
+    body: "4% on bookings Liv recovers from missed calls — with monthly caps shown in your digest so you keep upside without surprise bills.",
   },
   {
     id: "addons",
     title: "Add-ons",
-    body: `Peer insights (${formatEur(PEER_INSIGHTS_ADDON_EUR_CENTS)}/mo), Nordic locale pack, vertical packs, enterprise SSO & audit export — unlock in-app when your plan allows.`,
+    body: `Peer insights (${formatEur(PEER_INSIGHTS_ADDON_EUR_CENTS)}/mo), Nordic locale pack, vertical packs, enterprise SSO & audit export — you unlock these in-app when your plan allows.`,
   },
   {
     id: "migration",
     title: "Concierge migration",
-    body: "Optional Phorest / Booksy / CSV import help — quoted €500–€2,500 depending on client count (human-led, not self-serve).",
+    body: "Optional Phorest / Booksy / CSV import help — quoted €500–€2,500 depending on your client count (human-led, not self-serve).",
   },
   {
     id: "connect",
     title: "Stripe Connect (pass-through)",
-    body: "Card deposits go to your connected account. Livia subscription is separate — we do not take marketplace commission on appointments.",
+    body: "When deposits go live, card payments land in your connected account. Your Livia subscription stays separate — we do not take marketplace commission on appointments.",
   },
 ] as const;
 
 export const ADD_ONS = [
-  { name: "Peer insights", price: formatEur(PEER_INSIGHTS_ADDON_EUR_CENTS), desc: "Anonymized benchmarks when your segment has k≥10 shops." },
+  {
+    name: "Peer insights",
+    price: formatEur(PEER_INSIGHTS_ADDON_EUR_CENTS),
+    desc: "Anonymized benchmarks when your segment has k≥10 shops.",
+  },
   { name: "Nordic locale pack", price: "Custom", desc: "Extended Liv + SMS templates for SE, DK, NO, FI." },
   { name: "Enterprise SSO", price: "Chain+", desc: "SAML/OIDC for multi-location operators." },
   { name: "Audit export", price: "Chain+", desc: "Tamper-evident audit chain export for compliance reviews." },

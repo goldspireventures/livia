@@ -1,0 +1,13 @@
+/**
+ * W1 /demo concierge gate — locked gold palette (marketing only).
+ * W2 /demo/wedge/* mirrors this on the dashboard app.
+ */
+
+.cst-demo-gate {
+  --w1-navy-deep: #030615;
+  --w1-navy-mid: #05081c;
+  --w1-navy-soft: #071028;
+  --w1-gold-light: #e6d0a5;
+  --w1-gold-mid: #d9b97a;
+  --w1-gold-deep: #a9834d;
+}

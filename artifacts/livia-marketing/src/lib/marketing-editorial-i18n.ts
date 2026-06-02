@@ -1,7 +1,51 @@
 /**
  * Editorial home copy — EN + DE. Single source for livia.io human-crafted surfaces.
  */
+import { marketingSoloFloorPrice } from "@/lib/pricing-catalog";
 export type MarketingLocale = "en" | "de";
+
+export type HomeConstellationCopy = {
+  headline1: string;
+  headline2: string;
+  subhead: string;
+  bookDemo: string;
+  howItWorks: string;
+  joinBeta: string;
+};
+
+export type HomeOsCopy = {
+  eyebrow: string;
+  headline: [string, string];
+  headlineAccent: string;
+  subhead: string;
+  livIntro: string;
+  seeDemo: string;
+  howItWorks: string;
+  joinBeta: string;
+  convergenceLabel: string;
+  channels: { short: string; label: string }[];
+  physicsTitle: string;
+  physicsSubtitle: string;
+  physics: { title: string; body: string }[];
+  livBand: {
+    title: string;
+    body: string;
+    bullets: string[];
+    panelLabel: string;
+    panelLines: { text: string; muted?: boolean }[];
+  };
+};
+
+export type HomeFoldCopy = {
+  physicsEyebrow: string;
+  physicsHeadline: string;
+  livLine: string;
+  pricingFrom: string;
+  verticalsEyebrow: string;
+  verticalsHeadline: string;
+  verticalsSub: string;
+  faqMore: string;
+};
 
 export type EditorialCopy = {
   nav: {
@@ -9,6 +53,11 @@ export type EditorialCopy = {
     pricing: string;
     howItWorks: string;
     joinBeta: string;
+    tryBeta: string;
+    product: string;
+    solutions: string;
+    resources: string;
+    about: string;
     menu: string;
     english: string;
     deutsch: string;
@@ -25,6 +74,9 @@ export type EditorialCopy = {
     photoAlt: string;
     photoCaption: string;
   };
+  homeConstellation: HomeConstellationCopy;
+  homeFold: HomeFoldCopy;
+  homeOs: HomeOsCopy;
   homeTrust: { label: string; value: string }[];
   homeFeatures: { title: string; body: string }[];
   homeMarkets: {
@@ -104,6 +156,11 @@ const EN: EditorialCopy = {
     pricing: "Pricing",
     howItWorks: "How it works",
     joinBeta: "Join beta",
+    tryBeta: "Try beta",
+    product: "Product",
+    solutions: "Solutions",
+    resources: "Resources",
+    about: "About",
     menu: "Menu",
     english: "English",
     deutsch: "Deutsch",
@@ -119,6 +176,70 @@ const EN: EditorialCopy = {
     howItWorks: "How it works",
     photoAlt: "European service business interior in quiet morning light",
     photoCaption: "09:14 · Dublin",
+  },
+  homeConstellation: {
+    headline1: "One OS.",
+    headline2: "Every people-business.",
+    subhead: "Same physics. Different floor. Liv runs the gap.",
+    bookDemo: "Book a demo",
+    howItWorks: "How it works",
+    joinBeta: "Join beta",
+  },
+  homeFold: {
+    physicsEyebrow: "Same physics",
+    physicsHeadline: "Three invariants on every floor.",
+    livLine: "Replies, books, and briefs inside your OS — with staff override on every thread.",
+    pricingFrom: "Chain, Host, and add-ons on the full pricing page.",
+    verticalsEyebrow: "Your trade",
+    verticalsHeadline: "Pick your floor type",
+    verticalsSub: "Live demo — no sign-up until you're ready.",
+    faqMore: "More answers",
+  },
+  homeOs: {
+    eyebrow: "Operating system · people-businesses",
+    headline: ["Demand arrives everywhere.", "Time is scarce."],
+    headlineAccent: "One floor holds it.",
+    subhead:
+      "Salons, clinics, studios, groomers — any business where skilled humans sell scarce time to people who come back. Livia is the OS that unifies channels, calendar, memory, and policy.",
+    livIntro:
+      "<strong>Liv</strong> is the governed colleague on that floor — replying, booking, briefing, and leaving an audit trail you can trust.",
+    seeDemo: "See live demo",
+    howItWorks: "How it works",
+    joinBeta: "Join beta",
+    convergenceLabel: "Every channel → one operating truth",
+    channels: [
+      { short: "DM", label: "Social" },
+      { short: "SMS", label: "Text" },
+      { short: "Web", label: "Booking" },
+      { short: "Tel", label: "Phone" },
+    ],
+    physicsTitle: "The physics every in-scope business shares",
+    physicsSubtitle:
+      "Hair was the microscope, not the organism. These invariants hold whether you run a chair, a room, a bay, or a class slot.",
+    physics: [
+      { title: "Time inventory", body: "Scarce slots, buffers, and real availability — not a decorative calendar." },
+      { title: "Skill match", body: "Right practitioner, right service, right duration — policy-aware." },
+      { title: "Relationship memory", body: "Formula, plan, pet profile, vehicle notes — continuity that compounds." },
+      { title: "Policy", body: "Deposits, cancel windows, consent — yours, enforced consistently." },
+      { title: "Channels converge", body: "DM, SMS, web, phone — one schedule, one inbox, one truth." },
+    ],
+    livBand: {
+      title: "Liv is not a chatbot bolt-on",
+      body: "She runs inside your operating system — with disclosure, escalation, and staff override on every customer surface.",
+      bullets: [
+        "Replies in your tone with real slot checks",
+        "Books, reminds, and backfills against your rules",
+        "Briefs the owner before the day asks",
+        "EU AI Act disclosure built into guest surfaces",
+      ],
+      panelLabel: "Floor snapshot · Tuesday 07:02",
+      panelLines: [
+        { text: "3 chairs open Thursday — Liv offered the waitlist." },
+        { text: "Marie's 2:30 held for a regular." },
+        { text: "No deposit disputes this week." },
+        { text: "Staff can take over any thread.", muted: true },
+      ],
+    },
   },
   homeTrust: [
     { label: "Verticals", value: "21+ in demo" },
@@ -206,7 +327,7 @@ const EN: EditorialCopy = {
     items: [
       {
         q: "What is Livia?",
-        a: "The OS for appointment businesses. Calendar, inbox, staff, deposits — one interface. From €79/mo at launch; beta is free.",
+        a: `The OS for appointment businesses — your calendar, inbox, team, and booking page in one place. From ${marketingSoloFloorPrice()}/mo at launch; closed beta is free for you.`,
       },
       {
         q: "Who is it for?",
@@ -259,6 +380,11 @@ const DE: EditorialCopy = {
     pricing: "Preise",
     howItWorks: "So funktioniert's",
     joinBeta: "Beta beitreten",
+    tryBeta: "Beta testen",
+    product: "Produkt",
+    solutions: "Lösungen",
+    resources: "Ressourcen",
+    about: "Über uns",
     menu: "Menü",
     english: "English",
     deutsch: "Deutsch",
@@ -274,6 +400,70 @@ const DE: EditorialCopy = {
     howItWorks: "So funktioniert's",
     photoAlt: "Europäisches Dienstleistungsstudio am ruhigen Morgen",
     photoCaption: "09:14 · München",
+  },
+  homeConstellation: {
+    headline1: "Ein OS.",
+    headline2: "Jedes People-Business.",
+    subhead: "Gleiche Physik. Anderer Floor. Liv schließt die Lücke.",
+    bookDemo: "Demo buchen",
+    howItWorks: "So funktioniert's",
+    joinBeta: "Beta beitreten",
+  },
+  homeFold: {
+    physicsEyebrow: "Gleiche Physik",
+    physicsHeadline: "Drei Invarianten auf jedem Floor.",
+    livLine: "Antwortet, bucht, briefed — im OS, mit Team-Override in jedem Thread.",
+    pricingFrom: "Chain, Host und Add-ons auf der Preisseite.",
+    verticalsEyebrow: "Ihr Gewerk",
+    verticalsHeadline: "Wählen Sie Ihren Floor",
+    verticalsSub: "Live-Demo — ohne Anmeldung.",
+    faqMore: "Mehr Antworten",
+  },
+  homeOs: {
+    eyebrow: "Betriebssystem · People-Businesses",
+    headline: ["Nachfrage kommt überall an.", "Zeit ist knapp."],
+    headlineAccent: "Ein Floor hält alles.",
+    subhead:
+      "Salons, Kliniken, Studios, Groomer — jedes Geschäft, in dem Menschen knappe Zeit an Stammkunden verkaufen. Livia ist das OS für Kanäle, Kalender, Gedächtnis und Policy.",
+    livIntro:
+      "<strong>Liv</strong> ist die governierte Kollegin auf diesem Floor — antwortet, bucht, briefed und hinterlässt einen prüfbaren Trail.",
+    seeDemo: "Live-Demo ansehen",
+    howItWorks: "So funktioniert's",
+    joinBeta: "Beta beitreten",
+    convergenceLabel: "Jeder Kanal → eine operative Wahrheit",
+    channels: [
+      { short: "DM", label: "Social" },
+      { short: "SMS", label: "Text" },
+      { short: "Web", label: "Buchung" },
+      { short: "Tel", label: "Telefon" },
+    ],
+    physicsTitle: "Die Physik, die jedes passende Geschäft teilt",
+    physicsSubtitle:
+      "Friseur war das Mikroskop, nicht der Organismus. Diese Invarianten gelten für Stuhl, Raum, Box oder Kurs-Slot.",
+    physics: [
+      { title: "Zeit-Inventar", body: "Knapp Slots, Puffer, echte Verfügbarkeit — kein Deko-Kalender." },
+      { title: "Skill-Match", body: "Richtige Person, richtiger Service, richtige Dauer — policy-aware." },
+      { title: "Beziehungsgedächtnis", body: "Formel, Plan, Tierprofil, Fahrzeugnotizen — Kontinuität, die wächst." },
+      { title: "Policy", body: "Anzahlungen, Storno, Einwilligung — Ihre Regeln, durchgängig." },
+      { title: "Kanäle konvergieren", body: "DM, SMS, Web, Telefon — ein Schedule, eine Inbox, eine Wahrheit." },
+    ],
+    livBand: {
+      title: "Liv ist kein Chatbot-Bolt-on",
+      body: "Sie läuft im Betriebssystem — mit Disclosure, Eskalation und Staff-Override auf jeder Kundenoberfläche.",
+      bullets: [
+        "Antwortet in Ihrem Ton mit echten Slot-Checks",
+        "Bucht, erinnert und füllt nach Ihren Regeln",
+        "Briefed den Owner, bevor der Tag fragt",
+        "EU AI Act Disclosure in Gast-Oberflächen",
+      ],
+      panelLabel: "Floor-Snapshot · Dienstag 07:02",
+      panelLines: [
+        { text: "3 Stühle Donnerstag frei — Liv bot die Warteliste an." },
+        { text: "Maries 14:30 für Stammkundin reserviert." },
+        { text: "Keine Anzahlungs-Streitigkeiten diese Woche." },
+        { text: "Team kann jeden Thread übernehmen.", muted: true },
+      ],
+    },
   },
   homeTrust: [
     { label: "Branchen", value: "21+ in der Demo" },
@@ -362,7 +552,7 @@ const DE: EditorialCopy = {
     items: [
       {
         q: "Was ist Livia?",
-        a: "Das OS für Termingeschäfte. Kalender, Inbox, Team, Anzahlungen. Ab €79/Monat zum Launch; Beta kostenlos.",
+        a: `Das OS für Termingeschäfte — Kalender, Inbox, Team und Buchungsseite an einem Ort. Ab ${marketingSoloFloorPrice()}/Monat zum Launch; die Beta ist für Sie kostenlos.`,
       },
       {
         q: "Für wen?",

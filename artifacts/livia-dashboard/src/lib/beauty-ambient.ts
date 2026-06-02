@@ -44,3 +44,10 @@ export function setBeautyAmbientTier(tier: BeautyAmbientTier): void {
   window.localStorage.setItem(LS_KEY, tier);
   applyBeautyAmbient();
 }
+
+/** W2 gateway — strip tenant ambient tier from the document (do not re-apply). */
+export function clearBeautyAmbient(root: HTMLElement = document.documentElement): void {
+  delete root.dataset.beautyAmbient;
+  delete root.dataset.beautyAmbientSnapshot;
+  delete root.dataset.timeOfDay;
+}

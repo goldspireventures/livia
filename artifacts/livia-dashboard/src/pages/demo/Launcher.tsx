@@ -44,8 +44,8 @@ import {
   GatewayG1Hero,
   GatewayG1SignInHint,
 } from "@/components/gateway/gateway-demo-launcher-shell";
-import { G1_WEDGE_UNLOCKED } from "@/lib/g1-wedge-worlds";
 import type { BusinessVertical } from "@workspace/policy";
+import { isMarketingDemoWedgeUnlocked } from "@workspace/policy";
 import { useGatewaySkinHandoffOptional } from "@/components/gateway/gateway-skin-handoff-provider";
 import { prefetchTenantDashboardShell } from "@/lib/prefetch-tenant-dashboard";
 
@@ -82,7 +82,7 @@ export default function DemoLauncher() {
 
   useEffect(() => {
     const v = new URLSearchParams(window.location.search).get("vertical")?.toLowerCase();
-    if (v && G1_WEDGE_UNLOCKED.has(v as BusinessVertical)) {
+    if (v && isMarketingDemoWedgeUnlocked(v as BusinessVertical)) {
       navigate(`/demo/wedge/${v}`);
     }
   }, [navigate]);

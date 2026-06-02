@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { MarketingLayout } from "@/components/marketing-layout";
-import { EditorialPageHeader } from "@/components/editorial-page-header";
-import { EditorialArticle } from "@/components/editorial-article";
+import { ConstellationPageHeader } from "@/components/constellation/constellation-page-header";
+import { ConstellationInnerPage } from "@/components/constellation/constellation-inner-page";
+import { ConstellationGlassCard } from "@/components/constellation/constellation-spine";
 import { apiBaseUrl, dashboardDemoUrl, marketingOrigin } from "@/lib/marketing-links";
 
 type Check = { name: string; ok: boolean; detail?: string };
@@ -43,15 +44,20 @@ export default function StatusPage() {
 
   return (
     <MarketingLayout>
-      <EditorialArticle>
-        <EditorialPageHeader
-          title="Status"
+      <ConstellationInnerPage narrow>
+        <ConstellationPageHeader
+          eyebrow="Platform health"
+          title={
+            <>
+              System <em>status</em>
+            </>
+          }
           subtitle={
             <>
               EU platform health. Production incidents:{" "}
               <a
                 href={`${marketingOrigin}/status`}
-                className="text-aurora-cyan hover:text-white"
+                className="cst-page-link"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -62,34 +68,34 @@ export default function StatusPage() {
         />
 
         {loading ? (
-          <p className="text-sm text-muted-foreground mt-10">Checking…</p>
+          <p className="text-sm text-muted-foreground mt-10" aria-live="polite">
+            Checking…
+          </p>
         ) : (
           <>
             <div
-              className={`inline-flex items-center gap-2 rounded-sm px-3 py-1.5 text-sm mt-10 mb-8 ${
-                allOk ? "bg-emerald-500/15 text-emerald-400" : "bg-amber-500/15 text-amber-400"
-              }`}
+              className={`cst-status-badge mt-10 mb-8 ${allOk ? "cst-status-badge--ok" : "cst-status-badge--warn"}`}
+              role="status"
+              aria-live="polite"
             >
               <span className="h-2 w-2 rounded-full bg-current" />
               {allOk ? "All checks passing" : "Degraded"}
             </div>
-            <ul className="space-y-4 border-t border-white/10 pt-6">
-              {checks.map((c) => (
-                <li
-                  key={c.name}
-                  className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-4 border-b border-border/50 pb-4"
-                >
-                  <span className="font-medium">{c.name}</span>
-                  <span className={`text-sm ${c.ok ? "text-emerald-400" : "text-amber-400"}`}>
-                    {c.ok ? "OK" : "Issue"} — {c.detail}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <ConstellationGlassCard className="p-6">
+              <ul className="space-y-4">
+                {checks.map((c) => (
+                  <li key={c.name} className="cst-status-row">
+                    <span className="font-medium">{c.name}</span>
+                    <span className={`text-sm ${c.ok ? "text-emerald-400" : "text-amber-400"}`}>
+                      {c.ok ? "OK" : "Issue"} — {c.detail}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </ConstellationGlassCard>
           </>
         )}
-      </EditorialArticle>
+      </ConstellationInnerPage>
     </MarketingLayout>
   );
 }
-

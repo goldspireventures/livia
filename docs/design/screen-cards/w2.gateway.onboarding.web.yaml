@@ -15,7 +15,7 @@ visual:
   canvas:
     device: desktop_tablet
     viewport: 1024x768
-    background: platform-default preset — aurora subtle
+    background: platform-default preset — Constellation ambient (ink, champagne, orbit watermark)
   zones:
     - id: wizard_shell
       layout: centered card max-width 560px

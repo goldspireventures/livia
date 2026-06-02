@@ -237,7 +237,7 @@ export default function BillingControls() {
             <p className="text-2xl font-semibold">
               {eur(billing.voiceOutcomeShareEurCents)}
               {billing.voiceOutcomeCapEurCents != null
-                ? ` / ${eur(billing.voiceOutcomeCapEurCents)} cap`
+                ? ` / ${eur(billing.voiceOutcomeCapEurCents)}/mo cap`
                 : null}
             </p>
           </CardContent>

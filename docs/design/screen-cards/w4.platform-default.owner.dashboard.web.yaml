@@ -1,0 +1,27 @@
+meta:
+  id: w4.platform-default.owner.dashboard.web
+  world: W4
+  route: /dashboard
+  artifact: livia-dashboard
+  persona: [Owner]
+  release: R1
+  status: locked
+  presentation: platform-default
+
+job: >
+  New signup owner sees Constellation platform-default — ink shell, champagne Liv briefing,
+  ambient orbit inherited from M4 marketing (not the full hero diagram).
+
+visual:
+  reference: docs/design/assets/w4-tenant/platform-default/web/owner-dashboard.target.png
+  tokens: artifacts/livia-dashboard/src/styles/platform-default-constellation.css
+
+acceptance:
+  manual:
+    - presentation_preset_id = platform-default on create
+    - briefing card champagne left edge
+    - nebula top-right, stars sparse, orbit watermark ~10%
+
+traceability:
+  presetId: platform-default
+  ambient: artifacts/livia-dashboard/src/components/layout/platform-default-ambient.tsx

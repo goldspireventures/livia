@@ -1,7 +1,9 @@
 import { useRoute } from "wouter";
+import { Link } from "wouter";
 import { MarketingLayout } from "@/components/marketing-layout";
-import { EditorialPageHeader } from "@/components/editorial-page-header";
-import { EditorialArticle, EditorialChapterLabel, EditorialPainList } from "@/components/editorial-article";
+import { ConstellationPageHeader } from "@/components/constellation/constellation-page-header";
+import { ConstellationInnerPage, ConstellationPainList } from "@/components/constellation/constellation-inner-page";
+import { ConstellationGlassCard } from "@/components/constellation/constellation-spine";
 import { MarketingForm } from "@/components/marketing-form";
 import { dashboardWedgeUrl } from "@/lib/marketing-links";
 
@@ -96,32 +98,46 @@ export default function VerticalPage() {
 
   return (
     <MarketingLayout active="Verticals">
-      <EditorialArticle>
-        <EditorialChapterLabel>Vertical</EditorialChapterLabel>
-        <EditorialPageHeader title={v.title} subtitle={v.headline} />
+      <ConstellationInnerPage narrow>
+        <ConstellationPageHeader
+          eyebrow="Vertical"
+          title={v.title}
+          subtitle={v.headline}
+        />
 
-        <h2 className="text-lg font-medium mb-4 mt-10">What hurts today</h2>
-        <EditorialPainList items={v.pains} />
+        <section className="mt-10">
+          <p className="cst-section-label">Today</p>
+          <h2 className="text-lg font-medium mb-4">What hurts today</h2>
+          <ConstellationPainList items={v.pains} />
+        </section>
 
-        <h2 className="text-lg font-medium mb-3">How Liv helps</h2>
-        <p className="editorial-measure text-muted-foreground leading-relaxed mb-10">{v.liv}</p>
+        <ConstellationGlassCard className="p-6 mb-10">
+          <p className="cst-section-label">Liv</p>
+          <h2 className="text-lg font-medium mb-3">How Liv helps</h2>
+          <p className="text-muted-foreground leading-relaxed">{v.liv}</p>
+        </ConstellationGlassCard>
 
         <p className="mb-12">
           <a
             href={dashboardWedgeUrl(slug === "tattoo" ? "body-art" : slug)}
-            className="inline-flex items-center min-h-[44px] text-aurora-cyan hover:text-white font-medium transition-colors"
+            className="cst-page-link"
             data-testid="marketing-demo-link"
           >
             Try this vertical in the live demo →
           </a>
         </p>
 
-        <div className="border-t border-white/10 pt-12">
-          <h2 className="font-serif text-2xl mb-6">Join the beta</h2>
+        <section className="cst-page-section pt-8">
+          <h2 className="cst-waitlist__title">Join the beta</h2>
           <MarketingForm />
-        </div>
-      </EditorialArticle>
+        </section>
+
+        <p className="mt-8">
+          <Link href="/verticals" className="cst-page-link cst-page-link--muted">
+            All verticals
+          </Link>
+        </p>
+      </ConstellationInnerPage>
     </MarketingLayout>
   );
 }
-

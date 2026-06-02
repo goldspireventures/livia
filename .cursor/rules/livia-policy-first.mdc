@@ -1,0 +1,19 @@
+---
+description: Policy-first edits — cascade to API, codegen, surfaces, vertical checks
+globs: lib/policy/**/*
+alwaysApply: false
+---
+
+# Policy-first cascade
+
+Changes in `lib/policy` drive the platform. After edits:
+
+1. `pnpm vertical:check` (if vertical/onboarding/presets)
+2. `pnpm vertical:doc-check` (if vertical docs/registry)
+3. `pnpm codegen` if API contract changed
+4. `pnpm run typecheck`
+5. Verify `artifacts/*` consumers — no duplicated vertical lists or hardcoded salon UI
+
+Skill: `.cursor/skills/livia-vertical-change`
+
+Do not hand-edit `lib/api-zod` or `lib/api-client-react`.

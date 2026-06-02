@@ -55,10 +55,10 @@ export const FINAL_PLATFORM_SCREENS: FinalScreen[] = [
   {
     id: "m1-home",
     group: "marketing",
-    name: "Home — One thread (story)",
-    tagline: "Narrative continuity — company & product, not feature grid",
-    imageFile: "marketing-home-r2-one-thread-story.png",
-    docSection: "M1-R2",
+    name: "Home — Constellation",
+    tagline: "One OS · every people-business — orbital category story",
+    imageFile: "marketing-home-m4-constellation.png",
+    docSection: "M4",
     status: "locked",
   },
   {

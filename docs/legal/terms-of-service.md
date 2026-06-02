@@ -40,7 +40,7 @@ Livia is an AI-native operating service for appointment-based service businesses
 
 ## 5. Voice receptionist outcome share
 
-Where you've enabled the voice receptionist, we charge a 4% outcome share on bookings made via voice, capped at €5 per booking. This is in addition to your subscription. Per `livia.io/pricing` for full terms.
+Where you've enabled the voice receptionist, we charge a 4% outcome share on bookings made via voice, subject to a **monthly cap per plan** shown in your weekly digest and on `livia.io/pricing`. This is in addition to your subscription.
 
 ## 6. Your data
 

@@ -328,7 +328,7 @@ flowchart LR
 |--------|--------|----------|-------------------|
 | **R1 — Platform subscription** | Business (tenant) | Liv OS runtime, audit, mobile, dashboard | Stripe Billing monthly/annual |
 | **R2 — Per-seat fees** | Business | Manager, staff, reception seats | Stripe subscription line items |
-| **R3 — Voice outcome share** | Business | % on voice-recovered bookings (measurable) | Metered invoice line (4%, cap €5/booking) |
+| **R3 — Voice outcome share** | Business | % on voice-recovered bookings (measurable) | Metered invoice line (4%, monthly cap per plan in digest) |
 | **R4 — Concierge migration** | Business (optional) | Phorest/Fresha import help | One-time invoice (€500–€2,500) |
 | **R5 — Add-ons** | Business | Peer insights, extra locale voice | Stripe add-on price |
 | **R6 — Design partner discount** | Business | 50% yr1 coupon | Stripe coupon |

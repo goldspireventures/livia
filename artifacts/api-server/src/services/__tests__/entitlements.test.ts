@@ -6,6 +6,7 @@ import {
   lookupPlan,
   tenantHasEntitlement,
   PLAN_CATALOGUE,
+  voiceOutcomeCapLabel,
 } from "@workspace/entitlements";
 
 const solo = lookupPlan("solo")!;
@@ -23,5 +24,6 @@ assert.ok(
 
 assert.equal(PLAN_CATALOGUE.solo.baseEurCentsPerMonth, 7900);
 assert.equal(PLAN_CATALOGUE.studio.seatEurCentsPerMonth, 1500);
+assert.match(voiceOutcomeCapLabel(solo)!, /€50\/mo/);
 
 console.log("entitlements.test.ts: ok");

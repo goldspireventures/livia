@@ -5,70 +5,28 @@ meta:
   artifact: livia-marketing
   persona: [Prospect]
   release: R1
-  status: designed
+  status: locked
+  concept: M4-constellation
 
 job: >
-  Prospect feels Livia is premium, people-business-wide, and understands Liv in 10 seconds —
-  M1-R2 story scroll.
+  Prospect sees Livia as one OS for every people-business — verticals orbit one governed floor.
 
 visual:
-  canvas:
-    device: responsive
-    viewport: 1440x900 hero
-    background: deep aurora editorial — champagne accents — W1 fixed
-  zones:
-    - id: nav
-      height: 72px
-      content:
-        - Livia Aurum wordmark left
-        - links: How it works | Verticals | Pricing
-        - CTA "See demo" aurora pill right
-      sticky: true with blur on scroll
-    - id: hero
-      min_height: 90vh
-      content:
-        - headline serif 56px max 2 lines: people-business OS line
-        - subhead 20px sans muted max 480px width
-        - dual CTA: primary demo | secondary pricing
-        - hero visual: abstract thread motif — bookings + inbox + phone as one ribbon animation
-      motion:
-        hero: framer aurora blobs slow drift — marketing only
-        scroll_hint: subtle bounce chevron
-    - id: story_sections
-      layout: full-bleed scroll sections 3-4
-      content:
-        - section 1: Liv answers the phone (voice crop)
-        - section 2: Guest books on phone (/b crop)
-        - section 3: Owner briefing (dashboard crop)
-        - each: left copy right image alternating
-    - id: social_proof_band
-      content: design partner logos or honest "Built with Dublin shops"
-    - id: pricing_teaser
-      content: 3 tier cards preview → link /pricing
-    - id: footer
-      content: legal links | status | changelog
-  typography:
-    display: Cormorant Garamond
-    body: Inter 18px editorial line-height 1.6
-  color:
-    ink: #1a1a1a on light sections
-    aurora: gradient tokens ADR 0007
+  reference: docs/design/assets/w1-marketing/home/m4-constellation-hero.reference.png
+  hero:
+    headline: "One OS. 
+    Every people-business."
+    subhead: Same physics. Different floor. Liv runs the gap.
+    visual: orbital constellation map — 8 verticals, Livia mark center
 
-copy:
-  headline: "The operating system for people-businesses."
-  subhead: "Liv is the colleague you hire — bookings, messages, and the day's chaos."
+platform_skin_inheritance:
+  locked: docs/design/assets/w4-tenant/platform-default/
+  css: artifacts/livia-dashboard/src/styles/platform-default-constellation.css
 
 acceptance:
   e2e:
     - marketing-gate.spec.ts
-  visual:
-    - baseline: marketing-home-r2-one-thread-story.png
-  a11y:
-    - reduced_motion: disable blob drift
 
 traceability:
   surfaceId: marketing.home
-  northstar_png: m1-home-web.png
-  figma:
-    frame: W1/w1.marketing.home.web
-    status: not_started
+  component: artifacts/livia-marketing/src/components/home/constellation-hero.tsx

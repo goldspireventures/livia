@@ -1,64 +1,78 @@
 import { Link } from "wouter";
 import { MarketingLayout } from "@/components/marketing-layout";
-import { EditorialPageHeader } from "@/components/editorial-page-header";
-import { EditorialArticle } from "@/components/editorial-article";
+import { ConstellationPageHeader } from "@/components/constellation/constellation-page-header";
+import { ConstellationInnerPage } from "@/components/constellation/constellation-inner-page";
+import { ConstellationGlassCard } from "@/components/constellation/constellation-spine";
 import { MarketingForm } from "@/components/marketing-form";
 import { EU_MARKETS, REVENUE_STREAMS } from "@/lib/pricing-catalog";
 
 export default function EuropePage() {
   return (
     <MarketingLayout active="Europe">
-      <EditorialArticle wide>
-        <EditorialPageHeader
-          title="Europe"
-          subtitle="Dashboard in English today. Liv on customer channels in market language. Jurisdiction packs for currency, cancellation, GDPR."
-        />
+      <ConstellationPageHeader
+        eyebrow="IE · UK · EU"
+        title={
+          <>
+            Built for <em>Europe</em>
+          </>
+        }
+        subtitle="Dashboard in English today. Liv on customer channels in market language. Jurisdiction packs for currency, cancellation, GDPR."
+      />
 
-        <h2 className="font-serif text-2xl mb-6 mt-12">Markets we serve</h2>
-        <div className="grid sm:grid-cols-2 gap-4">
-          {EU_MARKETS.map((m) => (
-            <div key={m.code} className="rounded-sm border border-white/10 p-5 bg-white/[0.02]">
-              <div className="flex justify-between items-baseline gap-2">
-                <h3 className="font-medium">{m.label}</h3>
-                <span className="text-xs text-muted-foreground font-mono">{m.currency}</span>
-              </div>
-              <p className="text-sm text-muted-foreground mt-2">{m.language}</p>
-            </div>
-          ))}
-        </div>
-        <p className="text-sm text-muted-foreground mt-8 editorial-measure">
-          <Link href="/de" className="text-aurora-cyan hover:text-white">
-            Deutsche Marketing-Seite →
-          </Link>
-          {" · "}
-          Pick jurisdiction at onboarding — timezone, regulatory footer, and channel priorities follow.
-        </p>
-      </EditorialArticle>
+      <ConstellationInnerPage wide>
+        <section className="pb-10">
+          <p className="cst-section-label">Markets</p>
+          <h2 className="cst-page-section__title">Markets we serve</h2>
+          <div className="grid sm:grid-cols-2 gap-4">
+            {EU_MARKETS.map((m) => (
+              <ConstellationGlassCard key={m.code} className="p-5">
+                <div className="flex justify-between items-baseline gap-2">
+                  <h3 className="font-medium">{m.label}</h3>
+                  <span className="text-xs text-muted-foreground font-mono">{m.currency}</span>
+                </div>
+                <p className="text-sm text-muted-foreground mt-2">{m.language}</p>
+              </ConstellationGlassCard>
+            ))}
+          </div>
+          <p className="text-sm text-muted-foreground mt-8 max-w-prose">
+            <Link href="/de" className="cst-page-link">
+              Deutsche Marketing-Seite →
+            </Link>
+            {" · "}
+            Pick jurisdiction at onboarding — timezone, regulatory footer, and channel priorities follow.
+          </p>
+        </section>
 
-      <EditorialArticle wide className="border-t border-white/5 pt-12">
-        <h2 className="font-serif text-2xl mb-6">How we price across borders</h2>
-        <ul className="space-y-4 text-sm text-muted-foreground">
-          {REVENUE_STREAMS.slice(0, 4).map((r) => (
-            <li key={r.id} className="border-l border-white/10 pl-4">
-              <strong className="text-foreground font-medium">{r.title}</strong> — {r.body}
+        <section className="cst-page-section">
+          <p className="cst-section-label">Pricing</p>
+          <h2 className="cst-page-section__title">How we price across borders</h2>
+          <ul className="space-y-4">
+            {REVENUE_STREAMS.slice(0, 4).map((r) => (
+              <li key={r.id} className="cst-prose-section">
+                <p className="cst-prose-section__body">
+                  <strong className="text-foreground font-medium">{r.title}</strong> — {r.body}
+                </p>
+              </li>
+            ))}
+            <li className="cst-prose-section">
+              <p className="cst-prose-section__body">
+                <strong className="text-foreground font-medium">VAT</strong> — EU B2B with valid VAT ID:
+                reverse charge at checkout. UK and IE consumers see prices ex. VAT where applicable.
+              </p>
             </li>
-          ))}
-          <li className="border-l border-white/10 pl-4">
-            <strong className="text-foreground font-medium">VAT</strong> — EU B2B with valid VAT ID:
-            reverse charge at checkout. UK and IE consumers see prices ex. VAT where applicable.
-          </li>
-        </ul>
-        <p className="mt-8">
-          <Link href="/pricing" className="text-aurora-cyan hover:text-white min-h-[44px] inline-flex items-center">
-            Full pricing & revenue streams →
-          </Link>
-        </p>
-      </EditorialArticle>
+          </ul>
+          <p className="mt-8">
+            <Link href="/pricing" className="cst-page-link">
+              Full pricing & revenue streams →
+            </Link>
+          </p>
+        </section>
+      </ConstellationInnerPage>
 
-      <section className="px-4 sm:px-6 py-16 border-t border-white/5" id="waitlist">
-        <div className="max-w-xl">
-          <h2 className="font-serif text-2xl sm:text-3xl mb-4">Join the closed beta</h2>
-          <p className="text-muted-foreground mb-8 editorial-measure">IE · UK · EU. Invite batches.</p>
+      <section className="cst-waitlist" id="waitlist">
+        <div className="cst-waitlist__inner">
+          <h2 className="cst-waitlist__title">Join the closed beta</h2>
+          <p className="cst-waitlist__sub">IE · UK · EU. Invite batches.</p>
           <MarketingForm />
         </div>
       </section>

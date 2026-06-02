@@ -10,6 +10,7 @@ import { useBeautyChrome } from "@/lib/presentation-layout";
 import { beautyOutlineButton, beautyPanel, beautyPrimaryButton } from "@/lib/beauty-operational-ui";
 import { cn } from "@/lib/utils";
 import { ProfileSecurityLink } from "@/components/settings/profile-security-link";
+import { applyGatewaySurfaceTheme } from "@/lib/gateway-surface-theme";
 
 /** Platform-native account summary — Clerk profile opens in modal (not embedded iframe UI). */
 export function AccountSettingsPanel() {
@@ -100,7 +101,12 @@ export function AccountSettingsPanel() {
         </CardHeader>
         <CardContent>
           <SignOutButton redirectUrl="/sign-in">
-            <Button variant="outline" className={beautyOutlineButton(beautyChrome)} data-testid="settings-sign-out">
+            <Button
+              variant="outline"
+              className={beautyOutlineButton(beautyChrome)}
+              data-testid="settings-sign-out"
+              onClick={() => applyGatewaySurfaceTheme()}
+            >
               Sign out
             </Button>
           </SignOutButton>

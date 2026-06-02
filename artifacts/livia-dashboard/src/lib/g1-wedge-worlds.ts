@@ -1,4 +1,7 @@
-import type { BusinessVertical } from "@workspace/policy";
+import {
+  isMarketingDemoWedgeUnlocked,
+  type BusinessVertical,
+} from "@workspace/policy";
 
 /** Curated G1 worlds — layout matches `g1-wedge-web.target.png` (six portrait cards). */
 export type G1WedgeWorld = {
@@ -66,15 +69,16 @@ export const G1_WEDGE_WORLDS: G1WedgeWorld[] = [
   },
 ];
 
-/** Verticals with a shipped wedge story on staging. */
-export const G1_WEDGE_UNLOCKED = new Set<BusinessVertical>(["beauty"]);
-
 /** Unlocked worlds first; stable order within each tier. */
 export function listG1WedgeWorldsForDisplay(): G1WedgeWorld[] {
   return G1_WEDGE_WORLDS.map((world, index) => ({ world, index }))
     .sort((a, b) => {
-      const tier = (v: BusinessVertical) => (G1_WEDGE_UNLOCKED.has(v) ? 0 : 1);
+      const tier = (v: BusinessVertical) => (isMarketingDemoWedgeUnlocked(v) ? 0 : 1);
       return tier(a.world.vertical) - tier(b.world.vertical) || a.index - b.index;
     })
     .map(({ world }) => world);
+}
+
+export function isG1WedgeWorldUnlocked(vertical: BusinessVertical): boolean {
+  return isMarketingDemoWedgeUnlocked(vertical);
 }

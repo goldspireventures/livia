@@ -52,11 +52,11 @@ export const EVOLUTION_SCREENS: EvolutionScreen[] = [
   {
     id: "m1-home",
     name: "Marketing home",
-    tagline: "One thread story — company & category",
-    docRef: "M1-R2",
+    tagline: "Constellation — one OS, every people-business",
+    docRef: "M4",
     platform: "web",
-    imageFile: "m1-home-web.png",
-    lockedRef: "M1-R2 locked",
+    imageFile: "m4-marketing-home-web.png",
+    lockedRef: "M4 locked",
   },
   {
     id: "g1-wedge",

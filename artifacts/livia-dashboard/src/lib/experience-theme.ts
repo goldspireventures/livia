@@ -3,7 +3,8 @@ import { applyVerticalTheme, clearVerticalTheme, VERTICAL_THEMES } from "./verti
 import { applyMarketTheme, clearMarketTheme, MARKET_SKINS } from "./market-theme";
 import { PERSONA_ACCENT, type PersonaKind } from "./persona";
 import { resolveJurisdictionCode, resolveVerticalKey } from "@workspace/policy";
-import { BEAUTY_CSS_PRESETS } from "./presentation-layout";
+import { applyBeautyAmbient } from "./beauty-ambient";
+import { BEAUTY_CSS_PRESETS, isBeautyPresentationPreset, isBeautyVertical } from "./presentation-layout";
 
 /** Maps W4/W5 cssPreset → document color scheme (must match policy preset tokens). */
 const PRESENTATION_COLOR_MODE: Record<string, "light" | "dark"> = {
@@ -127,7 +128,44 @@ export function clearPresentationTheme(root?: HTMLElement | null) {
   applyPresentationTheme({ root });
 }
 
-/** W6 `/my` — Platform Default Aurora (same family as new signups), not tenant preset chrome. */
+/**
+ * Single hub for W4/W5 tenant skin — vertical + presentation preset + color mode.
+ * Settings preview, dashboard shell, and public /b must all use this so policy/CSS
+ * presets propagate without per-surface drift.
+ */
+export function applyTenantPresentationSurface(args: {
+  vertical?: string | null;
+  category?: string | null;
+  country?: string | null;
+  persona?: PersonaKind | null;
+  cssPreset?: string | null;
+  brandAccentHex?: string | null;
+  colorMode?: "light" | "dark" | null;
+  root?: HTMLElement | null;
+}) {
+  if (args.vertical != null || args.category != null || args.country != null || args.persona) {
+    applyExperienceTheme({
+      vertical: args.vertical,
+      category: args.category,
+      country: args.country,
+      persona: args.persona ?? null,
+    });
+  }
+  if (args.cssPreset) {
+    const mode = args.colorMode ?? resolvePresentationColorMode(args.cssPreset);
+    applyPresentationTheme({
+      cssPreset: args.cssPreset,
+      brandAccentHex: args.brandAccentHex,
+      colorMode: mode,
+      root: args.root,
+    });
+    if (!args.root && isBeautyVertical(args.vertical) && isBeautyPresentationPreset(args.cssPreset)) {
+      applyBeautyAmbient();
+    }
+  }
+}
+
+/** W6 `/my` — Platform Default Constellation (same family as new signups), not tenant preset chrome. */
 export function applyGuestHubPlatformTheme() {
   const el = document.documentElement;
   clearExperienceTheme();

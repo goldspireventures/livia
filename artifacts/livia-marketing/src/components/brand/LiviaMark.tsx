@@ -84,6 +84,21 @@ export function LiviaMark({ className = "h-8 w-8", fill }: LiviaMarkProps) {
   );
 }
 
+export function LiviaNavLogotype({ className = "" }: { className?: string }) {
+  return (
+    <span
+      className={`font-serif text-[1.35rem] sm:text-2xl font-normal tracking-[0.14em] uppercase leading-none ${className}`}
+      style={{
+        background: "linear-gradient(180deg, #f6f3ec 0%, #d9c39a 45%, #8a7549 60%, #d9c39a 78%, #f6f3ec 100%)",
+        WebkitBackgroundClip: "text",
+        WebkitTextFillColor: "transparent",
+      }}
+    >
+      Livia
+    </span>
+  );
+}
+
 export function LiviaWordmark({
   className = "",
   size = "md",

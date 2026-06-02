@@ -1,0 +1,31 @@
+---
+description: When changing one Livia surface, verify sibling surfaces and policy cascade
+alwaysApply: true
+---
+
+# Livia surfaces cascade
+
+Policy is the hub (`lib/policy` → API → thin `artifacts/*`). Do not fix one surface in isolation when the flow is shared.
+
+## If you touched…
+
+| Area | Also check |
+|------|------------|
+| Dashboard UI / copy | Mobile equivalent; marketing only if public-facing message |
+| Mobile screen | Web parity or intentional web-only doc |
+| Marketing (livia.io) | Scroll-to-top on route change; pricing matches business docs |
+| Internal ops | `INTERNAL_OPS_SECRET`; support registry |
+| Public `/b` guest | All verticals with same pattern — policy guest surfaces |
+| Gateway G1–G3 / sign-in | `docs/design/assets/w2-gateway/**/*.target.png`; screen cards |
+| Demo provision | Demo slugs, Clerk sync, `/demo` path |
+| API / OpenAPI | `pnpm codegen` — never hand-edit generated clients |
+
+## Ports (local full stack)
+
+- API `3000` · dashboard `5173` · marketing `5174` · internal `5175`
+
+## Skills
+
+`.cursor/skills/livia-session-hub` · `livia-beta-handoff` · `livia-visual-audit`
+
+Authority: root `AGENTS.md` cascade table.

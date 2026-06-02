@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { ArrowRight, Lock } from "lucide-react";
 import { getWedgeDemoStory } from "@workspace/policy";
-import { G1_WEDGE_UNLOCKED, listG1WedgeWorldsForDisplay } from "@/lib/g1-wedge-worlds";
+import { isG1WedgeWorldUnlocked, listG1WedgeWorldsForDisplay } from "@/lib/g1-wedge-worlds";
 import { cn } from "@/lib/utils";
 
 /** G1 — six portrait trade cards (locked target: g1-wedge-web.target.png). */
@@ -18,7 +18,7 @@ export function DemoWedgeGrid({ className }: { className?: string }) {
       <div className="gateway-g1-cards-track">
         {listG1WedgeWorldsForDisplay().map((world) => {
           const story = getWedgeDemoStory(world.vertical);
-          const unlocked = G1_WEDGE_UNLOCKED.has(world.vertical);
+          const unlocked = isG1WedgeWorldUnlocked(world.vertical);
           const href = unlocked ? `/demo/wedge/${world.vertical}` : "#";
 
           return (

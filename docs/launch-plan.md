@@ -63,7 +63,7 @@ Acceptance:
 
 - `docs/audits/marketing-vs-reality.md` has zero rows in state `build-before-G3`. (Promise integrity — see Task #49.)
 
-- Stripe Billing live with €49 / €99 / €149 tiers; first paid subscriber active.
+- Stripe Billing live with F9 tiers (Solo €79 · Studio €149 · Chain €249/shop · Host €99 + €19/renter); first paid subscriber active. See [`docs/business/PRICING-RECONCILIATION-2026-06-02.md`](business/PRICING-RECONCILIATION-2026-06-02.md).
 - Stripe Connect live for shop deposits + tips; one shop has taken a real deposit and a real tip.
 - App Store + Play Store live (not just internal); first organic download recorded.
 - `livia.io` marketing site live with hero, pricing, signup CTA, status link, changelog link.
@@ -138,7 +138,7 @@ Sizing: **S** ≤ one focused day · **M** 2-5 days · **L** > 1 week. Target ga
 | L4 | Twilio account provisioned, A2P 10DLC registration started for IE / UK numbers. | M | 2 |
 | L5 | Per-shop Twilio number provisioning flow (Settings → Communications → "Get a number"). | M | 2 |
 | L6 | Stripe account live (production keys), Stripe Connect onboarding link in Settings → Payments. | M | 3 |
-| L7 | Stripe Billing — products + prices for €49 / €99 / €149 tiers; checkout link in Settings → Plan. | M | 3 |
+| L7 | Stripe Billing — products + prices for F9 tiers (€79 / €149 / €249 / €99+€19 renter); checkout link in Settings → Plan. Mirror `PLAN_CATALOGUE`. | M | 3 |
 | L8 | Sentry projects (api / web / mobile), source maps uploaded on build. | S | 2 |
 | L9 | Statuspage / Better Stack components + automated incident creation from Sentry P0s. | S | 3 |
 | L10 | Plausible (privacy-first) analytics on `livia.io` + dashboard; PostHog optional for funnel work. | S | 3 |

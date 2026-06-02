@@ -151,6 +151,9 @@ export function clearVerticalTheme() {
   delete root.dataset.verticalShell;
   delete root.dataset.verticalDisplay;
   delete root.dataset.motion;
+  root.style.removeProperty("--primary");
+  root.style.removeProperty("--ring");
+  root.style.removeProperty("--sidebar-primary");
   root.style.removeProperty("--vertical-accent");
   root.style.removeProperty("--vertical-hero-from");
   root.style.removeProperty("--vertical-hero-to");

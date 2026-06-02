@@ -1,0 +1,119 @@
+/**
+ * Platform Default — Constellation skin (inherits M4 marketing DNA).
+ * Ambient only in product: stars, nebula corner, orbital watermark, champagne Liv moments.
+ * @see docs/design/assets/w4-tenant/platform-default/README.md
+ */
+
+html[data-presentation="platform-default"] {
+  --platform-ink: #0a0a10;
+  --platform-champagne: #d9c39a;
+  --platform-champagne-soft: rgba(217, 195, 154, 0.14);
+  --platform-nebula-violet: rgba(139, 92, 246, 0.14);
+  --platform-nebula-cyan: rgba(6, 182, 212, 0.08);
+}
+
+html[data-presentation="platform-default"].dark,
+html.dark[data-presentation="platform-default"] {
+  --background: 240 10% 6%;
+  --foreground: 0 0% 96%;
+  --card: 240 8% 9%;
+  --primary: 43 38% 66%;
+  --primary-foreground: 240 10% 8%;
+  --ring: 43 38% 66%;
+  --accent: 188 85% 48%;
+}
+
+html[data-presentation="platform-default"] .app-shell-main {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--platform-ink);
+  background-image:
+    radial-gradient(1px 1px at 8% 14%, rgba(255, 255, 255, 0.35), transparent),
+    radial-gradient(1px 1px at 22% 78%, rgba(255, 255, 255, 0.2), transparent),
+    radial-gradient(1px 1px at 68% 32%, rgba(255, 255, 255, 0.25), transparent),
+    radial-gradient(1px 1px at 91% 68%, rgba(255, 255, 255, 0.18), transparent),
+    radial-gradient(ellipse 42% 38% at 94% 6%, var(--platform-nebula-violet), transparent 72%),
+    radial-gradient(ellipse 36% 32% at 88% 10%, var(--platform-nebula-cyan), transparent 68%),
+    linear-gradient(180deg, hsl(240 8% 7%) 0%, var(--platform-ink) 12rem);
+}
+
+html[data-presentation="platform-default"] aside.app-shell-sidebar,
+html[data-presentation="platform-default"] aside.w-64 {
+  background: hsl(var(--card) / 0.78);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-right-color: rgba(217, 195, 154, 0.08);
+}
+
+html[data-presentation="platform-default"] .platform-default-liv-glass,
+html[data-presentation="platform-default"] [data-testid="owner-dashboard-briefing"],
+html[data-presentation="platform-default"] [data-testid="liv-command-hub"] {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-color: rgba(217, 195, 154, 0.14);
+  box-shadow:
+    0 0 0 1px rgba(217, 195, 154, 0.06),
+    0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+html[data-presentation="platform-default"] [data-testid="owner-dashboard-briefing"] {
+  border-left-color: var(--platform-champagne) !important;
+}
+
+html[data-presentation="platform-default"] .platform-default-card-lift:hover {
+  box-shadow: 0 10px 28px rgba(217, 195, 154, 0.1);
+}
+
+html[data-presentation="platform-default"] [data-testid="sidebar-nav"] [data-active="true"] {
+  position: relative;
+  box-shadow: inset 0 0 0 1px rgba(217, 195, 154, 0.12);
+}
+
+html[data-presentation="platform-default"] [data-testid="sidebar-nav"] [data-active="true"]::before {
+  content: "";
+  position: absolute;
+  left: 0.35rem;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  transform: translateY(-50%);
+  background: var(--platform-champagne);
+  box-shadow: 0 0 8px rgba(217, 195, 154, 0.55);
+}
+
+html[data-presentation="platform-default"] .platform-default-ambient {
+  position: fixed;
+  inset: 0;
+  left: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  html[data-presentation="platform-default"] .platform-default-ambient {
+    left: 13.5rem;
+  }
+}
+
+html[data-presentation="platform-default"] .platform-default-ambient__svg {
+  position: absolute;
+  top: 50%;
+  left: 58%;
+  width: min(680px, 85vw);
+  height: min(680px, 85vw);
+  transform: translate(-50%, -48%);
+  opacity: 0.1;
+}
+
+html[data-presentation="platform-default"] .app-shell-main > *:not(.platform-default-ambient) {
+  position: relative;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-presentation="platform-default"] .platform-default-ambient__svg {
+    opacity: 0.06;
+  }
+}

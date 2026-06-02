@@ -5,6 +5,8 @@ description: Log meaningful build session output to the exec cockpit Hats River 
 
 # Exec hat work logging (Track H)
 
+Part of [`livia-session-hub`](../livia-session-hub/SKILL.md) closeout.
+
 ## When to use
 
 - Session produced **shipped or doc-complete** work worth showing in cockpit Hats River

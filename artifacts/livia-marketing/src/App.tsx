@@ -15,8 +15,11 @@ import DeHomePage from "@/pages/de";
 import EuropePage from "@/pages/europe";
 import EuAiPage from "@/pages/eu-ai";
 import VerticalsIndexPage from "@/pages/verticals-index";
+import DemoPage from "@/pages/demo";
 import { LegalDpaPage, LegalPrivacyPage, LegalTosPage } from "@/pages/legal";
 import { useEffect, useRef } from "react";
+import { MarketingErrorBoundary } from "@/components/marketing-error-boundary";
+import { metaForPath } from "@/lib/marketing-route-meta";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +34,7 @@ function Router() {
       <Route path="/how-it-works" component={HowItWorksPage} />
       <Route path="/verticals" component={VerticalsIndexPage} />
       <Route path="/verticals/:slug" component={VerticalPage} />
+      <Route path="/demo" component={DemoPage} />
       <Route path="/for/chair-rental" component={ForChairRentalPage} />
       <Route path="/contact" component={ContactPage} />
       <Route path="/changelog" component={ChangelogPage} />
@@ -41,6 +45,27 @@ function Router() {
       <Route component={NotFound} />
     </Switch>
   );
+}
+
+function RouteDocumentMeta() {
+  const [location] = useLocation();
+
+  useEffect(() => {
+    const pathOnly = location.split("#")[0]?.split("?")[0] ?? "/";
+    const meta = metaForPath(pathOnly);
+    document.title = meta.title;
+    if (meta.description) {
+      let tag = document.querySelector('meta[name="description"]');
+      if (tag) tag.setAttribute("content", meta.description);
+    }
+    if (pathOnly === "/de") {
+      document.documentElement.lang = "de";
+    } else {
+      document.documentElement.lang = "en";
+    }
+  }, [location]);
+
+  return null;
 }
 
 function ScrollToTopOnRouteChange() {
@@ -63,10 +88,13 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <ScrollToTopOnRouteChange />
-          <Router />
-        </WouterRouter>
+        <MarketingErrorBoundary>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <RouteDocumentMeta />
+            <ScrollToTopOnRouteChange />
+            <Router />
+          </WouterRouter>
+        </MarketingErrorBoundary>
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>

@@ -29,8 +29,16 @@ html[data-presentation="editorial"] {
   --background: 40 33% 97%;
   --foreground: 24 10% 12%;
   --card: 0 0% 100%;
+  --card-foreground: 24 10% 12%;
   --primary: 16 52% 48%;
   --ring: 16 52% 48%;
+  --border: 35 18% 88%;
+  --muted: 38 22% 93%;
+  --muted-foreground: 24 8% 42%;
+  --secondary: 38 28% 95%;
+  --sidebar: 40 30% 96%;
+  --sidebar-foreground: 24 10% 12%;
+  --sidebar-accent: 38 35% 90%;
 }
 
 html[data-presentation="noir-dusk"],

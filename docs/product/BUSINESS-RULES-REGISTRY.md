@@ -44,7 +44,7 @@
 | Livia sub via Stripe Billing | pricing doc | `billing.service.ts` |
 | Shop deposits via Connect only | Complete Spec §6 | partial |
 | Refund ladder caps | `workflows/refund-request.md` | partial |
-| Voice outcome 4% cap €5/booking | pricing doc | settlement scaffold |
+| Voice outcome 4% monthly cap per plan | pricing doc + `PLAN_CATALOGUE` | settlement scaffold |
 
 ### Clients & staff
 

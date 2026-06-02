@@ -405,7 +405,7 @@ export function OwnerHomeRitual({
         className={cn(
           beauty
             ? "beauty-briefing-banner"
-            : "rounded-lg border border-border/80 bg-card pl-3 pr-3 py-3 md:pl-4 border-l-4 border-l-primary",
+            : "rounded-lg border border-border/80 bg-card pl-3 pr-3 py-3 md:pl-4 border-l-4 border-l-primary platform-default-liv-glass",
           beauty && briefingNeedsAttention && "beauty-briefing-banner--attention",
           !beauty && briefingLoading && "motion-liv-pulse",
           beauty && briefingLoading && "beauty-briefing-banner--attention motion-liv-pulse",

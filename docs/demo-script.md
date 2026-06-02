@@ -48,7 +48,7 @@ Open `livia.io`. Read the headline aloud:
 Scroll once through the three pillars (AI Inbox, Revenue Protection, Owner
 Cockpit). Pause on Pricing.
 
-> "Three honest tiers — €49, €99, €149. The product behind that pricing is
+> "Four honest tiers — Solo €79, Studio €149, Chain from €249 per shop, Host €99 plus €19 per renter. The product behind that pricing is
 > what I'm about to show you."
 
 This 30-second beat exists so the audience meets the brand voice before they

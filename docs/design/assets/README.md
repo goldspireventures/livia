@@ -13,6 +13,7 @@ docs/design/assets/
 ├── w2-gateway/               W2 — sign-in, sign-up, /demo (platform, fixed)
 ├── w3-internal/              W3 — ops support + exec (platform, fixed)
 ├── w4-tenant/                W4 — operator cockpit per vertical + preset
+│   └── platform-default/     W4 signup skin — Constellation (locked targets)
 ├── w5-public/                W5 — guest /b per vertical
 ├── evolution/                Mood boards by release tier (northstar | now | v3)
 ├── captures/                 Automated screenshots (Playwright), not design targets

@@ -12,7 +12,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 /** Keep in sync with artifacts/livia-dashboard/src/lib/livia-evolution-screens.ts */
 const EVOLUTION_IMAGE_FILES = [
-  "m1-home-web.png",
+  "m4-marketing-home-web.png",
   "g1-wedge-web.png",
   "g1-wedge-mobile.png",
   "tenant-inbox-web.png",

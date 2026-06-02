@@ -1,0 +1,36 @@
+meta:
+  id: w1.marketing.demo.web
+  world: W1
+  route: "/demo"
+  artifact: livia-marketing
+  persona: [Prospect]
+  release: R1
+  status: locked
+  concept: M4-concierge-gate
+
+job: >
+  Prospect picks one of three live demo businesses — concierge gate before W2 app handoff.
+
+visual:
+  reference: docs/design/assets/w1-marketing/demo/w1-demo-concept-c-concierge-gate.png
+  summary: >
+    Minimal chrome (logo + LIVE). Large champagne headline. Three photo-forward glass portals.
+    Procedural midnight navy + corner gold nebula clouds (#E6D0A5 / #D9B97A / #A9834D).
+
+inheritance:
+  w1_inner_pages: ConstellationPageShell — orbit + violet/cyan nebula (marketing standard)
+  w2_demo_flow: app /demo/wedge/:vertical inherits this gate ambient via DemoFlowShell
+
+handoff: app /demo/wedge/:slug or ?vertical=
+
+platform_skin_inheritance:
+  tokens: artifacts/livia-marketing/src/styles/constellation-w1-gold.css
+  css: artifacts/livia-marketing/src/styles/constellation-demo-concierge.css
+
+acceptance:
+  e2e:
+    - marketing-gate.spec.ts
+
+traceability:
+  surfaceId: marketing.demo
+  component: artifacts/livia-marketing/src/pages/demo.tsx

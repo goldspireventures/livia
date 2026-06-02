@@ -6,9 +6,9 @@
  */
 
 export const MARKETING_SURFACE_WORLD = "w1" as const;
-export const MARKETING_PLATFORM_SKIN = "aurora-editorial" as const;
+export const MARKETING_PLATFORM_SKIN = "constellation-surface" as const;
 
-/** Aligns with dashboard W2 gateway + platform-default dark Aurora locally. */
+/** W1 Constellation — ink + champagne; home carries full diagram, inner pages inherit ambient. /demo uses concierge gate. */
 export function applyMarketingPlatformTheme() {
   const el = document.documentElement;
   el.classList.add("dark");

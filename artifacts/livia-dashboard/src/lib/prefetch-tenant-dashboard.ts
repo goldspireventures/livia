@@ -4,12 +4,7 @@ import {
   getGetDashboardSummaryQueryOptions,
   getGetMyBusinessesQueryOptions,
 } from "@workspace/api-client-react";
-import {
-  applyExperienceTheme,
-  applyPresentationTheme,
-  resolvePresentationColorMode,
-} from "@/lib/experience-theme";
-import { applyBeautyAmbient } from "@/lib/beauty-ambient";
+import { applyTenantPresentationSurface, resolvePresentationColorMode } from "@/lib/experience-theme";
 import {
   fetchTenantExperience,
   type TenantExperienceResponse,
@@ -45,24 +40,16 @@ export function applyTenantShellFromCache(
   );
   if (!te) return false;
 
-  applyExperienceTheme({
-    vertical: te.vertical,
-    category: null,
-    country: null,
-  });
-
   const p = te.presentation;
-  if (p) {
-    const colorMode =
-      p.tokens?.colorMode === "light" || p.tokens?.colorMode === "dark"
-        ? p.tokens.colorMode
-        : resolvePresentationColorMode(p.cssPreset);
-    applyPresentationTheme({
-      cssPreset: p.cssPreset,
-      brandAccentHex: p.brandAccentHex,
-      colorMode,
-    });
-  }
-  applyBeautyAmbient();
+  const colorMode =
+    p?.tokens?.colorMode === "light" || p?.tokens?.colorMode === "dark"
+      ? p.tokens.colorMode
+      : resolvePresentationColorMode(p?.cssPreset);
+  applyTenantPresentationSurface({
+    vertical: te.vertical,
+    cssPreset: p?.cssPreset ?? "platform-default",
+    brandAccentHex: p?.brandAccentHex,
+    colorMode: colorMode ?? null,
+  });
   return true;
 }

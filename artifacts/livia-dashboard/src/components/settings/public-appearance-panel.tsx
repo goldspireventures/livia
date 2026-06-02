@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Copy, ExternalLink, LayoutDashboard, Palette, Smartphone } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { applyPresentationTheme, resolvePresentationColorMode } from "@/lib/experience-theme";
+import { applyTenantPresentationSurface, resolvePresentationColorMode } from "@/lib/experience-theme";
 import { accentMeetsWcagAa } from "@/lib/brand-contrast";
 import { cn } from "@/lib/utils";
 import { useTenantExperience } from "@/lib/tenant-experience-api";
@@ -60,10 +60,12 @@ function restoreAppliedPresentation(
   data: PresentationPayload,
   appliedPresetId: string,
   appliedAccent: string,
+  vertical?: string | null,
 ) {
   const preset = data.availablePresets.find((p) => p.id === appliedPresetId);
   if (!preset) return;
-  applyPresentationTheme({
+  applyTenantPresentationSurface({
+    vertical,
     cssPreset: preset.cssPreset,
     brandAccentHex: appliedAccent.trim() || null,
     colorMode: resolvePresentationColorMode(preset.cssPreset),
@@ -99,6 +101,9 @@ export function PublicAppearancePanel({
   const previewUrl = slug ? `/b/${slug}` : "";
   const contrastOk = accentMeetsWcagAa(draftAccent);
 
+  const { data: tenantXp } = useTenantExperience(bid || undefined);
+  const tenantVertical = (tenantXp as { vertical?: string } | undefined)?.vertical ?? null;
+
   useEffect(() => {
     if (!bid || !presentationPresetsUiEnabled()) return;
     void customFetch<PresentationPayload>(`/api/businesses/${bid}/presentation`)
@@ -109,10 +114,15 @@ export function PublicAppearancePanel({
         setAccent(d.brandAccentHex ?? "");
         setDraftAccent(d.brandAccentHex ?? "");
         setDirty(false);
-        applyPresentationTheme({ cssPreset: d.preset.cssPreset, brandAccentHex: d.brandAccentHex });
+        applyTenantPresentationSurface({
+          vertical: tenantVertical ?? undefined,
+          cssPreset: d.preset.cssPreset,
+          brandAccentHex: d.brandAccentHex,
+          colorMode: resolvePresentationColorMode(d.preset.cssPreset),
+        });
       })
       .catch(() => setData(null));
-  }, [bid]);
+  }, [bid, tenantVertical]);
 
   useEffect(() => {
     appliedThemeRef.current = { presetId, accent, data };
@@ -120,15 +130,15 @@ export function PublicAppearancePanel({
 
   useEffect(() => {
     if (appearanceTabActive || !data) return;
-    restoreAppliedPresentation(data, presetId, accent);
-  }, [appearanceTabActive, data, presetId, accent]);
+    restoreAppliedPresentation(data, presetId, accent, tenantVertical);
+  }, [appearanceTabActive, data, presetId, accent, tenantVertical]);
 
   useEffect(() => {
     return () => {
       const { presetId: id, accent: acc, data: payload } = appliedThemeRef.current;
-      if (payload) restoreAppliedPresentation(payload, id, acc);
+      if (payload) restoreAppliedPresentation(payload, id, acc, tenantVertical);
     };
-  }, []);
+  }, [tenantVertical]);
 
   const refreshPreview = useCallback(() => {
     setPreviewKey((k) => k + 1);
@@ -156,9 +166,11 @@ export function PublicAppearancePanel({
           setData(updated);
           setPresetId(updated.presetId);
           setAccent(updated.brandAccentHex ?? "");
-          applyPresentationTheme({
+          applyTenantPresentationSurface({
+            vertical: tenantVertical ?? undefined,
             cssPreset: updated.preset.cssPreset,
             brandAccentHex: updated.brandAccentHex,
+            colorMode: resolvePresentationColorMode(updated.preset.cssPreset),
           });
         }
         const brandPatch: Record<string, string | null> = {};
@@ -175,11 +187,9 @@ export function PublicAppearancePanel({
         setBusy(false);
       }
     },
-    [bid, editable, qc, refreshPreview, toast, updateBusiness],
+    [bid, editable, qc, refreshPreview, toast, updateBusiness, tenantVertical],
   );
 
-  const { data: tenantXp } = useTenantExperience(bid || undefined);
-  const tenantVertical = (tenantXp as { vertical?: string } | undefined)?.vertical ?? null;
   const beautyAppearance = isBeautyVertical(tenantVertical);
 
   const draftPresetMeta = data?.availablePresets.find((p) => p.id === draftPresetId);
@@ -189,8 +199,9 @@ export function PublicAppearancePanel({
     const cssPreset = draftPresetMeta?.cssPreset ?? draftPresetId;
     if (cssPreset) params.set("preset", cssPreset);
     if (draftAccent.trim()) params.set("accent", draftAccent.trim());
+    if (tenantVertical) params.set("vertical", tenantVertical);
     return params.toString();
-  }, [previewKey, draftPresetMeta?.cssPreset, draftPresetId, draftAccent]);
+  }, [previewKey, draftPresetMeta?.cssPreset, draftPresetId, draftAccent, tenantVertical]);
 
   const previewIframeSrc = previewUrl ? `${previewUrl}?${previewQuery}` : "";
 
@@ -210,7 +221,7 @@ export function PublicAppearancePanel({
     setDraftPresetId(presetId);
     setDraftAccent(accent);
     setDirty(false);
-    restoreAppliedPresentation(data, presetId, accent);
+    restoreAppliedPresentation(data, presetId, accent, tenantVertical);
     refreshPreview();
   }
 
@@ -229,9 +240,11 @@ export function PublicAppearancePanel({
     });
     const preset = data?.availablePresets.find((p) => p.id === draftPresetId);
     if (preset) {
-      applyPresentationTheme({
+      applyTenantPresentationSurface({
+        vertical: tenantVertical ?? undefined,
         cssPreset: preset.cssPreset,
         brandAccentHex: draftAccent.trim() || null,
+        colorMode: resolvePresentationColorMode(preset.cssPreset),
       });
     }
     setPresetId(draftPresetId);

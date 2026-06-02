@@ -30,10 +30,10 @@ const ROUTES = [
   "/eu-ai",
   "/contact",
   "/changelog",
+  "/demo",
+  "/legal/privacy",
   "/status",
 ];
-
-test.describe("livia.io — platform smoke", () => {
   test.beforeAll(async ({ request }) => {
     try {
       const res = await request.get(`${marketingBase}/`, { timeout: 8000 });
@@ -63,18 +63,32 @@ test.describe("livia.io — platform smoke", () => {
     await expect(page.getByText(/dental/i)).toHaveCount(0);
   });
 
-  test("demo CTA points at dashboard", async ({ page }) => {
+  test("demo CTA points at marketing concierge gate", async ({ page }) => {
     await page.goto(`${marketingBase}/how-it-works`);
     const demo = page.getByTestId("marketing-demo-link").first();
     await expect(demo).toBeVisible();
-    await expect(demo).toHaveAttribute("href", dashboardDemo);
+    await expect(demo).toHaveAttribute("href", "/demo");
   });
 
-  test("pricing shows wedge tiers", async ({ page }) => {
+  test("pricing shows F9 tiers from catalogue", async ({ page }) => {
     await page.goto(`${marketingBase}/pricing`);
     await expect(page.getByRole("heading", { name: /pricing/i })).toBeVisible();
     await expect(page.getByText(/€79/)).toBeVisible();
-    await expect(page.getByText(/recommended|most popular/i)).toHaveCount(0);
+    await expect(page.getByText(/\/shop/)).toBeVisible();
+    await expect(page.getByText(/most teams/i)).toBeVisible();
+  });
+
+  test("404 page offers home link", async ({ page }) => {
+    await page.goto(`${marketingBase}/not-a-real-page`);
+    await expect(page.getByRole("heading", { name: /isn't here/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /back to home/i })).toBeVisible();
+  });
+
+  test("skip link targets main content", async ({ page }) => {
+    await page.goto(`${marketingBase}/pricing`);
+    const skip = page.getByRole("link", { name: /skip to main/i });
+    await expect(skip).toBeAttached();
+    await expect(skip).toHaveAttribute("href", "#main-content");
   });
 
   test("status probes local API when configured", async ({ page }) => {

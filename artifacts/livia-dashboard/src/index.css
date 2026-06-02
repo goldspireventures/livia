@@ -4,6 +4,7 @@
 @import "./styles/beauty-ambient-signal.css";
 @import "./styles/gateway-g1.css";
 @import "./styles/gateway-handoff.css";
+@import "./styles/platform-default-constellation.css";
 @plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
@@ -725,32 +726,7 @@
     box-shadow: 0 0 0 2px hsl(var(--primary) / 0.15);
   }
 
-  html[data-presentation="platform-default"] .app-shell-main {
-    background-image:
-      radial-gradient(ellipse 80% 50% at 50% -20%, hsl(var(--primary) / 0.07), transparent),
-      linear-gradient(180deg, hsl(var(--primary) / 0.04) 0%, transparent 12rem);
-  }
-
-  html[data-presentation="platform-default"] aside.w-64 {
-    background: hsl(var(--card) / 0.72);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-  }
-
-  html[data-presentation="platform-default"] .platform-default-liv-glass {
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-  }
-
-  html[data-presentation="platform-default"] [data-testid="owner-dashboard-briefing"],
-  html[data-presentation="platform-default"] [data-testid="liv-command-hub"] {
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-  }
-
-  html[data-presentation="platform-default"] .platform-default-card-lift:hover {
-    box-shadow: 0 10px 28px hsl(var(--primary) / 0.08);
-  }
+  /* platform-default constellation — artifacts/livia-dashboard/src/styles/platform-default-constellation.css */
 
   /* Beauty + hair presentation presets — W4, W5, and scoped sign-in preview */
   :is(html, .sign-in-tenant-preview)[data-presentation="noir-dusk"] {

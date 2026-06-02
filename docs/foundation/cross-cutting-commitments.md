@@ -12,7 +12,7 @@ Each row = a strategic commitment. Each column = the discipline that has to deli
 | P1 Founder × C7 chain at R3-R4 | F3 + F5 chain journey | Cross-shop rollup; staff-borrow workflow; chain briefing | v1.5 hires (3 backend) | v1.5 | Chain €249/shop |
 | Audit log as product surface | F7 Bet 2 + F8 ADR 0015 | Append-only Postgres; hash-chain; daily tip-hash signing; Owner read UI | Concierge ops lead (audit-drill prep); Hire 4 (design — audit UI) | v1 | Included; never an upsell |
 | Cross-tenant intelligence with k≥10 | F8 ADR 0014 | Differential privacy aggregator; opt-in flow; peer-set formation | Hire 2 deep work; ops engineer for nightly rollup workflows | v1 (scaffolding) → v1.5 (real insights) | €49/mo add-on (opt-in) |
-| Voice receptionist en-IE | F7 wedge | Twilio + voice runtime + per-tenant number; eval golden set en-IE | Hire 2 + Hire 3 (concierge for voice setup) | v1 | 4% outcome share, capped €5/booking |
+| Voice receptionist en-IE | F7 wedge | Twilio + voice runtime + per-tenant number; eval golden set en-IE | Hire 2 + Hire 3 (concierge for voice setup) | v1 | 4% outcome share, monthly digest cap per plan |
 | Voice in second locale | F9 expansion | Per-locale character + corpus + eval set; per-locale TTS cast (~€60k/locale) | +1 AI engineer for v2 | v2 (en-UK) → v3 (de-DE, fr-FR, etc.) | Per-locale add-on €29/mo |
 | Phorest data export broker | F6 switching aid | XL engineering (broker + reconciliation); ops process | Hire 3 concierge | v1 | Free for design partners; €500–€2,500 thereafter |
 | Chair-rental data model | F7 wedge config | New entities (chair_rentals, rent_invoices); host dashboard; rent automation | v1.5 hire (1 backend, 1 design) | v1.5 | Host €99 + €19/renter/mo |

@@ -9,8 +9,10 @@ import {
   ArrowRight,
   type LucideIcon,
 } from "lucide-react";
+import { Link } from "wouter";
 import type { WedgeDemoBeat } from "@workspace/policy";
 import type { DemoRosterEntry } from "@/lib/demo-portal";
+import { WedgeFeaturePreview } from "@/components/gateway/wedge-feature-preview";
 import { cn } from "@/lib/utils";
 
 export const WEDGE_BEAT_CROP_META: Record<
@@ -55,53 +57,43 @@ export const WEDGE_BEAT_CROP_META: Record<
   },
 };
 
-function BeatCropTile({ beat }: { beat: WedgeDemoBeat }) {
-  const meta = WEDGE_BEAT_CROP_META[beat.cropHint] ?? WEDGE_BEAT_CROP_META.inbox;
-  const Icon = meta.icon;
-
-  return (
-    <div
-      className={cn(
-        "relative min-h-[72px] overflow-hidden rounded-lg border bg-[#080a10] p-2.5 sm:min-h-[80px]",
-        meta.ring,
-      )}
-    >
-      <div className="flex items-center gap-1.5">
-        <Icon className="h-3.5 w-3.5 text-primary" aria-hidden />
-        <span className="text-[9px] font-mono uppercase tracking-widest text-primary">{meta.label}</span>
-      </div>
-      <p className="mt-4 text-[10px] text-muted-foreground/70">Seeded demo</p>
-    </div>
-  );
-}
-
 type StoryProps = {
-  tradeLabel: string;
   beats: WedgeDemoBeat[];
   disabled?: boolean;
+  backHref?: string;
+  backLabel?: string;
   onContinue: () => void;
 };
 
-/** G2 — all four beats visible at once inside the gold card shell. */
-export function GatewayDemoStoryBeats({ tradeLabel, beats, disabled, onContinue }: StoryProps) {
+/** G2 — four platform surfaces on one card (inbox, book, SMS, today, …). */
+export function GatewayDemoStoryBeats({
+  beats,
+  disabled,
+  backHref = "/demo",
+  backLabel = "← Worlds",
+  onContinue,
+}: StoryProps) {
   return (
     <article
-      className="rounded-3xl border-2 border-aurum-champagne/50 bg-gradient-to-b from-white/[0.06] to-white/[0.02] p-1 shadow-[0_0_60px_-20px_rgba(34,211,238,0.35)]"
+      className="rounded-3xl border-2 border-[#d9b97a]/45 bg-gradient-to-b from-white/[0.06] to-white/[0.02] p-1 shadow-[0_0_60px_-20px_rgba(217,185,122,0.28)]"
       data-testid="gateway-demo-card-stage"
     >
       <div className="rounded-[1.35rem] border border-primary/25 bg-[#0a0c12]/90 p-4 sm:p-5">
-        <div className="relative">
+        <div className="flex items-start justify-between gap-3">
+          <Link
+            href={backHref}
+            className="inline-flex min-h-[44px] items-center rounded-full border border-[#d9b97a]/35 bg-[#d9b97a]/10 px-3.5 text-sm text-[#e6d0a5] transition hover:border-[#d9b97a]/55 hover:bg-[#d9b97a]/15"
+            data-testid="gateway-demo-back-worlds"
+          >
+            {backLabel}
+          </Link>
           <div
-            className="absolute right-0 top-0 max-w-[200px] rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2 backdrop-blur-sm"
+            className="max-w-[11rem] rounded-xl border border-white/10 bg-white/[0.04] px-2.5 py-2 text-right sm:max-w-[200px]"
             data-testid="gateway-sign-in-liv-briefing"
           >
-            <p className="text-[10px] font-medium text-primary">Liv · briefing</p>
-            <p className="mt-1 text-xs text-foreground/90">Patch test due — Emma, 2pm.</p>
+            <p className="text-[10px] font-medium text-[#d9b97a]">Liv · briefing</p>
+            <p className="mt-0.5 text-[11px] leading-snug text-foreground/85">Patch test due — Emma, 2pm.</p>
           </div>
-          <p className="pr-[210px] font-serif text-lg text-aurum-champagne/95 sm:pr-0 sm:text-xl">
-            {tradeLabel}
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">Your week in four beats — at a glance.</p>
         </div>
 
         <div
@@ -111,11 +103,11 @@ export function GatewayDemoStoryBeats({ tradeLabel, beats, disabled, onContinue 
           {beats.map((beat, i) => (
             <div
               key={`${beat.cropHint}-${i}`}
-              className="rounded-xl border border-aurum-champagne/25 bg-white/[0.03] p-3"
+              className="rounded-xl border border-[#d9b97a]/20 bg-white/[0.03] p-3"
               data-testid={`gateway-demo-beat-${beat.cropHint}`}
             >
-              <BeatCropTile beat={beat} />
-              <p className="mt-3 text-sm font-medium leading-snug text-foreground">{beat.headline}</p>
+              <WedgeFeaturePreview beat={beat} />
+              <p className="mt-2.5 text-sm font-medium leading-snug text-foreground">{beat.headline}</p>
               <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{beat.detail}</p>
             </div>
           ))}
@@ -142,6 +134,8 @@ type EnterProps = {
   roster: DemoRosterEntry[];
   busy: string | null;
   disabled?: boolean;
+  backHref?: string;
+  backLabel?: string;
   onSelectRole: (email: string) => void;
   onBack: () => void;
 };
@@ -153,17 +147,26 @@ export function GatewayDemoEnterStage({
   roster,
   busy,
   disabled,
+  backHref = "/demo",
+  backLabel = "← Worlds",
   onSelectRole,
   onBack,
 }: EnterProps) {
   return (
     <article
-      className="rounded-3xl border-2 border-aurum-champagne/50 bg-gradient-to-b from-white/[0.06] to-white/[0.02] p-1 shadow-[0_0_60px_-20px_rgba(34,211,238,0.35)]"
+      className="rounded-3xl border-2 border-[#d9b97a]/45 bg-gradient-to-b from-white/[0.06] to-white/[0.02] p-1 shadow-[0_0_60px_-20px_rgba(217,185,122,0.28)]"
       data-testid="gateway-demo-card-stage"
     >
       <div className="rounded-[1.35rem] border border-primary/25 bg-[#0a0c12]/90 p-4 sm:p-5">
-        <div className="space-y-1">
-          <p className="font-serif text-lg text-aurum-champagne/95">{tradeLabel}</p>
+        <Link
+          href={backHref}
+          className="inline-flex min-h-[44px] items-center rounded-full border border-[#d9b97a]/35 bg-[#d9b97a]/10 px-3.5 text-sm text-[#e6d0a5] transition hover:border-[#d9b97a]/55"
+          data-testid="gateway-demo-back-worlds"
+        >
+          {backLabel}
+        </Link>
+        <div className="mt-4 space-y-1">
+          <p className="font-serif text-lg text-[#e6d0a5]/95">{tradeLabel}</p>
           <p className="text-base font-medium text-foreground">{businessName}</p>
           <p className="text-sm text-muted-foreground">Tap a role to walk into the live demo.</p>
         </div>

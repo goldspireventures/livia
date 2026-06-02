@@ -1,6 +1,15 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { applyVerticalTheme } from "@/lib/vertical-theme";
-import { applyExperienceTheme, applyPresentationTheme, clearExperienceTheme, clearPresentationTheme, publicExperienceClassNames, marketRibbon } from "@/lib/experience-theme";
+import {
+  applyExperienceTheme,
+  applyTenantPresentationSurface,
+  clearExperienceTheme,
+  clearPresentationTheme,
+  publicExperienceClassNames,
+  marketRibbon,
+  resolvePresentationColorMode,
+} from "@/lib/experience-theme";
+import { applyAppearancePreviewFromSearch } from "@/lib/appearance-preview-mode";
 import { playCelebrationChime, celebrationEnabled } from "@/lib/celebrate";
 import { publicGuestPwaEnabled, usePublicGuestPwa } from "@/lib/public-guest-pwa";
 import { Link, useParams } from "wouter";
@@ -289,33 +298,35 @@ export default function PublicBookingPage() {
   }, [b?.vertical, b?.category, b?.country]);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const isPreview = params.get("preview") === "1";
-    const previewPreset = params.get("preset")?.trim();
-    const previewAccent = params.get("accent")?.trim();
     const skin = b?.experienceSkin as
       | { presentation?: string; presentationColorMode?: string; brandAccentHex?: string | null }
       | undefined;
-    const colorMode =
+    const savedMode =
       skin?.presentationColorMode === "light" || skin?.presentationColorMode === "dark"
         ? skin.presentationColorMode
         : null;
-    if (isPreview && (previewPreset || previewAccent)) {
-      applyPresentationTheme({
-        cssPreset: previewPreset || skin?.presentation,
-        brandAccentHex: previewAccent || skin?.brandAccentHex,
-        colorMode,
-      });
+
+    if (
+      applyAppearancePreviewFromSearch(undefined, {
+        vertical: b?.vertical ?? null,
+        category: b?.category ?? null,
+        country: b?.country ?? null,
+      })
+    ) {
       return;
     }
+
     if (skin?.presentation || skin?.brandAccentHex) {
-      applyPresentationTheme({
+      applyTenantPresentationSurface({
+        vertical: b?.vertical,
+        category: b?.category,
+        country: b?.country,
         cssPreset: skin.presentation,
         brandAccentHex: skin.brandAccentHex,
-        colorMode,
+        colorMode: savedMode ?? resolvePresentationColorMode(skin.presentation),
       });
     }
-  }, [b?.experienceSkin]);
+  }, [b?.experienceSkin, b?.vertical, b?.category, b?.country]);
 
   useEffect(() => {
     if (!b?.services?.length || servicePrefApplied.current) return;

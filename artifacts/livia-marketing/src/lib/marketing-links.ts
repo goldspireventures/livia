@@ -1,4 +1,5 @@
 /** Local dev defaults — override in `.env` for deploy. */
+import { isMarketingDemoWedgeUnlocked, type BusinessVertical } from "@workspace/policy";
 const dashboardOrigin =
   (import.meta.env.VITE_DASHBOARD_URL as string | undefined)?.replace(/\/+$/, "") ??
   (import.meta.env.VITE_DASHBOARD_SIGN_IN_URL as string | undefined)?.replace(
@@ -11,13 +12,13 @@ export const dashboardDemoUrl =
   (import.meta.env.VITE_DASHBOARD_DEMO_URL as string | undefined)?.replace(/\/+$/, "") ??
   `${dashboardOrigin}/demo`;
 
-/** W2 demo stories shipped — link straight to card-stage wedge (G2). */
-const DEMO_WEDGE_LIVE = new Set(["beauty"]);
+/** W1 concierge gate — marketing-hosted demo entry before app handoff. */
+export const marketingDemoPath = "/demo";
 
-/** Guided demo gateway — trade → wedge story → role tap (W2). */
+/** W2 demo stories with shipped wedge — link to card-stage (G2). */
 export function dashboardWedgeUrl(verticalSlug: string): string {
-  const slug = verticalSlug.replace(/^\/+/, "");
-  if (DEMO_WEDGE_LIVE.has(slug)) {
+  const slug = verticalSlug.replace(/^\/+/, "") as BusinessVertical;
+  if (isMarketingDemoWedgeUnlocked(slug)) {
     return `${dashboardDemoUrl}/wedge/${slug}`;
   }
   return `${dashboardDemoUrl}?vertical=${encodeURIComponent(slug)}`;

@@ -1,0 +1,19 @@
+meta:
+  id: w4.platform-default.ops.inbox.web
+  world: W4
+  route: /inbox
+  artifact: livia-dashboard
+  persona: [Owner, Manager]
+  release: R1
+  status: locked
+  presentation: platform-default
+
+job: >
+  Unified inbox on platform-default — Liv replies with champagne accent; same ambient shell as dashboard.
+
+visual:
+  reference: docs/design/assets/w4-tenant/platform-default/web/inbox-thread.target.png
+  tokens: artifacts/livia-dashboard/src/styles/platform-default-constellation.css
+
+traceability:
+  presetId: platform-default

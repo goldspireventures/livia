@@ -69,3 +69,5 @@ Thumbs.db
 
 # Local E2E scratch (do not commit)
 signin.json
+
+.vercel

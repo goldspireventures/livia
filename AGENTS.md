@@ -73,3 +73,7 @@ lib/policy (vertical, onboarding, presets, guest surfaces)
 
 - Domain: **livia-hq.com** (`app.`, `api.`).
 - Demo off in production: `LIVIA_DEMO_ENABLED` not set; see `artifacts/api-server/src/lib/demo-portal-config.ts`.
+
+## Cursor agent skills & rules
+
+Repeatable workflows live in **`.cursor/skills/`** (start with `livia-session-hub`). Always-on surface cascade: **`.cursor/rules/livia-surfaces-cascade.mdc`**. Policy edits: **`livia-policy-first.mdc`** when touching `lib/policy/`.
