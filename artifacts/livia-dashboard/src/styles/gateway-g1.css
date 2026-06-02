@@ -3,7 +3,28 @@
 .gateway-g1-root {
   position: relative;
   overflow-x: hidden;
+  overflow-y: auto;
+  height: 100dvh;
   background: #030408;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.08) transparent;
+}
+
+.gateway-g1-root::-webkit-scrollbar {
+  width: 6px;
+}
+
+.gateway-g1-root::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.gateway-g1-root::-webkit-scrollbar-thumb {
+  background: rgb(255 255 255 / 0.08);
+  border-radius: 9999px;
+}
+
+.gateway-g1-root:hover::-webkit-scrollbar-thumb {
+  background: rgb(255 255 255 / 0.14);
 }
 
 .gateway-g1-aurora {
@@ -11,24 +32,54 @@
   inset: 0;
   z-index: 0;
   background:
-    radial-gradient(ellipse 90% 60% at 50% 0%, hsl(160 60% 35% / 0.45), transparent 55%),
-    radial-gradient(ellipse 70% 50% at 20% 30%, hsl(187 80% 45% / 0.2), transparent 50%),
-    radial-gradient(ellipse 60% 40% at 80% 60%, hsl(280 40% 25% / 0.35), transparent 45%),
-    linear-gradient(180deg, #0a1218 0%, #030408 45%, #020306 100%);
+    radial-gradient(ellipse 120% 55% at 50% -8%, hsl(168 72% 42% / 0.55), transparent 52%),
+    radial-gradient(ellipse 85% 45% at 12% 18%, hsl(192 85% 48% / 0.28), transparent 48%),
+    radial-gradient(ellipse 70% 40% at 88% 22%, hsl(280 45% 32% / 0.32), transparent 42%),
+    radial-gradient(ellipse 100% 35% at 50% 72%, hsl(200 40% 12% / 0.65), transparent 55%),
+    linear-gradient(180deg, #0c1a22 0%, #061018 28%, #030408 62%, #010204 100%);
+}
+
+.gateway-g1-horizon {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      180deg,
+      transparent 0%,
+      transparent 48%,
+      rgb(2 8 12 / 0.35) 72%,
+      rgb(1 4 8 / 0.92) 100%
+    ),
+    radial-gradient(ellipse 140% 25% at 50% 100%, hsl(175 50% 18% / 0.35), transparent 70%);
+}
+
+.gateway-g1-grain {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  mix-blend-mode: overlay;
 }
 
 .gateway-g1-vignette {
   position: fixed;
   inset: 0;
-  z-index: 1;
+  z-index: 2;
   pointer-events: none;
-  background: linear-gradient(
-    90deg,
-    rgb(0 0 0 / 0.55) 0%,
-    transparent 18%,
-    transparent 82%,
-    rgb(0 0 0 / 0.35) 100%
-  );
+  background:
+    radial-gradient(ellipse 90% 80% at 50% 45%, transparent 35%, rgb(0 0 0 / 0.5) 100%),
+    linear-gradient(
+      90deg,
+      rgb(0 0 0 / 0.6) 0%,
+      transparent 16%,
+      transparent 84%,
+      rgb(0 0 0 / 0.4) 100%
+    );
 }
 
 .gateway-g1-cards-track {
@@ -38,7 +89,7 @@
   padding: 0.25rem 0.25rem 1.25rem;
   scroll-snap-type: x mandatory;
   scrollbar-width: thin;
-  scrollbar-color: hsl(var(--foreground) / 0.12) transparent;
+  scrollbar-color: rgb(255 255 255 / 0.1) transparent;
 }
 
 .gateway-g1-cards-track::-webkit-scrollbar {
@@ -46,7 +97,7 @@
 }
 
 .gateway-g1-cards-track::-webkit-scrollbar-thumb {
-  background: hsl(var(--foreground) / 0.12);
+  background: rgb(255 255 255 / 0.1);
   border-radius: 9999px;
 }
 
@@ -62,6 +113,9 @@
   border-radius: 1.25rem;
   text-decoration: none;
   color: inherit;
+  box-shadow:
+    0 4px 24px rgb(0 0 0 / 0.35),
+    inset 0 1px 0 rgb(255 255 255 / 0.06);
   transition: transform 220ms ease, box-shadow 220ms ease;
 }
 
@@ -73,22 +127,44 @@
   }
 }
 
+.gateway-g1-world-card--unlocked {
+  box-shadow:
+    0 8px 32px rgb(0 0 0 / 0.45),
+    0 0 48px -8px hsl(var(--primary) / 0.35),
+    inset 0 1px 0 rgb(255 255 255 / 0.1);
+}
+
 .gateway-g1-world-card:hover:not(.gateway-g1-world-card--locked) {
   transform: translateY(-4px);
-  box-shadow: 0 24px 48px rgb(0 0 0 / 0.45);
+  box-shadow:
+    0 24px 48px rgb(0 0 0 / 0.5),
+    0 0 56px -6px hsl(var(--primary) / 0.4);
+}
+
+/* Photo well — clipped inside gold frame (northstar: top ~58% of card). */
+.gateway-g1-world-card__media {
+  position: absolute;
+  z-index: 1;
+  left: 7px;
+  right: 7px;
+  top: 7px;
+  height: 58%;
+  overflow: hidden;
+  border-radius: 0.9rem 0.9rem 0.2rem 0.2rem;
 }
 
 .gateway-g1-world-card__photo {
-  position: absolute;
-  inset: 0;
-  background-size: cover;
-  background-position: center;
-  transform: scale(1.02);
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  transform: scale(1.01);
   transition: transform 400ms ease;
 }
 
 .gateway-g1-world-card:hover:not(.gateway-g1-world-card--locked) .gateway-g1-world-card__photo {
-  transform: scale(1.06);
+  transform: scale(1.05);
 }
 
 .gateway-g1-world-card__scrim {
@@ -96,10 +172,22 @@
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgb(0 0 0 / 0.15) 0%,
-    rgb(0 0 0 / 0.35) 45%,
-    rgb(0 0 0 / 0.88) 100%
+    rgb(0 0 0 / 0.05) 0%,
+    rgb(0 0 0 / 0.18) 55%,
+    rgb(0 0 0 / 0.45) 100%
   );
+  pointer-events: none;
+}
+
+.gateway-g1-world-card__base {
+  position: absolute;
+  z-index: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 52%;
+  background: linear-gradient(180deg, rgb(4 8 12 / 0.55) 0%, rgb(2 5 8 / 0.98) 38%);
+  pointer-events: none;
 }
 
 .gateway-g1-world-card__frame {
@@ -107,14 +195,22 @@
   inset: 6px;
   border-radius: 1rem;
   border: 1px solid hsl(var(--aurum-champagne, 40 30% 70%) / 0.45);
+  box-shadow: inset 0 0 32px rgb(0 0 0 / 0.25);
   pointer-events: none;
+}
+
+.gateway-g1-world-card--unlocked .gateway-g1-world-card__frame {
+  border-color: hsl(var(--primary) / 0.55);
+  box-shadow:
+    inset 0 0 40px hsl(var(--primary) / 0.08),
+    0 0 20px hsl(var(--primary) / 0.15);
 }
 
 .gateway-g1-world-card__icon {
   position: absolute;
   left: 50%;
-  top: 38%;
-  z-index: 2;
+  top: 54%;
+  z-index: 3;
   transform: translate(-50%, -50%);
 }
 
@@ -130,7 +226,7 @@
 
 .gateway-g1-world-card__copy {
   position: relative;
-  z-index: 2;
+  z-index: 3;
   padding: 0 1rem 0.75rem;
   text-align: center;
 }
@@ -159,7 +255,7 @@
 
 .gateway-g1-world-card__cta {
   position: relative;
-  z-index: 2;
+  z-index: 3;
   margin: 0 1rem 1rem;
   display: flex;
   align-items: center;
@@ -175,6 +271,12 @@
   text-transform: uppercase;
   color: hsl(40 40% 88%);
   backdrop-filter: blur(6px);
+}
+
+.gateway-g1-world-card--unlocked .gateway-g1-world-card__cta {
+  border-color: hsl(var(--primary) / 0.5);
+  background: hsl(var(--primary) / 0.12);
+  color: hsl(40 45% 92%);
 }
 
 .gateway-g1-world-card--locked {

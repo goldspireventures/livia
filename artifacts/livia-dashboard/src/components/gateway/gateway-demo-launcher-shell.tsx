@@ -38,6 +38,8 @@ export function GatewayDemoLauncherShell({ children, advanced }: Props) {
   return (
     <div className="gateway-g1-root min-h-[100dvh] text-foreground" data-testid="gateway-g1-launcher">
       <div className="gateway-g1-aurora" aria-hidden />
+      <div className="gateway-g1-horizon" aria-hidden />
+      <div className="gateway-g1-grain" aria-hidden />
       <div className="gateway-g1-vignette" aria-hidden />
 
       <div className="relative z-10 flex min-h-[100dvh]">

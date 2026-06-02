@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { ArrowRight, Lock } from "lucide-react";
 import { getWedgeDemoStory } from "@workspace/policy";
-import { G1_WEDGE_UNLOCKED, G1_WEDGE_WORLDS } from "@/lib/g1-wedge-worlds";
+import { G1_WEDGE_UNLOCKED, listG1WedgeWorldsForDisplay } from "@/lib/g1-wedge-worlds";
 import { cn } from "@/lib/utils";
 
 /** G1 — six portrait trade cards (locked target: g1-wedge-web.target.png). */
@@ -16,7 +16,7 @@ export function DemoWedgeGrid({ className }: { className?: string }) {
         Pick your world
       </h2>
       <div className="gateway-g1-cards-track">
-        {G1_WEDGE_WORLDS.map((world) => {
+        {listG1WedgeWorldsForDisplay().map((world) => {
           const story = getWedgeDemoStory(world.vertical);
           const unlocked = G1_WEDGE_UNLOCKED.has(world.vertical);
           const href = unlocked ? `/demo/wedge/${world.vertical}` : "#";
@@ -33,15 +33,27 @@ export function DemoWedgeGrid({ className }: { className?: string }) {
               data-world-key={world.key}
               className={cn(
                 "gateway-g1-world-card group",
+                unlocked && "gateway-g1-world-card--unlocked",
                 !unlocked && "gateway-g1-world-card--locked",
               )}
             >
-              <div
-                className="gateway-g1-world-card__photo"
-                style={{ backgroundImage: `url(${world.imageUrl})` }}
-                aria-hidden
-              />
-              <div className="gateway-g1-world-card__scrim" aria-hidden />
+              <div className="gateway-g1-world-card__media" aria-hidden>
+                <img
+                  src={world.imageUrl}
+                  alt=""
+                  className="gateway-g1-world-card__photo"
+                  style={
+                    world.photoPosition
+                      ? { objectPosition: world.photoPosition }
+                      : undefined
+                  }
+                  loading="lazy"
+                  decoding="async"
+                  draggable={false}
+                />
+                <div className="gateway-g1-world-card__scrim" />
+              </div>
+              <div className="gateway-g1-world-card__base" aria-hidden />
               <div className="gateway-g1-world-card__frame" aria-hidden />
 
               <div className="gateway-g1-world-card__icon" aria-hidden>

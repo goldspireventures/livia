@@ -6,8 +6,13 @@ export type G1WedgeWorld = {
   vertical: BusinessVertical;
   title: string;
   tagline: string;
-  /** Decorative card art — moody trade photography. */
+  /**
+   * Hero photo clipped inside the gold frame (northstar wells).
+   * Regenerate: `python scripts/extract-g1-card-photos.py`
+   */
   imageUrl: string;
+  /** Optional `object-position` for portrait focal point. */
+  photoPosition?: string;
 };
 
 export const G1_WEDGE_WORLDS: G1WedgeWorld[] = [
@@ -16,50 +21,60 @@ export const G1_WEDGE_WORLDS: G1WedgeWorld[] = [
     vertical: "body-art",
     title: "Tattoo salon",
     tagline: "Ink stories. Build legacies.",
-    imageUrl:
-      "https://images.unsplash.com/photo-1598371839696-5c5bb00af926?auto=format&fit=crop&w=600&q=80",
+    imageUrl: "/w2-gateway/cards/tattoo.jpg",
+    photoPosition: "center 22%",
   },
   {
     key: "barber",
     vertical: "hair",
     title: "Barber shop",
     tagline: "Craft fades. Build culture.",
-    imageUrl:
-      "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=600&q=80",
+    imageUrl: "/w2-gateway/cards/barber.jpg",
+    photoPosition: "62% center",
   },
   {
     key: "medspa",
     vertical: "medspa",
     title: "Medspa",
     tagline: "Elevate care. Empower transformation.",
-    imageUrl:
-      "https://images.unsplash.com/photo-1570172619644-dfd955f4818e?auto=format&fit=crop&w=600&q=80",
+    imageUrl: "/w2-gateway/cards/medspa.jpg",
+    photoPosition: "center 35%",
   },
   {
     key: "hair",
     vertical: "hair",
     title: "Hair salon",
     tagline: "Style lives. Shape confidence.",
-    imageUrl:
-      "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=600&q=80",
+    imageUrl: "/w2-gateway/cards/hair.jpg",
+    photoPosition: "center 28%",
   },
   {
     key: "beauty",
     vertical: "beauty",
     title: "Lash & brow",
     tagline: "Define the details. Reveal the you.",
-    imageUrl:
-      "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?auto=format&fit=crop&w=600&q=80",
+    imageUrl: "/w2-gateway/cards/beauty.jpg",
+    photoPosition: "center 40%",
   },
   {
     key: "wellness",
     vertical: "wellness",
     title: "Wellness studio",
     tagline: "Balance body. Align energy. Live well.",
-    imageUrl:
-      "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=600&q=80",
+    imageUrl: "/w2-gateway/cards/wellness.jpg",
+    photoPosition: "center 30%",
   },
 ];
 
 /** Verticals with a shipped wedge story on staging. */
 export const G1_WEDGE_UNLOCKED = new Set<BusinessVertical>(["beauty"]);
+
+/** Unlocked worlds first; stable order within each tier. */
+export function listG1WedgeWorldsForDisplay(): G1WedgeWorld[] {
+  return G1_WEDGE_WORLDS.map((world, index) => ({ world, index }))
+    .sort((a, b) => {
+      const tier = (v: BusinessVertical) => (G1_WEDGE_UNLOCKED.has(v) ? 0 : 1);
+      return tier(a.world.vertical) - tier(b.world.vertical) || a.index - b.index;
+    })
+    .map(({ world }) => world);
+}
