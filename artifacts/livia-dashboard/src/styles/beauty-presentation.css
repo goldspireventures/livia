@@ -365,6 +365,8 @@ html[data-vertical="beauty"][data-beauty-native-skin] .beauty-operational-panel-
 html[data-vertical="beauty"][data-beauty-native-skin]
   .beauty-operational-panel--ambient
   .beauty-op-list-scroll--ambient {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--foreground) / 0.1) transparent;
   -webkit-mask-image: linear-gradient(
     to bottom,
     #000 0%,
@@ -377,6 +379,39 @@ html[data-vertical="beauty"][data-beauty-native-skin]
     #000 calc(100% - 3rem),
     transparent 100%
   );
+}
+
+html[data-vertical="beauty"][data-beauty-native-skin]
+  .beauty-operational-panel--ambient
+  .beauty-op-list-scroll--ambient::-webkit-scrollbar {
+  width: 5px;
+}
+
+html[data-vertical="beauty"][data-beauty-native-skin]
+  .beauty-operational-panel--ambient
+  .beauty-op-list-scroll--ambient::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html[data-vertical="beauty"][data-beauty-native-skin]
+  .beauty-operational-panel--ambient
+  .beauty-op-list-scroll--ambient::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--foreground) / 0.1);
+  border-radius: 9999px;
+}
+
+html[data-vertical="beauty"][data-beauty-native-skin]
+  .beauty-operational-panel--ambient
+  .beauty-op-list-scroll--ambient:hover::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--foreground) / 0.18);
+}
+
+html[data-vertical="beauty"][data-beauty-native-skin]
+  .beauty-operational-panel--ambient
+  .beauty-op-list-scroll--ambient::-webkit-scrollbar-button {
+  display: none;
+  height: 0;
+  width: 0;
 }
 
 html[data-vertical="beauty"][data-beauty-native-skin]
