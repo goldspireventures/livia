@@ -3,16 +3,21 @@ export const GATEWAY_SKIN_HANDOFF_KEY = "livia.gateway.skinHandoff";
 
 export type GatewaySkinHandoffPayload = {
   vertical?: string;
+  businessId?: string;
   at: number;
 };
 
-export function markGatewaySkinHandoff(vertical?: string): void {
-  const payload: GatewaySkinHandoffPayload = {
-    vertical,
+export function markGatewaySkinHandoff(payload?: {
+  vertical?: string;
+  businessId?: string;
+}): void {
+  const body: GatewaySkinHandoffPayload = {
+    vertical: payload?.vertical,
+    businessId: payload?.businessId,
     at: Date.now(),
   };
   try {
-    sessionStorage.setItem(GATEWAY_SKIN_HANDOFF_KEY, JSON.stringify(payload));
+    sessionStorage.setItem(GATEWAY_SKIN_HANDOFF_KEY, JSON.stringify(body));
   } catch {
     // ignore quota / private mode
   }

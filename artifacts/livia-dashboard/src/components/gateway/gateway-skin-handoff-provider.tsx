@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   clearGatewaySkinHandoff,
   gatewayHandoffEnterMs,
@@ -16,13 +17,15 @@ import {
   markGatewaySkinHandoff,
   peekGatewaySkinHandoff,
 } from "@/lib/gateway-skin-handoff";
+import { applyTenantShellFromCache } from "@/lib/prefetch-tenant-dashboard";
 import { cn } from "@/lib/utils";
 
 type VeilPhase = "hidden" | "exit" | "enter";
 
 type HandoffOpts = {
   vertical?: string;
-  /** Client route change — veil stays mounted between exit and enter. */
+  businessId?: string;
+  /** Client route change — veil stays mounted; prefetch cache survives. */
   soft?: boolean;
 };
 
@@ -44,44 +47,61 @@ function runVeilAnimation(phase: "exit" | "enter"): Promise<void> {
 }
 
 export function GatewaySkinHandoffProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [phase, setPhase] = useState<VeilPhase>("hidden");
   const [vertical, setVertical] = useState<string | undefined>();
   const [runAnim, setRunAnim] = useState(false);
   const coldEnterStarted = useRef(false);
 
-  const playEnter = useCallback(async (v?: string) => {
-    setVertical(v);
-    setPhase("enter");
-    setRunAnim(false);
-    if (!gatewayHandoffPrefersReducedMotion()) {
-      document.documentElement.setAttribute("data-gateway-handoff-reveal", "");
-    }
-    await new Promise<void>((resolve) => {
-      requestAnimationFrame(() => {
+  const primeTenantUnderVeil = useCallback(
+    (businessId?: string) => {
+      if (businessId) {
+        applyTenantShellFromCache(queryClient, businessId);
+      }
+    },
+    [queryClient],
+  );
+
+  const playEnter = useCallback(
+    async (payload?: { vertical?: string; businessId?: string }) => {
+      setVertical(payload?.vertical);
+      primeTenantUnderVeil(payload?.businessId);
+      setPhase("enter");
+      setRunAnim(false);
+      if (!gatewayHandoffPrefersReducedMotion()) {
+        document.documentElement.setAttribute("data-gateway-handoff-reveal", "");
+      }
+      await new Promise<void>((resolve) => {
         requestAnimationFrame(() => {
-          setRunAnim(true);
-          resolve();
+          requestAnimationFrame(() => {
+            setRunAnim(true);
+            resolve();
+          });
         });
       });
-    });
-    await runVeilAnimation("enter");
-    clearGatewaySkinHandoff();
-    setPhase("hidden");
-    setRunAnim(false);
-    document.documentElement.removeAttribute("data-gateway-handoff-reveal");
-  }, []);
+      await runVeilAnimation("enter");
+      clearGatewaySkinHandoff();
+      setPhase("hidden");
+      setRunAnim(false);
+      document.documentElement.removeAttribute("data-gateway-handoff-reveal");
+    },
+    [primeTenantUnderVeil],
+  );
 
   useEffect(() => {
     if (coldEnterStarted.current) return;
     const payload = peekGatewaySkinHandoff();
     if (!payload) return;
     coldEnterStarted.current = true;
-    void playEnter(payload.vertical);
+    void playEnter({ vertical: payload.vertical, businessId: payload.businessId });
   }, [playEnter]);
 
   const transitionToTenant = useCallback(
     async (go: () => void, opts?: HandoffOpts) => {
-      markGatewaySkinHandoff(opts?.vertical);
+      markGatewaySkinHandoff({
+        vertical: opts?.vertical,
+        businessId: opts?.businessId,
+      });
       setVertical(opts?.vertical);
       setPhase("exit");
       setRunAnim(false);
@@ -97,7 +117,7 @@ export function GatewaySkinHandoffProvider({ children }: { children: ReactNode }
 
       if (opts?.soft) {
         go();
-        await playEnter(opts?.vertical);
+        await playEnter({ vertical: opts?.vertical, businessId: opts?.businessId });
         return;
       }
 

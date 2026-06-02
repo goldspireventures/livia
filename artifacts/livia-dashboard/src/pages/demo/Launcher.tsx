@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useDeferredValue } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { useSignIn, useClerk } from "@clerk/clerk-react";
 import {
@@ -46,6 +47,7 @@ import {
 import { G1_WEDGE_UNLOCKED } from "@/lib/g1-wedge-worlds";
 import type { BusinessVertical } from "@workspace/policy";
 import { useGatewaySkinHandoffOptional } from "@/components/gateway/gateway-skin-handoff-provider";
+import { prefetchTenantDashboardShell } from "@/lib/prefetch-tenant-dashboard";
 
 const VERTICAL_LABELS: Record<string, string> = {
   hair: "Hair & barber",
@@ -84,6 +86,7 @@ export default function DemoLauncher() {
       navigate(`/demo/wedge/${v}`);
     }
   }, [navigate]);
+  const queryClient = useQueryClient();
   const gatewayHandoff = useGatewaySkinHandoffOptional();
   const { signIn, isLoaded: signInLoaded } = useSignIn();
   const { setActive, signOut, session } = useClerk();
@@ -269,10 +272,12 @@ export default function DemoLauncher() {
       devPassword,
     );
     applyDemoSessionContext(result);
+    await prefetchTenantDashboardShell(queryClient, result.businessId);
     const go = () => navigate(result.landingPath);
     if (gatewayHandoff) {
       await gatewayHandoff.transitionToTenant(go, {
         vertical: selectedTenant?.vertical ?? undefined,
+        businessId: result.businessId,
         soft: true,
       });
     } else {

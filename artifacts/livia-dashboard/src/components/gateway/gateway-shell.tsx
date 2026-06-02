@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
+import { applyGatewaySurfaceTheme } from "@/lib/gateway-surface-theme";
 import { Link } from "wouter";
 import { LiviaWordmark } from "@/components/brand/LiviaMark";
 import { cn } from "@/lib/utils";
@@ -21,6 +22,10 @@ export function GatewayShell({
   backLabel = "← Worlds",
   className,
 }: Props) {
+  useEffect(() => {
+    applyGatewaySurfaceTheme();
+  }, []);
+
   return (
     <div
       className={cn(

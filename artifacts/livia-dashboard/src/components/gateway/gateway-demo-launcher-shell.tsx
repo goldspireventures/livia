@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
+import { applyGatewaySurfaceTheme } from "@/lib/gateway-surface-theme";
 import { Link } from "wouter";
 import {
   Compass,
@@ -35,6 +36,10 @@ const RAIL: {
 
 /** W2 G1 — aurora gateway shell (matches g1-wedge-web.target.png). */
 export function GatewayDemoLauncherShell({ children, advanced }: Props) {
+  useEffect(() => {
+    applyGatewaySurfaceTheme();
+  }, []);
+
   return (
     <div className="gateway-g1-root min-h-[100dvh] text-foreground" data-testid="gateway-g1-launcher">
       <div className="gateway-g1-aurora" aria-hidden />

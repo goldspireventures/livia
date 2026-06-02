@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "wouter";
+import { Link, useLocation, useParams } from "wouter";
 import { useSignIn, useClerk } from "@clerk/clerk-react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   GatewayBusyOverlay,
   GatewayDemoEnterStage,
@@ -24,11 +25,14 @@ import {
 import { completeDemoClerkSignIn } from "@/lib/demo-clerk-sign-in";
 import { useToast } from "@/hooks/use-toast";
 import { useGatewaySkinHandoffOptional } from "@/components/gateway/gateway-skin-handoff-provider";
+import { prefetchTenantDashboardShell } from "@/lib/prefetch-tenant-dashboard";
 
 type WedgeSlide = "story" | "enter";
 
 export default function DemoWedgeStoryPage() {
   const { vertical = "" } = useParams<{ vertical: string }>();
+  const [, navigate] = useLocation();
+  const queryClient = useQueryClient();
   const story = getWedgeDemoStory(vertical as WedgeDemoStory["vertical"]);
   const { toast } = useToast();
   const { signIn, isLoaded: signInLoaded } = useSignIn();
@@ -73,19 +77,31 @@ export default function DemoWedgeStoryPage() {
         devPassword,
       );
       applyDemoSessionContext(result);
-      const go = () => {
-        window.location.assign(result.landingPath);
-      };
+      await prefetchTenantDashboardShell(queryClient, result.businessId);
+      const go = () => navigate(result.landingPath);
       if (gatewayHandoff) {
         await gatewayHandoff.transitionToTenant(go, {
           vertical: story?.vertical,
-          soft: false,
+          businessId: result.businessId,
+          soft: true,
         });
       } else {
         go();
       }
     },
-    [devPassword, gatewayHandoff, session?.id, signIn, signInLoaded, setActive, signOut, story?.vertical, toast],
+    [
+      devPassword,
+      gatewayHandoff,
+      navigate,
+      queryClient,
+      session?.id,
+      signIn,
+      signInLoaded,
+      setActive,
+      signOut,
+      story?.vertical,
+      toast,
+    ],
   );
 
   const roster = useMemo((): DemoRosterEntry[] => {

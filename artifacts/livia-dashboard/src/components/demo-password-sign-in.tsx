@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSignIn, useClerk } from "@clerk/clerk-react";
 import { useLocation } from "wouter";
 import { Link } from "wouter";
@@ -15,6 +16,7 @@ import { completeDemoClerkSignIn } from "@/lib/demo-clerk-sign-in";
 import { SignInTenantPreview } from "@/components/sign-in-tenant-preview";
 import { useSignInAppearanceHint } from "@/lib/sign-in-appearance-hint";
 import { useGatewaySkinHandoffOptional } from "@/components/gateway/gateway-skin-handoff-provider";
+import { prefetchTenantDashboardShell } from "@/lib/prefetch-tenant-dashboard";
 
 type Props = {
   defaultEmail?: string;
@@ -36,6 +38,7 @@ export function DemoPasswordSignIn({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const { hint: appearanceHint, loading: appearanceLoading } = useSignInAppearanceHint(email);
+  const queryClient = useQueryClient();
   const gatewayHandoff = useGatewaySkinHandoffOptional();
 
   async function handleSubmit(e: React.FormEvent) {
@@ -59,9 +62,13 @@ export function DemoPasswordSignIn({
         password.trim() || devPasswordHint,
       );
       applyDemoSessionContext(result);
+      await prefetchTenantDashboardShell(queryClient, result.businessId);
       const go = () => navigate(result.landingPath);
       if (gatewayHandoff) {
-        await gatewayHandoff.transitionToTenant(go, { soft: true });
+        await gatewayHandoff.transitionToTenant(go, {
+          businessId: result.businessId,
+          soft: true,
+        });
       } else {
         go();
       }
