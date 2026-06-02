@@ -14,6 +14,7 @@ import {
 import { completeDemoClerkSignIn } from "@/lib/demo-clerk-sign-in";
 import { SignInTenantPreview } from "@/components/sign-in-tenant-preview";
 import { useSignInAppearanceHint } from "@/lib/sign-in-appearance-hint";
+import { useGatewaySkinHandoffOptional } from "@/components/gateway/gateway-skin-handoff-provider";
 
 type Props = {
   defaultEmail?: string;
@@ -35,6 +36,7 @@ export function DemoPasswordSignIn({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const { hint: appearanceHint, loading: appearanceLoading } = useSignInAppearanceHint(email);
+  const gatewayHandoff = useGatewaySkinHandoffOptional();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -57,7 +59,12 @@ export function DemoPasswordSignIn({
         password.trim() || devPasswordHint,
       );
       applyDemoSessionContext(result);
-      navigate(result.landingPath);
+      const go = () => navigate(result.landingPath);
+      if (gatewayHandoff) {
+        await gatewayHandoff.transitionToTenant(go, { soft: true });
+      } else {
+        go();
+      }
     } catch (err: unknown) {
       const msg =
         err instanceof Error

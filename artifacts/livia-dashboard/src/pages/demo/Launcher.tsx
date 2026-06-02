@@ -45,6 +45,7 @@ import {
 } from "@/components/gateway/gateway-demo-launcher-shell";
 import { G1_WEDGE_UNLOCKED } from "@/lib/g1-wedge-worlds";
 import type { BusinessVertical } from "@workspace/policy";
+import { useGatewaySkinHandoffOptional } from "@/components/gateway/gateway-skin-handoff-provider";
 
 const VERTICAL_LABELS: Record<string, string> = {
   hair: "Hair & barber",
@@ -83,6 +84,7 @@ export default function DemoLauncher() {
       navigate(`/demo/wedge/${v}`);
     }
   }, [navigate]);
+  const gatewayHandoff = useGatewaySkinHandoffOptional();
   const { signIn, isLoaded: signInLoaded } = useSignIn();
   const { setActive, signOut, session } = useClerk();
   const [catalog, setCatalog] = useState<DemoCatalogPersona[]>([]);
@@ -267,7 +269,15 @@ export default function DemoLauncher() {
       devPassword,
     );
     applyDemoSessionContext(result);
-    navigate(result.landingPath);
+    const go = () => navigate(result.landingPath);
+    if (gatewayHandoff) {
+      await gatewayHandoff.transitionToTenant(go, {
+        vertical: selectedTenant?.vertical ?? undefined,
+        soft: true,
+      });
+    } else {
+      go();
+    }
   }
 
   const selectedTenant = useMemo(

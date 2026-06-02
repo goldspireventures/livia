@@ -23,6 +23,7 @@ import {
 } from "@/lib/demo-portal";
 import { completeDemoClerkSignIn } from "@/lib/demo-clerk-sign-in";
 import { useToast } from "@/hooks/use-toast";
+import { useGatewaySkinHandoffOptional } from "@/components/gateway/gateway-skin-handoff-provider";
 
 type WedgeSlide = "story" | "enter";
 
@@ -37,6 +38,7 @@ export default function DemoWedgeStoryPage() {
   const [provisioned, setProvisioned] = useState(false);
   const [tenant, setTenant] = useState<DemoBusinessTenant | null>(null);
   const [slide, setSlide] = useState<WedgeSlide>("story");
+  const gatewayHandoff = useGatewaySkinHandoffOptional();
 
   useEffect(() => {
     void fetchDemoCatalog()
@@ -71,9 +73,19 @@ export default function DemoWedgeStoryPage() {
         devPassword,
       );
       applyDemoSessionContext(result);
-      window.location.href = result.landingPath;
+      const go = () => {
+        window.location.assign(result.landingPath);
+      };
+      if (gatewayHandoff) {
+        await gatewayHandoff.transitionToTenant(go, {
+          vertical: story?.vertical,
+          soft: false,
+        });
+      } else {
+        go();
+      }
     },
-    [devPassword, session?.id, signIn, signInLoaded, setActive, signOut, toast],
+    [devPassword, gatewayHandoff, session?.id, signIn, signInLoaded, setActive, signOut, story?.vertical, toast],
   );
 
   const roster = useMemo((): DemoRosterEntry[] => {

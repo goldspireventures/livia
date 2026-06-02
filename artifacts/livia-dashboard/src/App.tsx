@@ -65,6 +65,7 @@ import PublicPremisesPage from "@/pages/public-premises";
 import DemoLauncher from "@/pages/demo/Launcher";
 import DemoWedgeStoryPage from "@/pages/demo/WedgeStory";
 import { DemoProvider } from "@/lib/demo/demo-context";
+import { GatewaySkinHandoffProvider } from "@/components/gateway/gateway-skin-handoff-provider";
 import { isProductionCustomerSurface } from "@/lib/production-surface";
 import { isOnboardingPreviewRouteEnabled } from "@/lib/onboarding-preview-route";
 import { isPublicGuestPath } from "@/lib/public-guest-paths";
@@ -335,10 +336,12 @@ function App() {
         <ClerkProviderWithTheme>
           <TooltipProvider>
             <DemoProvider>
-              <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-                <AppRouter />
-              </WouterRouter>
-              <Toaster />
+              <GatewaySkinHandoffProvider>
+                <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+                  <AppRouter />
+                </WouterRouter>
+                <Toaster />
+              </GatewaySkinHandoffProvider>
             </DemoProvider>
           </TooltipProvider>
         </ClerkProviderWithTheme>

@@ -17,7 +17,7 @@ G2  /demo/wedge/:vertical    Trade story — four beat cards at once (policy cop
 G3  Enter as role            Owner default; manager / desk / staff when seeded
       │ Clerk demo ticket (no full /sign-in for happy path)
       ▼
-W4  /dashboard …             Tenant preset + brand — intentional skin handoff
+W4  /dashboard …             Tenant preset + brand — aurora dissolve veil (gateway-handoff)
 ```
 
 **Shortcuts:** `?vertical=beauty` → skip G1 grid · Marketing CTA → `/demo/wedge/beauty`.
