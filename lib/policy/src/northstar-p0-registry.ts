@@ -6,8 +6,6 @@
  * @see docs/design/screen-cards/README.md
  */
 
-import { resolve } from "node:path";
-
 export type NorthstarP0Entry = {
   screenId: string;
   route: string;
@@ -61,11 +59,14 @@ export const NORTHSTAR_PUBLIC_DIR = "artifacts/livia-dashboard/public/livia-evol
 export const NORTHSTAR_DOCS_DIR = "docs/design/assets/livia-evolution/northstar";
 export const SCREEN_CARD_BASELINE_DIR = "docs/design/assets/screen-cards";
 
+/** Repo-root join without node:path — safe when policy is pulled into React Native typecheck. */
 export function resolveNorthstarRealPath(repoRoot: string, entry: NorthstarP0Entry): string {
+  const root = repoRoot.replace(/\\/g, "/").replace(/\/$/, "");
   if (entry.northstarRealPath) {
-    return resolve(repoRoot, entry.northstarRealPath);
+    const rel = entry.northstarRealPath.replace(/\\/g, "/").replace(/^\//, "");
+    return `${root}/${rel}`;
   }
-  return resolve(repoRoot, SCREEN_CARD_BASELINE_DIR, entry.northstarFile);
+  return `${root}/${SCREEN_CARD_BASELINE_DIR}/${entry.northstarFile}`;
 }
 
 /** @deprecated Use resolveNorthstarRealPath */
