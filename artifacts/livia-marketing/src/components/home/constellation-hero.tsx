@@ -8,10 +8,9 @@ import "@/styles/constellation-home.css";
 
 type ConstellationHeroProps = {
   locale: MarketingLocale;
-  onJoinBeta: (e: React.MouseEvent) => void;
 };
 
-export function ConstellationHero({ locale, onJoinBeta }: ConstellationHeroProps) {
+export function ConstellationHero({ locale }: ConstellationHeroProps) {
   const t = editorialCopy(locale).homeConstellation;
   const verticals = CONSTELLATION_ORBIT_VERTICALS.map((v) => ({
     label: locale === "de" ? v.de : v.en,
@@ -34,12 +33,6 @@ export function ConstellationHero({ locale, onJoinBeta }: ConstellationHeroProps
               {t.bookDemo}
               <ArrowRight className="h-4 w-4 shrink-0" strokeWidth={1.75} />
             </Link>
-            <Link href="/how-it-works" className="constellation-hero__cta-secondary">
-              {t.howItWorks}
-            </Link>
-            <button type="button" onClick={onJoinBeta} className="constellation-hero__cta-secondary">
-              {t.joinBeta}
-            </button>
           </div>
         </div>
 

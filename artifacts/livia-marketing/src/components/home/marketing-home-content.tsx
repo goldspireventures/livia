@@ -13,14 +13,9 @@ type MarketingHomeContentProps = {
 export function MarketingHomeContent({ locale }: MarketingHomeContentProps) {
   const formRef = useRef<HTMLDivElement>(null);
 
-  const scrollToForm = (e: React.MouseEvent) => {
-    e.preventDefault();
-    formRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
   return (
     <>
-      <ConstellationHero locale={locale} onJoinBeta={scrollToForm} />
+      <ConstellationHero locale={locale} />
       <ConstellationHomeFold locale={locale} formRef={formRef} />
       {locale === "de" ? <DeContactBand locale={locale} /> : null}
     </>
