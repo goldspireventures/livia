@@ -1,0 +1,188 @@
+/* W2 G1 demo launcher — g1-wedge-web.target.png */
+
+.gateway-g1-root {
+  position: relative;
+  overflow-x: hidden;
+  background: #030408;
+}
+
+.gateway-g1-aurora {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 90% 60% at 50% 0%, hsl(160 60% 35% / 0.45), transparent 55%),
+    radial-gradient(ellipse 70% 50% at 20% 30%, hsl(187 80% 45% / 0.2), transparent 50%),
+    radial-gradient(ellipse 60% 40% at 80% 60%, hsl(280 40% 25% / 0.35), transparent 45%),
+    linear-gradient(180deg, #0a1218 0%, #030408 45%, #020306 100%);
+}
+
+.gateway-g1-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    rgb(0 0 0 / 0.55) 0%,
+    transparent 18%,
+    transparent 82%,
+    rgb(0 0 0 / 0.35) 100%
+  );
+}
+
+.gateway-g1-cards-track {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding: 0.25rem 0.25rem 1.25rem;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--foreground) / 0.12) transparent;
+}
+
+.gateway-g1-cards-track::-webkit-scrollbar {
+  height: 5px;
+}
+
+.gateway-g1-cards-track::-webkit-scrollbar-thumb {
+  background: hsl(var(--foreground) / 0.12);
+  border-radius: 9999px;
+}
+
+.gateway-g1-world-card {
+  position: relative;
+  flex: 0 0 min(200px, 42vw);
+  scroll-snap-align: start;
+  display: flex;
+  min-height: 320px;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+  border-radius: 1.25rem;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+
+@media (min-width: 1024px) {
+  .gateway-g1-world-card {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 380px;
+  }
+}
+
+.gateway-g1-world-card:hover:not(.gateway-g1-world-card--locked) {
+  transform: translateY(-4px);
+  box-shadow: 0 24px 48px rgb(0 0 0 / 0.45);
+}
+
+.gateway-g1-world-card__photo {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transform: scale(1.02);
+  transition: transform 400ms ease;
+}
+
+.gateway-g1-world-card:hover:not(.gateway-g1-world-card--locked) .gateway-g1-world-card__photo {
+  transform: scale(1.06);
+}
+
+.gateway-g1-world-card__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgb(0 0 0 / 0.15) 0%,
+    rgb(0 0 0 / 0.35) 45%,
+    rgb(0 0 0 / 0.88) 100%
+  );
+}
+
+.gateway-g1-world-card__frame {
+  position: absolute;
+  inset: 6px;
+  border-radius: 1rem;
+  border: 1px solid hsl(var(--aurum-champagne, 40 30% 70%) / 0.45);
+  pointer-events: none;
+}
+
+.gateway-g1-world-card__icon {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+}
+
+.gateway-g1-world-card__icon-ring {
+  display: block;
+  height: 3.25rem;
+  width: 3.25rem;
+  border-radius: 9999px;
+  border: 2px solid hsl(40 35% 72% / 0.85);
+  background: rgb(0 0 0 / 0.35);
+  box-shadow: 0 0 24px hsl(var(--primary) / 0.25);
+}
+
+.gateway-g1-world-card__copy {
+  position: relative;
+  z-index: 2;
+  padding: 0 1rem 0.75rem;
+  text-align: center;
+}
+
+.gateway-g1-world-card__title {
+  font-family: var(--app-font-serif);
+  font-size: 1.125rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: hsl(var(--primary));
+}
+
+.gateway-g1-world-card__tagline {
+  margin-top: 0.35rem;
+  font-size: 0.7rem;
+  line-height: 1.35;
+  color: rgb(255 255 255 / 0.72);
+}
+
+.gateway-g1-world-card__hook {
+  margin-top: 0.5rem;
+  font-size: 0.65rem;
+  color: rgb(255 255 255 / 0.45);
+}
+
+.gateway-g1-world-card__cta {
+  position: relative;
+  z-index: 2;
+  margin: 0 1rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border-radius: 9999px;
+  border: 1px solid hsl(40 35% 72% / 0.55);
+  background: rgb(0 0 0 / 0.25);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: hsl(40 40% 88%);
+  backdrop-filter: blur(6px);
+}
+
+.gateway-g1-world-card--locked {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.gateway-g1-world-card--locked .gateway-g1-world-card__cta {
+  border-color: rgb(255 255 255 / 0.15);
+  color: rgb(255 255 255 / 0.5);
+}

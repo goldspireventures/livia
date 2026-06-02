@@ -1,84 +1,74 @@
 import { Link } from "wouter";
-import { Lock } from "lucide-react";
-import { getWedgeDemoStory, listWedgeDemoVerticalsForDisplay, VERTICAL_COVERAGE_REGISTRY } from "@workspace/policy";
+import { ArrowRight, Lock } from "lucide-react";
+import { getWedgeDemoStory } from "@workspace/policy";
+import { G1_WEDGE_UNLOCKED, G1_WEDGE_WORLDS } from "@/lib/g1-wedge-worlds";
 import { cn } from "@/lib/utils";
 
-function tierBadge(vertical: string): string | null {
-  const row = VERTICAL_COVERAGE_REGISTRY.find((e) => e.codeVertical === vertical);
-  if (!row) return null;
-  if (row.tier === "partner-only") return "Partner preview";
-  if (row.tier === "beta-preview") return "Beta preview";
-  return null;
-}
-
-/** G1-A — vertical-fair wedge grid (non-hair first). */
+/** G1 — six portrait trade cards (locked target: g1-wedge-web.target.png). */
 export function DemoWedgeGrid({ className }: { className?: string }) {
-  const verticals = listWedgeDemoVerticalsForDisplay();
-  // Gate demo exploration to currently-designed vertical(s).
-  // Unlock more by extending this set as those vertical demo stories are signed off.
-  const unlocked = new Set<string>(["beauty"]);
-
   return (
     <section
-      className={cn("mb-10", className)}
+      className={cn("gateway-g1-cards", className)}
       data-testid="demo-wedge-grid"
       aria-labelledby="demo-wedge-grid-title"
     >
-      <h2
-        id="demo-wedge-grid-title"
-        className="text-xs font-mono uppercase tracking-widest text-white/40 mb-1"
-      >
-        G1 · Pick your world
+      <h2 id="demo-wedge-grid-title" className="sr-only">
+        Pick your world
       </h2>
-      <p className="text-sm text-white/55 mb-4 max-w-xl">
-        Beauty is live for staging — more trades unlock as their demo stories ship.
-      </p>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-3">
-        {verticals.map((v, i) => {
-          const story = getWedgeDemoStory(v);
-          if (!story) return null;
-          const badge = tierBadge(v);
-          const featured = i < 3;
-          const isUnlocked = unlocked.has(v);
+      <div className="gateway-g1-cards-track">
+        {G1_WEDGE_WORLDS.map((world) => {
+          const story = getWedgeDemoStory(world.vertical);
+          const unlocked = G1_WEDGE_UNLOCKED.has(world.vertical);
+          const href = unlocked ? `/demo/wedge/${world.vertical}` : "#";
+
           return (
             <Link
-              key={v}
-              href={isUnlocked ? `/demo/wedge/${v}` : "#"}
+              key={world.key}
+              href={href}
               onClick={(e) => {
-                if (!isUnlocked) e.preventDefault();
+                if (!unlocked) e.preventDefault();
               }}
-              aria-disabled={!isUnlocked ? "true" : undefined}
-              data-testid={`demo-wedge-card-${v}`}
+              aria-disabled={!unlocked}
+              data-testid={`demo-wedge-card-${world.vertical}`}
+              data-world-key={world.key}
               className={cn(
-                "group rounded-2xl border p-4 backdrop-blur-sm transition demo-wedge-card",
-                featured
-                  ? "border-[#06b6d4]/35 bg-white/[0.06] hover:border-[#22d3ee]/55"
-                  : "border-white/10 bg-white/[0.04] hover:border-white/25",
-                !isUnlocked && "opacity-55 cursor-not-allowed hover:border-white/10",
+                "gateway-g1-world-card group",
+                !unlocked && "gateway-g1-world-card--locked",
               )}
             >
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-sm font-medium text-white group-hover:text-[#22d3ee] leading-snug">
-                  {story.label}
-                </p>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  {!isUnlocked ? (
-                    <span className="inline-flex items-center gap-1 rounded-md border border-white/15 bg-white/5 px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-white/70">
-                      <Lock className="h-3 w-3" />
-                      Coming soon
-                    </span>
-                  ) : null}
-                  {badge ? (
-                    <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-amber-200/90">
-                      {badge}
-                    </span>
-                  ) : null}
-                </div>
+              <div
+                className="gateway-g1-world-card__photo"
+                style={{ backgroundImage: `url(${world.imageUrl})` }}
+                aria-hidden
+              />
+              <div className="gateway-g1-world-card__scrim" aria-hidden />
+              <div className="gateway-g1-world-card__frame" aria-hidden />
+
+              <div className="gateway-g1-world-card__icon" aria-hidden>
+                <span className="gateway-g1-world-card__icon-ring" />
               </div>
-              <p className="mt-2 text-xs text-white/45 line-clamp-2">{story.beats[0]?.headline}</p>
-              <p className="mt-3 text-[10px] font-mono text-[#22d3ee]/70 group-hover:text-[#22d3ee]">
-                {isUnlocked ? "Story → enter demo →" : "Locked until this vertical ships →"}
-              </p>
+
+              <div className="gateway-g1-world-card__copy">
+                <p className="gateway-g1-world-card__title">{world.title}</p>
+                <p className="gateway-g1-world-card__tagline">{world.tagline}</p>
+                {story && unlocked ? (
+                  <p className="gateway-g1-world-card__hook">{story.beats[0]?.headline}</p>
+                ) : null}
+              </div>
+
+              <div className="gateway-g1-world-card__cta">
+                {unlocked ? (
+                  <>
+                    Enter world
+                    <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                  </>
+                ) : (
+                  <>
+                    <Lock className="h-3 w-3" aria-hidden />
+                    Coming soon
+                  </>
+                )}
+              </div>
             </Link>
           );
         })}

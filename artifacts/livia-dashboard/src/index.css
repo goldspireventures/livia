@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 @import "./styles/beauty-presentation.css";
 @import "./styles/beauty-ambient-signal.css";
+@import "./styles/gateway-g1.css";
 @plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));

@@ -38,6 +38,13 @@ import { completeDemoClerkSignIn } from "@/lib/demo-clerk-sign-in";
 import { DemoFlowStepper, type DemoFlowStep } from "@/components/demo/demo-flow-stepper";
 import { DemoGuidedExperience } from "@/components/demo/demo-guided-experience";
 import { DemoWedgeGrid } from "@/components/demo/demo-wedge-grid";
+import {
+  GatewayDemoLauncherShell,
+  GatewayG1Hero,
+  GatewayG1SignInHint,
+} from "@/components/gateway/gateway-demo-launcher-shell";
+import { G1_WEDGE_UNLOCKED } from "@/lib/g1-wedge-worlds";
+import type { BusinessVertical } from "@workspace/policy";
 
 const VERTICAL_LABELS: Record<string, string> = {
   hair: "Hair & barber",
@@ -66,15 +73,13 @@ const ICONS: Record<Persona["iconName"], LucideIcon> = {
   Heart,
 };
 
-const WEDGE_LIVE = new Set(["beauty"]);
-
 export default function DemoLauncher() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
 
   useEffect(() => {
     const v = new URLSearchParams(window.location.search).get("vertical")?.toLowerCase();
-    if (v && WEDGE_LIVE.has(v)) {
+    if (v && G1_WEDGE_UNLOCKED.has(v as BusinessVertical)) {
       navigate(`/demo/wedge/${v}`);
     }
   }, [navigate]);
@@ -362,55 +367,9 @@ export default function DemoLauncher() {
     }
   }
 
-  return (
-    <div className="min-h-[100dvh] bg-[#09090b] text-white relative overflow-x-hidden">
-      <div className="fixed inset-0 pointer-events-none -z-10" aria-hidden>
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-[#8b5cf6]/15 rounded-full blur-[140px]" />
-        <div className="absolute top-1/3 right-1/4 w-[600px] h-[600px] bg-[#06b6d4]/12 rounded-full blur-[160px]" />
-        <div className="absolute bottom-1/4 left-1/3 w-[400px] h-[400px] bg-[#10b981]/10 rounded-full blur-[120px]" />
-      </div>
-
-      <div className="max-w-5xl mx-auto px-6 pt-16 pb-20">
-        <header className="mb-8 max-w-2xl">
-          <p className="text-[11px] font-mono tracking-wide text-[#22d3ee] uppercase mb-3">
-            Demo gateway · people-business OS
-          </p>
-          <h1
-            className="text-3xl md:text-5xl tracking-tight leading-[1.08] mb-4"
-            style={{ fontFamily: "var(--app-font-serif)" }}
-          >
-            Pick your world
-          </h1>
-          <p className="text-sm md:text-base text-white/60 leading-relaxed">
-            Choose a trade below — four beats on one card, then tap a role to enter the live demo.
-            {devPassword ? (
-              <>
-                {" "}
-                Shared password: <code className="text-white/80">{devPassword}</code>
-              </>
-            ) : (
-              <>
-                {" "}
-                Shared password hidden —{" "}
-                <Link
-                  href="/sign-in?beta=1"
-                  className="text-white/70 underline underline-offset-2 hover:text-white/90"
-                >
-                  sign in
-                </Link>{" "}
-                to continue.
-              </>
-            )}
-            {" · "}
-            <Link href="/sign-in?beta=1" className="text-white/50 underline underline-offset-2 hover:text-white/80">
-              Sign in with your own account
-            </Link>
-          </p>
-        </header>
-
-        <DemoWedgeGrid />
-
-        <details className="mb-10 group" open={!provisioned} data-testid="demo-advanced-paths">
+  const advancedPanel = (
+    <>
+        <details className="group" open={!provisioned} data-testid="demo-advanced-paths">
           <summary className="cursor-pointer text-xs font-mono uppercase tracking-widest text-white/40 mb-4 list-none">
             Advanced · setup, guided enter & all tenants
           </summary>
@@ -885,10 +844,10 @@ export default function DemoLauncher() {
         </div>
         </details>
 
-        <footer className="mt-16 pt-8 border-t border-white/5 text-[11px] font-mono text-white/40 max-w-3xl space-y-2">
+        <footer className="mt-8 text-[11px] font-mono text-white/40 space-y-2">
           <p>
             Playbook:{" "}
-            <Link href="/guides" className="text-[#22d3ee] underline">
+            <Link href="/guides" className="text-primary underline">
               guides
             </Link>
             {" · "}
@@ -899,7 +858,14 @@ export default function DemoLauncher() {
             </Link>
           </p>
         </footer>
-      </div>
-    </div>
+    </>
+  );
+
+  return (
+    <GatewayDemoLauncherShell advanced={advancedPanel}>
+      <GatewayG1Hero />
+      <GatewayG1SignInHint devPassword={devPassword} />
+      <DemoWedgeGrid />
+    </GatewayDemoLauncherShell>
   );
 }

@@ -125,7 +125,7 @@ Four native presets + Platform Default (signup lock). Policy: `presentation-pres
 
 | Surface | Target (single copy) | Implementation | Stg ticket |
 |---------|----------------------|----------------|------------|
-| G1 `/demo` | `g1-wedge-web.target.png` | ✅ `DemoWedgeGrid` primary; advanced paths in `<details>` | **G-DEMO-1** |
+| G1 `/demo` | `g1-wedge-web.target.png` | ✅ `GatewayDemoLauncherShell` — aurora, left rail, six portrait cards, Enter world | **G-DEMO-1** |
 | G2 `/demo/wedge/beauty` | `g2-wedge-story.target.png` | ✅ `GatewayDemoCardStage` fused card + beats | **G-DEMO-2** |
 | G3 enter (beat 4) | `g3-demo-enter.target.png` | ✅ Role grid in card; tap → Clerk (no Enter btn) | **G-DEMO-3** |
 | Sign-in web | `gateway-default.target.png` | ✅ `GatewaySignInStory` + Clerk (`?beta=1` on stg) | **G-SIGN-1** |

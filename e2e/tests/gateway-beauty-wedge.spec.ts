@@ -10,6 +10,7 @@ const dashboardBase = process.env.E2E_DASHBOARD_BASE ?? "http://127.0.0.1:5173";
 test.describe("Beauty demo gateway", () => {
   test("G1 wedge grid links to beauty story", async ({ page }) => {
     await page.goto(`${dashboardBase}/demo`, { waitUntil: "domcontentloaded" });
+    await expect(page.getByTestId("gateway-g1-launcher")).toBeVisible();
     await expect(page.getByTestId("demo-wedge-grid")).toBeVisible();
     await page.getByTestId("demo-wedge-card-beauty").click();
     await page.waitForURL(/\/demo\/wedge\/beauty/, { timeout: 15_000 });
