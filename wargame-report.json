@@ -1,64 +1,440 @@
 {
-  "generatedAt": "2026-05-27T09:12:45.820Z",
-  "apiBase": "http://127.0.0.1:3001",
+  "generatedAt": "2026-06-02T07:54:32.549Z",
+  "apiBase": "http://127.0.0.1:3000",
   "config": {
     "tenantCount": 6,
     "days": 14,
     "concurrency": 20
   },
   "summary": {
-    "total": 7008,
-    "errors": 0,
-    "errorRate": "0%",
+    "total": 7020,
+    "errors": 253,
+    "errorRate": "3.6%",
     "latency": {
-      "p50": 20,
-      "p95": 69,
-      "p99": 101,
-      "max": 296
+      "p50": 78,
+      "p95": 333,
+      "p99": 579,
+      "max": 1025
     }
   },
   "layers": {
     "all": {
-      "n": 7008,
-      "p50": 20,
-      "p95": 69,
-      "p99": 101,
-      "max": 296
+      "n": 7020,
+      "p50": 78,
+      "p95": 333,
+      "p99": 579,
+      "max": 1025
     },
     "l1": {
-      "n": 2429,
-      "p50": 47,
-      "p95": 86,
-      "p99": 137,
-      "max": 296
+      "n": 2510,
+      "p50": 34,
+      "p95": 127,
+      "p99": 154,
+      "max": 223
     },
     "l2": {
-      "n": 1420,
-      "p50": 18,
-      "p95": 31,
-      "p99": 52,
-      "max": 93
+      "n": 1391,
+      "p50": 29,
+      "p95": 55,
+      "p99": 69,
+      "max": 105
+    },
+    "l3": {
+      "n": 2068,
+      "p50": 186,
+      "p95": 279,
+      "p99": 333,
+      "max": 519
+    },
+    "l4": {
+      "n": 699,
+      "p50": 240,
+      "p95": 612,
+      "p99": 669,
+      "max": 1025
+    },
+    "l5": {
+      "n": 332,
+      "p50": 27,
+      "p95": 56,
+      "p99": 87,
+      "max": 92
     }
   },
   "opMix": {
-    "L1 public loads": 732,
-    "L1 services probe": 471,
-    "L1 availability probe": 335,
-    "L1 public booking": 891,
-    "L2 SMS inbound": 1420,
-    "L3 my-day": 533,
-    "L3 inbox": 504,
-    "L3 bookings list": 307,
-    "L3 booking create": 263,
-    "L3 customers": 177,
-    "L3 staff": 164,
-    "L3 packages": 130,
-    "L4 proposals load": 373,
+    "L1 public loads": 719,
+    "L1 services probe": 501,
+    "L1 availability probe": 357,
+    "L1 public booking": 933,
+    "L2 SMS inbound": 1391,
+    "L3 my-day": 474,
+    "L3 inbox": 580,
+    "L3 bookings list": 260,
+    "L3 booking create": 253,
+    "L3 customers": 210,
+    "L3 staff": 142,
+    "L3 packages": 149,
+    "L4 proposals load": 372,
     "L4 proposal approve": 0,
-    "L4 meta inbound sim": 355,
-    "L5 billing probe": 345
+    "L4 meta inbound sim": 327,
+    "L5 billing probe": 332
   },
-  "errorsByStatus": {},
-  "errorsByLayer": {},
-  "errorSamples": []
+  "errorsByStatus": {
+    "400": 253
+  },
+  "errorsByLayer": {
+    "l3": 253
+  },
+  "errorSamples": [
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbhoebemt0ktv/bookings",
+      "status": 400,
+      "ms": 217,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"eb41176a-93a1-4941-af9f-5d430ff38cee\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbidr6lwov80s/bookings",
+      "status": 400,
+      "ms": 226,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"c6da4dcc-cca1-4753-8a5c-aaf2fc687a1b\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbhuabbbjsdge/bookings",
+      "status": 400,
+      "ms": 184,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"0db48ec4-05c1-4a46-96f0-537de52d56b1\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbhoebemt0ktv/bookings",
+      "status": 400,
+      "ms": 185,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"96f35fcb-8b73-4813-be32-3f2699fcaa32\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbi1zov5ixoh6/bookings",
+      "status": 400,
+      "ms": 211,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"97e45440-4c9b-425c-b44f-0e6d6cfec23d\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbi1zov5ixoh6/bookings",
+      "status": 400,
+      "ms": 166,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"85a964c3-0015-4b56-a686-5f8daec0277c\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbho8ws58gird/bookings",
+      "status": 400,
+      "ms": 167,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"0a8a0686-acef-414d-b686-11a1008ecab3\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbidr6lwov80s/bookings",
+      "status": 400,
+      "ms": 170,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"61df9d10-9e28-44f3-8d1b-124e2f319ccd\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbho8ws58gird/bookings",
+      "status": 400,
+      "ms": 183,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"83865b76-781f-424d-85ac-aa1872609737\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbidr6lwov80s/bookings",
+      "status": 400,
+      "ms": 198,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"d4a05a01-01d9-4e47-865a-9a4290787a20\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbhuabbbjsdge/bookings",
+      "status": 400,
+      "ms": 236,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"f3b60673-aa17-442c-b721-42648bf060fd\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbidr6lwov80s/bookings",
+      "status": 400,
+      "ms": 165,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"97fb340b-84b8-4dd5-a200-a7b2c55c6072\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbhuabbbjsdge/bookings",
+      "status": 400,
+      "ms": 168,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"83b76ed9-6e27-4397-ac66-e52a31460b55\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbi1zov5ixoh6/bookings",
+      "status": 400,
+      "ms": 202,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"9cd2bd48-cb51-4564-891f-efed39e4c4ea\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbidr6lwov80s/bookings",
+      "status": 400,
+      "ms": 203,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"ba701849-ca2d-4fd0-8f03-1790788401fa\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbhuabbbjsdge/bookings",
+      "status": 400,
+      "ms": 195,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"afccf97d-996c-4e4c-8174-333cba1d307c\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbi1zov5ixoh6/bookings",
+      "status": 400,
+      "ms": 218,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"be2f607a-697a-4dad-9857-c8e3324b98cd\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbidr6lwov80s/bookings",
+      "status": 400,
+      "ms": 207,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"bce34833-cf64-4b34-ac1e-0c99f7cf5e6b\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbho8ws58gird/bookings",
+      "status": 400,
+      "ms": 161,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"b4c61057-3a59-4ace-ae72-e24221c8c6c6\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbhuabbbjsdge/bookings",
+      "status": 400,
+      "ms": 162,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"810bc78c-d029-4df1-a3e6-8a0dacbffd6a\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbidr6lwov80s/bookings",
+      "status": 400,
+      "ms": 177,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"f7cdc0ef-859d-4875-8357-bc3dd4577f94\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbhoebemt0ktv/bookings",
+      "status": 400,
+      "ms": 199,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"4ac96767-a46f-4fd2-af45-1a5bbbc14ec3\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbhoebemt0ktv/bookings",
+      "status": 400,
+      "ms": 133,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"8c25fd1a-aa7e-4dcf-b459-bc23898187ce\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbhoebemt0ktv/bookings",
+      "status": 400,
+      "ms": 141,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"3bebcc3b-7c53-4bfc-bb2e-df449a5f6c93\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbi1zov5ixoh6/bookings",
+      "status": 400,
+      "ms": 151,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"f88057d6-4d61-488f-a061-7fc20e84b987\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbhuabbbjsdge/bookings",
+      "status": 400,
+      "ms": 157,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"facaa5da-3f0b-4ff2-ada0-919594b35940\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbidr6lwov80s/bookings",
+      "status": 400,
+      "ms": 183,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"ba7f5ff7-e019-4b47-951c-ac4c350a899b\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbi1zov5ixoh6/bookings",
+      "status": 400,
+      "ms": 166,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"2be1a06b-c4cc-41f8-8e2c-46dd01dde424\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbhobf88zynw7/bookings",
+      "status": 400,
+      "ms": 156,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"d47f9939-8bb2-4b6c-aba2-fef0c0b4f33c\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbi1zov5ixoh6/bookings",
+      "status": 400,
+      "ms": 179,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"a4c11045-7f5c-4923-aba5-7c4f78390538\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbhuabbbjsdge/bookings",
+      "status": 400,
+      "ms": 193,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"64fb154f-97bd-4bd1-a22a-3f28a4a5c035\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbidr6lwov80s/bookings",
+      "status": 400,
+      "ms": 203,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"4ab867c8-6b35-48d2-8cc4-694a62a177e1\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbhobf88zynw7/bookings",
+      "status": 400,
+      "ms": 161,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"4684c5e0-57f4-44d9-83c8-08df4fe13c08\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbi1zov5ixoh6/bookings",
+      "status": 400,
+      "ms": 162,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"1f93a67c-35db-48c5-acaf-5b8c0a2609f9\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbhoebemt0ktv/bookings",
+      "status": 400,
+      "ms": 188,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"dc895feb-706e-4d0c-8a2e-17aaee4526cb\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbhoebemt0ktv/bookings",
+      "status": 400,
+      "ms": 154,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"71d6482b-f29c-4d50-b6cb-483b761d8d8d\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbhuabbbjsdge/bookings",
+      "status": 400,
+      "ms": 154,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"d84e2a38-fb76-4812-8fdf-443306f664e0\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbhobf88zynw7/bookings",
+      "status": 400,
+      "ms": 182,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"c893b6f2-5612-48c8-88c6-cc44822c00b3\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbhobf88zynw7/bookings",
+      "status": 400,
+      "ms": 175,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"ae9b4514-42f9-436c-9179-6f2b2bcec0f8\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbhoebemt0ktv/bookings",
+      "status": 400,
+      "ms": 203,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"562522fe-1e71-46a8-9ef7-e5da966f6c46\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbi1zov5ixoh6/bookings",
+      "status": 400,
+      "ms": 175,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"0dae1e93-a03b-4146-bb84-713695683388\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbi1zov5ixoh6/bookings",
+      "status": 400,
+      "ms": 177,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"d18fadc4-efae-4900-a255-18f923ec566a\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbho8ws58gird/bookings",
+      "status": 400,
+      "ms": 231,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"7a070cf6-8faf-404e-af3b-924a1a6d383e\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbi1zov5ixoh6/bookings",
+      "status": 400,
+      "ms": 201,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"805bf8e3-3e50-450e-aa2c-8af4fbde51c9\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbi1zov5ixoh6/bookings",
+      "status": 400,
+      "ms": 180,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"1b9109b3-ec17-48d4-a082-452de2f969ed\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbidr6lwov80s/bookings",
+      "status": 400,
+      "ms": 167,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"0e1f6c29-81c0-417d-b6be-b84c914aa7bf\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbi1zov5ixoh6/bookings",
+      "status": 400,
+      "ms": 161,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"c9e2663f-9a8f-40fd-85f2-7ff1be452d9d\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbidr6lwov80s/bookings",
+      "status": 400,
+      "ms": 207,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"b4119b48-e734-4100-a139-32a126b46283\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbi1zov5ixoh6/bookings",
+      "status": 400,
+      "ms": 182,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"cb5125bb-53e6-42f1-8e49-ddfbdb53a136\"}"
+    },
+    {
+      "layer": "l3",
+      "where": "/api/businesses/mpvbidr6lwov80s/bookings",
+      "status": 400,
+      "ms": 185,
+      "body": "{\"error\":\"serviceId, customerId, and startAt are required\",\"requestId\":\"64e913df-d474-42ae-9504-32f0243aacfb\"}"
+    }
+  ]
 }

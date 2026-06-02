@@ -62,7 +62,7 @@ html[data-vertical="beauty"][data-beauty-ambient="signal"][data-presentation="no
   z-index: 1;
 }
 
-/* Demote competing sidebar wash — bloom SVG is the only warm corner */
+/* Subtle sidebar corner wash (ambient signal preset) */
 html[data-vertical="beauty"][data-beauty-ambient="signal"][data-presentation="noir-dusk"] aside.app-shell-sidebar::after,
 html[data-vertical="beauty"][data-beauty-ambient="signal"][data-presentation="noir-dusk"] aside.w-64::after {
   background: radial-gradient(

@@ -25,10 +25,10 @@ test.describe("Marketing lifecycle", () => {
 
   test("home vertical chip opens demo wedge", async ({ page }) => {
     await page.goto(`${marketingBase}/`, { waitUntil: "domcontentloaded" });
-    const wedge = page.locator(`a[href*="${dashboardBase.replace(/\/+$/, "")}/demo/wedge/hair"]`).first();
+    const wedge = page.locator('a[href*="vertical=hair"]').first();
     await expect(wedge).toBeVisible();
     await wedge.click();
-    await page.waitForURL(/\/demo\/wedge\/hair/, { timeout: 30_000 });
+    await page.waitForURL(/\/demo(\/wedge\/hair|\?vertical=hair)/, { timeout: 30_000 });
     await expect(page.locator("body")).not.toContainText(/something went wrong/i);
   });
 

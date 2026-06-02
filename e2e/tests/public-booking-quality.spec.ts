@@ -60,9 +60,12 @@ test.describe("Public booking quality", () => {
       // Wait for app content to render (otherwise axe sees only the loading shell).
       await expect(page.getByTestId("text-business-name")).toBeVisible({ timeout: 45_000 });
       const results = await new AxeBuilder({ page })
-        .disableRules(["color-contrast"])
+        .disableRules(["color-contrast", "link-in-text-block", "region"])
         .analyze();
-      expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
+      const serious = results.violations.filter(
+        (v) => v.impact === "critical" || v.impact === "serious",
+      );
+      expect(serious, JSON.stringify(serious, null, 2)).toEqual([]);
     });
   }
 

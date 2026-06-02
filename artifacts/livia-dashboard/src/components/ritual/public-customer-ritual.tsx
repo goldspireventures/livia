@@ -2,6 +2,7 @@
 
 import { Instagram, MapPin, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PublicBookingHomeLink } from "@/components/public-booking/public-booking-home-link";
 import type { PublicSocialProof } from "@/components/public-booking/public-social-proof";
 
 const BASE_STEPS = [
@@ -122,8 +123,12 @@ export function PublicCustomerRitual({
   socialProof,
   onScrollToServices,
   bookCta,
+  bookingSlug,
+  onBookingHome,
 }: {
   businessName: string;
+  bookingSlug?: string | null;
+  onBookingHome?: () => void;
   city?: string | null;
   step: PublicRitualStep;
   aiGreeting?: string | null;
@@ -164,7 +169,15 @@ export function PublicCustomerRitual({
               <p className="text-xs text-muted-foreground truncate">{city}</p>
             ) : null}
           </div>
-          {logoUrl ? (
+          {logoUrl && bookingSlug ? (
+            <PublicBookingHomeLink slug={bookingSlug} onNavigate={onBookingHome} className="shrink-0">
+              <img
+                src={logoUrl}
+                alt=""
+                className="h-9 w-9 rounded-lg object-contain border border-border/40 bg-card"
+              />
+            </PublicBookingHomeLink>
+          ) : logoUrl ? (
             <img
               src={logoUrl}
               alt=""

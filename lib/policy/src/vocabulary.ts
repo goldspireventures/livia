@@ -17,11 +17,14 @@ const VOCAB: Record<
     ownerTodayScheduleCalendarCta: string;
     /** Per-appointment SMS when you're behind (CONFIRMED bookings). */
     runningLateLabel: string;
+    /** Public /b — catalog section title (plural, guest-facing). */
+    publicBookCatalogTitle: string;
   }
 > = {
   hair: {
     clientNoun: "Client",
     serviceNoun: "Service",
+    publicBookCatalogTitle: "Services",
     locationNoun: "Shop",
     teamNoun: "Team",
     hint: "Cuts, colour, and chair time — Liv speaks your vertical.",
@@ -33,6 +36,7 @@ const VOCAB: Record<
   beauty: {
     clientNoun: "Client",
     serviceNoun: "Treatment",
+    publicBookCatalogTitle: "Services",
     locationNoun: "Studio",
     teamNoun: "Team",
     hint: "Treatments and tech assignments — patch tests where required.",
@@ -44,6 +48,7 @@ const VOCAB: Record<
   "body-art": {
     clientNoun: "Client",
     serviceNoun: "Session",
+    publicBookCatalogTitle: "Sessions",
     locationNoun: "Studio",
     teamNoun: "Artists",
     hint: "Consult before long sessions; never rush the relationship.",
@@ -55,6 +60,7 @@ const VOCAB: Record<
   wellness: {
     clientNoun: "Guest",
     serviceNoun: "Session",
+    publicBookCatalogTitle: "Sessions",
     locationNoun: "Studio",
     teamNoun: "Practitioners",
     hint: "Calmer tone; policy-heavy reschedules.",
@@ -66,6 +72,7 @@ const VOCAB: Record<
   fitness: {
     clientNoun: "Member",
     serviceNoun: "Session",
+    publicBookCatalogTitle: "Sessions",
     locationNoun: "Studio",
     teamNoun: "Coaches",
     hint: "Sessions and coaches — brisk energy.",
@@ -77,6 +84,7 @@ const VOCAB: Record<
   medspa: {
     clientNoun: "Patient",
     serviceNoun: "Treatment",
+    publicBookCatalogTitle: "Treatments",
     locationNoun: "Clinic",
     teamNoun: "Practitioners",
     hint: "Clinical precision; consent language explicit.",
@@ -88,6 +96,7 @@ const VOCAB: Record<
   "allied-health": {
     clientNoun: "Patient",
     serviceNoun: "Appointment",
+    publicBookCatalogTitle: "Appointments",
     locationNoun: "Practice",
     teamNoun: "Clinicians",
     hint: "Session-based care; not a substitute for clinical records systems.",
@@ -99,6 +108,7 @@ const VOCAB: Record<
   "pet-grooming": {
     clientNoun: "Parent",
     serviceNoun: "Groom",
+    publicBookCatalogTitle: "Grooming",
     locationNoun: "Salon",
     teamNoun: "Groomers",
     hint: "Pet records, breed notes, and rebook cycles every 4–8 weeks.",
@@ -110,6 +120,7 @@ const VOCAB: Record<
   "automotive-detailing": {
     clientNoun: "Client",
     serviceNoun: "Detail",
+    publicBookCatalogTitle: "Services",
     locationNoun: "Studio",
     teamNoun: "Team",
     hint: "Vehicle details and bay time — confirm make/model on book.",

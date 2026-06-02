@@ -82,16 +82,29 @@ ok = run("node", ["scripts/provision-demo-if-needed.mjs"], "Ensure demo world pr
 
 const e2e = ["--filter", "@workspace/e2e", "exec", "playwright", "test"];
 
-ok = run("pnpm", [...e2e, "--project=marketing-platform", "--workers=1"], "Smoke: livia.io (all routes)") && ok;
+if (mktOk) {
+  ok = run("pnpm", [...e2e, "--project=marketing-platform", "--workers=1"], "Smoke: livia.io (all routes)") && ok;
+} else {
+  console.log("⊘ Skip marketing-platform — marketing :5174 not running");
+}
 ok = run("pnpm", [...e2e, "--project=all-verticals-smoke", "--workers=1"], "Smoke: 9 verticals × owner + public") && ok;
-ok =
-  run("pnpm", [...e2e, "--project=public-booking-quality", "--workers=1"], "Public booking B2C quality") &&
-  ok;
+if (dashOk) {
+  ok =
+    run("pnpm", [...e2e, "--project=public-booking-quality", "--workers=1"], "Public booking B2C quality") &&
+    ok;
+  ok = run("pnpm", [...e2e, "--project=ux-quality-gate", "--workers=1"], "UX quality gate (hair wedge)") && ok;
+  ok = run("pnpm", [...e2e, "--project=settings-preset-picker", "--workers=1"], "Settings preset picker (E7)") && ok;
+} else {
+  console.log("⊘ Skip dashboard E2E — dashboard :5173 not running");
+}
 ok = run("pnpm", [...e2e, "--project=internal-ops-smoke", "--workers=1"], "Internal ops (:5175)") && ok;
-ok = run("pnpm", [...e2e, "--project=ux-quality-gate", "--workers=1"], "UX quality gate (hair wedge)") && ok;
-ok = run("pnpm", [...e2e, "--project=settings-preset-picker", "--workers=1"], "Settings preset picker (E7)") && ok;
-
-ok = run("pnpm", [...e2e, "--project=marketing-lifecycle", "--workers=1"], "Marketing lifecycle (wedge → demo → /b)") && ok;
+if (mktOk && dashOk) {
+  ok =
+    run("pnpm", [...e2e, "--project=marketing-lifecycle", "--workers=1"], "Marketing lifecycle (wedge → demo → /b)") &&
+    ok;
+} else {
+  console.log("⊘ Skip marketing-lifecycle — need marketing + dashboard");
+}
 
 ok = run("node", ["scripts/headless-lifecycle-r1.mjs"], "Headless lifecycle (API wedge + /b)") && ok;
 

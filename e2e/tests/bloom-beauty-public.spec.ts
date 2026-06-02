@@ -67,7 +67,7 @@ test.describe("Bloom beauty public book", () => {
     }
     const body = await pub.json();
     const brow = body.services?.find((s: { name: string }) => /brow shape/i.test(s.name));
-    expect(brow?.imageUrl).toMatch(/1583001931096/);
+    expect(brow?.imageUrl).toMatch(/1595475207225/);
 
     await page.goto(`/b/${slug}`);
     const card = page.getByTestId(`button-service-${brow.id}`);

@@ -22,8 +22,8 @@ export function SidebarNav({ items, accent, badges, collapsed, beautyNav }: Prop
   return (
     <nav
       className={cn(
-        "relative z-[1] flex-1 min-h-0 overflow-y-auto px-2 py-2",
-        beautyNav ? "beauty-sidebar-nav space-y-0.5" : "space-y-3",
+        "relative flex-1 min-h-0 overflow-y-auto px-2 py-2",
+        beautyNav ? "beauty-sidebar-nav z-10 space-y-0.5" : "relative z-[1] space-y-3",
       )}
       data-testid="sidebar-nav"
     >

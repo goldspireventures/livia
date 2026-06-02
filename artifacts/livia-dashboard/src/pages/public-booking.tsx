@@ -476,6 +476,11 @@ export default function PublicBookingPage() {
     syncPublicBookingServiceQuery(null);
   }
 
+  function navigateBookingHome() {
+    goBackToServices();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   function resetFlow() {
     setStep("services");
     setSelectedService(null);
@@ -528,6 +533,8 @@ export default function PublicBookingPage() {
           <>
             <PublicBookStorefront
               businessName={b.name}
+              bookingSlug={slug}
+              onBookingHome={navigateBookingHome}
               logoUrl={b.logoUrl}
               coverImageUrl={b.coverImageUrl}
               heroCta={heroCta}
@@ -555,6 +562,8 @@ export default function PublicBookingPage() {
         ) : (
           <PublicCustomerRitual
             businessName={b.name}
+            bookingSlug={slug}
+            onBookingHome={navigateBookingHome}
             city={b.city ? `${b.city}` : null}
             step={step as PublicRitualStep}
             aiGreeting={b.aiGreeting}
@@ -615,6 +624,7 @@ export default function PublicBookingPage() {
               services={b.services}
               vertical={b.vertical}
               featuredServiceIds={b.publicFeaturedServiceIds}
+              catalogTitle={vocab.publicBookCatalogTitle}
               layout={beautyCatalogLayout}
               selectedServiceId={beautyPublic ? selectedService?.id : undefined}
               onSelect={selectPublicService}

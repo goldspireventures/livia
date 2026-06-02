@@ -32,7 +32,6 @@ const accountMenuAppearance = {
   },
 } as const;
 
-import { SidebarBeautyBloom } from "@/components/brand/sidebar-beauty-bloom";
 import { BeautySidebarBrand } from "@/components/brand/beauty-sidebar-brand";
 import { StudioHeaderBrand } from "@/components/brand/studio-header-brand";
 
@@ -243,12 +242,11 @@ export function AppLayout({ children }: { children: ReactNode }) {
         data-testid="app-shell-sidebar"
         className={cn(
           "app-shell-sidebar hidden w-[13.5rem] max-w-[13.5rem] shrink-0 flex-col border-r border-border/40 bg-card/50 md:flex relative overflow-hidden",
-          showBeautyFlower && "beauty-sidebar-with-bloom",
         )}
       >
         {showBeautyFlower ? (
           <>
-            <div className="beauty-sidebar-stack relative z-[2] flex min-h-0 flex-1 flex-col">
+            <div className="beauty-sidebar-stack relative z-10 flex min-h-0 flex-1 flex-col">
               <BeautySidebarBrand
                 businessName={business?.name || "Your shop"}
                 logoUrl={(business as { logoUrl?: string | null } | null)?.logoUrl}
@@ -261,9 +259,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 badges={navBadges}
                 beautyNav
               />
-            </div>
-            <div className="beauty-sidebar-bloom-reserve" aria-hidden>
-              <SidebarBeautyBloom />
             </div>
           </>
         ) : (

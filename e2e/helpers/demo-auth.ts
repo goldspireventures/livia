@@ -210,7 +210,29 @@ export async function clerkTicketSignIn(
   await ensurePlatformLegalAccepted(page);
 }
 
-export async function signInBusiness(page: Page, slug: string) {
+/** Clear Clerk/session state between demo business switches (serial E2E). */
+export async function resetDemoBrowserSession(page: Page) {
+  await page.context().clearCookies();
+  await page.goto("/", { waitUntil: "domcontentloaded", timeout: 60_000 });
+  await page.evaluate(() => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch {
+      /* ignore */
+    }
+  });
+}
+
+export async function signInBusiness(
+  page: Page,
+  slug: string,
+  opts?: { resetSession?: boolean },
+) {
+  if (opts?.resetSession) {
+    await resetDemoBrowserSession(page);
+  }
+
   await page.addInitScript(() => {
     try {
       window.localStorage.setItem("livia.platformTour.dismissed.v1", "1");

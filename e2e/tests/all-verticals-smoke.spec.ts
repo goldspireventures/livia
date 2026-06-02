@@ -31,6 +31,21 @@ test.describe("All verticals smoke", () => {
     await ensureDemoProvisioned(request);
   });
 
+  test("vertical route gate matrix", async ({ page, request }) => {
+    if (!(await demoCanSignIn(request, "luxe-salon-spa"))) {
+      test.skip(true, "Clerk sign-in unavailable in this environment (skip authenticated E2E)");
+    }
+    for (const { path, allowedVertical } of GATED_ROUTE_SAMPLES) {
+      const shop = VERTICAL_DEMO_SHOPS.find((s) => s.vertical === allowedVertical);
+      if (!shop) continue;
+      if (!(await demoCanSignIn(request, shop.slug))) continue;
+      await signInBusiness(page, shop.slug, { resetSession: true });
+      await page.goto(path, { waitUntil: "domcontentloaded", timeout: 45_000 });
+      await expect(page).toHaveURL(new RegExp(path.replace(/\//g, "\\/")));
+      await assertHealthyPage(page, path);
+    }
+  });
+
   for (const shop of VERTICAL_DEMO_SHOPS) {
     test.describe(`${shop.vertical} (${shop.slug})`, () => {
       test("public booking loads", async ({ page, request }) => {
@@ -129,22 +144,6 @@ test.describe("All verticals smoke", () => {
     await assertHealthyPage(page, "/medspa");
   });
 
-  test("vertical route gate matrix", async ({ page }) => {
-    for (const { path, allowedVertical } of GATED_ROUTE_SAMPLES) {
-      const shop = VERTICAL_DEMO_SHOPS.find((s) => s.vertical === allowedVertical);
-      if (!shop) continue;
-      // Skip if Clerk down (auth required).
-      // eslint-disable-next-line playwright/no-skipped-test
-      if (!(await demoCanSignIn(page.request, shop.slug))) {
-        test.skip(true, "Clerk sign-in unavailable in this environment (skip authenticated E2E)");
-      }
-      await signInBusiness(page, shop.slug);
-      await page.goto(path, { waitUntil: "domcontentloaded" });
-      await expect(page).toHaveURL(new RegExp(path.replace(/\//g, "\\/")));
-      await assertHealthyPage(page, path);
-    }
-  });
-
   test("luxe owner dashboard shows Liv surface", async ({ page, request }) => {
     const slug = "luxe-salon-spa";
     if (!(await demoHasBusiness(request, slug))) {
@@ -193,16 +192,20 @@ test.describe("All verticals smoke", () => {
       if (!bookRes?.ok()) continue;
 
       const body = (await bookRes.json()) as { visitPath?: string; guestToken?: string };
-      expect(body.visitPath).toMatch(new RegExp(`/b/${shop.slug}/visit/`));
       expect(body.guestToken).toBeTruthy();
+      const canonicalVisit = `/b/${shop.slug}/visit/${encodeURIComponent(body.guestToken!)}`;
+      expect(body.visitPath).toMatch(/\/visit\/|\/my\?visit=/);
 
       const apiVisit = await request.get(
         `${apiBase}/api/public/b/${shop.slug}/visit/${body.guestToken}`,
       );
       expect(apiVisit.ok()).toBeTruthy();
 
-      await page.goto(body.visitPath!, { waitUntil: "domcontentloaded", timeout: 45_000 });
-      await assertHealthyPage(page, body.visitPath!);
+      const pagePath = body.visitPath?.includes(`/b/${shop.slug}/visit/`)
+        ? body.visitPath!
+        : canonicalVisit;
+      await page.goto(pagePath, { waitUntil: "domcontentloaded", timeout: 45_000 });
+      await assertHealthyPage(page, pagePath);
       await expect(page.locator("body")).toContainText(/your visit|booking summary|appointment/i);
       checked += 1;
     }

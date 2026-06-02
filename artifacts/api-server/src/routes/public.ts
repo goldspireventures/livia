@@ -48,17 +48,16 @@ import { db, visitFeedbackTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { socialProofForVertical } from "../lib/public-social-proof";
 import { inferDemoServiceImageUrl, publicExperienceSkin } from "../lib/experience-skin";
-import { STALE_PUBLIC_SERVICE_IMAGE } from "@workspace/policy";
+import { resolvePublicServiceImageUrl } from "@workspace/policy";
 import { getSignInAppearanceHintForEmail } from "../services/sign-in-appearance-hint.service";
 
 const router: IRouter = Router();
 
 function toPublicServiceDto(row: Service, vertical?: BusinessVertical | null) {
-  const trimmed = row.imageUrl?.trim();
   const imageUrl =
-    trimmed && !STALE_PUBLIC_SERVICE_IMAGE.test(trimmed)
-      ? trimmed
-      : inferDemoServiceImageUrl(row.name, vertical ?? undefined) ?? null;
+    resolvePublicServiceImageUrl(row.name, undefined, row.imageUrl) ??
+    inferDemoServiceImageUrl(row.name, vertical ?? undefined) ??
+    null;
   return {
     id: row.id,
     name: row.name,

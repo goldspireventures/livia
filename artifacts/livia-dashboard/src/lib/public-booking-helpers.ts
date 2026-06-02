@@ -90,7 +90,7 @@ export function inferServiceCategory(name: string, vertical?: string | null): st
   if (vertical === "beauty") {
     if (n.includes("lash") || n.includes("brow")) return "Lashes & brows";
     if (n.includes("nail") || n.includes("manicure") || n.includes("pedicure")) return "Nails";
-    return "Treatments";
+    return "Services";
   }
   if (vertical === "hair") {
     if (n.includes("colour") || n.includes("color") || n.includes("balayage")) return "Colour";

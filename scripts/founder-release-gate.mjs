@@ -78,6 +78,12 @@ report.steps.push(
 
 // 2) “Smoke correctness” for API surface.
 if (level === "full") {
+  report.steps.push(
+    Object.assign(
+      { id: "ensure-e2e-stack", label: "ensure local E2E stack (api + surfaces)" },
+      run("Ensure E2E stack", "node", ["scripts/ensure-e2e-stack.mjs"]),
+    ),
+  );
   // This is the strongest local invariant check, but it relies on local env setup.
   report.steps.push(
     Object.assign(
@@ -97,7 +103,7 @@ if (level === "full") {
 
 // 3) Wargame sim — local full runs only (needs Clerk demo provision).
 if (level !== "ci") {
-  const apiBase = process.env.E2E_API_BASE ?? "http://127.0.0.1:3001";
+  const apiBase = process.env.E2E_API_BASE ?? "http://127.0.0.1:3000";
   const tenants = 6;
   const days = 14;
   const conc = 20;

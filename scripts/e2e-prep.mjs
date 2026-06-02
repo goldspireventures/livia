@@ -57,11 +57,7 @@ if (!skipDb) {
 } else {
   console.log("⊘ Skipping DB (--skip-db)");
   run("node", ["scripts/provision-demo-if-needed.mjs"], "Ensure demo provisioned");
-  run(
-    "node",
-    ["-e", "fetch('http://127.0.0.1:3000/api/demo/sync-clerk',{method:'POST'}).then(r=>r.json()).then(j=>console.log('sync-clerk',j)).catch(()=>console.warn('sync-clerk skipped — start API first'))"],
-    "Sync demo Clerk users",
-  );
+  run("node", ["scripts/sync-demo-clerk.mjs"], "Sync demo Clerk users");
 }
 
 run("pnpm", ["run", "typecheck:libs"], "Typecheck shared libs");

@@ -3,9 +3,6 @@ import type { PublicServiceRow } from "@/lib/public-booking-helpers";
 /** Featured tiles in the 2-column beauty grid. */
 export const MAX_BEAUTY_FEATURED_GRID = 4;
 
-/** At or below this count, show every treatment in the grid (no hidden overflow list). */
-export const SHOW_ALL_SERVICES_IN_GRID_MAX = 6;
-
 /** Team cards before we show a swipe hint (includes the "Any" card). */
 export const STAFF_STRIP_SCROLL_HINT_THRESHOLD = 5;
 
@@ -17,10 +14,6 @@ export function pickFeaturedPublicServices(
   const sorted = [...services].sort(
     (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name),
   );
-
-  if (sorted.length <= SHOW_ALL_SERVICES_IN_GRID_MAX) {
-    return { featured: sorted, rest: [] };
-  }
 
   const byId = new Map(sorted.map((s) => [s.id, s]));
   const featured: PublicServiceRow[] = [];
@@ -51,15 +44,28 @@ export function featuredServicesHint(
   featuredCount: number,
   restCount: number,
   totalCount: number,
+  catalogTitle: string,
 ): string | null {
+  const label = catalogTitle.trim().toLowerCase() || "services";
   if (restCount > 0) {
-    const noun = restCount === 1 ? "treatment" : "treatments";
-    return `${restCount} more ${noun} in the list below`;
+    const noun = restCount === 1 ? label.replace(/s$/, "") || label : label;
+    return `${restCount} more in the list below`;
   }
   if (totalCount > 2 && featuredCount > 2) {
-    return "Scroll for more treatments";
+    return `Scroll for more`;
   }
   return null;
+}
+
+/** Count line under public /b catalog heading — e.g. "5 services". */
+export function publicBookCatalogCountLabel(count: number, catalogTitle: string): string {
+  const title = catalogTitle.trim() || "Services";
+  const base = title.toLowerCase();
+  if (count === 1) {
+    const singular = base.endsWith("s") && base.length > 1 ? base.slice(0, -1) : base;
+    return `1 ${singular}`;
+  }
+  return `${count} ${base}`;
 }
 
 export function staffStripScrollHint(staffCount: number, teamNoun: string): string | null {

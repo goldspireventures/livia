@@ -20,6 +20,8 @@ import {
 
   pickFeaturedPublicServices,
 
+  publicBookCatalogCountLabel,
+
 } from "@/lib/public-featured-services";
 
 import { PublicServiceThumb } from "@/components/public-booking/public-service-thumb";
@@ -37,6 +39,8 @@ export function PublicServiceCatalog({
 
   featuredServiceIds,
 
+  catalogTitle = "Services",
+
   onSelect,
 
   layout = "list",
@@ -50,6 +54,8 @@ export function PublicServiceCatalog({
   vertical?: string | null;
 
   featuredServiceIds?: string[] | null;
+
+  catalogTitle?: string;
 
   bookCta?: string;
 
@@ -93,16 +99,16 @@ export function PublicServiceCatalog({
 
   if (layout === "beauty-grid") {
     const { featured, rest } = pickFeaturedPublicServices(services, featuredServiceIds);
-    const hint = featuredServicesHint(featured.length, rest.length, services.length);
+    const hint = featuredServicesHint(featured.length, rest.length, services.length, catalogTitle);
 
     return (
       <div data-testid="public-service-catalog">
         <div className="flex items-baseline justify-between gap-2 mb-3">
           <h3 className="text-sm font-medium" style={{ fontFamily: "var(--app-font-serif)" }}>
-            Treatments
+            {catalogTitle}
           </h3>
           <span className="text-[10px] uppercase tracking-wider text-muted-foreground tabular-nums">
-            {services.length} {services.length === 1 ? "service" : "services"}
+            {publicBookCatalogCountLabel(services.length, catalogTitle)}
           </span>
         </div>
         <div className="beauty-service-grid">
@@ -179,9 +185,12 @@ export function PublicServiceCatalog({
 
         {rest.length > 0 ? (
           <div className="mt-5 space-y-3" data-testid="public-service-overflow-section">
-            <h4 className="text-xs uppercase tracking-widest text-muted-foreground font-medium">
-              More treatments
-            </h4>
+            <div className="flex items-baseline justify-between gap-2">
+              <h4 className="text-xs uppercase tracking-widest text-muted-foreground font-medium">
+                More {catalogTitle.toLowerCase()}
+              </h4>
+              <span className="text-[10px] text-muted-foreground tabular-nums">{rest.length}</span>
+            </div>
             <div
               className="beauty-service-overflow-menu space-y-3"
               data-testid="public-service-overflow-menu"

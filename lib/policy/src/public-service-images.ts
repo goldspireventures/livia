@@ -4,12 +4,12 @@
  */
 
 export const PUBLIC_SERVICE_IMAGE_KEYWORDS: Record<string, string> = {
-  "brow shape": "https://images.unsplash.com/photo-1583001931096-959e9a1a6223?w=400&h=300&fit=crop",
-  "brow tint": "https://images.unsplash.com/photo-1583001931096-959e9a1a6223?w=400&h=300&fit=crop",
+  "brow shape": "https://images.unsplash.com/photo-1595475207225-428b62bda831?w=400&h=300&fit=crop",
+  "brow tint": "https://images.unsplash.com/photo-1595475207225-428b62bda831?w=400&h=300&fit=crop",
   "lash fill": "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=400&h=300&fit=crop",
   "lash lift": "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=400&h=300&fit=crop",
   manicure: "https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&h=300&fit=crop",
-  eyebrow: "https://images.unsplash.com/photo-1583001931096-959e9a1a6223?w=400&h=300&fit=crop",
+  eyebrow: "https://images.unsplash.com/photo-1595475207225-428b62bda831?w=400&h=300&fit=crop",
   massage: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=400&h=300&fit=crop",
   consult: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=400&h=300&fit=crop",
   tattoo: "https://images.unsplash.com/photo-1568515045052-f9a854d70bfd?w=400&h=300&fit=crop",
@@ -29,8 +29,8 @@ export const PUBLIC_SERVICE_IMAGE_KEYWORDS: Record<string, string> = {
   fill: "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=400&h=300&fit=crop",
   gel: "https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&h=300&fit=crop",
   nail: "https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&h=300&fit=crop",
-  brow: "https://images.unsplash.com/photo-1583001931096-959e9a1a6223?w=400&h=300&fit=crop",
-  shape: "https://images.unsplash.com/photo-1583001931096-959e9a1a6223?w=400&h=300&fit=crop",
+  brow: "https://images.unsplash.com/photo-1595475207225-428b62bda831?w=400&h=300&fit=crop",
+  shape: "https://images.unsplash.com/photo-1595475207225-428b62bda831?w=400&h=300&fit=crop",
   cut: "https://images.unsplash.com/photo-1503956546970-5a150ba5a4?w=400&h=300&fit=crop",
   wax: "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=400&h=300&fit=crop",
   facial: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=400&h=300&fit=crop",
@@ -38,7 +38,7 @@ export const PUBLIC_SERVICE_IMAGE_KEYWORDS: Record<string, string> = {
 
 /** Known-bad demo URLs — prefer keyword inference instead. */
 export const STALE_PUBLIC_SERVICE_IMAGE =
-  /photo-1598371839696|photo-1611501275019|photo-1570172619644-dfd03ed5d881|photo-1487412940907|photo-1595476108013/;
+  /photo-1598371839696|photo-1611501275019|photo-1570172619644-dfd03ed5d881|photo-1487412940907|photo-1595476108013|photo-1583001931096/;
 
 const KEYWORD_KEYS_LONGEST_FIRST = Object.keys(PUBLIC_SERVICE_IMAGE_KEYWORDS).sort(
   (a, b) => b.length - a.length,

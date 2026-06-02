@@ -39,10 +39,14 @@ test.describe("Internal ops smoke", () => {
     expect(typeof body.total).toBe("number");
   });
 
-  test("internal UI loads support queue without HTML parse error", async ({ page, request }) => {
+  test("internal UI loads support queue without HTML parse error", async ({ page }) => {
     test.skip(!opsSecret, "Set INTERNAL_OPS_SECRET in repo-root .env");
     const internalBase = process.env.E2E_INTERNAL_BASE ?? "http://127.0.0.1:5175";
-    await page.goto(internalBase, { waitUntil: "domcontentloaded" });
+    try {
+      await page.goto(internalBase, { waitUntil: "domcontentloaded", timeout: 15_000 });
+    } catch {
+      test.skip(true, `Internal ops not running at ${internalBase} — pnpm dev:internal`);
+    }
     await page.getByPlaceholder("X-Internal-Ops-Secret").fill(opsSecret);
     await page.getByPlaceholder(/@livia-hq\.com|you@livia\.io/).fill("e2e@livia.io");
     await page.getByRole("button", { name: "Continue" }).click();

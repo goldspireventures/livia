@@ -157,6 +157,16 @@ export default defineConfig({
       },
     },
     {
+      name: "marketing-lifecycle",
+      testMatch: /marketing-lifecycle\.spec\.ts/,
+      timeout: 180_000,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: marketingBase,
+      },
+    },
+    {
       name: "marketing-visual",
       testMatch: /marketing-visual-capture\.spec\.ts/,
       use: {

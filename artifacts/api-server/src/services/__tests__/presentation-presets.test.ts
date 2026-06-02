@@ -74,7 +74,11 @@ assert.equal(presentationPresetsActive({ LIVIA_PRESENTATION_PRESETS: "true" }), 
 assert.equal(presentationPresetsActive({ LIVIA_ENV: "staging" }), true);
 
 const matrix = getPresentationPromotionMatrix();
-assert.equal(matrix.length, verticals.length * 4, "9×4 promotion matrix");
+const expectedMatrixRows = verticals.reduce(
+  (sum, vertical) => sum + listPresentationPresets(vertical).length,
+  0,
+);
+assert.equal(matrix.length, expectedMatrixRows, "promotion matrix rows (9 verticals; beauty has 5 presets)");
 assert.ok(matrix.every((r) => r.productionReady), "all presets production-ready when flag on");
 
 console.log("presentation-presets.test.ts OK");

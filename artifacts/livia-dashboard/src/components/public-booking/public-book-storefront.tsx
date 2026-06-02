@@ -1,5 +1,6 @@
 import { MessageCircle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PublicBookingHomeLink } from "@/components/public-booking/public-booking-home-link";
 /** W5 storefront shell — default sticky header or beauty centered brand + hero. */
 export function PublicBookStorefront({
   businessName,
@@ -13,8 +14,12 @@ export function PublicBookStorefront({
   tagline,
   heroTagline,
   heroTitle,
+  bookingSlug,
+  onBookingHome,
 }: {
   businessName: string;
+  bookingSlug?: string | null;
+  onBookingHome?: () => void;
   logoUrl?: string | null;
   coverImageUrl?: string | null;
   heroCta: string;
@@ -41,7 +46,26 @@ export function PublicBookStorefront({
     return (
       <div className="public-book-storefront motion-hero-fade-in" data-testid="public-book-storefront">
         <div className="beauty-public-brand">
-          {logoUrl ? (
+          {bookingSlug ? (
+            <PublicBookingHomeLink
+              slug={bookingSlug}
+              onNavigate={onBookingHome}
+              className="mx-auto block w-fit"
+              aria-label={`${businessName} booking home`}
+            >
+              {logoUrl ? (
+                <img src={logoUrl} alt="" className="beauty-public-brand-logo" />
+              ) : (
+                <div
+                  className="beauty-public-brand-logo flex items-center justify-center text-xl font-serif bg-primary/15"
+                  style={{ fontFamily: "var(--app-font-serif)" }}
+                  aria-hidden
+                >
+                  {businessName.charAt(0)}
+                </div>
+              )}
+            </PublicBookingHomeLink>
+          ) : logoUrl ? (
             <img src={logoUrl} alt="" className="beauty-public-brand-logo" />
           ) : (
             <div
@@ -93,7 +117,21 @@ export function PublicBookStorefront({
         className="sticky top-0 z-30 flex h-16 items-center gap-3 px-4 border-b border-border/40 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/70"
         data-testid="public-book-sticky-header"
       >
-        {logoUrl ? (
+        {bookingSlug ? (
+          <PublicBookingHomeLink slug={bookingSlug} onNavigate={onBookingHome} className="shrink-0">
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt=""
+                className="h-12 w-12 rounded-full object-cover border border-border/50 bg-card"
+              />
+            ) : (
+              <div className="h-12 w-12 rounded-full bg-primary/15 flex items-center justify-center text-base font-serif border border-border/50">
+                {businessName.charAt(0)}
+              </div>
+            )}
+          </PublicBookingHomeLink>
+        ) : logoUrl ? (
           <img
             src={logoUrl}
             alt=""

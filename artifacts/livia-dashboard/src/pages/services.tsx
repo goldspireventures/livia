@@ -22,6 +22,8 @@ import { customFetch } from "@workspace/api-client-react";
 import { useForm } from "react-hook-form";
 import { invalidateOperationalState } from "@/lib/operational-cache";
 import { OperationalPageShell } from "@/components/layout/operational-page-shell";
+import { ServiceImageField } from "@/components/services/service-image-field";
+import { businessVocabulary } from "@workspace/policy";
 
 interface ServiceForm {
   name: string;
@@ -29,6 +31,7 @@ interface ServiceForm {
   durationMinutes: number;
   priceMinor: number;
   currency: string;
+  imageUrl?: string;
 }
 
 export default function ServicesPage() {
@@ -66,11 +69,27 @@ export default function ServicesPage() {
 
   const createService = useCreateService();
   const updateService = useUpdateService();
-  const { register, handleSubmit, reset } = useForm<ServiceForm>({
-    defaultValues: { currency: "USD", durationMinutes: 60 },
+  const { register, handleSubmit, reset, watch, setValue } = useForm<ServiceForm>({
+    defaultValues: { currency: "USD", durationMinutes: 60, imageUrl: "" },
   });
+  const draftImageUrl = watch("imageUrl");
 
-  const svcList = (services as { id: string; name: string; description?: string; durationMinutes: number; priceMinor: number; currency?: string; isActive?: boolean }[]) ?? [];
+  const svcList =
+    (services as {
+      id: string;
+      name: string;
+      description?: string;
+      durationMinutes: number;
+      priceMinor: number;
+      currency?: string;
+      isActive?: boolean;
+      imageUrl?: string | null;
+    }[]) ?? [];
+
+  const vocab = businessVocabulary(
+    (business as { vertical?: string } | null)?.vertical,
+    (business as { category?: string } | null)?.category,
+  );
 
   function openEdit(svc: (typeof svcList)[number]) {
     setEditId(svc.id);
@@ -80,6 +99,7 @@ export default function ServicesPage() {
       durationMinutes: svc.durationMinutes,
       priceMinor: svc.priceMinor,
       currency: svc.currency || "EUR",
+      imageUrl: svc.imageUrl ?? "",
     });
   }
 
@@ -95,6 +115,7 @@ export default function ServicesPage() {
           durationMinutes: Number(vals.durationMinutes),
           priceMinor: Number(vals.priceMinor),
           currency: vals.currency || "EUR",
+          imageUrl: vals.imageUrl?.trim() || undefined,
         },
       },
       {
@@ -120,6 +141,7 @@ export default function ServicesPage() {
           durationMinutes: Number(vals.durationMinutes),
           priceMinor: Number(vals.priceMinor),
           currency: vals.currency || "USD",
+          imageUrl: vals.imageUrl?.trim() || undefined,
         },
       },
       {
@@ -181,8 +203,8 @@ export default function ServicesPage() {
   return (
     <OperationalPageShell
       data-testid="services-page"
-      title="Services"
-      subtitle="Your catalog — pin up to 4 services to the top of your public booking page."
+      title={vocab.publicBookCatalogTitle}
+      subtitle={`Your catalog — add photos for public booking. Pin up to 4 ${vocab.publicBookCatalogTitle.toLowerCase()} to the top of your book page.`}
       width="full"
       actions={
         <div className="flex gap-2">
@@ -249,6 +271,14 @@ export default function ServicesPage() {
                   <Label>Currency</Label>
                   <Input {...register("currency")} placeholder="USD" data-testid="input-currency" />
                 </div>
+                {bid ? (
+                  <ServiceImageField
+                    businessId={bid}
+                    imageUrl={draftImageUrl || null}
+                    onChange={(url) => setValue("imageUrl", url ?? "")}
+                    disabled={createService.isPending}
+                  />
+                ) : null}
                 <div className="flex gap-2 justify-end">
                   <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                     Cancel
@@ -291,6 +321,14 @@ export default function ServicesPage() {
                 <Input type="number" min={0} {...register("priceMinor", { required: true })} />
               </div>
             </div>
+            {bid ? (
+              <ServiceImageField
+                businessId={bid}
+                imageUrl={draftImageUrl || null}
+                onChange={(url) => setValue("imageUrl", url ?? "")}
+                disabled={updateService.isPending}
+              />
+            ) : null}
             <div className="flex gap-2 justify-end">
               <Button type="button" variant="outline" onClick={() => setEditId(null)}>
                 Cancel
@@ -328,6 +366,15 @@ export default function ServicesPage() {
                 data-testid={`row-service-${svc.id}`}
                 className={`flex flex-wrap items-center gap-3 p-3 ${!svc.isActive ? "opacity-60" : ""}`}
               >
+                {svc.imageUrl ? (
+                  <img
+                    src={svc.imageUrl}
+                    alt=""
+                    className="h-12 w-12 shrink-0 rounded-lg object-cover border border-border/60"
+                  />
+                ) : (
+                  <div className="h-12 w-12 shrink-0 rounded-lg border border-dashed border-border/60 bg-muted/30" />
+                )}
                 <div className="flex-1 min-w-[140px]">
                   <p className="font-medium text-sm">{svc.name}</p>
                   {svc.description ? (

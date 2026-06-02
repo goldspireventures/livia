@@ -5,7 +5,7 @@ import {
   STALE_PUBLIC_SERVICE_IMAGE,
 } from "../public-service-images";
 
-assert.match(inferPublicServiceImageFromName("Brow shape")!, /1583001931096/);
+assert.match(inferPublicServiceImageFromName("Brow shape")!, /1595475207225/);
 assert.match(inferPublicServiceImageFromName("Lash fill")!, /1516975080664/);
 
 assert.equal(
@@ -13,7 +13,7 @@ assert.equal(
     "Brow shape",
     undefined,
     "https://images.unsplash.com/photo-1487412940907-6530b50e3063?w=400",
-  )!.includes("1583001931096"),
+  )!.includes("1595475207225"),
   true,
 );
 

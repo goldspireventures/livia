@@ -14,7 +14,6 @@ import {
   Scissors,
 } from "lucide-react";
 import { BeautySidebarBrand } from "@/components/brand/beauty-sidebar-brand";
-import { SidebarBeautyBloom } from "@/components/brand/sidebar-beauty-bloom";
 import { cn } from "@/lib/utils";
 import { isBeautyPresentationPreset, isBeautyVertical } from "@/lib/presentation-layout";
 
@@ -79,14 +78,13 @@ export function AppearancePreviewShell({
         className={cn(
           "app-shell-sidebar relative flex shrink-0 flex-col border-r border-border/40 overflow-hidden",
           embed ? "w-[11.5rem]" : "hidden sm:flex w-[13.5rem]",
-          beauty && "beauty-sidebar-with-bloom",
           embed && beauty && "appearance-preview-sidebar",
           !noirBeauty && "bg-card/40",
         )}
       >
         {beauty ? (
           <>
-            <div className="beauty-sidebar-stack relative z-[2] flex min-h-0 flex-1 flex-col">
+            <div className="beauty-sidebar-stack relative z-10 flex min-h-0 flex-1 flex-col">
               <BeautySidebarBrand businessName={businessName} compact={embed} />
               <nav
                 className={cn(
@@ -116,12 +114,6 @@ export function AppearancePreviewShell({
                   );
                 })}
               </nav>
-            </div>
-            <div
-              className={cn("beauty-sidebar-bloom-reserve", embed && "appearance-preview-bloom-reserve")}
-              aria-hidden
-            >
-              <SidebarBeautyBloom />
             </div>
           </>
         ) : (

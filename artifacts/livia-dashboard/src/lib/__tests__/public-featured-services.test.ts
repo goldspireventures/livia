@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  featuredServicesHint,
   MAX_BEAUTY_FEATURED_GRID,
   pickFeaturedPublicServices,
-  SHOW_ALL_SERVICES_IN_GRID_MAX,
+  publicBookCatalogCountLabel,
 } from "@/lib/public-featured-services";
 
 const svc = (id: string, name: string, sortOrder: number) => ({
@@ -16,7 +17,7 @@ const svc = (id: string, name: string, sortOrder: number) => ({
 });
 
 describe("pickFeaturedPublicServices", () => {
-  it("puts every treatment in the grid when count is within SHOW_ALL_SERVICES_IN_GRID_MAX", () => {
+  it("keeps a 2×2 hero grid and overflows extra treatments", () => {
     const services = [
       svc("1", "Lash fill", 1),
       svc("2", "Classic manicure", 2),
@@ -25,15 +26,16 @@ describe("pickFeaturedPublicServices", () => {
       svc("5", "Lash lift", 5),
     ];
     const { featured, rest } = pickFeaturedPublicServices(services, []);
-    expect(featured).toHaveLength(5);
-    expect(rest).toHaveLength(0);
+    expect(featured).toHaveLength(MAX_BEAUTY_FEATURED_GRID);
+    expect(rest).toHaveLength(1);
+    expect(rest[0]?.name).toBe("Lash lift");
     expect(featured.map((s) => s.name)).toContain("Brow shape");
+    expect(featuredServicesHint(4, 1, 5, "Services")).toMatch(/more in the list/i);
+    expect(publicBookCatalogCountLabel(5, "Services")).toBe("5 services");
   });
 
   it("splits featured grid and overflow when catalog is large", () => {
-    const services = Array.from({ length: SHOW_ALL_SERVICES_IN_GRID_MAX + 2 }, (_, i) =>
-      svc(String(i), `Service ${i}`, i),
-    );
+    const services = Array.from({ length: 10 }, (_, i) => svc(String(i), `Service ${i}`, i));
     const { featured, rest } = pickFeaturedPublicServices(services, []);
     expect(featured).toHaveLength(MAX_BEAUTY_FEATURED_GRID);
     expect(rest.length).toBe(services.length - MAX_BEAUTY_FEATURED_GRID);
