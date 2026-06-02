@@ -19,7 +19,7 @@ export const G1_WEDGE_WORLDS: G1WedgeWorld[] = [
   {
     key: "tattoo",
     vertical: "body-art",
-    title: "Tattoo salon",
+    title: "Tattoo studio",
     tagline: "Ink stories. Build legacies.",
     imageUrl: "/w2-gateway/cards/tattoo.jpg",
     photoPosition: "center 22%",
