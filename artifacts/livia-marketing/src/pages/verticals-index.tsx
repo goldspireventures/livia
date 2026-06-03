@@ -17,7 +17,7 @@ export default function VerticalsIndexPage() {
               Every <em>vertical</em>
             </>
           }
-          subtitle="One platform. Vertical packs for language, policies, and booking flows — pick yours, then enter the live demo."
+          subtitle="One platform. Vertical packs for language, policies, and booking flows — request a demo for yours."
         />
 
         <ul className="cst-verticals__grid">
@@ -38,7 +38,7 @@ export default function VerticalsIndexPage() {
         <ConstellationPageFooter>
           <p>Same physics on every floor — time, memory, policy, channels.</p>
           <Link href={marketingDemoPath} className="cst-page-link" data-testid="marketing-demo-link">
-            Try the demo →
+            Book a demo →
           </Link>
           <Link href="/" className="cst-page-link cst-page-link--muted">
             Back to home

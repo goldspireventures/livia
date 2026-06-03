@@ -1,6 +1,11 @@
 import { Router, type IRouter } from "express";
 import { CreateMarketingLeadBody } from "@workspace/api-zod";
+import { isMarketingDemoLeadIntent } from "@workspace/policy";
 import { createMarketingLead } from "../services/marketing-leads.service";
+import {
+  issueMarketingDemoGateToken,
+  verifyMarketingDemoGateToken,
+} from "../lib/marketing-demo-gate-token";
 import { logger } from "../lib/logger";
 
 import { sendError } from "../lib/http-errors";
@@ -34,6 +39,21 @@ setInterval(() => {
   for (const [k, t] of recentEmails) if (now - t > EMAIL_DEDUPE_MS) recentEmails.delete(k);
 }, 10 * 60_000).unref();
 
+function demoAccessTokenForLead(leadId: string, email: string, data: { source?: string | null; utmSource?: string | null }) {
+  if (!isMarketingDemoLeadIntent(data)) return undefined;
+  return issueMarketingDemoGateToken({ leadId, email }) ?? undefined;
+}
+
+router.get("/public/marketing/demo-gate/verify", (req, res): void => {
+  const key = typeof req.query.key === "string" ? req.query.key : "";
+  const result = verifyMarketingDemoGateToken(key);
+  if (!result.valid) {
+    res.status(401).json({ valid: false });
+    return;
+  }
+  res.json({ valid: true });
+});
+
 router.post("/public/marketing/leads", async (req, res): Promise<void> => {
   // Honeypot: bots fill every field. Legitimate forms leave `website` blank.
   if (req.body && typeof req.body === "object" && req.body.website) {
@@ -57,17 +77,23 @@ router.post("/public/marketing/leads", async (req, res): Promise<void> => {
 
   const emailKey = parsed.data.email.trim().toLowerCase();
   const lastSeen = recentEmails.get(emailKey);
+  const isDemoLead = isMarketingDemoLeadIntent(parsed.data);
+
   if (lastSeen && Date.now() - lastSeen < EMAIL_DEDUPE_MS) {
-    // Idempotent ack — don't insert duplicate row, don't leak that we deduped.
-    res.status(201).json({ ok: true });
+    const demoAccessToken = demoAccessTokenForLead(`dedupe-${emailKey}`, emailKey, parsed.data);
+    res.status(201).json({ ok: true, ...(demoAccessToken ? { demoAccessToken } : {}) });
     return;
   }
 
   try {
     const { id } = await createMarketingLead(parsed.data);
     recentEmails.set(emailKey, Date.now());
-    logger.info({ lead_id: id, source: parsed.data.source ?? "livia.io" }, "marketing_lead_captured");
-    res.status(201).json({ ok: true });
+    logger.info(
+      { lead_id: id, source: parsed.data.source ?? "livia.io", demo: isDemoLead },
+      "marketing_lead_captured",
+    );
+    const demoAccessToken = demoAccessTokenForLead(id, emailKey, parsed.data);
+    res.status(201).json({ ok: true, ...(demoAccessToken ? { demoAccessToken } : {}) });
   } catch (err) {
     logger.error({ err }, "marketing_lead_capture_failed");
     sendError(res, req, 500, "Failed to record lead");

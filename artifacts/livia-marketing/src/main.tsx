@@ -11,8 +11,10 @@ import "@fontsource/jetbrains-mono/500.css";
 import "./index.css";
 import { initMarketingAnalytics } from "@/lib/analytics";
 import { applyMarketingPlatformTheme } from "@/lib/marketing-platform-theme";
+import { initMarketingApiClient } from "@/lib/marketing-api-client";
 
 applyMarketingPlatformTheme();
+initMarketingApiClient();
 initMarketingAnalytics();
 
 createRoot(document.getElementById("root")!).render(<App />);

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -16,12 +16,15 @@ import {
 } from "@/components/ui/select";
 import { editorialCopy, type MarketingLocale } from "@/lib/marketing-editorial-i18n";
 import { MARKETING_VERTICAL_LINKS } from "@/lib/marketing-verticals";
+import { demoConciergeUrlWithKey, persistDemoGateKey } from "@/lib/marketing-demo-gate-client";
 
 const COUNTRY_OPTIONS = [
   { value: "IE", label: "Ireland" },
   { value: "GB", label: "United Kingdom" },
   { value: "DE", label: "Germany" },
 ] as const;
+
+export type MarketingFormIntent = "waitlist" | "demo";
 
 function formSchema(locale: MarketingLocale) {
   const invalid =
@@ -33,11 +36,26 @@ function formSchema(locale: MarketingLocale) {
   });
 }
 
-export function MarketingForm({ locale = "en" }: { locale?: MarketingLocale }) {
+function initialVerticalFromQuery(): string {
+  if (typeof window === "undefined") return "";
+  const raw = new URLSearchParams(window.location.search).get("vertical")?.trim() ?? "";
+  if (!raw) return "";
+  const known = MARKETING_VERTICAL_LINKS.some((v) => v.slug === raw);
+  return known ? raw : "";
+}
+
+export function MarketingForm({
+  locale = "en",
+  intent = "waitlist",
+}: {
+  locale?: MarketingLocale;
+  intent?: MarketingFormIntent;
+}) {
   const [submitted, setSubmitted] = useState(false);
   const createLead = useCreateMarketingLead();
-  const t = editorialCopy(locale).form;
+  const t = editorialCopy(locale);
   const schema = formSchema(locale);
+  const isDemo = intent === "demo";
 
   type FormValues = z.infer<typeof schema>;
 
@@ -46,28 +64,52 @@ export function MarketingForm({ locale = "en" }: { locale?: MarketingLocale }) {
     defaultValues: { email: "", vertical: "", country: "IE" },
   });
 
+  useEffect(() => {
+    const fromQuery = initialVerticalFromQuery();
+    if (fromQuery) form.setValue("vertical", fromQuery);
+  }, [form]);
+
   function onSubmit(values: FormValues) {
-    const source = locale === "de" ? "livia-hq.com/de" : "livia-hq.com";
+    const source =
+      locale === "de"
+        ? isDemo
+          ? "livia-hq.com/de/book-demo"
+          : "livia-hq.com/de"
+        : isDemo
+          ? "livia-hq.com/book-demo"
+          : "livia-hq.com";
     createLead.mutate(
       {
         data: {
           email: values.email,
           source,
-          utmSource: values.vertical?.trim() ? `vertical:${values.vertical}` : undefined,
+          utmSource: values.vertical?.trim()
+            ? isDemo
+              ? `demo:${values.vertical}`
+              : `vertical:${values.vertical}`
+            : isDemo
+              ? "demo-request"
+              : undefined,
           utmMedium: values.country?.trim() || undefined,
         },
       },
       {
-        onSuccess: () => {
+        onSuccess: (data) => {
           trackEvent("lead_submit", {
             source,
+            intent,
             ...(values.vertical?.trim() ? { vertical: values.vertical } : {}),
             ...(values.country?.trim() ? { country: values.country } : {}),
           });
+          if (isDemo && data.demoAccessToken) {
+            persistDemoGateKey(data.demoAccessToken);
+            window.location.assign(demoConciergeUrlWithKey(data.demoAccessToken));
+            return;
+          }
           setSubmitted(true);
         },
         onError: () => {
-          form.setError("email", { message: t.error });
+          form.setError("email", { message: t.form.error });
         },
       },
     );
@@ -85,13 +127,15 @@ export function MarketingForm({ locale = "en" }: { locale?: MarketingLocale }) {
             strokeLinejoin="round"
           />
         </svg>
-        {t.success}
+        {isDemo ? t.formDemo.success : t.form.success}
       </div>
     );
   }
 
   const verticalLabel = locale === "de" ? "Branche (optional)" : "Your trade (optional)";
   const countryLabel = locale === "de" ? "Land" : "Country";
+  const submitLabel = isDemo ? t.formDemo.submit : t.form.submit;
+  const pendingLabel = isDemo ? t.formDemo.pending : locale === "de" ? "Wird gesendet…" : "Joining…";
 
   return (
     <Form {...form}>
@@ -153,7 +197,7 @@ export function MarketingForm({ locale = "en" }: { locale?: MarketingLocale }) {
                     type="email"
                     aria-label="Email"
                     autoComplete="email"
-                    placeholder={t.placeholder}
+                    placeholder={t.form.placeholder}
                     className="h-12 min-h-[44px] bg-background/50 border-white/10 text-white placeholder:text-muted-foreground focus-visible:ring-aurora-cyan"
                     data-testid="waitlist-email"
                     {...field}
@@ -169,7 +213,7 @@ export function MarketingForm({ locale = "en" }: { locale?: MarketingLocale }) {
             disabled={createLead.isPending}
             data-testid="waitlist-submit"
           >
-            {createLead.isPending ? (locale === "de" ? "Wird gesendet…" : "Joining…") : t.submit}
+            {createLead.isPending ? pendingLabel : submitLabel}
           </Button>
         </div>
       </form>

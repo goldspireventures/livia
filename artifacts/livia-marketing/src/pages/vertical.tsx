@@ -5,7 +5,7 @@ import { ConstellationPageHeader } from "@/components/constellation/constellatio
 import { ConstellationInnerPage, ConstellationPainList } from "@/components/constellation/constellation-inner-page";
 import { ConstellationGlassCard } from "@/components/constellation/constellation-spine";
 import { MarketingForm } from "@/components/marketing-form";
-import { dashboardWedgeUrl } from "@/lib/marketing-links";
+import { marketingBookDemoUrl } from "@/lib/marketing-links";
 
 const VERTICALS: Record<
   string,
@@ -118,13 +118,13 @@ export default function VerticalPage() {
         </ConstellationGlassCard>
 
         <p className="mb-12">
-          <a
-            href={dashboardWedgeUrl(slug === "tattoo" ? "body-art" : slug)}
+          <Link
+            href={marketingBookDemoUrl(slug === "tattoo" ? "body-art" : slug)}
             className="cst-page-link"
             data-testid="marketing-demo-link"
           >
-            Try this vertical in the live demo →
-          </a>
+            Book a demo for this vertical →
+          </Link>
         </p>
 
         <section className="cst-page-section pt-8">

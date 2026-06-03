@@ -14,9 +14,13 @@ export const MARKETING_ROUTE_META: Record<
     title: "Pricing — Livia",
     description: "Honest EUR tiers from the entitlements catalogue. Closed beta is free.",
   },
+  "/book-demo": {
+    title: "Book a demo — Livia",
+    description: "Request a guided walkthrough of the live demo world for your vertical.",
+  },
   "/demo": {
-    title: "Try a live demo — Livia",
-    description: "Walk a real seeded business in 90 seconds.",
+    title: "Live demo — Livia",
+    description: "Invited guests — pick a vertical and walk a seeded business.",
   },
   "/how-it-works": { title: "How it works — Livia" },
   "/verticals": { title: "Verticals — Livia" },

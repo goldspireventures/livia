@@ -23,13 +23,14 @@ test.describe("Marketing lifecycle", () => {
     }
   });
 
-  test("home vertical chip opens demo wedge", async ({ page }) => {
+  test("home hero book demo opens request page", async ({ page }) => {
     await page.goto(`${marketingBase}/`, { waitUntil: "domcontentloaded" });
-    const wedge = page.locator('a[href*="/demo/wedge/beauty"]').first();
-    await expect(wedge).toBeVisible();
-    await wedge.click();
-    await page.waitForURL(/\/demo\/wedge\/beauty/, { timeout: 30_000 });
-    await expect(page.locator("body")).not.toContainText(/something went wrong/i);
+    const cta = page.getByTestId("marketing-hero-demo");
+    await expect(cta).toHaveAttribute("href", "/book-demo");
+    await cta.click();
+    await page.waitForURL(/\/book-demo/, { timeout: 15_000 });
+    await expect(page.getByTestId("waitlist-email")).toBeVisible();
+    await expect(page.getByTestId("waitlist-submit")).toContainText(/request demo/i);
   });
 
   test("wedge continues to demo launcher", async ({ page }) => {

@@ -30,6 +30,7 @@ const ROUTES = [
   "/eu-ai",
   "/contact",
   "/changelog",
+  "/book-demo",
   "/demo",
   "/legal/privacy",
   "/status",
@@ -63,11 +64,16 @@ const ROUTES = [
     await expect(page.getByText(/dental/i)).toHaveCount(0);
   });
 
-  test("demo CTA points at marketing concierge gate", async ({ page }) => {
+  test("/demo without key redirects to book-demo", async ({ page }) => {
+    await page.goto(`${marketingBase}/demo`, { waitUntil: "domcontentloaded" });
+    await page.waitForURL(/\/book-demo/, { timeout: 15_000 });
+  });
+
+  test("demo CTA points at book-demo request page", async ({ page }) => {
     await page.goto(`${marketingBase}/how-it-works`);
     const demo = page.getByTestId("marketing-demo-link").first();
     await expect(demo).toBeVisible();
-    await expect(demo).toHaveAttribute("href", "/demo");
+    await expect(demo).toHaveAttribute("href", "/book-demo");
   });
 
   test("pricing shows F9 tiers from catalogue", async ({ page }) => {

@@ -9,19 +9,25 @@ meta:
   concept: M4-concierge-gate
 
 job: >
-  Prospect picks one of three live demo businesses — concierge gate before W2 app handoff.
+  Invited guests pick a vertical — concierge gate before W2 app handoff.
+  Cold traffic books via /book-demo first.
 
 visual:
   reference: docs/design/assets/w1-marketing/demo/w1-demo-concept-c-concierge-gate.png
   summary: >
-    Minimal chrome (logo + LIVE). Large champagne headline. Three photo-forward glass portals.
-    Procedural midnight navy + corner gold nebula clouds (#E6D0A5 / #D9B97A / #A9834D).
+    Minimal chrome (logo + LIVE). “Invited guests” eyebrow. Large champagne headline.
+    Photo-forward glass portals. Footer links to /book-demo for access requests.
 
 inheritance:
   w1_inner_pages: ConstellationPageShell — orbit + violet/cyan nebula (marketing standard)
   w2_demo_flow: app /demo/wedge/:vertical inherits this gate ambient via DemoFlowShell
 
 handoff: app /demo/wedge/:slug or ?vertical=
+
+gate:
+  requires: /demo?key= signed token or LIVIA_MARKETING_DEMO_GATE_BYPASS_KEY (founder/E2E)
+  verify: GET /api/public/marketing/demo-gate/verify
+  cold_traffic: redirect to /book-demo
 
 platform_skin_inheritance:
   tokens: artifacts/livia-marketing/src/styles/constellation-w1-gold.css

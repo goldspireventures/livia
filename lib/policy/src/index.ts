@@ -38,6 +38,7 @@ export * from "./inbox-queue";
 export * from "./wedge-gate";
 export * from "./wedge-demo-stories";
 export * from "./marketing-demo-concierge";
+export * from "./marketing-demo-gate";
 export * from "./guest-surfaces";
 export * from "./platform-surface-registry";
 export * from "./support-points";

@@ -30,6 +30,7 @@ const ROUTES = [
   "/de",
   "/eu-ai",
   "/contact",
+  "/book-demo",
   "/changelog",
   "/status",
 ];

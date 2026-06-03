@@ -2,7 +2,7 @@ import type { RefObject } from "react";
 import { Link } from "wouter";
 import { MarketingForm } from "@/components/marketing-form";
 import { editorialCopy, type MarketingLocale } from "@/lib/marketing-editorial-i18n";
-import { dashboardWedgeUrl, marketingDemoPath } from "@/lib/marketing-links";
+import { marketingBookDemoUrl, marketingDemoPath } from "@/lib/marketing-links";
 import { MARKETING_VERTICAL_LINKS } from "@/lib/marketing-verticals";
 import "@/styles/constellation-home-fold.css";
 
@@ -56,9 +56,6 @@ export function ConstellationHomeFold({ locale, formRef }: ConstellationHomeFold
             <Link href={marketingDemoPath} className="cst-fold__link" data-testid="marketing-demo-link">
               {os.seeDemo} →
             </Link>
-            <Link href="/how-it-works" className="cst-fold__link cst-fold__link--muted">
-              {os.howItWorks}
-            </Link>
           </div>
         </div>
       </section>
@@ -70,9 +67,9 @@ export function ConstellationHomeFold({ locale, formRef }: ConstellationHomeFold
           <p className="cst-fold__liv-body mb-4">{fold.verticalsSub}</p>
           <div className="cst-fold__pills">
             {verticals.map((v) => (
-              <a key={v.slug} href={dashboardWedgeUrl(v.slug)} className="cst-fold__pill">
+              <Link key={v.slug} href={marketingBookDemoUrl(v.slug)} className="cst-fold__pill">
                 {v.label}
-              </a>
+              </Link>
             ))}
             <Link href="/verticals" className="cst-fold__pill">
               {locale === "de" ? "Alle Branchen →" : "All verticals →"}

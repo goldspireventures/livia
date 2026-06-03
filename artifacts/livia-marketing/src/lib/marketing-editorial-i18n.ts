@@ -142,6 +142,20 @@ export type EditorialCopy = {
     success: string;
     error: string;
   };
+  bookDemoPage: {
+    eyebrow: string;
+    titleLead: string;
+    titleAccent: string;
+    subtitle: string;
+    steps: [string, string, string];
+    invitedPrompt: string;
+    invitedLink: string;
+  };
+  formDemo: {
+    submit: string;
+    pending: string;
+    success: string;
+  };
   deContact?: {
     title: string;
     body: string;
@@ -152,7 +166,7 @@ export type EditorialCopy = {
 
 const EN: EditorialCopy = {
   nav: {
-    seeDemo: "Demo",
+    seeDemo: "Book demo",
     pricing: "Pricing",
     howItWorks: "How it works",
     joinBeta: "Join beta",
@@ -192,7 +206,7 @@ const EN: EditorialCopy = {
     pricingFrom: "Chain, Host, and add-ons on the full pricing page.",
     verticalsEyebrow: "Your trade",
     verticalsHeadline: "Pick your floor type",
-    verticalsSub: "Live demo — no sign-up until you're ready.",
+    verticalsSub: "Request access — we match your trade and send a demo invite.",
     faqMore: "More answers",
   },
   homeOs: {
@@ -203,7 +217,7 @@ const EN: EditorialCopy = {
       "Salons, clinics, studios, groomers — any business where skilled humans sell scarce time to people who come back. Livia is the OS that unifies channels, calendar, memory, and policy.",
     livIntro:
       "<strong>Liv</strong> is the governed colleague on that floor — replying, booking, briefing, and leaving an audit trail you can trust.",
-    seeDemo: "See live demo",
+    seeDemo: "Book a demo",
     howItWorks: "How it works",
     joinBeta: "Join beta",
     convergenceLabel: "Every channel → one operating truth",
@@ -372,6 +386,25 @@ const EN: EditorialCopy = {
     success: "You're on the list. We'll be in touch when a batch opens.",
     error: "Something went wrong. Please try again.",
   },
+  bookDemoPage: {
+    eyebrow: "Closed beta",
+    titleLead: "Book a",
+    titleAccent: "demo",
+    subtitle:
+      "Plug-and-play for your floor — but we walk you in first. Tell us your trade and market; we reply with a live demo link or a short call.",
+    steps: [
+      "You share email, trade, and country.",
+      "We qualify fit and invite in batches.",
+      "Your personal link opens /demo with a secure key — valid seven days.",
+    ],
+    invitedPrompt: "Already invited?",
+    invitedLink: "Open the personal link we emailed you — it contains your demo key.",
+  },
+  formDemo: {
+    submit: "Request demo",
+    pending: "Sending…",
+    success: "Request received. We'll email you a demo link or next steps within a few days.",
+  },
 };
 
 const DE: EditorialCopy = {
@@ -416,7 +449,7 @@ const DE: EditorialCopy = {
     pricingFrom: "Chain, Host und Add-ons auf der Preisseite.",
     verticalsEyebrow: "Ihr Gewerk",
     verticalsHeadline: "Wählen Sie Ihren Floor",
-    verticalsSub: "Live-Demo — ohne Anmeldung.",
+    verticalsSub: "Zugang anfragen — wir schicken eine Demo-Einladung.",
     faqMore: "Mehr Antworten",
   },
   homeOs: {
@@ -427,7 +460,7 @@ const DE: EditorialCopy = {
       "Salons, Kliniken, Studios, Groomer — jedes Geschäft, in dem Menschen knappe Zeit an Stammkunden verkaufen. Livia ist das OS für Kanäle, Kalender, Gedächtnis und Policy.",
     livIntro:
       "<strong>Liv</strong> ist die governierte Kollegin auf diesem Floor — antwortet, bucht, briefed und hinterlässt einen prüfbaren Trail.",
-    seeDemo: "Live-Demo ansehen",
+    seeDemo: "Demo buchen",
     howItWorks: "So funktioniert's",
     joinBeta: "Beta beitreten",
     convergenceLabel: "Jeder Kanal → eine operative Wahrheit",
@@ -595,6 +628,25 @@ const DE: EditorialCopy = {
     submit: "Auf die Warteliste",
     success: "Sie stehen auf der Liste. Wir melden uns, wenn eine Welle öffnet.",
     error: "Etwas ist schiefgelaufen. Bitte erneut versuchen.",
+  },
+  bookDemoPage: {
+    eyebrow: "Geschlossene Beta",
+    titleLead: "Demo",
+    titleAccent: "buchen",
+    subtitle:
+      "Plug-and-play für Ihren Floor — aber wir führen Sie zuerst ein. Branche und Markt nennen; wir antworten mit Demo-Link oder kurzem Call.",
+    steps: [
+      "E-Mail, Branche und Land senden.",
+      "Wir prüfen Passung und laden in Wellen ein.",
+      "Persönlicher Link zur Live-Demo — für Ihre Branche vorbereitet.",
+    ],
+    invitedPrompt: "Bereits eingeladen?",
+    invitedLink: "Nutzen Sie den persönlichen Link aus Ihrer E-Mail — er enthält Ihren Demo-Schlüssel.",
+  },
+  formDemo: {
+    submit: "Demo anfragen",
+    pending: "Wird gesendet…",
+    success: "Anfrage erhalten. Demo-Link oder nächste Schritte per E-Mail in wenigen Tagen.",
   },
   deContact: {
     title: "DACH-Pilot",

@@ -83,6 +83,7 @@ import type {
   MarkAllMyNotificationsRead200,
   MarkAllMyNotificationsReadBody,
   MarkMyNotificationRead200,
+  MarketingDemoGateVerifyResponse,
   MarketingLeadAck,
   Membership,
   MyDay,
@@ -130,6 +131,7 @@ import type {
   UpdateServiceBody,
   UpdateStaffBody,
   User,
+  VerifyMarketingDemoGateParams,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -6071,6 +6073,113 @@ export const useCreateMarketingLead = <
 > => {
   return useMutation(getCreateMarketingLeadMutationOptions(options));
 };
+
+/**
+ * @summary Validate W1 /demo concierge gate key
+ */
+export const getVerifyMarketingDemoGateUrl = (
+  params: VerifyMarketingDemoGateParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/public/marketing/demo-gate/verify?${stringifiedParams}`
+    : `/api/public/marketing/demo-gate/verify`;
+};
+
+export const verifyMarketingDemoGate = async (
+  params: VerifyMarketingDemoGateParams,
+  options?: RequestInit,
+): Promise<MarketingDemoGateVerifyResponse> => {
+  return customFetch<MarketingDemoGateVerifyResponse>(
+    getVerifyMarketingDemoGateUrl(params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getVerifyMarketingDemoGateQueryKey = (
+  params?: VerifyMarketingDemoGateParams,
+) => {
+  return [
+    `/api/public/marketing/demo-gate/verify`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getVerifyMarketingDemoGateQueryOptions = <
+  TData = Awaited<ReturnType<typeof verifyMarketingDemoGate>>,
+  TError = ErrorType<MarketingDemoGateVerifyResponse>,
+>(
+  params: VerifyMarketingDemoGateParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof verifyMarketingDemoGate>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getVerifyMarketingDemoGateQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof verifyMarketingDemoGate>>
+  > = ({ signal }) =>
+    verifyMarketingDemoGate(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof verifyMarketingDemoGate>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type VerifyMarketingDemoGateQueryResult = NonNullable<
+  Awaited<ReturnType<typeof verifyMarketingDemoGate>>
+>;
+export type VerifyMarketingDemoGateQueryError =
+  ErrorType<MarketingDemoGateVerifyResponse>;
+
+/**
+ * @summary Validate W1 /demo concierge gate key
+ */
+
+export function useVerifyMarketingDemoGate<
+  TData = Awaited<ReturnType<typeof verifyMarketingDemoGate>>,
+  TError = ErrorType<MarketingDemoGateVerifyResponse>,
+>(
+  params: VerifyMarketingDemoGateParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof verifyMarketingDemoGate>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getVerifyMarketingDemoGateQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary Plan, entitlements, period usage, and voice outcome estimate

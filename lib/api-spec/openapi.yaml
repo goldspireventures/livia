@@ -1578,6 +1578,31 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
 
+  /public/marketing/demo-gate/verify:
+    get:
+      operationId: verifyMarketingDemoGate
+      tags: [marketing]
+      summary: Validate W1 /demo concierge gate key
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Key accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketingDemoGateVerifyResponse"
+        "401":
+          description: Invalid or expired key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketingDemoGateVerifyResponse"
+
   # ─── Billing & monetisation (Phase 2) ─────────────────────────────────────
   /businesses/{businessId}/billing:
     get:
@@ -3715,7 +3740,17 @@ components:
       properties:
         ok:
           type: boolean
+        demoAccessToken:
+          type: string
+          description: Signed gate key for W1 /demo (demo book requests only)
       required: [ok]
+
+    MarketingDemoGateVerifyResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+      required: [valid]
 
     ChainShopRollup:
       type: object

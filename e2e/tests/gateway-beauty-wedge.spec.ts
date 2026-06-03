@@ -27,10 +27,10 @@ test.describe("Beauty demo gateway", () => {
     await expect(page.getByRole("button", { name: /owner/i }).first()).toBeVisible();
   });
 
-  test("marketing beauty chip deep-links wedge", async ({ page }) => {
+  test("marketing beauty vertical links book-demo with vertical", async ({ page }) => {
     const marketingBase = process.env.E2E_MARKETING_URL ?? "http://127.0.0.1:5174";
     await page.goto(`${marketingBase}/verticals/beauty`, { waitUntil: "domcontentloaded" });
     const link = page.getByTestId("marketing-demo-link");
-    await expect(link).toHaveAttribute("href", /\/demo\/wedge\/beauty/);
+    await expect(link).toHaveAttribute("href", /\/book-demo\?vertical=beauty/);
   });
 });

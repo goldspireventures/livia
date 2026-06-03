@@ -155,12 +155,14 @@ await check("Marketing pricing bundle (PLAN_CATALOGUE solo floor)", async () => 
   return `${label} (${floor}/mo from ${solo.baseEurCentsPerMonth} cents)`;
 });
 
-await check("Marketing home wedge CTAs", async () => {
-  // Marketing links into the dashboard "wedge" demo can be implemented as:
-  // - legacy path-based routes: `/demo/wedge/...`
-  // - current query-based gateway: `/demo?vertical=...`
-  const bundle = await marketingBundleContains("/", ["/demo", "vertical="]);
-  return bundle;
+await check("Marketing demo funnel (book-demo request)", async () => {
+  const bundles = await fetchMarketingSpaBundles("/book-demo");
+  return marketingBundlesContain(bundles, ["/book-demo", "Request demo", "secure key"]);
+});
+
+await check("Marketing concierge gate (/demo invited path)", async () => {
+  const bundles = await fetchMarketingSpaBundles("/demo");
+  return marketingBundlesContain(bundles, ["Checking demo access", "Invited guests"]);
 });
 
 await check("Presentation presets gate (E7)", async () => {

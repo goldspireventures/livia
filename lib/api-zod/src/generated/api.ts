@@ -2470,6 +2470,17 @@ export const CreateMarketingLeadBody = zod.object({
 });
 
 /**
+ * @summary Validate W1 /demo concierge gate key
+ */
+export const VerifyMarketingDemoGateQueryParams = zod.object({
+  key: zod.coerce.string(),
+});
+
+export const VerifyMarketingDemoGateResponse = zod.object({
+  valid: zod.boolean(),
+});
+
+/**
  * @summary Plan, entitlements, period usage, and voice outcome estimate
  */
 export const GetBusinessBillingParams = zod.object({

@@ -12,8 +12,20 @@ export const dashboardDemoUrl =
   (import.meta.env.VITE_DASHBOARD_DEMO_URL as string | undefined)?.replace(/\/+$/, "") ??
   `${dashboardOrigin}/demo`;
 
-/** W1 concierge gate — marketing-hosted demo entry before app handoff. */
-export const marketingDemoPath = "/demo";
+/** Primary CTA — demo request / interest capture (closed beta). */
+export const marketingBookDemoPath = "/book-demo";
+
+/** W1 concierge gate — invited guests pick a vertical before app handoff. */
+export const marketingDemoConciergePath = "/demo";
+
+/** @deprecated alias — use marketingBookDemoPath for CTAs */
+export const marketingDemoPath = marketingBookDemoPath;
+
+export function marketingBookDemoUrl(verticalSlug?: string): string {
+  const slug = verticalSlug?.replace(/^\/+/, "").trim();
+  if (!slug) return marketingBookDemoPath;
+  return `${marketingBookDemoPath}?vertical=${encodeURIComponent(slug)}`;
+}
 
 /** W2 demo stories with shipped wedge — link to card-stage (G2). */
 export function dashboardWedgeUrl(verticalSlug: string): string {
@@ -34,7 +46,7 @@ export const dashboardSignUpUrl =
 
 export const apiBaseUrl =
   (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/+$/, "") ??
-  "http://127.0.0.1:3001";
+  (typeof window !== "undefined" ? window.location.origin : "http://127.0.0.1:3000");
 
 const marketingOrigin =
   (import.meta.env.VITE_MARKETING_URL as string | undefined)?.replace(/\/+$/, "") ??

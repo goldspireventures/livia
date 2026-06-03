@@ -42,7 +42,7 @@ export default function HowItWorksPage() {
       <ConstellationPageFooter>
         <p>Same physics on every floor — time, memory, policy, channels.</p>
         <Link href={marketingDemoPath} data-testid="marketing-demo-link" className="cst-page-link">
-          See the live demo →
+          Book a demo →
         </Link>
         <Link href="/pricing" className="cst-page-link cst-page-link--muted">
           View pricing

@@ -1197,6 +1197,12 @@ export interface CreateMarketingLeadBody {
 
 export interface MarketingLeadAck {
   ok: boolean;
+  /** Signed gate key for W1 /demo (demo book requests only) */
+  demoAccessToken?: string;
+}
+
+export interface MarketingDemoGateVerifyResponse {
+  valid: boolean;
 }
 
 export type ChainShopRollupPulseStatus =
@@ -1455,6 +1461,10 @@ export type SendConversationMessageBody = {
 export type RequestGuestHubOtpBody = {
   phone?: string;
   country?: string;
+};
+
+export type VerifyMarketingDemoGateParams = {
+  key: string;
 };
 
 export type CreateBillingCheckoutSessionBodyPlanId =

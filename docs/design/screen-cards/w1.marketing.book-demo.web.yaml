@@ -1,0 +1,33 @@
+meta:
+  id: w1.marketing.book-demo.web
+  world: W1
+  route: "/book-demo"
+  artifact: livia-marketing
+  persona: [Prospect]
+  release: R1
+  status: locked
+  concept: demo-request-funnel
+
+job: >
+  Primary demo CTA — capture email, trade, and country; kick off invite workflow.
+  Invited guests use /demo concierge gate separately.
+
+visual:
+  summary: >
+    Inner constellation page with 3-step “what happens next”, MarketingForm (intent=demo),
+    and link to /demo for already-invited users.
+
+handoff: POST marketing lead (demoAccessToken) → /demo?key= → app /demo/wedge/:slug
+
+gate:
+  api: LIVIA_MARKETING_DEMO_GATE_SECRET signs tokens; LIVIA_MARKETING_DEMO_GATE_BYPASS_KEY for founder/E2E
+  verify: GET /public/marketing/demo-gate/verify?key=
+
+acceptance:
+  e2e:
+    - marketing-platform-smoke.spec.ts
+    - marketing-lifecycle.spec.ts
+
+traceability:
+  surfaceId: marketing.book-demo
+  component: artifacts/livia-marketing/src/pages/book-demo.tsx

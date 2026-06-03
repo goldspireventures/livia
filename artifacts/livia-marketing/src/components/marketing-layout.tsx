@@ -77,7 +77,7 @@ export function MarketingLayout({
               className="hidden sm:inline-flex text-sm font-medium text-muted-foreground hover:text-white transition-colors min-h-[44px] items-center"
               data-testid="marketing-demo-link"
             >
-              Try demo
+              Book a demo
             </Link>
             <a
               href={`${homeHref}#waitlist`}
@@ -107,7 +107,7 @@ export function MarketingLayout({
                     className="min-h-[44px] inline-flex items-center text-sm text-muted-foreground hover:text-white"
                     onClick={() => setMenuOpen(false)}
                   >
-                    Try demo
+                    Book a demo
                   </Link>
                   <a
                     href={`${homeHref}#waitlist`}
