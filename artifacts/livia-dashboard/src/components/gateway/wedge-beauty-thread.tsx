@@ -21,7 +21,7 @@ type Props = {
 };
 
 const CHAPTER_LABEL: Record<string, string> = {
-  inbox: "Inbox",
+  inbox: "Bookings",
   "public-book": "/b",
   today: "Today",
 };
@@ -60,16 +60,19 @@ function ThreadChapter({
             className={cn(
               "wedge-thread__figure",
               visual.aspect === "phone" && "wedge-thread__figure--phone",
+              visual.aspect === "wide" && "wedge-thread__figure--wide",
             )}
           >
-            <img
-              src={visual.src}
-              alt={visual.alt}
-              className="wedge-thread__shot"
-              style={visual.objectPosition ? { objectPosition: visual.objectPosition } : undefined}
-              loading={index === 0 ? "eager" : "lazy"}
-              decoding="async"
-            />
+            <div className="wedge-thread__figure-inner">
+              <img
+                src={visual.src}
+                alt={visual.alt}
+                className="wedge-thread__shot"
+                style={visual.objectPosition ? { objectPosition: visual.objectPosition } : undefined}
+                loading={index === 0 ? "eager" : "lazy"}
+                decoding="async"
+              />
+            </div>
           </figure>
         ) : null}
 
@@ -87,7 +90,7 @@ function ThreadChapter({
 }
 
 /**
- * G2 beauty — vertical thread story (Inbox → /b → Today) with real product screenshots.
+ * G2 beauty — vertical thread story (Bookings → /b → Today) with Bloom product screenshots.
  * No card boxes; inherits DemoFlowShell nebula only.
  */
 export function WedgeBeautyThread({

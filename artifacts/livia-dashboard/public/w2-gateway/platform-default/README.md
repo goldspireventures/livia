@@ -1,15 +1,14 @@
-# Platform Default — G2 beauty thread crops
+# Bloom Beauty — G2 beauty thread crops
 
-Real Livia screenshots (not preset mocks). Sync from design targets:
+Founder screenshots (Bloom Beauty Dublin, noir-dusk / platform skin).
+
+| Chapter | File | Design source |
+|---------|------|---------------|
+| Bookings | `inbox.png` | `w2-gateway/beauty/bloom-wedge/bookings.png` |
+| `/b` | `book-mobile.png` | `bloom-wedge/public-book-mobile.png` |
+| Today | `today.png` | `bloom-wedge/today.png` |
 
 ```bash
-pnpm sync:platform-default-wedge
+# Copy design sources → runtime (after updating bloom-wedge/)
+node -e "const fs=require('fs'),p='artifacts/livia-dashboard/public/w2-gateway/platform-default',s='docs/design/assets/w2-gateway/beauty/bloom-wedge';[['bookings.png','inbox.png'],['public-book-mobile.png','book-mobile.png'],['today.png','today.png']].forEach(([a,b])=>fs.copyFileSync(s+'/'+a,p+'/'+b))"
 ```
-
-| Chapter | File | Source |
-|---------|------|--------|
-| Inbox | `inbox.png` | `w4-tenant/platform-default/web/inbox-thread.target.png` |
-| Today | `today.png` | `w4-tenant/platform-default/web/owner-dashboard.target.png` |
-| `/b` | `book-mobile.png` | `w5-public/platform-default/mobile/book-mobile.target.png` |
-
-Refresh `/b` after UI change: `pnpm capture:platform-default-book` (requires API + dashboard).

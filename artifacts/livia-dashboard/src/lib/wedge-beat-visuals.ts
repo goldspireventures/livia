@@ -8,36 +8,36 @@ export type WedgeBeatVisual = {
   aspect?: "wide" | "phone";
 };
 
-/** G2 beauty thread — real Livia crops (Constellation signup skin): inbox, /b, Today. */
+/** G2 beauty thread — founder Bloom screenshots (bookings, /b, Today). */
 const BEAUTY_PLATFORM_DEFAULT_VISUALS: Partial<Record<WedgeDemoBeat["cropHint"], WedgeBeatVisual>> = {
   inbox: {
     src: "/w2-gateway/platform-default/inbox.png",
-    alt: "Livia inbox — thread with booking confirmation",
+    alt: "Bloom Beauty Dublin — bookings list with pending visits",
     objectPosition: "center top",
     aspect: "wide",
   },
   "public-book": {
     src: "/w2-gateway/platform-default/book-mobile.png",
-    alt: "Guest booking on /b — Bloom Beauty on Livia platform skin",
+    alt: "Bloom Beauty Dublin — guest booking page on /b",
     objectPosition: "center top",
     aspect: "phone",
   },
   today: {
     src: "/w2-gateway/platform-default/today.png",
-    alt: "Owner Today — schedule and Liv briefing",
-    objectPosition: "center top",
+    alt: "Bloom Beauty Dublin — owner Today with Liv briefing",
+    objectPosition: "left top",
     aspect: "wide",
   },
 };
 
 const BEAUTY_THREAD_BRIDGES: Partial<Record<WedgeDemoBeat["cropHint"], string>> = {
-  inbox: "Liv holds context — patch test, service, and thread history in one place.",
+  inbox: "Pending visits line up — confirm or guide without leaving the list.",
   "public-book": "Same guest, same brand. They book from your link without an account.",
   today: "You open Today — the chair plan, revenue, and what Liv already handled.",
 };
 
 const BEAUTY_LIV_INTRO =
-  "Three surfaces, one thread — inbox, your booking link, and Today on the same Livia skin.";
+  "Three surfaces, one thread — bookings, your /b link, and Today at Bloom Beauty Dublin.";
 
 /** Beauty G2 story chapters (Inbox → /b → Today). */
 export const BEAUTY_WEDGE_CHAPTER_ORDER: WedgeDemoBeat["cropHint"][] = [

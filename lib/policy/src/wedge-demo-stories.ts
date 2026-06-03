@@ -33,8 +33,8 @@ const WEDGE_BEATS: Record<BusinessVertical, WedgeDemoBeat[]> = {
   ],
   beauty: [
     {
-      headline: "Inbox catches the inquiry",
-      detail: "DMs, texts, and patch-test threads — one queue with full context before you reply.",
+      headline: "Bookings ready to confirm",
+      detail: "Pending visits, walk-ins, and guided booking — one list before you touch the calendar.",
       cropHint: "inbox",
     },
     {

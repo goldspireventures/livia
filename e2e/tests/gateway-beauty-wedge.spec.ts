@@ -20,7 +20,7 @@ test.describe("Beauty demo gateway", () => {
   test("G2 thread shows Inbox, /b, Today then G3 role grid", async ({ page }) => {
     await page.goto(`${dashboardBase}/demo/wedge/beauty`, { waitUntil: "domcontentloaded" });
     await expect(page.getByTestId("gateway-demo-beats-grid")).toBeVisible();
-    await expect(page.getByText("Inbox catches the inquiry")).toBeVisible();
+    await expect(page.getByText("Bookings ready to confirm")).toBeVisible();
     await expect(page.getByText("Guest books on `/b`")).toBeVisible();
     await expect(page.getByText("Today keeps the floor calm")).toBeVisible();
     await expect(page.getByTestId("gateway-demo-beat-inbox")).toBeVisible();
