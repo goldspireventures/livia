@@ -7,6 +7,7 @@ import { generateId } from "../lib/id";
 import {
   buildDemoRoleDef,
   DEMO_WORLD_SLUGS,
+  resolveClerkProvisioningDef,
   type DemoPersonaDef,
   type DemoPersonaId,
 } from "../lib/demo-portal-config";
@@ -72,29 +73,30 @@ async function upsertMembership(
 async function ensureClerkForDef(def: DemoPersonaDef): Promise<string | null> {
   const clerk = getClerk();
   if (!clerk) return null;
+  const clerkDef = resolveClerkProvisioningDef(def);
   const password = getDemoPassword();
   const existing = await withClerkRetry(() =>
-    clerk.users.getUserList({ emailAddress: [def.email], limit: 1 }),
+    clerk.users.getUserList({ emailAddress: [clerkDef.email], limit: 1 }),
   );
   let userId: string;
   if (existing.data[0]) {
     userId = existing.data[0].id;
-    await syncDemoClerkUser(clerk, userId, { email: def.email, password });
+    await syncDemoClerkUser(clerk, userId, { email: clerkDef.email, password });
   } else {
     const created = await withClerkRetry(() =>
       clerk.users.createUser({
-        emailAddress: [def.email],
-        firstName: def.firstName,
-        lastName: def.lastName,
+        emailAddress: [clerkDef.email],
+        firstName: clerkDef.firstName,
+        lastName: clerkDef.lastName,
         password,
         skipPasswordChecks: true,
         skipPasswordRequirement: true,
       }),
     );
     userId = created.id;
-    await syncDemoClerkUser(clerk, userId, { email: def.email, password });
+    await syncDemoClerkUser(clerk, userId, { email: clerkDef.email, password });
   }
-  await ensureDemoPlatformLegal(userId, def.email, def.displayName);
+  await ensureDemoPlatformLegal(userId, clerkDef.email, clerkDef.displayName);
   return userId;
 }
 

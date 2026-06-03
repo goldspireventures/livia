@@ -85,3 +85,32 @@ Pattern: `owner-<short>@livia.io` — only that tenant after sign-in.
 | Manager inbox queues | `manager@livia.io` |
 
 Public booking (no login): `http://localhost:5173/b/<slug>` or mobile `/public-book/<slug>`.
+
+---
+
+## Per-tenant roster (launcher role cards)
+
+Pattern on each demo business: `owner-<short>`, `manager-<short>`, `desk-<short>`, `staff-<short>` @ `demo.livia-hq.com` (e.g. Bloom: `manager-bloom@demo.livia-hq.com`).
+
+**Clerk quota:** manager / desk / staff cards sign in via **shared** global Clerk users (`manager@demo.livia-hq.com`, `desk@…`, `staff-lara` / `staff-mo`) while membership is wired to the shop you picked. Owners stay one Clerk user per business (`owner-bloom@…`).
+
+If manager/staff fail after a quota error, deploy the API fix and run **Sync logins** on `/demo` (or `POST /api/demo/repair-db`).
+
+### Clerk quota cleanup (staging dev instance)
+
+Prune synthetic demo users in Clerk — **keeps** the 21 modern per-shop owners (`owner-bloom@demo.livia-hq.com`, etc.), **deletes** legacy `demo-owner-*@livia.io` duplicates, manager/staff/desk per-tenant accounts, and other demo clutter:
+
+```bash
+pnpm demo:clerk-prune              # dry-run — lists keep vs delete
+pnpm demo:clerk-prune -- --execute
+```
+
+Optional: `--keep-globals` also keeps `manager@demo.livia-hq.com`, `org-admin@…`, and other cross-shop persona emails.
+
+After prune (especially without `--keep-globals`): recreate globals and roster pool:
+
+```bash
+pnpm demo:clerk-rebuild
+```
+
+Or **Sync logins** on `/demo` once pooled personas exist in Clerk again.

@@ -88,6 +88,46 @@ export function demoRoleEmailForSlug(slug: string, role: DemoTenantRole): string
   return demoEmail(`${role}-${short}`);
 }
 
+/**
+ * Shared Clerk users for per-tenant roster emails (manager-bloom, staff-harbour, …).
+ * UI/catalog still show per-shop addresses; sign-in provisions one global user per role
+ * and wires membership on the target business — avoids Clerk dev 100-user quota.
+ */
+export function sharedClerkPoolEmailForTenantRole(
+  slug: string,
+  role: DemoTenantRole,
+): string | null {
+  if (role === "owner") return null;
+  if (role === "manager") return DEMO_ROLE_EMAILS.manager;
+  if (role === "desk") return DEMO_ROLE_EMAILS.desk;
+  if (role === "staff") {
+    let hash = 0;
+    for (const ch of slug) hash = (hash + ch.charCodeAt(0)) | 0;
+    return Math.abs(hash) % 2 === 0 ? DEMO_ROLE_EMAILS.staffLara : DEMO_ROLE_EMAILS.staffMo;
+  }
+  return null;
+}
+
+/**
+ * Per-shop owner login (`owner-bloom@…`, legacy `demo-owner-{slug}@…`).
+ * Used when pruning Clerk — keep these; delete other synthetic demo users.
+ */
+export function isDemoShopOwnerEmail(email: string | null | undefined): boolean {
+  if (!email?.trim()) return false;
+  const lower = email.trim().toLowerCase();
+  const fromOwner = slugFromOwnerDemoEmail(lower);
+  if (fromOwner && DEMO_OWNER_SHORT_BY_SLUG[fromOwner]) return true;
+  const parsed = parseDemoTenantEmail(lower);
+  return Boolean(parsed?.role === "owner" && parsed.slug && DEMO_OWNER_SHORT_BY_SLUG[parsed.slug]);
+}
+
+/** Clerk API email for a roster def — pooled for non-owner tenant roles. */
+export function clerkProvisionEmailForTenantDef(email: string): string {
+  const parsed = parseDemoTenantEmail(email);
+  if (!parsed || parsed.role === "owner") return email.trim().toLowerCase();
+  return sharedClerkPoolEmailForTenantRole(parsed.slug, parsed.role) ?? email.trim().toLowerCase();
+}
+
 const TENANT_ROLE_RE =
   /^(owner|manager|desk|staff)-([a-z0-9]+)@(demo\.livia-hq\.com|livia\.io)$/;
 

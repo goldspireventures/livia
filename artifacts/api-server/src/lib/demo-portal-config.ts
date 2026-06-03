@@ -4,6 +4,7 @@
  */
 import {
   DEMO_ROLE_EMAILS,
+  clerkProvisionEmailForTenantDef,
   demoOwnerEmailForSlug,
   demoRoleEmailForSlug,
   isDemoLiviaEmail,
@@ -184,6 +185,13 @@ export function getDemoPersona(id: string): DemoPersonaDef | undefined {
 export function getDemoPersonaByEmail(email: string): DemoPersonaDef | undefined {
   const lower = email.trim().toLowerCase();
   return DEMO_PERSONAS.find((p) => p.email.toLowerCase() === lower);
+}
+
+/** Map per-tenant roster email → shared Clerk persona (manager / desk / staff pool). */
+export function resolveClerkProvisioningDef(def: DemoPersonaDef): DemoPersonaDef {
+  const clerkEmail = clerkProvisionEmailForTenantDef(def.email);
+  if (clerkEmail === def.email.toLowerCase()) return def;
+  return getDemoPersonaByEmail(clerkEmail) ?? def;
 }
 
 export function buildBusinessOwnerDef(

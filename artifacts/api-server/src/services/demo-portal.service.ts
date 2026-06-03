@@ -39,6 +39,7 @@ import {
   buildDemoRoleDef,
   demoOwnerEmailForSlug,
   getDemoPersona,
+  resolveClerkProvisioningDef,
   isDemoEmail,
   parseDemoTenantEmail,
   slugFromOwnerDemoEmail,
@@ -215,9 +216,15 @@ async function ensureDemoAccountReady(def: DemoPersonaDef): Promise<string> {
       logger.warn({ err, slug: parsed.slug }, "demo.roster.ensure_on_signin_failed");
     });
   }
-  let userId = await ensureClerkUser(def);
+  const clerkDef = resolveClerkProvisioningDef(def);
+  let userId = await ensureClerkUser(clerkDef);
   if (!userId) {
-    throw Object.assign(new Error("Could not create demo Clerk user"), { status: 500 });
+    throw Object.assign(
+      new Error(
+        "Could not resolve demo Clerk user. Run Sync logins on /demo or POST /api/demo/repair-db.",
+      ),
+      { status: 500 },
+    );
   }
   await ensureDemoPlatformLegal(userId, def.email, def.displayName);
   await wireDemoAccountMemberships(def, userId, def.membershipRole ?? "OWNER");
@@ -992,6 +999,42 @@ export async function syncDemoLogins(opts?: {
   const rosterResult = await seedDemoBusinessRosters(slugs ? { slugs } : undefined);
   const clerkResult = await syncAllDemoClerkUsers(slugs ? { slugs } : undefined);
   return { clerkSynced: clerkResult.synced, rosterAccounts: rosterResult.accounts };
+}
+
+/**
+ * Recreate demo Clerk users after prune (personas, per-shop owners, pooled roster globals).
+ * Does not wipe or re-seed the demo DB.
+ */
+export async function rebuildDemoClerkUsers(): Promise<{
+  personas: number;
+  owners: number;
+  rosterAccounts: number;
+}> {
+  const clerkIdsByEmail: Record<string, string> = {};
+  let personas = 0;
+  for (const def of [...DEMO_PERSONAS, ...DEMO_SCENARIO_ACCOUNTS]) {
+    if (!def.requiresClerk) continue;
+    const id = await ensureClerkUser(def);
+    if (!id) continue;
+    await ensureDemoPlatformLegal(id, def.email, def.displayName);
+    clerkIdsByEmail[def.email] = id;
+    personas++;
+  }
+  await wireScenarioMemberships(clerkIdsByEmail);
+
+  const status = await getDemoPortalStatus();
+  let owners = 0;
+  for (const b of status.businesses) {
+    const def = buildBusinessOwnerDef(b.slug, b.name);
+    const id = await ensureClerkUser(def);
+    if (!id) continue;
+    await ensureDemoPlatformLegal(id, def.email, def.displayName);
+    await wireDemoAccountMemberships(def, id, "OWNER");
+    owners++;
+  }
+
+  const roster = await seedDemoBusinessRosters();
+  return { personas, owners, rosterAccounts: roster.accounts };
 }
 
 export type DemoBusinessTenant = {

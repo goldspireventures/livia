@@ -29,6 +29,8 @@
     "vertical:onboarding-kit": "node scripts/vertical-onboarding-kit.mjs",
     "demo:provision": "node --env-file=.env scripts/provision-demo-world-cli.mjs",
     "demo:repair": "node --env-file=.env scripts/provision-demo-world-cli.mjs --repair",
+    "demo:clerk-prune": "node --env-file=.env scripts/prune-clerk-demo-users.mjs",
+    "demo:clerk-rebuild": "node --env-file=.env scripts/rebuild-demo-clerk.mjs",
     "demo:backfill-branding": "node --env-file=.env scripts/backfill-demo-branding.mjs",
     "demo:provision:http": "node --env-file=.env scripts/provision-demo-world.mjs",
     "demo:sync-verticals": "node --env-file=.env scripts/provision-demo-if-needed.mjs",
