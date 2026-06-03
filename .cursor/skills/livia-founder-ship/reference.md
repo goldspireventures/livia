@@ -3,7 +3,7 @@
 | Command | Purpose |
 |---------|---------|
 | `pnpm run typecheck` | Pre-push |
-| `node scripts/staging-readiness.mjs --strict` | Staging config + API leak checks |
+| `pnpm staging:readiness` | Staging config + API leak checks (PLAN_CATALOGUE pricing needles) |
 | `pnpm smoke:staging` | Staging HTTP smoke |
 | `pnpm prod:smoke` | Production smoke |
 | `pnpm founder:uat-preflight` | Local UAT preflight |

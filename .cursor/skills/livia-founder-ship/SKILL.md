@@ -18,7 +18,7 @@ description: >-
 1. **Pre-push:** `pnpm run typecheck`
 2. **Commit/push** only when user explicitly asked (see user git rules).
 3. **Trigger:** push to `main` → Vercel (`livia-stg`) + Railway API (GitHub deploy).
-4. **Post-deploy:** `node scripts/staging-readiness.mjs --strict`
+4. **Post-deploy:** `pnpm staging:readiness`
 5. **Smoke:** `pnpm smoke:staging` if needed
 6. **Human:** incognito sign-in on staging app URL
 

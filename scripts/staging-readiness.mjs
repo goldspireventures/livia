@@ -2,17 +2,21 @@
 /**
  * Staging readiness — post-deploy gate before founder E2E or pnpm test:e2e:staging.
  *
- *   node scripts/staging-readiness.mjs
- *   node scripts/staging-readiness.mjs --strict   # exit 1 on any failure
+ *   pnpm staging:readiness
+ *   node scripts/staging-readiness.mjs --strict
  *
  * Checks (public HTTP):
  *   - API + app health (prod-smoke subset)
  *   - Demo portal enabled on staging API
- *   - Marketing SPA bundles contain R1 pricing + wedge CTAs
+ *   - Marketing SPA bundles ship PLAN_CATALOGUE pricing + wedge CTAs
+ *
+ * Pricing note: livia.io renders €79 at runtime via formatEur(cents) — bundles carry
+ * baseEurCentsPerMonth from @workspace/entitlements, not the literal "€79" string.
  */
 import { spawnSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadPlanCataloguePricingSnapshot } from "./lib/load-plan-catalogue.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const strict = process.argv.includes("--strict");
@@ -42,17 +46,52 @@ async function fetchText(url, init) {
   return { res, text };
 }
 
-/** Vite SPA — pricing copy lives in JS chunks, not initial HTML. */
-async function marketingBundleContains(path, needles) {
+/** Collect deduped Vite asset URLs from SPA shell (entry + modulepreload). */
+function collectSpaAssetJsUrls(html) {
+  const urls = new Set();
+  for (const match of html.matchAll(/(?:src|href)="(\/assets\/[^"]+\.js)"/g)) {
+    urls.add(match[1]);
+  }
+  return [...urls];
+}
+
+/** Vite SPA — route copy lives in JS chunks, not initial HTML. */
+async function fetchMarketingSpaBundles(path) {
   const { res, text: html } = await fetchText(`${marketingBase}${path}`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const srcMatch = html.match(/src="(\/assets\/[^"]+\.js)"/);
-  if (!srcMatch) throw new Error("no JS bundle in index.html");
-  const { res: jsRes, text: js } = await fetchText(`${marketingBase}${srcMatch[1]}`);
-  if (!jsRes.ok) throw new Error(`bundle HTTP ${jsRes.status}`);
-  const missing = needles.filter((n) => !js.includes(n));
-  if (missing.length) throw new Error(`bundle missing: ${missing.join(", ")}`);
-  return srcMatch[1];
+  const assetUrls = collectSpaAssetJsUrls(html);
+  if (!assetUrls.length) throw new Error("no JS bundles in index.html");
+  const bundles = [];
+  for (const assetUrl of assetUrls) {
+    const { res: jsRes, text: js } = await fetchText(`${marketingBase}${assetUrl}`);
+    if (!jsRes.ok) throw new Error(`bundle HTTP ${jsRes.status} (${assetUrl})`);
+    bundles.push({ assetUrl, js });
+  }
+  return bundles;
+}
+
+function marketingBundlesContain(bundles, needles) {
+  const corpus = bundles.map((b) => b.js).join("\n");
+  const missing = needles.filter((n) => !corpus.includes(n));
+  if (missing.length) throw new Error(`bundles missing: ${missing.join(", ")}`);
+  return bundles.map((b) => b.assetUrl).join(", ");
+}
+
+async function marketingBundleContains(path, needles) {
+  const bundles = await fetchMarketingSpaBundles(path);
+  return marketingBundlesContain(bundles, needles);
+}
+
+/** Needles that prove PLAN_CATALOGUE shipped in the marketing bundle (runtime-priced). */
+function marketingPricingNeedles(catalogue) {
+  const { solo, studio } = catalogue;
+  return [
+    `id:"${solo.id}"`,
+    `name:"${solo.name}"`,
+    `baseEurCentsPerMonth:${solo.baseEurCentsPerMonth}`,
+    `baseEurCentsPerMonth:${studio.baseEurCentsPerMonth}`,
+    "/mo",
+  ];
 }
 
 console.log(`\n▶ Staging readiness\n`);
@@ -106,9 +145,14 @@ await check("Demo portal enabled (GET /api/demo/status)", async () => {
   return body.provisioned ? "provisioned" : "enabled (not yet provisioned)";
 });
 
-await check("Marketing pricing bundle (€79/mo)", async () => {
-  const bundle = await marketingBundleContains("/pricing", ["€79", "/mo"]);
-  return bundle;
+const planCatalogue = loadPlanCataloguePricingSnapshot();
+
+await check("Marketing pricing bundle (PLAN_CATALOGUE solo floor)", async () => {
+  const { solo } = planCatalogue;
+  const floor = `€${Math.round(solo.baseEurCentsPerMonth / 100)}`;
+  const bundles = await fetchMarketingSpaBundles("/pricing");
+  const label = marketingBundlesContain(bundles, marketingPricingNeedles(planCatalogue));
+  return `${label} (${floor}/mo from ${solo.baseEurCentsPerMonth} cents)`;
 });
 
 await check("Marketing home wedge CTAs", async () => {
