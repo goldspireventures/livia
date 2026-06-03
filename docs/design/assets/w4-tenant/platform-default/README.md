@@ -9,6 +9,7 @@
 |---------|------|
 | Owner dashboard | `web/owner-dashboard.target.png` |
 | Inbox thread | `web/inbox-thread.target.png` |
+| Guest `/b` (mobile) | `../w5-public/platform-default/mobile/book-mobile.target.png` |
 
 ## Inheritance rules (marketing → product)
 

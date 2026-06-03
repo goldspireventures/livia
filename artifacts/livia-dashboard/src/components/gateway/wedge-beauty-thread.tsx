@@ -87,7 +87,7 @@ function ThreadChapter({
 }
 
 /**
- * G2 beauty — vertical thread story (Inbox → /b → Today) on Platform Default skin.
+ * G2 beauty — vertical thread story (Inbox → /b → Today) with real product screenshots.
  * No card boxes; inherits DemoFlowShell nebula only.
  */
 export function WedgeBeautyThread({
@@ -110,7 +110,6 @@ export function WedgeBeautyThread({
           <Link href={backHref} className="wedge-thread__back" data-testid="gateway-demo-back-worlds">
             {backLabel}
           </Link>
-          <span className="wedge-thread__skin">Platform Default</span>
         </div>
 
         <p className="wedge-thread__world">

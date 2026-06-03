@@ -54,7 +54,7 @@ export default defineConfig({
     {
       name: "dashboard",
       testMatch:
-        /(dashboard-gate|eu-owner-self-onboard|prod-onboarding-notifications|demo-owner-flow|visual-screen-p0|preset-public-parity|bloom-beauty-public)\.spec\.ts/,
+        /(dashboard-gate|eu-owner-self-onboard|prod-onboarding-notifications|demo-owner-flow|visual-screen-p0|preset-public-parity|bloom-beauty-public|gateway-beauty-wedge)\.spec\.ts/,
       testIgnore: /v3-preflight\.spec\.ts/,
       use: {
         ...devices["Desktop Chrome"],
@@ -172,6 +172,15 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         baseURL: marketingBase,
+      },
+    },
+    {
+      name: "asset-capture",
+      testMatch: /capture-platform-default-wedge-book\.spec\.ts/,
+      timeout: 120_000,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
       },
     },
     {

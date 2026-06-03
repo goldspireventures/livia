@@ -8,23 +8,23 @@ export type WedgeBeatVisual = {
   aspect?: "wide" | "phone";
 };
 
-/** G2 beauty thread — Platform Default (Constellation) locked W4 crops + interim /b mobile. */
+/** G2 beauty thread — real Livia crops (Constellation signup skin): inbox, /b, Today. */
 const BEAUTY_PLATFORM_DEFAULT_VISUALS: Partial<Record<WedgeDemoBeat["cropHint"], WedgeBeatVisual>> = {
   inbox: {
     src: "/w2-gateway/platform-default/inbox.png",
-    alt: "Platform Default inbox — thread with booking confirmation",
+    alt: "Livia inbox — thread with booking confirmation",
     objectPosition: "center top",
     aspect: "wide",
   },
   "public-book": {
     src: "/w2-gateway/platform-default/book-mobile.png",
-    alt: "Guest booking page on /b — Bloom Beauty menu",
+    alt: "Guest booking on /b — Bloom Beauty on Livia platform skin",
     objectPosition: "center top",
     aspect: "phone",
   },
   today: {
     src: "/w2-gateway/platform-default/today.png",
-    alt: "Platform Default owner dashboard — Today schedule and Liv briefing",
+    alt: "Owner Today — schedule and Liv briefing",
     objectPosition: "center top",
     aspect: "wide",
   },
@@ -37,7 +37,7 @@ const BEAUTY_THREAD_BRIDGES: Partial<Record<WedgeDemoBeat["cropHint"], string>> 
 };
 
 const BEAUTY_LIV_INTRO =
-  "Three surfaces, one thread — how a lash & brow studio runs on Platform Default.";
+  "Three surfaces, one thread — inbox, your booking link, and Today on the same Livia skin.";
 
 /** Beauty G2 story chapters (Inbox → /b → Today). */
 export const BEAUTY_WEDGE_CHAPTER_ORDER: WedgeDemoBeat["cropHint"][] = [

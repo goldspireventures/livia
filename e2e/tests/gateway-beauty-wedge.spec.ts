@@ -23,7 +23,7 @@ test.describe("Beauty demo gateway", () => {
     await expect(page.getByText("Inbox catches the inquiry")).toBeVisible();
     await expect(page.getByText("Guest books on `/b`")).toBeVisible();
     await expect(page.getByText("Today keeps the floor calm")).toBeVisible();
-    await expect(page.getByText("Platform Default")).toBeVisible();
+    await expect(page.getByTestId("gateway-demo-beat-inbox")).toBeVisible();
     await page.getByTestId("gateway-demo-continue").click();
     await expect(page.getByTestId("gateway-demo-enter-roles")).toBeVisible({ timeout: 10_000 });
     await expect(page.getByRole("button", { name: /owner/i }).first()).toBeVisible();
@@ -32,7 +32,7 @@ test.describe("Beauty demo gateway", () => {
   test("marketing beauty vertical links book-demo with vertical", async ({ page }) => {
     const marketingBase = process.env.E2E_MARKETING_URL ?? "http://127.0.0.1:5174";
     await page.goto(`${marketingBase}/verticals/beauty`, { waitUntil: "domcontentloaded" });
-    const link = page.getByTestId("marketing-demo-link");
+    const link = page.getByTestId("marketing-demo-link").filter({ hasText: /vertical/i });
     await expect(link).toHaveAttribute("href", /\/book-demo\?vertical=beauty/);
   });
 });
