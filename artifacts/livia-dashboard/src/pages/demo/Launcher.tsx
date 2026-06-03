@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, useDeferredValue } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useDeferredValue } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { useSignIn, useClerk } from "@clerk/clerk-react";
@@ -48,6 +48,11 @@ import type { BusinessVertical } from "@workspace/policy";
 import { isMarketingDemoWedgeUnlocked } from "@workspace/policy";
 import { useGatewaySkinHandoffOptional } from "@/components/gateway/gateway-skin-handoff-provider";
 import { prefetchTenantDashboardShell } from "@/lib/prefetch-tenant-dashboard";
+import {
+  captureMarketingDemoGateKeyFromLocation,
+  getMarketingDemoConciergeUrl,
+  hasMarketingDemoGateKey,
+} from "@/lib/marketing-demo-gate";
 
 const VERTICAL_LABELS: Record<string, string> = {
   hair: "Hair & barber",
@@ -79,6 +84,13 @@ const ICONS: Record<Persona["iconName"], LucideIcon> = {
 export default function DemoLauncher() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
+
+  useLayoutEffect(() => {
+    captureMarketingDemoGateKeyFromLocation();
+    if (hasMarketingDemoGateKey()) {
+      window.location.replace(getMarketingDemoConciergeUrl());
+    }
+  }, []);
 
   useEffect(() => {
     const v = new URLSearchParams(window.location.search).get("vertical")?.toLowerCase();

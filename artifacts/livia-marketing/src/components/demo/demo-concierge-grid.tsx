@@ -2,18 +2,20 @@ import { Link } from "wouter";
 import { ArrowRight, Lock } from "lucide-react";
 import { listMarketingDemoConciergeEntries } from "@workspace/policy";
 import { dashboardWedgeUrl } from "@/lib/marketing-links";
+import { readDemoGateKeyFromLocation } from "@/lib/marketing-demo-gate-client";
 import { cn } from "@/lib/utils";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 export function DemoConciergeGrid() {
   const entries = listMarketingDemoConciergeEntries();
+  const gateKey = readDemoGateKeyFromLocation();
 
   return (
     <ul className="cst-demo-concierge__portals">
       {entries.map((entry) => {
         const thumbSrc = entry.imagePath ? `${base}${entry.imagePath}` : null;
-        const href = entry.unlocked ? dashboardWedgeUrl(entry.vertical) : undefined;
+        const href = entry.unlocked ? dashboardWedgeUrl(entry.vertical, gateKey) : undefined;
 
         const inner = (
           <>

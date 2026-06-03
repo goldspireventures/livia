@@ -11,6 +11,10 @@ import { isDemoLoginEnabled } from "@/lib/persona";
 import { isSignedOutLanding } from "@/lib/auth-routes";
 import { clerkGatewayAppearance } from "@/lib/clerk-gateway-appearance";
 import { getMarketingOrigin } from "@/lib/surface-urls";
+import {
+  getMarketingDemoConciergeUrl,
+  hasMarketingDemoGateKey,
+} from "@/lib/marketing-demo-gate";
 import { Button } from "@/components/ui/button";
 import { SignInTenantPreview } from "@/components/sign-in-tenant-preview";
 import {
@@ -46,6 +50,8 @@ export default function SignInPage() {
   }
 
   const showProductionStory = !isDemoLoginEnabled;
+  const invitedDemo = isSignedOutLanding() || hasMarketingDemoGateKey();
+  const invitedDemoUrl = getMarketingDemoConciergeUrl();
 
   return (
     <div className="relative flex min-h-[100dvh] w-full flex-col overflow-hidden bg-background text-foreground">
@@ -57,12 +63,22 @@ export default function SignInPage() {
       <header className="relative z-10 flex shrink-0 items-center justify-between px-5 py-5 sm:px-6 sm:py-6">
         <LiviaLogoLink size="md" home="marketing" />
         {isDemoLoginEnabled ? (
-          <Link href="/demo">
-            <span className="inline-flex min-h-[44px] items-center gap-1 text-xs text-primary transition-colors hover:text-primary/80">
-              Demo launcher
+          invitedDemo ? (
+            <a
+              href={invitedDemoUrl}
+              className="inline-flex min-h-[44px] items-center gap-1 text-xs text-primary transition-colors hover:text-primary/80"
+            >
+              Invited guest demo
               <ArrowRight className="h-3.5 w-3.5" />
-            </span>
-          </Link>
+            </a>
+          ) : (
+            <Link href="/demo">
+              <span className="inline-flex min-h-[44px] items-center gap-1 text-xs text-primary transition-colors hover:text-primary/80">
+                Demo launcher
+                <ArrowRight className="h-3.5 w-3.5" />
+              </span>
+            </Link>
+          )
         ) : (
           <a
             href={`${marketing}/#waitlist`}
@@ -84,8 +100,11 @@ export default function SignInPage() {
           <div className="mx-auto w-full max-w-md">
             {isSignedOutLanding() ? (
               <p className="mb-6 rounded-xl border border-border/60 bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
-                You&apos;re signed out. Use the demo launcher to explore another world, or sign in with
-                your beta account below.
+                You&apos;re signed out.{" "}
+                <a href={invitedDemoUrl} className="font-medium text-primary underline underline-offset-2">
+                  Return to invited guest demo
+                </a>{" "}
+                to pick another business, or sign in with your beta account below.
               </p>
             ) : null}
 
@@ -106,10 +125,17 @@ export default function SignInPage() {
 
             {isDemoLoginEnabled ? (
               <div className="mb-6 rounded-xl border border-primary/30 bg-primary/5 p-4">
-                <p className="mb-3 text-sm text-foreground">Staging team? Skip this form.</p>
-                <Button asChild className="w-full">
-                  <Link href="/demo">Open demo launcher</Link>
+                <p className="mb-3 text-sm text-foreground">
+                  {invitedDemo ? "Staging team? Use the internal G1 launcher." : "Staging team? Skip this form."}
+                </p>
+                <Button asChild className="w-full" variant={invitedDemo ? "outline" : "default"}>
+                  <Link href="/demo">Open internal demo launcher (G1)</Link>
                 </Button>
+                {invitedDemo ? (
+                  <Button asChild className="w-full mt-2">
+                    <a href={invitedDemoUrl}>Return to invited guest demo</a>
+                  </Button>
+                ) : null}
               </div>
             ) : null}
 

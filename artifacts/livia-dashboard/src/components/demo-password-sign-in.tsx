@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useSignIn, useClerk } from "@clerk/clerk-react";
 import { useLocation } from "wouter";
 import { Link } from "wouter";
+import { getMarketingDemoConciergeUrl, hasMarketingDemoGateKey } from "@/lib/marketing-demo-gate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -97,9 +98,15 @@ export function DemoPasswordSignIn({
         <p className="text-xs text-muted-foreground leading-relaxed">
           Demo tenants only — password{" "}
           <code className="text-[10px]">{devPasswordHint ?? "LiviaDemo2026!"}</code>. Or use the{" "}
-          <Link href="/demo" className="text-primary underline underline-offset-2">
-            demo launcher
-          </Link>
+          {hasMarketingDemoGateKey() ? (
+            <a href={getMarketingDemoConciergeUrl()} className="text-primary underline underline-offset-2">
+              invited guest demo
+            </a>
+          ) : (
+            <Link href="/demo" className="text-primary underline underline-offset-2">
+              demo launcher
+            </Link>
+          )}
           .
         </p>
       ) : null}

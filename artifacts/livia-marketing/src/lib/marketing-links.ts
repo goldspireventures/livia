@@ -28,12 +28,15 @@ export function marketingBookDemoUrl(verticalSlug?: string): string {
 }
 
 /** W2 demo stories with shipped wedge — link to card-stage (G2). */
-export function dashboardWedgeUrl(verticalSlug: string): string {
+export function dashboardWedgeUrl(verticalSlug: string, gateKey?: string | null): string {
   const slug = verticalSlug.replace(/^\/+/, "") as BusinessVertical;
-  if (isMarketingDemoWedgeUnlocked(slug)) {
-    return `${dashboardDemoUrl}/wedge/${slug}`;
-  }
-  return `${dashboardDemoUrl}?vertical=${encodeURIComponent(slug)}`;
+  const base = isMarketingDemoWedgeUnlocked(slug)
+    ? `${dashboardDemoUrl}/wedge/${slug}`
+    : `${dashboardDemoUrl}?vertical=${encodeURIComponent(slug)}`;
+  const key = gateKey?.trim();
+  if (!key) return base;
+  const sep = base.includes("?") ? "&" : "?";
+  return `${base}${sep}key=${encodeURIComponent(key)}`;
 }
 
 export const dashboardSignInUrl =
