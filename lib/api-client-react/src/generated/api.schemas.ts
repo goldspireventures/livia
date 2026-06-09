@@ -372,8 +372,10 @@ export interface CreateBusinessBody {
   jurisdiction?: CreateBusinessBodyJurisdiction;
   vertical?: BusinessVertical;
   tier?: BusinessTier;
-  /** When true (default), seed services and staff from the vertical pack */
+  /** Legacy/dev — when true, seed compact vertical pack menu + staff (default false; prefer starterPack for owner opt-in) */
   seedDefaults?: boolean;
+  /** Opt-in vertical starter menu for all verticals (+ beauty mini store). Empty studio when omitted. */
+  starterPack?: boolean;
   logoUrl?: string;
   instagramHandle?: string;
 }
@@ -638,6 +640,10 @@ export interface Service {
   currency: string;
   /** @nullable */
   imageUrl?: string | null;
+  /** @nullable */
+  aftercareInstructions?: string | null;
+  /** @nullable */
+  linkedRetailProductId?: string | null;
   isActive: boolean;
   sortOrder: number;
   createdAt: string;
@@ -802,6 +808,8 @@ export interface CreateServiceBody {
   priceMinor?: number;
   currency?: string;
   imageUrl?: string;
+  aftercareInstructions?: string;
+  linkedRetailProductId?: string;
   sortOrder?: number;
 }
 
@@ -815,6 +823,8 @@ export interface UpdateServiceBody {
   priceMinor?: number;
   currency?: string;
   imageUrl?: string;
+  aftercareInstructions?: string;
+  linkedRetailProductId?: string;
   isActive?: boolean;
   sortOrder?: number;
 }
@@ -831,6 +841,44 @@ export type CustomerDetail = Customer & {
   totalBookings: number;
   noShowCount: number;
 };
+
+export type RelationshipSummaryStage =
+  (typeof RelationshipSummaryStage)[keyof typeof RelationshipSummaryStage];
+
+export const RelationshipSummaryStage = {
+  prospect: "prospect",
+  new: "new",
+  active: "active",
+  at_risk: "at_risk",
+  lapsed: "lapsed",
+  trusted: "trusted",
+} as const;
+
+export type RelationshipSummaryTrajectory =
+  (typeof RelationshipSummaryTrajectory)[keyof typeof RelationshipSummaryTrajectory];
+
+export const RelationshipSummaryTrajectory = {
+  strengthening: "strengthening",
+  stable: "stable",
+  weakening: "weakening",
+  unknown: "unknown",
+} as const;
+
+export interface RelationshipSummary {
+  customerId: string;
+  stage: RelationshipSummaryStage;
+  stageLabel: string;
+  trajectory: RelationshipSummaryTrajectory;
+  headline: string;
+  signals: string[];
+  completedVisits: number;
+  totalBookings: number;
+  daysSinceLastVisit?: number | null;
+  nextBookingAt?: string | null;
+  conversationCount: number;
+  lastMessageAt?: string | null;
+  memoryHighlight?: string | null;
+}
 
 export interface CreateCustomerBody {
   firstName?: string;
@@ -974,12 +1022,504 @@ export interface SlotListResponse {
   slots: Slot[];
 }
 
+export type BusinessActivationSnapshotStatus =
+  (typeof BusinessActivationSnapshotStatus)[keyof typeof BusinessActivationSnapshotStatus];
+
+export const BusinessActivationSnapshotStatus = {
+  activated: "activated",
+  in_progress: "in_progress",
+  not_started: "not_started",
+} as const;
+
+export type BusinessActivationSnapshotActivationSource =
+  | (typeof BusinessActivationSnapshotActivationSource)[keyof typeof BusinessActivationSnapshotActivationSource]
+  | null;
+
+export const BusinessActivationSnapshotActivationSource = {
+  public: "public",
+  "owner-manual": "owner-manual",
+  staff: "staff",
+  "walk-in": "walk-in",
+  unknown: "unknown",
+} as const;
+
+/**
+ * V1 sacred metric — first successful booking and setup progress
+ */
+export interface BusinessActivationSnapshot {
+  status: BusinessActivationSnapshotStatus;
+  sacredMetricMet: boolean;
+  firstBookingAt?: string | null;
+  firstBookingId?: string | null;
+  activationSource?: BusinessActivationSnapshotActivationSource;
+  businessCreatedAt: string;
+  timeToFirstBookingMs?: number | null;
+  timeToFirstBookingLabel?: string | null;
+  activationStepsComplete: number;
+  activationStepsTotal: number;
+  paymentsConnected: boolean;
+}
+
+export interface PlatformActivationRollup {
+  refreshedAt: string;
+  totalBusinesses: number;
+  activatedCount: number;
+  /** Percentage 0–100 */
+  activationRate: number;
+  medianTimeToFirstBookingMs?: number | null;
+  medianTimeToFirstBookingLabel?: string | null;
+}
+
+export type ResolvedPlatformCapabilityState =
+  (typeof ResolvedPlatformCapabilityState)[keyof typeof ResolvedPlatformCapabilityState];
+
+export const ResolvedPlatformCapabilityState = {
+  defined: "defined",
+  installed: "installed",
+  configured: "configured",
+  active: "active",
+  suspended: "suspended",
+} as const;
+
+export interface ResolvedPlatformCapability {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  state: ResolvedPlatformCapabilityState;
+  v1: boolean;
+  readinessMet: boolean;
+  readinessBlockers: string[];
+  livTools: string[];
+  events: string[];
+}
+
+export interface VerticalCapabilitySummary {
+  id: string;
+  label: string;
+  maturity: string;
+}
+
+export interface TenantCapabilityGraph {
+  vertical: string;
+  platformCapabilities: ResolvedPlatformCapability[];
+  verticalCapabilities: VerticalCapabilitySummary[];
+  deferredVerticalCapabilities: VerticalCapabilitySummary[];
+}
+
+export type StoredCapabilityInstanceState =
+  (typeof StoredCapabilityInstanceState)[keyof typeof StoredCapabilityInstanceState];
+
+export const StoredCapabilityInstanceState = {
+  defined: "defined",
+  installed: "installed",
+  configured: "configured",
+  active: "active",
+  suspended: "suspended",
+} as const;
+
+export interface StoredCapabilityInstance {
+  capabilityId: string;
+  state: StoredCapabilityInstanceState;
+  installedAt?: string | null;
+  configuredAt?: string | null;
+  activeAt?: string | null;
+  suspendedAt?: string | null;
+  updatedAt: string;
+}
+
+export type TenantCapabilitiesResponseCapabilityInstances = {
+  [key: string]: StoredCapabilityInstance;
+};
+
+export type CapabilityHealthScoreGrade =
+  (typeof CapabilityHealthScoreGrade)[keyof typeof CapabilityHealthScoreGrade];
+
+export const CapabilityHealthScoreGrade = {
+  A: "A",
+  B: "B",
+  C: "C",
+  D: "D",
+  F: "F",
+} as const;
+
+export interface CapabilityHealthScore {
+  score: number;
+  grade: CapabilityHealthScoreGrade;
+  headline: string;
+}
+
+export type TenantCapabilitiesResponse = TenantCapabilityGraph & {
+  businessId: string;
+  activation?: BusinessActivationSnapshot;
+  capabilityInstances?: TenantCapabilitiesResponseCapabilityInstances;
+  /** Onboarding acts auto-completed from capability readiness this request */
+  onboardingAutoAdvanced?: string[];
+  capabilityHealth?: CapabilityHealthScore;
+};
+
+export type CommerceSignalId =
+  (typeof CommerceSignalId)[keyof typeof CommerceSignalId];
+
+export const CommerceSignalId = {
+  uncaptured_demand: "uncaptured_demand",
+  low_capture: "low_capture",
+  elevated_refunds: "elevated_refunds",
+  strong_revenue: "strong_revenue",
+} as const;
+
+export type CommerceSignalSeverity =
+  (typeof CommerceSignalSeverity)[keyof typeof CommerceSignalSeverity];
+
+export const CommerceSignalSeverity = {
+  act: "act",
+  watch: "watch",
+  info: "info",
+} as const;
+
+export interface CommerceSignal {
+  id: CommerceSignalId;
+  severity: CommerceSignalSeverity;
+  title: string;
+  body: string;
+  href: string;
+  priority: number;
+}
+
+export interface TwinCommerceSnapshot {
+  capturedMinor30d: number;
+  captureRatePercent?: number | null;
+  paymentCount30d: number;
+  currency: string;
+  capturedLabel: string;
+}
+
+export interface CommerceSignalsBundle {
+  businessId: string;
+  generatedAt: string;
+  signals: CommerceSignal[];
+  snapshot: TwinCommerceSnapshot;
+}
+
+export type OwnerIntelligenceBundleCommerce = {
+  signals: CommerceSignal[];
+  topSignal?: CommerceSignal | null;
+  snapshot: TwinCommerceSnapshot;
+};
+
+export type OwnerIntelligenceBundleTwinTopRecommendation = {
+  title?: string;
+  reason?: string;
+  priority?: string;
+  href?: string;
+} | null;
+
+export type OwnerIntelligenceBundleOps = {
+  pendingCount: number;
+  handedOffCount: number;
+  atRiskCount: number;
+  lowFeedbackCount: number;
+};
+
+export interface CommerceCapabilityBlocker {
+  capabilityId: string;
+  capabilityName: string;
+  blocker: string;
+  href: string;
+}
+
+export interface OwnerLivSuggestion {
+  id: string;
+  label: string;
+  href: string;
+  priority: number;
+}
+
+export type CommerceRemediationTaskSeverity =
+  (typeof CommerceRemediationTaskSeverity)[keyof typeof CommerceRemediationTaskSeverity];
+
+export const CommerceRemediationTaskSeverity = {
+  act: "act",
+  watch: "watch",
+  info: "info",
+} as const;
+
+export interface CommerceRemediationTask {
+  signalId: string;
+  severity: CommerceRemediationTaskSeverity;
+  title: string;
+  body: string;
+  href: string;
+  ownerPrompt: string;
+  priority: number;
+}
+
+export type TwinObservationEvidenceItem = {
+  type: string;
+  id: string;
+  label: string;
+};
+
+export interface TwinObservation {
+  id: string;
+  businessId: string;
+  domain: string;
+  layer: string;
+  observationKey: string;
+  title: string;
+  body: string;
+  confidence: string;
+  evidence: TwinObservationEvidenceItem[];
+  href?: string | null;
+  createdAt: string;
+}
+
+export type TwinRiskOrOpportunityKind =
+  (typeof TwinRiskOrOpportunityKind)[keyof typeof TwinRiskOrOpportunityKind];
+
+export const TwinRiskOrOpportunityKind = {
+  risk: "risk",
+  opportunity: "opportunity",
+} as const;
+
+export interface TwinRiskOrOpportunity {
+  id: string;
+  kind: TwinRiskOrOpportunityKind;
+  domain: string;
+  title: string;
+  body: string;
+  href?: string;
+  confidence: string;
+}
+
+export type TwinDomainId = (typeof TwinDomainId)[keyof typeof TwinDomainId];
+
+export const TwinDomainId = {
+  operational: "operational",
+  revenue: "revenue",
+  relationship: "relationship",
+  trust: "trust",
+  growth: "growth",
+  capability: "capability",
+} as const;
+
+export type TwinDomainScoreTrajectory =
+  (typeof TwinDomainScoreTrajectory)[keyof typeof TwinDomainScoreTrajectory];
+
+export const TwinDomainScoreTrajectory = {
+  strengthening: "strengthening",
+  stable: "stable",
+  weakening: "weakening",
+  unknown: "unknown",
+} as const;
+
+export interface TwinDomainScore {
+  domain: TwinDomainId;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  score: number;
+  label: string;
+  summary: string;
+  trajectory: TwinDomainScoreTrajectory;
+}
+
+export interface BusinessTwinHealth {
+  businessId: string;
+  generatedAt: string;
+  overallScore: number;
+  domains: TwinDomainScore[];
+}
+
+export interface OwnerIntelligenceBundle {
+  businessId: string;
+  generatedAt: string;
+  commerce: OwnerIntelligenceBundleCommerce;
+  capabilityHealth?: CapabilityHealthScore;
+  capabilityBlockers: number;
+  commerceCapabilityBlockers: CommerceCapabilityBlocker[];
+  livSuggestions: OwnerLivSuggestion[];
+  livPrompts: string[];
+  remediationTasks?: CommerceRemediationTask[];
+  twinTopRecommendation?: OwnerIntelligenceBundleTwinTopRecommendation;
+  twinHeadline?: string | null;
+  twinSubline?: string | null;
+  ops: OwnerIntelligenceBundleOps;
+  twinObservations: TwinObservation[];
+  twinRisks: TwinRiskOrOpportunity[];
+  twinOpportunities: TwinRiskOrOpportunity[];
+  twinHealth?: BusinessTwinHealth | null;
+}
+
+export type PatchTenantCapabilityInstanceRequestAction =
+  (typeof PatchTenantCapabilityInstanceRequestAction)[keyof typeof PatchTenantCapabilityInstanceRequestAction];
+
+export const PatchTenantCapabilityInstanceRequestAction = {
+  suspend: "suspend",
+  resume: "resume",
+} as const;
+
+export interface PatchTenantCapabilityInstanceRequest {
+  action: PatchTenantCapabilityInstanceRequestAction;
+}
+
+export type SetupGuidedFlowPhaseId =
+  (typeof SetupGuidedFlowPhaseId)[keyof typeof SetupGuidedFlowPhaseId];
+
+export const SetupGuidedFlowPhaseId = {
+  setup: "setup",
+  publish: "publish",
+  billing: "billing",
+  first_booking: "first_booking",
+} as const;
+
+export interface SetupGuidedFlowPhase {
+  id: SetupGuidedFlowPhaseId;
+  label: string;
+  headline: string;
+  done: boolean;
+  current: boolean;
+  href: string;
+  optional?: boolean;
+  livPrompt: string;
+}
+
+export interface SetupCapabilityBlocker {
+  capabilityId: string;
+  capabilityName: string;
+  blocker: string;
+}
+
+export type LivSetupGuidedFlowResponseActivation = {
+  status: string;
+  sacredMetricMet: boolean;
+  timeToFirstBookingLabel?: string | null;
+};
+
+export interface LivSetupGuidedFlowResponse {
+  phases: SetupGuidedFlowPhase[];
+  currentPhaseId: SetupGuidedFlowPhaseId;
+  complete: boolean;
+  publicPath?: string | null;
+  nextHref: string;
+  nextLivPrompt: string;
+  nextAct?: string | null;
+  percentComplete: number;
+  activation?: LivSetupGuidedFlowResponseActivation;
+  capabilityBlockers: SetupCapabilityBlocker[];
+  /** Onboarding acts implied by capability readiness blockers */
+  readinessActHints: string[];
+}
+
+export type LivSetupAssistRequestHistoryItemRole =
+  (typeof LivSetupAssistRequestHistoryItemRole)[keyof typeof LivSetupAssistRequestHistoryItemRole];
+
+export const LivSetupAssistRequestHistoryItemRole = {
+  user: "user",
+  assistant: "assistant",
+} as const;
+
+export type LivSetupAssistRequestHistoryItem = {
+  role: LivSetupAssistRequestHistoryItemRole;
+  content: string;
+};
+
+export interface LivSetupAssistRequest {
+  message: string;
+  history?: LivSetupAssistRequestHistoryItem[];
+}
+
+export interface LivSetupAssistResponse {
+  reply: string;
+  suggestions: string[];
+  toolsUsed?: string[];
+}
+
+export interface TwinFact {
+  key: string;
+  label: string;
+  value: string | number;
+  domain: TwinDomainId;
+}
+
+export type TwinRecommendationPriority =
+  (typeof TwinRecommendationPriority)[keyof typeof TwinRecommendationPriority];
+
+export const TwinRecommendationPriority = {
+  high: "high",
+  medium: "medium",
+  low: "low",
+} as const;
+
+export interface TwinRecommendation {
+  id: string;
+  priority: TwinRecommendationPriority;
+  title: string;
+  reason: string;
+  href?: string;
+  domain: TwinDomainId;
+  evidence: string[];
+}
+
+export interface BusinessTwinSummary {
+  businessId: string;
+  generatedAt: string;
+  headline: string;
+  subline: string;
+  facts: TwinFact[];
+  activationStatus: string;
+  sacredMetricMet: boolean;
+  commerce?: TwinCommerceSnapshot;
+}
+
+export interface BusinessTwinRecommendations {
+  businessId: string;
+  generatedAt: string;
+  recommendations: TwinRecommendation[];
+}
+
+export interface TwinObservationsBundle {
+  businessId: string;
+  generatedAt: string;
+  observations: TwinObservation[];
+}
+
+export interface TwinIntelligenceDailyResult {
+  businessId: string;
+  observationsCreated: number;
+}
+
 export interface PackageCreditSummary {
   ledgerCount: number;
   activePackages: number;
   creditsSold: number;
   creditsRedeemed: number;
   creditsRemaining: number;
+}
+
+export type AtRiskGuestPreviewStage =
+  (typeof AtRiskGuestPreviewStage)[keyof typeof AtRiskGuestPreviewStage];
+
+export const AtRiskGuestPreviewStage = {
+  at_risk: "at_risk",
+  lapsed: "lapsed",
+} as const;
+
+export interface AtRiskGuestPreview {
+  customerId: string;
+  displayName: string;
+  stage: AtRiskGuestPreviewStage;
+  daysSinceLastVisit: number;
+  headline: string;
+}
+
+export interface VisitFeedbackPreview {
+  id: string;
+  bookingId: string;
+  score: number;
+  comment?: string | null;
+  createdAt: string;
 }
 
 export interface DashboardSummary {
@@ -1000,6 +1540,15 @@ export interface DashboardSummary {
   /** Active bookable resources (wellness room board) */
   bookingResources?: BookingResource[];
   packageCreditSummary?: PackageCreditSummary;
+  activation?: BusinessActivationSnapshot;
+  /** Guests drifting or lapsed — relationship layer v1 nudges */
+  atRiskGuests?: AtRiskGuestPreview[];
+  /** Recent post-visit scores (14-day window, max 5 on summary) */
+  recentVisitFeedback?: VisitFeedbackPreview[];
+  /** Scores ≤3 in the 14-day feedback window */
+  lowFeedbackCount?: number;
+  /** Rolling 30-day payment capture snapshot for owner KPIs */
+  commerce?: TwinCommerceSnapshot;
 }
 
 export type ActivityItemLevel =
@@ -1013,6 +1562,15 @@ export const ActivityItemLevel = {
 
 export type ActivityItemContext = { [key: string]: unknown };
 
+export type ActivityItemPriority =
+  (typeof ActivityItemPriority)[keyof typeof ActivityItemPriority];
+
+export const ActivityItemPriority = {
+  info: "info",
+  watch: "watch",
+  act: "act",
+} as const;
+
 export interface ActivityItem {
   id: string;
   type: string;
@@ -1023,6 +1581,10 @@ export interface ActivityItem {
   entityId?: string | null;
   context?: ActivityItemContext;
   createdAt: string;
+  label: string;
+  detail?: string;
+  href?: string;
+  priority: ActivityItemPriority;
 }
 
 export interface FeatureFlag {
@@ -1136,6 +1698,11 @@ export const ConversationListItemStatus = {
   CLOSED: "CLOSED",
 } as const;
 
+/**
+ * @nullable
+ */
+export type ConversationListItemResolution = { [key: string]: unknown } | null;
+
 export interface ConversationListItem {
   id: string;
   businessId: string;
@@ -1158,6 +1725,12 @@ export interface ConversationListItem {
   createdAt: string;
   messageCount: number;
   bookingCount: number;
+  /** @nullable */
+  linkedBookingId?: string | null;
+  /** @nullable */
+  caseIntent?: string | null;
+  /** @nullable */
+  resolution?: ConversationListItemResolution;
 }
 
 export type ConversationMessageRole =
@@ -1296,13 +1869,51 @@ export interface ChainAlert {
   message: string;
 }
 
+export type ChainCommerceAlertSeverity =
+  (typeof ChainCommerceAlertSeverity)[keyof typeof ChainCommerceAlertSeverity];
+
+export const ChainCommerceAlertSeverity = {
+  act: "act",
+  watch: "watch",
+} as const;
+
+export interface ChainCommerceAlert {
+  businessId: string;
+  shopName: string;
+  severity: ChainCommerceAlertSeverity;
+  code: string;
+  message: string;
+  href: string;
+}
+
+export interface ChainShopCommerceSlice {
+  businessId: string;
+  shopName: string;
+  capturedMinor30d: number;
+  capturedLabel: string;
+  /** @nullable */
+  captureRatePercent?: number | null;
+  paymentCount30d: number;
+  demandBookings: number;
+  topSignal?: CommerceSignal | null;
+}
+
+export type ChainRollupCommerceSummary = {
+  totalCapturedMinor30d: number;
+  shopsWithActSignal: number;
+  shopsWithWatchSignal: number;
+};
+
 export interface ChainRollup {
   shopCount: number;
   bookingsThisWeek: number;
   completedThisWeek: number;
   shopsNeedingAttention: number;
-  founderBriefingLine: string;
+  orgAdminBriefingLine: string;
   alerts: ChainAlert[];
+  commerceAlerts?: ChainCommerceAlert[];
+  commerceSummary?: ChainRollupCommerceSummary;
+  commerceByShop?: ChainShopCommerceSlice[];
   shops: ChainShopRollup[];
 }
 
@@ -1363,6 +1974,10 @@ export type ForbiddenResponse = ErrorResponse;
  * Conflict (e.g. slug taken, slot unavailable)
  */
 export type ConflictResponse = ErrorResponse;
+
+export type GetMyCapabilitiesParams = {
+  businessId?: string;
+};
 
 export type ListMyNotificationsParams = {
   businessId?: string;
@@ -1444,6 +2059,18 @@ export type ListCustomersParams = {
   isBlocked?: boolean;
   limit?: number;
   offset?: number;
+};
+
+export type ListAtRiskRelationshipsParams = {
+  /**
+   * @minimum 1
+   * @maximum 20
+   */
+  limit?: number;
+};
+
+export type ListAtRiskRelationships200 = {
+  data: AtRiskGuestPreview[];
 };
 
 export type ListBookingsParams = {

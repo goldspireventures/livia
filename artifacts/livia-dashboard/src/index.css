@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 @import "./styles/beauty-presentation.css";
 @import "./styles/wellness-presentation.css";
+@import "./styles/vertical-presentation.css";
 @import "./styles/beauty-ambient-signal.css";
 @import "./styles/gateway-g1.css";
 @import "./styles/gateway-handoff.css";
@@ -328,6 +329,24 @@
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
+  }
+
+  html {
+    background-color: hsl(var(--background));
+  }
+
+  html.presentation-swap-lock,
+  html.presentation-swap-lock * {
+    transition-duration: 0ms !important;
+    transition-delay: 0ms !important;
+    animation-duration: 0ms !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html.presentation-swap-lock,
+    html.presentation-swap-lock * {
+      animation-duration: 0ms !important;
+    }
   }
 
   /* One scroll surface in the authenticated shell (main), not html+main stacked. */
@@ -662,6 +681,18 @@
       hsl(var(--primary) / 0.08) 0%,
       hsl(var(--background)) 28%
     );
+  }
+
+  /* W6 My Livia — web vault uses full width; mobile app keeps native /my-livia */
+  @media (min-width: 1024px) {
+    html[data-guest-surface="platform"] .guest-hub-platform {
+      background: linear-gradient(
+        135deg,
+        hsl(188 95% 43% / 0.08) 0%,
+        hsl(var(--background)) 22%,
+        hsl(var(--background)) 100%
+      );
+    }
   }
 
   /* W6 My Livia — Platform Default Aurora (dark), not tenant noir-dusk chrome */

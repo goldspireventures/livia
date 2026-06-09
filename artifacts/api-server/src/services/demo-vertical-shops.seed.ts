@@ -12,25 +12,42 @@ import {
 } from "./demo-showcase-depth";
 import {
   PLATFORM_DEFAULT_PRESET_ID,
+  demoShowcasePresentationPresetId,
   type BusinessVertical,
 } from "@workspace/policy";
 import { inferDemoServiceImageUrl } from "../lib/experience-skin";
 import { ensureWellnessShowcaseDepth } from "./wellness-demo-depth";
 
-/** Showcase wellness shops ship on Harbour Light so W4 shell is visible without a Settings visit. */
-export async function ensureWellnessDemoPresentationPreset(businessId: string): Promise<void> {
+/** Showcase demo shops ship vertical-native skin so Appearance + `/b` match the wedge on first walk-in. */
+export async function ensureVerticalDemoPresentationPreset(
+  businessId: string,
+  vertical: BusinessVertical,
+): Promise<boolean> {
   const [row] = await db
     .select({ presentationPresetId: businessesTable.presentationPresetId })
     .from(businessesTable)
     .where(eq(businessesTable.id, businessId))
     .limit(1);
   const id = row?.presentationPresetId;
+  const target = demoShowcasePresentationPresetId(vertical);
   if (!id || id === PLATFORM_DEFAULT_PRESET_ID) {
     await db
       .update(businessesTable)
-      .set({ presentationPresetId: "wellness-harbour-light" })
+      .set({ presentationPresetId: target })
       .where(eq(businessesTable.id, businessId));
+    return true;
   }
+  return false;
+}
+
+/** @deprecated Use ensureVerticalDemoPresentationPreset */
+export async function ensureWellnessDemoPresentationPreset(businessId: string): Promise<void> {
+  await ensureVerticalDemoPresentationPreset(businessId, "wellness");
+}
+
+/** @deprecated Use ensureVerticalDemoPresentationPreset */
+export async function ensureBeautyDemoPresentationPreset(businessId: string): Promise<void> {
+  await ensureVerticalDemoPresentationPreset(businessId, "beauty");
 }
 
 type ShowcaseServiceDef = {
@@ -41,6 +58,9 @@ type ShowcaseServiceDef = {
   category?: string;
   description?: string;
   imageUrl?: string;
+  serviceKind?: string | null;
+  rebookIntervalDays?: number | null;
+  requiresPatchTest?: boolean;
 };
 
 /** Stable Unsplash card art per service name — written on seed and repair. */
@@ -148,7 +168,11 @@ export async function seedVerticalShowcaseShops(
           durationMinutes: 60,
           priceMinor: 5500,
           sortOrder: 1,
-          category: "Lashes & brows",
+          category: "Lashes",
+          description: "Maintenance fill — 2–3 week cycle.",
+          serviceKind: "fill",
+          rebookIntervalDays: 14,
+          requiresPatchTest: true,
         },
         {
           name: "Classic manicure",
@@ -156,16 +180,37 @@ export async function seedVerticalShowcaseShops(
           priceMinor: 3500,
           sortOrder: 2,
           category: "Nails",
+          serviceKind: "other",
         },
         {
-          name: "Brow shape",
+          name: "Brow shape & tint",
           durationMinutes: 30,
           priceMinor: 2500,
           sortOrder: 3,
-          category: "Lashes & brows",
+          category: "Brows",
+          serviceKind: "maintenance",
+          rebookIntervalDays: 28,
+          requiresPatchTest: true,
         },
-        { name: "Gel nails", durationMinutes: 60, priceMinor: 4500, sortOrder: 4, category: "Nails" },
-        { name: "Lash lift", durationMinutes: 75, priceMinor: 6500, sortOrder: 5, category: "Lashes & brows" },
+        {
+          name: "Gel nails",
+          durationMinutes: 60,
+          priceMinor: 4500,
+          sortOrder: 4,
+          category: "Nails",
+          serviceKind: "maintenance",
+          rebookIntervalDays: 21,
+        },
+        {
+          name: "Classic lash full set",
+          durationMinutes: 120,
+          priceMinor: 8500,
+          sortOrder: 5,
+          category: "Lashes",
+          serviceKind: "full_set",
+          rebookIntervalDays: 21,
+          requiresPatchTest: true,
+        },
       ]),
     },
     {
@@ -442,8 +487,8 @@ export async function seedVerticalShowcaseShops(
 
     if (existing) {
       await refreshVerticalShowcaseShop(existing.id, d);
+      await ensureVerticalDemoPresentationPreset(existing.id, d.vertical);
       if (d.vertical === "wellness") {
-        await ensureWellnessDemoPresentationPreset(existing.id);
         await ensureWellnessShowcaseDepth(existing.id);
       }
       created.push({
@@ -469,6 +514,14 @@ export async function seedVerticalShowcaseShops(
     });
 
     const core = await seedShopCore(biz.id, d.staff, d.services, d.vertical);
+    if (d.vertical === "beauty") {
+      const { seedBeautyRetailTemplates } = await import("./beauty-retail.service");
+      await seedBeautyRetailTemplates(biz.id);
+    }
+    if (d.vertical === "wellness") {
+      const { seedWellnessRetailTemplates } = await import("./beauty-retail.service");
+      await seedWellnessRetailTemplates(biz.id);
+    }
     const customers = await ensureShowcaseCustomers(biz.id, 20);
     if (d.seedPets?.length) {
       await ensureShowcasePets(
@@ -492,8 +545,8 @@ export async function seedVerticalShowcaseShops(
       staffIds: core.staffRows.map((s) => s.id),
       serviceIds: core.serviceRows.map((s) => s.id),
     });
+    await ensureVerticalDemoPresentationPreset(biz.id, d.vertical);
     if (d.vertical === "wellness") {
-      await ensureWellnessDemoPresentationPreset(biz.id);
       await ensureWellnessShowcaseDepth(biz.id);
     }
     created.push({ slug: biz.slug, id: biz.id, name: biz.name, vertical: d.vertical });

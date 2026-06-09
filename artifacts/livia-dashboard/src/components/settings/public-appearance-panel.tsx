@@ -14,12 +14,15 @@ import { applyTenantPresentationSurface, resolvePresentationColorMode } from "@/
 import { accentMeetsWcagAa } from "@/lib/brand-contrast";
 import { cn } from "@/lib/utils";
 import { useTenantExperience } from "@/lib/tenant-experience-api";
-import { resolvePresentationLayoutMorph, type BusinessVertical } from "@workspace/policy";
 import {
-  BEAUTY_PRESET_SWATCH,
-  WELLNESS_PRESET_SWATCH,
-  type BeautyCssPreset,
-  type WellnessCssPreset,
+  resolvePresentationLayoutMorph,
+  resolveBeautyPickerMeta,
+  beautyLayoutMorphLabel,
+  listPresentationPresetsForTenantPicker,
+  type BusinessVertical,
+} from "@workspace/policy";
+import {
+  presetCardSwatch,
   isBeautyVertical,
   isWellnessVertical,
 } from "@/lib/presentation-layout";
@@ -98,12 +101,13 @@ export function PublicAppearancePanel({
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState<"logo" | "cover" | null>(null);
-  const [previewKey, setPreviewKey] = useState(0);
+  const [publicPreviewBust, setPublicPreviewBust] = useState(0);
+  const [iframeLoading, setIframeLoading] = useState({ public: true, app: true });
   const logoInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const appliedThemeRef = useRef({ presetId: "", accent: "", data: null as PresentationPayload | null });
 
-  const previewUrl = slug ? `/b/${slug}` : "";
+  const previewUrl = slug ? `/book/${slug}` : "";
   const contrastOk = accentMeetsWcagAa(draftAccent);
 
   const { data: tenantXp } = useTenantExperience(bid || undefined);
@@ -146,7 +150,8 @@ export function PublicAppearancePanel({
   }, [tenantVertical]);
 
   const refreshPreview = useCallback(() => {
-    setPreviewKey((k) => k + 1);
+    setPublicPreviewBust((k) => k + 1);
+    setIframeLoading({ public: true, app: true });
   }, []);
 
   const persist = useCallback(
@@ -177,6 +182,7 @@ export function PublicAppearancePanel({
             brandAccentHex: updated.brandAccentHex,
             colorMode: resolvePresentationColorMode(updated.preset.cssPreset),
           });
+          await qc.invalidateQueries({ queryKey: ["tenant-experience", bid] });
         }
         const brandPatch: Record<string, string | null> = {};
         if (next.logoUrl !== undefined) brandPatch.logoUrl = next.logoUrl.trim() || null;
@@ -197,19 +203,46 @@ export function PublicAppearancePanel({
 
   const beautyAppearance = isBeautyVertical(tenantVertical);
   const wellnessAppearance = isWellnessVertical(tenantVertical);
+  const draftBeautyMeta = beautyAppearance ? resolveBeautyPickerMeta(draftPresetId) : null;
 
-  const draftPresetMeta = data?.availablePresets.find((p) => p.id === draftPresetId);
+  /** Policy hub is source of truth for visible presets (avoids stale API bundle). */
+  const pickerPresets = useMemo((): PresentationPreset[] => {
+    if (tenantVertical) {
+      return listPresentationPresetsForTenantPicker(tenantVertical as BusinessVertical).map((p) => ({
+        id: p.id,
+        label: p.label,
+        description: p.description,
+        cssPreset: p.cssPreset,
+      }));
+    }
+    return data?.availablePresets ?? [];
+  }, [tenantVertical, data?.availablePresets]);
+
+  const draftPresetMeta = pickerPresets.find((p) => p.id === draftPresetId);
 
   const previewQuery = useMemo(() => {
-    const params = new URLSearchParams({ preview: "1", v: String(previewKey) });
+    const params = new URLSearchParams({ preview: "1" });
     const cssPreset = draftPresetMeta?.cssPreset ?? draftPresetId;
     if (cssPreset) params.set("preset", cssPreset);
     if (draftAccent.trim()) params.set("accent", draftAccent.trim());
     if (tenantVertical) params.set("vertical", tenantVertical);
     return params.toString();
-  }, [previewKey, draftPresetMeta?.cssPreset, draftPresetId, draftAccent, tenantVertical]);
+  }, [draftPresetMeta?.cssPreset, draftPresetId, draftAccent, tenantVertical]);
 
-  const previewIframeSrc = previewUrl ? `${previewUrl}?${previewQuery}` : "";
+  const publicPreviewQuery = useMemo(() => {
+    const params = new URLSearchParams(previewQuery);
+    if (publicPreviewBust > 0) params.set("v", String(publicPreviewBust));
+    return params.toString();
+  }, [previewQuery, publicPreviewBust]);
+
+  const previewIframeBg = useMemo(() => {
+    const cssPreset = draftPresetMeta?.cssPreset ?? "platform-default";
+    return resolvePresentationColorMode(cssPreset) === "light"
+      ? "hsl(0 0% 99%)"
+      : "hsl(240 10% 4%)";
+  }, [draftPresetMeta?.cssPreset]);
+
+  const previewIframeSrc = previewUrl ? `${previewUrl}?${publicPreviewQuery}` : "";
 
   const dashboardPreviewIframeSrc = useMemo(
     () => (bid ? appearancePreviewDashboardPath(previewQuery) : ""),
@@ -219,7 +252,7 @@ export function PublicAppearancePanel({
   function selectPreset(id: string) {
     setDraftPresetId(id);
     setDirty(id !== presetId || draftAccent.trim() !== accent.trim());
-    refreshPreview();
+    setIframeLoading((s) => ({ ...s, public: true, app: true }));
   }
 
   function discardDraftAppearance() {
@@ -235,7 +268,7 @@ export function PublicAppearancePanel({
     setDraftAccent(value);
     if (value.trim() && !accentMeetsWcagAa(value)) return;
     setDirty(draftPresetId !== presetId || value.trim() !== accent.trim());
-    refreshPreview();
+    setIframeLoading((s) => ({ ...s, public: true, app: true }));
   }
 
   async function applyDraftAppearance() {
@@ -244,15 +277,6 @@ export function PublicAppearancePanel({
       presentationPresetId: draftPresetId,
       brandAccentHex: draftAccent.trim() || null,
     });
-    const preset = data?.availablePresets.find((p) => p.id === draftPresetId);
-    if (preset) {
-      applyTenantPresentationSurface({
-        vertical: tenantVertical ?? undefined,
-        cssPreset: preset.cssPreset,
-        brandAccentHex: draftAccent.trim() || null,
-        colorMode: resolvePresentationColorMode(preset.cssPreset),
-      });
-    }
     setPresetId(draftPresetId);
     setAccent(draftAccent);
     setDirty(false);
@@ -316,7 +340,7 @@ export function PublicAppearancePanel({
                 Store appearance
               </CardTitle>
               <CardDescription className="mt-1">
-                One skin for your app and `/b/{slug}` — preview below, then apply.
+                One skin for your app and your book link — preview below, then apply.
               </CardDescription>
             </div>
             <div className="flex flex-wrap items-center gap-2 shrink-0">
@@ -382,16 +406,26 @@ export function PublicAppearancePanel({
                   className="w-full max-w-[360px] rounded-[2rem] border-[8px] border-foreground/10 bg-background shadow-xl overflow-hidden"
                   data-testid="public-b-preview-frame"
                 >
-                  <div className={previewFrameClass}>
+                  <div className={previewFrameClass} style={{ backgroundColor: previewIframeBg }}>
                     {previewIframeSrc ? (
-                      <iframe
-                        key={previewIframeSrc}
-                        title="Public booking preview"
-                        src={previewIframeSrc}
-                        className="h-full w-full border-0 bg-background"
-                        data-testid="public-b-preview-iframe"
-                        scrolling="yes"
-                      />
+                      <>
+                        {iframeLoading.public ? (
+                          <div
+                            className="absolute inset-0 z-10 motion-liv-pulse opacity-40"
+                            style={{ backgroundColor: previewIframeBg }}
+                            aria-hidden
+                          />
+                        ) : null}
+                        <iframe
+                          title="Public booking preview"
+                          src={previewIframeSrc}
+                          className="relative h-full w-full border-0"
+                          style={{ backgroundColor: previewIframeBg }}
+                          data-testid="public-b-preview-iframe"
+                          scrolling="yes"
+                          onLoad={() => setIframeLoading((s) => ({ ...s, public: false }))}
+                        />
+                      </>
                     ) : (
                       <div className="flex h-full items-center justify-center text-sm text-muted-foreground p-6 text-center">
                         Save a slug to preview your public page.
@@ -407,16 +441,26 @@ export function PublicAppearancePanel({
                   className="w-full max-w-[min(100%,720px)] rounded-xl border border-foreground/10 bg-background shadow-xl overflow-hidden"
                   data-testid="dashboard-app-preview-frame"
                 >
-                  <div className={previewFrameClass}>
+                  <div className={cn(previewFrameClass, "relative")} style={{ backgroundColor: previewIframeBg }}>
                     {dashboardPreviewIframeSrc ? (
-                      <iframe
-                        key={dashboardPreviewIframeSrc}
-                        title="Owner app preview"
-                        src={dashboardPreviewIframeSrc}
-                        className="h-full w-full border-0 bg-background"
-                        data-testid="dashboard-app-preview-iframe"
-                        scrolling="yes"
-                      />
+                      <>
+                        {iframeLoading.app ? (
+                          <div
+                            className="absolute inset-0 z-10 motion-liv-pulse opacity-40"
+                            style={{ backgroundColor: previewIframeBg }}
+                            aria-hidden
+                          />
+                        ) : null}
+                        <iframe
+                          title="Owner app preview"
+                          src={dashboardPreviewIframeSrc}
+                          className="relative h-full w-full border-0"
+                          style={{ backgroundColor: previewIframeBg }}
+                          data-testid="dashboard-app-preview-iframe"
+                          scrolling="yes"
+                          onLoad={() => setIframeLoading((s) => ({ ...s, app: false }))}
+                        />
+                      </>
                     ) : (
                       <div className="flex h-full items-center justify-center text-sm text-muted-foreground p-6 text-center">
                         Select a business to preview your app.
@@ -431,16 +475,26 @@ export function PublicAppearancePanel({
           <div className="grid gap-5 lg:grid-cols-[1fr_minmax(0,14rem)]">
             <div className="space-y-2">
               <Label>Preset</Label>
-              <div className="grid gap-2 grid-cols-2 xl:grid-cols-4">
-                {data.availablePresets.map((p) => {
-                  const swatch = beautyAppearance
-                    ? BEAUTY_PRESET_SWATCH[p.cssPreset as BeautyCssPreset]
-                    : wellnessAppearance
-                      ? WELLNESS_PRESET_SWATCH[p.cssPreset as WellnessCssPreset]
-                      : undefined;
+              <div
+                className={cn(
+                  "grid gap-2",
+                  pickerPresets.length <= 3
+                    ? "grid-cols-1 sm:grid-cols-3"
+                    : "grid-cols-2 xl:grid-cols-4",
+                )}
+              >
+                {pickerPresets.map((p) => {
+                  const swatch = presetCardSwatch(p.cssPreset, tenantVertical);
                   const morph =
-                    tenantVertical && isWellnessVertical(tenantVertical)
+                    tenantVertical &&
+                    (isWellnessVertical(tenantVertical) || isBeautyVertical(tenantVertical))
                       ? resolvePresentationLayoutMorph(tenantVertical as BusinessVertical, p.id)
+                      : null;
+                  const beautyMeta = beautyAppearance ? resolveBeautyPickerMeta(p.id) : null;
+                  const morphLabel = beautyAppearance
+                    ? beautyLayoutMorphLabel(morph)
+                    : morph
+                      ? layoutMorphLabel(morph)
                       : null;
                   return (
                   <button
@@ -460,8 +514,9 @@ export function PublicAppearancePanel({
                     {swatch ? (
                       <div
                         className={cn(
+                          "h-8 rounded-md mb-2",
                           beautyAppearance && "beauty-preset-swatch",
-                          wellnessAppearance && "wellness-preset-swatch h-8 rounded-md mb-2",
+                          wellnessAppearance && "wellness-preset-swatch",
                         )}
                         style={{
                           background: `linear-gradient(135deg, hsl(${swatch.a}) 0%, hsl(${swatch.b}) 100%)`,
@@ -470,16 +525,43 @@ export function PublicAppearancePanel({
                       />
                     ) : null}
                     <p className="text-sm font-medium">{p.label}</p>
-                    {morph ? (
+                    {morphLabel ? (
                       <p className="text-[10px] font-semibold uppercase tracking-wider text-primary mt-1">
-                        {layoutMorphLabel(morph)}
+                        {morphLabel}
                       </p>
                     ) : null}
-                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{p.description}</p>
+                    {beautyMeta ? (
+                      <>
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                          {beautyMeta.colorScheme}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground/90 mt-1.5 line-clamp-2">
+                          {beautyMeta.whenToPick}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{p.description}</p>
+                    )}
                   </button>
                 );
                 })}
               </div>
+              {draftBeautyMeta ? (
+                <div
+                  className="rounded-lg border border-border/80 bg-muted/30 p-3 space-y-2 text-xs"
+                  data-testid="beauty-preset-intent"
+                >
+                  <p className="font-medium text-sm text-foreground">{draftBeautyMeta.label} experience</p>
+                  <p className="text-muted-foreground">
+                    <span className="font-semibold text-foreground/90">Your app:</span>{" "}
+                    {draftBeautyMeta.operatorIntent}
+                  </p>
+                  <p className="text-muted-foreground">
+                    <span className="font-semibold text-foreground/90">Public /b:</span>{" "}
+                    {draftBeautyMeta.guestIntent}
+                  </p>
+                </div>
+              ) : null}
             </div>
 
             <div className="space-y-4">

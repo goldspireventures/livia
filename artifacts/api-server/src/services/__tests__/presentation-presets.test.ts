@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import {
+  demoShowcasePresentationPresetId,
   getPresentationPromotionMatrix,
   isValidPresentationPreset,
   listPresentationPresets,
@@ -29,16 +30,28 @@ for (const vertical of verticals) {
   const expectedLen = vertical === "beauty" ? 5 : 4;
   assert.equal(presets.length, expectedLen, `${vertical} preset count`);
   const picker = listPresentationPresetsForTenantPicker(vertical);
-  assert.equal(picker.length, presets.length, `${vertical} picker shows all presets including platform-default`);
+  const expectedPickerLen = vertical === "beauty" ? 3 : presets.length;
+  assert.equal(picker.length, expectedPickerLen, `${vertical} picker visible preset count`);
   assert.ok(
     picker.some((p) => p.id === PLATFORM_DEFAULT_PRESET_ID),
     `${vertical} picker includes platform-default`,
   );
-  assert.equal(
-    presets.filter((p) => p.isDefault).length,
-    1,
-    `${vertical} should have one vertical-native default`,
-  );
+  if (vertical === "beauty") {
+    assert.equal(
+      presets.filter((p) => p.isDefault).length,
+      0,
+      "beauty signup uses platform-default — no native isDefault flag",
+    );
+    assert.equal(resolvePresentationPreset("beauty", null).id, PLATFORM_DEFAULT_PRESET_ID);
+    assert.ok(!picker.some((p) => p.id === "beauty-editorial"));
+    assert.ok(!picker.some((p) => p.id === "beauty-premium-dark"));
+  } else {
+    assert.equal(
+      presets.filter((p) => p.isDefault).length,
+      1,
+      `${vertical} should have one vertical-native default`,
+    );
+  }
   assert.equal(presets[0]!.id, PLATFORM_DEFAULT_PRESET_ID, `${vertical} lists platform default first`);
 }
 
@@ -48,6 +61,8 @@ assert.equal(resolvePresentationPreset("body-art", PLATFORM_DEFAULT_PRESET_ID).t
 assert.equal(resolvePresentationPreset("body-art", null).id, "body-art-studio-dark");
 assert.equal(resolvePresentationPreset("body-art", null).tokens.layout, "pipeline");
 assert.equal(resolvePresentationPreset("hair", "not-a-real-preset").id, "hair-warm-chair");
+assert.equal(demoShowcasePresentationPresetId("body-art"), "body-art-studio-dark");
+assert.equal(demoShowcasePresentationPresetId("hair"), "hair-warm-chair");
 
 assert.equal(isValidPresentationPreset("hair", "hair-barber-bold"), true);
 assert.equal(isValidPresentationPreset("hair", "body-art-studio-dark"), false);

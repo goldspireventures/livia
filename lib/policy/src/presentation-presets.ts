@@ -26,6 +26,8 @@ export type PresentationPreset = {
   label: string;
   /** One-line description for picker */
   description: string;
+  /** When false, preset stays in catalog but is omitted from owner/onboarding pickers. */
+  pickerVisible?: boolean;
   isDefault: boolean;
   tokens: {
     colorMode: PresentationColorMode;
@@ -50,7 +52,7 @@ function platformDefaultPreset(vertical: BusinessVertical): PresentationPreset {
     vertical,
     label: "Platform Default",
     description:
-      "Constellation — ink shell, champagne Liv moments, ambient orbit inherited from marketing M4.",
+      "Classic Livia Constellation — ink shell, champagne accents, standard Today. Start here, then pick a studio skin.",
     isDefault: false,
     tokens: {
       colorMode: "dark",
@@ -124,8 +126,8 @@ const BASE_PRESENTATION_PRESETS: Record<BusinessVertical, PresentationPreset[]> 
       id: "beauty-noir-dusk",
       vertical: "beauty",
       label: "Noir Dusk",
-      description: "Soft dark — mauve accents, calm evening studio.",
-      isDefault: true,
+      description: "Evening studio — charcoal and mauve, inbox-first Today for lash DMs.",
+      isDefault: false,
       tokens: {
         colorMode: "dark",
         density: "comfortable",
@@ -141,7 +143,7 @@ const BASE_PRESENTATION_PRESETS: Record<BusinessVertical, PresentationPreset[]> 
       id: "beauty-soft-studio",
       vertical: "beauty",
       label: "Soft Studio",
-      description: "Lash and brow friendly — rounded cards, light blush palette.",
+      description: "Daylight studio — blush and rose, atrium Today for calm floor overview.",
       isDefault: false,
       tokens: {
         colorMode: "light",
@@ -159,6 +161,7 @@ const BASE_PRESENTATION_PRESETS: Record<BusinessVertical, PresentationPreset[]> 
       vertical: "beauty",
       label: "Editorial",
       description: "Magazine-clean — wide margins, treatment menu feel.",
+      pickerVisible: false,
       isDefault: false,
       tokens: {
         colorMode: "light",
@@ -176,6 +179,7 @@ const BASE_PRESENTATION_PRESETS: Record<BusinessVertical, PresentationPreset[]> 
       vertical: "beauty",
       label: "Premium Dark",
       description: "Rose-gold on charcoal — high-end salon cockpit.",
+      pickerVisible: false,
       isDefault: false,
       tokens: {
         colorMode: "dark",
@@ -577,14 +581,32 @@ export function listPresentationPresets(vertical: BusinessVertical): Presentatio
   return PRESENTATION_PRESETS[vertical];
 }
 
+/** Owner/onboarding picker — omits presets with `pickerVisible: false` (future unlock). */
+export function filterPresetsForPicker(presets: PresentationPreset[]): PresentationPreset[] {
+  return presets.filter((p) => p.pickerVisible !== false);
+}
+
 /**
- * API + Settings picker — all four presets per vertical (platform-default + 3 tailored).
- * Sign-up uses platform-default; owner may switch to any morph in Appearance.
+ * API + Settings picker — platform-default + vertical-native skins visible in UI.
+ * Sign-up uses platform-default; locked catalog presets stay valid for stored ids.
  */
+/** Beauty picker order — platform default, then light, then dark. */
+const BEAUTY_PICKER_ORDER = [
+  PLATFORM_DEFAULT_PRESET_ID,
+  "beauty-soft-studio",
+  "beauty-noir-dusk",
+] as const;
+
 export function listPresentationPresetsForTenantPicker(
   vertical: BusinessVertical,
 ): PresentationPreset[] {
-  return PRESENTATION_PRESETS[vertical];
+  const visible = filterPresetsForPicker(PRESENTATION_PRESETS[vertical]);
+  if (vertical === "beauty") {
+    return BEAUTY_PICKER_ORDER.map((id) => visible.find((p) => p.id === id)).filter(
+      (p): p is PresentationPreset => p != null,
+    );
+  }
+  return visible;
 }
 
 export function resolvePresentationPreset(
@@ -623,6 +645,26 @@ export function presetPreservesVerticalGates(
 }
 
 /** Staging / dev gate — presentation picker + token bundles. */
+/**
+ * Demo / wedge showcase tenants ship on a vertical-native skin (not platform-default)
+ * so Settings → Appearance and `/b` previews match the vertical story on first walk-in.
+ */
+export const DEMO_SHOWCASE_PRESENTATION_PRESET_ID: Record<BusinessVertical, string> = {
+  hair: "hair-warm-chair",
+  beauty: "beauty-noir-dusk",
+  wellness: "wellness-harbour-light",
+  "body-art": "body-art-studio-dark",
+  fitness: "fitness-gym-bold",
+  medspa: "medspa-clinical-calm",
+  "allied-health": "allied-clinic-standard",
+  "pet-grooming": "pet-playful-paw",
+  "automotive-detailing": "auto-bay-industrial",
+};
+
+export function demoShowcasePresentationPresetId(vertical: BusinessVertical): string {
+  return DEMO_SHOWCASE_PRESENTATION_PRESET_ID[vertical];
+}
+
 export function presentationPresetsEnabled(env?: Record<string, string | undefined>): boolean {
   const e = env ?? (typeof process !== "undefined" ? process.env : {});
   if (e.LIVIA_PRESENTATION_PRESETS === "true") return true;

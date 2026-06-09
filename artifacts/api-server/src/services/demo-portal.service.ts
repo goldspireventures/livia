@@ -946,11 +946,12 @@ export async function syncDemoWorld(): Promise<{
   provisioned: boolean;
   rosterAccounts: number;
   clerkSynced: number;
-  brandingUpdated?: number;
-  servicesUpdated?: number;
-  liveDaysRefreshed?: number;
-  bookingsAdded?: number;
-  warnings?: string[];
+    brandingUpdated?: number;
+    servicesUpdated?: number;
+    liveDaysRefreshed?: number;
+    bookingsAdded?: number;
+    presetsUpdated?: number;
+    warnings?: string[];
   passwordHint: string;
   businesses: Array<{ slug: string; id: string; name: string }>;
 }> {
@@ -986,10 +987,19 @@ export async function syncDemoWorld(): Promise<{
   let servicesUpdated = 0;
   let liveDaysRefreshed = 0;
   let bookingsAdded = 0;
+  let presetsUpdated = 0;
 
   try {
     brandingUpdated = await backfillAllDemoPublicBranding(DEMO_WORLD_SLUGS);
+    const { ensureVerticalDemoPresentationPreset } = await import("./demo-vertical-shops.seed");
     for (const b of status.businesses) {
+      if (b.vertical) {
+        const changed = await ensureVerticalDemoPresentationPreset(
+          b.id,
+          b.vertical as import("@workspace/policy").BusinessVertical,
+        );
+        if (changed) presetsUpdated += 1;
+      }
       servicesUpdated += await backfillDemoServiceImages(
         b.id,
         (b.vertical ?? undefined) as import("@workspace/policy").BusinessVertical | undefined,
@@ -1011,6 +1021,7 @@ export async function syncDemoWorld(): Promise<{
       servicesUpdated,
       liveDaysRefreshed,
       bookingsAdded,
+      presetsUpdated,
     },
     "demo.sync.completed",
   );

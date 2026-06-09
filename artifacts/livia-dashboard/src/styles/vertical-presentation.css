@@ -1,0 +1,228 @@
+/**
+ * Vertical presentation presets — hair, body-art, fitness, medspa, allied-health, pet, auto
+ * Beauty + wellness live in dedicated sheets. Tokens align with lib/policy/presentation-presets.ts
+ */
+
+/* —— Hair —— */
+html[data-presentation="warm-chair"] {
+  color-scheme: light;
+  --background: 36 33% 96%;
+  --foreground: 24 12% 14%;
+  --card: 0 0% 100%;
+  --primary: 32 48% 46%;
+  --ring: 32 48% 46%;
+  --border: 36 22% 88%;
+  --muted: 36 28% 93%;
+  --sidebar: 36 35% 98%;
+}
+
+html[data-presentation="clean-salon"] {
+  color-scheme: light;
+  --background: 210 25% 98%;
+  --foreground: 220 15% 14%;
+  --card: 0 0% 100%;
+  --primary: 199 89% 42%;
+  --ring: 199 89% 42%;
+  --border: 210 18% 90%;
+  --muted: 210 20% 94%;
+}
+
+html[data-presentation="barber-bold"] {
+  color-scheme: dark;
+  --background: 24 10% 8%;
+  --foreground: 40 20% 92%;
+  --card: 24 12% 12%;
+  --primary: 38 92% 50%;
+  --ring: 38 92% 50%;
+  --border: 24 10% 18%;
+  --muted: 24 8% 14%;
+}
+
+/* —— Body art —— */
+html[data-presentation="studio-dark"] {
+  color-scheme: dark;
+  --background: 220 12% 7%;
+  --foreground: 210 15% 92%;
+  --card: 220 14% 11%;
+  --primary: 0 72% 51%;
+  --ring: 0 72% 51%;
+  --border: 220 12% 18%;
+  --muted: 220 10% 14%;
+}
+
+html[data-presentation="flash-light"] {
+  color-scheme: light;
+  --background: 0 0% 98%;
+  --foreground: 220 20% 12%;
+  --card: 0 0% 100%;
+  --primary: 0 65% 48%;
+  --ring: 0 65% 48%;
+  --border: 220 12% 88%;
+}
+
+html[data-presentation="minimal-mono"] {
+  color-scheme: light;
+  --background: 0 0% 100%;
+  --foreground: 0 0% 8%;
+  --card: 0 0% 100%;
+  --primary: 0 0% 12%;
+  --ring: 0 0% 12%;
+  --border: 0 0% 88%;
+}
+
+/* —— Fitness —— */
+html[data-presentation="gym-bold"] {
+  color-scheme: dark;
+  --background: 222 47% 6%;
+  --foreground: 210 40% 96%;
+  --card: 222 40% 10%;
+  --primary: 142 76% 45%;
+  --ring: 142 76% 45%;
+  --border: 222 30% 16%;
+}
+
+html[data-presentation="studio-clean"] {
+  color-scheme: light;
+  --background: 200 30% 97%;
+  --foreground: 215 25% 14%;
+  --card: 0 0% 100%;
+  --primary: 174 58% 38%;
+  --ring: 174 58% 38%;
+}
+
+html[data-presentation="coach-compact"] {
+  color-scheme: light;
+  --background: 220 20% 97%;
+  --foreground: 222 30% 12%;
+  --card: 0 0% 100%;
+  --primary: 221 83% 53%;
+  --ring: 221 83% 53%;
+}
+
+/* —— Medspa —— */
+html[data-presentation="clinical-calm"] {
+  color-scheme: light;
+  --background: 260 30% 98%;
+  --foreground: 260 15% 16%;
+  --card: 0 0% 100%;
+  --primary: 262 52% 52%;
+  --ring: 262 52% 52%;
+  --border: 260 20% 90%;
+}
+
+html[data-presentation="luxury-serif"] {
+  color-scheme: dark;
+  --background: 280 18% 8%;
+  --foreground: 280 20% 92%;
+  --card: 280 16% 12%;
+  --primary: 280 45% 68%;
+  --ring: 280 45% 68%;
+}
+
+html[data-presentation="minimal-consent"] {
+  color-scheme: light;
+  --background: 0 0% 99%;
+  --foreground: 240 8% 14%;
+  --card: 0 0% 100%;
+  --primary: 240 6% 32%;
+  --ring: 240 6% 32%;
+}
+
+/* —— Allied health —— */
+html[data-presentation="clinic-standard"] {
+  color-scheme: light;
+  --background: 204 40% 97%;
+  --foreground: 215 25% 14%;
+  --card: 0 0% 100%;
+  --primary: 211 96% 42%;
+  --ring: 211 96% 42%;
+}
+
+html[data-presentation="practice-warm"] {
+  color-scheme: light;
+  --background: 28 35% 97%;
+  --foreground: 24 15% 14%;
+  --card: 0 0% 100%;
+  --primary: 24 55% 48%;
+  --ring: 24 55% 48%;
+}
+
+html[data-presentation="compact-desk"] {
+  color-scheme: light;
+  --background: 210 22% 96%;
+  --foreground: 220 20% 12%;
+  --card: 0 0% 100%;
+  --primary: 199 80% 40%;
+  --ring: 199 80% 40%;
+}
+
+/* —— Pet grooming —— */
+html[data-presentation="playful-paw"] {
+  color-scheme: light;
+  --background: 48 80% 97%;
+  --foreground: 28 30% 14%;
+  --card: 0 0% 100%;
+  --primary: 271 81% 56%;
+  --ring: 271 81% 56%;
+}
+
+html[data-presentation="clean-groom"] {
+  color-scheme: light;
+  --background: 180 25% 97%;
+  --foreground: 200 20% 14%;
+  --card: 0 0% 100%;
+  --primary: 172 66% 38%;
+  --ring: 172 66% 38%;
+}
+
+html[data-presentation="mobile-van"] {
+  color-scheme: light;
+  --background: 40 20% 96%;
+  --foreground: 30 15% 12%;
+  --card: 0 0% 100%;
+  --primary: 25 95% 53%;
+  --ring: 25 95% 53%;
+}
+
+/* —— Automotive detailing —— */
+html[data-presentation="bay-industrial"] {
+  color-scheme: dark;
+  --background: 220 10% 9%;
+  --foreground: 210 15% 90%;
+  --card: 220 12% 13%;
+  --primary: 45 93% 47%;
+  --ring: 45 93% 47%;
+  --border: 220 10% 18%;
+}
+
+html[data-presentation="showroom-light"] {
+  color-scheme: light;
+  --background: 220 15% 97%;
+  --foreground: 222 25% 12%;
+  --card: 0 0% 100%;
+  --primary: 221 83% 53%;
+  --ring: 221 83% 53%;
+}
+
+html[data-presentation="compact-mobile"] {
+  color-scheme: light;
+  --background: 210 18% 96%;
+  --foreground: 220 20% 12%;
+  --card: 0 0% 100%;
+  --primary: 215 25% 35%;
+  --ring: 215 25% 35%;
+}
+
+/* Shell chrome hints */
+html[data-presentation="studio-dark"] .app-shell-main,
+html[data-presentation="barber-bold"] .app-shell-main,
+html[data-presentation="gym-bold"] .app-shell-main,
+html[data-presentation="bay-industrial"] .app-shell-main {
+  background-image: linear-gradient(180deg, hsl(var(--card) / 0.5) 0%, hsl(var(--background)) 8rem);
+}
+
+html[data-presentation="warm-chair"] .app-shell-main,
+html[data-presentation="playful-paw"] .app-shell-main,
+html[data-presentation="clinical-calm"] .app-shell-main {
+  background-image: linear-gradient(180deg, hsl(var(--muted)) 0%, hsl(var(--background)) 6rem);
+}

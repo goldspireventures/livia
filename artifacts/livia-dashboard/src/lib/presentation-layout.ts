@@ -3,6 +3,7 @@ import {
   guestPublicHeroTagline,
   guestPublicCatalogLayout,
   resolveWellnessOperatorCssPreset,
+  PLATFORM_DEFAULT_PRESET_ID,
 } from "@workspace/policy";
 
 export const BEAUTY_CSS_PRESETS = ["noir-dusk", "soft-studio", "editorial", "premium-dark"] as const;
@@ -27,6 +28,12 @@ export function isBeautyPresentationPreset(preset?: string | null): boolean {
 
 export function isBeautyVertical(vertical?: string | null): boolean {
   return vertical === "beauty";
+}
+
+/** Platform Default / Constellation — not a vertical-native morph skin. */
+export function isConstellationPresentation(cssPreset?: string | null): boolean {
+  const p = cssPreset ?? readCssPresentation();
+  return p == null || p === "platform-default" || p === PLATFORM_DEFAULT_PRESET_ID;
 }
 
 export function isWellnessPresentationPreset(preset?: string | null): boolean {
@@ -110,7 +117,8 @@ export function resolveBeautyPublicCatalogLayout(
   cssPreset?: string | null,
 ): "beauty-grid" | "list" {
   if (cssPreset === "editorial") return "list";
-  return "beauty-grid";
+  const layout = guestPublicCatalogLayout("beauty", null);
+  return layout === "grid-2x2" ? "beauty-grid" : "list";
 }
 
 /** W5 hero H1 — singular service noun from tenant vocabulary. */
@@ -127,17 +135,7 @@ export function beautyPublicHeroTitle(serviceNoun: string): string {
 }
 
 export function beautyPublicHeroTagline(cssPreset?: string | null): string {
-  switch (cssPreset) {
-    case "soft-studio":
-      return "SOFT · CALM · STUDIO";
-    case "editorial":
-      return "CURATED · TREATMENTS";
-    case "premium-dark":
-      return "PREMIUM · EXPERIENCE";
-    case "noir-dusk":
-    default:
-      return "BEAUTY · CONFIDENCE · BLOOM";
-  }
+  return guestPublicHeroTagline("beauty", null, cssPreset) ?? "BOOK · CONFIRM · BLOOM";
 }
 
 /** Preset swatch for settings cards (HSL triplets matching index.css). */
@@ -147,9 +145,52 @@ export const WELLNESS_PRESET_SWATCH: Record<WellnessCssPreset, { a: string; b: s
   "evening-ledger": { a: "38 55% 58%", b: "220 25% 8%" },
 };
 
+export const PLATFORM_DEFAULT_SWATCH = { a: "43 38% 66%", b: "240 12% 22%" };
+
 export const BEAUTY_PRESET_SWATCH: Record<BeautyCssPreset, { a: string; b: string }> = {
   "noir-dusk": { a: "330 45% 72%", b: "228 18% 9%" },
   "soft-studio": { a: "330 81% 60%", b: "330 40% 98%" },
   editorial: { a: "16 52% 48%", b: "40 33% 97%" },
   "premium-dark": { a: "36 55% 62%", b: "30 8% 7%" },
 };
+
+/** Settings picker swatches — one entry per vertical-native cssPreset id. */
+const VERTICAL_PRESET_SWATCH: Record<string, { a: string; b: string }> = {
+  "warm-chair": { a: "32 48% 46%", b: "36 33% 96%" },
+  "clean-salon": { a: "199 89% 42%", b: "210 25% 98%" },
+  "barber-bold": { a: "38 92% 50%", b: "24 10% 8%" },
+  "studio-dark": { a: "0 72% 51%", b: "220 12% 7%" },
+  "flash-light": { a: "0 65% 48%", b: "0 0% 98%" },
+  "minimal-mono": { a: "0 0% 12%", b: "0 0% 100%" },
+  "gym-bold": { a: "142 76% 45%", b: "222 47% 6%" },
+  "studio-clean": { a: "174 58% 38%", b: "200 30% 97%" },
+  "coach-compact": { a: "221 83% 53%", b: "220 20% 97%" },
+  "clinical-calm": { a: "262 52% 52%", b: "260 30% 98%" },
+  "luxury-serif": { a: "280 45% 68%", b: "280 18% 8%" },
+  "minimal-consent": { a: "240 6% 32%", b: "0 0% 99%" },
+  "clinic-standard": { a: "211 96% 42%", b: "204 40% 97%" },
+  "practice-warm": { a: "24 55% 48%", b: "28 35% 97%" },
+  "compact-desk": { a: "199 80% 40%", b: "210 22% 96%" },
+  "playful-paw": { a: "271 81% 56%", b: "48 80% 97%" },
+  "clean-groom": { a: "172 66% 38%", b: "180 25% 97%" },
+  "mobile-van": { a: "25 95% 53%", b: "40 20% 96%" },
+  "bay-industrial": { a: "45 93% 47%", b: "220 10% 9%" },
+  "showroom-light": { a: "221 83% 53%", b: "220 15% 97%" },
+  "compact-mobile": { a: "215 25% 35%", b: "210 18% 96%" },
+};
+
+export function presetCardSwatch(
+  cssPreset: string,
+  vertical?: string | null,
+): { a: string; b: string } | undefined {
+  if (cssPreset === "platform-default" || cssPreset === PLATFORM_DEFAULT_PRESET_ID) {
+    return PLATFORM_DEFAULT_SWATCH;
+  }
+  if (vertical === "beauty" && (BEAUTY_CSS_PRESETS as readonly string[]).includes(cssPreset)) {
+    return BEAUTY_PRESET_SWATCH[cssPreset as BeautyCssPreset];
+  }
+  if (vertical === "wellness" && (WELLNESS_CSS_PRESETS as readonly string[]).includes(cssPreset)) {
+    return WELLNESS_PRESET_SWATCH[cssPreset as WellnessCssPreset];
+  }
+  return VERTICAL_PRESET_SWATCH[cssPreset];
+}
