@@ -69,7 +69,6 @@ import {
   ArrowUp,
 } from "lucide-react";
 import { Link } from "wouter";
-import { useInAppNotifications } from "@/hooks/use-in-app-notifications";
 
 interface ConversationListItem {
   id: string;
@@ -172,7 +171,6 @@ export default function InboxPage() {
     wellnessInboxMorph || beautyInboxMorph || isConstellationInbox,
   );
 
-  const { markReadByResource } = useInAppNotifications();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<"OPEN" | "HANDED_OFF" | "CLOSED" | "ALL">("OPEN");
   const [queueLens, setQueueLens] = useState<InboxQueueLens>("liv_handling");
@@ -235,15 +233,6 @@ export default function InboxPage() {
       setQueueLens("all");
     }
   }, [tenantVertical]);
-
-  useEffect(() => {
-    if (!businessId || !selectedId) return;
-    void markReadByResource({
-      resourceKind: "conversation",
-      resourceId: selectedId,
-      businessId,
-    });
-  }, [businessId, selectedId, markReadByResource]);
 
   const { data: convos, isLoading: isLoadingConvos } = useListConversations(
     businessId,
