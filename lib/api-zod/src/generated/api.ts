@@ -147,7 +147,7 @@ export const GetMyChainRollupResponse = zod.object({
   bookingsThisWeek: zod.number(),
   completedThisWeek: zod.number(),
   shopsNeedingAttention: zod.number(),
-  orgAdminBriefingLine: zod.string(),
+  founderBriefingLine: zod.string(),
   alerts: zod.array(
     zod.object({
       businessId: zod.string(),
@@ -157,53 +157,6 @@ export const GetMyChainRollupResponse = zod.object({
       message: zod.string(),
     }),
   ),
-  commerceAlerts: zod
-    .array(
-      zod.object({
-        businessId: zod.string(),
-        shopName: zod.string(),
-        severity: zod.enum(["act", "watch"]),
-        code: zod.string(),
-        message: zod.string(),
-        href: zod.string(),
-      }),
-    )
-    .optional(),
-  commerceSummary: zod
-    .object({
-      totalCapturedMinor30d: zod.number(),
-      shopsWithActSignal: zod.number(),
-      shopsWithWatchSignal: zod.number(),
-    })
-    .optional(),
-  commerceByShop: zod
-    .array(
-      zod.object({
-        businessId: zod.string(),
-        shopName: zod.string(),
-        capturedMinor30d: zod.number(),
-        capturedLabel: zod.string(),
-        captureRatePercent: zod.number().nullish(),
-        paymentCount30d: zod.number(),
-        demandBookings: zod.number(),
-        topSignal: zod
-          .object({
-            id: zod.enum([
-              "uncaptured_demand",
-              "low_capture",
-              "elevated_refunds",
-              "strong_revenue",
-            ]),
-            severity: zod.enum(["act", "watch", "info"]),
-            title: zod.string(),
-            body: zod.string(),
-            href: zod.string(),
-            priority: zod.number(),
-          })
-          .nullish(),
-      }),
-    )
-    .optional(),
   shops: zod.array(
     zod.object({
       businessId: zod.string(),
@@ -224,110 +177,6 @@ export const GetMyChainRollupResponse = zod.object({
     }),
   ),
 });
-
-/**
- * @summary Resolved capability graph for a tenant (defaults to first business)
- */
-export const GetMyCapabilitiesQueryParams = zod.object({
-  businessId: zod.coerce.string().optional(),
-});
-
-export const GetMyCapabilitiesResponse = zod
-  .object({
-    vertical: zod.string(),
-    platformCapabilities: zod.array(
-      zod.object({
-        id: zod.string(),
-        name: zod.string(),
-        description: zod.string(),
-        category: zod.string(),
-        state: zod.enum([
-          "defined",
-          "installed",
-          "configured",
-          "active",
-          "suspended",
-        ]),
-        v1: zod.boolean(),
-        readinessMet: zod.boolean(),
-        readinessBlockers: zod.array(zod.string()),
-        livTools: zod.array(zod.string()),
-        events: zod.array(zod.string()),
-      }),
-    ),
-    verticalCapabilities: zod.array(
-      zod.object({
-        id: zod.string(),
-        label: zod.string(),
-        maturity: zod.string(),
-      }),
-    ),
-    deferredVerticalCapabilities: zod.array(
-      zod.object({
-        id: zod.string(),
-        label: zod.string(),
-        maturity: zod.string(),
-      }),
-    ),
-  })
-  .and(
-    zod.object({
-      businessId: zod.string(),
-      activation: zod
-        .object({
-          status: zod.enum(["activated", "in_progress", "not_started"]),
-          sacredMetricMet: zod.boolean(),
-          firstBookingAt: zod.coerce.date().nullish(),
-          firstBookingId: zod.string().nullish(),
-          activationSource: zod
-            .enum(["public", "owner-manual", "staff", "walk-in", "unknown"])
-            .nullish(),
-          businessCreatedAt: zod.coerce.date(),
-          timeToFirstBookingMs: zod.number().nullish(),
-          timeToFirstBookingLabel: zod.string().nullish(),
-          activationStepsComplete: zod.number(),
-          activationStepsTotal: zod.number(),
-          paymentsConnected: zod.boolean(),
-        })
-        .optional()
-        .describe(
-          "V1 sacred metric — first successful booking and setup progress",
-        ),
-      capabilityInstances: zod
-        .record(
-          zod.string(),
-          zod.object({
-            capabilityId: zod.string(),
-            state: zod.enum([
-              "defined",
-              "installed",
-              "configured",
-              "active",
-              "suspended",
-            ]),
-            installedAt: zod.coerce.date().nullish(),
-            configuredAt: zod.coerce.date().nullish(),
-            activeAt: zod.coerce.date().nullish(),
-            suspendedAt: zod.coerce.date().nullish(),
-            updatedAt: zod.coerce.date(),
-          }),
-        )
-        .optional(),
-      onboardingAutoAdvanced: zod
-        .array(zod.string())
-        .optional()
-        .describe(
-          "Onboarding acts auto-completed from capability readiness this request",
-        ),
-      capabilityHealth: zod
-        .object({
-          score: zod.number(),
-          grade: zod.enum(["A", "B", "C", "D", "F"]),
-          headline: zod.string(),
-        })
-        .optional(),
-    }),
-  );
 
 /**
  * @summary Get caller's role + staff link inside a business
@@ -498,8 +347,6 @@ export const GetMyDayResponse = zod.object({
             priceMinor: zod.number(),
             currency: zod.string(),
             imageUrl: zod.string().nullish(),
-            aftercareInstructions: zod.string().nullish(),
-            linkedRetailProductId: zod.string().nullish(),
             isActive: zod.boolean(),
             sortOrder: zod.number(),
             createdAt: zod.coerce.date(),
@@ -609,8 +456,6 @@ export const GetMyDayResponse = zod.object({
               priceMinor: zod.number(),
               currency: zod.string(),
               imageUrl: zod.string().nullish(),
-              aftercareInstructions: zod.string().nullish(),
-              linkedRetailProductId: zod.string().nullish(),
               isActive: zod.boolean(),
               sortOrder: zod.number(),
               createdAt: zod.coerce.date(),
@@ -721,8 +566,6 @@ export const GetMyDayResponse = zod.object({
               priceMinor: zod.number(),
               currency: zod.string(),
               imageUrl: zod.string().nullish(),
-              aftercareInstructions: zod.string().nullish(),
-              linkedRetailProductId: zod.string().nullish(),
               isActive: zod.boolean(),
               sortOrder: zod.number(),
               createdAt: zod.coerce.date(),
@@ -984,13 +827,7 @@ export const CreateBusinessBody = zod.object({
     .boolean()
     .optional()
     .describe(
-      "Legacy\/dev — when true, seed compact vertical pack menu + staff (default false; prefer starterPack for owner opt-in)",
-    ),
-  starterPack: zod
-    .boolean()
-    .optional()
-    .describe(
-      "Opt-in vertical starter menu for all verticals (+ beauty mini store). Empty studio when omitted.",
+      "When true (default), seed services and staff from the vertical pack",
     ),
   logoUrl: zod.string().optional(),
   instagramHandle: zod.string().optional(),
@@ -1510,8 +1347,6 @@ export const GetStaffServicesResponseItem = zod.object({
   priceMinor: zod.number(),
   currency: zod.string(),
   imageUrl: zod.string().nullish(),
-  aftercareInstructions: zod.string().nullish(),
-  linkedRetailProductId: zod.string().nullish(),
   isActive: zod.boolean(),
   sortOrder: zod.number(),
   createdAt: zod.coerce.date(),
@@ -1543,8 +1378,6 @@ export const SetStaffServicesResponseItem = zod.object({
   priceMinor: zod.number(),
   currency: zod.string(),
   imageUrl: zod.string().nullish(),
-  aftercareInstructions: zod.string().nullish(),
-  linkedRetailProductId: zod.string().nullish(),
   isActive: zod.boolean(),
   sortOrder: zod.number(),
   createdAt: zod.coerce.date(),
@@ -1575,8 +1408,6 @@ export const ListServicesResponseItem = zod.object({
   priceMinor: zod.number(),
   currency: zod.string(),
   imageUrl: zod.string().nullish(),
-  aftercareInstructions: zod.string().nullish(),
-  linkedRetailProductId: zod.string().nullish(),
   isActive: zod.boolean(),
   sortOrder: zod.number(),
   createdAt: zod.coerce.date(),
@@ -1611,8 +1442,6 @@ export const CreateServiceBody = zod.object({
   priceMinor: zod.number().default(createServiceBodyPriceMinorDefault),
   currency: zod.string().default(createServiceBodyCurrencyDefault),
   imageUrl: zod.string().optional(),
-  aftercareInstructions: zod.string().optional(),
-  linkedRetailProductId: zod.string().optional(),
   sortOrder: zod.number().default(createServiceBodySortOrderDefault),
 });
 
@@ -1636,8 +1465,6 @@ export const GetServiceResponse = zod.object({
   priceMinor: zod.number(),
   currency: zod.string(),
   imageUrl: zod.string().nullish(),
-  aftercareInstructions: zod.string().nullish(),
-  linkedRetailProductId: zod.string().nullish(),
   isActive: zod.boolean(),
   sortOrder: zod.number(),
   createdAt: zod.coerce.date(),
@@ -1662,8 +1489,6 @@ export const UpdateServiceBody = zod.object({
   priceMinor: zod.number().optional(),
   currency: zod.string().optional(),
   imageUrl: zod.string().optional(),
-  aftercareInstructions: zod.string().optional(),
-  linkedRetailProductId: zod.string().optional(),
   isActive: zod.boolean().optional(),
   sortOrder: zod.number().optional(),
 });
@@ -1680,8 +1505,6 @@ export const UpdateServiceResponse = zod.object({
   priceMinor: zod.number(),
   currency: zod.string(),
   imageUrl: zod.string().nullish(),
-  aftercareInstructions: zod.string().nullish(),
-  linkedRetailProductId: zod.string().nullish(),
   isActive: zod.boolean(),
   sortOrder: zod.number(),
   createdAt: zod.coerce.date(),
@@ -1854,67 +1677,6 @@ export const UpdateCustomerResponse = zod.object({
 });
 
 /**
- * @summary Relationship summary for a customer (visits, comms, lifecycle stage)
- */
-export const GetCustomerRelationshipParams = zod.object({
-  businessId: zod.coerce.string(),
-  customerId: zod.coerce.string(),
-});
-
-export const GetCustomerRelationshipResponse = zod.object({
-  customerId: zod.string(),
-  stage: zod.enum([
-    "prospect",
-    "new",
-    "active",
-    "at_risk",
-    "lapsed",
-    "trusted",
-  ]),
-  stageLabel: zod.string(),
-  trajectory: zod.enum(["strengthening", "stable", "weakening", "unknown"]),
-  headline: zod.string(),
-  signals: zod.array(zod.string()),
-  completedVisits: zod.number(),
-  totalBookings: zod.number(),
-  daysSinceLastVisit: zod.number().nullish(),
-  nextBookingAt: zod.coerce.date().nullish(),
-  conversationCount: zod.number(),
-  lastMessageAt: zod.coerce.date().nullish(),
-  memoryHighlight: zod.string().nullish(),
-});
-
-/**
- * @summary Guests drifting or lapsed (relationship layer v1)
- */
-export const ListAtRiskRelationshipsParams = zod.object({
-  businessId: zod.coerce.string(),
-});
-
-export const listAtRiskRelationshipsQueryLimitDefault = 10;
-export const listAtRiskRelationshipsQueryLimitMax = 20;
-
-export const ListAtRiskRelationshipsQueryParams = zod.object({
-  limit: zod.coerce
-    .number()
-    .min(1)
-    .max(listAtRiskRelationshipsQueryLimitMax)
-    .default(listAtRiskRelationshipsQueryLimitDefault),
-});
-
-export const ListAtRiskRelationshipsResponse = zod.object({
-  data: zod.array(
-    zod.object({
-      customerId: zod.string(),
-      displayName: zod.string(),
-      stage: zod.enum(["at_risk", "lapsed"]),
-      daysSinceLastVisit: zod.number(),
-      headline: zod.string(),
-    }),
-  ),
-});
-
-/**
  * @summary List bookings for a business
  */
 export const ListBookingsParams = zod.object({
@@ -1989,8 +1751,6 @@ export const ListBookingsResponse = zod.object({
             priceMinor: zod.number(),
             currency: zod.string(),
             imageUrl: zod.string().nullish(),
-            aftercareInstructions: zod.string().nullish(),
-            linkedRetailProductId: zod.string().nullish(),
             isActive: zod.boolean(),
             sortOrder: zod.number(),
             createdAt: zod.coerce.date(),
@@ -2131,8 +1891,6 @@ export const GetBookingResponse = zod
         priceMinor: zod.number(),
         currency: zod.string(),
         imageUrl: zod.string().nullish(),
-        aftercareInstructions: zod.string().nullish(),
-        linkedRetailProductId: zod.string().nullish(),
         isActive: zod.boolean(),
         sortOrder: zod.number(),
         createdAt: zod.coerce.date(),
@@ -2396,465 +2154,6 @@ export const GetAvailableSlotsResponse = zod.object({
 });
 
 /**
- * @summary Resolved capability graph for tenant (platform + vertical)
- */
-export const GetTenantCapabilitiesParams = zod.object({
-  businessId: zod.coerce.string(),
-});
-
-export const GetTenantCapabilitiesResponse = zod
-  .object({
-    vertical: zod.string(),
-    platformCapabilities: zod.array(
-      zod.object({
-        id: zod.string(),
-        name: zod.string(),
-        description: zod.string(),
-        category: zod.string(),
-        state: zod.enum([
-          "defined",
-          "installed",
-          "configured",
-          "active",
-          "suspended",
-        ]),
-        v1: zod.boolean(),
-        readinessMet: zod.boolean(),
-        readinessBlockers: zod.array(zod.string()),
-        livTools: zod.array(zod.string()),
-        events: zod.array(zod.string()),
-      }),
-    ),
-    verticalCapabilities: zod.array(
-      zod.object({
-        id: zod.string(),
-        label: zod.string(),
-        maturity: zod.string(),
-      }),
-    ),
-    deferredVerticalCapabilities: zod.array(
-      zod.object({
-        id: zod.string(),
-        label: zod.string(),
-        maturity: zod.string(),
-      }),
-    ),
-  })
-  .and(
-    zod.object({
-      businessId: zod.string(),
-      activation: zod
-        .object({
-          status: zod.enum(["activated", "in_progress", "not_started"]),
-          sacredMetricMet: zod.boolean(),
-          firstBookingAt: zod.coerce.date().nullish(),
-          firstBookingId: zod.string().nullish(),
-          activationSource: zod
-            .enum(["public", "owner-manual", "staff", "walk-in", "unknown"])
-            .nullish(),
-          businessCreatedAt: zod.coerce.date(),
-          timeToFirstBookingMs: zod.number().nullish(),
-          timeToFirstBookingLabel: zod.string().nullish(),
-          activationStepsComplete: zod.number(),
-          activationStepsTotal: zod.number(),
-          paymentsConnected: zod.boolean(),
-        })
-        .optional()
-        .describe(
-          "V1 sacred metric — first successful booking and setup progress",
-        ),
-      capabilityInstances: zod
-        .record(
-          zod.string(),
-          zod.object({
-            capabilityId: zod.string(),
-            state: zod.enum([
-              "defined",
-              "installed",
-              "configured",
-              "active",
-              "suspended",
-            ]),
-            installedAt: zod.coerce.date().nullish(),
-            configuredAt: zod.coerce.date().nullish(),
-            activeAt: zod.coerce.date().nullish(),
-            suspendedAt: zod.coerce.date().nullish(),
-            updatedAt: zod.coerce.date(),
-          }),
-        )
-        .optional(),
-      onboardingAutoAdvanced: zod
-        .array(zod.string())
-        .optional()
-        .describe(
-          "Onboarding acts auto-completed from capability readiness this request",
-        ),
-      capabilityHealth: zod
-        .object({
-          score: zod.number(),
-          grade: zod.enum(["A", "B", "C", "D", "F"]),
-          headline: zod.string(),
-        })
-        .optional(),
-    }),
-  );
-
-/**
- * @summary Suspend or resume a tenant capability instance
- */
-export const PatchTenantCapabilityInstanceParams = zod.object({
-  businessId: zod.coerce.string(),
-  capabilityId: zod.coerce.string(),
-});
-
-export const PatchTenantCapabilityInstanceBody = zod.object({
-  action: zod.enum(["suspend", "resume"]),
-});
-
-export const PatchTenantCapabilityInstanceResponse = zod
-  .object({
-    vertical: zod.string(),
-    platformCapabilities: zod.array(
-      zod.object({
-        id: zod.string(),
-        name: zod.string(),
-        description: zod.string(),
-        category: zod.string(),
-        state: zod.enum([
-          "defined",
-          "installed",
-          "configured",
-          "active",
-          "suspended",
-        ]),
-        v1: zod.boolean(),
-        readinessMet: zod.boolean(),
-        readinessBlockers: zod.array(zod.string()),
-        livTools: zod.array(zod.string()),
-        events: zod.array(zod.string()),
-      }),
-    ),
-    verticalCapabilities: zod.array(
-      zod.object({
-        id: zod.string(),
-        label: zod.string(),
-        maturity: zod.string(),
-      }),
-    ),
-    deferredVerticalCapabilities: zod.array(
-      zod.object({
-        id: zod.string(),
-        label: zod.string(),
-        maturity: zod.string(),
-      }),
-    ),
-  })
-  .and(
-    zod.object({
-      businessId: zod.string(),
-      activation: zod
-        .object({
-          status: zod.enum(["activated", "in_progress", "not_started"]),
-          sacredMetricMet: zod.boolean(),
-          firstBookingAt: zod.coerce.date().nullish(),
-          firstBookingId: zod.string().nullish(),
-          activationSource: zod
-            .enum(["public", "owner-manual", "staff", "walk-in", "unknown"])
-            .nullish(),
-          businessCreatedAt: zod.coerce.date(),
-          timeToFirstBookingMs: zod.number().nullish(),
-          timeToFirstBookingLabel: zod.string().nullish(),
-          activationStepsComplete: zod.number(),
-          activationStepsTotal: zod.number(),
-          paymentsConnected: zod.boolean(),
-        })
-        .optional()
-        .describe(
-          "V1 sacred metric — first successful booking and setup progress",
-        ),
-      capabilityInstances: zod
-        .record(
-          zod.string(),
-          zod.object({
-            capabilityId: zod.string(),
-            state: zod.enum([
-              "defined",
-              "installed",
-              "configured",
-              "active",
-              "suspended",
-            ]),
-            installedAt: zod.coerce.date().nullish(),
-            configuredAt: zod.coerce.date().nullish(),
-            activeAt: zod.coerce.date().nullish(),
-            suspendedAt: zod.coerce.date().nullish(),
-            updatedAt: zod.coerce.date(),
-          }),
-        )
-        .optional(),
-      onboardingAutoAdvanced: zod
-        .array(zod.string())
-        .optional()
-        .describe(
-          "Onboarding acts auto-completed from capability readiness this request",
-        ),
-      capabilityHealth: zod
-        .object({
-          score: zod.number(),
-          grade: zod.enum(["A", "B", "C", "D", "F"]),
-          headline: zod.string(),
-        })
-        .optional(),
-    }),
-  );
-
-/**
- * @summary Business Twin at-a-glance understanding
- */
-export const GetBusinessTwinSummaryParams = zod.object({
-  businessId: zod.coerce.string(),
-});
-
-export const GetBusinessTwinSummaryResponse = zod.object({
-  businessId: zod.string(),
-  generatedAt: zod.coerce.date(),
-  headline: zod.string(),
-  subline: zod.string(),
-  facts: zod.array(
-    zod.object({
-      key: zod.string(),
-      label: zod.string(),
-      value: zod.union([zod.string(), zod.number()]),
-      domain: zod.enum([
-        "operational",
-        "revenue",
-        "relationship",
-        "trust",
-        "growth",
-        "capability",
-      ]),
-    }),
-  ),
-  activationStatus: zod.string(),
-  sacredMetricMet: zod.boolean(),
-  commerce: zod
-    .object({
-      capturedMinor30d: zod.number(),
-      captureRatePercent: zod.number().nullish(),
-      paymentCount30d: zod.number(),
-      currency: zod.string(),
-      capturedLabel: zod.string(),
-    })
-    .optional(),
-});
-
-/**
- * @summary Six-domain business health snapshot
- */
-export const GetBusinessTwinHealthParams = zod.object({
-  businessId: zod.coerce.string(),
-});
-
-export const getBusinessTwinHealthResponseDomainsItemScoreMin = 0;
-export const getBusinessTwinHealthResponseDomainsItemScoreMax = 100;
-
-export const GetBusinessTwinHealthResponse = zod.object({
-  businessId: zod.string(),
-  generatedAt: zod.coerce.date(),
-  overallScore: zod.number(),
-  domains: zod.array(
-    zod.object({
-      domain: zod.enum([
-        "operational",
-        "revenue",
-        "relationship",
-        "trust",
-        "growth",
-        "capability",
-      ]),
-      score: zod
-        .number()
-        .min(getBusinessTwinHealthResponseDomainsItemScoreMin)
-        .max(getBusinessTwinHealthResponseDomainsItemScoreMax),
-      label: zod.string(),
-      summary: zod.string(),
-      trajectory: zod.enum(["strengthening", "stable", "weakening", "unknown"]),
-    }),
-  ),
-});
-
-/**
- * @summary Actionable Twin recommendations
- */
-export const GetBusinessTwinRecommendationsParams = zod.object({
-  businessId: zod.coerce.string(),
-});
-
-export const GetBusinessTwinRecommendationsResponse = zod.object({
-  businessId: zod.string(),
-  generatedAt: zod.coerce.date(),
-  recommendations: zod.array(
-    zod.object({
-      id: zod.string(),
-      priority: zod.enum(["high", "medium", "low"]),
-      title: zod.string(),
-      reason: zod.string(),
-      href: zod.string().optional(),
-      domain: zod.enum([
-        "operational",
-        "revenue",
-        "relationship",
-        "trust",
-        "growth",
-        "capability",
-      ]),
-      evidence: zod.array(zod.string()),
-    }),
-  ),
-});
-
-/**
- * @summary Persisted Twin observations with evidence
- */
-export const GetTwinObservationsParams = zod.object({
-  businessId: zod.coerce.string(),
-});
-
-export const GetTwinObservationsResponse = zod.object({
-  businessId: zod.string(),
-  generatedAt: zod.coerce.date(),
-  observations: zod.array(
-    zod.object({
-      id: zod.string(),
-      businessId: zod.string(),
-      domain: zod.string(),
-      layer: zod.string(),
-      observationKey: zod.string(),
-      title: zod.string(),
-      body: zod.string(),
-      confidence: zod.string(),
-      evidence: zod.array(
-        zod.object({
-          type: zod.string(),
-          id: zod.string(),
-          label: zod.string(),
-        }),
-      ),
-      href: zod.string().nullish(),
-      createdAt: zod.coerce.date(),
-    }),
-  ),
-});
-
-/**
- * @summary Materialize Twin observations now (owner/admin)
- */
-export const SyncTwinIntelligenceParams = zod.object({
-  businessId: zod.coerce.string(),
-});
-
-export const SyncTwinIntelligenceResponse = zod.object({
-  businessId: zod.string(),
-  observationsCreated: zod.number(),
-});
-
-/**
- * @summary Guided setup phases with capability readiness blockers
- */
-export const GetLivSetupGuidedFlowParams = zod.object({
-  businessId: zod.coerce.string(),
-});
-
-export const GetLivSetupGuidedFlowResponse = zod.object({
-  phases: zod.array(
-    zod.object({
-      id: zod.enum(["setup", "publish", "billing", "first_booking"]),
-      label: zod.string(),
-      headline: zod.string(),
-      done: zod.boolean(),
-      current: zod.boolean(),
-      href: zod.string(),
-      optional: zod.boolean().optional(),
-      livPrompt: zod.string(),
-    }),
-  ),
-  currentPhaseId: zod.enum(["setup", "publish", "billing", "first_booking"]),
-  complete: zod.boolean(),
-  publicPath: zod.string().nullish(),
-  nextHref: zod.string(),
-  nextLivPrompt: zod.string(),
-  nextAct: zod.string().nullish(),
-  percentComplete: zod.number(),
-  activation: zod
-    .object({
-      status: zod.string(),
-      sacredMetricMet: zod.boolean(),
-      timeToFirstBookingLabel: zod.string().nullish(),
-    })
-    .optional(),
-  capabilityBlockers: zod.array(
-    zod.object({
-      capabilityId: zod.string(),
-      capabilityName: zod.string(),
-      blocker: zod.string(),
-    }),
-  ),
-  readinessActHints: zod
-    .array(zod.string())
-    .describe("Onboarding acts implied by capability readiness blockers"),
-});
-
-/**
- * @summary Liv setup copilot — owner onboarding assist
- */
-export const PostLivSetupAssistParams = zod.object({
-  businessId: zod.coerce.string(),
-});
-
-export const PostLivSetupAssistBody = zod.object({
-  message: zod.string(),
-  history: zod
-    .array(
-      zod.object({
-        role: zod.enum(["user", "assistant"]),
-        content: zod.string(),
-      }),
-    )
-    .optional(),
-});
-
-export const PostLivSetupAssistResponse = zod.object({
-  reply: zod.string(),
-  suggestions: zod.array(zod.string()),
-  toolsUsed: zod.array(zod.string()).optional(),
-});
-
-/**
- * @summary Liv owner ops copilot — commerce, Twin, capability strategy
- */
-export const PostLivOwnerAssistParams = zod.object({
-  businessId: zod.coerce.string(),
-});
-
-export const PostLivOwnerAssistBody = zod.object({
-  message: zod.string(),
-  history: zod
-    .array(
-      zod.object({
-        role: zod.enum(["user", "assistant"]),
-        content: zod.string(),
-      }),
-    )
-    .optional(),
-});
-
-export const PostLivOwnerAssistResponse = zod.object({
-  reply: zod.string(),
-  suggestions: zod.array(zod.string()),
-  toolsUsed: zod.array(zod.string()).optional(),
-});
-
-/**
  * @summary Get dashboard KPIs and upcoming bookings
  */
 export const GetDashboardSummaryParams = zod.object({
@@ -2921,8 +2220,6 @@ export const GetDashboardSummaryResponse = zod.object({
             priceMinor: zod.number(),
             currency: zod.string(),
             imageUrl: zod.string().nullish(),
-            aftercareInstructions: zod.string().nullish(),
-            linkedRetailProductId: zod.string().nullish(),
             isActive: zod.boolean(),
             sortOrder: zod.number(),
             createdAt: zod.coerce.date(),
@@ -3012,293 +2309,6 @@ export const GetDashboardSummaryResponse = zod.object({
       creditsRemaining: zod.number(),
     })
     .optional(),
-  activation: zod
-    .object({
-      status: zod.enum(["activated", "in_progress", "not_started"]),
-      sacredMetricMet: zod.boolean(),
-      firstBookingAt: zod.coerce.date().nullish(),
-      firstBookingId: zod.string().nullish(),
-      activationSource: zod
-        .enum(["public", "owner-manual", "staff", "walk-in", "unknown"])
-        .nullish(),
-      businessCreatedAt: zod.coerce.date(),
-      timeToFirstBookingMs: zod.number().nullish(),
-      timeToFirstBookingLabel: zod.string().nullish(),
-      activationStepsComplete: zod.number(),
-      activationStepsTotal: zod.number(),
-      paymentsConnected: zod.boolean(),
-    })
-    .optional()
-    .describe("V1 sacred metric — first successful booking and setup progress"),
-  atRiskGuests: zod
-    .array(
-      zod.object({
-        customerId: zod.string(),
-        displayName: zod.string(),
-        stage: zod.enum(["at_risk", "lapsed"]),
-        daysSinceLastVisit: zod.number(),
-        headline: zod.string(),
-      }),
-    )
-    .optional()
-    .describe("Guests drifting or lapsed — relationship layer v1 nudges"),
-  recentVisitFeedback: zod
-    .array(
-      zod.object({
-        id: zod.string(),
-        bookingId: zod.string(),
-        score: zod.number(),
-        comment: zod.string().nullish(),
-        createdAt: zod.coerce.date(),
-      }),
-    )
-    .optional()
-    .describe("Recent post-visit scores (14-day window, max 5 on summary)"),
-  lowFeedbackCount: zod
-    .number()
-    .optional()
-    .describe("Scores ≤3 in the 14-day feedback window"),
-  commerce: zod
-    .object({
-      capturedMinor30d: zod.number(),
-      captureRatePercent: zod.number().nullish(),
-      paymentCount30d: zod.number(),
-      currency: zod.string(),
-      capturedLabel: zod.string(),
-    })
-    .optional()
-    .describe("Rolling 30-day payment capture snapshot for owner KPIs"),
-});
-
-/**
- * @summary Rolling 30-day commerce snapshot for owner surfaces
- */
-export const GetCommerceSnapshotParams = zod.object({
-  businessId: zod.coerce.string(),
-});
-
-export const GetCommerceSnapshotResponse = zod.object({
-  capturedMinor30d: zod.number(),
-  captureRatePercent: zod.number().nullish(),
-  paymentCount30d: zod.number(),
-  currency: zod.string(),
-  capturedLabel: zod.string(),
-});
-
-/**
- * @summary Structured commerce signals for owner surfaces and Liv
- */
-export const GetCommerceSignalsParams = zod.object({
-  businessId: zod.coerce.string(),
-});
-
-export const GetCommerceSignalsResponse = zod.object({
-  businessId: zod.string(),
-  generatedAt: zod.coerce.date(),
-  signals: zod.array(
-    zod.object({
-      id: zod.enum([
-        "uncaptured_demand",
-        "low_capture",
-        "elevated_refunds",
-        "strong_revenue",
-      ]),
-      severity: zod.enum(["act", "watch", "info"]),
-      title: zod.string(),
-      body: zod.string(),
-      href: zod.string(),
-      priority: zod.number(),
-    }),
-  ),
-  snapshot: zod.object({
-    capturedMinor30d: zod.number(),
-    captureRatePercent: zod.number().nullish(),
-    paymentCount30d: zod.number(),
-    currency: zod.string(),
-    capturedLabel: zod.string(),
-  }),
-});
-
-/**
- * @summary Unified owner intelligence — commerce, capabilities, Twin, Liv prompts
- */
-export const GetOwnerIntelligenceParams = zod.object({
-  businessId: zod.coerce.string(),
-});
-
-export const getOwnerIntelligenceResponseTwinHealthOneDomainsItemScoreMin = 0;
-export const getOwnerIntelligenceResponseTwinHealthOneDomainsItemScoreMax = 100;
-
-export const GetOwnerIntelligenceResponse = zod.object({
-  businessId: zod.string(),
-  generatedAt: zod.coerce.date(),
-  commerce: zod.object({
-    signals: zod.array(
-      zod.object({
-        id: zod.enum([
-          "uncaptured_demand",
-          "low_capture",
-          "elevated_refunds",
-          "strong_revenue",
-        ]),
-        severity: zod.enum(["act", "watch", "info"]),
-        title: zod.string(),
-        body: zod.string(),
-        href: zod.string(),
-        priority: zod.number(),
-      }),
-    ),
-    topSignal: zod
-      .object({
-        id: zod.enum([
-          "uncaptured_demand",
-          "low_capture",
-          "elevated_refunds",
-          "strong_revenue",
-        ]),
-        severity: zod.enum(["act", "watch", "info"]),
-        title: zod.string(),
-        body: zod.string(),
-        href: zod.string(),
-        priority: zod.number(),
-      })
-      .nullish(),
-    snapshot: zod.object({
-      capturedMinor30d: zod.number(),
-      captureRatePercent: zod.number().nullish(),
-      paymentCount30d: zod.number(),
-      currency: zod.string(),
-      capturedLabel: zod.string(),
-    }),
-  }),
-  capabilityHealth: zod
-    .object({
-      score: zod.number(),
-      grade: zod.enum(["A", "B", "C", "D", "F"]),
-      headline: zod.string(),
-    })
-    .optional(),
-  capabilityBlockers: zod.number(),
-  commerceCapabilityBlockers: zod.array(
-    zod.object({
-      capabilityId: zod.string(),
-      capabilityName: zod.string(),
-      blocker: zod.string(),
-      href: zod.string(),
-    }),
-  ),
-  livSuggestions: zod.array(
-    zod.object({
-      id: zod.string(),
-      label: zod.string(),
-      href: zod.string(),
-      priority: zod.number(),
-    }),
-  ),
-  livPrompts: zod.array(zod.string()),
-  remediationTasks: zod
-    .array(
-      zod.object({
-        signalId: zod.string(),
-        severity: zod.enum(["act", "watch", "info"]),
-        title: zod.string(),
-        body: zod.string(),
-        href: zod.string(),
-        ownerPrompt: zod.string(),
-        priority: zod.number(),
-      }),
-    )
-    .optional(),
-  twinTopRecommendation: zod
-    .object({
-      title: zod.string().optional(),
-      reason: zod.string().optional(),
-      priority: zod.string().optional(),
-      href: zod.string().optional(),
-    })
-    .nullish(),
-  twinHeadline: zod.string().nullish(),
-  twinSubline: zod.string().nullish(),
-  ops: zod.object({
-    pendingCount: zod.number(),
-    handedOffCount: zod.number(),
-    atRiskCount: zod.number(),
-    lowFeedbackCount: zod.number(),
-  }),
-  twinObservations: zod.array(
-    zod.object({
-      id: zod.string(),
-      businessId: zod.string(),
-      domain: zod.string(),
-      layer: zod.string(),
-      observationKey: zod.string(),
-      title: zod.string(),
-      body: zod.string(),
-      confidence: zod.string(),
-      evidence: zod.array(
-        zod.object({
-          type: zod.string(),
-          id: zod.string(),
-          label: zod.string(),
-        }),
-      ),
-      href: zod.string().nullish(),
-      createdAt: zod.coerce.date(),
-    }),
-  ),
-  twinRisks: zod.array(
-    zod.object({
-      id: zod.string(),
-      kind: zod.enum(["risk", "opportunity"]),
-      domain: zod.string(),
-      title: zod.string(),
-      body: zod.string(),
-      href: zod.string().optional(),
-      confidence: zod.string(),
-    }),
-  ),
-  twinOpportunities: zod.array(
-    zod.object({
-      id: zod.string(),
-      kind: zod.enum(["risk", "opportunity"]),
-      domain: zod.string(),
-      title: zod.string(),
-      body: zod.string(),
-      href: zod.string().optional(),
-      confidence: zod.string(),
-    }),
-  ),
-  twinHealth: zod
-    .object({
-      businessId: zod.string(),
-      generatedAt: zod.coerce.date(),
-      overallScore: zod.number(),
-      domains: zod.array(
-        zod.object({
-          domain: zod.enum([
-            "operational",
-            "revenue",
-            "relationship",
-            "trust",
-            "growth",
-            "capability",
-          ]),
-          score: zod
-            .number()
-            .min(getOwnerIntelligenceResponseTwinHealthOneDomainsItemScoreMin)
-            .max(getOwnerIntelligenceResponseTwinHealthOneDomainsItemScoreMax),
-          label: zod.string(),
-          summary: zod.string(),
-          trajectory: zod.enum([
-            "strengthening",
-            "stable",
-            "weakening",
-            "unknown",
-          ]),
-        }),
-      ),
-    })
-    .nullish(),
 });
 
 /**
@@ -3322,10 +2332,6 @@ export const GetActivityFeedResponseItem = zod.object({
   entityId: zod.string().nullish(),
   context: zod.object({}).passthrough().optional(),
   createdAt: zod.coerce.date(),
-  label: zod.string(),
-  detail: zod.string().optional(),
-  href: zod.string().optional(),
-  priority: zod.enum(["info", "watch", "act"]),
 });
 export const GetActivityFeedResponse = zod.array(GetActivityFeedResponseItem);
 
@@ -3387,8 +2393,6 @@ export const GetPublicBusinessResponse = zod.object({
       priceMinor: zod.number(),
       currency: zod.string(),
       imageUrl: zod.string().nullish(),
-      aftercareInstructions: zod.string().nullish(),
-      linkedRetailProductId: zod.string().nullish(),
       isActive: zod.boolean(),
       sortOrder: zod.number(),
       createdAt: zod.coerce.date(),
@@ -3491,9 +2495,6 @@ export const ListConversationsResponseItem = zod.object({
   createdAt: zod.coerce.date(),
   messageCount: zod.number(),
   bookingCount: zod.number(),
-  linkedBookingId: zod.string().nullish(),
-  caseIntent: zod.string().nullish(),
-  resolution: zod.record(zod.string(), zod.unknown()).nullish(),
 });
 export const ListConversationsResponse = zod.array(
   ListConversationsResponseItem,
@@ -3524,9 +2525,6 @@ export const GetConversationResponse = zod.object({
     createdAt: zod.coerce.date(),
     messageCount: zod.number(),
     bookingCount: zod.number(),
-    linkedBookingId: zod.string().nullish(),
-    caseIntent: zod.string().nullish(),
-    resolution: zod.record(zod.string(), zod.unknown()).nullish(),
   }),
   messages: zod.array(
     zod.object({
@@ -3574,9 +2572,6 @@ export const UpdateConversationResponse = zod.object({
   createdAt: zod.coerce.date(),
   messageCount: zod.number(),
   bookingCount: zod.number(),
-  linkedBookingId: zod.string().nullish(),
-  caseIntent: zod.string().nullish(),
-  resolution: zod.record(zod.string(), zod.unknown()).nullish(),
 });
 
 /**
