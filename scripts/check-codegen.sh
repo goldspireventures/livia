@@ -6,7 +6,10 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-pnpm --filter @workspace/api-spec run codegen >/dev/null
+if ! pnpm --filter @workspace/api-spec run codegen; then
+  echo "::error::OpenAPI codegen command failed. See logs above." >&2
+  exit 1
+fi
 
 CHANGED="$(git status --porcelain lib/api-client-react lib/api-zod lib/api-spec || true)"
 
