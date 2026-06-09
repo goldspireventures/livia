@@ -7,6 +7,7 @@ import type { BusinessVertical } from "./types";
 import {
   PRESENTATION_PRESETS,
   PLATFORM_DEFAULT_PRESET_ID,
+  filterPresetsForPicker,
   resolvePresentationPreset,
   type PresentationPreset,
 } from "./presentation-presets";
@@ -152,9 +153,9 @@ export function validateVerticalPresentationPack(
   };
 }
 
-/** Owner picker — all four presets (sign-up default + three tailored). */
+/** Owner picker — visible presets only (sign-up default + shipped vertical skins). */
 export function listPresentationPresetsForOwnerPicker(
   vertical: BusinessVertical,
 ): PresentationPreset[] {
-  return PRESENTATION_PRESETS[vertical];
+  return filterPresetsForPicker(PRESENTATION_PRESETS[vertical]);
 }

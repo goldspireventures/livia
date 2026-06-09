@@ -1,4 +1,4 @@
-import { Sparkles } from "lucide-react";
+import { ListChecks, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { staffLivInboxSuggestions } from "@workspace/policy";
 import { beautyOutlineButton } from "@/lib/beauty-operational-ui";
@@ -11,8 +11,11 @@ type Props = {
   loading?: boolean;
   mode?: "open" | "handoff";
   beautyChrome?: boolean;
-  /** Wellness calm inbox — collapsed prompts so the thread stays visible. */
+  /** Icon popover — does not eat horizontal compose width. */
   compact?: boolean;
+  /** Pinned to the right edge of the thread pane. */
+  floating?: boolean;
+  extraSuggestions?: readonly string[];
   onAsk: (prompt: string) => void;
 };
 
@@ -58,22 +61,37 @@ export function LivInboxAssist({
   loading,
   mode = "open",
   beautyChrome,
-  compact,
+  compact = true,
+  floating = false,
+  extraSuggestions = [],
   onAsk,
 }: Props) {
-  const suggestions = staffLivInboxSuggestions(vertical, category, mode);
+  const suggestions = [
+    ...extraSuggestions,
+    ...staffLivInboxSuggestions(vertical, category, mode),
+  ].filter((s, i, arr) => arr.indexOf(s) === i).slice(0, 4);
 
   if (compact) {
     return (
-      <details className="wellness-liv-inbox-assist group text-sm" data-testid="liv-inbox-assist">
-        <summary className="cursor-pointer list-none text-[10px] font-mono uppercase tracking-wider text-muted-foreground flex items-center gap-1 [&::-webkit-details-marker]:hidden">
-          <Sparkles className="h-3 w-3 text-primary shrink-0" />
-          Ask Liv · {suggestions.length} prompts
-          <span className="text-muted-foreground/70 normal-case tracking-normal font-sans">
-            (tap to expand)
-          </span>
+      <details
+        className="relative shrink-0 group"
+        data-testid="liv-inbox-assist"
+      >
+        <summary
+          className={cn(
+            "inline-flex cursor-pointer list-none items-center justify-center border bg-background/80 transition-colors hover:bg-muted/60 [&::-webkit-details-marker]:hidden",
+            floating ? "h-10 w-10 rounded-full shadow-md" : "h-9 w-9 rounded-md",
+            beautyOutlineButton(beautyChrome),
+          )}
+          aria-label={`Liv prompts (${suggestions.length})`}
+          title={`Liv prompts (${suggestions.length})`}
+        >
+          <ListChecks className="h-4 w-4 text-primary" />
         </summary>
-        <div className="pt-2">
+        <div className="absolute bottom-full right-0 z-30 mb-2 w-72 max-w-[calc(100vw-2rem)] rounded-lg border border-border bg-popover p-2.5 shadow-lg">
+          <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-2">
+            Suggested prompts
+          </p>
           <SuggestionChips
             suggestions={suggestions}
             disabled={disabled}

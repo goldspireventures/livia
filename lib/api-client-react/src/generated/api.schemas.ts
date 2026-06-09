@@ -832,6 +832,60 @@ export type CustomerDetail = Customer & {
   noShowCount: number;
 };
 
+export type RelationshipSummaryStage =
+  (typeof RelationshipSummaryStage)[keyof typeof RelationshipSummaryStage];
+
+export const RelationshipSummaryStage = {
+  prospect: "prospect",
+  new: "new",
+  active: "active",
+  at_risk: "at_risk",
+  lapsed: "lapsed",
+  trusted: "trusted",
+} as const;
+
+export type RelationshipSummaryTrajectory =
+  (typeof RelationshipSummaryTrajectory)[keyof typeof RelationshipSummaryTrajectory];
+
+export const RelationshipSummaryTrajectory = {
+  strengthening: "strengthening",
+  stable: "stable",
+  weakening: "weakening",
+  unknown: "unknown",
+} as const;
+
+export interface RelationshipSummary {
+  customerId: string;
+  stage: RelationshipSummaryStage;
+  stageLabel: string;
+  trajectory: RelationshipSummaryTrajectory;
+  headline: string;
+  signals: string[];
+  completedVisits: number;
+  totalBookings: number;
+  daysSinceLastVisit: number | null;
+  nextBookingAt: string | null;
+  conversationCount: number;
+  lastMessageAt: string | null;
+  memoryHighlight: string | null;
+}
+
+export type AtRiskGuestPreviewStage =
+  (typeof AtRiskGuestPreviewStage)[keyof typeof AtRiskGuestPreviewStage];
+
+export const AtRiskGuestPreviewStage = {
+  at_risk: "at_risk",
+  lapsed: "lapsed",
+} as const;
+
+export interface AtRiskGuestPreview {
+  customerId: string;
+  displayName: string;
+  stage: AtRiskGuestPreviewStage;
+  daysSinceLastVisit: number;
+  headline: string;
+}
+
 export interface CreateCustomerBody {
   firstName?: string;
   lastName?: string;
@@ -1444,6 +1498,18 @@ export type ListCustomersParams = {
   isBlocked?: boolean;
   limit?: number;
   offset?: number;
+};
+
+export type ListAtRiskGuestRelationshipsParams = {
+  /**
+   * @minimum 1
+   * @maximum 20
+   */
+  limit?: number;
+};
+
+export type ListAtRiskGuestRelationships200 = {
+  data: AtRiskGuestPreview[];
 };
 
 export type ListBookingsParams = {

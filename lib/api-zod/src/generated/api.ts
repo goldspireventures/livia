@@ -1677,6 +1677,67 @@ export const UpdateCustomerResponse = zod.object({
 });
 
 /**
+ * @summary Relationship summary for a customer
+ */
+export const GetCustomerRelationshipParams = zod.object({
+  businessId: zod.coerce.string(),
+  customerId: zod.coerce.string(),
+});
+
+export const GetCustomerRelationshipResponse = zod.object({
+  customerId: zod.string(),
+  stage: zod.enum([
+    "prospect",
+    "new",
+    "active",
+    "at_risk",
+    "lapsed",
+    "trusted",
+  ]),
+  stageLabel: zod.string(),
+  trajectory: zod.enum(["strengthening", "stable", "weakening", "unknown"]),
+  headline: zod.string(),
+  signals: zod.array(zod.string()),
+  completedVisits: zod.number(),
+  totalBookings: zod.number(),
+  daysSinceLastVisit: zod.number().nullable(),
+  nextBookingAt: zod.coerce.date().nullable(),
+  conversationCount: zod.number(),
+  lastMessageAt: zod.coerce.date().nullable(),
+  memoryHighlight: zod.string().nullable(),
+});
+
+/**
+ * @summary Guests at risk of lapsing
+ */
+export const ListAtRiskGuestRelationshipsParams = zod.object({
+  businessId: zod.coerce.string(),
+});
+
+export const listAtRiskGuestRelationshipsQueryLimitDefault = 10;
+export const listAtRiskGuestRelationshipsQueryLimitMax = 20;
+
+export const ListAtRiskGuestRelationshipsQueryParams = zod.object({
+  limit: zod.coerce
+    .number()
+    .min(1)
+    .max(listAtRiskGuestRelationshipsQueryLimitMax)
+    .default(listAtRiskGuestRelationshipsQueryLimitDefault),
+});
+
+export const ListAtRiskGuestRelationshipsResponse = zod.object({
+  data: zod.array(
+    zod.object({
+      customerId: zod.string(),
+      displayName: zod.string(),
+      stage: zod.enum(["at_risk", "lapsed"]),
+      daysSinceLastVisit: zod.number(),
+      headline: zod.string(),
+    }),
+  ),
+});
+
+/**
  * @summary List bookings for a business
  */
 export const ListBookingsParams = zod.object({

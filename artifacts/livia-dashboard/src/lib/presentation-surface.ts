@@ -1,5 +1,6 @@
 import type { PresentationLayoutMorph } from "@workspace/policy";
 import { useTenantExperience, type TenantPresentation } from "@/lib/tenant-experience-api";
+import { effectivePresentationMorph } from "@/lib/appearance-preview-mode";
 
 export type PresentationSurfaceState = {
   cssPreset: string | null;
@@ -22,9 +23,10 @@ export function presentationSurfaceFromTenant(
       presetLabel: null,
     };
   }
+  const layoutMorph = effectivePresentationMorph(vertical, presentation.presetId);
   return {
     cssPreset: presentation.cssPreset,
-    layoutMorph: null,
+    layoutMorph,
     layout: presentation.tokens?.layout ?? null,
     presetId: presentation.presetId,
     presetLabel: presentation.label,
@@ -34,17 +36,8 @@ export function presentationSurfaceFromTenant(
 export function usePresentationSurface(businessId: string | undefined): PresentationSurfaceState {
   const { data } = useTenantExperience(businessId);
   const presentation = data?.presentation;
-  return {
-    cssPreset: presentation?.cssPreset ?? null,
-    layoutMorph:
-      typeof document !== "undefined"
-        ? (document.documentElement.dataset.layoutMorph as PresentationLayoutMorph | undefined) ??
-          null
-        : null,
-    layout: presentation?.tokens?.layout ?? null,
-    presetId: presentation?.presetId ?? null,
-    presetLabel: presentation?.label ?? null,
-  };
+  const vertical = data?.vertical ?? null;
+  return presentationSurfaceFromTenant(presentation, vertical);
 }
 
 export function layoutMorphLabel(morph: PresentationLayoutMorph | null): string {

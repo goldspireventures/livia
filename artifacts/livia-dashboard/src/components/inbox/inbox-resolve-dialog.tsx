@@ -24,9 +24,9 @@ type Props = {
 };
 
 const TITLES: Record<ResolveOutcome, string> = {
-  refund_and_cancel: "Approve refund and cancel",
-  cancel_no_refund: "Deny refund — cancel appointment",
-  close_no_action: "Deny refund — keep appointment",
+  refund_and_cancel: "Refund & close case",
+  cancel_no_refund: "Cancel appointment",
+  close_no_action: "Close case",
 };
 
 const PLACEHOLDERS: Record<ResolveOutcome, string> = {
@@ -35,7 +35,7 @@ const PLACEHOLDERS: Record<ResolveOutcome, string> = {
   cancel_no_refund:
     "Hi — we've cancelled your appointment. Per our policy the deposit isn't refundable for late cancellations.",
   close_no_action:
-    "Hi — we can't refund the deposit on this one, but your appointment is still confirmed if you'd like to keep it.",
+    "Hi — thanks for your patience. Here's where we landed on your request…",
 };
 
 export function InboxResolveDialog({

@@ -21,6 +21,12 @@ import { mergeChannelIdentity } from "../services/channel-identities.service";
 import { appendHumanAudit } from "../lib/audit";
 
 import { sendError } from "../lib/http-errors";
+import { replyDomainError } from "../lib/domain-errors";
+import {
+  assertChairRentalCustomerFirewall,
+  ChairRentalCustomerFirewallError,
+} from "../services/chair-rental-firewall.service";
+
 const router: IRouter = Router();
 const getBizId = (param: string | string[]) => Array.isArray(param) ? param[0] : param;
 
@@ -45,6 +51,16 @@ router.get(
       });
       res.json(result);
       return;
+    }
+
+    try {
+      await assertChairRentalCustomerFirewall(getUserId(req), businessId);
+    } catch (e) {
+      if (e instanceof ChairRentalCustomerFirewallError) {
+        replyDomainError(req, res, e);
+        return;
+      }
+      throw e;
     }
 
     const result = await listCustomers(businessId, {
@@ -90,11 +106,67 @@ router.get(
         sendError(res, req, 404, "Customer not found");
         return;
       }
+    } else {
+      try {
+        await assertChairRentalCustomerFirewall(getUserId(req), businessId);
+      } catch (e) {
+        if (e instanceof ChairRentalCustomerFirewallError) {
+          replyDomainError(req, res, e);
+          return;
+        }
+        throw e;
+      }
     }
 
     const c = await getCustomerDetail(businessId, customerId);
     if (!c) { sendError(res, req, 404, "Customer not found"); return; }
     res.json(c);
+  },
+);
+
+router.get(
+  "/businesses/:businessId/relationships/at-risk",
+  requireAuth,
+  requireRole("ADMIN"),
+  async (req, res): Promise<void> => {
+    const businessId = getBizId(req.params.businessId);
+    const limitRaw = req.query.limit;
+    const limit =
+      typeof limitRaw === "string" && limitRaw.trim()
+        ? Math.min(20, Math.max(1, parseInt(limitRaw, 10)))
+        : 10;
+    const { listAtRiskGuestPreviews } = await import("../services/relationship.service");
+    const data = await listAtRiskGuestPreviews(businessId, { limit });
+    res.json({ data });
+  },
+);
+
+router.get(
+  "/businesses/:businessId/customers/:customerId/relationship",
+  requireAuth,
+  requireRole("STAFF"),
+  async (req, res): Promise<void> => {
+    const businessId = getBizId(req.params.businessId);
+    const customerId = getBizId(req.params.customerId);
+    const ctx = getRoleContext(req);
+
+    if (ctx.effectiveRole === "STAFF") {
+      const ok = ctx.actingStaffId
+        ? await isCustomerServedByStaff(businessId, customerId, ctx.actingStaffId)
+        : false;
+      if (!ok) {
+        sendError(res, req, 404, "Customer not found");
+        return;
+      }
+    }
+
+    const { getRelationshipSummary } = await import("../services/relationship.service");
+    const summary = await getRelationshipSummary(businessId, customerId);
+    if (!summary) {
+      sendError(res, req, 404, "Customer not found");
+      return;
+    }
+    res.json(summary);
   },
 );
 
@@ -145,6 +217,14 @@ router.post(
       customerId,
       { identityId },
     );
+    await logEvent({
+      type: EventType.CHANNEL_IDENTITY_LINKED,
+      businessId,
+      userId,
+      entityType: "customer",
+      entityId: customerId,
+      context: { identityId, merged: true },
+    });
     const c = await getCustomerDetail(businessId, customerId);
     res.json(c);
   },

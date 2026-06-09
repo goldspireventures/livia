@@ -2,6 +2,11 @@ import {
   applyTenantPresentationSurface,
   resolvePresentationColorMode,
 } from "@/lib/experience-theme";
+import {
+  resolvePresentationLayoutMorph,
+  type BusinessVertical,
+  type PresentationLayoutMorph,
+} from "@workspace/policy";
 
 /** Store appearance iframe — real /dashboard Today, not a scaled mock. */
 export function isAppearanceEmbed(): boolean {
@@ -44,6 +49,26 @@ export function shouldApplyUrlPreviewToDocument(): boolean {
 /**
  * Apply draft presentation from URL (settings iframe). Returns true when preview mode ran.
  */
+/**
+ * Saved preset from API, or draft `preset=` from settings / appearance embed iframes.
+ * Keeps Today morph + `/b` preview aligned with the picker before Apply.
+ */
+export function effectivePresentationMorph(
+  vertical: string | null | undefined,
+  savedPresetId?: string | null,
+): PresentationLayoutMorph | null {
+  if (!vertical) return null;
+  const v = vertical as BusinessVertical;
+  const draft = readAppearancePreviewParams();
+  if ((draft.isPreview || isAppearanceEmbed()) && draft.cssPreset) {
+    return resolvePresentationLayoutMorph(v, draft.cssPreset);
+  }
+  if (savedPresetId) {
+    return resolvePresentationLayoutMorph(v, savedPresetId);
+  }
+  return null;
+}
+
 export function applyAppearancePreviewFromSearch(
   search?: string,
   fallback?: { vertical?: string | null; category?: string | null; country?: string | null },

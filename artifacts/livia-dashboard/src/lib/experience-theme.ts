@@ -49,9 +49,27 @@ export function syncDocumentColorMode(
   if (root) return;
   const el = document.documentElement;
   if (colorMode === "light") {
+    el.style.colorScheme = "light";
     el.classList.remove("dark");
   } else if (colorMode === "dark") {
+    el.style.colorScheme = "dark";
     el.classList.add("dark");
+  }
+  el.style.backgroundColor = "hsl(var(--background))";
+  if (document.body) {
+    document.body.style.backgroundColor = "hsl(var(--background))";
+  }
+}
+
+function withPresentationSwapLock(apply: () => void) {
+  const el = document.documentElement;
+  el.classList.add("presentation-swap-lock");
+  try {
+    apply();
+  } finally {
+    requestAnimationFrame(() => {
+      el.classList.remove("presentation-swap-lock");
+    });
   }
 }
 
@@ -110,6 +128,43 @@ export function marketRibbon(
   return MARKET_SKINS[code]?.ribbon ?? MARKET_SKINS.IE?.ribbon;
 }
 
+/** Presentation preset wins over vertical inline `--primary` (vertical theme sets inline first). */
+const PRESENTATION_TOKEN_OVERRIDES: Record<
+  string,
+  { primary: string; ring: string; sidebarPrimary?: string; accent?: string }
+> = {
+  "platform-default": {
+    primary: "43 38% 66%",
+    ring: "43 38% 66%",
+    sidebarPrimary: "43 38% 66%",
+    accent: "188 72% 52%",
+  },
+  "noir-dusk": { primary: "330 45% 72%", ring: "330 45% 72%", sidebarPrimary: "330 45% 72%" },
+  "soft-studio": { primary: "330 81% 60%", ring: "330 81% 60%", sidebarPrimary: "330 81% 60%" },
+  editorial: { primary: "16 52% 48%", ring: "16 52% 48%", sidebarPrimary: "16 52% 48%" },
+  "premium-dark": { primary: "36 55% 62%", ring: "36 55% 62%", sidebarPrimary: "36 55% 62%" },
+  "harbour-light": { primary: "174 72% 40%", ring: "174 72% 40%", sidebarPrimary: "174 72% 40%" },
+  "session-rail": { primary: "222 47% 22%", ring: "222 47% 22%", sidebarPrimary: "222 47% 22%" },
+  "evening-ledger": { primary: "38 55% 58%", ring: "38 55% 58%", sidebarPrimary: "38 55% 58%" },
+  "warm-chair": { primary: "43 74% 52%", ring: "43 74% 52%", sidebarPrimary: "43 74% 52%" },
+  "clean-salon": { primary: "210 40% 45%", ring: "210 40% 45%", sidebarPrimary: "210 40% 45%" },
+  "barber-bold": { primary: "0 0% 92%", ring: "0 0% 92%", sidebarPrimary: "0 0% 92%" },
+};
+
+function applyPresentationTokenOverrides(root: HTMLElement, cssPreset?: string | null) {
+  if (!cssPreset) return;
+  const tokens = PRESENTATION_TOKEN_OVERRIDES[cssPreset];
+  if (!tokens) return;
+  root.style.setProperty("--primary", tokens.primary);
+  root.style.setProperty("--ring", tokens.ring);
+  root.style.setProperty("--sidebar-primary", tokens.sidebarPrimary ?? tokens.primary);
+  if (tokens.accent) {
+    root.style.setProperty("--accent", tokens.accent);
+  } else {
+    root.style.removeProperty("--accent");
+  }
+}
+
 export function applyPresentationLayoutMorph(
   morph: PresentationLayoutMorph | null,
   root?: HTMLElement | null,
@@ -131,58 +186,67 @@ export function applyPresentationTheme(args: {
   /** Scope tokens to a panel (e.g. sign-in preview) instead of the full document. */
   root?: HTMLElement | null;
 }) {
-  const root = args.root ?? document.documentElement;
-  if (args.cssPreset) {
-    root.dataset.presentation = args.cssPreset;
+  const apply = () => {
+    const root = args.root ?? document.documentElement;
+    if (args.cssPreset) {
+      root.dataset.presentation = args.cssPreset;
+    } else {
+      delete root.dataset.presentation;
+    }
+    const morph =
+      args.layoutMorph ??
+      (args.vertical && args.cssPreset
+        ? resolvePresentationLayoutMorph(args.vertical as BusinessVertical, args.cssPreset)
+        : null);
+    applyPresentationLayoutMorph(morph, root);
+    if (args.cssPreset) {
+      const layoutToken =
+        morph === "atrium"
+          ? "spatial"
+          : morph === "timeline-rail"
+            ? "timeline"
+            : morph === "ledger"
+              ? "cards"
+              : morph === "menu-card"
+                ? "list"
+                : morph === "cockpit" || morph === "split-inbox"
+                  ? "cards"
+                  : "cards";
+      root.dataset.presentationLayout = layoutToken;
+    } else {
+      delete root.dataset.presentationLayout;
+    }
+    if (
+      args.cssPreset &&
+      (BEAUTY_CSS_PRESETS as readonly string[]).includes(args.cssPreset)
+    ) {
+      root.dataset.beautyNativeSkin = "1";
+    } else {
+      delete root.dataset.beautyNativeSkin;
+    }
+    if (
+      args.cssPreset &&
+      (WELLNESS_CSS_PRESETS as readonly string[]).includes(args.cssPreset)
+    ) {
+      root.dataset.wellnessNativeSkin = "1";
+    } else {
+      delete root.dataset.wellnessNativeSkin;
+    }
+    if (args.brandAccentHex) {
+      root.style.setProperty("--brand-accent", args.brandAccentHex);
+    } else {
+      root.style.removeProperty("--brand-accent");
+    }
+    applyPresentationTokenOverrides(root, args.cssPreset);
+    const mode = args.colorMode ?? resolvePresentationColorMode(args.cssPreset);
+    syncDocumentColorMode(mode, args.root);
+  };
+
+  if (args.root) {
+    apply();
   } else {
-    delete root.dataset.presentation;
+    withPresentationSwapLock(apply);
   }
-  const morph =
-    args.layoutMorph ??
-    (args.vertical && args.cssPreset
-      ? resolvePresentationLayoutMorph(args.vertical as BusinessVertical, args.cssPreset)
-      : null);
-  applyPresentationLayoutMorph(morph, root);
-  if (args.cssPreset) {
-    const layoutToken =
-      morph === "atrium"
-        ? "spatial"
-        : morph === "timeline-rail"
-          ? "timeline"
-          : morph === "ledger"
-            ? "cards"
-            : morph === "menu-card"
-              ? "list"
-              : morph === "cockpit" || morph === "split-inbox"
-                ? "cards"
-                : "cards";
-    root.dataset.presentationLayout = layoutToken;
-  } else {
-    delete root.dataset.presentationLayout;
-  }
-  if (
-    args.cssPreset &&
-    (BEAUTY_CSS_PRESETS as readonly string[]).includes(args.cssPreset)
-  ) {
-    root.dataset.beautyNativeSkin = "1";
-  } else {
-    delete root.dataset.beautyNativeSkin;
-  }
-  if (
-    args.cssPreset &&
-    (WELLNESS_CSS_PRESETS as readonly string[]).includes(args.cssPreset)
-  ) {
-    root.dataset.wellnessNativeSkin = "1";
-  } else {
-    delete root.dataset.wellnessNativeSkin;
-  }
-  if (args.brandAccentHex) {
-    root.style.setProperty("--brand-accent", args.brandAccentHex);
-  } else {
-    root.style.removeProperty("--brand-accent");
-  }
-  const mode = args.colorMode ?? resolvePresentationColorMode(args.cssPreset);
-  syncDocumentColorMode(mode, args.root);
 }
 
 export function clearPresentationTheme(root?: HTMLElement | null) {

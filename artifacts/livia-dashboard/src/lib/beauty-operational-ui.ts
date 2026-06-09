@@ -41,6 +41,26 @@ export function beautyCustomerListScroll(beauty?: boolean, extra?: string) {
   );
 }
 
+const BEAUTY_POST_SESSION_DRAFT_KEY = "livia.beautyPostSessionDraft";
+
+export function stashBeautyPostSessionDraft(body: string) {
+  try {
+    sessionStorage.setItem(BEAUTY_POST_SESSION_DRAFT_KEY, body);
+  } catch {
+    /* sessionStorage unavailable */
+  }
+}
+
+export function takeBeautyPostSessionDraft(): string | null {
+  try {
+    const value = sessionStorage.getItem(BEAUTY_POST_SESSION_DRAFT_KEY);
+    if (value) sessionStorage.removeItem(BEAUTY_POST_SESSION_DRAFT_KEY);
+    return value;
+  } catch {
+    return null;
+  }
+}
+
 export function beautyRow(beauty?: boolean, attention?: boolean, extra?: string) {
   return cn(
     "flex items-center gap-3 p-3 transition-colors cursor-pointer",

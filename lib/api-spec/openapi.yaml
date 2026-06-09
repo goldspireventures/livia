@@ -1053,6 +1053,58 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /businesses/{businessId}/customers/{customerId}/relationship:
+    get:
+      operationId: getCustomerRelationship
+      tags: [customers]
+      summary: Relationship summary for a customer
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - $ref: "#/components/parameters/CustomerId"
+      responses:
+        "200":
+          description: Relationship aggregate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RelationshipSummary"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /businesses/{businessId}/relationships/at-risk:
+    get:
+      operationId: listAtRiskGuestRelationships
+      tags: [customers]
+      summary: Guests at risk of lapsing
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 20
+            default: 10
+      responses:
+        "200":
+          description: At-risk guest previews
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AtRiskGuestPreview"
+                required: [data]
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
   # ─── Bookings ─────────────────────────────────────────────────────────────
   /businesses/{businessId}/bookings:
     get:
@@ -3294,6 +3346,76 @@ components:
             noShowCount:
               type: integer
           required: [recentBookings, totalBookings, noShowCount]
+
+    RelationshipSummary:
+      type: object
+      properties:
+        customerId:
+          type: string
+        stage:
+          type: string
+          enum: [prospect, new, active, at_risk, lapsed, trusted]
+        stageLabel:
+          type: string
+        trajectory:
+          type: string
+          enum: [strengthening, stable, weakening, unknown]
+        headline:
+          type: string
+        signals:
+          type: array
+          items:
+            type: string
+        completedVisits:
+          type: integer
+        totalBookings:
+          type: integer
+        daysSinceLastVisit:
+          type: integer
+          nullable: true
+        nextBookingAt:
+          type: string
+          format: date-time
+          nullable: true
+        conversationCount:
+          type: integer
+        lastMessageAt:
+          type: string
+          format: date-time
+          nullable: true
+        memoryHighlight:
+          type: string
+          nullable: true
+      required:
+        - customerId
+        - stage
+        - stageLabel
+        - trajectory
+        - headline
+        - signals
+        - completedVisits
+        - totalBookings
+        - daysSinceLastVisit
+        - nextBookingAt
+        - conversationCount
+        - lastMessageAt
+        - memoryHighlight
+
+    AtRiskGuestPreview:
+      type: object
+      properties:
+        customerId:
+          type: string
+        displayName:
+          type: string
+        stage:
+          type: string
+          enum: [at_risk, lapsed]
+        daysSinceLastVisit:
+          type: integer
+        headline:
+          type: string
+      required: [customerId, displayName, stage, daysSinceLastVisit, headline]
 
     CreateCustomerBody:
       type: object

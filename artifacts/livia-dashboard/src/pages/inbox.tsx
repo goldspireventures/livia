@@ -13,10 +13,23 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OperationalPageShell } from "@/components/layout/operational-page-shell";
-import { useBeautyChrome, useWellnessChrome, wellnessNativeMorphForVertical } from "@/lib/presentation-layout";
+import {
+  beautyNativeMorphForVertical,
+  isConstellationPresentation,
+  readCssPresentation,
+  useBeautyChrome,
+  useWellnessChrome,
+  wellnessNativeMorphForVertical,
+} from "@/lib/presentation-layout";
+import { effectivePresentationMorph } from "@/lib/appearance-preview-mode";
+import { useTenantExperience } from "@/lib/tenant-experience-api";
 import { cn } from "@/lib/utils";
-import { beautyOutlineButton, beautyPrimaryButton } from "@/lib/beauty-operational-ui";
-import { LivInboxAssist } from "@/components/inbox/liv-inbox-assist";
+import {
+  beautyOutlineButton,
+  beautyPrimaryButton,
+  takeBeautyPostSessionDraft,
+} from "@/lib/beauty-operational-ui";
+import { InboxRelationshipChip } from "@/components/inbox/inbox-relationship-chip";
 import { HelpSupportDialog } from "@/components/help-support-dialog";
 import { usePersona } from "@/lib/persona";
 import { useUser } from "@clerk/clerk-react";
@@ -28,8 +41,10 @@ import {
   INBOX_QUEUE_LENS_LABELS,
   matchesInboxQueueLens,
   shouldShowInboxContextRail,
+  buildBeautyPostSessionInboxDraft,
   buildWellnessPostSessionInboxDraft,
   wellnessRetailSkuById,
+  inboxFloorGuidance,
   type InboxQueueLens,
 } from "@workspace/policy";
 import { InboxThreadList } from "@/components/inbox/inbox-thread-list";
@@ -42,6 +57,7 @@ import {
   type ResolveOutcome,
 } from "@/components/inbox/inbox-resolve-dialog";
 import { resolutionSummary, type ConversationResolution } from "@/lib/conversation-resolution";
+import { inboxMessagesMinHeight } from "@/lib/inbox-thread-layout";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Sparkles,
@@ -50,12 +66,16 @@ import {
   MessageSquare,
   Globe,
   Phone,
+  ArrowUp,
 } from "lucide-react";
+import { Link } from "wouter";
+import { useInAppNotifications } from "@/hooks/use-in-app-notifications";
 
 interface ConversationListItem {
   id: string;
   channel: string;
   status: string;
+  customerId?: string | null;
   customerName: string | null;
   customerEmail: string | null;
   customerPhone: string | null;
@@ -109,6 +129,12 @@ function channelIcon(channel: string) {
   }
 }
 
+/** Owner compose when Liv paused or thread handed off — matches mobile inbox. */
+function inboxNeedsOwnerReply(conv: ConversationListItem | null | undefined): boolean {
+  if (!conv || conv.status === "CLOSED") return false;
+  return conv.status === "HANDED_OFF" || !conv.aiHandled;
+}
+
 function inboxGreeting(firstName: string | null | undefined, multiShop: boolean): string {
   const t = timeGreeting();
   const prefix =
@@ -127,24 +153,43 @@ export default function InboxPage() {
   const qc = useQueryClient();
   const businessId = business?.id ?? "";
   const tenantVertical = (business as { vertical?: string } | null)?.vertical ?? null;
+  const { data: tenantXp } = useTenantExperience(businessId || undefined);
+  const layoutMorph = effectivePresentationMorph(
+    tenantVertical,
+    tenantXp?.presentation?.presetId,
+  );
   const beautyChrome = useBeautyChrome(tenantVertical);
   const wellnessChrome = useWellnessChrome(tenantVertical);
-  const layoutMorph =
-    typeof document !== "undefined" ? document.documentElement.dataset.layoutMorph : undefined;
   const wellnessInboxMorph = wellnessNativeMorphForVertical(tenantVertical, layoutMorph);
+  const beautyInboxMorph = beautyNativeMorphForVertical(tenantVertical, layoutMorph);
+  const presentationCss =
+    tenantXp?.presentation?.cssPreset ?? readCssPresentation();
+  const isConstellationInbox =
+    !beautyInboxMorph &&
+    !wellnessInboxMorph &&
+    isConstellationPresentation(presentationCss);
+  const compactInboxCompose = Boolean(
+    wellnessInboxMorph || beautyInboxMorph || isConstellationInbox,
+  );
 
+  const { markReadByResource } = useInAppNotifications();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<"OPEN" | "HANDED_OFF" | "CLOSED" | "ALL">("OPEN");
   const [queueLens, setQueueLens] = useState<InboxQueueLens>("liv_handling");
   const [replyDraft, setReplyDraft] = useState("");
   const [sending, setSending] = useState(false);
-  const [livAssisting, setLivAssisting] = useState(false);
   const [postSessionFlow, setPostSessionFlow] = useState<{
     skuName?: string;
+    productName?: string;
     steps: string[];
   } | null>(null);
 
-  const showRitual = persona === "manager" || persona === "owner" || persona === "org_admin";
+  const showRitual =
+    persona === "manager" ||
+    persona === "owner" ||
+    persona === "org_admin" ||
+    persona === "receptionist";
+  const floorGuidance = inboxFloorGuidance(persona);
 
   useEffect(() => {
     if (showRitual) setQueueLens(defaultInboxQueueLens(persona));
@@ -174,7 +219,31 @@ export default function InboxPage() {
       setStatusFilter("ALL");
       setQueueLens("all");
     }
+
+    if (params.get("flow") === "post_session" && tenantVertical === "beauty") {
+      const stashed = takeBeautyPostSessionDraft();
+      const productName = params.get("product") ?? undefined;
+      const draft = buildBeautyPostSessionInboxDraft({
+        productName: productName ?? undefined,
+      });
+      setReplyDraft(stashed ?? draft.body);
+      setPostSessionFlow({
+        productName: productName ?? undefined,
+        steps: draft.steps,
+      });
+      setStatusFilter("ALL");
+      setQueueLens("all");
+    }
   }, [tenantVertical]);
+
+  useEffect(() => {
+    if (!businessId || !selectedId) return;
+    void markReadByResource({
+      resourceKind: "conversation",
+      resourceId: selectedId,
+      businessId,
+    });
+  }, [businessId, selectedId, markReadByResource]);
 
   const { data: convos, isLoading: isLoadingConvos } = useListConversations(
     businessId,
@@ -277,8 +346,10 @@ export default function InboxPage() {
           toast({
             title:
               status === "HANDED_OFF"
-                ? "AI paused — you've taken over"
-                : status === "CLOSED"
+                ? "You're on this thread — Liv is standing by"
+                : status === "OPEN"
+                  ? "Back to Liv — she'll handle this thread again"
+                  : status === "CLOSED"
                   ? "Conversation closed"
                   : "Conversation reopened",
           });
@@ -288,6 +359,47 @@ export default function InboxPage() {
         },
       },
     );
+  }
+
+  async function sendOwnerReply(releaseAfterSend: boolean) {
+    if (!businessId || !selectedId || !replyDraft.trim()) return;
+    setSending(true);
+    try {
+      await apiFetch(`/businesses/${businessId}/conversations/${selectedId}/messages`, {
+        method: "POST",
+        body: JSON.stringify({ content: replyDraft.trim() }),
+      });
+      setReplyDraft("");
+      if (releaseAfterSend) {
+        await new Promise<void>((resolve, reject) => {
+          updateConversation.mutate(
+            { businessId, conversationId: selectedId, data: { status: "OPEN" } },
+            {
+              onSuccess: () => resolve(),
+              onError: () => reject(new Error("release failed")),
+            },
+          );
+        });
+      }
+      invalidateOperationalState(qc, businessId);
+      await qc.invalidateQueries({
+        queryKey: getGetConversationQueryKey(businessId, selectedId),
+      });
+      await qc.invalidateQueries({
+        queryKey: getListConversationsQueryKey(businessId),
+      });
+      toast({
+        title: releaseAfterSend ? "Sent — Liv's back on this thread" : "Reply sent",
+      });
+    } catch (err: unknown) {
+      toast({
+        title: "Could not send reply",
+        description: err instanceof Error ? err.message : "Send failed",
+        variant: "destructive",
+      });
+    } finally {
+      setSending(false);
+    }
   }
 
   const ritualTitle =
@@ -331,12 +443,46 @@ export default function InboxPage() {
   } else if (wellnessInboxMorph === "atrium") {
     showContextRail = false;
     paneGrid = "lg:grid-cols-[minmax(0,300px)_minmax(0,1fr)]";
+  } else if (beautyInboxMorph === "split-inbox") {
+    showContextRail = shouldShowInboxContextRail(!!selectedConversation);
+    paneGrid = showContextRail
+      ? "lg:grid-cols-[minmax(0,260px)_minmax(0,1fr)_minmax(0,240px)]"
+      : "lg:grid-cols-[minmax(0,260px)_minmax(0,1fr)]";
+  } else if (beautyInboxMorph === "atrium") {
+    showContextRail = false;
+    paneGrid = "lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]";
+  } else if (beautyInboxMorph === "menu-card") {
+    showContextRail = false;
+    paneGrid = "lg:grid-cols-[minmax(0,240px)_minmax(0,1fr)] max-w-5xl mx-auto w-full";
+  } else if (beautyInboxMorph === "cockpit") {
+    showContextRail = !!selectedConversation;
+    paneGrid = showContextRail
+      ? "lg:grid-cols-[minmax(0,220px)_minmax(0,1fr)_minmax(0,200px)]"
+      : "lg:grid-cols-[minmax(0,220px)_minmax(0,1fr)]";
+  } else if (isConstellationInbox) {
+    showContextRail = shouldShowInboxContextRail(!!selectedConversation);
+    paneGrid = showContextRail
+      ? "lg:grid-cols-[minmax(0,264px)_minmax(0,1.1fr)_minmax(0,242px)]"
+      : "lg:grid-cols-[minmax(0,264px)_minmax(0,1.1fr)]";
   }
 
-  const inboxShellClass = wellnessInboxMorph ? "wellness-inbox-page" : undefined;
-  const inboxGridMinH = wellnessInboxMorph
-    ? "min-h-[min(720px,calc(100dvh-11rem))] max-h-[calc(100dvh-7.5rem)]"
-    : "min-h-[min(560px,calc(100vh-220px))] max-h-[calc(100vh-160px)]";
+  const inboxShellClass = cn(
+    wellnessInboxMorph && "wellness-inbox-page",
+    beautyInboxMorph && "beauty-inbox-page",
+    isConstellationInbox && "constellation-inbox-page",
+  );
+  const inboxGridMinH =
+    wellnessInboxMorph || beautyInboxMorph
+      ? "h-[calc(100dvh-9.5rem)] min-h-[min(720px,calc(100dvh-9rem))] max-h-[calc(100dvh-6.5rem)]"
+      : isConstellationInbox
+        ? "h-[min(840px,calc(100dvh-6rem))] min-h-[min(720px,calc(100dvh-6rem))]"
+        : "h-[calc(100dvh-10.5rem)] min-h-[min(640px,calc(100dvh-10rem))] max-h-[calc(100dvh-7rem)]";
+
+  const threadMessageCount = useMemo(() => {
+    return (
+      detailData?.messages.filter((m) => m.role !== "SYSTEM" && m.role !== "TOOL").length ?? 0
+    );
+  }, [detailData?.messages]);
 
   return (
     <OperationalPageShell
@@ -398,7 +544,10 @@ export default function InboxPage() {
           className="mb-3 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2.5 text-sm"
           data-testid="inbox-post-session-flow"
         >
-          <p className="font-medium text-foreground">Post-session continuity (WB-402)</p>
+          <p className="font-medium text-foreground">
+            Post-session continuity
+            {tenantVertical === "beauty" ? " — mini store" : " (WB-402)"}
+          </p>
           <ol className="mt-1 list-decimal pl-5 text-xs text-muted-foreground space-y-0.5">
             {postSessionFlow.steps.map((step) => (
               <li key={step}>{step}</li>
@@ -409,6 +558,35 @@ export default function InboxPage() {
               Product mention: <span className="text-foreground">{postSessionFlow.skuName}</span>
             </p>
           ) : null}
+          {postSessionFlow.productName ? (
+            <p className="text-xs text-muted-foreground mt-1.5">
+              Product mention: <span className="text-foreground">{postSessionFlow.productName}</span>
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+      {floorGuidance ? (
+        <div
+          className={cn(
+            "mb-3 flex flex-col gap-2 rounded-lg border px-3 py-2.5 text-sm sm:flex-row sm:items-center sm:justify-between",
+            isConstellationInbox
+              ? "constellation-inbox-floor-guidance border-[rgba(217,195,154,0.22)] bg-[rgba(217,195,154,0.06)]"
+              : "border-border/80 bg-muted/30",
+          )}
+          data-testid="inbox-floor-guidance"
+        >
+          <div className="min-w-0">
+            <p className="font-medium text-foreground">{floorGuidance.title}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{floorGuidance.body}</p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn("shrink-0", beautyOutlineButton(beautyChrome))}
+            asChild
+          >
+            <Link href={floorGuidance.href}>{floorGuidance.cta}</Link>
+          </Button>
         </div>
       ) : null}
       <div
@@ -417,8 +595,11 @@ export default function InboxPage() {
           inboxGridMinH,
           paneGrid,
           beautyChrome ? "beauty-operational-panel beauty-inbox-shell" : "bg-card",
+          isConstellationInbox && "constellation-inbox-shell platform-default-liv-glass",
           wellnessChrome && "wellness-list-shell",
           wellnessInboxMorph && `wellness-inbox-grid wellness-inbox--${wellnessInboxMorph}`,
+          beautyInboxMorph && `beauty-inbox-grid beauty-inbox--${beautyInboxMorph}`,
+          isConstellationInbox && "constellation-inbox-grid constellation-inbox--constellation",
         )}
         data-testid="inbox-three-pane"
       >
@@ -446,6 +627,8 @@ export default function InboxPage() {
             "flex flex-col min-h-0 min-w-0 h-full border-b lg:border-b-0 lg:border-r border-border/80",
             beautyChrome && "beauty-inbox-conversation-pane",
             wellnessInboxMorph && "wellness-inbox-conversation-col",
+            beautyInboxMorph && "beauty-inbox-conversation-col",
+            isConstellationInbox && "constellation-inbox-conversation-col",
           )}
         >
           {!selectedId ? (
@@ -463,25 +646,43 @@ export default function InboxPage() {
               ))}
             </div>
           ) : (
-            <div className="flex flex-col flex-1 min-h-0">
+            <div className="relative flex flex-col flex-1 min-h-0 overflow-hidden constellation-inbox-thread">
               {selectedConversation && (
                 <div
                   className={cn(
                     "border-b border-border px-4 flex flex-col gap-3 shrink-0",
-                    wellnessInboxMorph ? "py-2" : "py-3",
+                    compactInboxCompose ? "py-2" : "py-3",
                   )}
                 >
                   <div className="flex items-center justify-between gap-3 flex-wrap">
                   <div className="min-w-0">
                     <div className="font-semibold truncate flex items-center gap-2">
                       {channelIcon(selectedConversation.channel)}
-                      {selectedConversation.customerName ?? "Anonymous visitor"}
+                      {selectedConversation.customerId ? (
+                        <Link
+                          href={`/customers/${selectedConversation.customerId}`}
+                          className="hover:text-primary transition-colors truncate"
+                          data-testid="inbox-thread-customer-link"
+                        >
+                          {selectedConversation.customerName ?? "Guest"}
+                        </Link>
+                      ) : (
+                        selectedConversation.customerName ?? "Anonymous visitor"
+                      )}
                     </div>
                     <div className="text-xs text-muted-foreground truncate">
                       {selectedConversation.customerEmail ??
                         selectedConversation.customerPhone ??
                         "no contact info shared"}
                     </div>
+                    {selectedConversation.customerId && businessId ? (
+                      <InboxRelationshipChip
+                        businessId={businessId}
+                        customerId={selectedConversation.customerId}
+                        compact
+                        className="mt-1.5 lg:hidden"
+                      />
+                    ) : null}
                   </div>
                   <div className="flex items-center gap-2">
                     <HelpSupportDialog
@@ -515,19 +716,20 @@ export default function InboxPage() {
                           Take over
                         </Button>
                       )}
-                    {selectedConversation.status === "HANDED_OFF" && (
+                    {selectedConversation.status === "HANDED_OFF" &&
+                    !replyDraft.trim() ? (
                       <Button
                         variant="outline"
                         size="sm"
                         className={beautyOutlineButton(beautyChrome)}
                         onClick={() => handleStatusChange("OPEN")}
                         disabled={updateConversation.isPending}
-                        data-testid="button-resume-ai"
+                        data-testid="button-back-to-liv"
                       >
                         <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-                        Resume AI
+                        Release to Liv
                       </Button>
-                    )}
+                    ) : null}
                     {selectedConversation.status !== "CLOSED" &&
                     !(
                       selectedConversation.caseIntent === "refund_request" ||
@@ -551,12 +753,17 @@ export default function InboxPage() {
                   (selectedConversation.caseIntent === "refund_request" ||
                     selectedConversation.summary?.toLowerCase().includes("refund")) ? (
                     <div
-                      className="flex flex-col gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-3"
+                      className={cn(
+                        "flex flex-col gap-2 rounded-lg border px-3 py-3",
+                        isConstellationInbox
+                          ? "constellation-inbox-case-resolve border-[rgba(217,195,154,0.28)] bg-[rgba(217,195,154,0.06)]"
+                          : "border-primary/30 bg-primary/5",
+                      )}
                       data-testid="inbox-case-resolve"
                     >
                       <p className="text-xs font-medium text-foreground">
-                        Refund request — pick what happened. You must message the customer; the linked
-                        booking updates automatically.
+                        Refund request — reply below, then close the case when you&apos;re ready. Liv can
+                        run the refund and booking update on your confirmation.
                       </p>
                       <div className="flex flex-wrap gap-2">
                         <Button
@@ -568,25 +775,25 @@ export default function InboxPage() {
                             setResolveDialog({ outcome: "refund_and_cancel", refundMinor: 6000 })
                           }
                         >
-                          Approve refund + cancel
+                          Refund & close case
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
                           disabled={resolving}
-                          data-testid="inbox-resolve-deny-cancel"
+                          data-testid="inbox-resolve-cancel-no-refund"
                           onClick={() => setResolveDialog({ outcome: "cancel_no_refund" })}
                         >
-                          Deny refund — cancel appointment
+                          Cancel appointment
                         </Button>
                         <Button
                           size="sm"
                           variant="ghost"
                           disabled={resolving}
-                          data-testid="inbox-resolve-deny-keep"
+                          data-testid="inbox-resolve-close-case"
                           onClick={() => setResolveDialog({ outcome: "close_no_action" })}
                         >
-                          Deny refund — keep appointment
+                          Close case
                         </Button>
                       </div>
                     </div>
@@ -603,27 +810,20 @@ export default function InboxPage() {
                 </div>
               )}
 
-              {selectedConversation?.status === "HANDED_OFF" ? (
-                <div
-                  className={cn(
-                    "mx-4 mt-3 rounded-lg border px-3 py-2 text-sm flex items-center gap-2",
-                    beautyChrome
-                      ? "beauty-inbox-handoff-banner"
-                      : "border-amber-500/40 bg-amber-50 dark:bg-amber-950/40 text-amber-950 dark:text-amber-100",
-                  )}
-                  data-testid="inbox-handoff-banner"
-                >
-                  <HandHelping className="h-4 w-4 shrink-0" aria-hidden />
-                  You&apos;ve taken over — Liv is paused on this thread.
-                </div>
-              ) : null}
-
               <div
                 className={cn(
-                  "flex-1 min-h-0 overflow-y-auto p-4 space-y-3 motion-wizard-enter",
+                  "flex-1 min-h-0 overflow-y-auto p-4 space-y-3 motion-wizard-enter inbox-messages-scroll",
                   beautyChrome ? "beauty-inbox-messages" : "bg-background/30",
                   wellnessInboxMorph && "wellness-inbox-messages-scroll",
+                  beautyInboxMorph && "beauty-inbox-messages-scroll",
+                  isConstellationInbox && "constellation-inbox-messages-scroll",
                 )}
+                style={{
+                  minHeight: inboxMessagesMinHeight(threadMessageCount, {
+                    ownerComposing: inboxNeedsOwnerReply(selectedConversation),
+                  }),
+                }}
+                data-testid="inbox-messages-scroll"
               >
                 {detailData?.messages
                   .filter((m) => m.role !== "SYSTEM")
@@ -655,7 +855,9 @@ export default function InboxPage() {
                               "h-7 w-7 rounded-full flex items-center justify-center shrink-0 mb-0.5",
                               beautyChrome
                                 ? "beauty-inbox-avatar"
-                                : "bg-primary/15",
+                                : isConstellationInbox
+                                  ? "constellation-inbox-avatar"
+                                  : "bg-primary/15",
                             )}
                           >
                             <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden />
@@ -668,14 +870,20 @@ export default function InboxPage() {
                             isUser
                               ? beautyChrome
                                 ? "beauty-inbox-bubble--guest rounded-br-sm"
-                                : "bg-primary text-primary-foreground rounded-br-sm"
+                                : isConstellationInbox
+                                  ? "constellation-inbox-bubble--guest rounded-br-sm"
+                                  : "bg-primary text-primary-foreground rounded-br-sm"
                               : isStaff
                                 ? beautyChrome
                                   ? "beauty-inbox-bubble--team rounded-bl-sm"
-                                  : "bg-[hsl(var(--chart-3))]/20 border border-[hsl(var(--chart-3))]/30 rounded-bl-sm"
+                                  : isConstellationInbox
+                                    ? "constellation-inbox-bubble--team rounded-bl-sm"
+                                    : "bg-[hsl(var(--chart-3))]/20 border border-[hsl(var(--chart-3))]/30 rounded-bl-sm"
                                 : beautyChrome
                                   ? "beauty-inbox-bubble--liv rounded-bl-sm"
-                                  : "bg-muted rounded-bl-sm",
+                                  : isConstellationInbox
+                                    ? "constellation-inbox-bubble--liv rounded-bl-sm"
+                                    : "bg-muted rounded-bl-sm",
                           )}
                         >
                           {isStaff ? (
@@ -708,166 +916,104 @@ export default function InboxPage() {
                 )}
               </div>
 
-              {selectedId && selectedConversation?.status !== "CLOSED" ? (
+              {selectedId && inboxNeedsOwnerReply(selectedConversation) ? (
                 <div
                   className={cn(
-                    "shrink-0 border-t backdrop-blur-sm mt-auto z-10",
-                    wellnessInboxMorph ? "wellness-inbox-compose p-2 space-y-1.5" : "sticky bottom-0 p-3 space-y-2",
-                    beautyChrome ? "beauty-inbox-compose" : "border-border bg-card/95",
+                    "shrink-0 border-t backdrop-blur-sm z-10 constellation-inbox-footer",
+                    compactInboxCompose ? "p-2 space-y-1.5" : "sticky bottom-0 p-3 space-y-2",
+                    wellnessInboxMorph && "wellness-inbox-compose",
+                    beautyChrome && "beauty-inbox-compose",
+                    beautyInboxMorph && "beauty-inbox-compose--compact",
+                    isConstellationInbox && "constellation-inbox-compose",
+                    !beautyChrome && !wellnessInboxMorph && !isConstellationInbox && "border-border bg-card/95 mt-auto",
                   )}
                 >
-                  {(selectedConversation?.status === "OPEN" ||
-                    selectedConversation?.status === "HANDED_OFF") &&
-                  !(
-                    selectedConversation?.caseIntent === "refund_request" ||
-                    selectedConversation?.summary?.toLowerCase().includes("refund")
-                  ) ? (
-                    <LivInboxAssist
-                      vertical={tenantVertical}
-                      category={(business as { category?: string } | null)?.category}
-                      beautyChrome={beautyChrome}
-                      compact={wellnessChrome}
-                      mode={
-                        selectedConversation?.status === "HANDED_OFF" ? "handoff" : "open"
+                  {selectedConversation?.status === "HANDED_OFF" ? (
+                    <div
+                      className={cn(
+                        "rounded-lg border px-3 py-2 text-sm flex items-start gap-2",
+                        beautyChrome
+                          ? "beauty-inbox-handoff-banner"
+                          : isConstellationInbox
+                            ? "constellation-inbox-handoff-banner"
+                            : "border-amber-500/40 bg-amber-50 dark:bg-amber-950/40 text-amber-950 dark:text-amber-100",
+                      )}
+                      data-testid="inbox-handoff-banner"
+                    >
+                      <HandHelping className="h-4 w-4 shrink-0 mt-0.5" aria-hidden />
+                      <span>
+                        <span className="font-medium text-foreground">You&apos;re replying.</span>{" "}
+                        Send when ready — Liv resumes this thread automatically after your message
+                        goes out on the customer&apos;s channel.
+                      </span>
+                    </div>
+                  ) : null}
+                  <div className="relative">
+                    <Textarea
+                      placeholder={
+                        selectedConversation?.status === "HANDED_OFF"
+                          ? "Write your reply to the customer…"
+                          : "Reply to customer…"
                       }
-                      disabled={livAssisting || sending}
-                      loading={livAssisting}
-                      onAsk={async (prompt) => {
-                        if (!businessId || !selectedId) return;
-                        setLivAssisting(true);
-                        try {
-                          const result = await apiFetch<{
-                            reply: string;
-                            toolsUsed?: string[];
-                          }>(
-                            `/businesses/${businessId}/conversations/${selectedId}/liv-assist`,
-                            {
-                              method: "POST",
-                              body: JSON.stringify({ message: prompt }),
-                            },
-                          );
-                          setReplyDraft(result.reply);
-                          await qc.invalidateQueries({
-                            queryKey: getGetConversationQueryKey(businessId, selectedId),
-                          });
-                          const tools = result.toolsUsed?.length
-                            ? ` · Tools: ${result.toolsUsed.join(", ")}`
-                            : "";
-                          toast({
-                            title: "Liv drafted a reply",
-                            description: `Review before sending${tools}`,
-                          });
-                        } catch (err: unknown) {
-                          toast({
-                            title: "Liv could not assist",
-                            description: err instanceof Error ? err.message : "Try again",
-                            variant: "destructive",
-                          });
-                        } finally {
-                          setLivAssisting(false);
+                      value={replyDraft}
+                      onChange={(e) => setReplyDraft(e.target.value)}
+                      rows={
+                        selectedConversation?.status === "HANDED_OFF"
+                          ? 3
+                          : compactInboxCompose
+                            ? 2
+                            : 2
+                      }
+                      className={cn(
+                        "resize-none text-sm bg-background/80 pr-12",
+                        beautyChrome
+                          ? "border-border/80 focus-visible:ring-primary/30"
+                          : isConstellationInbox
+                            ? "constellation-inbox-reply-input border-border/80 focus-visible:ring-primary/30"
+                            : "border-primary/35 ring-1 ring-primary/25 focus-visible:ring-2 focus-visible:ring-primary/50",
+                      )}
+                      data-testid="inbox-reply-input"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          if (!sending && replyDraft.trim()) {
+                            void sendOwnerReply(selectedConversation?.status === "HANDED_OFF");
+                          }
                         }
                       }}
                     />
-                  ) : null}
-                  {selectedConversation?.status === "HANDED_OFF" ? (
-                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      <HandHelping className="h-3.5 w-3.5 shrink-0" />
-                      Liv is paused — your reply goes to the customer on their channel when configured.
-                    </p>
-                  ) : null}
-                  <Textarea
-                    placeholder="Reply to customer…"
-                    value={replyDraft}
-                    onChange={(e) => setReplyDraft(e.target.value)}
-                    rows={wellnessInboxMorph ? 1 : 2}
-                    className={cn(
-                      "resize-none text-sm bg-background/80",
-                      beautyChrome
-                        ? "border-border/80 focus-visible:ring-primary/30"
-                        : "border-primary/35 ring-1 ring-primary/25 focus-visible:ring-2 focus-visible:ring-primary/50",
-                    )}
-                    data-testid="inbox-reply-input"
-                  />
-                  <div className="flex flex-wrap justify-end gap-2">
-                    {selectedConversation?.status === "OPEN" ? (
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        className={beautyOutlineButton(beautyChrome)}
-                        disabled={livAssisting || sending}
-                        data-testid="inbox-ask-liv"
-                        onClick={async () => {
-                          if (!businessId || !selectedId) return;
-                          setLivAssisting(true);
-                          try {
-                            const prompt =
-                              replyDraft.trim() ||
-                              "Read this thread and draft the next helpful reply for the customer. Be concise and on-brand.";
-                            const result = await apiFetch<{ reply: string }>(
-                              `/businesses/${businessId}/conversations/${selectedId}/liv-assist`,
-                              {
-                                method: "POST",
-                                body: JSON.stringify({ message: prompt }),
-                              },
-                            );
-                            setReplyDraft(result.reply);
-                            await qc.invalidateQueries({
-                              queryKey: getGetConversationQueryKey(businessId, selectedId),
-                            });
-                            toast({ title: "Liv drafted a reply — review before sending" });
-                          } catch (err: unknown) {
-                            toast({
-                              title: "Liv could not assist",
-                              description: err instanceof Error ? err.message : "Try again",
-                              variant: "destructive",
-                            });
-                          } finally {
-                            setLivAssisting(false);
-                          }
-                        }}
-                      >
-                        <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-                        {livAssisting ? "Liv is thinking…" : "Ask Liv"}
-                      </Button>
-                    ) : null}
                     <Button
-                      size="sm"
-                      className={beautyPrimaryButton(beautyChrome)}
+                      type="button"
+                      size="icon"
+                      className={cn(
+                        "absolute bottom-2 right-2 h-8 w-8 rounded-full shrink-0",
+                        beautyPrimaryButton(beautyChrome),
+                      )}
                       disabled={sending || !replyDraft.trim()}
                       data-testid="inbox-send-reply"
-                      onClick={async () => {
-                        if (!businessId || !selectedId) return;
-                        setSending(true);
-                        try {
-                          await apiFetch(
-                            `/businesses/${businessId}/conversations/${selectedId}/messages`,
-                            {
-                              method: "POST",
-                              body: JSON.stringify({ content: replyDraft.trim() }),
-                            },
-                          );
-                          setReplyDraft("");
-                          await qc.invalidateQueries({
-                            queryKey: getGetConversationQueryKey(businessId, selectedId),
-                          });
-                          await qc.invalidateQueries({
-                            queryKey: getListConversationsQueryKey(businessId),
-                          });
-                          toast({ title: "Reply sent" });
-                        } catch (err: unknown) {
-                          toast({
-                            title: "Could not send reply",
-                            description: err instanceof Error ? err.message : "Send failed",
-                            variant: "destructive",
-                          });
-                        } finally {
-                          setSending(false);
-                        }
-                      }}
+                      aria-label={
+                        selectedConversation?.status === "HANDED_OFF"
+                          ? "Send reply and return thread to Liv"
+                          : "Send reply"
+                      }
+                      onClick={() =>
+                        void sendOwnerReply(selectedConversation?.status === "HANDED_OFF")
+                      }
                     >
-                      {sending ? "Sending…" : "Send reply"}
+                      <ArrowUp className="h-4 w-4" aria-hidden />
                     </Button>
                   </div>
+                  {selectedConversation?.status === "HANDED_OFF" && replyDraft.trim() ? (
+                    <button
+                      type="button"
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      data-testid="inbox-release-without-send"
+                      disabled={updateConversation.isPending}
+                      onClick={() => handleStatusChange("OPEN")}
+                    >
+                      Release to Liv without sending
+                    </button>
+                  ) : null}
                 </div>
               ) : null}
             </div>

@@ -5,9 +5,14 @@ import {
   Check,
   CheckCircle2,
   ChevronRight,
+  DollarSign,
   Flower2,
   Inbox,
   Sparkles,
+  Star,
+  Users,
+  ClipboardList,
+  FileCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,17 +26,27 @@ import { useTenantExperience } from "@/lib/tenant-experience-api";
 import { useCallback, useState } from "react";
 import { InboxPreviewPanel } from "@/components/dashboard/inbox-preview-panel";
 import { OwnerLivGuardrails } from "@/components/dashboard/owner-liv-guardrails";
+import { OwnerLivSuggestionsStrip } from "@/components/dashboard/owner-liv-suggestions-strip";
 import { VerticalHomeModules } from "@/components/dashboard/vertical-home-modules";
 import {
+  ownerHomeCommerceNeedsAttention,
+  ownerIntelligenceHasSurfaceContent,
   resolveOwnerHomeBriefingCta,
   resolveOwnerHomeKpiChips,
   resolveOwnerHomeModuleLayout,
+  shouldExpandOwnerHomeInsightsDisclosure,
+  shouldShowOwnerPendingPanel,
 } from "@workspace/policy";
+import { useGetOwnerIntelligence } from "@workspace/api-client-react";
+import { useMembership } from "@/lib/membership-context";
 import { cn } from "@/lib/utils";
 import { beautyNativeMorphForVertical, useBeautyChrome } from "@/lib/presentation-layout";
-import { resolvePresentationLayoutMorph } from "@workspace/policy";
+import { effectivePresentationMorph } from "@/lib/appearance-preview-mode";
 import { BeautyMorphTodayHome } from "@/components/beauty/beauty-morph-today";
 import { WellnessMorphTodayHome } from "@/components/wellness/wellness-morph-today";
+import { HairColourDayCard } from "@/components/hair/hair-colour-day-card";
+import { AutomotiveBayBoard } from "@/components/automotive/automotive-bay-board";
+import { BodyArtPipelineCard } from "@/components/body-art/body-art-pipeline-card";
 import { resolvePublicServiceImageUrl } from "@/lib/public-service-image";
 import {
   PENDING_BOOKINGS_LIST_HREF,
@@ -39,11 +54,14 @@ import {
 } from "@workspace/policy";
 import { verticalPackUi } from "@/lib/vertical-pack-ui";
 import { TodayAppointmentsStrip } from "@/components/dashboard/today-appointments-strip";
+import { AtRiskGuestsStrip } from "@/components/dashboard/at-risk-guests-strip";
+import { VisitFeedbackStrip } from "@/components/dashboard/visit-feedback-strip";
 import {
   PendingBookingActions,
   type PendingBookingActionBooking,
 } from "@/components/booking/pending-booking-actions";
 import { PendingWhyLine } from "@/components/booking/pending-why-line";
+import { OwnerIntelligenceStack } from "@/components/dashboard/owner-intelligence-stack";
 
 type PendingBooking = PendingBookingActionBooking & {
   status: string;
@@ -67,7 +85,17 @@ function customerName(c: PendingBooking["customer"]): string {
 
 const KPI_VIEW: Partial<
   Record<
-    "todayBookings" | "inboxHandoffs" | "toConfirm" | "completedToday",
+    | "todayBookings"
+    | "inboxHandoffs"
+    | "toConfirm"
+    | "completedToday"
+    | "atRiskGuests"
+    | "lowFeedback"
+    | "revenue30d"
+    | "depositsGap"
+    | "fillsDue"
+    | "colourDayBlocks"
+    | "medspaConsentQueue",
     { href: string; label: string; icon: typeof Calendar }
   >
 > = {
@@ -75,6 +103,17 @@ const KPI_VIEW: Partial<
   inboxHandoffs: { href: "/inbox?lens=taken_over", label: "View inbox", icon: Inbox },
   toConfirm: { href: PENDING_BOOKINGS_LIST_HREF, label: "View pending", icon: CheckCircle2 },
   completedToday: { href: "/bookings", label: "View today", icon: Check },
+  atRiskGuests: { href: "/customers", label: "View guests", icon: Users },
+  lowFeedback: { href: "/dashboard", label: "View feedback", icon: Star },
+  revenue30d: { href: "/settings?tab=billing", label: "View payments", icon: DollarSign },
+  depositsGap: {
+    href: "/settings?tab=billing#commerce-fix",
+    label: "Turn on deposits",
+    icon: DollarSign,
+  },
+  fillsDue: { href: "/customers#fill-cycle", label: "View fill cycle", icon: Users },
+  colourDayBlocks: { href: "/bookings", label: "Colour-day plan", icon: ClipboardList },
+  medspaConsentQueue: { href: "/medspa", label: "Consent queue", icon: FileCheck },
 };
 
 function KpiChip({
@@ -85,6 +124,7 @@ function KpiChip({
   loading,
   chipId,
   beauty,
+  constellation: constellationProp,
   signalGlow,
 }: {
   label: string;
@@ -94,9 +134,15 @@ function KpiChip({
   loading?: boolean;
   chipId?: keyof typeof KPI_VIEW;
   beauty?: boolean;
+  constellation?: boolean;
   /** Actionable KPI — left-edge glow in signal ambient tier */
   signalGlow?: boolean;
 }) {
+  const constellation =
+    constellationProp ??
+    (!beauty &&
+      typeof document !== "undefined" &&
+      document.documentElement.dataset.presentation === "platform-default");
   const view = chipId ? KPI_VIEW[chipId] : undefined;
   const inner = (
     <>
@@ -126,6 +172,9 @@ function KpiChip({
     "rounded-lg border border-border/80 bg-card px-3 py-2.5 flex flex-col gap-0.5 min-h-[72px] justify-center",
     beauty && "beauty-kpi-card",
     beauty && signalGlow && "beauty-kpi-card--signal",
+    constellation && "constellation-kpi",
+    constellation && signalGlow && tone === "warn" && "constellation-kpi--signal",
+    constellation && tone === "good" && "constellation-kpi--good",
   );
 
   if (beauty && view) {
@@ -222,7 +271,8 @@ function BeautyPendingHero({
 
 function PendingPanel({
   pendingBookings,
-  pendingCount,
+  homePendingCount,
+  globalPendingCount,
   isLoadingSummary,
   formatTime,
   updatePending,
@@ -233,7 +283,10 @@ function PendingPanel({
   compact,
 }: {
   pendingBookings: PendingBooking[];
-  pendingCount: number;
+  /** Pending on today's home surface — matches list rows. */
+  homePendingCount: number;
+  /** All pending bookings — for "view all" when backlog extends beyond today. */
+  globalPendingCount: number;
   isLoadingSummary: boolean;
   formatTime: (iso: string) => string;
   updatePending: boolean;
@@ -252,8 +305,10 @@ function PendingPanel({
     >
       <div className="flex items-center justify-between px-3 py-2 border-b border-border/60">
         <h2 className="text-sm font-semibold">Needs confirmation</h2>
-        {pendingCount > 0 ? (
-          <span className="text-[10px] font-mono text-[hsl(var(--chart-4))]">{pendingCount} pending</span>
+        {homePendingCount > 0 ? (
+          <span className="text-[10px] font-mono text-[hsl(var(--chart-4))]">
+            {homePendingCount} today
+          </span>
         ) : null}
       </div>
       {isLoadingSummary ? (
@@ -261,11 +316,6 @@ function PendingPanel({
           {[1, 2].map((i) => (
             <Skeleton key={i} className="h-12 w-full rounded-lg" />
           ))}
-        </div>
-      ) : pendingBookings.length === 0 ? (
-        <div className="flex flex-col items-center justify-center px-3 py-6 text-center">
-          <Check className="h-6 w-6 text-[hsl(var(--chart-3))]/50 mb-1.5" aria-hidden />
-          <p className="text-xs text-muted-foreground">Nothing waiting on you.</p>
         </div>
       ) : (
         <ul className="divide-y divide-border/60">
@@ -294,11 +344,11 @@ function PendingPanel({
           ))}
         </ul>
       )}
-      {pendingBookings.length > 1 ? (
+      {globalPendingCount > pendingBookings.length ? (
         <div className="mt-auto border-t border-border/60 px-3 py-1.5">
           <Link href={PENDING_BOOKINGS_LIST_HREF}>
             <Button variant="ghost" size="sm" className="w-full text-xs h-8">
-              View all {pendingCount} pending
+              View all {globalPendingCount} pending
             </Button>
           </Link>
         </div>
@@ -339,6 +389,29 @@ export function OwnerHomeRitual({
       creditsRedeemed: number;
       creditsRemaining: number;
     };
+    atRiskGuests?: Array<{
+      customerId: string;
+      displayName: string;
+      stage: "at_risk" | "lapsed";
+      daysSinceLastVisit: number;
+      headline: string;
+    }>;
+    recentVisitFeedback?: Array<{
+      id: string;
+      bookingId: string;
+      score: number;
+      comment: string | null;
+      createdAt: string;
+    }>;
+    lowFeedbackCount?: number;
+    confirmedCount?: number;
+    commerce?: {
+      capturedMinor30d: number;
+      captureRatePercent?: number | null;
+      paymentCount30d: number;
+      currency: string;
+      capturedLabel: string;
+    };
   } | null;
   isLoadingSummary: boolean;
   pendingBookings: PendingBooking[];
@@ -350,7 +423,14 @@ export function OwnerHomeRitual({
   updatePending: boolean;
 }) {
   const { business } = useBusiness();
+  const { role } = useMembership();
   const bid = business?.id ?? "";
+  const canViewOwnerIntel = ["OWNER", "ADMIN"].includes(role ?? "");
+  const { data: ownerIntel } = useGetOwnerIntelligence(bid, {
+    query: { enabled: !!bid && canViewOwnerIntel, staleTime: 90_000 } as never,
+  });
+  const showInsightsDisclosure =
+    canViewOwnerIntel && ownerIntelligenceHasSurfaceContent(ownerIntel ?? null);
   const queryClient = useQueryClient();
   const [assigningBookingId, setAssigningBookingId] = useState<string | null>(null);
   const updateBooking = useUpdateBooking();
@@ -384,16 +464,29 @@ export function OwnerHomeRitual({
 
   const pendingCount = summary?.pendingCount ?? 0;
   const handoffCount = summary?.handedOffCount ?? 0;
-  const moduleLayout = resolveOwnerHomeModuleLayout({
-    pendingCount,
-    openInboxCount: handoffCount,
-  });
+  const atRiskCount = summary?.atRiskGuests?.length ?? 0;
+  const lowFeedbackCount = summary?.lowFeedbackCount ?? 0;
 
   const todayTotal = summary?.todayBookings ?? 0;
+  const fillsDueCount = (ownerIntel?.ops as { fillsDueCount?: number } | undefined)?.fillsDueCount;
+  const colourDayBlocks = (ownerIntel?.ops as { colourDayBlocks?: number } | undefined)?.colourDayBlocks;
+  const medspaConsentQueueCount = (
+    ownerIntel?.ops as { medspaConsentQueueCount?: number } | undefined
+  )?.medspaConsentQueueCount;
+  const isAutomotive = tenantVertical === "automotive-detailing";
   const kpiChips = resolveOwnerHomeKpiChips({
     todayBookings: todayTotal,
     pendingCount,
     handedOffCount: handoffCount,
+    atRiskCount,
+    lowFeedbackCount,
+    capturedMinor30d: summary?.commerce?.capturedMinor30d,
+    paymentCount30d: summary?.commerce?.paymentCount30d,
+    confirmedCount: summary?.confirmedCount,
+    weekBookings: summary?.weekBookings,
+    fillsDueCount,
+    colourDayBlocks,
+    medspaConsentQueueCount,
   });
   const kpiGridClass =
     kpiChips.length <= 1
@@ -402,38 +495,70 @@ export function OwnerHomeRitual({
         ? "grid-cols-2"
         : kpiChips.length === 3
           ? "grid-cols-3"
-          : "grid-cols-2 lg:grid-cols-4";
+          : kpiChips.length === 4
+            ? "grid-cols-2 lg:grid-cols-4"
+            : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6";
   const weekAvg = summary ? Math.round(summary.weekBookings! / 7) : 0;
   const todayDelta = summary ? summary.todayBookings! - weekAvg : 0;
 
   const briefingCta = resolveOwnerHomeBriefingCta({
     pendingCount,
     handedOffCount: handoffCount,
+    atRiskCount,
+    lowFeedbackCount,
+    captureRatePercent: summary?.commerce?.captureRatePercent,
+    paymentCount30d: summary?.commerce?.paymentCount30d,
+    confirmedCount: summary?.confirmedCount,
+    weekBookings: summary?.weekBookings,
     fallbackHref: ritual.primaryAction?.href ?? "/bookings",
     fallbackLabel: ritual.primaryAction?.label ?? "View calendar",
+  });
+  const commerceLowCapture = ownerHomeCommerceNeedsAttention({
+    captureRatePercent: summary?.commerce?.captureRatePercent,
+    paymentCount30d: summary?.commerce?.paymentCount30d,
   });
   const oneThingHref = briefingCta.href;
   const oneThingLabel = briefingCta.label;
   const beauty = useBeautyChrome(tenantVertical);
   const beautyMorph =
-    tenantVertical === "beauty" && tenantXp?.presentation
-      ? resolvePresentationLayoutMorph("beauty", tenantXp.presentation.presetId)
+    tenantVertical === "beauty"
+      ? effectivePresentationMorph("beauty", tenantXp?.presentation?.presetId)
       : null;
   const beautyNativeMorph = beautyNativeMorphForVertical(tenantVertical, beautyMorph);
   const wellnessMorph =
-    tenantVertical === "wellness" && tenantXp?.presentation
-      ? resolvePresentationLayoutMorph("wellness", tenantXp.presentation.presetId)
+    tenantVertical === "wellness"
+      ? effectivePresentationMorph("wellness", tenantXp?.presentation?.presetId)
       : null;
   const wellnessNativeMorph =
     wellnessMorph && wellnessMorph !== "constellation" ? wellnessMorph : null;
+  const presentationCss = tenantXp?.presentation?.cssPreset;
+  const isConstellationToday =
+    !beautyNativeMorph &&
+    !wellnessNativeMorph &&
+    (presentationCss === "platform-default" || presentationCss == null);
   const vocab = verticalPackUi(tenantVertical, business?.category);
   const bookingSlices = resolveOwnerHomeBookingSlices(summary?.upcomingBookings, now);
   const heroPending = bookingSlices.pendingToday[0] ?? pendingBookings[0] ?? null;
   const hasTodaySchedule =
     bookingSlices.pendingToday.length + bookingSlices.confirmedToday.length > 0;
+  const homePendingCount = bookingSlices.pendingToday.length;
+  const homePendingBookings = bookingSlices.pendingToday.slice(0, 5);
+  const showPendingPanel =
+    shouldShowOwnerPendingPanel(homePendingCount, isLoadingSummary) && !hasTodaySchedule;
+  const moduleLayout = resolveOwnerHomeModuleLayout({
+    pendingCount,
+    openInboxCount: handoffCount,
+    homePendingCount,
+    pendingSurfacedElsewhere: hasTodaySchedule,
+  });
 
   const briefingNeedsAttention =
-    briefingLoading || pendingCount > 0 || handoffCount > 0 || livPulse === "act";
+    briefingLoading ||
+    pendingCount > 0 ||
+    handoffCount > 0 ||
+    lowFeedbackCount > 0 ||
+    atRiskCount > 0 ||
+    livPulse === "act";
 
   const morphBookings = [...bookingSlices.pendingToday, ...bookingSlices.confirmedToday];
 
@@ -484,6 +609,10 @@ export function OwnerHomeRitual({
           summary?.bookingResources?.length ? onAssignBookingToResource : undefined
         }
         assigningBookingId={assigningBookingId}
+        atRiskGuests={summary?.atRiskGuests}
+        recentVisitFeedback={summary?.recentVisitFeedback}
+        lowFeedbackCount={summary?.lowFeedbackCount}
+        signalsLoading={isLoadingSummary}
       />
     );
   }
@@ -513,12 +642,20 @@ export function OwnerHomeRitual({
         }
         vertical={tenantVertical}
         category={(business as { category?: string } | null)?.category}
+        atRiskGuests={summary?.atRiskGuests}
+        recentVisitFeedback={summary?.recentVisitFeedback}
+        lowFeedbackCount={summary?.lowFeedbackCount}
+        signalsLoading={isLoadingSummary}
       />
     );
   }
 
   return (
-    <div className="space-y-4 max-w-5xl" data-testid="owner-home-ritual">
+    <div
+      className={cn("space-y-4 max-w-5xl", isConstellationToday && "constellation-today")}
+      data-testid="owner-home-ritual"
+      data-constellation={isConstellationToday ? "true" : undefined}
+    >
       <header className="flex flex-col gap-0.5 sm:flex-row sm:items-end sm:justify-between">
         <h1
           className="text-2xl sm:text-[26px] font-serif tracking-tight leading-tight"
@@ -547,11 +684,11 @@ export function OwnerHomeRitual({
               <Flower2 className="h-4 w-4" strokeWidth={1.5} />
             </div>
           ) : (
-            <Sparkles className="h-4 w-4 shrink-0 mt-0.5 text-primary" aria-hidden />
+            <Star className="h-4 w-4 shrink-0 mt-0.5 text-primary fill-primary/20" aria-hidden />
           )}
           <div className="min-w-0 flex-1">
             <p className="text-[10px] uppercase tracking-[0.2em] text-primary/80 font-medium mb-1">
-              {beauty ? "Liv briefing" : "Briefing"}
+              {beauty ? "What needs you" : isConstellationToday ? "Your orbit today" : "What needs you today"}
             </p>
             {briefingLoading ? (
               <div className="space-y-1.5">
@@ -617,6 +754,7 @@ export function OwnerHomeRitual({
                 value={handoffCount}
                 sub={handoffCount === 1 ? "needs you" : "need you"}
                 tone="warn"
+                signalGlow={handoffCount > 0}
                 loading={isLoadingSummary}
               />
             </Link>
@@ -626,10 +764,150 @@ export function OwnerHomeRitual({
           <KpiChip
             chipId="toConfirm"
             beauty={beauty}
-            signalGlow
+            signalGlow={pendingCount > 0}
             label="To confirm"
             value={pendingCount}
             sub="pending"
+            tone="warn"
+            loading={isLoadingSummary}
+          />
+        ) : null}
+        {kpiChips.includes("lowFeedback") ? (
+          beauty ? (
+            <KpiChip
+              chipId="lowFeedback"
+              beauty
+              signalGlow
+              label="Low scores"
+              value={lowFeedbackCount}
+              sub="need follow-up"
+              tone="warn"
+              loading={isLoadingSummary}
+            />
+          ) : (
+            <Link href="/dashboard" className="block">
+              <KpiChip
+                label="Low scores"
+                value={lowFeedbackCount}
+                sub="need follow-up"
+                tone="warn"
+                loading={isLoadingSummary}
+              />
+            </Link>
+          )
+        ) : null}
+        {kpiChips.includes("atRiskGuests") ? (
+          beauty ? (
+            <KpiChip
+              chipId="atRiskGuests"
+              beauty
+              signalGlow
+              label="At-risk guests"
+              value={atRiskCount}
+              sub="drifting"
+              tone="warn"
+              loading={isLoadingSummary}
+            />
+          ) : (
+            <Link href="/customers" className="block">
+              <KpiChip
+                label="At-risk guests"
+                value={atRiskCount}
+                sub="drifting"
+                tone="warn"
+                loading={isLoadingSummary}
+              />
+            </Link>
+          )
+        ) : null}
+        {kpiChips.includes("revenue30d") ? (
+          beauty ? (
+            <KpiChip
+              chipId="revenue30d"
+              beauty
+              signalGlow={commerceLowCapture}
+              label="Revenue (30d)"
+              value={summary?.commerce?.capturedLabel ?? "—"}
+              sub={
+                summary?.commerce?.captureRatePercent != null
+                  ? `${summary.commerce.captureRatePercent}% capture`
+                  : `${summary?.commerce?.paymentCount30d ?? 0} payments`
+              }
+              tone={commerceLowCapture ? "warn" : "good"}
+              loading={isLoadingSummary}
+            />
+          ) : (
+            <Link href="/settings?tab=billing" className="block">
+              <KpiChip
+                label="Revenue (30d)"
+                value={summary?.commerce?.capturedLabel ?? "—"}
+                sub={
+                  summary?.commerce?.captureRatePercent != null
+                    ? `${summary.commerce.captureRatePercent}% capture`
+                    : `${summary?.commerce?.paymentCount30d ?? 0} payments`
+                }
+                tone={commerceLowCapture ? "warn" : "good"}
+                loading={isLoadingSummary}
+              />
+            </Link>
+          )
+        ) : null}
+        {kpiChips.includes("depositsGap") ? (
+          beauty ? (
+            <KpiChip
+              chipId="depositsGap"
+              beauty
+              signalGlow
+              label="Deposits"
+              value="Not captured"
+              sub="Demand without payments"
+              tone="warn"
+              loading={isLoadingSummary}
+            />
+          ) : (
+            <Link href="/settings?tab=billing" className="block">
+              <KpiChip
+                label="Deposits"
+                value="Not captured"
+                sub="Turn on Stripe"
+                tone="warn"
+                signalGlow
+                loading={isLoadingSummary}
+              />
+            </Link>
+          )
+        ) : null}
+        {kpiChips.includes("fillsDue") ? (
+          <KpiChip
+            chipId="fillsDue"
+            beauty={beauty}
+            signalGlow
+            label="Fills due"
+            value={fillsDueCount ?? 0}
+            sub="past cycle"
+            tone="warn"
+            loading={isLoadingSummary}
+          />
+        ) : null}
+        {kpiChips.includes("colourDayBlocks") ? (
+          <KpiChip
+            chipId="colourDayBlocks"
+            beauty={beauty}
+            signalGlow
+            label="Colour blocks"
+            value={colourDayBlocks ?? 0}
+            sub="today"
+            loading={isLoadingSummary}
+          />
+        ) : null}
+        {kpiChips.includes("medspaConsentQueue") ? (
+          <KpiChip
+            chipId="medspaConsentQueue"
+            beauty={beauty}
+            signalGlow
+            label="Consent queue"
+            value={medspaConsentQueueCount ?? 0}
+            sub="awaiting sign"
             tone="warn"
             loading={isLoadingSummary}
           />
@@ -651,6 +929,17 @@ export function OwnerHomeRitual({
         ) : null}
       </div>
 
+      <OwnerLivSuggestionsStrip
+        pendingCount={pendingCount}
+        handedOffCount={handoffCount}
+        atRiskCount={atRiskCount}
+        lowFeedbackCount={lowFeedbackCount}
+        confirmedCount={summary?.confirmedCount}
+        weekBookings={summary?.weekBookings}
+        commerce={summary?.commerce}
+        className="mb-1"
+      />
+
       {beauty && heroPending && !isLoadingSummary ? (
         <BeautyPendingHero
           booking={heroPending}
@@ -663,13 +952,27 @@ export function OwnerHomeRitual({
         />
       ) : null}
 
+      {tenantVertical === "hair" ? <HairColourDayCard /> : null}
+
+      {tenantVertical === "body-art" ? <BodyArtPipelineCard /> : null}
+
+      {isAutomotive && summary?.bookingResources?.length ? (
+        <AutomotiveBayBoard
+          bookings={morphBookings}
+          resources={summary.bookingResources}
+          onAssignBookingToResource={onAssignBookingToResource}
+          assigningBookingId={assigningBookingId}
+          vertical={tenantVertical}
+        />
+      ) : null}
+
       <TodayAppointmentsStrip
           pendingToday={bookingSlices.pendingToday}
           confirmedToday={bookingSlices.confirmedToday}
           formatTime={formatTime}
           loading={isLoadingSummary}
-          scheduleTitle={vocab.ownerTodayScheduleTitle}
-          calendarCta={vocab.ownerTodayScheduleCalendarCta}
+          scheduleTitle={isConstellationToday ? "Today's orbit" : vocab.ownerTodayScheduleTitle}
+          calendarCta={isConstellationToday ? "View calendar" : vocab.ownerTodayScheduleCalendarCta}
           runningLateLabel={vocab.runningLateLabel}
           updatePending={updatePending}
           onConfirmBooking={onConfirmBooking}
@@ -678,6 +981,32 @@ export function OwnerHomeRitual({
           category={(business as { category?: string } | null)?.category}
           skipPendingId={beauty && heroPending ? heroPending.id : null}
         />
+
+      <AtRiskGuestsStrip
+        guests={summary?.atRiskGuests ?? []}
+        loading={isLoadingSummary}
+      />
+
+      <VisitFeedbackStrip
+        items={summary?.recentVisitFeedback}
+        loading={isLoadingSummary}
+      />
+
+      {showInsightsDisclosure ? (
+        <SettingsDisclosure
+          title="Payments & Liv insights"
+          description="Optional depth — one priority action, not six repeats of the same signal."
+          defaultOpen={shouldExpandOwnerHomeInsightsDisclosure({
+            hasIntelligenceContent: true,
+            commerceNeedsAttention: commerceLowCapture,
+            pendingRemediationCount: ownerIntel?.remediationTasks?.length ?? 0,
+          })}
+        >
+          <div className="pt-2">
+            <OwnerIntelligenceStack variant="owner-home" />
+          </div>
+        </SettingsDisclosure>
+      ) : null}
 
       {moduleLayout.mode === "all_clear" ? (
         <div
@@ -698,10 +1027,11 @@ export function OwnerHomeRitual({
             attentionCount={handoffCount}
             compact
           />
-        ) : hasTodaySchedule ? null : (
+        ) : showPendingPanel ? (
           <PendingPanel
-            pendingBookings={pendingBookings}
-            pendingCount={pendingCount}
+            pendingBookings={homePendingBookings}
+            homePendingCount={homePendingCount}
+            globalPendingCount={pendingCount}
             isLoadingSummary={isLoadingSummary}
             formatTime={formatTime}
             updatePending={updatePending}
@@ -710,7 +1040,7 @@ export function OwnerHomeRitual({
             vertical={tenantVertical}
             category={(business as { category?: string } | null)?.category}
           />
-        )
+        ) : null
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           <InboxPreviewPanel
@@ -729,10 +1059,11 @@ export function OwnerHomeRitual({
               onDeclineBooking={onDeclineBooking}
               vertical={tenantVertical}
             />
-          ) : hasTodaySchedule ? null : (
+          ) : showPendingPanel ? (
             <PendingPanel
-              pendingBookings={pendingBookings}
-              pendingCount={pendingCount}
+              pendingBookings={homePendingBookings}
+              homePendingCount={homePendingCount}
+              globalPendingCount={pendingCount}
               isLoadingSummary={isLoadingSummary}
               formatTime={formatTime}
               updatePending={updatePending}
@@ -742,7 +1073,7 @@ export function OwnerHomeRitual({
               category={(business as { category?: string } | null)?.category}
               compact
             />
-          )}
+          ) : null}
         </div>
       )}
 

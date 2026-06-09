@@ -1,5 +1,7 @@
 /**
  * Beauty presentation presets — W4 dashboard + W5 /b
+ * Shipped picker: Platform Default (constellation) · Soft Studio (light/atrium) · Noir Dusk (dark/split-inbox)
+ * Experiential authority: lib/policy/src/beauty-experience.ts
  * Targets: docs/design/assets/w4-tenant/beauty, w5-public/beauty
  * Unlayered — must override global defaultTheme=dark and platform :root tokens.
  *
@@ -648,6 +650,72 @@ html[data-vertical="beauty"][data-beauty-native-skin] .beauty-inbox-messages {
   background: hsl(var(--beauty-surface-5) / 0.45);
 }
 
+/* Inbox morph layouts — preset drives grid shape (not palette-only) */
+html[data-vertical="beauty"][data-beauty-native-skin] .beauty-inbox-page header[data-testid^="page-header-"] {
+  margin-bottom: 0.5rem;
+}
+
+html[data-vertical="beauty"][data-beauty-native-skin] .beauty-inbox-page header[data-testid^="page-header-"] h1 {
+  font-family: var(--font-serif, ui-serif, Georgia, serif);
+  font-size: 1.35rem;
+}
+
+html[data-vertical="beauty"][data-beauty-native-skin] .beauty-inbox-grid {
+  grid-template-rows: 1fr;
+}
+
+html[data-vertical="beauty"][data-beauty-native-skin] .beauty-inbox-grid > * {
+  min-height: 0;
+}
+
+html[data-vertical="beauty"][data-beauty-native-skin] .beauty-inbox-conversation-col {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+html[data-vertical="beauty"][data-beauty-native-skin] .beauty-inbox-messages-scroll {
+  flex: 1 1 0%;
+}
+
+html[data-vertical="beauty"][data-beauty-native-skin] .beauty-inbox-compose--compact textarea {
+  min-height: 2.25rem;
+}
+
+html[data-vertical="beauty"][data-layout-morph="menu-card"] .beauty-inbox--menu-card .divide-y > button,
+html[data-vertical="beauty"][data-layout-morph="menu-card"] .beauty-inbox--menu-card [data-testid="inbox-thread-list"] > div {
+  border-radius: 0.65rem;
+  margin: 0.3rem 0.5rem;
+  border: 1px solid hsl(var(--border) / 0.75);
+  background: hsl(var(--card) / 0.92);
+}
+
+html[data-vertical="beauty"][data-layout-morph="menu-card"] .beauty-inbox--menu-card .beauty-inbox-thread--active {
+  border: 1px solid hsl(var(--primary) / 0.35);
+  box-shadow: 0 1px 0 hsl(var(--primary) / 0.08);
+}
+
+html[data-vertical="beauty"][data-layout-morph="cockpit"] .beauty-inbox--cockpit .beauty-inbox-context-rail {
+  background: hsl(var(--beauty-surface-1) / 0.85);
+}
+
+html[data-vertical="beauty"][data-layout-morph="cockpit"] .beauty-inbox--cockpit .beauty-inbox-thread-pane {
+  border-right-width: 2px;
+  border-right-color: hsl(var(--primary) / 0.2);
+}
+
+html[data-vertical="beauty"][data-layout-morph="split-inbox"] .beauty-inbox--split-inbox .beauty-inbox-thread-pane {
+  background: hsl(var(--beauty-surface-4) / 0.35);
+}
+
+html[data-vertical="beauty"][data-layout-morph="atrium"] .beauty-inbox--atrium .beauty-inbox-thread-pane {
+  background: linear-gradient(
+    180deg,
+    hsl(var(--primary) / 0.06) 0%,
+    hsl(var(--card) / 0.5) 100%
+  );
+}
+
 html[data-vertical="beauty"][data-beauty-native-skin] .app-shell-main {
   background-color: hsl(var(--beauty-surface-0));
   background-image:
@@ -917,9 +985,8 @@ html[data-vertical="beauty"] [data-testid="owner-home-ritual"] > *:nth-child(4) 
 /* ── W5: public /b beauty layout ── */
 
 .beauty-public-shell {
-  max-width: 28rem;
-  margin-left: auto;
-  margin-right: auto;
+  width: 100%;
+  max-width: none;
 }
 
 .beauty-public-shell .beauty-public-brand {
@@ -1004,7 +1071,236 @@ html[data-beauty-native-skin][data-presentation="premium-dark"] .beauty-public-s
   height: min(42vh, 280px);
 }
 
-/* Fixed 2×2 hero — extra catalog items use the overflow list below */
+/* Scalable /b canvas — section nav, staff grid, catalog grid, shop grid */
+.public-book-canvas {
+  width: 100%;
+}
+
+.public-staff-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .public-staff-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .public-staff-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+.public-staff-grid__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: calc(var(--radius) + 2px);
+  border: 1px solid hsl(var(--border) / 0.85);
+  background: hsl(var(--card));
+  padding: 0.65rem 0.45rem;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.public-staff-grid__card:hover {
+  border-color: hsl(var(--primary) / 0.35);
+}
+
+.public-staff-grid__card--selected {
+  border-color: hsl(var(--primary) / 0.6);
+  background: hsl(var(--primary) / 0.08);
+}
+
+.public-staff-grid__label {
+  font-size: 0.65rem;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.2;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.public-service-catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.875rem;
+}
+
+@media (min-width: 768px) {
+  .public-service-catalog-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.public-service-catalog-grid--dense {
+  gap: 0.75rem;
+}
+
+@media (min-width: 1280px) {
+  .public-service-catalog-grid--dense {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* W5 — Take home / retail (image-first tiles + narrow-rail rows) */
+.public-book-shop-rail {
+  padding-top: 0.5rem;
+  border-top: 1px solid hsl(var(--border) / 0.6);
+}
+
+.public-book-shop-section {
+  padding-top: 0.25rem;
+}
+
+.public-shop-rail-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.public-shop-card {
+  list-style: none;
+}
+
+.public-shop-card--rail {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.5rem;
+  border-radius: calc(var(--radius) + 2px);
+  border: 1px solid hsl(var(--border) / 0.85);
+  background: hsl(var(--card));
+  transition: border-color 0.15s ease;
+}
+
+.public-shop-card--rail:hover {
+  border-color: hsl(var(--primary) / 0.35);
+}
+
+.public-shop-card-thumb {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: hsl(var(--muted));
+}
+
+.public-shop-card-thumb--rail {
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 0.5rem;
+  aspect-ratio: 1 / 1;
+}
+
+.public-shop-card-thumb--placeholder {
+  border: 1px dashed hsl(var(--border) / 0.8);
+}
+
+.public-shop-card--tile {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: calc(var(--radius) + 2px);
+  border: 1px solid hsl(var(--border) / 0.85);
+  background: hsl(var(--card));
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.public-shop-card--tile:hover {
+  border-color: hsl(var(--primary) / 0.35);
+  box-shadow: 0 8px 24px hsl(var(--primary) / 0.08);
+  transform: translateY(-1px);
+}
+
+.public-shop-card-media {
+  overflow: hidden;
+  background: hsl(var(--muted));
+}
+
+.public-shop-card--tile .public-shop-card-thumb {
+  aspect-ratio: 4 / 5;
+}
+
+.public-shop-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.55rem 0.65rem 0.65rem;
+  flex: 1;
+}
+
+.public-shop-card-category {
+  font-size: 0.5625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+}
+
+.public-shop-card-title {
+  font-size: 0.8125rem;
+  line-height: 1.25;
+  font-weight: 500;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.public-shop-card-desc {
+  font-size: 0.6875rem;
+  line-height: 1.35;
+  color: hsl(var(--muted-foreground));
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.public-shop-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.35rem;
+}
+
+.public-shop-card-price {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: hsl(var(--primary));
+}
+
+.public-shop-grid--tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+@media (min-width: 640px) {
+  .public-shop-grid--tiles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .public-shop-grid--tiles {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .public-shop-grid--tiles {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+/* Fixed 2×2 hero — extra catalog items use the overflow list below (small catalogs) */
 .beauty-service-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1015,6 +1311,68 @@ html[data-beauty-native-skin][data-presentation="premium-dark"] .beauty-public-s
   .beauty-service-grid {
     gap: 1rem;
   }
+}
+
+/* W5 /b — compact treatment tiles (~50% footprint vs hero grid) */
+.public-book-canvas .beauty-service-grid,
+.public-book-canvas .public-service-catalog-grid,
+.beauty-public-shell .beauty-service-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+@media (min-width: 480px) {
+  .public-book-canvas .beauty-service-grid,
+  .public-book-canvas .public-service-catalog-grid,
+  .beauty-public-shell .beauty-service-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .public-book-canvas .public-service-catalog-grid--dense,
+  .beauty-public-shell .beauty-service-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+.public-book-canvas .beauty-treatment-card .beauty-service-card-thumb,
+.beauty-public-shell .beauty-treatment-card .beauty-service-card-thumb {
+  aspect-ratio: 8 / 3;
+}
+
+.public-book-canvas .beauty-treatment-card .beauty-service-card-body,
+.beauty-public-shell .beauty-treatment-card .beauty-service-card-body {
+  padding: 0.35rem 0.45rem 0.45rem;
+}
+
+.public-book-canvas .beauty-treatment-card .beauty-service-card-title,
+.beauty-public-shell .beauty-treatment-card .beauty-service-card-title {
+  font-size: 0.75rem;
+  line-height: 1.2;
+  margin-bottom: 0.1rem;
+}
+
+.public-book-canvas .beauty-treatment-card .beauty-service-card-from,
+.beauty-public-shell .beauty-treatment-card .beauty-service-card-from {
+  font-size: 0.5rem;
+  letter-spacing: 0.06em;
+}
+
+.public-book-canvas .beauty-treatment-card .beauty-service-card-price,
+.beauty-public-shell .beauty-treatment-card .beauty-service-card-price {
+  font-size: 0.8125rem;
+}
+
+.public-book-canvas .beauty-treatment-card .text-\[11px\],
+.beauty-public-shell .beauty-treatment-card .text-\[11px\] {
+  display: none;
+}
+
+.public-book-canvas .beauty-service-overflow-menu,
+.beauty-public-shell .beauty-service-overflow-menu {
+  max-height: min(28vh, 220px);
+  gap: 0.5rem;
 }
 
 .beauty-service-card {

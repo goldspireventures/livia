@@ -69,6 +69,8 @@ import type {
   InternalTenantDetail,
   InternalTenantSearchResponse,
   Invitation,
+  ListAtRiskGuestRelationships200,
+  ListAtRiskGuestRelationshipsParams,
   ListAvailabilityRulesParams,
   ListAvailableSmsNumbers200,
   ListAvailableSmsNumbersParams,
@@ -103,6 +105,7 @@ import type {
   PublicChatBody,
   PublicChatResponse,
   RegisterDeviceTokenBody,
+  RelationshipSummary,
   RequestGuestHubOtpBody,
   SearchAuditLogParams,
   SearchInternalTenantsParams,
@@ -4296,6 +4299,244 @@ export const useUpdateCustomer = <
 > => {
   return useMutation(getUpdateCustomerMutationOptions(options));
 };
+
+/**
+ * @summary Relationship summary for a customer
+ */
+export const getGetCustomerRelationshipUrl = (
+  businessId: string,
+  customerId: string,
+) => {
+  return `/api/businesses/${businessId}/customers/${customerId}/relationship`;
+};
+
+export const getCustomerRelationship = async (
+  businessId: string,
+  customerId: string,
+  options?: RequestInit,
+): Promise<RelationshipSummary> => {
+  return customFetch<RelationshipSummary>(
+    getGetCustomerRelationshipUrl(businessId, customerId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetCustomerRelationshipQueryKey = (
+  businessId: string,
+  customerId: string,
+) => {
+  return [
+    `/api/businesses/${businessId}/customers/${customerId}/relationship`,
+  ] as const;
+};
+
+export const getGetCustomerRelationshipQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCustomerRelationship>>,
+  TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+>(
+  businessId: string,
+  customerId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getCustomerRelationship>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getGetCustomerRelationshipQueryKey(businessId, customerId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getCustomerRelationship>>
+  > = ({ signal }) =>
+    getCustomerRelationship(businessId, customerId, {
+      signal,
+      ...requestOptions,
+    });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!(businessId && customerId),
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getCustomerRelationship>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetCustomerRelationshipQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getCustomerRelationship>>
+>;
+export type GetCustomerRelationshipQueryError = ErrorType<
+  UnauthorizedResponse | NotFoundResponse
+>;
+
+/**
+ * @summary Relationship summary for a customer
+ */
+
+export function useGetCustomerRelationship<
+  TData = Awaited<ReturnType<typeof getCustomerRelationship>>,
+  TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+>(
+  businessId: string,
+  customerId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getCustomerRelationship>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetCustomerRelationshipQueryOptions(
+    businessId,
+    customerId,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Guests at risk of lapsing
+ */
+export const getListAtRiskGuestRelationshipsUrl = (
+  businessId: string,
+  params?: ListAtRiskGuestRelationshipsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/businesses/${businessId}/relationships/at-risk?${stringifiedParams}`
+    : `/api/businesses/${businessId}/relationships/at-risk`;
+};
+
+export const listAtRiskGuestRelationships = async (
+  businessId: string,
+  params?: ListAtRiskGuestRelationshipsParams,
+  options?: RequestInit,
+): Promise<ListAtRiskGuestRelationships200> => {
+  return customFetch<ListAtRiskGuestRelationships200>(
+    getListAtRiskGuestRelationshipsUrl(businessId, params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListAtRiskGuestRelationshipsQueryKey = (
+  businessId: string,
+  params?: ListAtRiskGuestRelationshipsParams,
+) => {
+  return [
+    `/api/businesses/${businessId}/relationships/at-risk`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getListAtRiskGuestRelationshipsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listAtRiskGuestRelationships>>,
+  TError = ErrorType<UnauthorizedResponse>,
+>(
+  businessId: string,
+  params?: ListAtRiskGuestRelationshipsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listAtRiskGuestRelationships>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getListAtRiskGuestRelationshipsQueryKey(businessId, params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listAtRiskGuestRelationships>>
+  > = ({ signal }) =>
+    listAtRiskGuestRelationships(businessId, params, {
+      signal,
+      ...requestOptions,
+    });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!businessId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listAtRiskGuestRelationships>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListAtRiskGuestRelationshipsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listAtRiskGuestRelationships>>
+>;
+export type ListAtRiskGuestRelationshipsQueryError =
+  ErrorType<UnauthorizedResponse>;
+
+/**
+ * @summary Guests at risk of lapsing
+ */
+
+export function useListAtRiskGuestRelationships<
+  TData = Awaited<ReturnType<typeof listAtRiskGuestRelationships>>,
+  TError = ErrorType<UnauthorizedResponse>,
+>(
+  businessId: string,
+  params?: ListAtRiskGuestRelationshipsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listAtRiskGuestRelationships>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListAtRiskGuestRelationshipsQueryOptions(
+    businessId,
+    params,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary List bookings for a business
