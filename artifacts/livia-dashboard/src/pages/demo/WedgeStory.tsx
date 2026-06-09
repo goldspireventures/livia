@@ -15,19 +15,13 @@ import {
   getWedgeDemoStory,
   type WedgeDemoStory,
 } from "@workspace/policy";
-import {
-  applyDemoSessionContext,
-  fetchDemoCatalog,
-  fetchDemoStatus,
-  requestDemoQuickSignIn,
-  type DemoBusinessTenant,
-  type DemoRosterEntry,
-  type DemoSignInResult,
-} from "@/lib/demo-portal";
-import { completeDemoClerkSignIn } from "@/lib/demo-clerk-sign-in";
+import { fetchDemoCatalog, requestDemoQuickSignIn, requestDemoSignIn, demoOpenPersonaUrl, type DemoRosterEntry } from "@/lib/demo-portal";
+import { DemoGuestClientShortcut } from "@/components/demo/demo-guest-client-shortcut";
+import { useDemoWorldStatus } from "@/lib/demo/demo-world-status";
+import { completeDemoPortalSignIn } from "@/lib/demo/complete-demo-portal-sign-in";
+import { resolveG1WedgeWorld } from "@/lib/g1-wedge-worlds";
 import { useToast } from "@/hooks/use-toast";
 import { useGatewaySkinHandoffOptional } from "@/components/gateway/gateway-skin-handoff-provider";
-import { prefetchTenantDashboardShell } from "@/lib/prefetch-tenant-dashboard";
 
 type WedgeSlide = "story" | "enter";
 
@@ -35,16 +29,30 @@ export default function DemoWedgeStoryPage() {
   const { vertical = "" } = useParams<{ vertical: string }>();
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
+  const worldKey =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("world")
+      : null;
   const story = getWedgeDemoStory(vertical as WedgeDemoStory["vertical"]);
+  const world = story ? resolveG1WedgeWorld(story.vertical, worldKey) : null;
+  const demoSlug = world?.demoSlug ?? story?.demoSlug ?? null;
   const { toast } = useToast();
   const { signIn, isLoaded: signInLoaded } = useSignIn();
   const { signOut, session, setActive } = useClerk();
   const [busy, setBusy] = useState<string | null>(null);
   const [devPassword, setDevPassword] = useState<string | undefined>();
-  const [provisioned, setProvisioned] = useState(false);
-  const [tenant, setTenant] = useState<DemoBusinessTenant | null>(null);
+  const { provisioned, tenants, loading: statusLoading, error: statusError, refresh } =
+    useDemoWorldStatus();
   const [slide, setSlide] = useState<WedgeSlide>("story");
   const gatewayHandoff = useGatewaySkinHandoffOptional();
+
+  const tenant = useMemo(() => {
+    return (
+      (demoSlug ? tenants.find((b) => b.slug === demoSlug) : null) ??
+      tenants.find((b) => (b.vertical ?? "").toLowerCase() === vertical.toLowerCase()) ??
+      null
+    );
+  }, [demoSlug, tenants, vertical]);
 
   useEffect(() => {
     void fetchDemoCatalog()
@@ -54,42 +62,24 @@ export default function DemoWedgeStoryPage() {
         }
       })
       .catch(() => undefined);
-    void fetchDemoStatus()
-      .then((st) => {
-        setProvisioned(st.provisioned);
-        const slug = story?.demoSlug;
-        const match =
-          (slug ? st.businesses?.find((b) => b.slug === slug) : null) ??
-          st.businesses?.find((b) => (b.vertical ?? "").toLowerCase() === vertical.toLowerCase());
-        setTenant(match ?? null);
-      })
-      .catch(() => undefined);
-  }, [story?.demoSlug, vertical]);
+  }, []);
 
   const completeTicketSignIn = useCallback(
-    async (result: DemoSignInResult) => {
+    async (result: Parameters<typeof completeDemoPortalSignIn>[0]["result"]) => {
       if (!signInLoaded || !signIn) {
         toast({ title: "Clerk not ready", variant: "destructive" });
         return;
       }
-      await completeDemoClerkSignIn(
+      await completeDemoPortalSignIn({
         signIn,
-        { signOut, setActive, sessionId: session?.id },
+        clerk: { signOut, setActive, sessionId: session?.id },
         result,
-        devPassword,
-      );
-      applyDemoSessionContext(result);
-      await prefetchTenantDashboardShell(queryClient, result.businessId);
-      const go = () => navigate(result.landingPath);
-      if (gatewayHandoff) {
-        await gatewayHandoff.transitionToTenant(go, {
-          vertical: story?.vertical,
-          businessId: result.businessId,
-          soft: true,
-        });
-      } else {
-        go();
-      }
+        password: devPassword,
+        queryClient,
+        navigate,
+        gatewayHandoff,
+        vertical: story?.vertical,
+      });
     },
     [
       devPassword,
@@ -120,6 +110,26 @@ export default function DemoWedgeStoryPage() {
       },
     ];
   }, [tenant]);
+
+  async function enterGuestClient() {
+    setBusy("customer");
+    try {
+      const result = await requestDemoSignIn("customer");
+      if (result.signInStrategy === "public") {
+        navigate(result.landingPath);
+        return;
+      }
+      await completeTicketSignIn(result);
+    } catch (e: unknown) {
+      toast({
+        title: "Could not open My Livia",
+        description: e instanceof Error ? e.message : "Unknown error",
+        variant: "destructive",
+      });
+    } finally {
+      setBusy(null);
+    }
+  }
 
   async function enterAsRole(email: string) {
     if (!provisioned) {
@@ -156,7 +166,7 @@ export default function DemoWedgeStoryPage() {
     );
   }
 
-  const businessName = tenant?.name ?? "Belle Vue Beauty";
+  const businessName = tenant?.name ?? world?.businessLabel ?? story.label;
   const enterMode = slide === "enter";
 
   return (
@@ -169,49 +179,85 @@ export default function DemoWedgeStoryPage() {
         </p>
       ) : null}
 
-      {!provisioned ? (
+      {!provisioned && !statusLoading ? (
         <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm">
-          <p className="font-medium text-amber-100">Demo not seeded yet</p>
+          <p className="font-medium text-amber-100">Demo world not ready yet</p>
           <p className="mt-1 text-amber-200/80">
-            <Link href="/demo" className="underline underline-offset-2">
+            <Link href="/demo#demo-setup" className="underline underline-offset-2">
               Open /demo
             </Link>{" "}
-            and run <strong>Quick sync</strong> first.
+            and run <strong>Set up demo world</strong> once (~30–60s). Then return here — Enter live demo
+            will sign you in as owner.
           </p>
+          {statusError ? (
+            <p className="mt-2 text-xs text-amber-200/70">
+              Status check: {statusError}.{" "}
+              <button
+                type="button"
+                onClick={() => void refresh()}
+                className="underline underline-offset-2"
+              >
+                Retry
+              </button>
+            </p>
+          ) : null}
         </div>
       ) : null}
 
       {enterMode ? (
-        <GatewayDemoEnterStage
-          tradeLabel={story.label}
-          businessName={businessName}
-          roster={roster}
-          busy={busy}
-          disabled={!provisioned}
-          backHref="/demo"
-          backLabel="← Worlds"
-          onSelectRole={(email) => void enterAsRole(email)}
-          onBack={() => setSlide("story")}
-        />
+        <>
+          <DemoGuestClientShortcut
+            busy={busy === "customer"}
+            openHref={demoOpenPersonaUrl({ persona: "customer" })}
+            onOpen={() => void enterGuestClient()}
+          />
+          <GatewayDemoEnterStage
+            tradeLabel={story.label}
+            businessName={businessName}
+            roster={roster}
+            busy={busy}
+            disabled={!provisioned}
+            backHref="/demo"
+            backLabel="← Worlds"
+            onSelectRole={(email) => void enterAsRole(email)}
+            onBack={() => setSlide("story")}
+          />
+        </>
       ) : isPresetWedgeThread(story.vertical) ? (
         <WedgeBeautyThread
           vertical={story.vertical}
+          world={world}
           beats={story.beats}
-          tradeLabel={story.label}
-          disabled={!provisioned}
+          tradeLabel={world?.businessLabel ?? story.label}
+          continueLabel={
+            provisioned ? "Walk into the live demo" : "Set up demo world first"
+          }
           backHref="/demo"
           backLabel="← Worlds"
-          onContinue={() => setSlide("enter")}
+          onContinue={() => {
+            if (!provisioned) {
+              navigate("/demo#demo-setup");
+              return;
+            }
+            setSlide("enter");
+          }}
         />
       ) : (
         <WedgeStudioBrief
           beats={story.beats}
-          tradeLabel={story.label}
+          tradeLabel={world?.businessLabel ?? story.label}
           vertical={story.vertical}
-          disabled={!provisioned}
+          world={world}
+          continueLabel={provisioned ? "Enter live demo" : "Set up demo world first"}
           backHref="/demo"
           backLabel="← Worlds"
-          onContinue={() => setSlide("enter")}
+          onContinue={() => {
+            if (!provisioned) {
+              navigate("/demo#demo-setup");
+              return;
+            }
+            setSlide("enter");
+          }}
         />
       )}
 

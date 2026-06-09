@@ -4,23 +4,23 @@ export const MARKETING_ROUTE_META: Record<
   { title: string; description?: string }
 > = {
   "/": {
-    title: "Livia — one OS for every people-business",
-    description: "Same physics. Different floor. Liv runs the gap.",
+    title: "Livia — one platform built for how you work",
+    description: "Software for appointment businesses. Liv handles messages and bookings after hours.",
   },
   "/de": {
     title: "Livia — ein OS für jedes People-Business",
   },
   "/pricing": {
     title: "Pricing — Livia",
-    description: "Honest EUR tiers from the entitlements catalogue. Closed beta is free.",
+    description: "Clear EUR pricing. Closed beta is free.",
   },
   "/book-demo": {
     title: "Book a demo — Livia",
-    description: "Request a guided walkthrough of the live demo world for your vertical.",
+    description: "Request a guided walkthrough of a live demo for your trade.",
   },
   "/demo": {
     title: "Live demo — Livia",
-    description: "Invited guests — pick a vertical and walk a seeded business.",
+    description: "Invited guests — pick your trade and walk through a ready-made demo business.",
   },
   "/how-it-works": { title: "How it works — Livia" },
   "/verticals": { title: "Verticals — Livia" },

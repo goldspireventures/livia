@@ -25,7 +25,7 @@ const VERTICALS: Record<
       "Last-minute gaps in the chair plan",
       "Client lists split across notes and Instagram",
     ],
-    liv: "Liv triages inbox, books with your durations and patch-test rules, and keeps Bloom-branded `/b` in sync with your menu.",
+    liv: "Liv sorts your inbox, books with your durations and patch-test rules, and keeps your branded booking page in sync with your menu.",
   },
   barber: {
     title: "Barbershops",

@@ -1,6 +1,7 @@
 import { ArrowRight, Calendar, ClipboardCheck, ImageIcon, Inbox, Loader2, MessageSquare, Sparkles, type LucideIcon } from "lucide-react";
 import { Link } from "wouter";
 import type { DemoRosterEntry } from "@/lib/demo-portal";
+import { demoOpenPersonaUrl } from "@/lib/demo-portal";
 import { cn } from "@/lib/utils";
 
 export const WEDGE_BEAT_CROP_META: Record<
@@ -85,7 +86,7 @@ export function GatewayDemoEnterStage({
         <div className="mt-4 space-y-1">
           <p className="font-serif text-lg text-[#e6d0a5]/95">{tradeLabel}</p>
           <p className="text-base font-medium text-foreground">{businessName}</p>
-          <p className="text-sm text-muted-foreground">Tap a role to walk into the live demo.</p>
+          <p className="text-sm text-muted-foreground">Tap a role to walk into the live demo. Ctrl+click opens a new tab.</p>
         </div>
 
         <div className="mt-5" data-testid="gateway-demo-enter-roles">
@@ -93,17 +94,24 @@ export function GatewayDemoEnterStage({
             {roster.map((entry) => {
               const loading = busy === entry.email;
               const primary = entry.role === "owner";
+              const href = demoOpenPersonaUrl({ email: entry.email });
               return (
-                <button
+                <a
                   key={entry.email}
-                  type="button"
-                  disabled={!!busy || disabled}
-                  onClick={() => onSelectRole(entry.email)}
+                  href={href}
+                  onClick={(e) => {
+                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                    e.preventDefault();
+                    if (busy || disabled) return;
+                    onSelectRole(entry.email);
+                  }}
+                  aria-disabled={!!busy || disabled}
                   className={cn(
-                    "rounded-xl border px-3 py-2.5 text-left transition disabled:opacity-60",
+                    "rounded-xl border px-3 py-2.5 text-left transition",
                     primary
                       ? "border-primary/50 bg-primary/15 hover:border-primary/70"
                       : "border-white/15 bg-white/5 hover:border-white/30",
+                    (busy || disabled) && "opacity-60 pointer-events-none",
                   )}
                 >
                   <span className="flex items-center justify-between gap-1">
@@ -115,7 +123,7 @@ export function GatewayDemoEnterStage({
                   <span className="mt-0.5 block truncate text-[9px] font-mono text-muted-foreground">
                     {entry.email}
                   </span>
-                </button>
+                </a>
               );
             })}
           </div>

@@ -19,7 +19,7 @@ const NAV = [
   { href: "/pricing", label: "Pricing" },
   { href: "/verticals", label: "Verticals" },
   { href: "/europe", label: "Europe" },
-  { href: "/eu-ai", label: "EU AI" },
+  { href: "/eu-ai", label: "How we use AI" },
   { href: "/for/chair-rental", label: "For hosts" },
   { href: "/contact", label: "Contact" },
 ] as const;

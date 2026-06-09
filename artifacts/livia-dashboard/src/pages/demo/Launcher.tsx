@@ -19,7 +19,6 @@ import {
 } from "lucide-react";
 import { PERSONAS, ACCENT_CLASSES, type Persona } from "@/lib/demo/personas";
 import {
-  applyDemoSessionContext,
   fetchDemoCatalog,
   fetchDemoStatus,
   provisionDemoWorld,
@@ -28,6 +27,7 @@ import {
   syncDemoLogins,
   requestDemoQuickSignIn,
   requestDemoSignIn,
+  demoOpenPersonaUrl,
   type DemoBusinessTenant,
   type DemoCatalogPersona,
   type DemoPersonaId,
@@ -35,10 +35,13 @@ import {
   type DemoSignInResult,
 } from "@/lib/demo-portal";
 import { useToast } from "@/hooks/use-toast";
-import { completeDemoClerkSignIn } from "@/lib/demo-clerk-sign-in";
+import { completeDemoPortalSignIn } from "@/lib/demo/complete-demo-portal-sign-in";
 import { DemoFlowStepper, type DemoFlowStep } from "@/components/demo/demo-flow-stepper";
 import { DemoGuidedExperience } from "@/components/demo/demo-guided-experience";
 import { DemoWedgeGrid } from "@/components/demo/demo-wedge-grid";
+import { DemoGuestClientShortcut } from "@/components/demo/demo-guest-client-shortcut";
+import { DemoWorldReadinessStrip } from "@/components/demo/demo-world-readiness-strip";
+import { writeDemoWorldStatusCache } from "@/lib/demo/demo-world-status";
 import {
   GatewayDemoLauncherShell,
   GatewayG1Hero,
@@ -47,7 +50,6 @@ import {
 import type { BusinessVertical } from "@workspace/policy";
 import { isMarketingDemoWedgeUnlocked } from "@workspace/policy";
 import { useGatewaySkinHandoffOptional } from "@/components/gateway/gateway-skin-handoff-provider";
-import { prefetchTenantDashboardShell } from "@/lib/prefetch-tenant-dashboard";
 import {
   captureMarketingDemoGateKeyFromLocation,
   getMarketingDemoConciergeUrl,
@@ -112,6 +114,8 @@ export default function DemoLauncher() {
   const [tenantFilter, setTenantFilter] = useState("");
   const [countryFilter, setCountryFilter] = useState<string>("ALL");
   const [selectedScenario, setSelectedScenario] = useState<DemoScenarioSpotlight | null>(null);
+  const [statusLoading, setStatusLoading] = useState(true);
+  const [statusError, setStatusError] = useState<string | null>(null);
   const roleSectionRef = useRef<HTMLElement | null>(null);
 
   const flowStep: DemoFlowStep = !provisioned
@@ -121,6 +125,8 @@ export default function DemoLauncher() {
       : "scenario";
 
   const refresh = useCallback(async () => {
+    setStatusLoading(true);
+    setStatusError(null);
     const [cat, st] = await Promise.all([
       fetchDemoCatalog().catch(() => ({
         personas: [],
@@ -128,35 +134,41 @@ export default function DemoLauncher() {
         sharedPassword: undefined,
         scenarios: [],
       })),
-      fetchDemoStatus().catch(
-        (): Awaited<ReturnType<typeof fetchDemoStatus>> => ({
-          provisioned: false,
-          businesses: [],
-          passwordHint: "",
-          dashboardBase: "",
-          internalBase: "",
-          marketingBase: "",
-          demoPasswordConfigured: false,
-        }),
-      ),
+      fetchDemoStatus().catch((e: unknown) => {
+        const msg = e instanceof Error ? e.message : "Demo status unreachable";
+        setStatusError(msg);
+        return null;
+      }),
     ]);
     setCatalog(cat.personas);
     setScenarios(cat.scenarios ?? []);
     // Only show a password if the API explicitly returns one.
     // Never fall back to a hardcoded shared password on the client.
     setDevPassword(cat.sharedPassword ?? cat.devPassword ?? undefined);
-    setProvisioned(st.provisioned);
-    setTenants(st.businesses ?? []);
+    if (st) {
+      setProvisioned(st.provisioned);
+      setTenants(st.businesses ?? []);
+      writeDemoWorldStatusCache(st.provisioned, st.businesses ?? []);
+    }
+    setStatusLoading(false);
   }, []);
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
 
+  useEffect(() => {
+    if (window.location.hash !== "#demo-setup") return;
+    window.requestAnimationFrame(() => {
+      document.getElementById("demo-setup")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }, [provisioned, statusLoading]);
+
   async function handleSync() {
     setBusy("provision");
     try {
       const result = await syncDemoWorld();
+      writeDemoWorldStatusCache(result.provisioned, result.businesses as DemoBusinessTenant[]);
       toast({
         title: result.mode === "full" ? "Demo world created" : "Quick sync done",
         description:
@@ -278,24 +290,16 @@ export default function DemoLauncher() {
       toast({ title: "Clerk not ready", variant: "destructive" });
       return;
     }
-    await completeDemoClerkSignIn(
+    await completeDemoPortalSignIn({
       signIn,
-      { signOut, setActive, sessionId: session?.id },
+      clerk: { signOut, setActive, sessionId: session?.id },
       result,
-      devPassword,
-    );
-    applyDemoSessionContext(result);
-    await prefetchTenantDashboardShell(queryClient, result.businessId);
-    const go = () => navigate(result.landingPath);
-    if (gatewayHandoff) {
-      await gatewayHandoff.transitionToTenant(go, {
-        vertical: selectedTenant?.vertical ?? undefined,
-        businessId: result.businessId,
-        soft: true,
-      });
-    } else {
-      go();
-    }
+      password: devPassword,
+      queryClient,
+      navigate,
+      gatewayHandoff,
+      vertical: selectedTenant?.vertical ?? undefined,
+    });
   }
 
   const selectedTenant = useMemo(
@@ -417,7 +421,11 @@ export default function DemoLauncher() {
           scenarioSelected={!!selectedScenario}
         />
 
-        <section className="mb-10 rounded-2xl border border-white/12 bg-white/[0.03] p-5" data-testid="demo-step-setup">
+        <section
+          id="demo-setup-advanced"
+          className="mb-10 rounded-2xl border border-white/12 bg-white/[0.03] p-5"
+          data-testid="demo-step-setup"
+        >
           <h2 className="text-xs font-mono uppercase tracking-widest text-white/40 mb-2">
             2 · Set up demo world
           </h2>
@@ -777,7 +785,7 @@ export default function DemoLauncher() {
         <details className="mb-10 group">
           <summary className="cursor-pointer text-sm font-mono uppercase tracking-wider text-white/50 mb-4 list-none flex items-center gap-2">
             Staff & role rehearsals (optional)
-            <span className="text-white/30 normal-case font-sans text-xs">— manager, front desk, chain org admin</span>
+            <span className="text-white/30 normal-case font-sans text-xs">— Ctrl+click opens a role in a new tab</span>
           </summary>
         <div
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4"
@@ -788,13 +796,18 @@ export default function DemoLauncher() {
             const a = ACCENT_CLASSES[p.accent];
             const live = catalog.find((c) => c.id === p.id);
             const loading = busy === p.id;
+            const openHref = demoOpenPersonaUrl({ persona: p.id as DemoPersonaId });
             return (
-              <button
+              <a
                 key={p.id}
-                type="button"
-                onClick={() => void enterPersona(p.id as DemoPersonaId)}
-                disabled={!!busy}
-                className={`group relative h-full rounded-2xl border ${a.border} bg-gradient-to-br ${a.gradFrom} ${a.gradTo} p-6 text-left transition-all hover:-translate-y-1 hover:shadow-2xl overflow-hidden disabled:opacity-70`}
+                href={openHref}
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                  e.preventDefault();
+                  void enterPersona(p.id as DemoPersonaId);
+                }}
+                aria-disabled={!!busy}
+                className={`group relative h-full rounded-2xl border ${a.border} bg-gradient-to-br ${a.gradFrom} ${a.gradTo} p-6 text-left transition-all hover:-translate-y-1 hover:shadow-2xl overflow-hidden ${busy ? "opacity-70 pointer-events-none" : ""}`}
                 data-testid={`demo-launcher-card-${p.id}`}
               >
                 <div
@@ -827,8 +840,9 @@ export default function DemoLauncher() {
                     Sign in as {p.displayName.split(" ")[0]}
                     <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
                   </div>
+                  <p className="mt-2 text-[10px] text-white/35 font-mono">Ctrl+click · new tab</p>
                 </div>
-              </button>
+              </a>
             );
           })}
 
@@ -893,6 +907,20 @@ export default function DemoLauncher() {
     <GatewayDemoLauncherShell advanced={advancedPanel}>
       <GatewayG1Hero />
       <GatewayG1SignInHint devPassword={devPassword} />
+      <DemoWorldReadinessStrip
+        provisioned={provisioned}
+        businessCount={tenants.length}
+        loading={statusLoading}
+        error={statusError}
+        busy={busy}
+        onSetup={() => void handleSync()}
+        onRetry={() => void refresh()}
+      />
+      <DemoGuestClientShortcut
+        busy={busy === "customer"}
+        openHref={demoOpenPersonaUrl({ persona: "customer" })}
+        onOpen={() => void enterPersona("customer")}
+      />
       <DemoWedgeGrid />
     </GatewayDemoLauncherShell>
   );

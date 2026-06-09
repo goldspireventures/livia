@@ -38,7 +38,7 @@ export function DemoConciergeGrid() {
               <p className="cst-demo-portal__title">{entry.title}</p>
               <p className="cst-demo-portal__desc">{entry.description}</p>
               {!entry.unlocked ? (
-                <p className="cst-demo-portal__lock-note">Unlocks when this wedge ships</p>
+                <p className="cst-demo-portal__lock-note">Coming soon — request a demo for early access</p>
               ) : null}
             </div>
             <span className="cst-demo-portal__action" aria-hidden>

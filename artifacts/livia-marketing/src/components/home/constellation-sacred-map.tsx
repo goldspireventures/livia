@@ -223,7 +223,7 @@ export function ConstellationSacredMap({ verticals }: ConstellationSacredMapProp
               textAnchor={layout.textAnchor}
               dominantBaseline={layout.dominantBaseline}
               fill="#d9c39a"
-              fontSize="10"
+              fontSize="11"
               fontWeight="600"
               letterSpacing="0.12em"
               opacity="0.92"

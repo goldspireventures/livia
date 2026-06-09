@@ -85,6 +85,23 @@ router.get("/public/guest-hub/me", async (req, res): Promise<void> => {
   res.json(view);
 });
 
+router.patch("/public/guest-hub/preferences", async (req, res): Promise<void> => {
+  const token =
+    typeof req.headers["x-guest-hub-token"] === "string" ? req.headers["x-guest-hub-token"] : "";
+  const { preferredModality } = req.body ?? {};
+  if (!token) {
+    sendError(res, req, 401, "Guest hub token required");
+    return;
+  }
+  const { updateGuestPreferredModality } = await import("../services/guest-hub.service");
+  const view = await updateGuestPreferredModality(token, String(preferredModality ?? "ANY"));
+  if (!view) {
+    sendError(res, req, 401, "Session expired");
+    return;
+  }
+  res.json(view);
+});
+
 router.post("/public/guest-hub/favorites/:businessId", async (req, res): Promise<void> => {
   const token = typeof req.headers["x-guest-hub-token"] === "string" ? req.headers["x-guest-hub-token"] : "";
   const businessId = Array.isArray(req.params.businessId)
@@ -110,6 +127,113 @@ router.post("/public/guest-hub/favorites/:businessId", async (req, res): Promise
     throw e;
   }
 });
+
+router.get("/public/guest-hub/shops/:slug", async (req, res): Promise<void> => {
+  const token = typeof req.headers["x-guest-hub-token"] === "string" ? req.headers["x-guest-hub-token"] : "";
+  const slug = Array.isArray(req.params.slug) ? req.params.slug[0] : req.params.slug;
+  if (!token) {
+    sendError(res, req, 401, "Guest hub token required");
+    return;
+  }
+  try {
+    const { getGuestShopRelationship } = await import("../services/guest-hub-visit.service");
+    const view = await getGuestShopRelationship(token, slug ?? "");
+    if (!view) {
+      sendError(res, req, 404, "Shop not found");
+      return;
+    }
+    res.json(view);
+  } catch (e) {
+    logRouteError(req, e, "Guest shop relationship failed");
+    sendError(res, req, 500, safeClientMessage(e, "Could not load shop"));
+  }
+});
+
+router.get("/public/guest-hub/shops/:slug/visits/:bookingId", async (req, res): Promise<void> => {
+  const token = typeof req.headers["x-guest-hub-token"] === "string" ? req.headers["x-guest-hub-token"] : "";
+  const slug = Array.isArray(req.params.slug) ? req.params.slug[0] : req.params.slug;
+  const bookingId = Array.isArray(req.params.bookingId)
+    ? req.params.bookingId[0]
+    : req.params.bookingId;
+  if (!token) {
+    sendError(res, req, 401, "Guest hub token required");
+    return;
+  }
+  try {
+    const { getGuestVisitManage } = await import("../services/guest-hub-visit.service");
+    const view = await getGuestVisitManage(token, slug ?? "", bookingId ?? "");
+    res.json(view);
+  } catch (e) {
+    if (e instanceof Error && (e.message === "UNAUTHORIZED" || e.message === "NOT_FOUND")) {
+      sendError(res, req, e.message === "UNAUTHORIZED" ? 401 : 404, "Visit not found");
+      return;
+    }
+    logRouteError(req, e, "Guest visit manage failed");
+    sendError(res, req, 500, safeClientMessage(e, "Could not load visit"));
+  }
+});
+
+router.post(
+  "/public/guest-hub/shops/:slug/visits/:bookingId/running-late",
+  async (req, res): Promise<void> => {
+    const token =
+      typeof req.headers["x-guest-hub-token"] === "string" ? req.headers["x-guest-hub-token"] : "";
+    const slug = Array.isArray(req.params.slug) ? req.params.slug[0] : req.params.slug;
+    const bookingId = Array.isArray(req.params.bookingId)
+      ? req.params.bookingId[0]
+      : req.params.bookingId;
+    const minutesLate = Number(req.body?.minutesLate ?? 10);
+    if (!token) {
+      sendError(res, req, 401, "Guest hub token required");
+      return;
+    }
+    try {
+      const { postGuestVisitRunningLate } = await import("../services/guest-hub-visit.service");
+      await postGuestVisitRunningLate(token, slug ?? "", bookingId ?? "", minutesLate);
+      res.json({ ok: true });
+    } catch (e) {
+      if (e instanceof Error && (e.message === "UNAUTHORIZED" || e.message === "NOT_FOUND")) {
+        sendError(res, req, e.message === "UNAUTHORIZED" ? 401 : 404, "Visit not found");
+        return;
+      }
+      logRouteError(req, e, "Guest running late failed");
+      sendError(res, req, 500, safeClientMessage(e, "Could not notify studio"));
+    }
+  },
+);
+
+router.post(
+  "/public/guest-hub/shops/:slug/visits/:bookingId/message",
+  async (req, res): Promise<void> => {
+    const token =
+      typeof req.headers["x-guest-hub-token"] === "string" ? req.headers["x-guest-hub-token"] : "";
+    const slug = Array.isArray(req.params.slug) ? req.params.slug[0] : req.params.slug;
+    const bookingId = Array.isArray(req.params.bookingId)
+      ? req.params.bookingId[0]
+      : req.params.bookingId;
+    const content = typeof req.body?.content === "string" ? req.body.content : "";
+    if (!token) {
+      sendError(res, req, 401, "Guest hub token required");
+      return;
+    }
+    try {
+      const { postGuestVisitMessage } = await import("../services/guest-hub-visit.service");
+      const result = await postGuestVisitMessage(token, slug ?? "", bookingId ?? "", content);
+      res.json(result);
+    } catch (e) {
+      if (e instanceof Error && e.message === "EMPTY") {
+        sendError(res, req, 400, "Message required");
+        return;
+      }
+      if (e instanceof Error && (e.message === "UNAUTHORIZED" || e.message === "NOT_FOUND")) {
+        sendError(res, req, e.message === "UNAUTHORIZED" ? 401 : 404, "Visit not found");
+        return;
+      }
+      logRouteError(req, e, "Guest message failed");
+      sendError(res, req, 500, safeClientMessage(e, "Could not send message"));
+    }
+  },
+);
 
 router.post("/public/guest-hub/chat", async (req, res): Promise<void> => {
   const token =

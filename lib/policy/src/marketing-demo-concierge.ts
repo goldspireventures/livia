@@ -1,6 +1,6 @@
 import type { BusinessVertical } from "./types";
 import { getCoverageForCodeVertical } from "./vertical-coverage";
-import { listWedgeDemoVerticalsForDisplay } from "./wedge-demo-stories";
+import { listWedgeDemoVerticals, listWedgeDemoVerticalsForDisplay } from "./wedge-demo-stories";
 
 /**
  * W1 /demo concierge — wedges that are live (append one at a time as each ships).
@@ -9,6 +9,8 @@ import { listWedgeDemoVerticalsForDisplay } from "./wedge-demo-stories";
 export const MARKETING_DEMO_WEDGE_UNLOCK_ORDER: readonly BusinessVertical[] = [
   "beauty",
   "wellness",
+  "hair",
+  "medspa",
 ] as const;
 
 /**
@@ -26,8 +28,12 @@ export const MARKETING_DEMO_WEDGE_PIPELINE_ORDER: readonly BusinessVertical[] = 
   "automotive-detailing",
 ] as const;
 
+/**
+ * W1 /demo concierge — all registry verticals with demo stories (beta / staging testers).
+ * Marketing GTM may still highlight MARKETING_DEMO_WEDGE_UNLOCK_ORDER first in copy.
+ */
 export function isMarketingDemoWedgeUnlocked(vertical: BusinessVertical): boolean {
-  return (MARKETING_DEMO_WEDGE_UNLOCK_ORDER as readonly string[]).includes(vertical);
+  return listWedgeDemoVerticals().includes(vertical);
 }
 
 export type MarketingDemoConciergeEntry = {
@@ -50,7 +56,7 @@ const CONCIERGE_COPY: Partial<
   },
   wellness: {
     title: "Harbour Wellness · Cork",
-    description: "Rooms, vouchers, and calm concierge — spa-native, not salon-shaped.",
+    description: "Built for spas and wellness studios — rooms, vouchers, and calm booking.",
     imagePath: "/demo/portal-wellness.jpg",
   },
   hair: {
@@ -75,7 +81,7 @@ const CONCIERGE_COPY: Partial<
   },
   "allied-health": {
     title: "Motion Physio · Cork",
-    description: "Lite clinic intake — not an EHR.",
+    description: "Simple intake for bookings — not a full medical records system.",
     imagePath: "/demo/portal-allied-health.jpg",
   },
   "pet-grooming": {

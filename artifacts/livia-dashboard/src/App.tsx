@@ -31,6 +31,10 @@ import {
   LazyWellnessAuditDiaryPage,
   LazyWellnessGuestVaultPage,
   LazyWellnessRetailPage,
+  LazyStudioSetupPage,
+  LazyBeautyReceptionPage,
+  LazyBeautyTvPage,
+  LazyBeautyStorePage,
   LazyDesignProofsPage,
   LazyDemoShowcase,
   LazyExperiencePage,
@@ -43,6 +47,7 @@ import {
   LazyMedspaHubPage,
   LazyMyDayPage,
   LazyPremisesPage,
+  LazyPremisesInvitePage,
   LazyRotaPage,
   LazyServicesPage,
   LazySettingsPage,
@@ -68,10 +73,16 @@ import PublicProofPage from "@/pages/public-proof";
 import PublicIntakePage from "@/pages/public-intake";
 import PublicWaitlistPage from "@/pages/public-waitlist";
 import PublicPayPage from "@/pages/public-pay";
+import PublicShopPage from "@/pages/public-shop";
 import MyLiviaPage from "@/pages/my-livia";
+import MyLiviaShopPage from "@/pages/my-livia-shop";
+import MyLiviaVisitPage from "@/pages/my-livia-visit";
+import { GuestSubdomainRouter, isGuestSubdomainHost } from "@/components/guest/guest-subdomain-router";
+import { LegacyGuestBookRedirect } from "@/components/guest/legacy-guest-book-redirect";
 import WellnessCorporatePage from "@/pages/wellness-corporate";
 import PublicPremisesPage from "@/pages/public-premises";
 import DemoLauncher from "@/pages/demo/Launcher";
+import DemoOpenPersonaPage from "@/pages/demo/OpenPersona";
 import DemoWedgeStoryPage from "@/pages/demo/WedgeStory";
 import { DemoProvider } from "@/lib/demo/demo-context";
 import { GatewaySkinHandoffProvider } from "@/components/gateway/gateway-skin-handoff-provider";
@@ -113,22 +124,31 @@ function AuthenticatedRoutes() {
 
   // Safety net: guest paths must never enter tenant AuthGuard (avoids sign-in redirect loops on /my).
   if (isPublicGuestPath(location)) {
-    if (location.split("?")[0]?.replace(/\/+$/, "") === "/my") {
+    const guestPath = location.split("?")[0]?.replace(/\/+$/, "") || "/";
+    if (guestPath === "/my") {
       return <MyLiviaPage />;
     }
-    if (location.startsWith("/b/")) {
-      const visitMatch = location.match(/^\/b\/([^/]+)\/visit\/([^/]+)/);
-      const proofMatch = location.match(/^\/b\/([^/]+)\/proof\/([^/]+)/);
-      const intakeMatch = location.match(/^\/b\/([^/]+)\/intake\/([^/]+)/);
-      const payMatch = location.match(/^\/b\/([^/]+)\/pay\/([^/]+)/);
-      const waitlistMatch = location.match(/^\/b\/([^/]+)\/waitlist\/([^/]+)/);
-      const slugMatch = location.match(/^\/b\/([^/]+)/);
+    if (guestPath.startsWith("/my/")) {
+      const visitMatch = location.match(/^\/my\/([^/]+)\/visit\/([^/]+)/);
+      const shopMatch = location.match(/^\/my\/([^/]+)\/?$/);
+      if (visitMatch) return <MyLiviaVisitPage />;
+      if (shopMatch) return <MyLiviaShopPage />;
+    }
+    if (location.startsWith("/b/") || location.startsWith("/book/")) {
+      const visitMatch = location.match(/^\/(?:b|book)\/([^/]+)\/visit\/([^/]+)/);
+      const proofMatch = location.match(/^\/(?:b|book)\/([^/]+)\/proof\/([^/]+)/);
+      const intakeMatch = location.match(/^\/(?:b|book)\/([^/]+)\/intake\/([^/]+)/);
+      const payMatch = location.match(/^\/(?:b|book)\/([^/]+)\/pay\/([^/]+)/);
+      const shopMatch = location.match(/^\/(?:b|book)\/([^/]+)\/shop\/([^/]+)/);
+      const waitlistMatch = location.match(/^\/(?:b|book)\/([^/]+)\/waitlist\/([^/]+)/);
+      const bookingOnlyMatch = location.match(/^\/(?:b|book)\/([^/]+)\/?$/);
       if (proofMatch) return <PublicProofPage />;
       if (intakeMatch) return <PublicIntakePage />;
       if (payMatch) return <PublicPayPage />;
+      if (shopMatch) return <PublicShopPage />;
       if (waitlistMatch) return <PublicWaitlistPage />;
       if (visitMatch) return <PublicVisitPage />;
-      if (slugMatch) return <PublicBookingPage />;
+      if (bookingOnlyMatch) return <PublicBookingPage />;
     }
     if (location.startsWith("/p/")) return <PublicPremisesPage />;
   }
@@ -151,6 +171,9 @@ function AuthenticatedRoutes() {
           <Route path="/audit">{() => <LazyRoute page={LazyAuditPage} />}</Route>
           <Route path="/chain">{() => <LazyRoute page={LazyChainPage} />}</Route>
           <Route path="/premises">{() => <LazyRoute page={LazyPremisesPage} />}</Route>
+          <Route path="/premises/invite/:token">
+            {() => <LazyRoute page={LazyPremisesInvitePage} />}
+          </Route>
           <Route path="/day-packages">
             {() => (
               <WedgeRouteGuard path="/day-packages">
@@ -181,6 +204,18 @@ function AuthenticatedRoutes() {
           </Route>
           <Route path="/wellness-corporate">
             {() => <Redirect to="/corporate-wellness" />}
+          </Route>
+          <Route path="/studio-setup">
+            {() => <LazyRoute page={LazyStudioSetupPage} />}
+          </Route>
+          <Route path="/beauty-reception">
+            {() => <LazyRoute page={LazyBeautyReceptionPage} />}
+          </Route>
+          <Route path="/beauty-tv">
+            {() => <LazyRoute page={LazyBeautyTvPage} />}
+          </Route>
+          <Route path="/beauty-store">
+            {() => <LazyRoute page={LazyBeautyStorePage} />}
           </Route>
           <Route path="/corporate-wellness" component={WellnessCorporatePage} />
           <Route path="/host">
@@ -222,6 +257,7 @@ function AuthenticatedRoutes() {
           </Route>
           <Route path="/toolkit">{() => <LazyRoute page={LazyToolkitPage} />}</Route>
           <Route path="/lifecycle">{() => <LazyRoute page={LazyLifecyclePage} />}</Route>
+          <Route path="/guides">{() => <LazyRoute page={LazyGuidesPage} />}</Route>
           <Route path="/experience">{() => <LazyRoute page={LazyExperiencePage} />}</Route>
           <Route path="/portal">{() => <Redirect to="/demo" />}</Route>
           <Route path="/launch-status">{() => <LazyRoute page={LazyLaunchStatusPage} />}</Route>
@@ -234,10 +270,16 @@ function AuthenticatedRoutes() {
 }
 
 function AppRouter() {
+  if (isGuestSubdomainHost()) {
+    return <GuestSubdomainRouter />;
+  }
+
   return (
     <Switch>
       <Route path="/sign-in" component={SignInPage} />
       <Route path="/sign-up" component={SignUpPage} />
+      <Route path="/my/:slug/visit/:bookingId" component={MyLiviaVisitPage} />
+      <Route path="/my/:slug" component={MyLiviaShopPage} />
       <Route path="/my" component={MyLiviaPage} />
       <Route path="/my/" component={MyLiviaPage} />
 
@@ -254,25 +296,32 @@ function AppRouter() {
           <Route path="/experience/livia-evolution" component={LiviaEvolutionGalleryPage} />
         </>
       ) : null}
-      <Route path="/b/:slug/proof/:token" component={PublicProofPage} />
-      <Route path="/b/:slug/intake/:token" component={PublicIntakePage} />
-      <Route path="/b/:slug/waitlist/:token" component={PublicWaitlistPage} />
-      <Route path="/b/:slug/pay/:token" component={PublicPayPage} />
-      <Route path="/b/:slug/visit/:token" component={PublicVisitPage} />
-      <Route path="/b/:slug" component={PublicBookingPage} />
+      <Route path="/book/:slug/proof/:token" component={PublicProofPage} />
+      <Route path="/book/:slug/intake/:token" component={PublicIntakePage} />
+      <Route path="/book/:slug/waitlist/:token" component={PublicWaitlistPage} />
+      <Route path="/book/:slug/pay/:token" component={PublicPayPage} />
+      <Route path="/book/:slug/shop/:token" component={PublicShopPage} />
+      <Route path="/book/:slug/visit/:token" component={PublicVisitPage} />
+      <Route path="/book/:slug" component={PublicBookingPage} />
+      <Route path="/b/:slug/proof/:token">{() => <LegacyGuestBookRedirect />}</Route>
+      <Route path="/b/:slug/intake/:token">{() => <LegacyGuestBookRedirect />}</Route>
+      <Route path="/b/:slug/waitlist/:token">{() => <LegacyGuestBookRedirect />}</Route>
+      <Route path="/b/:slug/pay/:token">{() => <LegacyGuestBookRedirect />}</Route>
+      <Route path="/b/:slug/shop/:token">{() => <LegacyGuestBookRedirect />}</Route>
+      <Route path="/b/:slug/visit/:token">{() => <LegacyGuestBookRedirect />}</Route>
+      <Route path="/b/:slug">{() => <LegacyGuestBookRedirect />}</Route>
       <Route path="/p/:slug" component={PublicPremisesPage} />
 
       {/* QA / sales only — stripped from production customer builds */}
       {!isProductionCustomerSurface ? (
         <>
-          <Route path="/guides">{() => <LazyRoute page={LazyGuidesPage} />}</Route>
+          <Route path="/demo/open" component={DemoOpenPersonaPage} />
           <Route path="/demo" component={DemoLauncher} />
           <Route path="/demo/wedge/:vertical" component={DemoWedgeStoryPage} />
           <Route path="/demo/:persona">{() => <LazyRoute page={LazyDemoShowcase} />}</Route>
         </>
       ) : (
         <>
-          <Route path="/guides">{() => <Redirect to="/sign-in" />}</Route>
           <Route path="/demo">{() => <Redirect to="/sign-in" />}</Route>
           <Route path="/demo/:persona">{() => <Redirect to="/sign-in" />}</Route>
         </>
@@ -369,7 +418,7 @@ function ClerkProviderWithTheme({ children }: { children: React.ReactNode }) {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
         <ClerkProviderWithTheme>
           <TooltipProvider>
             <DemoProvider>

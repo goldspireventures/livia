@@ -26,7 +26,8 @@ import {
   buildPlatformLegalAcceptance,
   hasCurrentPlatformLegal,
 } from "../lib/platform-legal-gate";
-import { createBusiness } from "./businesses.service";
+import { createBusiness, getBusinessBySlug } from "./businesses.service";
+import { resolveGuestBookUrl } from "../lib/guest-public-urls";
 import { applyDemoPublicBranding, backfillAllDemoPublicBranding } from "../lib/demo-public-assets";
 import { backfillDemoServiceImages } from "../lib/demo-service-images";
 import { inferDemoServiceImageUrl } from "../lib/experience-skin";
@@ -49,7 +50,7 @@ import {
   type DemoTenantRole,
 } from "../lib/demo-portal-config";
 import { DEMO_SCENARIO_ACCOUNTS } from "../lib/demo-scenario-config";
-import { syncDemoClerkUser } from "../lib/demo-clerk-sync";
+import { syncDemoClerkUser, syncDemoClerkUserIfStale } from "../lib/demo-clerk-sync";
 import { seedDemoInbox, seedExpandedBookings } from "./demo-inbox.seed";
 import { seedDemoAuditTrail } from "./demo-audit.seed";
 import { seedRealWorldScenarios, REAL_WORLD_PREMISES_SLUG } from "./demo-real-world-scenarios.seed";
@@ -210,12 +211,6 @@ async function wireScenarioMemberships(clerkIdsByEmail: Record<string, string>):
 
 /** Ensure Clerk user + DB memberships exist (e.g. scenario added after last provision). */
 async function ensureDemoAccountReady(def: DemoPersonaDef): Promise<string> {
-  const parsed = parseDemoTenantEmail(def.email);
-  if (parsed) {
-    await seedDemoBusinessRosters({ slugs: [parsed.slug] }).catch((err) => {
-      logger.warn({ err, slug: parsed.slug }, "demo.roster.ensure_on_signin_failed");
-    });
-  }
   const clerkDef = resolveClerkProvisioningDef(def);
   let userId = await ensureClerkUser(clerkDef);
   if (!userId) {
@@ -385,6 +380,9 @@ export async function seedShopCore(
     category?: string;
     description?: string;
     imageUrl?: string;
+    serviceKind?: string | null;
+    rebookIntervalDays?: number | null;
+    requiresPatchTest?: boolean;
   }>,
   vertical?: import("@workspace/policy").BusinessVertical,
 ) {
@@ -412,6 +410,9 @@ export async function seedShopCore(
         imageUrl:
           s.imageUrl ??
           inferDemoServiceImageUrl(s.name, vertical ?? undefined),
+        serviceKind: s.serviceKind ?? null,
+        rebookIntervalDays: s.rebookIntervalDays ?? null,
+        requiresPatchTest: s.requiresPatchTest ?? false,
       }),
     ),
   );
@@ -455,7 +456,7 @@ export async function seedShopCore(
   const customers = await db
     .insert(customersTable)
     .values(
-      customerDefs.map((c) => ({
+      customerDefs.map((c, idx) => ({
         id: generateId(),
         businessId,
         firstName: c.first,
@@ -463,6 +464,9 @@ export async function seedShopCore(
         displayName: `${c.first} ${c.last}`,
         email: c.email,
         phone: c.phone,
+        ...(vertical === "beauty" && idx === 0
+          ? { patchTestCompletedAt: new Date(Date.now() - 3 * 24 * 60 * 60_000) }
+          : {}),
       })),
     )
     .returning();
@@ -476,6 +480,18 @@ export async function seedShopCore(
     { ci: 1, staffId: s1.id, serviceId: v1.id, status: "PENDING" as BookingStatus, daysOffset: 0, hour: 14 },
     { ci: 2, staffId: s0.id, serviceId: v0.id, status: "CONFIRMED" as BookingStatus, daysOffset: 1, hour: 11 },
     { ci: 0, staffId: s1.id, serviceId: v1.id, status: "COMPLETED" as BookingStatus, daysOffset: -1, hour: 15 },
+    ...(vertical === "beauty"
+      ? [
+          {
+            ci: 2,
+            staffId: s0.id,
+            serviceId: v0.id,
+            status: "COMPLETED" as BookingStatus,
+            daysOffset: -18,
+            hour: 11,
+          },
+        ]
+      : []),
   ];
   await db.insert(bookingsTable).values(
     bookingRows.map((b) => {
@@ -543,6 +559,46 @@ export async function wipeDemoWorld(): Promise<void> {
   await db.delete(businessesTable).where(inArray(businessesTable.slug, [...DEMO_WORLD_SLUGS]));
 }
 
+async function ensureDemoBusiness(
+  ownerId: string,
+  data: Parameters<typeof createBusiness>[1],
+  repair: boolean,
+) {
+  if (repair && data.slug) {
+    const existing = await getBusinessBySlug(data.slug);
+    if (existing) return existing;
+  }
+  return createBusiness(ownerId, data);
+}
+
+/** Repair on an already-provisioned demo world — refresh branding/data, no wipe, no new Clerk users. */
+async function repairProvisionedDemoWorld(): Promise<{
+  personas: Array<{ id: DemoPersonaId; email: string; clerkUserId: string | null }>;
+  businesses: Array<{ slug: string; id: string; name: string }>;
+  passwordHint: string;
+  mode: "repair";
+}> {
+  const synced = await syncDemoWorld();
+  const { seedDemoGuestHub } = await import("./demo-guest-hub.seed");
+  const guestHub = await seedDemoGuestHub();
+  logger.info(guestHub, "demo.guest_hub.seeded");
+
+  const personas = await Promise.all(
+    DEMO_PERSONAS.filter((p) => p.requiresClerk).map(async (p) => ({
+      id: p.id,
+      email: p.email,
+      clerkUserId: (await ensureClerkUser(p, { create: false })) ?? null,
+    })),
+  );
+
+  return {
+    personas,
+    businesses: synced.businesses,
+    passwordHint: synced.passwordHint,
+    mode: "repair",
+  };
+}
+
 export async function provisionDemoWorld(opts?: {
   /** Seed DB + wire existing Clerk users — no wipe, no new Clerk users. */
   repair?: boolean;
@@ -552,6 +608,13 @@ export async function provisionDemoWorld(opts?: {
   passwordHint: string;
   mode?: "full" | "repair";
 }> {
+  if (opts?.repair) {
+    const status = await getDemoPortalStatus();
+    if (status.provisioned) {
+      return repairProvisionedDemoWorld();
+    }
+  }
+
   if (!opts?.repair) {
     await wipeDemoWorld();
   }
@@ -584,7 +647,8 @@ export async function provisionDemoWorld(opts?: {
     throw new Error("Failed to provision org-admin/owner Clerk users");
   }
 
-  const auroraStudio = await createBusiness(orgAdminId, {
+  const repair = !!opts?.repair;
+  const auroraStudio = await ensureDemoBusiness(orgAdminId, {
     name: "Aurora Studio",
     slug: "aurora-studio",
     description: "Flagship colour and cut studio — Dublin city centre.",
@@ -595,8 +659,8 @@ export async function provisionDemoWorld(opts?: {
     city: "Dublin",
     country: "IE",
     tier: "studio",
-  });
-  const auroraMews = await createBusiness(orgAdminId, {
+  }, repair);
+  const auroraMews = await ensureDemoBusiness(orgAdminId, {
     name: "Aurora Mews",
     slug: "aurora-mews",
     description: "Neighbourhood salon — Dublin south.",
@@ -608,8 +672,8 @@ export async function provisionDemoWorld(opts?: {
     tier: "studio",
     parentBusinessId: auroraStudio.id,
     structureKind: "location",
-  });
-  const auroraGalway = await createBusiness(orgAdminId, {
+  }, repair);
+  const auroraGalway = await ensureDemoBusiness(orgAdminId, {
     name: "Aurora Galway",
     slug: "aurora-galway",
     description: "West coast flagship.",
@@ -621,8 +685,8 @@ export async function provisionDemoWorld(opts?: {
     tier: "studio",
     parentBusinessId: auroraStudio.id,
     structureKind: "location",
-  });
-  const conorsCut = await createBusiness(ownerId, {
+  }, repair);
+  const conorsCut = await ensureDemoBusiness(ownerId, {
     name: "Conor's Cut Co.",
     slug: "conors-cut-co",
     description: "Two-chair barbershop — Cork.",
@@ -632,7 +696,7 @@ export async function provisionDemoWorld(opts?: {
     city: "Cork",
     country: "IE",
     tier: "solo",
-  });
+  }, repair);
 
   const studioSeed = await seedShopCore(
     auroraStudio.id,
@@ -878,6 +942,10 @@ export async function provisionDemoWorld(opts?: {
   ]);
   logger.info(channelStack, "demo.channel_stack.seeded");
 
+  const { seedDemoGuestHub } = await import("./demo-guest-hub.seed");
+  const guestHub = await seedDemoGuestHub();
+  logger.info(guestHub, "demo.guest_hub.seeded");
+
   const chainLinks = await linkDemoChainHierarchy();
   if (chainLinks > 0) {
     logger.info({ chainLinks }, "demo.chain_hierarchy.linked");
@@ -1095,7 +1163,7 @@ export async function getDemoPortalStatus(): Promise<{
           country: r.country,
           ownerEmail: resolveRosterOwnerEmail(r.slug, chainHq),
           ownerPersonaId: chainHq ? ("org_admin" as const) : null,
-          publicBookingUrl: `${dashboardBase}/b/${r.slug}`,
+          publicBookingUrl: resolveGuestBookUrl(r.slug),
           roster: rosterEntriesForSlug(r.slug, r.name).map((entry) => ({
             ...entry,
             email:
@@ -1181,6 +1249,8 @@ export async function syncVerticalShowcaseForDemo(): Promise<{
       const { ensureDemoOperationalCases } = await import("./demo-operational-cases.seed");
       await ensureDemoOperationalCases(b.id, b.slug, {});
     }
+    const { runTwinIntelligenceDaily } = await import("./twin-intelligence-daily.service");
+    await runTwinIntelligenceDaily(b.id).catch(() => undefined);
   }
   const addedNew = businesses.some((b) => !before.has(b.slug));
   if (addedNew) {
@@ -1198,6 +1268,41 @@ export async function syncVerticalShowcaseForDemo(): Promise<{
       vertical: b.vertical,
     })),
   };
+}
+
+/** Founder UAT + org-admin shops — avoid full-roster twin sync in preflight. */
+const DEMO_TWIN_INTEL_SLUGS = new Set([
+  "luxe-salon-spa",
+  "clarity-medspa-dublin",
+  "bloom-beauty-dublin",
+  "aurora-studio",
+]);
+
+/** Materialize Twin observations for demo tenants (UAT / founder walkthrough). */
+export async function syncDemoTwinIntelligence(opts?: {
+  slugs?: string[];
+}): Promise<{
+  processed: number;
+  observationsCreated: number;
+}> {
+  const status = await getDemoPortalStatus();
+  if (!status.provisioned) {
+    throw Object.assign(new Error("Demo not provisioned"), { status: 409 });
+  }
+  const { runTwinIntelligenceDaily } = await import("./twin-intelligence-daily.service");
+  const targets = opts?.slugs?.length
+    ? status.businesses.filter((b) => opts.slugs!.includes(b.slug))
+    : status.businesses.filter((b) => DEMO_TWIN_INTEL_SLUGS.has(b.slug));
+  const shops =
+    targets.length > 0
+      ? targets
+      : status.businesses.filter((b) => b.slug === "luxe-salon-spa");
+  let observationsCreated = 0;
+  for (const b of shops) {
+    const result = await runTwinIntelligenceDaily(b.id);
+    observationsCreated += result.observationsCreated;
+  }
+  return { processed: shops.length, observationsCreated };
 }
 
 /** Re-sync Clerk state for all demo emails (password, verified email, MFA off). */
@@ -1272,7 +1377,7 @@ export async function signInAsDemoBusiness(slug: string): Promise<{
 
   const userId = await ensureDemoAccountReady(def);
   const password = getDemoPassword();
-  await syncDemoClerkUser(clerk, userId, { email: def.email, password });
+  await syncDemoClerkUserIfStale(clerk, userId, { email: def.email, password });
 
   const { token } = await clerk.signInTokens.createSignInToken({
     userId,
@@ -1326,7 +1431,7 @@ export async function signInAsDemoEmail(opts: {
   }
 
   const userId = await ensureDemoAccountReady(def);
-  await syncDemoClerkUser(clerk, userId, { email: def.email, password: expected });
+  await syncDemoClerkUserIfStale(clerk, userId, { email: def.email, password: expected });
 
   const [biz] = await db
     .select()
@@ -1356,8 +1461,11 @@ export async function signInAsDemoEmail(opts: {
           : def.membershipRole === "ADMIN"
             ? "manager"
             : "owner";
-    const { seedDemoInAppNotifications } = await import("./in-app-notifications.service");
-    await seedDemoInAppNotifications(userId, biz.id, personaHint).catch(() => undefined);
+    void import("./in-app-notifications.service")
+      .then(({ seedDemoInAppNotifications }) =>
+        seedDemoInAppNotifications(userId, biz.id, personaHint),
+      )
+      .catch(() => undefined);
   }
 
   return {
@@ -1410,7 +1518,10 @@ export async function signInAsDemoPersona(opts: {
   }
 
   const userId = await ensureDemoAccountReady(def);
-  await syncDemoClerkUser(clerk, userId, { email: def.email, password: getDemoPassword() });
+  await syncDemoClerkUserIfStale(clerk, userId, {
+    email: def.email,
+    password: getDemoPassword(),
+  });
 
   const targetSlug = opts.businessSlugOverride?.trim() || def.primaryBusinessSlug;
   const [biz] = await db.select().from(businessesTable).where(eq(businessesTable.slug, targetSlug));

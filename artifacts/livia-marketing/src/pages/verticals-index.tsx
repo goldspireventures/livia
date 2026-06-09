@@ -11,13 +11,13 @@ export default function VerticalsIndexPage() {
     <MarketingLayout active="Verticals">
       <div className="cst-verticals">
         <ConstellationPageHeader
-          eyebrow="Same OS · different floor"
+          eyebrow="One platform · every trade"
           title={
             <>
               Every <em>vertical</em>
             </>
           }
-          subtitle="One platform. Vertical packs for language, policies, and booking flows — request a demo for yours."
+          subtitle="One platform — set up for your trade with language, booking rules, and flows that match how you work. Request a demo for yours."
         />
 
         <ul className="cst-verticals__grid">
@@ -36,7 +36,7 @@ export default function VerticalsIndexPage() {
         </ul>
 
         <ConstellationPageFooter>
-          <p>Same physics on every floor — time, memory, policy, channels.</p>
+          <p>Every trade shares the same basics — your calendar, client history, booking rules, and messages in one place.</p>
           <Link href={marketingDemoPath} className="cst-page-link" data-testid="marketing-demo-link">
             Book a demo →
           </Link>

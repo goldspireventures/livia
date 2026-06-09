@@ -167,6 +167,14 @@ export async function requestDemoSignIn(persona: DemoPersonaId) {
   });
 }
 
+/** Deep link for opening a demo persona in a new browser tab (`/demo/open`). */
+export function demoOpenPersonaUrl(opts: { persona?: DemoPersonaId; email?: string }): string {
+  const params = new URLSearchParams();
+  if (opts.persona) params.set("persona", opts.persona);
+  if (opts.email) params.set("email", opts.email);
+  return `/demo/open?${params.toString()}`;
+}
+
 export async function requestDemoSignInForBusiness(persona: DemoPersonaId, businessSlug: string) {
   return apiFetch<DemoSignInResult>("/demo/sign-in", {
     method: "POST",
