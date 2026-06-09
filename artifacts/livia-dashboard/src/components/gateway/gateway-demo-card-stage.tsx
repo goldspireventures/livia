@@ -1,7 +1,18 @@
-import { ArrowRight, Calendar, ClipboardCheck, ImageIcon, Inbox, Loader2, MessageSquare, Sparkles, type LucideIcon } from "lucide-react";
+import {
+  ArrowRight,
+  Calendar,
+  ClipboardCheck,
+  ImageIcon,
+  Inbox,
+  Loader2,
+  MessageSquare,
+  Sparkles,
+  type LucideIcon,
+} from "lucide-react";
 import { Link } from "wouter";
 import type { DemoRosterEntry } from "@/lib/demo-portal";
 import { demoOpenPersonaUrl } from "@/lib/demo-portal";
+import { DemoGuestClientShortcut } from "@/components/demo/demo-guest-client-shortcut";
 import { cn } from "@/lib/utils";
 
 export const WEDGE_BEAT_CROP_META: Record<
@@ -50,11 +61,10 @@ type EnterProps = {
   tradeLabel: string;
   businessName: string;
   roster: DemoRosterEntry[];
-  busy: string | null;
   disabled?: boolean;
   backHref?: string;
   backLabel?: string;
-  onSelectRole: (email: string) => void;
+  guestOpenHref: string;
   onBack: () => void;
 };
 
@@ -63,11 +73,10 @@ export function GatewayDemoEnterStage({
   tradeLabel,
   businessName,
   roster,
-  busy,
   disabled,
   backHref = "/demo",
   backLabel = "← Worlds",
-  onSelectRole,
+  guestOpenHref,
   onBack,
 }: EnterProps) {
   return (
@@ -86,46 +95,48 @@ export function GatewayDemoEnterStage({
         <div className="mt-4 space-y-1">
           <p className="font-serif text-lg text-[#e6d0a5]/95">{tradeLabel}</p>
           <p className="text-base font-medium text-foreground">{businessName}</p>
-          <p className="text-sm text-muted-foreground">Tap a role to walk into the live demo. Ctrl+click opens a new tab.</p>
+          <p className="text-sm text-muted-foreground">
+            Each role opens in its own tab — keep this screen to try more.
+          </p>
         </div>
 
-        <div className="mt-5" data-testid="gateway-demo-enter-roles">
-          <div className="grid grid-cols-2 gap-2">
-            {roster.map((entry) => {
-              const loading = busy === entry.email;
-              const primary = entry.role === "owner";
-              const href = demoOpenPersonaUrl({ email: entry.email });
-              return (
-                <a
-                  key={entry.email}
-                  href={href}
-                  onClick={(e) => {
-                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
-                    e.preventDefault();
-                    if (busy || disabled) return;
-                    onSelectRole(entry.email);
-                  }}
-                  aria-disabled={!!busy || disabled}
-                  className={cn(
-                    "rounded-xl border px-3 py-2.5 text-left transition",
-                    primary
-                      ? "border-primary/50 bg-primary/15 hover:border-primary/70"
-                      : "border-white/15 bg-white/5 hover:border-white/30",
-                    (busy || disabled) && "opacity-60 pointer-events-none",
-                  )}
-                >
-                  <span className="flex items-center justify-between gap-1">
-                    <span className="text-sm font-medium">
-                      {loading ? "Signing in…" : entry.label.split(" · ").pop()}
+        <div className="mt-5 space-y-4">
+          <DemoGuestClientShortcut openHref={guestOpenHref} embedded />
+
+          <div data-testid="gateway-demo-enter-roles">
+            <p className="mb-2 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+              Staff roles
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {roster.map((entry) => {
+                const primary = entry.role === "owner";
+                const href = demoOpenPersonaUrl({ email: entry.email });
+                return (
+                  <a
+                    key={entry.email}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-disabled={disabled}
+                    className={cn(
+                      "rounded-xl border px-3 py-2.5 text-left transition hover:-translate-y-px",
+                      primary
+                        ? "border-primary/50 bg-primary/15 hover:border-primary/70"
+                        : "border-white/15 bg-white/5 hover:border-white/30",
+                      disabled && "opacity-60 pointer-events-none",
+                    )}
+                  >
+                    <span className="flex items-center justify-between gap-1">
+                      <span className="text-sm font-medium">{entry.label.split(" · ").pop()}</span>
+                      <ArrowRight className="h-3.5 w-3.5 text-primary" />
                     </span>
-                    {!loading ? <ArrowRight className="h-3.5 w-3.5 text-primary" /> : null}
-                  </span>
-                  <span className="mt-0.5 block truncate text-[9px] font-mono text-muted-foreground">
-                    {entry.email}
-                  </span>
-                </a>
-              );
-            })}
+                    <span className="mt-0.5 block truncate text-[9px] font-mono text-muted-foreground">
+                      {entry.email}
+                    </span>
+                  </a>
+                );
+              })}
+            </div>
           </div>
         </div>
 

@@ -785,7 +785,7 @@ export default function DemoLauncher() {
         <details className="mb-10 group">
           <summary className="cursor-pointer text-sm font-mono uppercase tracking-wider text-white/50 mb-4 list-none flex items-center gap-2">
             Staff & role rehearsals (optional)
-            <span className="text-white/30 normal-case font-sans text-xs">— Ctrl+click opens a role in a new tab</span>
+            <span className="text-white/30 normal-case font-sans text-xs">— each opens in a new tab</span>
           </summary>
         <div
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4"
@@ -795,19 +795,14 @@ export default function DemoLauncher() {
             const Icon = ICONS[p.iconName];
             const a = ACCENT_CLASSES[p.accent];
             const live = catalog.find((c) => c.id === p.id);
-            const loading = busy === p.id;
             const openHref = demoOpenPersonaUrl({ persona: p.id as DemoPersonaId });
             return (
               <a
                 key={p.id}
                 href={openHref}
-                onClick={(e) => {
-                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
-                  e.preventDefault();
-                  void enterPersona(p.id as DemoPersonaId);
-                }}
-                aria-disabled={!!busy}
-                className={`group relative h-full rounded-2xl border ${a.border} bg-gradient-to-br ${a.gradFrom} ${a.gradTo} p-6 text-left transition-all hover:-translate-y-1 hover:shadow-2xl overflow-hidden ${busy ? "opacity-70 pointer-events-none" : ""}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`group relative h-full rounded-2xl border ${a.border} bg-gradient-to-br ${a.gradFrom} ${a.gradTo} p-6 text-left transition-all hover:-translate-y-1 hover:shadow-2xl overflow-hidden`}
                 data-testid={`demo-launcher-card-${p.id}`}
               >
                 <div
@@ -817,11 +812,7 @@ export default function DemoLauncher() {
                   <div
                     className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border ${a.border} ${a.bg} mb-5`}
                   >
-                    {loading ? (
-                      <Loader2 className={`h-5 w-5 animate-spin ${a.text}`} />
-                    ) : (
-                      <Icon className={`h-5 w-5 ${a.text}`} />
-                    )}
+                    <Icon className={`h-5 w-5 ${a.text}`} />
                   </div>
                   <h2
                     className="text-xl mb-1 tracking-tight text-white"
@@ -840,7 +831,7 @@ export default function DemoLauncher() {
                     Sign in as {p.displayName.split(" ")[0]}
                     <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
                   </div>
-                  <p className="mt-2 text-[10px] text-white/35 font-mono">Ctrl+click · new tab</p>
+                  <p className="mt-2 text-[10px] text-white/35 font-mono">Opens in new tab</p>
                 </div>
               </a>
             );
@@ -916,11 +907,7 @@ export default function DemoLauncher() {
         onSetup={() => void handleSync()}
         onRetry={() => void refresh()}
       />
-      <DemoGuestClientShortcut
-        busy={busy === "customer"}
-        openHref={demoOpenPersonaUrl({ persona: "customer" })}
-        onOpen={() => void enterPersona("customer")}
-      />
+      <DemoGuestClientShortcut openHref={demoOpenPersonaUrl({ persona: "customer" })} />
       <DemoWedgeGrid />
     </GatewayDemoLauncherShell>
   );

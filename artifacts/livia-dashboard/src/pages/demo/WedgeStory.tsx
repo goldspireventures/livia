@@ -1,12 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useLocation, useParams } from "wouter";
-import { useSignIn, useClerk } from "@clerk/clerk-react";
-import { useQueryClient } from "@tanstack/react-query";
-import {
-  GatewayBusyOverlay,
-  GatewayDemoEnterStage,
-  GatewaySlideDots,
-} from "@/components/gateway/gateway-demo-card-stage";
+import { GatewayDemoEnterStage, GatewaySlideDots } from "@/components/gateway/gateway-demo-card-stage";
 import { WedgeBeautyThread } from "@/components/gateway/wedge-beauty-thread";
 import { WedgeStudioBrief } from "@/components/gateway/wedge-studio-brief";
 import { isPresetWedgeThread } from "@/lib/wedge-beat-visuals";
@@ -15,20 +9,15 @@ import {
   getWedgeDemoStory,
   type WedgeDemoStory,
 } from "@workspace/policy";
-import { fetchDemoCatalog, requestDemoQuickSignIn, requestDemoSignIn, demoOpenPersonaUrl, type DemoRosterEntry } from "@/lib/demo-portal";
-import { DemoGuestClientShortcut } from "@/components/demo/demo-guest-client-shortcut";
+import { demoOpenPersonaUrl, type DemoRosterEntry } from "@/lib/demo-portal";
 import { useDemoWorldStatus } from "@/lib/demo/demo-world-status";
-import { completeDemoPortalSignIn } from "@/lib/demo/complete-demo-portal-sign-in";
 import { resolveG1WedgeWorld } from "@/lib/g1-wedge-worlds";
-import { useToast } from "@/hooks/use-toast";
-import { useGatewaySkinHandoffOptional } from "@/components/gateway/gateway-skin-handoff-provider";
 
 type WedgeSlide = "story" | "enter";
 
 export default function DemoWedgeStoryPage() {
   const { vertical = "" } = useParams<{ vertical: string }>();
   const [, navigate] = useLocation();
-  const queryClient = useQueryClient();
   const worldKey =
     typeof window !== "undefined"
       ? new URLSearchParams(window.location.search).get("world")
@@ -36,15 +25,9 @@ export default function DemoWedgeStoryPage() {
   const story = getWedgeDemoStory(vertical as WedgeDemoStory["vertical"]);
   const world = story ? resolveG1WedgeWorld(story.vertical, worldKey) : null;
   const demoSlug = world?.demoSlug ?? story?.demoSlug ?? null;
-  const { toast } = useToast();
-  const { signIn, isLoaded: signInLoaded } = useSignIn();
-  const { signOut, session, setActive } = useClerk();
-  const [busy, setBusy] = useState<string | null>(null);
-  const [devPassword, setDevPassword] = useState<string | undefined>();
   const { provisioned, tenants, loading: statusLoading, error: statusError, refresh } =
     useDemoWorldStatus();
   const [slide, setSlide] = useState<WedgeSlide>("story");
-  const gatewayHandoff = useGatewaySkinHandoffOptional();
 
   const tenant = useMemo(() => {
     return (
@@ -53,48 +36,6 @@ export default function DemoWedgeStoryPage() {
       null
     );
   }, [demoSlug, tenants, vertical]);
-
-  useEffect(() => {
-    void fetchDemoCatalog()
-      .then((c) => {
-        if (c.sharedPassword ?? c.devPassword) {
-          setDevPassword(c.sharedPassword ?? c.devPassword);
-        }
-      })
-      .catch(() => undefined);
-  }, []);
-
-  const completeTicketSignIn = useCallback(
-    async (result: Parameters<typeof completeDemoPortalSignIn>[0]["result"]) => {
-      if (!signInLoaded || !signIn) {
-        toast({ title: "Clerk not ready", variant: "destructive" });
-        return;
-      }
-      await completeDemoPortalSignIn({
-        signIn,
-        clerk: { signOut, setActive, sessionId: session?.id },
-        result,
-        password: devPassword,
-        queryClient,
-        navigate,
-        gatewayHandoff,
-        vertical: story?.vertical,
-      });
-    },
-    [
-      devPassword,
-      gatewayHandoff,
-      navigate,
-      queryClient,
-      session?.id,
-      signIn,
-      signInLoaded,
-      setActive,
-      signOut,
-      story?.vertical,
-      toast,
-    ],
-  );
 
   const roster = useMemo((): DemoRosterEntry[] => {
     if (tenant?.roster?.length) return tenant.roster;
@@ -110,50 +51,6 @@ export default function DemoWedgeStoryPage() {
       },
     ];
   }, [tenant]);
-
-  async function enterGuestClient() {
-    setBusy("customer");
-    try {
-      const result = await requestDemoSignIn("customer");
-      if (result.signInStrategy === "public") {
-        navigate(result.landingPath);
-        return;
-      }
-      await completeTicketSignIn(result);
-    } catch (e: unknown) {
-      toast({
-        title: "Could not open My Livia",
-        description: e instanceof Error ? e.message : "Unknown error",
-        variant: "destructive",
-      });
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  async function enterAsRole(email: string) {
-    if (!provisioned) {
-      toast({
-        title: "Set up demo world first",
-        description: "Open /demo and run Quick sync, then return here.",
-        variant: "destructive",
-      });
-      return;
-    }
-    setBusy(email);
-    try {
-      const result = await requestDemoQuickSignIn(email);
-      await completeTicketSignIn(result);
-    } catch (e: unknown) {
-      toast({
-        title: "Could not enter demo",
-        description: e instanceof Error ? e.message : "Unknown error",
-        variant: "destructive",
-      });
-    } finally {
-      setBusy(null);
-    }
-  }
 
   if (!story) {
     return (
@@ -171,8 +68,6 @@ export default function DemoWedgeStoryPage() {
 
   return (
     <DemoFlowShell>
-      {busy ? <GatewayBusyOverlay label="Signing in…" /> : null}
-
       {enterMode ? (
         <p className="mb-6 text-center font-serif text-xl tracking-tight text-[#e6d0a5]/90 sm:text-2xl">
           Walk in as your role
@@ -205,24 +100,16 @@ export default function DemoWedgeStoryPage() {
       ) : null}
 
       {enterMode ? (
-        <>
-          <DemoGuestClientShortcut
-            busy={busy === "customer"}
-            openHref={demoOpenPersonaUrl({ persona: "customer" })}
-            onOpen={() => void enterGuestClient()}
-          />
-          <GatewayDemoEnterStage
-            tradeLabel={story.label}
-            businessName={businessName}
-            roster={roster}
-            busy={busy}
-            disabled={!provisioned}
-            backHref="/demo"
-            backLabel="← Worlds"
-            onSelectRole={(email) => void enterAsRole(email)}
-            onBack={() => setSlide("story")}
-          />
-        </>
+        <GatewayDemoEnterStage
+          tradeLabel={story.label}
+          businessName={businessName}
+          roster={roster}
+          disabled={!provisioned}
+          backHref="/demo"
+          backLabel="← Worlds"
+          guestOpenHref={demoOpenPersonaUrl({ persona: "customer" })}
+          onBack={() => setSlide("story")}
+        />
       ) : isPresetWedgeThread(story.vertical) ? (
         <WedgeBeautyThread
           vertical={story.vertical}
