@@ -2,7 +2,6 @@ import {
   resolveJurisdictionCode,
   resolveVerticalKey,
   resolvePresentationLayoutMorph,
-  resolveBeautyOperatorCssPreset,
   resolveWellnessOperatorCssPreset,
   type BusinessVertical,
   type PresentationLayoutMorph,
@@ -280,9 +279,7 @@ export function applyTenantPresentationSurface(args: {
   const cssPreset =
     args.vertical === "wellness"
       ? resolveWellnessOperatorCssPreset(args.cssPreset)
-      : args.vertical === "beauty"
-        ? resolveBeautyOperatorCssPreset(args.cssPreset)
-        : args.cssPreset;
+      : args.cssPreset;
   if (cssPreset) {
     const mode = args.colorMode ?? resolvePresentationColorMode(cssPreset);
     applyPresentationTheme({

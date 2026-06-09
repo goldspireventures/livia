@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -38,6 +39,7 @@ type Props = {
 
 export function OnboardingPresentationPick({ businessId, onReviewed }: Props) {
   const { toast } = useToast();
+  const qc = useQueryClient();
   const { business } = useBusiness();
   const [data, setData] = useState<PresentationPayload | null>(null);
   const [busy, setBusy] = useState(false);
@@ -90,6 +92,7 @@ export function OnboardingPresentationPick({ businessId, onReviewed }: Props) {
         brandAccentHex: next.brandAccentHex,
         colorMode: resolvePresentationColorMode(next.preset.cssPreset),
       });
+      await qc.invalidateQueries({ queryKey: ["tenant-experience", businessId] });
       onReviewed?.();
       toast({ title: "Look updated", description: next.preset.label });
     } catch {

@@ -34,11 +34,7 @@ import { applyBeautyAmbient } from "@/lib/beauty-ambient";
 import { applyWellnessAmbient } from "@/lib/wellness-ambient";
 import { useSurfaceClass } from "@/hooks/use-surface-class";
 import { WellnessAtmosphere } from "@/components/wellness/wellness-atmosphere";
-import {
-  isWellnessCssPreset,
-  resolveBeautyOperatorCssPreset,
-  resolveWellnessOperatorCssPreset,
-} from "@workspace/policy";
+import { isWellnessCssPreset, resolveWellnessOperatorCssPreset } from "@workspace/policy";
 import { applyGatewaySurfaceTheme } from "@/lib/gateway-surface-theme";
 import { useTheme } from "next-themes";
 import { fetchUserLifecycle } from "@/lib/lifecycle-api";
@@ -312,9 +308,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const effectiveCssPreset =
     vertical === "wellness"
       ? resolveWellnessOperatorCssPreset(storedCssPreset)
-      : vertical === "beauty"
-        ? resolveBeautyOperatorCssPreset(storedCssPreset)
-        : storedCssPreset;
+      : storedCssPreset;
   const showBeautyFlower =
     isBeautyVertical(vertical) && isBeautyPresentationPreset(effectiveCssPreset);
   const isPlatformDefault = effectiveCssPreset === "platform-default";

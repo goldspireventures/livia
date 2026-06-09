@@ -255,7 +255,6 @@ export function personaNavOrder(
       "/bookings",
       "/beauty-store",
       "/services",
-      "/studio-setup",
       "/settings",
     ];
   }
