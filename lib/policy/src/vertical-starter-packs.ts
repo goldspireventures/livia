@@ -30,6 +30,8 @@ const HAIR_STARTER: StarterPackServiceTemplate[] = [
   { name: "Highlights / balayage", category: "Colour", durationMinutes: 150, priceMinor: 12000 },
   { name: "Blow dry", category: "Styling", durationMinutes: 45, priceMinor: 4000 },
   { name: "Beard trim", category: "Grooming", durationMinutes: 20, priceMinor: 1800 },
+  { name: "Skin fade", category: "Grooming", durationMinutes: 40, priceMinor: 3200 },
+  { name: "Hot towel shave", category: "Grooming", durationMinutes: 30, priceMinor: 2800 },
   { name: "Children's cut", category: "Cuts", durationMinutes: 30, priceMinor: 3500 },
 ];
 

@@ -19,8 +19,23 @@ import {
   quickDemoSignIn,
 } from "../services/demo-portal.service";
 
+import { guestBookTokenPath } from "@workspace/policy";
+import { resolveGuestTokenUrl } from "../lib/guest-public-urls";
 import { sendError } from "../lib/http-errors";
 const router: IRouter = Router();
+
+function demoGuestSurfacePayload(
+  slug: string,
+  surface: "proof" | "pay" | "intake" | "waitlist",
+  token: string,
+) {
+  return {
+    slug,
+    token,
+    path: guestBookTokenPath(slug, surface, token),
+    url: resolveGuestTokenUrl(slug, surface, token),
+  };
+}
 
 function gate(_req: Request, res: Response, next: NextFunction) {
   if (!isDemoPortalEnabled()) {
@@ -211,8 +226,7 @@ router.get("/demo/guest-surfaces/:slug/proof", async (req, res): Promise<void> =
     sendError(res, req, 404, "No pending guest proof for this demo shop");
     return;
   }
-  const dashboardBase = process.env.LIVIA_DASHBOARD_URL?.replace(/\/+$/, "") ?? "http://127.0.0.1:5173";
-  res.json({ slug, token, path: `/b/${slug}/proof/${token}`, url: `${dashboardBase}/b/${slug}/proof/${token}` });
+  res.json(demoGuestSurfacePayload(slug, "proof", token));
 });
 
 /** Demo-only: guest intake token for E2E / medspa walkthroughs. */
@@ -228,8 +242,7 @@ router.get("/demo/guest-surfaces/:slug/pay", async (req, res): Promise<void> => 
     sendError(res, req, 404, "No pending deposit booking for this demo shop");
     return;
   }
-  const dashboardBase = process.env.LIVIA_DASHBOARD_URL?.replace(/\/+$/, "") ?? "http://127.0.0.1:5173";
-  res.json({ slug, token, path: `/b/${slug}/pay/${token}`, url: `${dashboardBase}/b/${slug}/pay/${token}` });
+  res.json(demoGuestSurfacePayload(slug, "pay", token));
 });
 
 router.get("/demo/guest-surfaces/:slug/intake", async (req, res): Promise<void> => {
@@ -244,8 +257,7 @@ router.get("/demo/guest-surfaces/:slug/intake", async (req, res): Promise<void> 
     sendError(res, req, 404, "No draft guest intake for this demo shop");
     return;
   }
-  const dashboardBase = process.env.LIVIA_DASHBOARD_URL?.replace(/\/+$/, "") ?? "http://127.0.0.1:5173";
-  res.json({ slug, token, path: `/b/${slug}/intake/${token}`, url: `${dashboardBase}/b/${slug}/intake/${token}` });
+  res.json(demoGuestSurfacePayload(slug, "intake", token));
 });
 
 /** Demo-only: waitlist accept token (fitness / slot waitlist). */
@@ -261,12 +273,8 @@ router.get("/demo/guest-surfaces/:slug/waitlist", async (req, res): Promise<void
     sendError(res, req, 404, "No waitlist offer for this demo shop");
     return;
   }
-  const dashboardBase = process.env.LIVIA_DASHBOARD_URL?.replace(/\/+$/, "") ?? "http://127.0.0.1:5173";
   res.json({
-    slug,
-    token,
-    path: `/b/${slug}/waitlist/${token}`,
-    url: `${dashboardBase}/b/${slug}/waitlist/${token}`,
+    ...demoGuestSurfacePayload(slug, "waitlist", token),
   });
 });
 
