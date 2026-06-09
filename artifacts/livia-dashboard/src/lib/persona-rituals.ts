@@ -248,7 +248,16 @@ export function personaNavOrder(
     return ["/beauty-reception", "/bookings", "/inbox", "/customers", "/settings"];
   }
   if (businessVertical === "beauty" && (persona === "manager" || persona === "owner")) {
-    return ["/dashboard", "/beauty-reception", "/inbox", "/bookings", "/beauty-store", "/studio-setup", "/settings"];
+    return [
+      "/dashboard",
+      "/beauty-reception",
+      "/inbox",
+      "/bookings",
+      "/beauty-store",
+      "/services",
+      "/studio-setup",
+      "/settings",
+    ];
   }
   return PERSONA_NAV_ORDER[persona];
 }

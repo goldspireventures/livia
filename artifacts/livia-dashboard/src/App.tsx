@@ -31,6 +31,10 @@ import {
   LazyWellnessAuditDiaryPage,
   LazyWellnessGuestVaultPage,
   LazyWellnessRetailPage,
+  LazyBeautyReceptionPage,
+  LazyBeautyTvPage,
+  LazyBeautyStorePage,
+  LazyStudioSetupPage,
   LazyDesignProofsPage,
   LazyDemoShowcase,
   LazyExperiencePage,
@@ -190,6 +194,18 @@ function AuthenticatedRoutes() {
           </Route>
           <Route path="/wellness-retail">
             {() => <LazyRoute page={LazyWellnessRetailPage} />}
+          </Route>
+          <Route path="/beauty-reception">
+            {() => <LazyRoute page={LazyBeautyReceptionPage} />}
+          </Route>
+          <Route path="/beauty-tv">
+            {() => <LazyRoute page={LazyBeautyTvPage} />}
+          </Route>
+          <Route path="/beauty-store">
+            {() => <LazyRoute page={LazyBeautyStorePage} />}
+          </Route>
+          <Route path="/studio-setup">
+            {() => <LazyRoute page={LazyStudioSetupPage} />}
           </Route>
           <Route path="/wellness-corporate">
             {() => <Redirect to="/corporate-wellness" />}

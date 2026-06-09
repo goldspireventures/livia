@@ -31,6 +31,9 @@ const HREF_SECTION: Record<string, NavSectionId> = {
   "/lifecycle": "account",
   "/portal": "account",
   "/experience": "account",
+  "/services": "account",
+  "/beauty-store": "account",
+  "/studio-setup": "account",
   "/settings": "account",
 };
 

@@ -29,7 +29,7 @@ import {
 } from "@workspace/policy";
 import { cn } from "@/lib/utils";
 import { beautyNativeMorphForVertical, useBeautyChrome } from "@/lib/presentation-layout";
-import { resolvePresentationLayoutMorph } from "@workspace/policy";
+import { resolveBeautyOperatorCssPreset, resolvePresentationLayoutMorph } from "@workspace/policy";
 import { BeautyMorphTodayHome } from "@/components/beauty/beauty-morph-today";
 import { WellnessMorphTodayHome } from "@/components/wellness/wellness-morph-today";
 import { resolvePublicServiceImageUrl } from "@/lib/public-service-image";
@@ -416,8 +416,11 @@ export function OwnerHomeRitual({
   const oneThingLabel = briefingCta.label;
   const beauty = useBeautyChrome(tenantVertical);
   const beautyMorph =
-    tenantVertical === "beauty" && tenantXp?.presentation
-      ? resolvePresentationLayoutMorph("beauty", tenantXp.presentation.presetId)
+    tenantVertical === "beauty"
+      ? resolvePresentationLayoutMorph(
+          "beauty",
+          resolveBeautyOperatorCssPreset(tenantXp?.presentation?.cssPreset),
+        )
       : null;
   const beautyNativeMorph = beautyNativeMorphForVertical(tenantVertical, beautyMorph);
   const wellnessMorph =

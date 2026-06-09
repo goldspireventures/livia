@@ -1,6 +1,20 @@
 import type { BusinessVertical } from "./types";
 
 /**
+ * W4/W5 operator skin when stored preset is Platform Default.
+ * Constellation is signup chrome — beauty day ops default to Noir Dusk unless the owner
+ * explicitly picked soft-studio, editorial, or premium-dark.
+ */
+export const BEAUTY_OPERATOR_DEFAULT_CSS_PRESET = "noir-dusk";
+
+export function resolveBeautyOperatorCssPreset(cssPreset?: string | null): string {
+  if (!cssPreset || cssPreset === "platform-default") {
+    return BEAUTY_OPERATOR_DEFAULT_CSS_PRESET;
+  }
+  return cssPreset;
+}
+
+/**
  * W4 beauty operator shell — inbox-first day ops + studio strip (Treatments in nav).
  * Mirrors wellness-operator-shell pattern; beauty keeps sidebar + beautyNav chrome.
  */
