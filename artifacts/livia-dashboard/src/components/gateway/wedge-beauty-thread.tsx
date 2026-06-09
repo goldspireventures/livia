@@ -1,7 +1,7 @@
 import { ArrowRight } from "lucide-react";
 import { Link } from "wouter";
 import type { WedgeDemoBeat } from "@workspace/policy";
-import { g1TaglineForVertical, g1TitleForVertical } from "@/lib/g1-wedge-worlds";
+import { g1TaglineForWorld, g1TitleForWorld, type G1WedgeWorld } from "@/lib/g1-wedge-worlds";
 import type { BusinessVertical } from "@workspace/policy";
 import {
   filterWedgeChapters,
@@ -14,9 +14,11 @@ import { cn } from "@/lib/utils";
 
 type Props = {
   vertical: BusinessVertical;
+  world?: G1WedgeWorld | null;
   beats: WedgeDemoBeat[];
   tradeLabel: string;
   disabled?: boolean;
+  continueLabel?: string;
   backHref?: string;
   backLabel?: string;
   onContinue: () => void;
@@ -99,16 +101,18 @@ function ThreadChapter({
  */
 export function WedgeBeautyThread({
   vertical,
+  world,
   beats,
   tradeLabel,
   disabled,
+  continueLabel = "Walk into the live demo",
   backHref = "/demo",
   backLabel = "← Worlds",
   onContinue,
 }: Props) {
   const chapters = filterWedgeChapters(beats);
-  const g1Title = g1TitleForVertical(vertical);
-  const g1Tagline = g1TaglineForVertical(vertical);
+  const g1Title = g1TitleForWorld(world ?? null) ?? tradeLabel;
+  const g1Tagline = g1TaglineForWorld(world ?? null);
   const livIntro = resolveWedgeLivIntro(vertical);
   const arc = vertical === "wellness" ? "From message to room" : "From DM to chair";
 
@@ -157,7 +161,7 @@ export function WedgeBeautyThread({
           className="wedge-thread__cta"
           data-testid="gateway-demo-continue"
         >
-          Walk into the live demo
+          {continueLabel}
           <ArrowRight className="h-4 w-4" aria-hidden />
         </button>
       </footer>

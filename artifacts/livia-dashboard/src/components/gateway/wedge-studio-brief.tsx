@@ -1,7 +1,7 @@
 import { ArrowRight } from "lucide-react";
 import { Link } from "wouter";
 import type { BusinessVertical, WedgeDemoBeat } from "@workspace/policy";
-import { g1TaglineForVertical, g1TitleForVertical } from "@/lib/g1-wedge-worlds";
+import { g1TaglineForWorld, g1TitleForWorld, type G1WedgeWorld } from "@/lib/g1-wedge-worlds";
 import {
   resolveWedgeBeatVisual,
   resolveWedgeLivIntro,
@@ -14,7 +14,9 @@ type Props = {
   beats: WedgeDemoBeat[];
   tradeLabel: string;
   vertical: BusinessVertical;
+  world?: G1WedgeWorld | null;
   disabled?: boolean;
+  continueLabel?: string;
   backHref?: string;
   backLabel?: string;
   onContinue: () => void;
@@ -78,13 +80,15 @@ export function WedgeStudioBrief({
   beats,
   tradeLabel,
   vertical,
+  world,
   disabled,
+  continueLabel = "Enter live demo",
   backHref = "/demo",
   backLabel = "← Worlds",
   onContinue,
 }: Props) {
-  const g1Title = g1TitleForVertical(vertical);
-  const g1Tagline = g1TaglineForVertical(vertical);
+  const g1Title = g1TitleForWorld(world ?? null) ?? tradeLabel;
+  const g1Tagline = g1TaglineForWorld(world ?? null);
   const [hero, ...tiles] = beats;
   const livIntro = resolveWedgeLivIntro(vertical);
 
@@ -144,7 +148,7 @@ export function WedgeStudioBrief({
             className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-60"
             data-testid="gateway-demo-continue"
           >
-            Enter live demo
+            {continueLabel}
             <ArrowRight className="h-4 w-4" />
           </button>
         </div>

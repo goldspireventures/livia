@@ -1,19 +1,24 @@
-/** Normalize guest visit links to `/b/{slug}/visit/{token}` (legacy `/my?visit=`). */
-export function extractGuestVisitToken(url: string): string | null {
+import { guestManageVisitPath, migrateLegacyGuestBookPath } from "@workspace/policy";
+
+/** Extract booking id from `/my/{slug}/visit/{id}` manage URLs. */
+export function extractGuestVisitBookingId(url: string): string | null {
+  const fromMy = url.match(/\/my\/[^/]+\/visit\/([^/?]+)/)?.[1];
+  if (fromMy) return decodeURIComponent(fromMy);
   const fromQuery = url.match(/[?&]visit=([^&]+)/)?.[1];
   if (fromQuery) return decodeURIComponent(fromQuery);
-  const fromPath = url.match(/\/visit\/([^/?]+)/)?.[1];
-  if (fromPath) return decodeURIComponent(fromPath);
   return null;
 }
 
-export function guestVisitPath(slug: string, visitToken: string): string {
-  return `/b/${slug}/visit/${encodeURIComponent(visitToken)}`;
+/** @deprecated Token paths — prefer guestManageVisitPath(slug, bookingId). */
+export function extractGuestVisitToken(url: string): string | null {
+  const fromPath = url.match(/\/visit\/([^/?]+)/)?.[1];
+  if (fromPath) return decodeURIComponent(fromPath);
+  return extractGuestVisitBookingId(url);
 }
 
-export function normalizeGuestVisitUrl(url: string, slug: string): string {
-  if (url.startsWith("/b/") && url.includes("/visit/")) return url;
-  const token = extractGuestVisitToken(url);
-  if (token && slug) return guestVisitPath(slug, token);
-  return url;
+export function normalizeGuestVisitUrl(url: string, slug: string, bookingId?: string): string {
+  if (url.startsWith("/my/") && url.includes("/visit/")) return url;
+  const id = bookingId ?? extractGuestVisitBookingId(url);
+  if (id && slug) return guestManageVisitPath(slug, id);
+  return migrateLegacyGuestBookPath(url);
 }
