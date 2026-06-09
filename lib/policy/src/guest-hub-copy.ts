@@ -85,4 +85,7 @@ export const LIVIA_MOBILE_ENTRY_COPY = {
   guestPhoneHint: "Verify once with the mobile number you book with.",
   staffBackLink: "Not staff? Back to home",
   guestStaffLink: "Work at a studio? Sign in",
+  demoTitle: "Walk the demo",
+  demoBody: "Try owner, manager, staff, and guest flows — same showcase as the web demo.",
+  demoCta: "Open demo gateway",
 } as const;

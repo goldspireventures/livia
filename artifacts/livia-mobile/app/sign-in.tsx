@@ -40,7 +40,7 @@ import {
   normalizeDemoSignInIdentifier,
 } from "@/lib/demo-sign-in";
 import { persistDemoSession } from "@/lib/demo-session";
-import { setDevPersonaOverride } from "@/hooks/usePersona";
+import { isDemoLoginEnabled, setDevPersonaOverride } from "@/hooks/usePersona";
 import { LIVIA_MOBILE_ENTRY_COPY } from "@workspace/policy";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -522,6 +522,24 @@ export default function SignInScreen() {
             </Text>
           </Text>
         </TouchableOpacity>
+
+        {isDemoLoginEnabled ? (
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => {
+              haptics.selection();
+              router.push("/demo" as never);
+            }}
+            style={styles.guestEntry}
+            testID="sign-in-demo-gateway"
+          >
+            <Text style={[styles.guestEntryText, { color: colors.mutedForeground }]}>
+              <Text style={{ color: colors.primary, fontFamily: fonts.bodySemi }}>
+                {LIVIA_MOBILE_ENTRY_COPY.demoCta} →
+              </Text>
+            </Text>
+          </TouchableOpacity>
+        ) : null}
 
         <Text style={[styles.legal, { color: colors.mutedForeground }]}>
           By continuing you agree to Livia's Terms & Privacy Policy.

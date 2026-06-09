@@ -22,10 +22,12 @@ import {
   openGuestBookUrl,
 } from "@/lib/guest-hub";
 import {
+  DEMO_GUEST_CLIENT_COPY,
   GUEST_PREFERRED_MODALITY_LABELS,
   LIVIA_MOBILE_ENTRY_COPY,
   type GuestPreferredModality,
 } from "@workspace/policy";
+import { DEMO_GUEST_PHONE, requestGuestHubOtpMobile } from "@/lib/guest-hub-otp";
 
 const GUEST_MODALITIES = Object.keys(GUEST_PREFERRED_MODALITY_LABELS) as GuestPreferredModality[];
 
@@ -107,18 +109,13 @@ export default function MyLiviaHubScreen() {
     setBusy(true);
     setErr(null);
     try {
-      const r = await fetch(`${api}/api/public/guest-hub/otp/request`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone }),
-      });
-      if (!r.ok) throw new Error("Could not send code");
-      const j = (await r.json()) as { sessionToken: string; devOtp?: string; magicOtpCode?: string };
+      const j = await requestGuestHubOtpMobile(api, phone, "IE");
       setOtpSession(j.sessionToken);
-      setMagicOtp(j.magicOtpCode ?? j.devOtp ?? null);
-      if (j.magicOtpCode ?? j.devOtp) setCode(j.magicOtpCode ?? j.devOtp ?? "");
-    } catch {
-      setErr("Could not send code");
+      const shownCode = j.magicOtpCode ?? j.devOtp ?? null;
+      setMagicOtp(shownCode);
+      if (shownCode) setCode(shownCode);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not send code");
     } finally {
       setBusy(false);
     }
@@ -219,6 +216,9 @@ export default function MyLiviaHubScreen() {
           <Text style={[type.caption, { color: colors.mutedForeground, marginTop: 8 }]}>
             Your bookings across every Livia shop — verify once with your mobile.
           </Text>
+          <Text style={[type.caption, { color: colors.mutedForeground, marginTop: 6 }]}>
+            {DEMO_GUEST_CLIENT_COPY.phoneHint}
+          </Text>
           {magicOtp ? (
             <Text style={[type.caption, { color: colors.primary, marginTop: 12 }]}>
               Staging code: {magicOtp}
@@ -228,20 +228,33 @@ export default function MyLiviaHubScreen() {
             <>
               <TextInput
                 style={[styles.input, { borderColor: colors.border, color: colors.foreground }]}
-                placeholder="Mobile number"
+                placeholder="e.g. +353 87 100 0001"
                 placeholderTextColor={colors.mutedForeground}
                 keyboardType="phone-pad"
                 value={phone}
                 onChangeText={setPhone}
+                testID="guest-hub-phone-input"
               />
               <Pressable
-                style={[styles.btn, { backgroundColor: colors.primary }]}
+                onPress={() => setPhone(DEMO_GUEST_PHONE)}
+                style={[styles.demoFill, { borderColor: colors.border }]}
+                testID="guest-hub-demo-phone"
+              >
+                <Text style={[type.caption, { color: colors.primary }]}>Use demo number</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.btn, { backgroundColor: colors.primary }, busy && { opacity: 0.7 }]}
                 onPress={() => void requestOtp()}
                 disabled={busy || !phone.trim()}
+                testID="guest-hub-send-code"
               >
-                <Text style={[type.body, { color: colors.primaryForeground, fontFamily: fonts.bodyMed }]}>
-                  Send code
-                </Text>
+                {busy ? (
+                  <ActivityIndicator color={colors.primaryForeground} />
+                ) : (
+                  <Text style={[type.body, { color: colors.primaryForeground, fontFamily: fonts.bodyMed }]}>
+                    Send code
+                  </Text>
+                )}
               </Pressable>
             </>
           ) : (
@@ -407,6 +420,14 @@ const styles = StyleSheet.create({
     padding: 14,
     alignItems: "center",
     marginTop: 12,
+  },
+  demoFill: {
+    alignSelf: "flex-start",
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginTop: 8,
   },
   btnSm: {
     borderWidth: 1,

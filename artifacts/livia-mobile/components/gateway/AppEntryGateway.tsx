@@ -10,6 +10,7 @@ import { elevation } from "@/constants/elevation";
 import { fonts, type } from "@/constants/typography";
 import { useColors } from "@/hooks/useColors";
 import { useHaptics } from "@/hooks/useHaptics";
+import { isDemoLoginEnabled } from "@/hooks/usePersona";
 import { LIVIA_MOBILE_ENTRY_COPY } from "@workspace/policy";
 
 export function AppEntryGateway() {
@@ -27,6 +28,11 @@ export function AppEntryGateway() {
   function goGuest() {
     haptics.tap();
     router.push("/my-livia" as never);
+  }
+
+  function goDemo() {
+    haptics.tap();
+    router.push("/demo" as never);
   }
 
   return (
@@ -96,6 +102,25 @@ export function AppEntryGateway() {
               <Text style={[styles.cardCta, { color: aurora.violet }]}>{copy.operatorCta} →</Text>
             </View>
           </Pressable>
+
+          {isDemoLoginEnabled ? (
+            <Pressable
+              onPress={goDemo}
+              testID="entry-gateway-demo"
+              style={({ pressed }) => [
+                styles.demoLink,
+                pressed && styles.cardPressed,
+              ]}
+            >
+              <Text style={[styles.demoLinkTitle, { color: colors.foreground }]}>
+                {copy.demoTitle}
+              </Text>
+              <Text style={[styles.demoLinkBody, { color: colors.mutedForeground }]}>
+                {copy.demoBody}
+              </Text>
+              <Text style={[styles.cardCta, { color: colors.primary }]}>{copy.demoCta} →</Text>
+            </Pressable>
+          ) : null}
         </View>
       </ScrollView>
     </View>
@@ -170,5 +195,24 @@ const styles = StyleSheet.create({
   cardHint: {
     fontSize: 11,
     fontFamily: fonts.body,
+  },
+  demoLink: {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "transparent",
+    paddingVertical: 14,
+    paddingHorizontal: 4,
+    gap: 4,
+    alignItems: "center",
+  },
+  demoLinkTitle: {
+    fontFamily: fonts.bodySemi,
+    fontSize: 15,
+  },
+  demoLinkBody: {
+    ...type.caption,
+    textAlign: "center",
+    lineHeight: 18,
+    maxWidth: 300,
   },
 });
