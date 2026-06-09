@@ -514,14 +514,6 @@ export async function seedVerticalShowcaseShops(
     });
 
     const core = await seedShopCore(biz.id, d.staff, d.services, d.vertical);
-    if (d.vertical === "beauty") {
-      const { seedBeautyRetailTemplates } = await import("./beauty-retail.service");
-      await seedBeautyRetailTemplates(biz.id);
-    }
-    if (d.vertical === "wellness") {
-      const { seedWellnessRetailTemplates } = await import("./beauty-retail.service");
-      await seedWellnessRetailTemplates(biz.id);
-    }
     const customers = await ensureShowcaseCustomers(biz.id, 20);
     if (d.seedPets?.length) {
       await ensureShowcasePets(
