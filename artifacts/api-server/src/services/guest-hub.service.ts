@@ -14,17 +14,11 @@ import {
 } from "@workspace/db";
 import { eq, and, desc, gte, inArray } from "drizzle-orm";
 import {
-  guestManageVisitPath,
   guestOtpCodeMatches,
-  guestShopRelationshipPath,
-  migrateLegacyGuestBookPath,
   normalizeGuestHubPhone,
 } from "@workspace/policy";
-import { resolveGuestBookUrl } from "../lib/guest-public-urls";
-import { resolveDemoVerticalImageUrl } from "../lib/demo-public-assets";
 import { generateId } from "../lib/id";
 import { getStagingRelaxations } from "../lib/staging-relaxations";
-import type { BusinessVertical } from "@workspace/policy";
 import { ensureBookingGuestAccess } from "./booking-guest-access.service";
 
 const OTP_TTL_MS = 10 * 60 * 1000;
@@ -36,18 +30,6 @@ function sessionToken(): string {
 
 function otpCode(): string {
   return String(randomInt(100000, 999999));
-}
-
-function resolveGuestShopImageUrl(shop: {
-  logoUrl: string | null;
-  coverImageUrl: string | null;
-  vertical: string;
-}): string | null {
-  const logo = shop.logoUrl?.trim();
-  if (logo) return logo;
-  const cover = shop.coverImageUrl?.trim();
-  if (cover) return cover;
-  return resolveDemoVerticalImageUrl(shop.vertical as BusinessVertical);
 }
 
 export async function requestGuestHubOtp(rawPhone: string, defaultCountry = "IE") {
@@ -152,7 +134,6 @@ export async function getGuestHubView(hubToken: string) {
       slug: businessesTable.slug,
       vertical: businessesTable.vertical,
       logoUrl: businessesTable.logoUrl,
-      coverImageUrl: businessesTable.coverImageUrl,
       firstBookingAt: guestShopLinksTable.firstBookingAt,
       consentAt: guestShopLinksTable.consentAt,
     })
@@ -247,8 +228,7 @@ export async function getGuestHubView(hubToken: string) {
         startAt: b.startAt.toISOString(),
         serviceName: b.serviceName,
         staffDisplayName: b.staffDisplayName,
-        visitUrl: guestManageVisitPath(b.slug, b.bookingId),
-        visitToken,
+        visitUrl: `/b/${b.slug}/visit/${encodeURIComponent(visitToken)}`,
       };
     }),
   );
@@ -263,81 +243,24 @@ export async function getGuestHubView(hubToken: string) {
     session.phoneE164,
   );
 
-  const customersForGuest =
-    businessIds.length > 0 && session.phoneE164
-      ? await db
-          .select({
-            businessId: customersTable.businessId,
-            customerId: customersTable.id,
-          })
-          .from(customersTable)
-          .where(
-            and(
-              eq(customersTable.phone, session.phoneE164),
-              inArray(customersTable.businessId, businessIds),
-            ),
-          )
-      : [];
-  const customerByBusiness = new Map(
-    customersForGuest.map((c) => [c.businessId, c.customerId] as const),
-  );
-
-  const {
-    loadGuestVerticalArtifacts,
-    summarizeGuestShopHint,
-  } = await import("./guest-hub-vertical-artifacts.service");
-
-  const relationshipHintByBusiness = new Map<string, string | null>();
-  await Promise.all(
-    shops.map(async (s) => {
-      const customerId = customerByBusiness.get(s.businessId);
-      if (!customerId) {
-        relationshipHintByBusiness.set(s.businessId, null);
-        return;
-      }
-      const artifacts = await loadGuestVerticalArtifacts({
-        businessId: s.businessId,
-        customerId,
-        slug: s.slug,
-        vertical: s.vertical,
-      });
-      const pack = packageCredits.find((p) => p.slug === s.slug);
-      relationshipHintByBusiness.set(
-        s.businessId,
-        summarizeGuestShopHint(artifacts, pack ?? null),
-      );
-    }),
-  );
-
-  const [guestRow] = await db
-    .select({ preferredModality: guestIdentitiesTable.preferredModality })
-    .from(guestIdentitiesTable)
-    .where(eq(guestIdentitiesTable.id, session.guestId))
-    .limit(1);
-
   return {
     guestId: session.guestId,
     phoneE164: session.phoneE164,
-    preferredModality: guestRow?.preferredModality ?? "ANY",
     packageCredits,
     upcomingBookings,
     shops: shops.map((s) => {
       const last = lastByBusiness.get(s.businessId);
-      const bookQuery = last ? `service=${encodeURIComponent(last.serviceId)}` : "";
-      const bookUrl = resolveGuestBookUrl(s.slug, bookQuery);
-      const imageUrl = resolveGuestShopImageUrl(s);
+      const bookUrl = last
+        ? `/b/${s.slug}?service=${encodeURIComponent(last.serviceId)}`
+        : `/b/${s.slug}`;
       return {
         ...s,
-        imageUrl,
         firstBookingAt: s.firstBookingAt?.toISOString() ?? null,
         consentAt: s.consentAt.toISOString(),
         isFavorite: favoriteSet.has(s.businessId),
         bookUrl,
-        bookPath: `/book/${s.slug}${bookQuery ? `?${bookQuery}` : ""}`,
-        shopRelationshipUrl: guestShopRelationshipPath(s.slug),
         manageVisitUrl: visitByBusiness.get(s.businessId) ?? null,
         lastServiceName: last?.serviceName ?? null,
-        relationshipHint: relationshipHintByBusiness.get(s.businessId) ?? null,
       };
     }),
   };
@@ -346,20 +269,13 @@ export async function getGuestHubView(hubToken: string) {
 /** Resolve legacy `/my?visit=token` links to the public visit route. */
 export async function resolveGuestVisitPath(token: string): Promise<string | null> {
   const [row] = await db
-    .select({
-      slug: businessesTable.slug,
-      bookingId: bookingGuestAccessTable.bookingId,
-    })
+    .select({ slug: businessesTable.slug })
     .from(bookingGuestAccessTable)
     .innerJoin(businessesTable, eq(bookingGuestAccessTable.businessId, businessesTable.id))
     .where(eq(bookingGuestAccessTable.token, token))
     .limit(1);
   if (!row?.slug) return null;
-  const booking = row;
-  if (booking?.bookingId) {
-    return guestManageVisitPath(row.slug, booking.bookingId);
-  }
-  return migrateLegacyGuestBookPath(`/book/${row.slug}/visit/${encodeURIComponent(token)}`);
+  return `/b/${row.slug}/visit/${encodeURIComponent(token)}`;
 }
 
 export async function linkGuestToShop(guestId: string, businessId: string, firstBookingAt?: Date) {
@@ -436,36 +352,4 @@ export async function ensureGuestVaultLinkFromBook(
 
   await linkGuestToShop(guestId, businessId, bookingStartAt);
   return { guestId, phoneE164, myLiviaPath: "/my" };
-}
-
-const VALID_MODALITIES = new Set([
-  "VOICE",
-  "WHATSAPP",
-  "SMS",
-  "EMAIL",
-  "INSTAGRAM",
-  "WEB",
-  "ANY",
-]);
-
-export async function updateGuestPreferredModality(
-  hubToken: string,
-  modality: string,
-): Promise<Awaited<ReturnType<typeof getGuestHubView>> | null> {
-  const session = await getGuestHubSession(hubToken);
-  if (!session?.guestId) return null;
-  const next = VALID_MODALITIES.has(modality) ? modality : "ANY";
-  await db
-    .update(guestIdentitiesTable)
-    .set({ preferredModality: next })
-    .where(eq(guestIdentitiesTable.id, session.guestId));
-
-  if (session.phoneE164) {
-    await db
-      .update(customersTable)
-      .set({ preferredModality: next as typeof customersTable.$inferSelect.preferredModality })
-      .where(eq(customersTable.phone, session.phoneE164));
-  }
-
-  return getGuestHubView(hubToken);
 }

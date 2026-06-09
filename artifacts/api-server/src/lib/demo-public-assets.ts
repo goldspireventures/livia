@@ -73,13 +73,6 @@ const ASSETS: Partial<
   },
 };
 
-/** Read-only vertical stock image when a tenant has no logo/cover yet (demo + onboarding). */
-export function resolveDemoVerticalImageUrl(vertical: BusinessVertical): string | null {
-  const pack = ASSETS[vertical];
-  if (!pack) return null;
-  return pack.logoUrl ?? pack.coverImageUrl ?? null;
-}
-
 export async function applyDemoPublicBranding(
   businessId: string,
   vertical: BusinessVertical,
