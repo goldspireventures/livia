@@ -10,6 +10,10 @@ export function mobileMyLiviaUrl(): string {
   return `${MOBILE_SCHEME}my-livia`;
 }
 
+export function mobileSettingsUrl(tab = "shop"): string {
+  return `${MOBILE_SCHEME}settings${tab ? `?tab=${encodeURIComponent(tab)}` : ""}`;
+}
+
 export const CROSS_SURFACE_WEB_COPY = {
   continueOnMobileTitle: "Continue on mobile",
   continueOnMobileBody:

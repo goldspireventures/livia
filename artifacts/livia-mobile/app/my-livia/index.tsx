@@ -105,19 +105,51 @@ export default function MyLiviaHubScreen() {
     })();
   }, [loadView]);
 
-  async function requestOtp() {
+  async function requestOtp(forPhone = phone) {
     setBusy(true);
     setErr(null);
     try {
-      const j = await requestGuestHubOtpMobile(api, phone, "IE");
+      const j = await requestGuestHubOtpMobile(api, forPhone, "IE");
       setOtpSession(j.sessionToken);
       const shownCode = j.magicOtpCode ?? j.devOtp ?? null;
       setMagicOtp(shownCode);
       if (shownCode) setCode(shownCode);
+      return { sessionToken: j.sessionToken, code: shownCode };
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Could not send code");
+      return null;
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function signInAsMaryDemo() {
+    setPhone(DEMO_GUEST_PHONE);
+    setErr(null);
+    const otp = await requestOtp(DEMO_GUEST_PHONE);
+    if (!otp?.sessionToken) return;
+    if (otp.code) {
+      setCode(otp.code);
+      setBusy(true);
+      try {
+        const r = await fetch(`${api}/api/public/guest-hub/otp/verify`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionToken: otp.sessionToken, code: otp.code }),
+        });
+        if (!r.ok) throw new Error("Incorrect code");
+        const j = (await r.json()) as { hubToken: string };
+        await AsyncStorage.setItem(GUEST_HUB_TOKEN_KEY, j.hubToken);
+        setHubToken(j.hubToken);
+        const v = await loadView(j.hubToken);
+        setView(v);
+        setChannel(v.preferredModality ?? "ANY");
+        setOtpSession(null);
+      } catch {
+        setErr("Could not sign in — try Verify manually with code 000000");
+      } finally {
+        setBusy(false);
+      }
     }
   }
 
@@ -236,11 +268,21 @@ export default function MyLiviaHubScreen() {
                 testID="guest-hub-phone-input"
               />
               <Pressable
+                onPress={() => void signInAsMaryDemo()}
+                style={[styles.demoFill, { borderColor: colors.primary, backgroundColor: colors.primary + "12" }]}
+                testID="guest-hub-demo-mary"
+                disabled={busy}
+              >
+                <Text style={[type.caption, { color: colors.primary, fontFamily: fonts.bodyMed }]}>
+                  Sign in as Mary (demo)
+                </Text>
+              </Pressable>
+              <Pressable
                 onPress={() => setPhone(DEMO_GUEST_PHONE)}
                 style={[styles.demoFill, { borderColor: colors.border }]}
                 testID="guest-hub-demo-phone"
               >
-                <Text style={[type.caption, { color: colors.primary }]}>Use demo number</Text>
+                <Text style={[type.caption, { color: colors.primary }]}>Use demo number only</Text>
               </Pressable>
               <Pressable
                 style={[styles.btn, { backgroundColor: colors.primary }, busy && { opacity: 0.7 }]}

@@ -174,6 +174,48 @@ await check("Presentation presets gate (E7)", async () => {
   return "LIVIA_DEPLOY_ENV=staging (run settings-preset-picker E2E after API redeploy)";
 });
 
+await check("Demo guest Mary vault (sync + /me)", async () => {
+  const sync = await fetch(`${apiBase}/api/demo/sync-guest-hub`, {
+    method: "POST",
+    signal: AbortSignal.timeout(120_000),
+  });
+  if (sync.status === 404) {
+    throw new Error(
+      "404 — API not redeployed yet; push main → Railway redeploy, then re-run readiness",
+    );
+  }
+  if (!sync.ok) throw new Error(`sync-guest-hub HTTP ${sync.status}`);
+
+  const otpReq = await fetch(`${apiBase}/api/public/guest-hub/otp/request`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ phone: "+353871000001", country: "IE" }),
+    signal: AbortSignal.timeout(20_000),
+  });
+  if (!otpReq.ok) throw new Error(`otp/request HTTP ${otpReq.status}`);
+  const { sessionToken, magicOtpCode, devOtp } = await otpReq.json();
+  const code = devOtp ?? magicOtpCode ?? "000000";
+  const verify = await fetch(`${apiBase}/api/public/guest-hub/otp/verify`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ sessionToken, code }),
+    signal: AbortSignal.timeout(20_000),
+  });
+  if (!verify.ok) throw new Error(`otp/verify HTTP ${verify.status}`);
+  const { hubToken, token } = await verify.json();
+  const hub = hubToken ?? token;
+  if (!hub) throw new Error("missing hubToken");
+  const me = await fetch(`${apiBase}/api/public/guest-hub/me`, {
+    headers: { "X-Guest-Hub-Token": hub },
+    signal: AbortSignal.timeout(20_000),
+  });
+  if (!me.ok) throw new Error(`/me HTTP ${me.status}`);
+  const view = await me.json();
+  const shopCount = Array.isArray(view.shops) ? view.shops.length : 0;
+  if (shopCount < 7) throw new Error(`Mary has ${shopCount} shops — expected ≥7`);
+  return `${shopCount} shops linked`;
+});
+
 await check("Demo guest surface token (proof)", async () => {
   const res = await fetch(`${apiBase}/api/demo/guest-surfaces/ink-anchor-galway/proof`, {
     signal: AbortSignal.timeout(20_000),

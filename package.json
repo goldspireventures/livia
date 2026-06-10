@@ -38,6 +38,8 @@
     "demo:backfill-branding": "node --env-file=.env scripts/backfill-demo-branding.mjs",
     "demo:provision:http": "node --env-file=.env scripts/provision-demo-world.mjs",
     "demo:sync-verticals": "node --env-file=.env scripts/provision-demo-if-needed.mjs",
+    "demo:sync-guest-hub": "node --env-file=.env scripts/seed-demo-guest-hub.mjs",
+    "demo:sync-guest-hub:staging": "node scripts/with-db-target.mjs --staging node scripts/seed-demo-guest-hub.mjs",
     "reset:demo": "node --env-file=.env scripts/reset-demo-for-test.mjs",
     "db:migrate:sql": "node --env-file=.env scripts/apply-sql-migrations.mjs",
     "db:migrate:sql:prod": "node scripts/with-db-target.mjs --prod node scripts/apply-sql-migrations.mjs",

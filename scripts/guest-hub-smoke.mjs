@@ -121,7 +121,10 @@ try {
           const view = await me.json();
           const shopCount = Array.isArray(view.shops) ? view.shops.length : 0;
           if (shopCount < 7) {
-            fail("guest-hub /me shops", `expected ≥7 linked shops, got ${shopCount} — re-run demo:provision`);
+            fail(
+              "guest-hub /me shops",
+              `expected ≥7 linked shops, got ${shopCount} — run pnpm demo:sync-guest-hub (or POST /api/demo/sync-guest-hub)`,
+            );
           } else {
             pass("guest-hub /me", `${shopCount} shops linked`);
           }

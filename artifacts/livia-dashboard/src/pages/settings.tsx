@@ -78,6 +78,7 @@ import {
   StudioProfileForm,
   type StudioProfileFormValues,
 } from "@/components/settings/studio-profile-form";
+import { CrossSurfaceContinueCard } from "@/components/onboarding/cross-surface-continue-card";
 import { PublicAppearancePanel } from "@/components/settings/public-appearance-panel";
 import { LivSetupPanel } from "@/components/liv/liv-setup-panel";
 import { AuditLogPanel } from "@/components/audit/audit-log-panel";
@@ -387,6 +388,7 @@ export default function SettingsPage() {
                 onBrandFieldsChange={setBrandFields}
                 appearanceTabActive={settingsTab === "appearance"}
               />
+              {shopEditable ? <CrossSurfaceContinueCard variant="appearance" /> : null}
             </TabsContent>
           )}
 
