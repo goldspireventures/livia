@@ -10,6 +10,7 @@ import {
   Platform,
   Pressable,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -31,7 +32,11 @@ import { fonts, type } from "@/constants/typography";
 import { useBusiness } from "@/contexts/BusinessContext";
 import { useTenantExperience } from "@/hooks/useTenantExperience";
 import { verticalOperationalCopy } from "@workspace/policy";
-import { useBeautyMobileLayout } from "@/hooks/useBeautyMobileLayout";
+import {
+  MobileBookingsMorphHeader,
+  MobileBookingsMorphLayout,
+} from "@/components/bookings/MobileBookingsMorphLayout";
+import { usePresentationMorph } from "@/hooks/usePresentationMorph";
 import { useColors } from "@/hooks/useColors";
 import { useHaptics } from "@/hooks/useHaptics";
 import { notifyBookingRunningLate, promptRunningLateMinutes } from "@/lib/running-late";
@@ -74,7 +79,7 @@ export default function BookingsScreen() {
   const pack = verticalPackUi(bizVertical, currentBusiness?.category);
   const opCopy = verticalOperationalCopy(bizVertical, currentBusiness?.category);
   const roomsTitle = opCopy.bookingsPageTitle;
-  const { layout: beautyLayout } = useBeautyMobileLayout();
+  const { nativeMorph } = usePresentationMorph();
   const params = useLocalSearchParams<{ status?: string }>();
   const [filter, setFilter] = useState<Filter>("day");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -172,7 +177,31 @@ export default function BookingsScreen() {
   );
 
   const bookings = data?.data ?? [];
+  const pendingCount = bookings.filter((b) => b.status === "PENDING").length;
+  const completedCount = bookings.filter((b) => b.status === "COMPLETED").length;
+  const useMorphList = Boolean(nativeMorph);
   const { refreshing: pullRefreshing, onRefresh: onPullRefresh } = useManualRefresh(refetch);
+
+  const renderSwipeRow = (
+    item: (typeof bookings)[number],
+    index: number,
+    inner: React.ReactNode,
+  ) => (
+    <SwipeableRow
+      onSwipeRight={() => advanceStatus(item.id, item.status)}
+      onSwipeLeft={() => router.push(`/booking/${item.id}?intent=reschedule`)}
+      rightLabel={
+        item.status === "PENDING"
+          ? "Confirm"
+          : item.status === "CONFIRMED"
+            ? "Done"
+            : "—"
+      }
+      leftLabel="Reschedule"
+    >
+      {inner}
+    </SwipeableRow>
+  );
 
   return (
     <OperationalScreen
@@ -268,50 +297,74 @@ export default function BookingsScreen() {
         </>
       }
     >
+      {nativeMorph ? (
+        <MobileBookingsMorphHeader
+          morph={nativeMorph}
+          pendingCount={pendingCount}
+          completedCount={completedCount}
+          total={bookings.length}
+          accent={colors.primary}
+        />
+      ) : null}
+      {useMorphList && nativeMorph ? (
+        <ScrollView
+          contentContainerStyle={[styles.list, bookings.length === 0 && styles.listEmpty]}
+          refreshControl={
+            <RefreshControl
+              refreshing={pullRefreshing}
+              onRefresh={onPullRefresh}
+              tintColor={colors.primary}
+            />
+          }
+        >
+          {bookings.length === 0 ? (
+            <EmptyState
+              icon="calendar"
+              title={isLoading ? "Loading…" : "No appointments in this view"}
+              subtitle={
+                isLoading
+                  ? undefined
+                  : statusFilter === "PENDING"
+                    ? "Nothing waiting for approval — Liv will queue edge cases here."
+                    : `No ${pack.serviceNoun.toLowerCase()}s for this period. Try week view or tap + to book.`
+              }
+              isLoading={isLoading}
+            />
+          ) : (
+            <MobileBookingsMorphLayout
+              morph={nativeMorph}
+              bookings={bookings}
+              accent={colors.primary}
+              timeZone={currentBusiness?.timezone}
+              showDate={filter !== "day"}
+              pendingCount={pendingCount}
+              completedCount={completedCount}
+              onPress={(id) => router.push(`/booking/${id}`)}
+              onLongPress={(id, status, name) => setActionsFor({ id, status, name })}
+              renderSwipeRow={renderSwipeRow}
+            />
+          )}
+        </ScrollView>
+      ) : (
       <FlatList
         data={bookings}
         keyExtractor={(b) => b.id}
         renderItem={({ item, index }) => {
           const customerName =
             item.customer?.displayName ?? item.customer?.firstName ?? "Walk-in";
-          return (
-            <SwipeableRow
-              onSwipeRight={() => advanceStatus(item.id, item.status)}
-              onSwipeLeft={() =>
-                router.push(`/booking/${item.id}?intent=reschedule`)
+          return renderSwipeRow(
+            item,
+            index,
+            <BookingCard
+              booking={item}
+              timeZone={currentBusiness?.timezone}
+              showDate={filter !== "day"}
+              index={index}
+              onPress={() => router.push(`/booking/${item.id}`)}
+              onLongPress={() =>
+                setActionsFor({ id: item.id, status: item.status, name: customerName })
               }
-              rightLabel={
-                item.status === "PENDING"
-                  ? "Confirm"
-                  : item.status === "CONFIRMED"
-                    ? "Done"
-                    : "—"
-              }
-              leftLabel="Reschedule"
-            >
-              <View
-                style={
-                  beautyLayout
-                    ? {
-                        borderLeftWidth: 3,
-                        borderLeftColor:
-                          item.status === "PENDING" ? colors.primary : colors.border,
-                      }
-                    : undefined
-                }
-              >
-                <BookingCard
-                  booking={item}
-                  timeZone={currentBusiness?.timezone}
-                  showDate={filter !== "day"}
-                  index={index}
-                  onPress={() => router.push(`/booking/${item.id}`)}
-                  onLongPress={() =>
-                    setActionsFor({ id: item.id, status: item.status, name: customerName })
-                  }
-                />
-              </View>
-            </SwipeableRow>
+            />,
           );
         }}
         contentContainerStyle={[
@@ -341,6 +394,7 @@ export default function BookingsScreen() {
         }
         scrollEnabled={bookings.length > 0}
       />
+      )}
 
       <QuickActionsSheet
         visible={!!actionsFor}

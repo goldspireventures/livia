@@ -221,4 +221,74 @@ export function BeautyCockpitSchedule({
   );
 }
 
+/** Noir-dusk — confirm queue beside floor schedule (split-inbox morph on /bookings). */
+export function BeautySplitInboxBookingsSchedule({
+  bookings,
+  vertical,
+  className,
+}: {
+  bookings: BeautyBookingRow[];
+  vertical?: string | null;
+  className?: string;
+}) {
+  const pending = bookings.filter((b) => b.status === "PENDING");
+  const floor = bookings.filter((b) => b.status !== "PENDING");
+
+  return (
+    <section
+      className={cn("beauty-split-inbox-bookings grid gap-4 lg:grid-cols-2", className)}
+      data-testid="beauty-split-inbox-bookings"
+    >
+      <div className="beauty-split-inbox-queue rounded-xl border border-border/80 bg-card/80 p-3">
+        <h2 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+          Confirm first · {layoutMorphLabel("split-inbox")}
+        </h2>
+        <ul className="space-y-2">
+          {pending.length === 0 ? (
+            <p className="text-xs text-muted-foreground py-4 text-center">Nothing waiting for approval.</p>
+          ) : (
+            pending.map((b) => (
+              <li key={b.id}>
+                <Link
+                  href={`/bookings/${b.id}`}
+                  className="block rounded-lg border border-primary/25 bg-primary/5 px-3 py-2 hover:bg-primary/10"
+                >
+                  <p className="text-xs font-mono text-muted-foreground">{formatTime(b)}</p>
+                  <p className="text-sm font-medium truncate">{b.service?.name ?? "Treatment"}</p>
+                  <p className="text-xs text-muted-foreground truncate">{guestName(b.customer)}</p>
+                </Link>
+              </li>
+            ))
+          )}
+        </ul>
+      </div>
+      <div className="rounded-xl border border-border/80 bg-card/80 p-3">
+        <h2 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+          On the floor today
+        </h2>
+        <ul className="space-y-2">
+          {floor.length === 0 ? (
+            <p className="text-xs text-muted-foreground py-4 text-center">Floor clear.</p>
+          ) : (
+            floor.slice(0, 8).map((b) => (
+              <li key={b.id}>
+                <Link href={`/bookings/${b.id}`} className="block rounded-lg border px-3 py-2 hover:bg-muted/40">
+                  <p className="text-xs font-mono text-muted-foreground">{formatTime(b)}</p>
+                  <p className="text-sm font-medium truncate">{b.service?.name ?? "Treatment"}</p>
+                  <p className="text-xs text-muted-foreground truncate">{guestName(b.customer)}</p>
+                </Link>
+              </li>
+            ))
+          )}
+        </ul>
+        {floor.length > 8 ? (
+          <Link href="/bookings" className="inline-block mt-3 text-xs text-primary hover:underline">
+            View all {floor.length} on calendar
+          </Link>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
 export type { PackageCreditSummaryView };

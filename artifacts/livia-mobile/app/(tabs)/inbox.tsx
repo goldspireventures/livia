@@ -29,7 +29,8 @@ import { usePresentationAccent } from "@/contexts/PresentationThemeContext";
 import { useTenantExperience } from "@/hooks/useTenantExperience";
 import { fonts, type } from "@/constants/typography";
 import { useBusiness } from "@/contexts/BusinessContext";
-import { useBeautyMobileLayout } from "@/hooks/useBeautyMobileLayout";
+import { MobileInboxMorphLayout } from "@/components/inbox/MobileInboxMorphLayout";
+import { usePresentationMorph } from "@/hooks/usePresentationMorph";
 import { useColors } from "@/hooks/useColors";
 import { usePersona } from "@/hooks/usePersona";
 import { asHref } from "@/lib/navigation";
@@ -67,7 +68,7 @@ export default function InboxScreen() {
   const bizMeta = currentBusiness as { vertical?: string; category?: string } | undefined;
   const { data: tenantExperience } = useTenantExperience(businessId || undefined);
   const accent = usePresentationAccent();
-  const { layout: beautyLayout } = useBeautyMobileLayout();
+  const { nativeMorph } = usePresentationMorph();
   const chrome = useOperationalChrome(businessId || undefined);
   const presentation = useTenantPresentation();
   const haptics = useHaptics();
@@ -188,24 +189,29 @@ export default function InboxScreen() {
             actionLabel={canQuickBook ? "New booking" : undefined}
             onAction={canQuickBook ? () => router.push(asHref("/booking/new")) : undefined}
           />
+        ) : nativeMorph ? (
+          <MobileInboxMorphLayout
+            morph={nativeMorph}
+            threads={filtered}
+            accent={accent}
+            chrome={chrome}
+            showQueue={showQueue}
+            queueLens={queueLens}
+            formatRelative={formatRelative}
+            queueCounts={queueCounts}
+          />
         ) : (
-          filtered.map((t, i) => {
-            const needsYou = t.status === "OPEN" && !t.aiHandled;
-            const beautyAccent =
-              beautyLayout && needsYou && (showQueue ? queueLens === "needs_you" : true);
-            return (
-              <InboxThreadRow
-                key={t.id}
-                thread={t}
-                index={i}
-                accent={accent}
-                chrome={chrome}
-                formatRelative={formatRelative}
-                needsYouHighlight={showQueue && queueLens === "needs_you"}
-                beautyAccent={beautyAccent ?? undefined}
-              />
-            );
-          })
+          filtered.map((t, i) => (
+            <InboxThreadRow
+              key={t.id}
+              thread={t}
+              index={i}
+              accent={accent}
+              chrome={chrome}
+              formatRelative={formatRelative}
+              needsYouHighlight={showQueue && queueLens === "needs_you"}
+            />
+          ))
         )}
       </OperationalScreen>
 

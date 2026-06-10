@@ -1,26 +1,36 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 import { BookingGuidedDialog } from "@/components/booking/booking-guided-dialog";
 import { useBusiness } from "@/lib/business-context";
-import { useListBookings, listBookings } from "@workspace/api-client-react";
+import {
+  getGetDashboardSummaryQueryKey,
+  useGetDashboardSummary,
+  useListBookings,
+  listBookings,
+  useUpdateBooking,
+} from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { formatDateTime } from "@/lib/format";
 import { useNewBookingArrivalToast } from "@/hooks/use-new-booking-arrival";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CalendarPlus, Search, Calendar, ChevronRight, Loader2 } from "lucide-react";
+import { CalendarPlus, Search, Calendar, Loader2 } from "lucide-react";
 import { usePersona } from "@/lib/persona";
 import { BookingCreateDialog } from "@/components/booking/booking-create-dialog";
-import { pendingReasonLabel } from "@/lib/booking-pending";
-import { BookingRowActions } from "@/components/booking/booking-row-actions";
 import { OperationalPageShell } from "@/components/layout/operational-page-shell";
 import { bookingExperienceCopy, verticalOperationalCopy } from "@workspace/policy";
 import { useOperationalChrome } from "@/lib/operational-chrome";
 import { cn } from "@/lib/utils";
 import { onContainedScrollWheel } from "@/lib/use-contained-scroll";
+import { usePresentationSurface } from "@/lib/presentation-surface";
+import {
+  beautyNativeMorphForVertical,
+  isConstellationPresentation,
+  wellnessNativeMorphForVertical,
+} from "@/lib/presentation-layout";
+import { BookingsMorphFallbackRow, BookingsMorphList } from "@/components/booking/bookings-morph-list";
 
 const PAGE_SIZE = 40;
 
@@ -51,6 +61,20 @@ export default function BookingsPage() {
   const opCopy = verticalOperationalCopy(businessVertical, businessCategory);
   const bookingCopy = bookingExperienceCopy(businessVertical, businessCategory);
   const statusParam = statusFilter !== "ALL" ? (statusFilter as any) : undefined;
+  const presentation = usePresentationSurface(bid);
+  const beautyMorph = beautyNativeMorphForVertical(businessVertical, presentation.layoutMorph);
+  const wellnessMorph = wellnessNativeMorphForVertical(businessVertical, presentation.layoutMorph);
+  const constellationMorph =
+    !beautyMorph &&
+    !wellnessMorph &&
+    isConstellationPresentation(presentation.cssPreset) &&
+    presentation.layoutMorph === "constellation";
+  const bookingsMorph = beautyMorph ?? wellnessMorph ?? (constellationMorph ? "constellation" : null);
+  const updateBooking = useUpdateBooking();
+  const [assigningBookingId, setAssigningBookingId] = useState<string | null>(null);
+  const { data: dashboardSummary } = useGetDashboardSummary(bid, {
+    query: { enabled: !!bid && !!bookingsMorph } as never,
+  });
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -151,6 +175,29 @@ export default function BookingsPage() {
     : accumulated;
 
   const listLoading = isLoading && offset === 0;
+  const pendingCount = filtered.filter((b: { status: string }) => b.status === "PENDING").length;
+  const completedCount = filtered.filter((b: { status: string }) => b.status === "COMPLETED").length;
+
+  const onAssignBookingToResource = useCallback(
+    async (bookingId: string, resourceId: string | null) => {
+      if (!bid) return false;
+      setAssigningBookingId(bookingId);
+      try {
+        await updateBooking.mutateAsync({
+          businessId: bid,
+          bookingId,
+          data: { resourceId },
+        });
+        await qc.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey(bid) });
+        return true;
+      } catch {
+        return false;
+      } finally {
+        setAssigningBookingId(null);
+      }
+    },
+    [bid, updateBooking, qc],
+  );
 
   const showRitual = persona === "receptionist" || persona === "manager" || persona === "owner";
 
@@ -262,78 +309,43 @@ export default function BookingsPage() {
             </div>
           ) : (
             <>
+            {bookingsMorph ? (
+              <div className="p-4" data-testid={`bookings-morph-${bookingsMorph}`}>
+                <BookingsMorphList
+                  morph={bookingsMorph}
+                  vertical={businessVertical}
+                  category={businessCategory}
+                  bookings={filtered}
+                  pendingCount={pendingCount}
+                  completedCount={completedCount}
+                  packageCreditSummary={dashboardSummary?.packageCreditSummary ?? null}
+                  bookingResources={dashboardSummary?.bookingResources}
+                  onAssignBookingToResource={
+                    dashboardSummary?.bookingResources?.length ? onAssignBookingToResource : undefined
+                  }
+                  assigningBookingId={assigningBookingId}
+                  statusColors={STATUS_COLORS}
+                  rowClass={op.row}
+                  avatarClass={op.avatarRing}
+                  bookingStatusClass={op.bookingStatus}
+                />
+              </div>
+            ) : (
             <div className={op.listScroll()} onWheel={onContainedScrollWheel}>
               {filtered.map((booking: any) => (
-                <Link key={booking.id} href={`/bookings/${booking.id}`}>
-                  <div
-                    data-testid={`row-booking-${booking.id}`}
-                    className={op.row(booking.status === "PENDING")}
-                  >
-                    <div className={op.avatarRing()}>
-                      {booking.customer?.firstName?.charAt(0) ?? "?"}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">
-                        {booking.customer?.firstName} {booking.customer?.lastName}
-                      </p>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {booking.service?.name}
-                        {booking.staff ? ` · ${booking.staff.displayName}` : ""}
-                      </p>
-                    </div>
-                    <div className="flex flex-col items-end gap-1 shrink-0">
-                      <span className="text-sm font-medium">{formatDateTime(booking.startAt)}</span>
-                      <div className="flex flex-col items-end gap-0.5">
-                        <span
-                          className={cn(
-                            "text-[10px] font-semibold px-2 py-0.5 rounded-full border",
-                            op.bookingStatus(
-                              booking.status,
-                              STATUS_COLORS[booking.status] ?? "",
-                            ),
-                          )}
-                        >
-                          {booking.status}
-                        </span>
-                        {booking.status === "PENDING" ? (
-                          <span
-                            className={cn(
-                              "text-[9px] max-w-[200px] line-clamp-2 text-right leading-snug",
-                              op.wellness
-                                ? "text-[hsl(var(--wellness-pending-fg))]"
-                                : "text-amber-700 dark:text-amber-300",
-                            )}
-                            data-testid={`pending-reason-${booking.id}`}
-                            title={pendingReasonLabel(
-                              booking.pendingReason,
-                              businessVertical,
-                              businessCategory,
-                            )}
-                          >
-                            {pendingReasonLabel(
-                              booking.pendingReason,
-                              businessVertical,
-                              businessCategory,
-                            )}
-                          </span>
-                        ) : booking.status === "CANCELLED" && booking.cancellationReason ? (
-                          <span className="text-[9px] text-muted-foreground max-w-[160px] truncate text-right">
-                            {booking.cancellationReason}
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
-                    <BookingRowActions
-                      bookingId={booking.id}
-                      status={booking.status}
-                      customerFirstName={booking.customer?.firstName}
-                      customerLastName={booking.customer?.lastName}
-                    />
-                    <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                  </div>
-                </Link>
+                <BookingsMorphFallbackRow
+                  key={booking.id}
+                  booking={booking}
+                  rowClass={op.row}
+                  avatarClass={op.avatarRing}
+                  bookingStatusClass={op.bookingStatus}
+                  statusColors={STATUS_COLORS}
+                  vertical={businessVertical}
+                  category={businessCategory}
+                />
               ))}
             </div>
+            )}
             {!search && hasMore && (
               <div className="p-4 border-t flex justify-center">
                 <Button
