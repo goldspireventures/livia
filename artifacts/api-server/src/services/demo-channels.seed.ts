@@ -2,8 +2,14 @@
  * Production-like demo channel stack — WhatsApp, Instagram, Messenger, SMS numbers.
  * Stable IDs so META_DEV_SIMULATE + /dev/meta/inbound resolve the correct tenant.
  */
-import { db, businessesTable, conversationsTable, conversationMessagesTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import {
+  db,
+  businessesTable,
+  conversationsTable,
+  conversationMessagesTable,
+  customersTable,
+} from "@workspace/db";
+import { and, eq, inArray } from "drizzle-orm";
 import type { MessagingChannels } from "@workspace/policy";
 import { generateId } from "../lib/id";
 import { updateMessagingChannels } from "./messaging-channels.service";
@@ -231,6 +237,129 @@ export async function applyDemoChannelProfile(businessId: string, slug: string):
   return Boolean(CHANNEL_PROFILES[slug]);
 }
 
+/** Idempotent — same guest with open WhatsApp + Instagram threads (sibling banner E2E). */
+export const CROSS_CHANNEL_DEMO_MARKER = "[demo:cross-channel]";
+
+export async function ensureCrossChannelDemoThreads(
+  businessId: string,
+  customers: CustomerRow[],
+): Promise<boolean> {
+  const customer = customers[0];
+  if (!customer) return false;
+
+  const open = await db
+    .select({ id: conversationsTable.id, channel: conversationsTable.channel })
+    .from(conversationsTable)
+    .where(
+      and(
+        eq(conversationsTable.businessId, businessId),
+        eq(conversationsTable.customerId, customer.id),
+        inArray(conversationsTable.status, ["OPEN", "HANDED_OFF"]),
+      ),
+    );
+
+  const hasWa = open.some((r) => r.channel === "WHATSAPP");
+  const hasIg = open.some((r) => r.channel === "INSTAGRAM");
+  if (hasWa && hasIg) return true;
+
+  const name = customer.displayName?.trim() || "Emma Walsh";
+  const toSeed: SocialThread[] = [
+    {
+      channel: "WHATSAPP",
+      customerIdx: 0,
+      name,
+      externalPhone: "353872009901",
+      summary: `${CROSS_CHANNEL_DEMO_MARKER} ${name} — WhatsApp Saturday blowdry`,
+      aiHandled: true,
+      messages: [
+        { role: "USER", content: "Can I still get Saturday 10:30 blowdry? 💇‍♀️", minsAgo: 14 },
+        {
+          role: "ASSISTANT",
+          content: `Hi ${name.split(" ")[0]} — yes, Lara still has 10:30. Reply YES to lock it.`,
+          minsAgo: 12,
+        },
+      ],
+    },
+    {
+      channel: "INSTAGRAM",
+      customerIdx: 0,
+      name,
+      externalPhone: "meta:ig_demo_cross_channel",
+      summary: `${CROSS_CHANNEL_DEMO_MARKER} ${name} — Instagram colour question`,
+      aiHandled: true,
+      messages: [
+        { role: "USER", content: "Quick one — can I add gloss on top of Saturday colour?", minsAgo: 6 },
+        {
+          role: "ASSISTANT",
+          content: "Yes — gloss add-on is €25. I'll note it for Lara when you confirm Saturday.",
+          minsAgo: 4,
+        },
+      ],
+    },
+  ];
+
+  for (const t of toSeed) {
+    if (open.some((r) => r.channel === t.channel)) continue;
+    const convId = generateId();
+    const lastAt = ago(Math.min(...t.messages.map((m) => m.minsAgo)));
+    await db.insert(conversationsTable).values({
+      id: convId,
+      businessId,
+      customerId: customer.id,
+      channel: t.channel,
+      status: "OPEN",
+      customerName: name,
+      customerPhone: t.externalPhone,
+      customerEmail: customer.email ?? null,
+      aiHandled: t.aiHandled,
+      summary: t.summary,
+      lastMessageAt: lastAt,
+    });
+    for (const m of t.messages) {
+      await db.insert(conversationMessagesTable).values({
+        id: generateId(),
+        conversationId: convId,
+        role: m.role,
+        content: m.content,
+        createdAt: ago(m.minsAgo),
+      });
+    }
+  }
+  return true;
+}
+
+/** Aurora Studio — flagship cross-channel inbox pair for owner/chain inbox E2E. */
+export async function ensureCrossChannelDemoThreadsForAurora(): Promise<{ seeded: boolean }> {
+  const [biz] = await db
+    .select({ id: businessesTable.id })
+    .from(businessesTable)
+    .where(eq(businessesTable.slug, "aurora-studio"))
+    .limit(1);
+  if (!biz) return { seeded: false };
+
+  const customers = await db
+    .select({
+      id: customersTable.id,
+      displayName: customersTable.displayName,
+      email: customersTable.email,
+      phone: customersTable.phone,
+    })
+    .from(customersTable)
+    .where(eq(customersTable.businessId, biz.id))
+    .limit(8);
+
+  const rows: CustomerRow[] = customers.map((c) => ({
+    id: c.id,
+    displayName: c.displayName ?? "Guest",
+    email: c.email ?? "",
+    phone: c.phone ?? "",
+  }));
+  if (!rows.length) return { seeded: false };
+
+  await ensureCrossChannelDemoThreads(biz.id, rows);
+  return { seeded: true };
+}
+
 export async function seedDemoSocialInbox(
   businessId: string,
   customers: CustomerRow[],
@@ -291,6 +420,7 @@ export async function seedDemoChannelStack(
 
     if (shop.customers?.length && isFlagship) {
       await seedDemoSocialInbox(shop.id, shop.customers, { flagship: true });
+      await ensureCrossChannelDemoThreads(shop.id, shop.customers);
       socialThreads += 1;
     }
   }

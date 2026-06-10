@@ -13,6 +13,7 @@ setup.setTimeout(120_000);
 async function provisionDemo(request: import("@playwright/test").APIRequestContext) {
   const status = await request.get(`${apiBase}/api/demo/status`, { timeout: 30_000 });
   if (status.ok() && (await status.json() as { provisioned?: boolean }).provisioned) {
+    await request.post(`${apiBase}/api/demo/sync`, { timeout: 120_000 }).catch(() => undefined);
     return;
   }
   const prov = await request.post(`${apiBase}/api/demo/provision`, { timeout: 180_000 });
@@ -22,6 +23,7 @@ async function provisionDemo(request: import("@playwright/test").APIRequestConte
       setup.skip(true, `Demo provision failed (${prov.status()})`);
     }
   }
+  await request.post(`${apiBase}/api/demo/sync`, { timeout: 120_000 }).catch(() => undefined);
 }
 
 async function signInFounderWithTicket(

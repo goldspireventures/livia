@@ -144,7 +144,23 @@ export default function ConversationScreen() {
   const convStatus = detail?.conversation?.status ?? summary?.status;
   const aiHandled = detail?.conversation?.aiHandled ?? summary?.aiHandled ?? true;
   const messages: ConversationMessage[] = detail?.messages ?? [];
-  const siblingThreads = detail?.siblingThreads ?? [];
+  const siblingThreads = useMemo(() => {
+    if (detail?.siblingThreads?.length) return detail.siblingThreads;
+    if (!customerId) return [];
+    return threads
+      .filter(
+        (t) =>
+          t.customerId === customerId &&
+          t.id !== conversationId &&
+          t.status !== "CLOSED",
+      )
+      .map((t) => ({
+        id: t.id,
+        channel: t.channel,
+        status: t.status,
+        lastMessage: t.lastMessage ?? null,
+      }));
+  }, [detail?.siblingThreads, customerId, conversationId, threads]);
   const siblingBanner = inboxSiblingThreadsBanner(siblingThreads);
   const businessVertical = (currentBusiness as { vertical?: string } | null)?.vertical;
   const livSuggestionChips = useMemo(

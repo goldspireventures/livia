@@ -1051,6 +1051,8 @@ export async function syncDemoWorld(): Promise<{
     logger.info(guestHub, "demo.guest_hub.synced");
     const { seedOperatorLivWorld } = await import("./demo-operator-liv-world.seed");
     await seedOperatorLivWorld();
+    const { ensureCrossChannelDemoThreadsForAurora } = await import("./demo-channels.seed");
+    await ensureCrossChannelDemoThreadsForAurora();
   } catch (err) {
     logger.warn({ err }, "demo.guest_hub.sync_failed");
   }

@@ -296,15 +296,33 @@ export default function InboxPage() {
     return counts;
   }, [conversations]);
 
-  const siblingThreads = detailData?.siblingThreads ?? [];
-  const siblingBanner = inboxSiblingThreadsBanner(siblingThreads);
-
   const selectedConversation = useMemo(() => {
     if (!selectedId) return null;
     return (
       detailData?.conversation ?? conversations.find((c) => c.id === selectedId) ?? null
     );
   }, [selectedId, detailData, conversations]);
+
+  const siblingThreads = useMemo(() => {
+    if (detailData?.siblingThreads?.length) return detailData.siblingThreads;
+    const customerId = selectedConversation?.customerId;
+    if (!customerId || !selectedId) return [];
+    return conversations
+      .filter(
+        (c) =>
+          c.customerId === customerId &&
+          c.id !== selectedId &&
+          c.status !== "CLOSED",
+      )
+      .map((c) => ({
+        id: c.id,
+        channel: c.channel,
+        status: c.status,
+        lastMessage: c.lastMessage ?? null,
+        lastMessageAt: c.lastMessageAt,
+      }));
+  }, [detailData?.siblingThreads, selectedConversation?.customerId, selectedId, conversations]);
+  const siblingBanner = inboxSiblingThreadsBanner(siblingThreads);
 
   const [resolving, setResolving] = useState(false);
   const [resolveDialog, setResolveDialog] = useState<{
@@ -692,6 +710,12 @@ export default function InboxPage() {
                         selectedConversation.customerPhone ??
                         "no contact info shared"}
                     </div>
+                    <p
+                      className="text-[11px] text-muted-foreground mt-0.5"
+                      data-testid="inbox-thread-channel-hint"
+                    >
+                      {inboxReplyDeliveredOnChannel(selectedConversation.channel)}
+                    </p>
                     {selectedConversation.customerId && businessId ? (
                       <InboxRelationshipChip
                         businessId={businessId}
