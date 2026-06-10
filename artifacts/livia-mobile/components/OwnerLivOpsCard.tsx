@@ -14,7 +14,15 @@ import { customFetch } from "@workspace/api-client-react";
 
 type AssistMessage = { role: "user" | "assistant"; content: string };
 
-export function OwnerLivOpsCard({ businessId }: { businessId: string }) {
+export function OwnerLivOpsCard({
+  businessId,
+  starters = [],
+  soloMode = false,
+}: {
+  businessId: string;
+  starters?: string[];
+  soloMode?: boolean;
+}) {
   const colors = useColors();
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,6 +30,8 @@ export function OwnerLivOpsCard({ businessId }: { businessId: string }) {
   const [suggestions, setSuggestions] = useState<string[]>([]);
 
   const lastReply = [...history].reverse().find((m) => m.role === "assistant")?.content;
+  const visibleStarters =
+    suggestions.length > 0 ? suggestions : history.length === 0 ? starters : [];
 
   async function send(prompt?: string) {
     const text = (prompt ?? message).trim();
@@ -52,14 +62,21 @@ export function OwnerLivOpsCard({ businessId }: { businessId: string }) {
     <View style={[styles.card, { borderColor: colors.border, backgroundColor: colors.card }]}>
       <View style={styles.head}>
         <Feather name="message-circle" size={14} color={colors.primary} />
-        <Text style={[styles.title, { color: colors.foreground }]}>Ask Liv — owner ops</Text>
+        <Text style={[styles.title, { color: colors.foreground }]}>
+          {soloMode ? "Ask Liv" : "Ask Liv"}
+        </Text>
       </View>
+      {soloMode && !lastReply ? (
+        <Text style={[styles.reply, { color: colors.mutedForeground }]} numberOfLines={2}>
+          Bookings, inbox, or what to do next — plain language.
+        </Text>
+      ) : null}
       {lastReply ? (
         <Text style={[styles.reply, { color: colors.mutedForeground }]} numberOfLines={4}>
           {lastReply}
         </Text>
       ) : null}
-      {suggestions.slice(0, 2).map((s) => (
+      {visibleStarters.slice(0, 3).map((s) => (
         <Pressable key={s} onPress={() => void send(s)} style={styles.chip}>
           <Text style={[styles.chipText, { color: colors.primary }]} numberOfLines={1}>
             {s}

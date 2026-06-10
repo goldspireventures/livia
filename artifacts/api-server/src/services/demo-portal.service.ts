@@ -15,7 +15,12 @@ import {
   careSeriesTable,
   careSeriesSessionsTable,
 } from "@workspace/db";
-import { ONBOARDING_ACT_IDS, onboardingChecklistSchema } from "@workspace/policy";
+import {
+  DEMO_END_CLIENTS,
+  DEMO_OPERATOR_EXPERIENCE,
+  ONBOARDING_ACT_IDS,
+  onboardingChecklistSchema,
+} from "@workspace/policy";
 import { and, eq, inArray } from "drizzle-orm";
 import { generateId } from "../lib/id";
 import { mapWithConcurrency, withClerkRetry } from "../lib/async-pool";
@@ -930,6 +935,10 @@ export async function provisionDemoWorld(opts?: {
   const guestHub = await seedDemoGuestHub();
   logger.info(guestHub, "demo.guest_hub.seeded");
 
+  const { seedOperatorLivWorld } = await import("./demo-operator-liv-world.seed");
+  const operatorLiv = await seedOperatorLivWorld();
+  logger.info(operatorLiv, "demo.operator_liv_world.seeded");
+
   logger.info({ businesses: businesses.map((b) => b.slug) }, "Demo world provisioned");
 
   return {
@@ -956,11 +965,9 @@ export async function syncDemoWorld(): Promise<{
     bookingsAdded?: number;
     presetsUpdated?: number;
     warnings?: string[];
-  guestHub?: {
-    guestId: string;
-    shopsLinked: number;
-    upcomingEnsured: number;
-  } | null;
+  guestHub?: Awaited<
+    ReturnType<typeof import("./demo-guest-hub.seed").seedDemoGuestHub>
+  > | null;
   passwordHint: string;
   businesses: Array<{ slug: string; id: string; name: string }>;
 }> {
@@ -1042,6 +1049,8 @@ export async function syncDemoWorld(): Promise<{
     const { seedDemoGuestHub } = await import("./demo-guest-hub.seed");
     guestHub = await seedDemoGuestHub();
     logger.info(guestHub, "demo.guest_hub.synced");
+    const { seedOperatorLivWorld } = await import("./demo-operator-liv-world.seed");
+    await seedOperatorLivWorld();
   } catch (err) {
     logger.warn({ err }, "demo.guest_hub.sync_failed");
   }
@@ -1217,6 +1226,15 @@ export function getDemoCatalog() {
       primaryBusinessSlug: p.primaryBusinessSlug,
       businessSlugs: p.businessSlugs,
     })),
+    endClients: DEMO_END_CLIENTS.map((c) => ({
+      id: c.id,
+      displayName: c.displayName,
+      phoneE164: c.phoneE164,
+      story: c.story,
+      linkedSlugs: c.linkedSlugs,
+      otpHint: "000000 in dev/staging",
+    })),
+    operatorExperience: DEMO_OPERATOR_EXPERIENCE,
     /** @deprecated use sharedPassword */
     devPassword: demoResponsesMayIncludeSecrets() ? getDemoPassword() : undefined,
   };

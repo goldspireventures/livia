@@ -58,6 +58,7 @@ import { useTenantExperience } from "@/lib/tenant-experience-api";
 import { wellnessNativeMorphForVertical } from "@/lib/presentation-layout";
 import { effectivePresentationMorph } from "@/lib/appearance-preview-mode";
 import { GuestVaultOwnerCallout } from "@/components/customers/guest-vault-owner-callout";
+import { SoloOperatorCopilot } from "@/components/dashboard/solo-operator-copilot";
 
 // ------------ helpers ------------
 
@@ -351,6 +352,30 @@ export default function DashboardPage() {
     summary.weekBookings === 0 &&
     summary.totalCustomers === 0;
 
+  const operatorXp = tenantXp?.operatorExperience;
+  const firstRunSteps = operatorXp?.firstRunSteps?.length
+    ? operatorXp.firstRunSteps
+    : [
+        {
+          step: 1,
+          label: "Add your staff & services",
+          body: "Livia needs to know who works there and what they do.",
+          href: "/staff",
+        },
+        {
+          step: 2,
+          label: "Set your booking page",
+          body: "Share your book page on socials — customers book on your brand, not a marketplace.",
+          href: "/settings",
+        },
+        {
+          step: 3,
+          label: "Take your first booking",
+          body: "Manually or share your public link with customers.",
+          href: "/bookings?create=1",
+        },
+      ];
+
   if (isFirstRun) {
     return (
       <div
@@ -362,12 +387,16 @@ export default function DashboardPage() {
             className="text-base font-semibold tracking-tight"
             style={{ fontFamily: "var(--app-font-display)" }}
           >
-            Welcome to Livia
+            {operatorXp?.soloMode ? "Liv is on your team" : "Welcome to Livia"}
           </h1>
           <p className="text-xs text-muted-foreground font-mono mt-1">
-            Your command center is ready. Let's get something on screen.
+            {operatorXp?.soloMode
+              ? operatorXp.livSubline
+              : "Your command center is ready. Let's get something on screen."}
           </p>
         </header>
+
+        {operatorXp?.soloMode ? <SoloOperatorCopilot pack={operatorXp} /> : null}
 
         <div className={`grid grid-cols-1 gap-4 ${isDemoLoginEnabled ? "lg:grid-cols-2" : ""}`}>
           {isDemoLoginEnabled ? (
@@ -393,54 +422,25 @@ export default function DashboardPage() {
           ) : null}
 
           <div className="rounded-2xl border border-border bg-card p-8">
-            <h2 className="text-base font-semibold mb-4">Or build it yourself</h2>
+            <h2 className="text-base font-semibold mb-4">
+              {operatorXp?.soloMode ? "Four steps — then Liv runs with you" : "Or build it yourself"}
+            </h2>
             <ul className="space-y-3 text-sm">
-              <li className="flex items-start gap-3">
-                <span className="mt-1 h-5 w-5 rounded-full bg-muted text-[10px] font-mono text-muted-foreground flex items-center justify-center shrink-0">
-                  1
-                </span>
-                <div>
-                  <Link href="/staff">
-                    <span className="font-medium hover:text-primary cursor-pointer">
-                      Add your staff & services
-                    </span>
-                  </Link>
-                  <p className="text-xs text-muted-foreground">
-                    Livia needs to know who works there and what they do.
-                  </p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="mt-1 h-5 w-5 rounded-full bg-muted text-[10px] font-mono text-muted-foreground flex items-center justify-center shrink-0">
-                  2
-                </span>
-                <div>
-                  <Link href="/settings">
-                    <span className="font-medium hover:text-primary cursor-pointer">
-                      Set your booking page
-                    </span>
-                  </Link>
-                  <p className="text-xs text-muted-foreground">
-                    Share your book page ({import.meta.env.DEV ? `/book/${business?.slug}` : `${business?.slug}.livia-hq.com`}) on
-                    socials — customers book on your brand, not a marketplace.
-                  </p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="mt-1 h-5 w-5 rounded-full bg-muted text-[10px] font-mono text-muted-foreground flex items-center justify-center shrink-0">
-                  3
-                </span>
-                <div>
-                  <Link href="/bookings?create=1">
-                    <span className="font-medium hover:text-primary cursor-pointer">
-                      Take your first booking
-                    </span>
-                  </Link>
-                  <p className="text-xs text-muted-foreground">
-                    Manually or share your public link with customers.
-                  </p>
-                </div>
-              </li>
+              {firstRunSteps.map((step) => (
+                <li key={step.step} className="flex items-start gap-3">
+                  <span className="mt-1 h-5 w-5 rounded-full bg-muted text-[10px] font-mono text-muted-foreground flex items-center justify-center shrink-0">
+                    {step.step}
+                  </span>
+                  <div>
+                    <Link href={step.href}>
+                      <span className="font-medium hover:text-primary cursor-pointer">
+                        {step.label}
+                      </span>
+                    </Link>
+                    <p className="text-xs text-muted-foreground">{step.body}</p>
+                  </div>
+                </li>
+              ))}
             </ul>
           </div>
         </div>

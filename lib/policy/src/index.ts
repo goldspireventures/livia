@@ -116,6 +116,8 @@ export * from "./owner-intelligence-home";
 export * from "./owner-intelligence-nav";
 export * from "./owner-liv-inbox-suggestions";
 export * from "./owner-ops-suggestions";
+export * from "./operator-experience-policy";
+export * from "./demo-guest-world";
 export * from "./owner-presence-intel";
 export * from "./public-book-layout";
 export * from "./setup-guided-flow";

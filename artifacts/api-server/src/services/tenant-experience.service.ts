@@ -37,6 +37,7 @@ export async function getTenantExperienceForBusiness(businessId: string) {
       onboardingState: onboardingState ?? null,
       tier: biz.tier ?? biz.planId ?? "solo",
       activeStaffCount,
+      subverticalProfileId: biz.subverticalProfileId ?? null,
     }),
     presentation: {
       presetId: preset.id,

@@ -71,6 +71,8 @@ export const DEMO_ROLE_EMAILS = {
   medspa: demoEmail("medspa"),
   pets: demoEmail("pets"),
   physio: demoEmail("physio"),
+  studioBarber: demoEmail("studio-barber"),
+  soloWellness: demoEmail("solo-wellness"),
 } as const;
 
 export function demoOwnerShortForSlug(slug: string): string {

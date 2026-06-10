@@ -2,7 +2,7 @@
  * Guest hub (W6) — vault curation rules shared by API + demo seed.
  */
 
-export const GUEST_HUB_DEMO_BOOKING_NOTE = "Demo guest hub — Mary McNamara";
+export { GUEST_HUB_DEMO_BOOKING_NOTE, guestHubDemoBookingNote } from "./demo-guest-world";
 
 /** Max upcoming visits shown on `/my` — avoids operator live-day noise. */
 export const GUEST_HUB_UPCOMING_MAX_TOTAL = 8;
@@ -52,11 +52,4 @@ export function curateGuestHubUpcoming<T extends GuestHubUpcomingRow>(rows: T[])
   return picked.slice(0, GUEST_HUB_UPCOMING_MAX_TOTAL);
 }
 
-/** Realistic spread for Mary hero demos (days from today). */
-export const MARY_GUEST_HUB_UPCOMING_DAYS: Record<string, number> = {
-  "luxe-salon-spa": 4,
-  "bloom-beauty-dublin": 9,
-  "harbour-wellness-cork": 14,
-  "motion-physio-cork": 21,
-  "ink-anchor-galway": 28,
-};
+export { MARY_GUEST_HUB_UPCOMING_DAYS } from "./demo-guest-world";

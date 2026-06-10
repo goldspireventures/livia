@@ -59,6 +59,8 @@ import { VisitFeedbackCard } from "@/components/VisitFeedbackCard";
 import { OwnerIntelligenceHub } from "@/components/OwnerIntelligenceHub";
 import { ActNotificationBanner } from "@/components/ActNotificationBanner";
 import { OwnerLivOpsCard } from "@/components/OwnerLivOpsCard";
+import { SoloOperatorLivStrip } from "@/components/SoloOperatorLivStrip";
+import { SoloOperatorFirstRun } from "@/components/SoloOperatorFirstRun";
 import {
   OwnerMobileBriefingChips,
   OwnerMobileRevenueStat,
@@ -102,6 +104,10 @@ import { MorphOwnerSignalsFooter } from "@/components/today/MorphOwnerSignalsFoo
 import { ConstellationTodayHome } from "@/components/constellation/ConstellationTodayHome";
 import { TENANT_SHELL_LAYOUT, tenantScreenBackground } from "@/lib/tenant-shell-layout";
 import { useManualRefresh } from "@/lib/manual-refresh";
+import {
+  resolveMobileOwnerLivStack,
+  shouldShowMobileOwnerRitualHeader,
+} from "@workspace/policy";
 
 function formatTimeInBusinessTz(iso: string, timeZone: string) {
   return new Date(iso).toLocaleTimeString(undefined, {
@@ -231,6 +237,16 @@ export default function DashboardScreen() {
   const nextRelative = useRelativeTime(next?.startAt);
 
   const pendingCount = summary?.pendingCount ?? 0;
+  const operatorXp = (
+    tenantExperience as { operatorExperience?: import("@workspace/policy").OperatorExperiencePack } | null
+  )?.operatorExperience;
+  const isFirstRun =
+    !!summary &&
+    !isLoading &&
+    (summary.todayBookings ?? 0) === 0 &&
+    (summary.weekBookings ?? 0) === 0 &&
+    (summary.totalCustomers ?? 0) === 0;
+  const isOwnerHome = role === "OWNER" || role === "ADMIN";
 
   const vertical = (currentBusiness as { vertical?: string } | undefined)?.vertical;
   const pack = verticalPackUi(vertical, (bizDetail as { category?: string } | undefined)?.category);
@@ -286,6 +302,20 @@ export default function DashboardScreen() {
   const pendingRows = pendingData?.data ?? [];
   const pendingPreview = pendingRows.slice(0, 5);
   const pendingHidden = Math.max(0, pendingRows.length - pendingPreview.length);
+
+  const livStack = resolveMobileOwnerLivStack({
+    useMorphToday,
+    soloMode: !!operatorXp?.soloMode,
+    pendingCount,
+    handoffCount,
+    onboardingPercent: onboardingPct,
+    isFirstRun: isOwnerHome && isFirstRun,
+  });
+  const showRitualHeader = shouldShowMobileOwnerRitualHeader({
+    useMorphToday,
+    useConstellationToday,
+    isFirstRun: isOwnerHome && isFirstRun,
+  });
 
   const schedulePreview = useMemo(() => {
     const list = summary?.upcomingBookings ?? [];
@@ -408,17 +438,13 @@ export default function DashboardScreen() {
         </Animated.View>
       ) : null}
 
-      <ActivationMilestone />
-      {!useConstellationToday ? <ActivationWelcome /> : null}
-
       <Animated.View style={[styles.headerBlock, headStyle]}>
         <ScreenTopBar />
-        {!useConstellationToday ? (
+        {showRitualHeader ? (
           <>
             <PersonaRitualHeader variant="home" showActions />
             <Text style={[styles.verticalLine, { color: presentationAccent }]} numberOfLines={2}>
-              {pack.label} · {pack.ownerTodayLine}
-              {beautyOwner && beautyPreset?.label ? ` · ${beautyPreset.label}` : ""}
+              {pack.label}
               {" · "}
               {new Date(clock).toLocaleDateString(undefined, {
                 weekday: "long",
@@ -431,6 +457,13 @@ export default function DashboardScreen() {
         ) : null}
       </Animated.View>
 
+      <ActivationMilestone />
+      {showRitualHeader ? <ActivationWelcome /> : null}
+
+      {isOwnerHome && isFirstRun ? <SoloOperatorFirstRun pack={operatorXp} /> : null}
+      {isOwnerHome && !isFirstRun && operatorXp?.soloMode ? (
+        <SoloOperatorLivStrip pack={operatorXp} />
+      ) : null}
 
       {isFounder && businesses.length >= 2 ? (
         <>
@@ -868,34 +901,54 @@ export default function DashboardScreen() {
         </View>
       ) : null}
 
-      {!useConstellationToday && (role === "OWNER" || role === "ADMIN") && currentBusiness?.id ? (
+      {!useConstellationToday &&
+      (role === "OWNER" || role === "ADMIN") &&
+      currentBusiness?.id &&
+      (livStack.showSectionLabel ||
+        livStack.showBriefing ||
+        livStack.showActBanner ||
+        livStack.showMoments ||
+        livStack.showIncidents ||
+        livStack.showProposals ||
+        livStack.showStuckContinuity ||
+        livStack.showIntelligenceHub ||
+        livStack.showVisitFeedback ||
+        livStack.showCapabilityReadiness ||
+        livStack.showLivOps ||
+        livStack.showVerticalInsights) ? (
         <View style={styles.livSection}>
-          <Text style={[styles.livSectionTitle, { color: colors.mutedForeground }]}>
-            Liv & insights
-          </Text>
-          <View
-            style={
-              beautyOwner
-                ? {
-                    borderWidth: 1,
-                    borderColor: colors.primary + "33",
-                    borderRadius: 16,
-                    overflow: "hidden",
-                  }
-                : undefined
-            }
-          >
-            <MorningBriefingCard
-              key={currentBusiness.id}
-              businessId={currentBusiness.id}
-              businessName={currentBusiness.name}
-            />
-          </View>
-          <ActNotificationBanner />
-          <LivMomentsCard businessId={currentBusiness.id} />
-          <LivIncidentsCard businessId={currentBusiness.id} />
-          <LivProposalsCard businessId={currentBusiness.id} />
-          <StuckContinuityCard businessId={currentBusiness.id} />
+          {livStack.showSectionLabel ? (
+            <Text style={[styles.livSectionTitle, { color: colors.mutedForeground }]}>
+              Needs attention
+            </Text>
+          ) : null}
+          {livStack.showBriefing ? (
+            <View
+              style={
+                beautyOwner
+                  ? {
+                      borderWidth: 1,
+                      borderColor: colors.primary + "33",
+                      borderRadius: 16,
+                      overflow: "hidden",
+                    }
+                  : undefined
+              }
+            >
+              <MorningBriefingCard
+                key={currentBusiness.id}
+                businessId={currentBusiness.id}
+                businessName={currentBusiness.name}
+              />
+            </View>
+          ) : null}
+          {livStack.showActBanner ? <ActNotificationBanner /> : null}
+          {livStack.showMoments ? <LivMomentsCard businessId={currentBusiness.id} /> : null}
+          {livStack.showIncidents ? <LivIncidentsCard businessId={currentBusiness.id} /> : null}
+          {livStack.showProposals ? <LivProposalsCard businessId={currentBusiness.id} /> : null}
+          {livStack.showStuckContinuity ? (
+            <StuckContinuityCard businessId={currentBusiness.id} />
+          ) : null}
           {useMorphToday ? (
             <MorphOwnerSignalsFooter
               businessId={currentBusiness.id}
@@ -932,18 +985,34 @@ export default function DashboardScreen() {
             />
           ) : (
             <>
-              <OwnerIntelligenceHub businessId={currentBusiness.id} />
-              <VisitFeedbackCard
-                businessId={currentBusiness.id}
-                items={summary?.recentVisitFeedback}
-              />
+              {livStack.showIntelligenceHub ? (
+                <OwnerIntelligenceHub businessId={currentBusiness.id} />
+              ) : null}
+              {livStack.showVisitFeedback ? (
+                <VisitFeedbackCard
+                  businessId={currentBusiness.id}
+                  items={summary?.recentVisitFeedback}
+                />
+              ) : null}
             </>
           )}
-          <CapabilityReadinessCard businessId={currentBusiness.id} />
-          <OwnerLivOpsCard businessId={currentBusiness.id} />
-          <ActivityFeedCard businessId={currentBusiness.id} />
-          <VerticalHomeShortcuts />
-          <VerticalTodayInsights businessId={currentBusiness.id} />
+          {livStack.showCapabilityReadiness ? (
+            <CapabilityReadinessCard businessId={currentBusiness.id} />
+          ) : null}
+          {livStack.showLivOps ? (
+            <OwnerLivOpsCard
+              businessId={currentBusiness.id}
+              starters={operatorXp?.livOpsStarters ?? []}
+              soloMode={operatorXp?.soloMode}
+            />
+          ) : null}
+          {livStack.showActivityFeed ? (
+            <ActivityFeedCard businessId={currentBusiness.id} />
+          ) : null}
+          {livStack.showVerticalShortcuts ? <VerticalHomeShortcuts /> : null}
+          {livStack.showVerticalInsights ? (
+            <VerticalTodayInsights businessId={currentBusiness.id} />
+          ) : null}
         </View>
       ) : null}
 

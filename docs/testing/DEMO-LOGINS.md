@@ -72,6 +72,28 @@ Pattern: `owner-<short>@livia.io` — only that tenant after sign-in.
 
 ---
 
+## End clients (guest `/my` — OTP `000000` in dev/staging)
+
+| Guest | Phone | Story |
+|-------|-------|--------|
+| **Mary McNamara** | `+353 87 100 0001` | Cross-vertical — 9 showcase shops, 5 upcoming visits |
+| **Sean Kelly** | `+353 87 100 0002` | Solo barber loyalist + studio visits — Stoneybatter, DBC, Dundrum Hair, Conor's |
+| **Orla Murphy** | `+353 87 100 0003` | Wellness-first — Serenity Spa, Harbour, Bloom, Dundrum Hair |
+
+Sync after provision: `pnpm demo:sync-liv-world` or `POST /api/demo/sync-guest-hub`
+
+Autonomous gate: `pnpm smoke:demo-liv-world`
+
+## Operator shapes (Liv alive)
+
+| Shape | Sign in | Guest in story |
+|-------|---------|----------------|
+| Solo barber | `owner-stoney@demo.livia-hq.com` | Sean — running late SMS, pending fade today |
+| Studio barber | `owner-barber@demo.livia-hq.com` | Sean handoff refund; Mary reschedule |
+| Solo wellness | `owner-serenity@demo.livia-hq.com` | Orla — pack redemption thread |
+
+Shortcut scenarios: `solo@` → Stoneybatter · `studio-barber@` → DBC · `solo-wellness@` → Serenity
+
 ## Suggested test matrix
 
 | Goal | Account |

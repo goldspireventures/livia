@@ -11,6 +11,10 @@ import {
   type BLOCKING_ONBOARDING_ACTS,
 } from "./onboarding-program";
 import type { OperatorNavSignals } from "./operator-nav-policy";
+import {
+  resolveOperatorExperience,
+  type OperatorExperiencePack,
+} from "./operator-experience-policy";
 import type { OnboardingState } from "./onboarding-state";
 import {
   welcomeVerticalAnnouncement,
@@ -49,6 +53,7 @@ export type TenantExperience = {
   announcement: WelcomedVerticalAnnouncement;
   skin: TenantExperienceSkin;
   operator: OperatorNavSignals;
+  operatorExperience: OperatorExperiencePack;
   onboarding: {
     appUnlocked: boolean;
     blockingPercent: number;
@@ -123,6 +128,7 @@ export function resolveTenantExperience(args: {
   onboardingState?: OnboardingState | null;
   tier?: string | null;
   activeStaffCount?: number;
+  subverticalProfileId?: string | null;
 }): TenantExperience {
   const key = resolveVerticalKey(args.vertical, args.category);
   const vocabulary = businessVocabulary(args.vertical, args.category);
@@ -149,6 +155,14 @@ export function resolveTenantExperience(args: {
     activeStaffCount: args.activeStaffCount ?? 1,
   };
 
+  const operatorExperience = resolveOperatorExperience({
+    signals: operator,
+    vertical: args.vertical,
+    category: args.category,
+    subverticalProfileId: args.subverticalProfileId,
+    businessName: args.businessName,
+  });
+
   return {
     vertical: key,
     vocabulary,
@@ -157,6 +171,7 @@ export function resolveTenantExperience(args: {
     announcement: welcomeVerticalAnnouncement(key),
     skin,
     operator,
+    operatorExperience,
     onboarding: {
       appUnlocked,
       blockingPercent,

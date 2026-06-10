@@ -6,6 +6,9 @@ import {
   resolveOwnerHomeModuleLayout,
   shouldShowOwnerPendingPanel,
   shouldShowActivationWelcomeCard,
+  shouldShowActivationMilestoneOnHome,
+  resolveMobileOwnerLivStack,
+  shouldShowMobileOwnerRitualHeader,
   shouldShowOwnerLivGuardrails,
   shouldShowOnboardingMaturityBanner,
   shouldShowRunningLateAffordance,
@@ -179,6 +182,26 @@ assert.equal(shouldShowOnboardingMaturityBanner(100), false);
 
 assert.equal(shouldShowActivationWelcomeCard({ activationStepsPending: 1, dismissed: false }), true);
 assert.equal(shouldShowActivationWelcomeCard({ activationStepsPending: 0, dismissed: false }), false);
+
+assert.equal(shouldShowActivationMilestoneOnHome({ status: "in_progress" }), true);
+assert.equal(shouldShowActivationMilestoneOnHome({ status: "activated" }), false);
+assert.equal(shouldShowActivationMilestoneOnHome({ status: "not_started" }), false);
+
+const quietMorph = resolveMobileOwnerLivStack({
+  useMorphToday: true,
+  soloMode: false,
+  pendingCount: 0,
+  handoffCount: 0,
+  onboardingPercent: 100,
+  isFirstRun: false,
+});
+assert.equal(quietMorph.showBriefing, false);
+assert.equal(quietMorph.showActivityFeed, false);
+
+assert.equal(
+  shouldShowMobileOwnerRitualHeader({ useMorphToday: true, useConstellationToday: false, isFirstRun: false }),
+  false,
+);
 
 assert.equal(shouldShowRunningLateAffordance(0), false);
 assert.equal(shouldShowRunningLateAffordance(0, { pendingConfirmations: 2 }), true);

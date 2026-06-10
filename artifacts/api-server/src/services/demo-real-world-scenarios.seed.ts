@@ -29,6 +29,7 @@ type ShopDef = {
   description: string;
   vertical: "hair" | "beauty" | "wellness";
   tier: "solo" | "studio";
+  subverticalProfileId?: string;
   city: string;
   staff: Parameters<typeof seedShopCore>[1];
   services: Parameters<typeof seedShopCore>[2];
@@ -60,6 +61,7 @@ async function ensureShop(
     city: def.city,
     country: "IE",
     tier: def.tier,
+    subverticalProfileId: def.subverticalProfileId,
     addressLine1: "14 Main Street",
   });
   const core = await seedShopCore(biz.id, def.staff, def.services);
@@ -96,6 +98,7 @@ export async function seedRealWorldScenarios(
       description: "Single-chair barber — owner runs the floor and the books.",
       vertical: "hair",
       tier: "solo",
+      subverticalProfileId: "hair.barber",
       city: "Dublin",
       staff: [
         {
@@ -120,6 +123,7 @@ export async function seedRealWorldScenarios(
       description: "Six-chair shop — South William Street.",
       vertical: "hair",
       tier: "studio",
+      subverticalProfileId: "hair.barber",
       city: "Dublin",
       staff: [
         { firstName: "Liam", lastName: "O'Brien", displayName: "Liam O'Brien", email: "liam@dbc.ie", color: "#0EA5E9" },
@@ -142,6 +146,7 @@ export async function seedRealWorldScenarios(
     description: "Hair colour and cut — upstairs in Dundrum House.",
     vertical: "hair",
     tier: "studio",
+    subverticalProfileId: "hair.salon",
     city: "Dundrum",
     staff: [
       { firstName: "Kate", lastName: "Flynn", displayName: "Kate Flynn", email: "kate@dundrumhair.ie", color: "#A855F7" },
@@ -269,11 +274,15 @@ export async function seedRealWorldScenarios(
     }
   }
 
+  const { seedOperatorLivWorld } = await import("./demo-operator-liv-world.seed");
+  const operatorLiv = await seedOperatorLivWorld();
+
   logger.info(
     {
       event: "demo.seed.real_world.ok",
       business_slugs: created.map((b) => b.slug),
       premises_slug: REAL_WORLD_PREMISES_SLUG,
+      operatorLiv,
     },
     "Real-world demo scenarios seeded",
   );

@@ -143,18 +143,49 @@ router.post("/demo/repair-db", async (req, res): Promise<void> => {
   }
 });
 
-/** Re-seed demo guest Mary vault links (idempotent). */
+/** Re-seed demo guest vault + operator Liv world (idempotent). */
 router.post("/demo/sync-guest-hub", async (req, res): Promise<void> => {
   const requestId = (req as Request & { id?: string }).id;
   try {
     const { seedDemoGuestHub } = await import("../services/demo-guest-hub.seed");
     const guestHub = await seedDemoGuestHub();
-    logger.info({ event: "demo.guest_hub.sync.ok", request_id: requestId, ...guestHub }, "Guest hub seeded");
-    res.json({ ok: true, ...guestHub });
+    const { seedOperatorLivWorld } = await import("../services/demo-operator-liv-world.seed");
+    const operatorLiv = await seedOperatorLivWorld();
+    logger.info(
+      { event: "demo.guest_hub.sync.ok", request_id: requestId, ...guestHub, operatorLiv },
+      "Guest hub + operator Liv seeded",
+    );
+    res.json({ ok: true, ...guestHub, operatorLiv });
   } catch (e: unknown) {
     const err = e as Error;
     logger.error({ event: "demo.guest_hub.sync.failed", request_id: requestId, err }, "Guest hub seed failed");
     sendError(res, req, 500, err.message ?? "Guest hub seed failed");
+  }
+});
+
+/** Programmatic check — three end clients + operator Liv depth (no Clerk auth). */
+router.get("/demo/liv-world-check", async (_req, res): Promise<void> => {
+  try {
+    const { verifyDemoGuestWorld } = await import("../services/demo-guest-world.verify");
+    const report = await verifyDemoGuestWorld();
+    res.status(report.ok ? 200 : 503).json(report);
+  } catch (e: unknown) {
+    const err = e as Error;
+    sendError(res, _req, 500, err.message ?? "Liv world check failed");
+  }
+});
+
+/** Re-seed operator inbox + briefings only. */
+router.post("/demo/sync-operator-liv", async (req, res): Promise<void> => {
+  const requestId = (req as Request & { id?: string }).id;
+  try {
+    const { seedOperatorLivWorld } = await import("../services/demo-operator-liv-world.seed");
+    const operatorLiv = await seedOperatorLivWorld();
+    logger.info({ event: "demo.operator_liv.sync.ok", request_id: requestId, operatorLiv }, "Operator Liv synced");
+    res.json({ ok: true, operatorLiv });
+  } catch (e: unknown) {
+    const err = e as Error;
+    sendError(res, req, 500, err.message ?? "Operator Liv sync failed");
   }
 });
 

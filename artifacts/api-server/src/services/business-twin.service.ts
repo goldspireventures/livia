@@ -378,7 +378,7 @@ export function buildTwinSummaryFromContext(
     headline = "You're live — bookings are flowing.";
     subline = activation?.timeToFirstBookingLabel
       ? `Activated in ${activation.timeToFirstBookingLabel}.`
-      : "First booking received.";
+      : "Live with your first booking.";
   } else if ((activation?.status ?? "") === "in_progress") {
     headline = "Almost live — finish setup for your first booking.";
     subline = `${activation?.activationStepsTotal! - activation?.activationStepsComplete!} step(s) left on the activation path.`;

@@ -26,7 +26,9 @@ import {
   resolveOwnerHomeBriefingCta,
   resolveOwnerHomeKpiChips,
   resolveOwnerHomeModuleLayout,
+  resolveSoloOwnerHomeFallback,
 } from "@workspace/policy";
+import { SoloOperatorCopilot } from "@/components/dashboard/solo-operator-copilot";
 import { cn } from "@/lib/utils";
 import { beautyNativeMorphForVertical, useBeautyChrome } from "@/lib/presentation-layout";
 import { resolvePresentationLayoutMorph } from "@workspace/policy";
@@ -406,14 +408,24 @@ export function OwnerHomeRitual({
   const weekAvg = summary ? Math.round(summary.weekBookings! / 7) : 0;
   const todayDelta = summary ? summary.todayBookings! - weekAvg : 0;
 
+  const operatorXp = tenantXp?.operatorExperience;
   const briefingCta = resolveOwnerHomeBriefingCta({
     pendingCount,
     handedOffCount: handoffCount,
     fallbackHref: ritual.primaryAction?.href ?? "/bookings",
     fallbackLabel: ritual.primaryAction?.label ?? "View calendar",
   });
-  const oneThingHref = briefingCta.href;
-  const oneThingLabel = briefingCta.label;
+  const soloFallback =
+    tenantXp?.operator && operatorXp?.soloMode
+      ? resolveSoloOwnerHomeFallback(tenantXp.operator, {
+          pendingCount,
+          handedOffCount: handoffCount,
+          todayBookings: todayTotal,
+          weekBookings: summary?.weekBookings ?? 0,
+        })
+      : null;
+  const oneThingHref = soloFallback?.href ?? briefingCta.href;
+  const oneThingLabel = soloFallback?.label ?? briefingCta.label;
   const beauty = useBeautyChrome(tenantVertical);
   const beautyMorph =
     tenantVertical === "beauty" && tenantXp?.presentation
@@ -530,6 +542,8 @@ export function OwnerHomeRitual({
         <p className="text-xs text-muted-foreground font-mono tabular-nums">{formatHeaderDate(now)}</p>
       </header>
 
+      {operatorXp?.soloMode ? <SoloOperatorCopilot pack={operatorXp} /> : null}
+
       <section
         className={cn(
           beauty
@@ -559,7 +573,14 @@ export function OwnerHomeRitual({
                 <Skeleton className="h-3.5 w-4/5 max-w-sm" />
               </div>
             ) : (
-              <p className="text-sm leading-relaxed text-foreground/90 line-clamp-3">{livLine}</p>
+              <>
+                <p className="text-sm leading-relaxed text-foreground/90 line-clamp-3">{livLine}</p>
+                {operatorXp?.soloMode && !briefingLoading ? (
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                    {operatorXp.livSubline}
+                  </p>
+                ) : null}
+              </>
             )}
             {!beauty && livPulse !== "act" && livSource === "liv" ? (
               <p className="text-[10px] uppercase tracking-wider font-mono text-muted-foreground mt-0.5">

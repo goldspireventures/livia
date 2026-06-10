@@ -2,17 +2,16 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useGetDashboardSummary } from "@workspace/api-client-react";
+import { shouldShowActivationMilestoneOnHome } from "@workspace/policy";
 import { useBusiness } from "@/contexts/BusinessContext";
 import { useMembership } from "@/hooks/useMembership";
 import { useColors } from "@/hooks/useColors";
 import { Shimmer } from "@/components/brand/Shimmer";
 
-/**
- * Sacred V1 metric banner — parity with dashboard ActivationMilestone.
- */
+/** Setup-only banner — hides after activation (no permanent "first booking" toast). */
 export function ActivationMilestone() {
   const colors = useColors();
-  const { currentBusiness } = useBusiness();
+  const { currentBusiness, isDemoAccount } = useBusiness();
   const { role } = useMembership();
   const bid = currentBusiness?.id ?? "";
 
@@ -21,6 +20,7 @@ export function ActivationMilestone() {
   });
 
   if (!currentBusiness || !["OWNER", "ADMIN"].includes(role ?? "")) return null;
+  if (isDemoAccount) return null;
 
   if (isLoading) {
     return (
@@ -31,46 +31,25 @@ export function ActivationMilestone() {
   }
 
   const activation = data?.activation;
-  if (!activation) return null;
+  if (!shouldShowActivationMilestoneOnHome(activation)) return null;
 
-  if (activation.sacredMetricMet && activation.timeToFirstBookingLabel) {
-    return (
-      <View
-        style={[styles.card, styles.activated, { borderColor: colors.primary + "33" }]}
-        testID="activation-milestone-activated"
-      >
-        <Feather name="check-circle" size={20} color={colors.primary} />
-        <View style={styles.copy}>
-          <Text style={[styles.title, { color: colors.foreground }]}>First booking received</Text>
-          <Text style={[styles.sub, { color: colors.mutedForeground }]}>
-            Activated in {activation.timeToFirstBookingLabel}
-            {activation.activationSource === "public" ? " via your booking page" : ""}.
-          </Text>
-        </View>
+  const remaining =
+    (activation?.activationStepsTotal ?? 0) - (activation?.activationStepsComplete ?? 0);
+
+  return (
+    <View
+      style={[styles.card, styles.progress, { borderColor: "#d9770640" }]}
+      testID="activation-milestone-in-progress"
+    >
+      <Feather name="zap" size={20} color="#d97706" />
+      <View style={styles.copy}>
+        <Text style={[styles.title, { color: colors.foreground }]}>Finish setup</Text>
+        <Text style={[styles.sub, { color: colors.mutedForeground }]}>
+          {remaining} step{remaining === 1 ? "" : "s"} left — then you are ready for live bookings.
+        </Text>
       </View>
-    );
-  }
-
-  if (activation.status === "in_progress") {
-    const remaining = activation.activationStepsTotal - activation.activationStepsComplete;
-    return (
-      <View
-        style={[styles.card, styles.progress, { borderColor: "#d9770640" }]}
-        testID="activation-milestone-in-progress"
-      >
-        <Feather name="zap" size={20} color="#d97706" />
-        <View style={styles.copy}>
-          <Text style={[styles.title, { color: colors.foreground }]}>Almost live</Text>
-          <Text style={[styles.sub, { color: colors.mutedForeground }]}>
-            {remaining} setup step{remaining === 1 ? "" : "s"} left — your sacred metric is the first
-            real booking.
-          </Text>
-        </View>
-      </View>
-    );
-  }
-
-  return null;
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -84,7 +63,6 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 12,
   },
-  activated: { backgroundColor: "rgba(99, 102, 241, 0.06)" },
   progress: { backgroundColor: "rgba(217, 119, 6, 0.06)" },
   copy: { flex: 1, gap: 2 },
   title: { fontSize: 15, fontWeight: "600" },

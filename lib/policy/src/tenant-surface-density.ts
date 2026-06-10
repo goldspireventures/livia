@@ -218,6 +218,108 @@ export function shouldShowActivationWelcomeCard(args: {
   return args.activationStepsPending > 0 && !args.dismissed;
 }
 
+/** Today home — setup banner only while activation is in progress (not after first booking). */
+export function shouldShowActivationMilestoneOnHome(activation: {
+  status?: string | null;
+} | null | undefined): boolean {
+  return activation?.status === "in_progress";
+}
+
+export type MobileOwnerLivStackLayout = {
+  showSectionLabel: boolean;
+  showBriefing: boolean;
+  showActBanner: boolean;
+  showMoments: boolean;
+  showIncidents: boolean;
+  showProposals: boolean;
+  showStuckContinuity: boolean;
+  showIntelligenceHub: boolean;
+  showVisitFeedback: boolean;
+  showCapabilityReadiness: boolean;
+  showLivOps: boolean;
+  showActivityFeed: boolean;
+  showVerticalInsights: boolean;
+  showVerticalShortcuts: boolean;
+};
+
+/** Mobile owner Today — context-aware Liv depth (small surface). */
+export function resolveMobileOwnerLivStack(signals: {
+  useMorphToday: boolean;
+  soloMode: boolean;
+  pendingCount: number;
+  handoffCount: number;
+  onboardingPercent: number;
+  isFirstRun: boolean;
+}): MobileOwnerLivStackLayout {
+  if (signals.isFirstRun) {
+    return {
+      showSectionLabel: false,
+      showBriefing: false,
+      showActBanner: false,
+      showMoments: false,
+      showIncidents: false,
+      showProposals: false,
+      showStuckContinuity: false,
+      showIntelligenceHub: false,
+      showVisitFeedback: false,
+      showCapabilityReadiness: signals.onboardingPercent < 100,
+      showLivOps: false,
+      showActivityFeed: false,
+      showVerticalInsights: false,
+      showVerticalShortcuts: false,
+    };
+  }
+
+  const needsAttention =
+    signals.pendingCount > 0 || signals.handoffCount > 0 || signals.onboardingPercent < 100;
+
+  if (signals.useMorphToday) {
+    return {
+      showSectionLabel: false,
+      showBriefing: false,
+      showActBanner: signals.handoffCount > 0,
+      showMoments: signals.handoffCount > 0,
+      showIncidents: signals.handoffCount > 0,
+      showProposals: signals.pendingCount > 0,
+      showStuckContinuity: false,
+      showIntelligenceHub: false,
+      showVisitFeedback: false,
+      showCapabilityReadiness: signals.onboardingPercent < 100,
+      showLivOps: signals.soloMode,
+      showActivityFeed: false,
+      showVerticalInsights: false,
+      showVerticalShortcuts: false,
+    };
+  }
+
+  return {
+    showSectionLabel: needsAttention,
+    showBriefing: true,
+    showActBanner: signals.handoffCount > 0,
+    showMoments: needsAttention,
+    showIncidents: signals.handoffCount > 0,
+    showProposals: signals.pendingCount > 0,
+    showStuckContinuity: signals.handoffCount > 0,
+    showIntelligenceHub: needsAttention,
+    showVisitFeedback: needsAttention,
+    showCapabilityReadiness: signals.onboardingPercent < 100,
+    showLivOps: !signals.soloMode,
+    showActivityFeed: false,
+    showVerticalInsights: needsAttention,
+    showVerticalShortcuts: false,
+  };
+}
+
+/** Mobile owner Today — ritual header duplicates morph/constellation briefing. */
+export function shouldShowMobileOwnerRitualHeader(signals: {
+  useMorphToday: boolean;
+  useConstellationToday: boolean;
+  isFirstRun: boolean;
+}): boolean {
+  if (signals.isFirstRun) return false;
+  return !signals.useMorphToday && !signals.useConstellationToday;
+}
+
 /** Floor ops — running late when there is day-of work on the calendar. */
 export function shouldShowRunningLateAffordance(
   todayBookings: number,

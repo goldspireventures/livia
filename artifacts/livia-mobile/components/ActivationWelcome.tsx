@@ -6,6 +6,7 @@ import { useBusiness } from "@/contexts/BusinessContext";
 import { fetchTenantExperience } from "@/lib/tenant-experience";
 import { useColors } from "@/hooks/useColors";
 import { verticalAccentHex } from "@/lib/vertical-theme";
+import { shouldShowActivationWelcomeCard } from "@workspace/policy";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const DISMISS_KEY = "livia.activationWelcomeDismissed";
@@ -13,7 +14,7 @@ const DISMISS_KEY = "livia.activationWelcomeDismissed";
 export function ActivationWelcome() {
   const colors = useColors();
   const { getToken } = useAuth();
-  const { currentBusiness } = useBusiness();
+  const { currentBusiness, isDemoAccount } = useBusiness();
   const [dismissed, setDismissed] = useState(true);
   const [experience, setExperience] = useState<Awaited<
     ReturnType<typeof fetchTenantExperience>
@@ -33,10 +34,17 @@ export function ActivationWelcome() {
     void fetchTenantExperience(bid, getToken).then(setExperience);
   }, [bid, dismissed, getToken]);
 
-  if (!bid || dismissed || !experience) return null;
+  if (!bid || dismissed || !experience || isDemoAccount) return null;
 
   const pending = experience.onboarding.activationSteps.filter((s) => !s.done);
-  if (pending.length === 0 && experience.onboarding.appUnlocked) return null;
+  if (
+    !shouldShowActivationWelcomeCard({
+      activationStepsPending: pending.length,
+      dismissed,
+    })
+  ) {
+    return null;
+  }
 
   return (
     <View

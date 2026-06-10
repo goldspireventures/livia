@@ -48,6 +48,8 @@
     "db:targets": "node scripts/show-db-targets.mjs",
     "smoke:demo": "node scripts/demo-smoke.mjs",
     "smoke:guest-hub": "node scripts/guest-hub-smoke.mjs",
+    "smoke:demo-liv-world": "node scripts/demo-liv-world-smoke.mjs",
+    "demo:sync-liv-world": "npx tsx --env-file=.env artifacts/api-server/scripts/sync-demo-liv-world-cli.ts",
     "preset:morph-audit": "pnpm --filter @workspace/api-server exec node --import tsx/esm ../../lib/policy/src/preset-morph-audit-cli.ts",
     "smoke:innovation-p0": "node scripts/innovation-p0-smoke.mjs",
     "verify:bloom-beauty": "node --env-file=.env scripts/verify-bloom-beauty.mjs",
