@@ -430,6 +430,27 @@
   padding: 1rem 1.15rem 1.3rem;
 }
 
+/* Services catalogue — half-size cards, same layout and typography */
+.ev-services-scaler {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.ev-services-scaler > .grid {
+  zoom: 0.5;
+  width: 100%;
+}
+
+@supports not (zoom: 1) {
+  .ev-services-scaler > .grid {
+    transform: scale(0.5);
+    transform-origin: top center;
+    width: 100%;
+    margin-bottom: -50%;
+  }
+}
+
 .ev-process {
   display: grid;
   gap: 1.5rem;

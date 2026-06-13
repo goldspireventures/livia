@@ -18,37 +18,39 @@ export default function PublicEventVendorServicesPage() {
               Prices are starting points — your final quote depends on guest count, venue, and styling level.
               Everything is confirmed in writing before you book.
             </p>
-            <div className="grid gap-6 md:grid-cols-2">
-              {data.services.map((svc) => (
-                <article key={svc.id} className="ev-card flex flex-col md:flex-row overflow-hidden">
-                  {svc.imageUrl ? (
-                    <img
-                      src={svc.imageUrl}
-                      alt=""
-                      className="md:w-40 md:aspect-auto aspect-[16/10] object-cover"
-                    />
-                  ) : null}
-                  <div className="ev-card__body flex-1">
-                    {svc.category ? (
-                      <p className="text-[10px] uppercase tracking-widest text-amber-800/80 mb-1">
-                        {svc.category}
+            <div className="ev-services-scaler">
+              <div className="grid gap-6 md:grid-cols-2">
+                {data.services.map((svc) => (
+                  <article key={svc.id} className="ev-card flex flex-col md:flex-row overflow-hidden">
+                    {svc.imageUrl ? (
+                      <img
+                        src={svc.imageUrl}
+                        alt=""
+                        className="md:w-40 md:aspect-auto aspect-[16/10] object-cover"
+                      />
+                    ) : null}
+                    <div className="ev-card__body flex-1">
+                      {svc.category ? (
+                        <p className="text-[10px] uppercase tracking-widest text-amber-800/80 mb-1">
+                          {svc.category}
+                        </p>
+                      ) : null}
+                      <h2 className="font-medium text-lg">{svc.name}</h2>
+                      {svc.description ? (
+                        <p className="ev-muted text-sm mt-2">{svc.description}</p>
+                      ) : null}
+                      <p className="mt-3 font-medium text-amber-900">
+                        from {formatCurrency(svc.priceMinor, currency)}
+                        {svc.quoteUnit === "per_guest"
+                          ? " / guest"
+                          : svc.quoteUnit === "per_table"
+                            ? " / table"
+                            : ""}
                       </p>
-                    ) : null}
-                    <h2 className="font-medium text-lg">{svc.name}</h2>
-                    {svc.description ? (
-                      <p className="ev-muted text-sm mt-2">{svc.description}</p>
-                    ) : null}
-                    <p className="mt-3 font-medium text-amber-900">
-                      from {formatCurrency(svc.priceMinor, currency)}
-                      {svc.quoteUnit === "per_guest"
-                        ? " / guest"
-                        : svc.quoteUnit === "per_table"
-                          ? " / table"
-                          : ""}
-                    </p>
-                  </div>
-                </article>
-              ))}
+                    </div>
+                  </article>
+                ))}
+              </div>
             </div>
             <div className="ev-cta-band ev-cta-band--inset mt-12">
               <h2 className="ev-section__title text-2xl">Not sure what you need?</h2>
