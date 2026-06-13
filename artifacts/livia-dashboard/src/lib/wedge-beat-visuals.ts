@@ -98,6 +98,33 @@ const EVENT_VENDOR_THREAD_BRIDGES: Partial<Record<WedgeDemoBeat["cropHint"], str
 const EVENT_VENDOR_LIV_INTRO =
   "The three things no decor studio has in one place — every lead, quotes that write themselves, and a catalogue that thinks in events.";
 
+const EVENT_VENDOR_ATELIER_VISUALS: Partial<Record<WedgeDemoBeat["cropHint"], WedgeBeatVisual>> = {
+  inbox: {
+    src: "/w2-gateway/beats/event-vendors/atelier/inbox.png",
+    alt: "Atelier Decor Dublin — unified consult inbox with Sarah Murphy lead",
+    objectPosition: "left top",
+    aspect: "wide",
+  },
+  "quote-gen": {
+    src: "/w2-gateway/beats/event-vendors/atelier/quote-gen.png",
+    alt: "Atelier Decor Dublin — line-item quote generator with deposit",
+    objectPosition: "left top",
+    aspect: "wide",
+  },
+  catalogue: {
+    src: "/w2-gateway/beats/event-vendors/atelier/catalogue.png",
+    alt: "Atelier Decor Dublin — public services catalogue with hanging price tags",
+    objectPosition: "center top",
+    aspect: "wide",
+  },
+  "milestone-pay": {
+    src: "/w2-gateway/beats/event-vendors/atelier/milestone-pay.png",
+    alt: "Atelier Decor Dublin — guest quote accept and milestone deposit",
+    objectPosition: "center top",
+    aspect: "phone",
+  },
+};
+
 const WEDGE_THREAD_VERTICALS = new Set<BusinessVertical>(["beauty", "wellness", "event-vendors"]);
 
 export function isPresetWedgeThread(vertical: BusinessVertical): boolean {
@@ -132,6 +159,9 @@ export function resolveWedgeBeatVisual(
   }
   if (vertical === "wellness") {
     return WELLNESS_HARBOUR_VISUALS[beat.cropHint] ?? null;
+  }
+  if (vertical === "event-vendors") {
+    return EVENT_VENDOR_ATELIER_VISUALS[beat.cropHint] ?? null;
   }
   return null;
 }

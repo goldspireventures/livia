@@ -176,7 +176,7 @@ export default defineConfig({
     },
     {
       name: "asset-capture",
-      testMatch: /capture-platform-default-wedge-book\.spec\.ts/,
+      testMatch: /capture-(platform-default-wedge-book|event-vendor-wedge-beats)\.spec\.ts/,
       timeout: 120_000,
       use: {
         ...devices["Desktop Chrome"],

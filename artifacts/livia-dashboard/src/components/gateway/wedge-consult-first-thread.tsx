@@ -4,10 +4,12 @@ import type { BusinessVertical, WedgeDemoBeat } from "@workspace/policy";
 import { g1TaglineForWorld, g1TitleForWorld, type G1WedgeWorld } from "@/lib/g1-wedge-worlds";
 import {
   filterWedgeChapters,
+  resolveWedgeBeatVisual,
   resolveWedgeLivIntro,
   resolveWedgeThreadBridge,
 } from "@/lib/wedge-beat-visuals";
 import { WedgeConsultFirstPreview } from "@/components/gateway/wedge-consult-first-preview";
+import { cn } from "@/lib/utils";
 
 type Props = {
   vertical: BusinessVertical;
@@ -25,6 +27,7 @@ const CHAPTER_LABEL: Record<string, string> = {
   inbox: "Inbox",
   "quote-gen": "Quote generator",
   catalogue: "Catalogue",
+  "milestone-pay": "Accept & pay",
 };
 
 /**
@@ -85,6 +88,7 @@ export function WedgeConsultFirstThread({
         {chapters.map((beat, index) => {
           const bridge = resolveWedgeThreadBridge(vertical, beat);
           const label = CHAPTER_LABEL[beat.cropHint] ?? beat.cropHint;
+          const visual = resolveWedgeBeatVisual(vertical, beat);
           return (
             <article
               key={beat.cropHint}
@@ -95,7 +99,25 @@ export function WedgeConsultFirstThread({
                 <span className="wedge-consult__index">{String(index + 1).padStart(2, "0")}</span>
                 <span className="wedge-consult__eyebrow">{label}</span>
               </div>
-              <WedgeConsultFirstPreview beat={beat} />
+              {visual ? (
+                <figure
+                  className={cn(
+                    "wedge-consult__shot-wrap overflow-hidden rounded-xl border border-white/10",
+                    visual.aspect === "phone" && "mx-auto max-w-[11rem]",
+                  )}
+                >
+                  <img
+                    src={visual.src}
+                    alt={visual.alt}
+                    className="block h-auto w-full object-cover"
+                    style={visual.objectPosition ? { objectPosition: visual.objectPosition } : undefined}
+                    loading={index === 0 ? "eager" : "lazy"}
+                    decoding="async"
+                  />
+                </figure>
+              ) : (
+                <WedgeConsultFirstPreview beat={beat} />
+              )}
               <div className="wedge-consult__copy">
                 <h2 className="text-sm font-semibold leading-snug text-foreground sm:text-base">
                   {beat.headline}
