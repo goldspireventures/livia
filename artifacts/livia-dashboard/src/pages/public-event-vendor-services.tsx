@@ -18,31 +18,30 @@ export default function PublicEventVendorServicesPage() {
               Prices are starting points — your final quote depends on guest count, venue, and styling level.
               Everything is confirmed in writing before you book.
             </p>
-            <div className="ev-services-list grid gap-3.5 md:grid-cols-2">
+            <div className="ev-services-list grid gap-8 md:grid-cols-2">
               {data.services.map((svc) => (
-                <article key={svc.id} className="ev-services-card ev-card flex flex-col md:flex-row overflow-hidden">
-                  {svc.imageUrl ? (
-                    <img src={svc.imageUrl} alt="" className="object-cover shrink-0" />
-                  ) : null}
-                    <div className="ev-card__body flex-1">
-                      {svc.category ? (
-                        <p className="text-[10px] uppercase tracking-widest text-amber-800/80 mb-1">
-                          {svc.category}
-                        </p>
-                      ) : null}
-                      <h2 className="font-medium text-lg">{svc.name}</h2>
-                      {svc.description ? (
-                        <p className="ev-muted text-sm mt-2">{svc.description}</p>
-                      ) : null}
-                      <p className="mt-3 font-medium text-amber-900">
-                        from {formatCurrency(svc.priceMinor, currency)}
-                        {svc.quoteUnit === "per_guest"
-                          ? " / guest"
-                          : svc.quoteUnit === "per_table"
-                            ? " / table"
-                            : ""}
-                      </p>
-                    </div>
+                <article key={svc.id} className="ev-services-card">
+                  <div className="ev-services-card__media">
+                    {svc.imageUrl ? (
+                      <img src={svc.imageUrl} alt="" className="object-cover" loading="lazy" />
+                    ) : (
+                      <div className="ev-services-card__media-fallback" aria-hidden />
+                    )}
+                  </div>
+                  <div className="ev-services-card__tag">
+                    {svc.category ? (
+                      <p className="ev-services-card__category">{svc.category}</p>
+                    ) : null}
+                    <h2 className="ev-services-card__name">{svc.name}</h2>
+                    <p className="ev-services-card__price">
+                      from {formatCurrency(svc.priceMinor, currency)}
+                      {svc.quoteUnit === "per_guest"
+                        ? " / guest"
+                        : svc.quoteUnit === "per_table"
+                          ? " / table"
+                          : ""}
+                    </p>
+                  </div>
                 </article>
               ))}
             </div>
