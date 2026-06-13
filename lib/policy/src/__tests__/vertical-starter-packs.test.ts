@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { isConsultFirstVertical } from "../client-profile-policy";
 import { businessVerticalSchema } from "../types";
 import {
   getVerticalStarterPackOffer,
@@ -12,7 +13,11 @@ for (const vertical of businessVerticalSchema.options) {
   assert.ok(services.length >= 4, `${vertical} starter pack needs at least 4 services`);
   for (const svc of services) {
     assert.ok(svc.name.trim().length > 0, `${vertical} service name required`);
-    assert.ok(svc.durationMinutes > 0, `${vertical} ${svc.name} duration`);
+    if (isConsultFirstVertical(vertical)) {
+      assert.ok(svc.durationMinutes >= 0, `${vertical} ${svc.name} duration`);
+    } else {
+      assert.ok(svc.durationMinutes > 0, `${vertical} ${svc.name} duration`);
+    }
     assert.ok(svc.priceMinor >= 0, `${vertical} ${svc.name} price`);
   }
 

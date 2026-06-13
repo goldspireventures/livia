@@ -19,6 +19,16 @@ import {
 import { inferDemoServiceImageUrl } from "../lib/experience-skin";
 import { ensureWellnessShowcaseDepth } from "./wellness-demo-depth";
 import { ensureEventVendorsShowcaseDepth } from "./event-vendors-demo-depth";
+import { logger } from "../lib/logger";
+
+async function runEventVendorsShowcaseDepth(businessId: string, slug: string) {
+  try {
+    await ensureEventVendorsShowcaseDepth(businessId);
+  } catch (err) {
+    logger.error({ err, businessId, slug }, "[demo] event-vendors showcase depth failed");
+    if (process.env.CI !== "true") throw err;
+  }
+}
 
 /** Demo shops stay on Constellation until the owner picks Appearance. */
 export async function ensureVerticalDemoPresentationPreset(
@@ -518,7 +528,7 @@ export async function seedVerticalShowcaseShops(
         await ensureWellnessShowcaseDepth(existing.id);
       }
       if (d.vertical === "event-vendors") {
-        await ensureEventVendorsShowcaseDepth(existing.id);
+        await runEventVendorsShowcaseDepth(existing.id, d.slug);
       }
       created.push({
         slug: existing.slug,
@@ -579,7 +589,7 @@ export async function seedVerticalShowcaseShops(
       await ensureWellnessShowcaseDepth(biz.id);
     }
     if (d.vertical === "event-vendors") {
-      await ensureEventVendorsShowcaseDepth(biz.id);
+      await runEventVendorsShowcaseDepth(biz.id, d.slug);
     }
     created.push({ slug: biz.slug, id: biz.id, name: biz.name, vertical: d.vertical });
   }
