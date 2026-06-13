@@ -227,12 +227,14 @@ router.post("/internal/cron/event-vendor-lifecycle", async (req, res): Promise<v
     sendError(res, req, 401, "Unauthorized");
     return;
   }
-  const { runEventVendorLifecycleSweep } = await import(
+  const { runEventVendorLifecycleSweep, runMilestoneDueReminders } = await import(
     "../services/event-vendor-lifecycle.service"
   );
   const businessId = (req.body?.businessId as string | undefined)?.trim();
-  const result = await runEventVendorLifecycleSweep(businessId ? { businessId } : undefined);
-  res.json(result);
+  const opts = businessId ? { businessId } : undefined;
+  const sweep = await runEventVendorLifecycleSweep(opts);
+  const milestones = await runMilestoneDueReminders(opts);
+  res.json({ ...sweep, milestoneReminders: milestones.reminders });
 });
 
 router.post("/internal/cron/test-push", async (req, res): Promise<void> => {

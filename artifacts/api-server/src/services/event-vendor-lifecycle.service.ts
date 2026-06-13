@@ -1,9 +1,11 @@
 import {
   buildEventPrepPlan,
   depositDueReminderCopy,
+  milestonePaymentReminderCopy,
   operatorPrepNudgeCopy,
   overduePrepTasks,
   resolveDueLifecycleActions,
+  resolveQuoteMilestonePayment,
   upcomingPrepTasks,
   type EventPrepTask,
   type LivEventLifecycle,
@@ -11,7 +13,7 @@ import {
 import { db, businessesTable, quotesTable } from "@workspace/db";
 import { and, eq } from "drizzle-orm";
 import { resolveGuestQuoteUrl } from "../lib/guest-public-urls";
-import { getQuoteWithLines, getEnquiry } from "./consult-first.service";
+import { getQuoteWithLines, getEnquiry, updateEnquiry } from "./consult-first.service";
 import {
   emailDepositDueReminder,
   sendPostEventReviewRequest,
@@ -184,6 +186,13 @@ export async function onBookingSecured(businessId: string, quoteId: string) {
     .set({ eventDaySheet: nextSheet, updatedAt: new Date() })
     .where(and(eq(quotesTable.id, quoteId), eq(quotesTable.businessId, businessId)));
 
+  if (quote.enquiryId) {
+    await updateEnquiry(businessId, quote.enquiryId, {
+      status: "booked",
+      eventDateHoldStatus: "confirmed",
+    });
+  }
+
   const contactName =
     enquiry?.contactName ?? sheet.billToName ?? quote.customer?.displayName ?? "Client";
 
@@ -347,6 +356,77 @@ export async function runEventVendorLifecycleSweep(opts?: { businessId?: string 
   }
 
   return { businesses: businesses.length, quotesChecked, actionsTaken, today };
+}
+
+/** Cron — email guests when a milestone payment becomes due. */
+export async function runMilestoneDueReminders(opts?: { businessId?: string }) {
+  const today = new Date().toISOString().slice(0, 10);
+  const conditions = [eq(businessesTable.vertical, "event-vendors" as const)];
+  if (opts?.businessId) conditions.push(eq(businessesTable.id, opts.businessId));
+
+  const businesses = await db
+    .select({ id: businessesTable.id, name: businessesTable.name, slug: businessesTable.slug, currency: businessesTable.currency })
+    .from(businessesTable)
+    .where(and(...conditions));
+
+  let reminders = 0;
+
+  for (const biz of businesses) {
+    const quotes = await db
+      .select()
+      .from(quotesTable)
+      .where(and(eq(quotesTable.businessId, biz.id), eq(quotesTable.status, "accepted")));
+
+    for (const q of quotes) {
+      const payment = resolveQuoteMilestonePayment(q);
+      const dueMilestone = payment.milestones.find((m) => m.status === "due");
+      if (!dueMilestone || payment.nextDueMinor <= 0) continue;
+
+      const sheet = sheetOf(q.eventDaySheet as Record<string, unknown> | null);
+      const lifecycle = lifecycleOf(sheet);
+      const sentKey = dueMilestone.label;
+      if (lifecycle.milestoneRemindersSent?.[sentKey]) continue;
+
+      const enquiry = q.enquiryId ? await getEnquiry(biz.id, q.enquiryId) : null;
+      const quoteFull = await getQuoteWithLines(biz.id, q.id);
+      if (!quoteFull) continue;
+      const { contactName, contactEmail } = resolveQuoteRecipient(
+        quoteFull,
+        enquiry,
+        quoteFull.customer ?? null,
+      );
+      if (!contactEmail) continue;
+
+      const payUrl = resolveGuestQuoteUrl(biz.slug, q.publicToken);
+      const copy = milestonePaymentReminderCopy({
+        contactName,
+        businessName: biz.name,
+        payUrl,
+        milestoneLabel: dueMilestone.label,
+        amountMinor: payment.nextDueMinor,
+        currency: biz.currency,
+      });
+
+      await emailDepositDueReminder({
+        businessId: biz.id,
+        to: contactEmail,
+        subject: copy.subject,
+        body: copy.body,
+      });
+
+      const nextLifecycle: LivEventLifecycle = {
+        ...lifecycle,
+        milestoneRemindersSent: {
+          ...(lifecycle.milestoneRemindersSent ?? {}),
+          [sentKey]: new Date().toISOString(),
+        },
+      };
+      await persistLifecycle(biz.id, q.id, sheet, nextLifecycle);
+      reminders++;
+    }
+  }
+
+  return { reminders, today };
 }
 
 export type { EventPrepTask, LivEventLifecycle };

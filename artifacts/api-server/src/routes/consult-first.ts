@@ -22,6 +22,8 @@ import {
   listQuoteTemplates,
   listQuotesWithEnquiry,
   requestPostEventReview,
+  reviseSentQuote,
+  sendMoodBoardForApproval,
   sendQuote,
   updateEnquiry,
   updateEventVendorSite,
@@ -405,6 +407,33 @@ router.get(
       bizId(req.params.businessId),
       bizId(req.params.quoteId),
       bizId(req.params.taskId),
+    );
+    if (!row) {
+      sendError(res, req, 404, "not_found");
+      return;
+    }
+    res.json(row);
+  }),
+);
+
+router.post(
+  "/businesses/:businessId/quotes/:quoteId/revise",
+  ...withBusinessFeature("quotes", "ADMIN", async (req, res) => {
+    const row = await reviseSentQuote(bizId(req.params.businessId), bizId(req.params.quoteId));
+    if (!row) {
+      sendError(res, req, 404, "not_found");
+      return;
+    }
+    res.json(row);
+  }),
+);
+
+router.post(
+  "/businesses/:businessId/enquiries/:enquiryId/mood-board/send",
+  ...withBusinessFeature("enquiries", "ADMIN", async (req, res) => {
+    const row = await sendMoodBoardForApproval(
+      bizId(req.params.businessId),
+      bizId(req.params.enquiryId),
     );
     if (!row) {
       sendError(res, req, 404, "not_found");

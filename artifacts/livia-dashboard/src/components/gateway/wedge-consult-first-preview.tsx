@@ -79,6 +79,27 @@ function previewBody(hint: WedgeDemoBeat["cropHint"]) {
           <p className="text-[8px] text-white/35">Units scale from guest count & tables</p>
         </div>
       );
+    case "milestone-pay":
+      return (
+        <div className="p-3 space-y-2">
+          <p className="text-[9px] font-mono uppercase tracking-widest text-emerald-200/50">Booked</p>
+          <p className="text-[11px] font-medium text-white/90">Sarah accepted · deposit paid</p>
+          <div className="space-y-1 text-[9px]">
+            <div className="flex justify-between text-emerald-300/90">
+              <span>Hold 25%</span>
+              <span>Paid ✓</span>
+            </div>
+            <div className="flex justify-between text-white/60">
+              <span>Balance 50% · T-30</span>
+              <span>Due Aug</span>
+            </div>
+            <div className="flex justify-between text-white/40">
+              <span>Final 25%</span>
+              <span>Event day</span>
+            </div>
+          </div>
+        </div>
+      );
     default:
       return <div className="p-3 text-[10px] text-white/50">Preview</div>;
   }

@@ -75,7 +75,10 @@ import { isWellnessGiftPublicBookEnabled } from "@workspace/policy";
 import {
   acceptPublicQuote,
   declinePublicQuote,
+  decidePublicMoodBoard,
   getPublicEventSite,
+  getPublicMoodBoardByToken,
+  getPlannerPortalByToken,
   getPublicQuoteByToken,
   renderPublicQuoteHtml,
   submitPublicEnquiry,
@@ -1397,6 +1400,39 @@ router.post("/public/:slug/q/:token/pay/checkout", async (req, res) => {
       message: safeClientMessage(err, "Could not start checkout"),
     });
   }
+});
+
+router.get("/public/:slug/mood/:token", async (req, res) => {
+  const data = await getPublicMoodBoardByToken(req.params.slug, req.params.token);
+  if (!data) {
+    sendError(res, req, 404, "not_found");
+    return;
+  }
+  res.json(data);
+});
+
+router.post("/public/:slug/mood/:token/decision", async (req, res) => {
+  const decision = req.body?.decision === "approved" ? "approved" : "changes_requested";
+  const row = await decidePublicMoodBoard(
+    req.params.slug,
+    req.params.token,
+    decision,
+    req.body?.note as string | undefined,
+  );
+  if (!row) {
+    sendError(res, req, 404, "not_found");
+    return;
+  }
+  res.json(row);
+});
+
+router.get("/public/:slug/planner/:token", async (req, res) => {
+  const data = await getPlannerPortalByToken(req.params.slug, req.params.token);
+  if (!data) {
+    sendError(res, req, 404, "not_found");
+    return;
+  }
+  res.json(data);
 });
 
 export default router;

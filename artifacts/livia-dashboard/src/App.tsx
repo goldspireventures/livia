@@ -89,6 +89,8 @@ import PublicEventVendorServicesPage from "@/pages/public-event-vendor-services"
 import PublicEventVendorAboutPage from "@/pages/public-event-vendor-about";
 import PublicEventVendorEnquirePage from "@/pages/public-event-vendor-enquire";
 import PublicEventVendorQuotePage from "@/pages/public-event-vendor-quote";
+import PublicEventVendorMoodPage from "@/pages/public-event-vendor-mood";
+import PublicEventVendorPlannerPage from "@/pages/public-event-vendor-planner";
 import {
   FOUNDER_DEMO_LAUNCHER_PATH,
   marketingDemoGateUrl,
@@ -411,6 +413,8 @@ function AppRouter() {
       <Route path="/b/:slug">{() => <LegacyGuestBookRedirect />}</Route>
       <Route path="/p/:slug" component={PublicPremisesPage} />
       <Route path="/e/:slug/q/:token" component={PublicEventVendorQuotePage} />
+      <Route path="/e/:slug/mood/:token" component={PublicEventVendorMoodPage} />
+      <Route path="/e/:slug/planner/:token" component={PublicEventVendorPlannerPage} />
       <Route path="/e/:slug/enquire" component={PublicEventVendorEnquirePage} />
       <Route path="/e/:slug/gallery" component={PublicEventVendorGalleryPage} />
       <Route path="/e/:slug/services" component={PublicEventVendorServicesPage} />

@@ -15,7 +15,8 @@ export type WedgeDemoBeat = {
     | "proof"
     | "consent"
     | "quote-gen"
-    | "catalogue";
+    | "catalogue"
+    | "milestone-pay";
 };
 
 export type WedgeDemoStory = {
@@ -118,6 +119,11 @@ const WEDGE_BEATS: Record<BusinessVertical, WedgeDemoBeat[]> = {
       headline: "Your catalogue",
       detail: "Balloon garlands, per-table centrepieces, per-guest sashes — units that scale quotes automatically.",
       cropHint: "catalogue",
+    },
+    {
+      headline: "Accept & milestone pay",
+      detail: "Guest accepts on their phone — deposit secures the date; balance milestones collect automatically.",
+      cropHint: "milestone-pay",
     },
   ],
 };

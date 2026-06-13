@@ -32,6 +32,8 @@ type Props = {
   lowFitList?: LowFitRow[];
   staleQuotesList?: StaleRow[];
   prepTaskList?: PrepRow[];
+  pipelineForecast?: { quotedMinor: number; expectedMinor: number; weightLabel: string };
+  replyBenchmark?: { label: string; percentile: number } | null;
   loading?: boolean;
 };
 
@@ -42,6 +44,8 @@ export function ConsultFirstHomePanel({
   lowFitList = [],
   staleQuotesList = [],
   prepTaskList = [],
+  pipelineForecast,
+  replyBenchmark,
   loading,
 }: Props) {
   if (loading) {
@@ -79,6 +83,30 @@ export function ConsultFirstHomePanel({
             </Link>
           </Button>
         </div>
+      ) : null}
+
+      {pipelineForecast && pipelineForecast.quotedMinor > 0 ? (
+        <div
+          className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-4 flex flex-wrap items-center justify-between gap-2"
+          data-testid="pipeline-forecast-kpi"
+        >
+          <div>
+            <p className="text-sm font-medium">Pipeline forecast</p>
+            <p className="text-xs text-muted-foreground">{pipelineForecast.weightLabel}</p>
+          </div>
+          <p className="text-lg font-semibold tabular-nums">
+            €{(pipelineForecast.expectedMinor / 100).toLocaleString("en-IE", { minimumFractionDigits: 0 })}
+            <span className="text-xs font-normal text-muted-foreground ml-1">
+              of €{(pipelineForecast.quotedMinor / 100).toLocaleString("en-IE", { minimumFractionDigits: 0 })} quoted
+            </span>
+          </p>
+        </div>
+      ) : null}
+
+      {replyBenchmark ? (
+        <p className="text-xs text-muted-foreground px-1" data-testid="reply-time-benchmark">
+          Reply speed: {replyBenchmark.label}
+        </p>
       ) : null}
 
       {lowFitList.length > 0 ? (

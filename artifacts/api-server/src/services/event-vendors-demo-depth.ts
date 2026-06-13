@@ -42,10 +42,14 @@ export async function ensureEventVendorsShowcaseDepth(businessId: string) {
 
   for (const svc of services) {
     const unit = QUOTE_UNITS[svc.name];
-    if (unit) {
+    const stockCount = svc.name === "Balloon garland" ? 3 : null;
+    if (unit || stockCount != null) {
       await db
         .update(servicesTable)
-        .set({ quoteUnit: unit, durationMinutes: 0 })
+        .set({
+          ...(unit ? { quoteUnit: unit, durationMinutes: 0 } : {}),
+          ...(stockCount != null ? { stockCount } : {}),
+        })
         .where(eq(servicesTable.id, svc.id));
     }
   }
@@ -75,7 +79,9 @@ export async function ensureEventVendorsShowcaseDepth(businessId: string) {
         eventType: "christening",
       },
     ],
-    blockedDates: [],
+    blockedDates: ["2026-12-25"],
+    setupFeeMinor: 9500,
+    outdoorTermsExtra: "Marquee installs may require reschedule in storm warnings above wind threshold.",
     milestoneDepositTemplate: [
       { label: "Deposit to secure date", percent: 30, dueDaysBeforeEvent: undefined },
       { label: "Balance", percent: 70, dueDaysBeforeEvent: 7 },
@@ -239,4 +245,21 @@ async function ensureDemoSentQuoteForDeposit(businessId: string) {
   if (quote?.id) {
     await sendQuote(businessId, quote.id, "email");
   }
+}
+
+/** Demo E2E — first sent quote public token for event-vendors slug. */
+export async function getDemoGuestQuoteToken(slug: string): Promise<string | null> {
+  const [biz] = await db
+    .select({ id: businessesTable.id, vertical: businessesTable.vertical })
+    .from(businessesTable)
+    .where(eq(businessesTable.slug, slug))
+    .limit(1);
+  if (!biz || biz.vertical !== "event-vendors") return null;
+
+  const [quote] = await db
+    .select({ publicToken: quotesTable.publicToken })
+    .from(quotesTable)
+    .where(and(eq(quotesTable.businessId, biz.id), eq(quotesTable.status, "sent")))
+    .limit(1);
+  return quote?.publicToken ?? null;
 }

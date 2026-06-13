@@ -255,6 +255,25 @@ export default function QuotesScreen() {
             }}
           />
         ) : null}
+        {selected.status === "sent" ? (
+          <ActionBtn
+            label="Revise quote (v+1)"
+            colors={colors}
+            onPress={async () => {
+              if (!bid) return;
+              try {
+                const row = await customFetch<{ id: string }>(
+                  `/api/businesses/${bid}/quotes/${selected.id}/revise`,
+                  { method: "POST" },
+                );
+                await loadDetail(row.id);
+                haptics.tap();
+              } catch {
+                Alert.alert("Could not revise quote");
+              }
+            }}
+          />
+        ) : null}
         <ActionBtn
           label="Edit on web"
           colors={colors}

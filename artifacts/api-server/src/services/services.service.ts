@@ -35,6 +35,8 @@ export async function createService(
     requiresPatchTest?: boolean;
     aftercareInstructions?: string | null;
     linkedRetailProductId?: string | null;
+    quoteUnit?: string | null;
+    stockCount?: number | null;
   },
 ) {
   let currency = data.currency;
@@ -63,6 +65,8 @@ export async function createService(
       requiresPatchTest: data.requiresPatchTest ?? false,
       aftercareInstructions: data.aftercareInstructions ?? null,
       linkedRetailProductId: data.linkedRetailProductId ?? null,
+      quoteUnit: data.quoteUnit ?? null,
+      stockCount: data.stockCount ?? null,
     })
     .returning();
   return s;

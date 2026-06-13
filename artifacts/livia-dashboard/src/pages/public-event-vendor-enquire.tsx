@@ -18,6 +18,8 @@ export default function PublicEventVendorEnquirePage() {
   const [contactPhone, setContactPhone] = useState("");
   const [partnerName, setPartnerName] = useState("");
   const [plannerName, setPlannerName] = useState("");
+  const [plannerEmail, setPlannerEmail] = useState("");
+  const [plannerPhone, setPlannerPhone] = useState("");
   const [eventType, setEventType] = useState("");
   const [eventDate, setEventDate] = useState("");
   const [eventDateFlexible, setEventDateFlexible] = useState(false);
@@ -45,6 +47,8 @@ export default function PublicEventVendorEnquirePage() {
               contactPhone: contactPhone || undefined,
               partnerName: partnerName || undefined,
               plannerName: plannerName || undefined,
+              plannerEmail: plannerEmail || undefined,
+              plannerPhone: plannerPhone || undefined,
               eventType: eventType || undefined,
               eventDate: eventDate || undefined,
               eventDateFlexible,
@@ -305,6 +309,24 @@ export default function PublicEventVendorEnquirePage() {
                             id="planner"
                             value={plannerName}
                             onChange={(e) => setPlannerName(e.target.value)}
+                          />
+                        </div>
+                        <div className="ev-field">
+                          <label htmlFor="planner-email">Planner email</label>
+                          <input
+                            id="planner-email"
+                            type="email"
+                            value={plannerEmail}
+                            onChange={(e) => setPlannerEmail(e.target.value)}
+                          />
+                        </div>
+                        <div className="ev-field">
+                          <label htmlFor="planner-phone">Planner phone</label>
+                          <input
+                            id="planner-phone"
+                            type="tel"
+                            value={plannerPhone}
+                            onChange={(e) => setPlannerPhone(e.target.value)}
                           />
                         </div>
                         <div className="ev-field sm:col-span-2">

@@ -434,6 +434,8 @@ export function OwnerHomeRitual({
           dueDate: string;
           overdue: boolean;
         }>;
+        pipelineForecast?: { quotedMinor: number; expectedMinor: number; weightLabel: string };
+        replyBenchmark?: { label: string; percentile: number } | null;
       }>(`/businesses/${bid}/event-vendor/dashboard`),
     enabled: consultFirst && !!bid,
     staleTime: 30_000,
@@ -846,6 +848,8 @@ export function OwnerHomeRitual({
               lowFitList={consultDash?.lowFitList}
               staleQuotesList={consultDash?.staleQuotesList}
               prepTaskList={consultDash?.prepTaskList}
+              pipelineForecast={consultDash?.pipelineForecast}
+              replyBenchmark={consultDash?.replyBenchmark}
               loading={consultDashLoading}
             />
           ) : (

@@ -45,6 +45,10 @@ type Enquiry = {
   partnerName?: string | null;
   partnerPhone?: string | null;
   plannerName?: string | null;
+  plannerEmail?: string | null;
+  plannerPhone?: string | null;
+  eventDateHoldStatus?: string | null;
+  moodBoardStatus?: string | null;
   eventType?: string | null;
   eventDate?: string | null;
   eventDateFlexible?: boolean | null;
@@ -142,6 +146,8 @@ export default function EventVendorUnifiedInboxPage() {
     partnerName: "",
     partnerPhone: "",
     plannerName: "",
+    plannerEmail: "",
+    plannerPhone: "",
   });
   const [lens, setLens] = useState<ConsultInboxLens>("all");
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
@@ -252,6 +258,8 @@ export default function EventVendorUnifiedInboxPage() {
       partnerName: selected?.partnerName ?? "",
       partnerPhone: selected?.partnerPhone ?? "",
       plannerName: selected?.plannerName ?? "",
+      plannerEmail: selected?.plannerEmail ?? "",
+      plannerPhone: selected?.plannerPhone ?? "",
     });
     if (selected?.id) void loadMoodBoard(selected.id);
   }, [selected?.id]);
@@ -416,6 +424,8 @@ export default function EventVendorUnifiedInboxPage() {
           partnerName: contacts.partnerName || null,
           partnerPhone: contacts.partnerPhone || null,
           plannerName: contacts.plannerName || null,
+          plannerEmail: contacts.plannerEmail || null,
+          plannerPhone: contacts.plannerPhone || null,
         }),
       });
       toast({ title: "Saved" });
@@ -645,6 +655,33 @@ export default function EventVendorUnifiedInboxPage() {
                 </Button>
               ) : null}
 
+              {selected.status === "booked" ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  className="w-full sm:w-auto"
+                  onClick={async () => {
+                    if (!bid || !selected) return;
+                    try {
+                      await customFetch(
+                        `/api/businesses/${bid}/enquiries/${selected.id}/request-review`,
+                        { method: "POST" },
+                      );
+                      toast({
+                        title: "Review request sent",
+                        description: `Liv emailed ${selected.contactName} for a post-event review.`,
+                      });
+                    } catch {
+                      toast({ title: "Could not send review request", variant: "destructive" });
+                    }
+                  }}
+                  data-testid="request-post-event-review"
+                >
+                  Request post-event review
+                </Button>
+              ) : null}
+
               {quoteBrief ? (
                 <QuoteBriefPanel
                   hints={quoteBrief.briefIntelligence.hints}
@@ -768,11 +805,48 @@ export default function EventVendorUnifiedInboxPage() {
                       onChange={(e) => setContacts({ ...contacts, plannerName: e.target.value })}
                     />
                   </div>
+                  <div className="space-y-1">
+                    <Label>Planner email</Label>
+                    <Input
+                      type="email"
+                      value={contacts.plannerEmail}
+                      onChange={(e) => setContacts({ ...contacts, plannerEmail: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Planner phone</Label>
+                    <Input
+                      value={contacts.plannerPhone}
+                      onChange={(e) => setContacts({ ...contacts, plannerPhone: e.target.value })}
+                    />
+                  </div>
                 </div>
               </SettingsDisclosure>
 
               <SettingsDisclosure title="Mood board & inspiration" defaultOpen={moodBoard.length > 0}>
                 <div className="space-y-2 pt-3">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    disabled={moodBoard.length === 0}
+                    onClick={async () => {
+                      if (!bid || !selected) return;
+                      try {
+                        const row = await customFetch<{ approvalUrl: string }>(
+                          `/api/businesses/${bid}/enquiries/${selected.id}/mood-board/send`,
+                          { method: "POST" },
+                        );
+                        await navigator.clipboard.writeText(row.approvalUrl);
+                        toast({ title: "Approval link copied" });
+                      } catch {
+                        toast({ title: "Could not create link", variant: "destructive" });
+                      }
+                    }}
+                    data-testid="send-mood-board-approval"
+                  >
+                    Copy mood board approval link
+                  </Button>
                   <div className="flex flex-wrap gap-2">
                     <Input
                       className="flex-1 min-w-[140px]"

@@ -295,6 +295,22 @@ const EVENT_VENDOR_THREADS: DemoInboxThreadSpec[] = [
   },
   {
     channel: "WEB",
+    status: "OPEN",
+    aiHandled: false,
+    name: "Sarah Murphy",
+    phone: "+353871234567",
+    email: "sarah.murphy@example.com",
+    summary: "Also enquired via website — same birthday celebration.",
+    messages: [
+      {
+        role: "USER",
+        content: "Submitted the enquire form for 15 Sept — blush & gold, 40 guests.",
+        minsAgo: 45,
+      },
+    ],
+  },
+  {
+    channel: "WEB",
     status: "HANDED_OFF",
     aiHandled: false,
     name: "Aoife Brennan",

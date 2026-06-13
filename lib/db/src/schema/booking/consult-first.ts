@@ -25,6 +25,8 @@ export const eventVendorSiteTable = pgTable("event_vendor_site", {
     .$type<Array<{ label: string; percent: number; dueDaysBeforeEvent?: number }>>()
     .notNull()
     .default([]),
+  setupFeeMinor: integer("setup_fee_minor").notNull().default(0),
+  outdoorTermsExtra: text("outdoor_terms_extra"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -75,6 +77,14 @@ export const enquiriesTable = pgTable(
     partnerName: text("partner_name"),
     partnerPhone: text("partner_phone"),
     plannerName: text("planner_name"),
+    plannerEmail: text("planner_email"),
+    plannerPhone: text("planner_phone"),
+    eventDateHoldStatus: text("event_date_hold_status"),
+    holdExpiresAt: timestamp("hold_expires_at", { withTimezone: true }),
+    firstOperatorReplyAt: timestamp("first_operator_reply_at", { withTimezone: true }),
+    moodBoardApprovalToken: text("mood_board_approval_token"),
+    moodBoardStatus: text("mood_board_status").notNull().default("draft"),
+    plannerAccessToken: text("planner_access_token"),
     internalNotes: text("internal_notes"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -133,6 +143,8 @@ export const quotesTable = pgTable(
       .notNull()
       .default([]),
     depositPaidMinor: integer("deposit_paid_minor").notNull().default(0),
+    supersedesQuoteId: text("supersedes_quote_id"),
+    version: integer("version").notNull().default(1),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

@@ -19,6 +19,8 @@ type Site = {
   defaultDepositPercent: number;
   quoteValidityDays: number;
   termsText?: string | null;
+  setupFeeMinor: number;
+  outdoorTermsExtra?: string | null;
   blockedDates: string[];
   gallery: Array<{ url: string; caption?: string; eventType?: string }>;
   milestoneDepositTemplate: MilestoneTemplate[];
@@ -161,6 +163,32 @@ export default function EventSitePage() {
           rows={3}
         />
       </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label>Travel & setup fee (€)</Label>
+          <Input
+            type="number"
+            min={0}
+            step={1}
+            value={Math.round((site.setupFeeMinor ?? 0) / 100)}
+            onChange={(e) =>
+              setSite({ ...site, setupFeeMinor: Math.round(Number(e.target.value || 0) * 100) })
+            }
+            data-testid="event-site-setup-fee"
+          />
+          <p className="text-xs text-muted-foreground">Added as a line when venue is set on an enquiry.</p>
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label>Outdoor / weather contingency (appended to quote terms)</Label>
+        <Textarea
+          value={site.outdoorTermsExtra ?? ""}
+          onChange={(e) => setSite({ ...site, outdoorTermsExtra: e.target.value })}
+          rows={2}
+          placeholder="e.g. Outdoor installs may reschedule for high wind…"
+          data-testid="event-site-outdoor-terms"
+        />
+      </div>
       </div>
 
       <div className="rounded-xl border bg-card/60 p-4 space-y-4">
@@ -268,6 +296,26 @@ export default function EventSitePage() {
             Block
           </Button>
         </div>
+        {site.blockedDates.length > 0 ? (
+          <ul className="space-y-1 text-sm">
+            {site.blockedDates.map((d) => (
+              <li key={d} className="flex items-center justify-between gap-2 text-muted-foreground">
+                <span>{d}</span>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  onClick={() =>
+                    setSite({ ...site, blockedDates: site.blockedDates.filter((x) => x !== d) })
+                  }
+                  aria-label={`Unblock ${d}`}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </div>
       </div>
 

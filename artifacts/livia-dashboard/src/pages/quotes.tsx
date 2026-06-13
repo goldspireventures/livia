@@ -815,6 +815,25 @@ export default function QuotesPage() {
                 )}
                 {selected.status === "sent" ? (
                   <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={async () => {
+                        if (!bid) return;
+                        try {
+                          const row = await customFetch<{ id: string; version?: number }>(
+                            `/api/businesses/${bid}/quotes/${selected.id}/revise`,
+                            { method: "POST" },
+                          );
+                          toast({ title: `Quote v${row.version ?? 2} draft created` });
+                          window.location.href = `/quotes?id=${row.id}`;
+                        } catch {
+                          toast({ title: "Revise failed", variant: "destructive" });
+                        }
+                      }}
+                    >
+                      Revise quote (v+1)
+                    </Button>
                     {selected.sentAt &&
                     Math.floor(
                       (Date.now() - new Date(selected.sentAt).getTime()) / (24 * 60 * 60 * 1000),

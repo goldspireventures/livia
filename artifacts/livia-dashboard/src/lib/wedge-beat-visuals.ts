@@ -20,6 +20,7 @@ export const EVENT_VENDOR_CHAPTER_ORDER: WedgeDemoBeat["cropHint"][] = [
   "inbox",
   "quote-gen",
   "catalogue",
+  "milestone-pay",
 ];
 
 export function wedgeChapterOrder(vertical?: BusinessVertical): WedgeDemoBeat["cropHint"][] {

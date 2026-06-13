@@ -11,7 +11,7 @@ import {
   businessesTable,
   conversationsTable,
 } from "@workspace/db";
-import { and, desc, eq, isNull, lt, or } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, lt, or } from "drizzle-orm";
 import { getPublicAppOrigin } from "../lib/public-app-origin";
 import { generateId } from "../lib/id";
 import { findOrCreateCustomer, getCustomerById } from "./customers.service";
@@ -39,15 +39,20 @@ import {
 import {
   STALE_QUOTE_DAYS,
   buildQuoteBriefIntelligence,
+  diffQuoteLineItems,
   matchTemplateByEventType,
   matchGallerySimilarWork,
+  outdoorContingencyClause,
   personalMessageFromBrief,
+  resolveSetupFeeMinor,
   scalePresetQuantity,
   setupChecklistForEventType,
   staleQuoteNudgeCopy,
   upcomingPrepTasks,
   overduePrepTasks,
   resolveEnquiryDeclineCopy,
+  weightedPipelineForecast,
+  replyTimeBenchmark,
   type LivEventLifecycle,
 } from "@workspace/policy";
 
@@ -134,6 +139,8 @@ export async function updateEventVendorSite(
     /** @deprecated — use PATCH /liv-outbound */
     quoteWhatsappTemplate: string;
     milestoneDepositTemplate: Array<{ label: string; percent: number; dueDaysBeforeEvent?: number }>;
+    setupFeeMinor: number;
+    outdoorTermsExtra: string;
   }>,
 ) {
   const { sitePatch, outboundPatch } = extractLegacyOutboundPatch(
@@ -272,6 +279,14 @@ export async function updateEnquiry(
     partnerName: string;
     partnerPhone: string;
     plannerName: string;
+    plannerEmail: string;
+    plannerPhone: string;
+    eventDateHoldStatus: string;
+    holdExpiresAt: Date;
+    firstOperatorReplyAt: Date;
+    plannerAccessToken: string;
+    moodBoardApprovalToken: string;
+    moodBoardStatus: string;
   }>,
 ) {
   const [row] = await db
@@ -344,6 +359,8 @@ export type PublicEnquiryInput = {
   partnerName?: string;
   partnerPhone?: string;
   plannerName?: string;
+  plannerEmail?: string;
+  plannerPhone?: string;
   source?: string;
 };
 
@@ -394,6 +411,9 @@ export async function submitPublicEnquiry(slug: string, input: PublicEnquiryInpu
       partnerName: input.partnerName,
       partnerPhone: input.partnerPhone,
       plannerName: input.plannerName,
+      plannerEmail: input.plannerEmail,
+      plannerPhone: input.plannerPhone,
+      plannerAccessToken: input.plannerEmail ? quoteToken() : null,
     })
     .returning();
 
@@ -636,7 +656,18 @@ export async function generateQuoteFromEnquiry(
 
   const quoteId = generateId();
   const token = quoteToken();
-  const lineRows = matched.map((m, i) => {
+  let lineRows: Array<{
+    id: string;
+    quoteId: string;
+    serviceId: string | null;
+    name: string;
+    description: string | null;
+    quantity: string;
+    unit: string;
+    unitPriceMinor: number;
+    lineTotalMinor: number;
+    sortOrder: number;
+  }> = matched.map((m, i) => {
     const qty = m.qty;
     const unitMinor = m.svc.priceMinor;
     return {
@@ -652,6 +683,25 @@ export async function generateQuoteFromEnquiry(
       sortOrder: i,
     };
   });
+
+  const setupMinor = resolveSetupFeeMinor({
+    venue: enquiry.venue,
+    setupFeeMinor: site.setupFeeMinor,
+  });
+  if (setupMinor > 0) {
+    lineRows.push({
+      id: generateId(),
+      quoteId,
+      serviceId: null,
+      name: "Travel & setup",
+      description: enquiry.venue ?? null,
+      quantity: "1",
+      unit: "flat",
+      unitPriceMinor: setupMinor,
+      lineTotalMinor: setupMinor,
+      sortOrder: lineRows.length,
+    });
+  }
 
   const totals = computeQuoteTotals(
     lineRows.map((l) => ({ quantity: Number(l.quantity), unitPriceMinor: l.unitPriceMinor })),
@@ -724,6 +774,17 @@ export async function generateQuoteFromEnquiry(
     presetLines,
     catalogueNames: services.map((s) => s.name),
     subtotalMinor: totals.subtotalMinor,
+    setupFeeMinor: site.setupFeeMinor,
+    stockCatalogue: services.map((s) => ({
+      id: s.id,
+      name: s.name,
+      stockCount: s.stockCount,
+    })),
+    draftLines: lineRows.map((l) => ({
+      name: l.name,
+      quantity: l.quantity,
+      serviceId: l.serviceId,
+    })),
   });
 
   return { ...full, appliedTemplateId, briefIntelligence };
@@ -1008,19 +1069,38 @@ export async function sendQuote(
     quote.customerId && !enquiry ? await getCustomerById(businessId, quote.customerId) : null;
   const { contactName, contactEmail } = resolveQuoteRecipient(quote, enquiry, customer);
 
+  const site = await getEventVendorSite(businessId);
+  const outdoorTerms = outdoorContingencyClause({
+    eventType: enquiry?.eventType ?? (quote.eventDaySheet as { eventType?: string })?.eventType,
+    venue: enquiry?.venue ?? (quote.eventDaySheet as { venue?: string })?.venue,
+    notes: enquiry?.notes,
+    operatorExtra: site.outdoorTermsExtra,
+  });
+  const termsSnapshot = [quote.termsSnapshot ?? site.termsText, outdoorTerms].filter(Boolean).join("\n\n");
+
   const [row] = await db
     .update(quotesTable)
     .set({
       status: "sent",
       sentAt: new Date(),
       sentVia: via,
+      termsSnapshot,
       updatedAt: new Date(),
     })
     .where(and(eq(quotesTable.id, quoteId), eq(quotesTable.businessId, businessId)))
     .returning();
 
   if (quote.enquiryId) {
-    await updateEnquiry(businessId, quote.enquiryId, { status: "quoted" });
+    const holdExpires = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+    await updateEnquiry(businessId, quote.enquiryId, {
+      status: "quoted",
+      eventDateHoldStatus: "tentative",
+      holdExpiresAt: holdExpires,
+      firstOperatorReplyAt: enquiry?.firstOperatorReplyAt ?? new Date(),
+      ...(enquiry?.plannerEmail && !enquiry.plannerAccessToken
+        ? { plannerAccessToken: quoteToken() }
+        : {}),
+    });
   }
 
   const slug = biz?.slug ?? businessId;
@@ -1116,7 +1196,36 @@ export async function getPublicQuoteByToken(slug: string, token: string) {
 
   const similarWork = matchGallerySimilarWork(site.gallery ?? [], eventType);
 
-  return { business: biz, quote: { ...quote, lines }, site, similarWork, eventType };
+  let versionDiff: ReturnType<typeof diffQuoteLineItems> = [];
+  let previousVersion: number | null = null;
+  if (quote.supersedesQuoteId) {
+    const prev = await getQuoteWithLines(biz.id, quote.supersedesQuoteId);
+    if (prev) {
+      previousVersion = prev.version ?? 1;
+      versionDiff = diffQuoteLineItems(
+        prev.lines.map((l) => ({
+          name: l.name,
+          quantity: l.quantity,
+          lineTotalMinor: l.lineTotalMinor,
+        })),
+        lines.map((l) => ({
+          name: l.name,
+          quantity: l.quantity,
+          lineTotalMinor: l.lineTotalMinor,
+        })),
+      );
+    }
+  }
+
+  return {
+    business: biz,
+    quote: { ...quote, lines },
+    site,
+    similarWork,
+    eventType,
+    versionDiff,
+    previousVersion,
+  };
 }
 
 export async function declinePublicQuote(slug: string, token: string) {
@@ -1449,6 +1558,19 @@ export async function getConsultFirstDashboard(businessId: string) {
     staleQuotesList,
     prepTasksDue: prepTaskRows.length,
     prepTaskList: prepTaskRows.slice(0, 12),
+    pipelineForecast: weightedPipelineForecast(quotes),
+    replyBenchmark: (() => {
+      const samples = enquiries
+        .filter((e) => e.firstOperatorReplyAt)
+        .map((e) =>
+          Math.round(
+            (e.firstOperatorReplyAt!.getTime() - e.createdAt.getTime()) / 60_000,
+          ),
+        );
+      if (!samples.length) return null;
+      const avg = Math.round(samples.reduce((a, b) => a + b, 0) / samples.length);
+      return replyTimeBenchmark(avg);
+    })(),
   };
 }
 
@@ -1456,12 +1578,13 @@ export async function getEnquiryQuoteBrief(businessId: string, enquiryId: string
   const enquiry = await getEnquiry(businessId, enquiryId);
   if (!enquiry) return null;
 
-  const [services, templates] = await Promise.all([
+  const [services, templates, site] = await Promise.all([
     db
-      .select({ name: servicesTable.name })
+      .select({ id: servicesTable.id, name: servicesTable.name, stockCount: servicesTable.stockCount })
       .from(servicesTable)
       .where(and(eq(servicesTable.businessId, businessId), eq(servicesTable.isActive, true))),
     listQuoteTemplates(businessId),
+    getEventVendorSite(businessId),
   ]);
 
   const suggestedTemplate = matchTemplateByEventType(templates, enquiry.eventType);
@@ -1493,7 +1616,207 @@ export async function getEnquiryQuoteBrief(businessId: string, enquiryId: string
       servicesRequested: enquiry.servicesRequested as string[],
       presetLines,
       catalogueNames: services.map((s) => s.name),
+      setupFeeMinor: site.setupFeeMinor,
+      stockCatalogue: services,
     }),
+  };
+}
+
+/** Clone a sent quote into a new draft (v+1) for negotiation revisions. */
+export async function reviseSentQuote(businessId: string, quoteId: string) {
+  const quote = await getQuoteWithLines(businessId, quoteId);
+  if (!quote || quote.status !== "sent") return null;
+
+  const newId = generateId();
+  const token = quoteToken();
+  const version = (quote.version ?? 1) + 1;
+
+  const [row] = await db
+    .insert(quotesTable)
+    .values({
+      id: newId,
+      businessId,
+      enquiryId: quote.enquiryId,
+      customerId: quote.customerId,
+      status: "draft",
+      personalMessage: quote.personalMessage,
+      depositPercent: quote.depositPercent,
+      subtotalMinor: quote.subtotalMinor,
+      depositAmountMinor: quote.depositAmountMinor,
+      balanceDueMinor: quote.balanceDueMinor,
+      validUntil: quote.validUntil,
+      termsSnapshot: quote.termsSnapshot,
+      publicToken: token,
+      eventDaySheet: quote.eventDaySheet,
+      milestoneDeposits: quote.milestoneDeposits,
+      supersedesQuoteId: quote.id,
+      version,
+    })
+    .returning();
+
+  if (quote.lines.length) {
+    await db.insert(quoteLineItemsTable).values(
+      quote.lines.map((l, i) => ({
+        id: generateId(),
+        quoteId: newId,
+        serviceId: l.serviceId,
+        name: l.name,
+        description: l.description,
+        quantity: l.quantity,
+        unit: l.unit,
+        unitPriceMinor: l.unitPriceMinor,
+        lineTotalMinor: l.lineTotalMinor,
+        sortOrder: i,
+      })),
+    );
+  }
+
+  await db
+    .update(quotesTable)
+    .set({ status: "expired", updatedAt: new Date() })
+    .where(eq(quotesTable.id, quoteId));
+
+  return getQuoteWithLines(businessId, row!.id);
+}
+
+export async function sendMoodBoardForApproval(businessId: string, enquiryId: string) {
+  const enquiry = await getEnquiry(businessId, enquiryId);
+  if (!enquiry) return null;
+  const items = await listMoodBoardItems(businessId, enquiryId);
+  if (!items.length) return null;
+
+  const token = enquiry.moodBoardApprovalToken ?? quoteToken();
+  await updateEnquiry(businessId, enquiryId, {
+    moodBoardApprovalToken: token,
+    moodBoardStatus: "sent",
+  });
+
+  const [biz] = await db
+    .select({ slug: businessesTable.slug, name: businessesTable.name })
+    .from(businessesTable)
+    .where(eq(businessesTable.id, businessId))
+    .limit(1);
+
+  const path = `/e/${biz?.slug}/mood/${token}`;
+  return {
+    approvalUrl: `${getPublicAppOrigin()}${path}`,
+    path,
+    itemCount: items.length,
+    businessName: biz?.name ?? "Studio",
+  };
+}
+
+export async function getPublicMoodBoardByToken(slug: string, token: string) {
+  const [biz] = await db
+    .select({ id: businessesTable.id, name: businessesTable.name, slug: businessesTable.slug })
+    .from(businessesTable)
+    .where(eq(businessesTable.slug, slug))
+    .limit(1);
+  if (!biz) return null;
+
+  const [enquiry] = await db
+    .select()
+    .from(enquiriesTable)
+    .where(
+      and(
+        eq(enquiriesTable.businessId, biz.id),
+        eq(enquiriesTable.moodBoardApprovalToken, token),
+      ),
+    )
+    .limit(1);
+  if (!enquiry) return null;
+
+  const items = await listMoodBoardItems(biz.id, enquiry.id);
+  return {
+    business: biz,
+    enquiry: {
+      contactName: enquiry.contactName,
+      eventType: enquiry.eventType,
+      theme: enquiry.theme,
+      status: enquiry.moodBoardStatus,
+    },
+    items,
+  };
+}
+
+export async function decidePublicMoodBoard(
+  slug: string,
+  token: string,
+  decision: "approved" | "changes_requested",
+  note?: string,
+) {
+  const data = await getPublicMoodBoardByToken(slug, token);
+  if (!data || data.enquiry.status === "approved") return null;
+
+  const [enquiry] = await db
+    .select({ id: enquiriesTable.id, businessId: enquiriesTable.businessId })
+    .from(enquiriesTable)
+    .where(eq(enquiriesTable.moodBoardApprovalToken, token))
+    .limit(1);
+  if (!enquiry) return null;
+
+  const status = decision === "approved" ? "approved" : "changes_requested";
+  await updateEnquiry(enquiry.businessId, enquiry.id, { moodBoardStatus: status });
+  if (note?.trim()) {
+    await db
+      .update(enquiriesTable)
+      .set({ internalNotes: note.trim(), updatedAt: new Date() })
+      .where(eq(enquiriesTable.id, enquiry.id));
+  }
+  return { status };
+}
+
+export async function getPlannerPortalByToken(slug: string, token: string) {
+  const [biz] = await db
+    .select({ id: businessesTable.id, name: businessesTable.name, slug: businessesTable.slug })
+    .from(businessesTable)
+    .where(eq(businessesTable.slug, slug))
+    .limit(1);
+  if (!biz) return null;
+
+  const enquiryRows = await db
+    .select()
+    .from(enquiriesTable)
+    .where(
+      and(
+        eq(enquiriesTable.businessId, biz.id),
+        eq(enquiriesTable.plannerAccessToken, token),
+      ),
+    );
+
+  if (!enquiryRows.length) return null;
+
+  const quoteRows = await db
+    .select()
+    .from(quotesTable)
+    .where(
+      and(
+        eq(quotesTable.businessId, biz.id),
+        inArray(
+          quotesTable.enquiryId,
+          enquiryRows.map((e) => e.id),
+        ),
+      ),
+    );
+
+  return {
+    business: biz,
+    plannerName: enquiryRows[0]?.plannerName ?? "Planner",
+    clients: enquiryRows.map((e) => ({
+      contactName: e.contactName,
+      eventType: e.eventType,
+      eventDate: e.eventDate,
+      status: e.status,
+      quotes: quoteRows
+        .filter((q) => q.enquiryId === e.id)
+        .map((q) => ({
+          id: q.id,
+          status: q.status,
+          subtotalMinor: q.subtotalMinor,
+          version: q.version,
+          publicPath: `/e/${slug}/q/${q.publicToken}`,
+        })),
+    })),
   };
 }
 

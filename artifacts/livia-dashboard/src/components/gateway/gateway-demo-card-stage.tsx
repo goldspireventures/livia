@@ -71,6 +71,12 @@ export const WEDGE_BEAT_CROP_META: Record<
     chip: "bg-orange-500/15 text-orange-300",
     ring: "border-orange-500/30",
   },
+  "milestone-pay": {
+    label: "Booked",
+    icon: Sparkles,
+    chip: "bg-emerald-500/15 text-emerald-300",
+    ring: "border-emerald-500/30",
+  },
 };
 
 type EnterProps = {

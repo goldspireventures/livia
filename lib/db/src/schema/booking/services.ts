@@ -32,6 +32,8 @@ export const servicesTable = pgTable(
     linkedRetailProductId: text("linked_retail_product_id"),
     /** Consult-first catalogue unit — flat, per_guest, per_table, per_item, per_metre */
     quoteUnit: text("quote_unit"),
+    /** Event-vendor hire stock — warn when quote qty exceeds available units */
+    stockCount: integer("stock_count"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

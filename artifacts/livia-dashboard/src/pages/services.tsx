@@ -44,6 +44,8 @@ interface ServiceForm {
   serviceKind?: string;
   rebookIntervalDays?: number | "";
   requiresPatchTest?: boolean;
+  quoteUnit?: string;
+  stockCount?: number | "";
 }
 
 function serviceNamePlaceholder(vertical: string): string {
@@ -96,6 +98,8 @@ export default function ServicesPage() {
       imageUrl: "",
       category: "",
       requiresPatchTest: false,
+      quoteUnit: "flat",
+      stockCount: "",
     },
   });
   const draftImageUrl = watch("imageUrl");
@@ -143,6 +147,15 @@ export default function ServicesPage() {
     };
   }
 
+  function eventVendorPayload(vals: ServiceForm) {
+    if (!isEventVendor) return {};
+    return {
+      quoteUnit: vals.quoteUnit?.trim() || null,
+      stockCount:
+        vals.stockCount === "" || vals.stockCount == null ? null : Number(vals.stockCount),
+    };
+  }
+
   function openEdit(svc: (typeof svcList)[number]) {
     setEditId(svc.id);
     reset({
@@ -157,6 +170,8 @@ export default function ServicesPage() {
       serviceKind: (svc as { serviceKind?: string }).serviceKind ?? "",
       rebookIntervalDays: (svc as { rebookIntervalDays?: number | null }).rebookIntervalDays ?? "",
       requiresPatchTest: (svc as { requiresPatchTest?: boolean }).requiresPatchTest ?? false,
+      quoteUnit: (svc as { quoteUnit?: string | null }).quoteUnit ?? "flat",
+      stockCount: (svc as { stockCount?: number | null }).stockCount ?? "",
     });
   }
 
@@ -176,6 +191,7 @@ export default function ServicesPage() {
           currency: vals.currency || "EUR",
           imageUrl: vals.imageUrl?.trim() || undefined,
           ...beautyPayload(vals),
+          ...eventVendorPayload(vals),
         },
       },
       {
@@ -205,6 +221,7 @@ export default function ServicesPage() {
           currency: vals.currency || "EUR",
           imageUrl: vals.imageUrl?.trim() || undefined,
           ...beautyPayload(vals),
+          ...eventVendorPayload(vals),
         },
       },
       {
@@ -450,6 +467,30 @@ export default function ServicesPage() {
                   <p className="text-xs text-muted-foreground">
                     Quotes use this as the unit price — per guest/table depends on catalogue setup.
                   </p>
+                  <div className="grid gap-3 sm:grid-cols-2 pt-2">
+                    <div className="space-y-2">
+                      <Label>Quote unit</Label>
+                      <select
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm"
+                        {...register("quoteUnit")}
+                        data-testid="input-quote-unit"
+                      >
+                        <option value="flat">Flat fee</option>
+                        <option value="per_guest">Per guest</option>
+                        <option value="per_table">Per table (8 guests)</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Stock count (optional)</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        placeholder="e.g. 3 arches"
+                        {...register("stockCount")}
+                        data-testid="input-stock-count"
+                      />
+                    </div>
+                  </div>
                 </div>
                 )}
                 <div className="space-y-2">
@@ -542,6 +583,23 @@ export default function ServicesPage() {
                 step={0.01}
                 {...register("priceMajor", { required: true, min: 0, valueAsNumber: true })}
               />
+              <div className="grid gap-3 sm:grid-cols-2 pt-2">
+                <div className="space-y-2">
+                  <Label>Quote unit</Label>
+                  <select
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm"
+                    {...register("quoteUnit")}
+                  >
+                    <option value="flat">Flat fee</option>
+                    <option value="per_guest">Per guest</option>
+                    <option value="per_table">Per table (8 guests)</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Stock count (optional)</Label>
+                  <Input type="number" min={0} placeholder="e.g. 3" {...register("stockCount")} />
+                </div>
+              </div>
             </div>
             )}
             {isBeauty ? (

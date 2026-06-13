@@ -30,6 +30,8 @@ export type LivEventLifecycle = {
   prepTasks: EventPrepTask[];
   prepInitializedAt?: string | null;
   depositReminderSentAt?: string | null;
+  /** Milestone label → ISO sentAt for auto-collect reminders */
+  milestoneRemindersSent?: Record<string, string>;
 };
 
 export type EventPrepLineInput = { name: string };

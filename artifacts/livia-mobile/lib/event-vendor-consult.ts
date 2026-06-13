@@ -41,6 +41,8 @@ export type ConsultDashboard = {
     dueDate: string;
     overdue: boolean;
   }>;
+  pipelineForecast?: { quotedMinor: number; expectedMinor: number; weightLabel: string };
+  replyBenchmark?: { label: string; percentile: number } | null;
 };
 
 export type QuoteRow = {

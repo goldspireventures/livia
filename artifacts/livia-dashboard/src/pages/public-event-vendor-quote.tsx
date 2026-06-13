@@ -14,6 +14,8 @@ type QuotePayload = {
   business: { name: string; slug: string };
   eventType?: string | null;
   similarWork?: Array<{ url: string; caption?: string; eventType?: string }>;
+  versionDiff?: Array<{ name: string; change: string; detail: string }>;
+  previousVersion?: number | null;
   quote: {
     id: string;
     status: string;
@@ -217,7 +219,7 @@ export default function PublicEventVendorQuotePage() {
     );
   }
 
-  const { business, quote, similarWork, eventType } = data;
+  const { business, quote, similarWork, eventType, versionDiff, previousVersion } = data;
   const currency = pay?.currency ?? "EUR";
   const paymentState = pay?.milestones
     ? {
@@ -259,6 +261,23 @@ export default function PublicEventVendorQuotePage() {
 
         {quote.personalMessage ? (
           <p className="text-center text-muted-foreground">{quote.personalMessage}</p>
+        ) : null}
+
+        {versionDiff && versionDiff.length > 0 ? (
+          <Card data-testid="guest-quote-version-diff">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">
+                Updated quote{previousVersion ? ` (was v${previousVersion})` : ""}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1 text-sm text-muted-foreground">
+              {versionDiff.map((d) => (
+                <p key={`${d.name}-${d.change}`}>
+                  <span className="text-foreground font-medium">{d.name}</span> — {d.detail}
+                </p>
+              ))}
+            </CardContent>
+          </Card>
         ) : null}
 
         {similarWork && similarWork.length > 0 ? (
@@ -442,7 +461,7 @@ export default function PublicEventVendorQuotePage() {
             className="ev-btn ev-btn--outline !text-stone-800 !border-stone-300 !bg-white"
           >
             <Download className="h-4 w-4" />
-            Download invoice PDF
+            Download invoice
           </a>
         </div>
 

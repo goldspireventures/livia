@@ -21,20 +21,24 @@ import {
 
 import { guestBookTokenPath } from "@workspace/policy";
 import { resolveGuestTokenUrl } from "../lib/guest-public-urls";
+import { getPublicAppOrigin } from "../lib/public-app-origin";
 import { sendError } from "../lib/http-errors";
 const router: IRouter = Router();
 
 function demoGuestSurfacePayload(
   slug: string,
-  surface: "proof" | "pay" | "intake" | "waitlist",
+  surface: "proof" | "pay" | "intake" | "waitlist" | "quote",
   token: string,
 ) {
-  return {
-    slug,
-    token,
-    path: guestBookTokenPath(slug, surface, token),
-    url: resolveGuestTokenUrl(slug, surface, token),
-  };
+  const path =
+    surface === "quote"
+      ? `/e/${slug}/q/${token}`
+      : guestBookTokenPath(slug, surface, token);
+  const url =
+    surface === "quote"
+      ? `${getPublicAppOrigin()}${path}`
+      : resolveGuestTokenUrl(slug, surface, token);
+  return { slug, token, path, url };
 }
 
 function gate(_req: Request, res: Response, next: NextFunction) {
@@ -322,6 +326,22 @@ router.get("/demo/guest-surfaces/:slug/waitlist", async (req, res): Promise<void
   res.json({
     ...demoGuestSurfacePayload(slug, "waitlist", token),
   });
+});
+
+/** Demo-only: event-vendor public quote token for consult-first E2E. */
+router.get("/demo/guest-surfaces/:slug/quote", async (req, res): Promise<void> => {
+  const slug = String(req.params.slug ?? "").trim();
+  if (!slug) {
+    sendError(res, req, 400, "slug is required");
+    return;
+  }
+  const { getDemoGuestQuoteToken } = await import("../services/event-vendors-demo-depth");
+  const token = await getDemoGuestQuoteToken(slug);
+  if (!token) {
+    sendError(res, req, 404, "No sent quote for this demo shop");
+    return;
+  }
+  res.json(demoGuestSurfacePayload(slug, "quote", token));
 });
 
 /**

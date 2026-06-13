@@ -100,6 +100,9 @@ export function buildQuoteBriefIntelligence(args: {
   presetLines?: QuotePresetLine[];
   catalogueNames?: string[];
   subtotalMinor?: number;
+  stockCatalogue?: Array<{ id: string; name: string; stockCount?: number | null }>;
+  draftLines?: Array<{ name: string; quantity: string; serviceId?: string | null }>;
+  setupFeeMinor?: number | null;
 }): QuoteBriefIntelligence {
   const hints: QuoteBriefHint[] = [];
   const missingFields: string[] = [];
@@ -168,6 +171,25 @@ export function buildQuoteBriefIntelligence(args: {
       id: "auto-scaled",
       severity: "info",
       message: "Quantities scaled from guest count — review before sending.",
+    });
+  }
+
+  const peak = peakDayPricingHint(args.eventDate);
+  if (peak) hints.push(peak);
+
+  if (args.draftLines?.length && args.stockCatalogue?.length) {
+    hints.push(...inventoryStockWarnings(args.draftLines, args.stockCatalogue));
+  }
+
+  const setupFee = resolveSetupFeeMinor({
+    venue: args.venue,
+    setupFeeMinor: args.setupFeeMinor,
+  });
+  if (setupFee > 0) {
+    hints.push({
+      id: "setup-fee",
+      severity: "info",
+      message: "Venue on file — travel/setup fee will be added to the quote draft.",
     });
   }
 
@@ -264,6 +286,181 @@ export function matchGallerySimilarWork(
   if (matched.length >= limit) return matched.slice(0, limit);
   const rest = gallery.filter((g) => (g.eventType ?? "").toLowerCase() !== key);
   return [...matched, ...rest].slice(0, limit);
+}
+
+/** Peak Saturday / summer season pricing nudge for quote drafts. */
+export function peakDayPricingHint(eventDate?: string | null): QuoteBriefHint | null {
+  if (!eventDate) return null;
+  const d = new Date(`${eventDate}T12:00:00.000Z`);
+  const month = d.getUTCMonth();
+  const day = d.getUTCDay();
+  const isPeakSeason = month >= 5 && month <= 8;
+  const isSaturday = day === 6;
+  if (!isPeakSeason && !isSaturday) return null;
+  const parts: string[] = [];
+  if (isSaturday) parts.push("Saturday");
+  if (isPeakSeason) parts.push("peak season (Jun–Aug)");
+  return {
+    id: "peak-pricing",
+    severity: "info",
+    message: `${parts.join(" · ")} — consider a peak surcharge on your quote.`,
+  };
+}
+
+/** Flat travel/setup fee when venue address is present and operator configured a fee. */
+export function resolveSetupFeeMinor(args: {
+  venue?: string | null;
+  setupFeeMinor?: number | null;
+}): number {
+  const venue = args.venue?.trim();
+  if (!venue || venue.length < 8) return 0;
+  return Math.max(0, args.setupFeeMinor ?? 0);
+}
+
+const DEFAULT_OUTDOOR_TERMS =
+  "Outdoor / marquee decor is weather-dependent. In case of severe weather, setup may be rescheduled by mutual agreement; indoor alternatives will be discussed where possible.";
+
+/** Append outdoor contingency when venue or notes imply outdoor work. */
+export function outdoorContingencyClause(args: {
+  eventType?: string | null;
+  venue?: string | null;
+  notes?: string | null;
+  operatorExtra?: string | null;
+}): string | null {
+  const blob = `${args.venue ?? ""} ${args.notes ?? ""} ${args.eventType ?? ""}`.toLowerCase();
+  const outdoor =
+    /outdoor|garden|marquee|tent|beach|park|field|terrace|patio|gazebo/i.test(blob) ||
+    args.eventType?.toLowerCase() === "wedding";
+  if (!outdoor) return null;
+  const extra = args.operatorExtra?.trim();
+  return extra ? `${DEFAULT_OUTDOOR_TERMS}\n\n${extra}` : DEFAULT_OUTDOOR_TERMS;
+}
+
+export type PipelineForecast = {
+  quotedMinor: number;
+  expectedMinor: number;
+  weightLabel: string;
+};
+
+const PIPELINE_WEIGHTS: Record<string, number> = {
+  sent: 0.4,
+  accepted: 0.8,
+  booked: 1,
+};
+
+/** Weighted pipeline € — quoted at 40%, accepted at 80%. */
+export function weightedPipelineForecast(
+  quotes: Array<{ status: string; subtotalMinor: number; depositPaidMinor?: number; depositAmountMinor?: number }>,
+): PipelineForecast {
+  let quotedMinor = 0;
+  let expectedMinor = 0;
+  for (const q of quotes) {
+    if (!["sent", "accepted", "booked"].includes(q.status)) continue;
+    const secured =
+      (q.depositPaidMinor ?? 0) >= (q.depositAmountMinor ?? 0) && (q.depositAmountMinor ?? 0) > 0;
+    const effective = secured && q.status === "accepted" ? "booked" : q.status;
+    const w = PIPELINE_WEIGHTS[effective] ?? 0;
+    quotedMinor += q.subtotalMinor;
+    expectedMinor += Math.round(q.subtotalMinor * w);
+  }
+  return {
+    quotedMinor,
+    expectedMinor,
+    weightLabel: "Quoted 40% · Accepted 80% · Booked 100%",
+  };
+}
+
+/** Operator reply-time social proof from first response latency. */
+export function replyTimeBenchmark(minutes: number): { label: string; percentile: number } {
+  if (minutes <= 5) return { label: "Lightning — top 5% for event vendors", percentile: 95 };
+  if (minutes <= 15) return { label: "Fast — top 20%", percentile: 80 };
+  if (minutes <= 60) return { label: "Same day — solid", percentile: 55 };
+  if (minutes <= 240) return { label: "Within half a day", percentile: 35 };
+  return { label: "Slow — guest may have moved on", percentile: 15 };
+}
+
+export type QuoteLineDiff = {
+  name: string;
+  change: "added" | "removed" | "qty" | "price";
+  detail: string;
+};
+
+export function diffQuoteLineItems(
+  prev: Array<{ name: string; quantity: string; lineTotalMinor: number }>,
+  next: Array<{ name: string; quantity: string; lineTotalMinor: number }>,
+): QuoteLineDiff[] {
+  const diffs: QuoteLineDiff[] = [];
+  const prevMap = new Map(prev.map((l) => [l.name.toLowerCase(), l]));
+  const nextMap = new Map(next.map((l) => [l.name.toLowerCase(), l]));
+
+  for (const [key, n] of nextMap) {
+    const p = prevMap.get(key);
+    if (!p) {
+      diffs.push({ name: n.name, change: "added", detail: `New line × ${n.quantity}` });
+      continue;
+    }
+    if (p.quantity !== n.quantity) {
+      diffs.push({
+        name: n.name,
+        change: "qty",
+        detail: `Quantity ${p.quantity} → ${n.quantity}`,
+      });
+    }
+    if (p.lineTotalMinor !== n.lineTotalMinor) {
+      diffs.push({
+        name: n.name,
+        change: "price",
+        detail: `Total updated`,
+      });
+    }
+  }
+  for (const [key, p] of prevMap) {
+    if (!nextMap.has(key)) {
+      diffs.push({ name: p.name, change: "removed", detail: "Removed from quote" });
+    }
+  }
+  return diffs;
+}
+
+export function inventoryStockWarnings(
+  lines: Array<{ name: string; quantity: string; serviceId?: string | null }>,
+  catalogue: Array<{ id: string; name: string; stockCount?: number | null }>,
+): QuoteBriefHint[] {
+  const hints: QuoteBriefHint[] = [];
+  for (const line of lines) {
+    const svc =
+      (line.serviceId ? catalogue.find((c) => c.id === line.serviceId) : undefined) ??
+      catalogue.find((c) => c.name.toLowerCase() === line.name.toLowerCase());
+    if (!svc?.stockCount || svc.stockCount <= 0) continue;
+    const qty = Number(line.quantity);
+    if (qty > svc.stockCount) {
+      hints.push({
+        id: `stock-${svc.id}`,
+        severity: "warn",
+        message: `"${svc.name}" — only ${svc.stockCount} in stock; quote asks for ${qty}.`,
+      });
+    }
+  }
+  return hints;
+}
+
+export function milestonePaymentReminderCopy(args: {
+  contactName: string;
+  businessName: string;
+  payUrl: string;
+  milestoneLabel: string;
+  amountMinor: number;
+  currency?: string;
+}): { subject: string; body: string; whatsappText: string } {
+  const first = args.contactName.split(" ")[0] ?? "there";
+  const amount = new Intl.NumberFormat("en-IE", {
+    style: "currency",
+    currency: args.currency ?? "EUR",
+  }).format(args.amountMinor / 100);
+  const subject = `${args.milestoneLabel} due — ${args.businessName}`;
+  const body = `Hi ${first},\n\nYour ${args.milestoneLabel.toLowerCase()} (${amount}) is now due for your event with ${args.businessName}:\n\n${args.payUrl}\n\n— ${args.businessName}`;
+  const whatsappText = `Hi ${first}! Your ${args.milestoneLabel.toLowerCase()} (${amount}) is due:\n${args.payUrl}`;
+  return { subject, body, whatsappText };
 }
 
 export function matchTemplateByEventType<

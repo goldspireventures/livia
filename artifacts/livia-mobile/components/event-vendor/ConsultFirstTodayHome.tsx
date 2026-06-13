@@ -148,6 +148,27 @@ export function ConsultFirstTodayHome({ dash, handoffCount, loading, livLine, li
           </Text>
         </Pressable>
       ))}
+
+      {stats.pipelineForecast && stats.pipelineForecast.quotedMinor > 0 ? (
+        <View style={[styles.forecast, { borderColor: "#10b98155", backgroundColor: "#10b98112" }]}>
+          <Text style={[styles.rowTitle, { color: colors.foreground }]}>Pipeline forecast</Text>
+          <Text style={{ color: colors.foreground, fontSize: 18, fontWeight: "600" }}>
+            €{(stats.pipelineForecast.expectedMinor / 100).toLocaleString("en-IE", { minimumFractionDigits: 0 })}
+            <Text style={{ fontSize: 12, fontWeight: "400", color: colors.mutedForeground }}>
+              {" "}
+              of €{(stats.pipelineForecast.quotedMinor / 100).toLocaleString("en-IE", { minimumFractionDigits: 0 })}{" "}
+              quoted
+            </Text>
+          </Text>
+          <Text style={{ color: colors.mutedForeground, fontSize: 11 }}>{stats.pipelineForecast.weightLabel}</Text>
+        </View>
+      ) : null}
+
+      {stats.replyBenchmark ? (
+        <Text style={{ color: colors.mutedForeground, fontSize: 12, paddingHorizontal: 4 }}>
+          Reply speed: {stats.replyBenchmark.label}
+        </Text>
+      ) : null}
     </Animated.View>
   );
 }
@@ -200,4 +221,5 @@ const styles = StyleSheet.create({
   kpi: { flex: 1, borderWidth: 1, borderRadius: 12, padding: 10 },
   row: { borderWidth: 1, borderRadius: 12, padding: 12 },
   rowTitle: { fontFamily: fonts.bodyMed, fontSize: 15, marginBottom: 2 },
+  forecast: { borderWidth: 1, borderRadius: 12, padding: 12, gap: 4 },
 });

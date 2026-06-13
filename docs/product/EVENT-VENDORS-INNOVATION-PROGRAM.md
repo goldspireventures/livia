@@ -1,10 +1,10 @@
 # Event vendors & decor — innovation program
 
-**Status:** living (2026-06-10)  
+**Status:** living (2026-06-10) — **depth wave complete**  
 **Authority:** [`EVENT-VENDORS-VERTICAL-PROGRAM.md`](./EVENT-VENDORS-VERTICAL-PROGRAM.md) · [`CONSULT-FIRST-WORKFLOW-SPEC.md`](./CONSULT-FIRST-WORKFLOW-SPEC.md) · master matrix [`VERTICAL-INNOVATION-PROGRAM.md`](./VERTICAL-INNOVATION-PROGRAM.md)  
 **Principle:** Consult-first people business — **enquiry → quote → booked** — not calendar-shaped. Cascade **policy → API → web + mobile + `/e/` guest surfaces**.
 
-**Demo tenant:** `atelier-decor-dublin` · wedge G2 beats: **Inbox · Quote generator · Catalogue**
+**Demo tenant:** `atelier-decor-dublin` · wedge G2 beats: **Inbox · Quote generator · Catalogue** · G2 ch4: **Accept & milestone pay**
 
 ---
 
@@ -24,8 +24,7 @@ Competitors (HoneyBook, Dubsado, spreadsheets + Canva + WhatsApp) treat quotes a
 | **Quote generator** | Enquiry brief → template + catalogue → itemised quote < 60s | ✅ live |
 | **Your catalogue** | Per-guest / per-table / per-item units scale quotes automatically | ✅ live (via `/services`) |
 | **Guest enquire shortcut (G3)** | Enter demo → `/e/{slug}/enquire` — no “Open My Livia” | ✅ live |
-
-**Next wedge beat (G2 chapter 4):** Event-day sheet or milestone pay on accept — the “booked + money collected” payoff.
+| **Accept & milestone pay (ch4)** | Guest accepts on phone — deposit secures date; milestones collect via cron | ✅ live |
 
 ---
 
@@ -40,23 +39,24 @@ Competitors (HoneyBook, Dubsado, spreadsheets + Canva + WhatsApp) treat quotes a
 | **Stale-quote radar** | Quotes die in WhatsApp | Today KPI + `StaleQuotesPanel` | P0 | ✅ |
 | **One-tap Liv follow-up** | “What do I say on day 5?” | Copy `stale-liv-draft` → WhatsApp (web + mobile) | P1 | ✅ |
 | **Pipeline at a glance** | Lost leads in DMs | New → Quoted → Booked → Lost on `/enquiries` | P0 | ✅ |
-| **Milestone deposit ladder** | Wedding 25/50/25 schedules | Policy + guest pay view + Stripe/dev sim | P1 | 🟡 next-due collect |
+| **Milestone deposit ladder** | Wedding 25/50/25 schedules | Policy + guest pay view + cron reminders | P1 | ✅ |
 | **Event-day sheet** | Day-of chaos on phone | `EventDaySheetPanel` on `/quotes` + mobile | P1 | ✅ |
 | **Liv event prep timeline** | “What do I do 2 weeks out?” | `EventPrepTimelinePanel` after deposit | P1 | ✅ |
-| **Mood board approval** | Pinterest photo tennis | Extend body-art `/proof` pattern | P2 | 🔲 |
-| **Travel/setup fee from venue** | Manual mileage math | Address on enquire → auto line | P2 | 🔲 |
-| **Seasonal pricing hints** | Peak Saturday underpriced | Hint on quote draft | P2 | 🔲 |
-| **Revenue forecast** | Pipeline € invisible | Weighted quoted → expected | P3 | 🔲 |
-| **Liv pre-screen learning** | Repeat pricing mistakes | Learn default qty per guest band | P3 | 🟡 partial |
+| **Mood board approval** | Pinterest photo tennis | `/e/{slug}/mood/{token}` + operator send link | P2 | ✅ |
+| **Travel/setup fee from venue** | Manual mileage math | Site setup fee → auto line on quote | P2 | ✅ |
+| **Seasonal pricing hints** | Peak Saturday underpriced | `peakDayPricingHint` on quote draft | P2 | ✅ |
+| **Revenue forecast** | Pipeline € invisible | Weighted quoted → expected on Today | P3 | ✅ |
+| **Liv pre-screen learning** | Repeat pricing mistakes | `scalePresetQuantity` + brief hints per guest band | P3 | ✅ |
+| **Reply-time benchmark** | “Am I fast enough?” | First-reply latency on Today home | P3 | ✅ |
 
 ### Coordinator (later multi-user)
 
 | Idea | Problem | Pri | Status |
 |------|---------|-----|--------|
-| **Multi-contact** | Client + planner on same enquiry | P2 | 🟡 fields |
-| **Planner portal lite** | Planner sees all client quotes | P3 | 🔲 |
-| **Date holds** | Tentative vs confirmed on calendar | P2 | 🔲 |
-| **Blocked-date warn on enquire** | Book full Saturdays twice | P2 | 🔲 |
+| **Multi-contact** | Client + planner on same enquiry | P2 | ✅ |
+| **Planner portal lite** | Planner sees all client quotes | P3 | ✅ (`/e/{slug}/planner/{token}`) |
+| **Date holds** | Tentative vs confirmed on calendar | P2 | ✅ |
+| **Blocked-date warn on enquire** | Book full Saturdays twice | P2 | ✅ |
 
 ---
 
@@ -72,8 +72,8 @@ Competitors (HoneyBook, Dubsado, spreadsheets + Canva + WhatsApp) treat quotes a
 | **Milestone schedule visible** | Wedding payment anxiety | Paid / due / upcoming on quote | P1 | ✅ |
 | **Event-day checklist (guest)** | “What happens on the day?” | Checklist after accept | P1 | ✅ |
 | **Inspiration links on enquire** | Pinterest lost in DMs | URL field on form | P1 | ✅ |
-| **Quote versioning** | Negotiation confusion | v2 diff on guest view | P2 | 🔲 |
-| **Mood board approve link** | Palette sign-off before deposit | `/proof`-style token | P2 | 🔲 |
+| **Quote versioning** | Negotiation confusion | v2 diff on guest view + operator revise | P2 | ✅ |
+| **Mood board approve link** | Palette sign-off before deposit | `/e/{slug}/mood/{token}` | P2 | ✅ |
 
 ---
 
@@ -86,7 +86,7 @@ These are the category-killing moments. Each must feel native, not bolted on.
 3. **Quote snapshot freeze** — Catalogue price edits never rewrite sent quotes (immutable line items on send).
 4. **One-tap WhatsApp send** — Assisted `wa.me` prefill + link; status → Quoted; thread stays in inbox.
 5. **Stale-quote Liv follow-up** — “Sent 5 days ago — no reply” with one-tap copy drafted by Liv.
-6. **Milestone deposits** — 25% hold → 50% at T-30 → balance on day; guest sees schedule; collect next due.
+6. **Milestone deposits** — 25% hold → 50% at T-30 → balance on day; guest sees schedule; cron collects next due.
 7. **Event-day sheet** — Venue, theme, date, guests, setup checklist — mobile-first on quote detail.
 8. **Sibling thread banner** — Same celebration enquired on IG *and* web — one thread (inbox routing).
 
@@ -99,7 +99,7 @@ These are the category-killing moments. Each must feel native, not bolted on.
 | Quote line templates by event type (birthday / wedding / corporate) | P1 ✅ |
 | Branded HTML invoice / PDF download on guest quote | P1 ✅ |
 | Liv outbound template hub (Settings → Channels) | P1 ✅ |
-| Post-event review ask (SMS/email T+1) | P2 🟡 API |
+| Post-event review ask (SMS/email T+1) | P2 ✅ |
 | Enquiry source tracking (`?from=ig`) | P1 ✅ |
 | Prescreen tier (high / medium / low fit) on enquiry | P2 ✅ |
 | Collapsible Liv message templates in Settings | P1 ✅ |
@@ -108,14 +108,14 @@ These are the category-killing moments. Each must feel native, not bolted on.
 
 ## Tier 3 — category killer (hard moat)
 
-| Idea | Why it wins |
-|------|-------------|
-| Live availability on enquire | “14 June full” before wasted time |
-| Quote versioning with guest diff | Negotiation without confusion |
-| Inventory-aware catalogue | “Only 2 neon arches left that week” |
-| Weather/contingency clause auto-terms | Outdoor decor protection |
-| Competitor reply-time benchmark | “You replied in 4 min — top 10%” |
-| Meta WhatsApp Business API | True send — defer; assisted OK in v1 |
+| Idea | Why it wins | Status |
+|------|-------------|--------|
+| Live availability on enquire | “14 June full” before wasted time | ✅ |
+| Quote versioning with guest diff | Negotiation without confusion | ✅ |
+| Inventory-aware catalogue | “Only 2 neon arches left that week” | ✅ |
+| Weather/contingency clause auto-terms | Outdoor decor protection | ✅ |
+| Competitor reply-time benchmark | “You replied in 4 min — top 10%” | ✅ |
+| Meta WhatsApp Business API | True send — defer; assisted OK in v1 | ⏸ deferred |
 
 ---
 
@@ -138,7 +138,7 @@ These ship once for event vendors; other consult-first verticals inherit:
 
 | Surface | Event-vendor native use |
 |---------|-------------------------|
-| **Owner phone** | Inbox triage, copy stale nudge, event-day sheet |
+| **Owner phone** | Inbox triage, copy stale nudge, event-day sheet, pipeline forecast |
 | **Owner laptop** | Quote edit, send review, catalogue, website CMS |
 | **Guest phone** | Enquire form, quote view, accept + pay |
 | **Guest desktop** | Quote PDF download, milestone schedule review |
@@ -158,20 +158,20 @@ These ship once for event vendors; other consult-first verticals inherit:
 
 ## P0–P3 prioritisation (event-vendors)
 
-| Priority | Item | Why now |
-|----------|------|---------|
-| **P0** | Guest `/e/` routes without sign-in | Founder demo blocker |
-| **P0** | Quote generate + send + accept | Sacred metric: enquiry → booked |
-| **P0** | Demo inbox realism (no salon bleed) | Trust in wedge |
-| **P1** | Gallery-matched quote on guest view | Guest wow — highest gap closed |
-| **P1** | Stale nudge one-tap (web parity) | Operator wow — Liv writes follow-up |
-| **P1** | Brief intelligence on `/quotes` | Reinforce “quote writes itself” |
-| **P1** | Event-day sheet (web + mobile) | Day-of execution |
-| **P2** | Mood board approval | Body-art proof reuse |
-| **P2** | Blocked dates on enquire | Reduce wasted enquiries |
-| **P2** | Full milestone auto-collect | Wedding segment depth |
-| **P3** | Planner portal | Multi-stakeholder weddings |
-| **P3** | Revenue forecast | Owner analytics |
+| Priority | Item | Why now | Status |
+|----------|------|---------|--------|
+| **P0** | Guest `/e/` routes without sign-in | Founder demo blocker | ✅ |
+| **P0** | Quote generate + send + accept | Sacred metric: enquiry → booked | ✅ |
+| **P0** | Demo inbox realism (no salon bleed) | Trust in wedge | ✅ |
+| **P1** | Gallery-matched quote on guest view | Guest wow | ✅ |
+| **P1** | Stale nudge one-tap (web parity) | Operator wow | ✅ |
+| **P1** | Brief intelligence on `/quotes` | Reinforce “quote writes itself” | ✅ |
+| **P1** | Event-day sheet (web + mobile) | Day-of execution | ✅ |
+| **P2** | Mood board approval | Body-art proof reuse | ✅ |
+| **P2** | Blocked dates on enquire | Reduce wasted enquiries | ✅ |
+| **P2** | Full milestone auto-collect | Wedding segment depth | ✅ |
+| **P3** | Planner portal | Multi-stakeholder weddings | ✅ |
+| **P3** | Revenue forecast | Owner analytics | ✅ |
 
 ---
 
@@ -182,19 +182,20 @@ These ship once for event vendors; other consult-first verticals inherit:
 | ✅ | Shipped in repo |
 | 🟡 | Partial — API or one surface only |
 | 🔲 | Spec locked — build in depth wave |
+| ⏸ | Intentionally deferred (v2 / external API) |
 
 ---
 
 ## Cascade checklist (when shipping any row)
 
-- [ ] `lib/policy` — `event-vendor-quote-program.ts` + vocabulary  
-- [ ] API — `consult-first.service.ts` + routes  
-- [ ] Dashboard — `/enquiries`, `/quotes`, `/services`, `/website`  
-- [ ] Mobile — `enquiries.tsx`, `quotes.tsx` parity  
-- [ ] Guest — `/e/{slug}/enquire`, `/q/{token}`  
-- [ ] Demo seed — `event-vendors-demo-depth.ts` + inbox threads  
-- [ ] Wedge — `wedge-demo-stories.ts` + G2 preview  
-- [ ] Registry + `pnpm vertical:doc-check`
+- [x] `lib/policy` — `event-vendor-quote-program.ts` + vocabulary  
+- [x] API — `consult-first.service.ts` + routes  
+- [x] Dashboard — `/enquiries`, `/quotes`, `/services`, `/website`  
+- [x] Mobile — `enquiries.tsx`, `quotes.tsx`, Today forecast parity  
+- [x] Guest — `/e/{slug}/enquire`, `/q/{token}`, `/mood/{token}`, `/planner/{token}`  
+- [x] Demo seed — `event-vendors-demo-depth.ts` + inbox threads  
+- [x] Wedge — `wedge-demo-stories.ts` + G2 preview + ch4 milestone pay  
+- [x] E2E smoke — `event-vendors-consult-first.spec.ts`
 
 ---
 
@@ -204,3 +205,4 @@ These ship once for event vendors; other consult-first verticals inherit:
 |------|--------|
 | 2026-06-10 | Initial innovation program — tier 1–3 showstoppers, persona matrix, wedge beats, P0–P3 |
 | 2026-06-10 | Shipped: gallery-matched quote, stale nudge web, brief on quotes, event-day sheet panels |
+| 2026-06-10 | Depth wave complete: mood board, planner portal, quote versioning, pipeline forecast, setup fee, outdoor terms, inventory stock, milestone cron, blocked dates, reply benchmark — Meta WhatsApp deferred |
