@@ -1,5 +1,6 @@
 import { db, businessesTable, quotesTable, enquiriesTable } from "@workspace/db";
 import { and, eq } from "drizzle-orm";
+import { resolveQuoteMilestonePayment } from "@workspace/policy";
 import { getStripe, isStripeConfigured, logStripeSkip } from "../lib/stripe";
 import { getStagingRelaxations } from "../lib/staging-relaxations";
 import { safeClientMessage } from "../lib/http-errors";
@@ -29,10 +30,10 @@ export async function getGuestQuotePayView(slug: string, token: string) {
     .limit(1);
   if (!quote) return null;
 
-  const depositDueMinor = Math.max(0, quote.depositAmountMinor - quote.depositPaidMinor);
+  const payment = resolveQuoteMilestonePayment(quote);
   const canPay =
     quote.status === "accepted" &&
-    depositDueMinor > 0 &&
+    payment.nextDueMinor > 0 &&
     (isStripeConfigured() || guestQuotePayDevSimAllowed());
 
   return {
@@ -44,7 +45,12 @@ export async function getGuestQuotePayView(slug: string, token: string) {
     subtotalMinor: quote.subtotalMinor,
     depositAmountMinor: quote.depositAmountMinor,
     depositPaidMinor: quote.depositPaidMinor,
-    depositDueMinor,
+    depositDueMinor: payment.nextDueMinor,
+    nextPaymentLabel: payment.nextLabel,
+    nextPaymentDueDate: payment.nextDueDate ?? null,
+    dateSecured: payment.dateSecured,
+    scheduleFullyPaid: payment.scheduleFullyPaid,
+    milestones: payment.milestones,
     checkoutAvailable: canPay,
     logoUrl: biz.logoUrl,
     vertical: biz.vertical,
@@ -60,15 +66,23 @@ async function recordGuestQuoteDevDeposit(
   quote: typeof quotesTable.$inferSelect,
   amountMinor: number,
 ): Promise<GuestQuoteCheckoutResult> {
-  await applyGuestQuoteDepositFromWebhook({
+  const result = await applyGuestQuoteDepositFromWebhook({
     businessId: quote.businessId,
     quoteId: quote.id,
     amountMinor,
   });
 
+  if (!result.applied) {
+    return { mode: "error", message: "No payment due" };
+  }
+
   return {
     mode: "dev",
-    message: "Deposit recorded — your date is secured. Thank you!",
+    message: result.scheduleFullyPaid
+      ? "Payment received — your celebration is fully paid. Thank you!"
+      : result.dateSecured
+        ? "Payment recorded — your date is secured. Thank you!"
+        : "Payment recorded — thank you!",
   };
 }
 
@@ -79,10 +93,10 @@ export async function createGuestQuoteDepositCheckout(
   const view = await getGuestQuotePayView(slug, token);
   if (!view) return { mode: "error", message: "Quote not found" };
   if (view.status !== "accepted") {
-    return { mode: "error", message: "Accept the quote before paying the deposit" };
+    return { mode: "error", message: "Accept the quote before paying" };
   }
   if (view.depositDueMinor <= 0) {
-    return { mode: "error", message: "No deposit due" };
+    return { mode: "error", message: "No payment due right now" };
   }
 
   const [quote] = await db
@@ -116,11 +130,12 @@ export async function createGuestQuoteDepositCheckout(
       customerId: quote.customerId,
       amountMinor: view.depositDueMinor,
       currency: view.currency,
-      description: `Event deposit — ${view.businessName}`,
+      description: `${view.nextPaymentLabel} — ${view.businessName}`,
       metadata: {
         quoteId: quote.id,
         kind: "guest_quote_deposit",
         quoteToken: token,
+        milestoneLabel: view.nextPaymentLabel,
       },
     });
 
@@ -134,8 +149,8 @@ export async function createGuestQuoteDepositCheckout(
             currency: view.currency.toLowerCase(),
             unit_amount: view.depositDueMinor,
             product_data: {
-              name: `Deposit — ${view.businessName}`,
-              description: "Event booking deposit",
+              name: `${view.nextPaymentLabel} — ${view.businessName}`,
+              description: "Event quote payment",
             },
           },
           quantity: 1,
@@ -148,6 +163,7 @@ export async function createGuestQuoteDepositCheckout(
           paymentIntentRecordId: intent.paymentIntentRecordId,
           kind: "guest_quote_deposit",
           quoteToken: token,
+          milestoneLabel: view.nextPaymentLabel,
         },
       },
       metadata: {
@@ -155,6 +171,7 @@ export async function createGuestQuoteDepositCheckout(
         quoteId: quote.id,
         kind: "guest_quote_deposit",
         quoteToken: token,
+        milestoneLabel: view.nextPaymentLabel,
       },
       success_url: `${returnPath}?status=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${returnPath}?status=cancel`,
@@ -176,7 +193,7 @@ export async function createGuestQuoteDepositCheckout(
 }
 
 export type GuestQuoteDepositApplyResult =
-  | { applied: true; depositPaidMinor: number; depositFullyPaid: boolean }
+  | { applied: true; depositPaidMinor: number; dateSecured: boolean; scheduleFullyPaid: boolean }
   | { applied: false; reason: "quote_not_found" | "already_paid" };
 
 /** Idempotent — safe for webhook retries and checkout return confirm. */
@@ -192,12 +209,13 @@ export async function applyGuestQuoteDepositFromWebhook(args: {
     .limit(1);
   if (!quote) return { applied: false, reason: "quote_not_found" };
 
-  const depositDueMinor = Math.max(0, quote.depositAmountMinor - quote.depositPaidMinor);
-  if (depositDueMinor <= 0) return { applied: false, reason: "already_paid" };
+  const before = resolveQuoteMilestonePayment(quote);
+  if (before.nextDueMinor <= 0) return { applied: false, reason: "already_paid" };
 
-  const creditMinor = Math.min(args.amountMinor, depositDueMinor);
+  const creditMinor = Math.min(args.amountMinor, before.nextDueMinor);
   const depositPaidMinor = quote.depositPaidMinor + creditMinor;
-  const depositFullyPaid = depositPaidMinor >= quote.depositAmountMinor;
+  const after = resolveQuoteMilestonePayment({ ...quote, depositPaidMinor });
+  const wasSecured = before.dateSecured;
 
   await db
     .update(quotesTable)
@@ -207,14 +225,14 @@ export async function applyGuestQuoteDepositFromWebhook(args: {
     })
     .where(eq(quotesTable.id, quote.id));
 
-  if (depositFullyPaid && quote.enquiryId) {
+  if (!wasSecured && after.dateSecured && quote.enquiryId) {
     await db
       .update(enquiriesTable)
       .set({ status: "booked", updatedAt: new Date() })
       .where(eq(enquiriesTable.id, quote.enquiryId));
   }
 
-  if (depositFullyPaid) {
+  if (after.scheduleFullyPaid) {
     void onBookingSecured(args.businessId, args.quoteId).catch(() => undefined);
   }
 
@@ -223,10 +241,19 @@ export async function applyGuestQuoteDepositFromWebhook(args: {
     type: EventType.PAYMENT_SUCCEEDED,
     entityType: "quote",
     entityId: args.quoteId,
-    context: { guestQuoteDeposit: true, amountMinor: creditMinor },
+    context: {
+      guestQuoteDeposit: true,
+      amountMinor: creditMinor,
+      milestoneLabel: before.nextLabel,
+    },
   });
 
-  return { applied: true, depositPaidMinor, depositFullyPaid };
+  return {
+    applied: true,
+    depositPaidMinor,
+    dateSecured: after.dateSecured,
+    scheduleFullyPaid: after.scheduleFullyPaid,
+  };
 }
 
 export type GuestQuoteDepositConfirmResult =

@@ -54,6 +54,7 @@ export * from "./wedge-gate";
 export * from "./client-profile-policy";
 export * from "./operator-ui-copy";
 export * from "./consult-inbox-policy";
+export * from "./consult-first-payment";
 export * from "./demo-roster-policy";
 export * from "./wedge-demo-stories";
 export * from "./marketing-demo-concierge";

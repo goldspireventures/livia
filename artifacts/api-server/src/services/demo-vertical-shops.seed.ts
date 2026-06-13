@@ -573,8 +573,8 @@ export async function seedVerticalShowcaseShops(
           now,
           d.vertical,
         );
-    await seedDemoInbox(biz.id, customers, { vertical: d.vertical, bookingKeys });
     if (!consultFirst) {
+      await seedDemoInbox(biz.id, customers, { vertical: d.vertical, bookingKeys });
       await ensureDemoOperationalCases(biz.id, biz.slug, bookingKeys);
     }
     await ensureLiveDayForBusiness(biz.id, {

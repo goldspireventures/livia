@@ -578,15 +578,16 @@ export default function SettingsPage() {
               {bid ? (
                 <>
                   {livEditable ? <LivOutboundTemplatesSection businessId={bid} /> : null}
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base">Notifications</CardTitle>
-                      <CardDescription>Push and email alerts for you and your team.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
+                  <SettingsDisclosure
+                    title="Notifications"
+                    description="Push and email alerts for you and your team."
+                    defaultOpen={false}
+                    data-testid="settings-notifications-disclosure"
+                  >
+                    <div className="pt-2">
                       <NotificationPreferencesControls />
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </SettingsDisclosure>
                   <SettingsDisclosure
                     title="SMS, email & social"
                     description="Shop number, WhatsApp, and Instagram — Liv replies from one inbox."

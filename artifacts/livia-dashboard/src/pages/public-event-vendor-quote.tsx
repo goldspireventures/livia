@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useSearch } from "wouter";
 import { useGuestQuoteRoute } from "@/lib/use-guest-book-slug";
 import { formatCurrency } from "@/lib/format";
+import { resolveQuoteMilestonePayment } from "@workspace/policy";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, CreditCard, Download, Loader2 } from "lucide-react";
@@ -29,6 +30,18 @@ type QuotePayload = {
 
 type PayPayload = {
   depositDueMinor: number;
+  nextPaymentLabel?: string;
+  nextPaymentDueDate?: string | null;
+  dateSecured?: boolean;
+  scheduleFullyPaid?: boolean;
+  milestones?: Array<{
+    label: string;
+    percent: number;
+    amountMinor: number;
+    dueDate?: string;
+    paidMinor: number;
+    status: "paid" | "due" | "upcoming";
+  }>;
   checkoutAvailable: boolean;
   currency: string;
   status: string;
@@ -203,7 +216,25 @@ export default function PublicEventVendorQuotePage() {
 
   const { business, quote } = data;
   const currency = pay?.currency ?? "EUR";
-  const depositDue = pay?.depositDueMinor ?? Math.max(0, quote.depositAmountMinor - quote.depositPaidMinor);
+  const paymentState = pay?.milestones
+    ? {
+        milestones: pay.milestones,
+        nextDueMinor: pay.depositDueMinor,
+        nextLabel: pay.nextPaymentLabel ?? "Deposit",
+        dateSecured: pay.dateSecured ?? false,
+        scheduleFullyPaid: pay.scheduleFullyPaid ?? false,
+      }
+    : (() => {
+        const resolved = resolveQuoteMilestonePayment(quote);
+        return {
+          milestones: resolved.milestones,
+          nextDueMinor: resolved.nextDueMinor,
+          nextLabel: resolved.nextLabel,
+          dateSecured: resolved.dateSecured,
+          scheduleFullyPaid: resolved.scheduleFullyPaid,
+        };
+      })();
+  const depositDue = pay?.depositDueMinor ?? paymentState.nextDueMinor;
 
   return (
     <EventVendorPageShell>
@@ -261,13 +292,25 @@ export default function PublicEventVendorQuotePage() {
               <CardTitle className="text-base">Payment schedule</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {quote.milestoneDeposits!.map((m) => (
+              {paymentState.milestones.map((m) => (
                 <div key={m.label} className="ev-quote-row">
-                  <span>
-                    {m.label} ({m.percent}%)
-                    {m.dueDate ? ` — due ${m.dueDate}` : ""}
+                  <span className="flex items-center gap-2 min-w-0">
+                    {m.status === "paid" ? (
+                      <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
+                    ) : null}
+                    <span>
+                      {m.label} ({m.percent}%)
+                      {m.dueDate ? ` — due ${m.dueDate}` : ""}
+                      {m.status === "upcoming" ? " · not due yet" : ""}
+                    </span>
                   </span>
-                  <span>{formatCurrency(m.amountMinor, currency)}</span>
+                  <span className={m.status === "paid" ? "text-primary font-medium" : ""}>
+                    {m.status === "paid"
+                      ? "Paid"
+                      : m.status === "due" && m.paidMinor > 0
+                        ? `${formatCurrency(m.paidMinor, currency)} / ${formatCurrency(m.amountMinor, currency)}`
+                        : formatCurrency(m.amountMinor, currency)}
+                  </span>
                 </div>
               ))}
             </CardContent>
@@ -341,7 +384,7 @@ export default function PublicEventVendorQuotePage() {
                 ) : (
                   <>
                     <CreditCard className="h-4 w-4" />
-                    Pay deposit {formatCurrency(depositDue, currency)}
+                    Pay {paymentState.nextLabel.toLowerCase()} {formatCurrency(depositDue, currency)}
                   </>
                 )}
               </button>
@@ -353,8 +396,13 @@ export default function PublicEventVendorQuotePage() {
             </>
           ) : null}
 
-          {quote.depositPaidMinor >= quote.depositAmountMinor && quote.status === "accepted" ? (
-            <p className="text-center text-sm text-primary font-medium">Deposit paid — you&apos;re booked!</p>
+          {paymentState.scheduleFullyPaid && quote.status === "accepted" ? (
+            <p className="text-center text-sm text-primary font-medium">Fully paid — you&apos;re booked!</p>
+          ) : paymentState.dateSecured && depositDue <= 0 && quote.status === "accepted" ? (
+            <p className="text-center text-sm text-primary font-medium">
+              Date secured
+              {pay?.nextPaymentDueDate ? ` — balance due ${pay.nextPaymentDueDate}` : " — balance due before your event"}.
+            </p>
           ) : null}
 
           <a

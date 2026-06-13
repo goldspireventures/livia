@@ -7,6 +7,7 @@ import {
   LIV_OUTBOUND_TEMPLATE_VARS,
   type LivOutboundCopyKey,
 } from "@workspace/policy";
+import { SettingsDisclosure } from "@/components/ui/settings-disclosure";
 
 type Field = {
   key: LivOutboundCopyKey;
@@ -71,40 +72,48 @@ export function LivOutboundTemplatesSection({ businessId, onSaved }: Props) {
         </p>
       </div>
 
-      {fields.map((field) => (
-        <div key={field.key} className="space-y-2">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <Label>{field.label}</Label>
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              className="text-xs h-7"
-              onClick={() =>
-                setOverrides((prev) => ({
-                  ...prev,
-                  [field.key]: field.defaultTemplate,
-                }))
-              }
-            >
-              Reset to default
-            </Button>
-          </div>
-          <p className="text-xs text-muted-foreground">{field.hint}</p>
-          <Textarea
-            value={overrides[field.key] ?? ""}
-            onChange={(e) =>
-              setOverrides((prev) => ({
-                ...prev,
-                [field.key]: e.target.value,
-              }))
-            }
-            rows={field.key === "decline_reply" ? 8 : 5}
-            placeholder={field.defaultTemplate}
-            data-testid={`liv-template-${field.key}`}
-          />
-        </div>
-      ))}
+      <div className="space-y-2">
+        {fields.map((field) => (
+          <SettingsDisclosure
+            key={field.key}
+            title={field.label}
+            description={field.hint}
+            defaultOpen={false}
+            data-testid={`liv-template-disclosure-${field.key}`}
+          >
+            <div className="space-y-2 pt-2">
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="text-xs h-7"
+                  onClick={() =>
+                    setOverrides((prev) => ({
+                      ...prev,
+                      [field.key]: field.defaultTemplate,
+                    }))
+                  }
+                >
+                  Reset to default
+                </Button>
+              </div>
+              <Textarea
+                value={overrides[field.key] ?? ""}
+                onChange={(e) =>
+                  setOverrides((prev) => ({
+                    ...prev,
+                    [field.key]: e.target.value,
+                  }))
+                }
+                rows={field.key === "decline_reply" ? 8 : 5}
+                placeholder={field.defaultTemplate}
+                data-testid={`liv-template-${field.key}`}
+              />
+            </div>
+          </SettingsDisclosure>
+        ))}
+      </div>
 
       <Button type="button" onClick={() => void save()} disabled={busy} data-testid="liv-outbound-save">
         {busy ? "Saving…" : "Save templates"}

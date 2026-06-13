@@ -667,6 +667,8 @@ export async function generateQuoteFromEnquiry(
     milestoneTemplate.length ? milestoneTemplate : [{ label: "Deposit", percent: depositPercent }],
     enquiry.eventDate,
   );
+  const depositAmountMinor = milestoneDeposits[0]?.amountMinor ?? totals.depositAmountMinor;
+  const balanceDueMinor = totals.subtotalMinor - depositAmountMinor;
 
   const eventDaySheet = {
     eventDate: enquiry.eventDate,
@@ -693,8 +695,8 @@ export async function generateQuoteFromEnquiry(
       status: "draft",
       depositPercent,
       subtotalMinor: totals.subtotalMinor,
-      depositAmountMinor: totals.depositAmountMinor,
-      balanceDueMinor: totals.balanceDueMinor,
+      depositAmountMinor,
+      balanceDueMinor,
       validUntil: validUntil.toISOString().slice(0, 10),
       termsSnapshot: site.termsText,
       publicToken: token,
@@ -835,14 +837,17 @@ export async function updateQuote(
       lineRows.map((l) => ({ quantity: Number(l.quantity), unitPriceMinor: l.unitPriceMinor })),
       depositPercent,
     );
+    const milestones = (patch.milestoneDeposits ?? existing.milestoneDeposits) as MilestoneDeposit[];
+    const depositAmountMinor = milestones[0]?.amountMinor ?? totals.depositAmountMinor;
+    const balanceDueMinor = totals.subtotalMinor - depositAmountMinor;
     const [quote] = await db
       .update(quotesTable)
       .set({
         personalMessage: patch.personalMessage ?? existing.personalMessage,
         depositPercent,
         subtotalMinor: totals.subtotalMinor,
-        depositAmountMinor: totals.depositAmountMinor,
-        balanceDueMinor: totals.balanceDueMinor,
+        depositAmountMinor,
+        balanceDueMinor,
         eventDaySheet: mergedSheet ?? existing.eventDaySheet,
         milestoneDeposits: patch.milestoneDeposits ?? existing.milestoneDeposits,
         customerId: linkCustomerId !== undefined ? linkCustomerId : existing.customerId,
@@ -949,6 +954,8 @@ export async function createManualQuote(
     [{ label: "Deposit", percent: depositPercent }],
     null,
   );
+  const depositAmountMinor = milestoneDeposits[0]?.amountMinor ?? totals.depositAmountMinor;
+  const balanceDueMinor = totals.subtotalMinor - depositAmountMinor;
 
   await db.insert(quotesTable).values({
     id: quoteId,
@@ -959,8 +966,8 @@ export async function createManualQuote(
     personalMessage: "Thank you for your enquiry — here is your personalised quote.",
     depositPercent,
     subtotalMinor: totals.subtotalMinor,
-    depositAmountMinor: totals.depositAmountMinor,
-    balanceDueMinor: totals.balanceDueMinor,
+    depositAmountMinor,
+    balanceDueMinor,
     validUntil: validUntil.toISOString().slice(0, 10),
     publicToken: token,
     milestoneDeposits,

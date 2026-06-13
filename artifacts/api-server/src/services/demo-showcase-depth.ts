@@ -290,25 +290,21 @@ export async function refreshVerticalShowcaseShop(
 
   const consultFirst = isConsultFirstVertical(d.vertical);
   let bookingKeys: Record<string, string> = {};
-  if ((inboxCount?.count ?? 0) === 0) {
-    if (!consultFirst) {
-      bookingKeys = await seedExpandedBookings(
-        businessId,
-        customers,
-        staffIds,
-        serviceIds,
-        now,
-        d.vertical,
-      );
-    }
+  if ((inboxCount?.count ?? 0) === 0 && !consultFirst) {
+    bookingKeys = await seedExpandedBookings(
+      businessId,
+      customers,
+      staffIds,
+      serviceIds,
+      now,
+      d.vertical,
+    );
     await seedDemoInbox(businessId, customers, {
       vertical: d.vertical,
       bookingKeys,
-      ...(consultFirst ? {} : { pendingBookingNotes: "Liv created — confirm when ready" }),
+      pendingBookingNotes: "Liv created — confirm when ready",
     });
-    if (!consultFirst) {
-      await ensureDemoOperationalCases(businessId, d.slug, bookingKeys);
-    }
+    await ensureDemoOperationalCases(businessId, d.slug, bookingKeys);
   }
 
   await ensureLiveDayForBusiness(businessId, {

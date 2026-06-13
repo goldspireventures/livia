@@ -74,7 +74,9 @@ export async function seedDemoInbox(
   for (const t of threads) {
     const cid = t.anonymous
       ? null
-      : (customers[t.customerIdx ?? 0]?.id ?? customers[0]?.id);
+      : (customers.find((c) => c.email && t.email && c.email.toLowerCase() === t.email.toLowerCase())?.id ??
+        customers[t.customerIdx ?? 0]?.id ??
+        customers[0]?.id);
     const linkedBookingId =
       t.linkedBookingKey && opts?.bookingKeys?.[t.linkedBookingKey]
         ? opts.bookingKeys[t.linkedBookingKey]

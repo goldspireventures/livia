@@ -271,14 +271,36 @@ const FITNESS_THREADS: DemoInboxThreadSpec[] = [
 
 const EVENT_VENDOR_THREADS: DemoInboxThreadSpec[] = [
   {
-    customerIdx: 0,
+    channel: "SMS",
+    status: "OPEN",
+    aiHandled: true,
+    name: "Sarah Murphy",
+    phone: "+353871234567",
+    email: "sarah.murphy@example.com",
+    summary: "Birthday quote sent — Sarah asked if blush & gold setup fits €500–€1,000.",
+    caseIntent: "quote_follow_up",
+    messages: [
+      {
+        role: "USER",
+        content: "Got the quote — can we tweak the centrepieces if we drop one balloon garland?",
+        minsAgo: 22,
+      },
+      {
+        role: "ASSISTANT",
+        content:
+          "Absolutely — I'll ask the studio to revise the line items and resend. Your 15 Sept date is still held pending deposit.",
+        minsAgo: 19,
+      },
+    ],
+  },
+  {
     channel: "WEB",
     status: "HANDED_OFF",
     aiHandled: false,
     name: "Aoife Brennan",
     phone: "+353 87 100 0001",
     email: "aoife.b@email.ie",
-    summary: "Wedding draping enquiry — asked for a call before quoting.",
+    summary: "October wedding at Carton House — wants draping quote after a call.",
     messages: [
       {
         role: "USER",
@@ -290,23 +312,41 @@ const EVENT_VENDOR_THREADS: DemoInboxThreadSpec[] = [
         content: "Congratulations! Share your guest count and venue and I'll draft a quote.",
         minsAgo: 118,
       },
-      { role: "USER", content: "About 120 at Carton House — can someone call me?", minsAgo: 90 },
+      { role: "USER", content: "About 120 at Carton House — can someone call me this week?", minsAgo: 90 },
+    ],
+  },
+  {
+    channel: "SMS",
+    status: "OPEN",
+    aiHandled: true,
+    name: "Patrick O'Neill",
+    phone: "+353 87 100 0004",
+    email: "patrick.oneill@example.com",
+    summary: "Christening balloon arch — Liv sent enquire link for 28 June.",
+    messages: [
+      { role: "USER", content: "Do you do balloon arches for christenings in Wicklow?", minsAgo: 14 },
+      {
+        role: "ASSISTANT",
+        content:
+          "We do — fill in the enquire form with your church & reception venues and I'll draft a quote same day.",
+        minsAgo: 11,
+      },
     ],
   },
   {
     anonymous: true,
-    channel: "SMS",
+    channel: "VOICE",
     status: "OPEN",
     aiHandled: true,
     name: "Unknown caller",
     phone: "+353 87 199 8822",
     email: "",
-    summary: "Missed call — Liv sent the enquire link for balloon styling.",
+    summary: "Missed call — Liv texted back with enquire link for a 40th birthday.",
     messages: [
-      { role: "USER", content: "Missed your call about balloon arches for a birthday", minsAgo: 8 },
+      { role: "USER", content: "Missed your call about styling for a 40th in Dun Laoghaire", minsAgo: 8 },
       {
         role: "ASSISTANT",
-        content: "No worries — use our enquire form to lock your date and theme. I'll follow up once it's in.",
+        content: "No worries — use our enquire form with your date and theme. I'll follow up once it's in.",
         minsAgo: 5,
       },
     ],
