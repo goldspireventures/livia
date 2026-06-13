@@ -430,24 +430,25 @@
   padding: 1rem 1.15rem 1.3rem;
 }
 
-/* Services catalogue — 50% footprint; thumb + text row (override .ev-card img width:100%) */
+/* Services catalogue — compact row cards; must beat .ev-card img { width: 100% } */
 .ev-services-list {
   width: 100%;
-  max-width: 36rem;
+  max-width: 39.6rem;
   margin-inline: auto;
 }
 
-.ev-services-card__img {
+.ev-services-card img {
   width: 100%;
   aspect-ratio: 16 / 10;
-  flex-shrink: 0;
+  flex: 0 0 auto;
 }
 
 @media (min-width: 768px) {
-  .ev-services-card__img {
-    width: 5rem;
-    min-width: 5rem;
-    max-width: 5rem;
+  .ev-services-card img {
+    width: 5.5rem;
+    min-width: 5.5rem;
+    max-width: 5.5rem;
+    flex: 0 0 5.5rem;
     aspect-ratio: 4 / 3;
     align-self: stretch;
     height: auto;
@@ -455,9 +456,17 @@
 }
 
 .ev-services-card .ev-card__body {
-  padding: 0.5rem 0.6rem 0.65rem;
+  padding: 0.55rem 0.65rem 0.7rem;
   min-width: 0;
-  flex: 1 1 0%;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.ev-services-card .ev-card__body > p:last-child {
+  color: #78350f;
+  font-weight: 600;
 }
 
 .ev-process {

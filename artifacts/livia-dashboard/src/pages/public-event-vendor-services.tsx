@@ -18,15 +18,11 @@ export default function PublicEventVendorServicesPage() {
               Prices are starting points — your final quote depends on guest count, venue, and styling level.
               Everything is confirmed in writing before you book.
             </p>
-            <div className="ev-services-list grid gap-3 md:grid-cols-2">
+            <div className="ev-services-list grid gap-3.5 md:grid-cols-2">
               {data.services.map((svc) => (
                 <article key={svc.id} className="ev-services-card ev-card flex flex-col md:flex-row overflow-hidden">
                   {svc.imageUrl ? (
-                    <img
-                      src={svc.imageUrl}
-                      alt=""
-                      className="ev-services-card__img object-cover"
-                    />
+                    <img src={svc.imageUrl} alt="" className="object-cover shrink-0" />
                   ) : null}
                     <div className="ev-card__body flex-1">
                       {svc.category ? (
