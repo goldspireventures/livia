@@ -14,6 +14,7 @@ import { GatewayBackLink } from "@/components/gateway/gateway-back-link";
 import type { DemoRosterEntry } from "@/lib/demo-portal";
 import { demoOpenPersonaUrl } from "@/lib/demo-portal";
 import { DemoGuestClientShortcut } from "@/components/demo/demo-guest-client-shortcut";
+import { DemoConsultFirstGuestShortcut } from "@/components/demo/demo-consult-first-guest-shortcut";
 import { cn } from "@/lib/utils";
 
 export const WEDGE_BEAT_CROP_META: Record<
@@ -66,6 +67,8 @@ type EnterProps = {
   backHref?: string;
   backLabel?: string;
   guestOpenHref: string;
+  /** Consult-first demos use public enquire — not My Livia. */
+  guestShortcut?: "my-livia" | "public-enquire";
   onBack: () => void;
 };
 
@@ -78,6 +81,7 @@ export function GatewayDemoEnterStage({
   backHref = "/demo",
   backLabel = "← Worlds",
   guestOpenHref,
+  guestShortcut = "my-livia",
   onBack,
 }: EnterProps) {
   return (
@@ -102,7 +106,11 @@ export function GatewayDemoEnterStage({
         </div>
 
         <div className="mt-5 space-y-4">
-          <DemoGuestClientShortcut openHref={guestOpenHref} embedded />
+          {guestShortcut === "public-enquire" ? (
+            <DemoConsultFirstGuestShortcut openHref={guestOpenHref} embedded />
+          ) : (
+            <DemoGuestClientShortcut openHref={guestOpenHref} embedded />
+          )}
 
           <div data-testid="gateway-demo-enter-roles">
             <p className="mb-2 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">

@@ -76,7 +76,16 @@ const BEAUTY_LIV_INTRO =
 const WELLNESS_LIV_INTRO =
   "Three surfaces, one thread — concierge, your /b link, and the room board at Harbour Wellness Cork.";
 
-const WEDGE_THREAD_VERTICALS = new Set<BusinessVertical>(["beauty", "wellness"]);
+const EVENT_VENDOR_THREAD_BRIDGES: Partial<Record<WedgeDemoBeat["cropHint"], string>> = {
+  inbox: "Sarah's birthday enquiry lands — Liv acknowledges and flags it for a quote.",
+  "public-book": "Guests enquire with date, venue, and theme — no account, no time slots.",
+  today: "You draft from catalogue, send the quote, and track deposit to booked.",
+};
+
+const EVENT_VENDOR_LIV_INTRO =
+  "Three strengths for event studios — capture leads, a real public website, and quote-to-booked without DM chaos.";
+
+const WEDGE_THREAD_VERTICALS = new Set<BusinessVertical>(["beauty", "wellness", "event-vendors"]);
 
 export function isPresetWedgeThread(vertical: BusinessVertical): boolean {
   return WEDGE_THREAD_VERTICALS.has(vertical);
@@ -118,12 +127,14 @@ export function resolveWedgeThreadBridge(
 ): string | null {
   if (vertical === "beauty") return BEAUTY_THREAD_BRIDGES[beat.cropHint] ?? null;
   if (vertical === "wellness") return WELLNESS_THREAD_BRIDGES[beat.cropHint] ?? null;
+  if (vertical === "event-vendors") return EVENT_VENDOR_THREAD_BRIDGES[beat.cropHint] ?? null;
   return null;
 }
 
 export function resolveWedgeLivIntro(vertical: BusinessVertical): string {
   if (vertical === "beauty") return BEAUTY_LIV_INTRO;
   if (vertical === "wellness") return WELLNESS_LIV_INTRO;
+  if (vertical === "event-vendors") return EVENT_VENDOR_LIV_INTRO;
   return "Inbox, booking, and Today — then walk into the live demo.";
 }
 

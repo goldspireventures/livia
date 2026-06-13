@@ -2,13 +2,16 @@ import { useMemo, useState } from "react";
 import { Link, useLocation, useParams } from "wouter";
 import { GatewayDemoEnterStage, GatewaySlideDots } from "@/components/gateway/gateway-demo-card-stage";
 import { WedgeBeautyThread } from "@/components/gateway/wedge-beauty-thread";
+import { WedgeConsultFirstThread } from "@/components/gateway/wedge-consult-first-thread";
 import { WedgeStudioBrief } from "@/components/gateway/wedge-studio-brief";
 import { isPresetWedgeThread } from "@/lib/wedge-beat-visuals";
 import { DemoFlowShell } from "@/components/gateway/demo-flow-shell";
 import {
   getWedgeDemoStory,
+  isConsultFirstVertical,
   type WedgeDemoStory,
 } from "@workspace/policy";
+import { publicEventVendorEnquireUrl } from "@/lib/surface-urls";
 import { demoOpenPersonaUrl, type DemoRosterEntry } from "@/lib/demo-portal";
 import { useDemoWorldStatus } from "@/lib/demo/demo-world-status";
 import { resolveG1WedgeWorld } from "@/lib/g1-wedge-worlds";
@@ -69,6 +72,10 @@ export default function DemoWedgeStoryPage() {
 
   const businessName = tenant?.name ?? world?.businessLabel ?? story.label;
   const enterMode = slide === "enter";
+  const consultFirst = isConsultFirstVertical(story.vertical);
+  const guestOpenHref = consultFirst && demoSlug
+    ? publicEventVendorEnquireUrl(demoSlug)
+    : demoOpenPersonaUrl({ persona: "customer" });
 
   return (
     <DemoFlowShell>
@@ -111,8 +118,27 @@ export default function DemoWedgeStoryPage() {
           disabled={!provisioned}
           backHref={demoWorldsBackUrl()}
           backLabel="← Worlds"
-          guestOpenHref={demoOpenPersonaUrl({ persona: "customer" })}
+          guestOpenHref={guestOpenHref}
+          guestShortcut={consultFirst ? "public-enquire" : "my-livia"}
           onBack={() => setSlide("story")}
+        />
+      ) : consultFirst ? (
+        <WedgeConsultFirstThread
+          vertical={story.vertical}
+          world={world}
+          beats={story.beats}
+          tradeLabel={world?.businessLabel ?? story.label}
+          disabled={!provisioned}
+          continueLabel={provisioned ? "Enter live demo" : "Set up demo world first"}
+          backHref={demoWorldsBackUrl()}
+          backLabel="← Worlds"
+          onContinue={() => {
+            if (!provisioned) {
+              navigate(`${FOUNDER_DEMO_LAUNCHER_PATH}#demo-setup`);
+              return;
+            }
+            setSlide("enter");
+          }}
         />
       ) : isPresetWedgeThread(story.vertical) ? (
         <WedgeBeautyThread

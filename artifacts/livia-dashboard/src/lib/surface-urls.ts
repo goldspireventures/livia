@@ -29,6 +29,10 @@ export function publicEventVendorSiteUrl(slug: string): string {
   return `https://${slug}.livia-hq.com`;
 }
 
+export function publicEventVendorEnquireUrl(slug: string): string {
+  return `${publicEventVendorSiteUrl(slug)}/enquire`;
+}
+
 export function marketingPricingUrl(): string {
   return `${marketingOrigin}/pricing`;
 }

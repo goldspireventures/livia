@@ -787,3 +787,118 @@
   object-position: center top;
 }
 
+/* G2 consult-first — three equal strength cards (event vendors) */
+.wedge-consult {
+  max-width: 56rem;
+  margin: 0 auto;
+}
+
+.wedge-consult__header {
+  margin-bottom: 1.5rem;
+}
+
+.wedge-consult__liv {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  margin-top: 1.25rem;
+  padding: 0.875rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(217, 185, 122, 0.22);
+  background: rgba(217, 185, 122, 0.06);
+}
+
+.wedge-consult__liv-mark {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+  color: rgba(217, 185, 122, 0.85);
+}
+
+.wedge-consult__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.875rem;
+}
+
+@media (min-width: 768px) {
+  .wedge-consult__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+}
+
+.wedge-consult__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.875rem;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(217, 185, 122, 0.28);
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.05) 0%, rgba(8, 10, 14, 0.92) 55%);
+  box-shadow: 0 12px 40px -24px rgba(0, 0, 0, 0.65);
+}
+
+.wedge-consult__card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.wedge-consult__index {
+  font-family: ui-monospace, monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  color: rgba(217, 185, 122, 0.55);
+}
+
+.wedge-consult__eyebrow {
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(230, 208, 165, 0.65);
+}
+
+.wedge-consult__copy {
+  flex: 1;
+}
+
+.wedge-consult__footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.wedge-consult__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 11rem;
+  max-width: min(100%, 20rem);
+  padding: 0.85rem 1.75rem;
+  border-radius: 9999px;
+  background: hsl(var(--primary));
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: hsl(var(--primary-foreground));
+  transition: opacity 0.2s;
+}
+
+.wedge-consult__cta:hover:not(:disabled) {
+  opacity: 0.92;
+}
+
+.wedge-consult__cta:disabled {
+  opacity: 0.5;
+}
+
+.wedge-consult-preview {
+  min-height: 7.5rem;
+}
+

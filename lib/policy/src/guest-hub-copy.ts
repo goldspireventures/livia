@@ -86,6 +86,14 @@ export const DEMO_GUEST_CLIENT_COPY = {
   nameHint: "Demo guest Mary · linked across all showcase studios",
 } as const;
 
+/** Demo launcher — consult-first verticals (event website, not My Livia). */
+export const DEMO_CONSULT_FIRST_GUEST_COPY = {
+  title: "Try it as a client",
+  body: "Your public event website — structured enquire, quote review, and deposit pay. No guest app login.",
+  cta: "Open enquire form",
+  hint: "Same path couples take from Instagram or your website link.",
+} as const;
+
 /** Native app cold open — operator vs guest split (W4 + W6). */
 export const LIVIA_MOBILE_ENTRY_COPY = {
   kicker: "One app · two doors",

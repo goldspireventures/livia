@@ -96,10 +96,21 @@ const WEDGE_BEATS: Record<BusinessVertical, WedgeDemoBeat[]> = {
     { headline: "Today — bay schedule", detail: "What's in, what's next.", cropHint: "today" },
   ],
   "event-vendors": [
-    { headline: "IG enquiry", detail: "Send one enquire link from DMs.", cropHint: "inbox" },
-    { headline: "Your event website", detail: "Gallery, services, and structured enquire — not a booking widget.", cropHint: "public-book" },
-    { headline: "Draft quote", detail: "Catalogue → tweak → send.", cropHint: "today" },
-    { headline: "Track to booked", detail: "Pipeline from new to booked.", cropHint: "sms" },
+    {
+      headline: "Enquiries in one inbox",
+      detail: "Instagram DMs and web enquires — Liv drafts replies and surfaces quote-ready leads.",
+      cropHint: "inbox",
+    },
+    {
+      headline: "Your event website",
+      detail: "Gallery, services, and structured enquire — not a salon booking widget.",
+      cropHint: "public-book",
+    },
+    {
+      headline: "Quote to booked",
+      detail: "Itemised quotes, milestone deposits, and a calm pipeline to secured dates.",
+      cropHint: "today",
+    },
   ],
 };
 
