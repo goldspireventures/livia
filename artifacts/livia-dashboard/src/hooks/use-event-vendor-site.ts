@@ -38,23 +38,42 @@ export type EventVendorSitePayload = {
 export function useEventVendorSite(slug: string | undefined) {
   const [data, setData] = useState<EventVendorSitePayload | null>(null);
   const [loading, setLoading] = useState(true);
+  const [errorKind, setErrorKind] = useState<"not_found" | "unavailable" | null>(null);
 
   useEffect(() => {
     if (!slug) return;
     let cancelled = false;
     (async () => {
       setLoading(true);
+      setErrorKind(null);
       try {
         const r = await fetch(`/api/public/${slug}/event-site`);
-        if (!r.ok) throw new Error("not found");
+        if (r.status === 404) {
+          if (!cancelled) {
+            setData(null);
+            setErrorKind("not_found");
+          }
+          return;
+        }
+        if (!r.ok) {
+          if (!cancelled) {
+            setData(null);
+            setErrorKind("unavailable");
+          }
+          return;
+        }
         const d = (await r.json()) as EventVendorSitePayload;
         if (!cancelled) {
           setData(d);
+          setErrorKind(null);
           applyVerticalTheme(d.business.vertical, null);
           applyExperienceTheme({ vertical: d.business.vertical });
         }
       } catch {
-        if (!cancelled) setData(null);
+        if (!cancelled) {
+          setData(null);
+          setErrorKind("unavailable");
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -66,5 +85,5 @@ export function useEventVendorSite(slug: string | undefined) {
     };
   }, [slug]);
 
-  return { data, loading };
+  return { data, loading, errorKind };
 }

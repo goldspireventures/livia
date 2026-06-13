@@ -14,15 +14,20 @@ type Props = {
 
 export function EventVendorPageShell({ children }: Props) {
   const slug = useEventVendorSlug();
-  const { data, loading } = useEventVendorSite(slug);
+  const { data, loading, errorKind } = useEventVendorSite(slug);
   usePublicGuestPwa(slug);
 
   if (loading) return <PublicSurfaceLoading />;
   if (!data || !slug) {
     return (
       <PublicSurfaceNotFound
-        title="Event vendor not found"
-        detail="This website doesn't exist or the link may be outdated."
+        code={errorKind === "unavailable" ? "503" : "404"}
+        title={errorKind === "unavailable" ? "Website temporarily unavailable" : "Event vendor not found"}
+        detail={
+          errorKind === "unavailable"
+            ? "We could not load this public site right now. Try again in a few minutes, or use the staging demo link if you are testing."
+            : "This website doesn't exist or the link may be outdated."
+        }
       />
     );
   }
