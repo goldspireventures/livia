@@ -15,6 +15,7 @@ const SHELL: Record<BusinessVertical, string> = {
   "allied-health": "clinical",
   "pet-grooming": "playful",
   "automotive-detailing": "industrial",
+  "event-vendors": "warm",
 };
 
 const DISPLAY: Record<BusinessVertical, "serif" | "sans"> = {
@@ -27,6 +28,7 @@ const DISPLAY: Record<BusinessVertical, "serif" | "sans"> = {
   "allied-health": "sans",
   "pet-grooming": "sans",
   "automotive-detailing": "sans",
+  "event-vendors": "serif",
 };
 
 export function publicExperienceSkin(vertical?: string | null, country?: string | null) {
@@ -48,6 +50,7 @@ const VERTICAL_FALLBACK: Record<BusinessVertical, string> = {
   "allied-health": PUBLIC_SERVICE_IMAGE_KEYWORDS.physio!,
   "pet-grooming": PUBLIC_SERVICE_IMAGE_KEYWORDS.groom!,
   "automotive-detailing": PUBLIC_SERVICE_IMAGE_KEYWORDS.detail!,
+  "event-vendors": PUBLIC_SERVICE_IMAGE_KEYWORDS.massage!,
 };
 
 export function inferDemoServiceImageUrl(

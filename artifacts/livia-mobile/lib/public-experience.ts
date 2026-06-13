@@ -42,6 +42,7 @@ const VERTICAL_HERO: Record<BusinessVertical, string> = {
   "allied-health": "#0c1418",
   "pet-grooming": "#1a1220",
   "automotive-detailing": "#0f1114",
+  "event-vendors": "#1a1408",
 };
 
 /** Aligned with dashboard `MARKET_SKINS` ribbons. */

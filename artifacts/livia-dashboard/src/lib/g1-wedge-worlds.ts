@@ -82,6 +82,16 @@ export const G1_WEDGE_WORLDS: G1WedgeWorld[] = [
     imageUrl: "/w2-gateway/cards/wellness.jpg",
     photoPosition: "center 30%",
   },
+  {
+    key: "events",
+    vertical: "event-vendors",
+    demoSlug: "atelier-decor-dublin",
+    businessLabel: "Atelier Decor · Dublin",
+    title: "Event styling",
+    tagline: "Enquire. Quote. Celebrate.",
+    imageUrl: "/w2-gateway/cards/events.jpg",
+    photoPosition: "center 40%",
+  },
 ];
 
 /** Unlocked worlds first; stable order within each tier. */

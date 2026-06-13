@@ -80,6 +80,7 @@ const ACCENT_HEX: Record<BusinessVertical, string> = {
   "allied-health": "#0EA5E9",
   "pet-grooming": "#A855F7",
   "automotive-detailing": "#94A3B8",
+  "event-vendors": "#D97706",
 };
 
 const SHELL: Record<BusinessVertical, string> = {
@@ -92,6 +93,7 @@ const SHELL: Record<BusinessVertical, string> = {
   "allied-health": "clinical",
   "pet-grooming": "playful",
   "automotive-detailing": "industrial",
+  "event-vendors": "gallery",
 };
 
 const DISPLAY: Record<BusinessVertical, "serif" | "sans"> = {
@@ -104,6 +106,7 @@ const DISPLAY: Record<BusinessVertical, "serif" | "sans"> = {
   "allied-health": "sans",
   "pet-grooming": "sans",
   "automotive-detailing": "sans",
+  "event-vendors": "serif",
 };
 
 export function resolveTenantExperienceSkin(

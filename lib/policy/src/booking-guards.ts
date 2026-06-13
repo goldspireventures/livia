@@ -178,6 +178,20 @@ export const BOOKING_GUARDS: Partial<Record<BusinessVertical, BookingGuardField[
   "allied-health": ALLIED_HEALTH_GUARDS,
   fitness: FITNESS_GUARDS,
   wellness: WELLNESS_GUARDS,
+  "event-vendors": [
+    {
+      id: "event_theme",
+      label: "Theme or colour palette",
+      type: "text",
+      helpText: "e.g. blush and gold, superhero, elegant white",
+    },
+    {
+      id: "inspiration_link",
+      label: "Inspiration link (optional)",
+      type: "text",
+      helpText: "Pinterest or Instagram post URL",
+    },
+  ],
 };
 
 export function getBookingGuardsForVertical(vertical: BusinessVertical): BookingGuardField[] {

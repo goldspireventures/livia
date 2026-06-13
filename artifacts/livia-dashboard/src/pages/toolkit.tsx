@@ -3,6 +3,7 @@ import { useBusiness } from "@/lib/business-context";
 import { useMembership } from "@/lib/membership-context";
 import { usePersona } from "@/lib/persona";
 import { LivCommandHub } from "@/components/liv/liv-command-hub";
+import { EventVendorLivCommandPanel } from "@/components/event-vendor/event-vendor-liv-command";
 import { LivTrustEmbeddedPanel } from "@/components/liv/liv-trust-embedded-panel";
 import { LivProposalsPanel } from "@/components/liv-proposals-panel";
 import { scrollToToolkitAnchor } from "@/lib/toolkit-navigation";
@@ -23,6 +24,7 @@ export default function ToolkitPage() {
   const { kind: persona } = usePersona();
   const showExports = persona === "org_admin" || effectiveRole === "OWNER";
   const vertical = (business as { vertical?: string } | null)?.vertical;
+  const isEventVendor = vertical === "event-vendors";
   const tier = (business as { tier?: string } | null)?.tier;
   const showPayroll = showExports && showPayrollToolkitExport(vertical, tier);
   const showEnterprise = showExports && showEnterpriseToolkitExports(vertical, tier);
@@ -40,14 +42,24 @@ export default function ToolkitPage() {
       <PersonaRitualHeader
         variant="page"
         title="Liv command"
-        subtitle="Mandate, policies, and channel wiring — everyday work stays on Today and Inbox."
+        subtitle={
+          isEventVendor
+            ? "Quote drafts, follow-ups, and Liv voice — enquiries and quotes live under Business."
+            : "Mandate, policies, and channel wiring — everyday work stays on Today and Inbox."
+        }
       />
 
-      <LivCommandHub density="focused" />
+      {isEventVendor ? (
+        <EventVendorLivCommandPanel />
+      ) : (
+        <LivCommandHub density="focused" />
+      )}
 
+      {!isEventVendor ? (
       <div id="liv-approvals" className="scroll-mt-20">
         <LivProposalsPanel variant="home" />
       </div>
+      ) : null}
 
       {showPayroll || showEnterprise ? (
         <SettingsDisclosure
@@ -62,7 +74,7 @@ export default function ToolkitPage() {
         </SettingsDisclosure>
       ) : null}
 
-      <LivTrustEmbeddedPanel />
+      <LivTrustEmbeddedPanel vertical={vertical} />
     </PageFrame>
   );
 }

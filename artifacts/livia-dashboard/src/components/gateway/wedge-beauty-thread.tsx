@@ -1,5 +1,5 @@
 import { ArrowRight } from "lucide-react";
-import { Link } from "wouter";
+import { GatewayBackLink } from "@/components/gateway/gateway-back-link";
 import type { WedgeDemoBeat } from "@workspace/policy";
 import { g1TaglineForWorld, g1TitleForWorld, type G1WedgeWorld } from "@/lib/g1-wedge-worlds";
 import type { BusinessVertical } from "@workspace/policy";
@@ -120,9 +120,9 @@ export function WedgeBeautyThread({
     <div className="wedge-thread" data-testid="gateway-demo-beats-grid">
       <header className="wedge-thread__intro">
         <div className="wedge-thread__nav">
-          <Link href={backHref} className="wedge-thread__back" data-testid="gateway-demo-back-worlds">
+          <GatewayBackLink href={backHref} className="wedge-thread__back" data-testid="gateway-demo-back-worlds">
             {backLabel}
-          </Link>
+          </GatewayBackLink>
         </div>
 
         <p className="wedge-thread__world">

@@ -45,6 +45,7 @@ export const DEMO_OWNER_SHORT_BY_SLUG: Record<string, string> = {
   "berlin-studio-neun": "berlin",
   "paris-belle-vue": "paris",
   "copenhagen-havn-wellness": "havn",
+  "atelier-decor-dublin": "atelier",
 };
 
 const SHORT_TO_SLUG: Record<string, string> = Object.fromEntries(
@@ -73,6 +74,7 @@ export const DEMO_ROLE_EMAILS = {
   physio: demoEmail("physio"),
   studioBarber: demoEmail("studio-barber"),
   soloWellness: demoEmail("solo-wellness"),
+  eventDecor: demoEmail("owner-atelier"),
 } as const;
 
 export function demoOwnerShortForSlug(slug: string): string {

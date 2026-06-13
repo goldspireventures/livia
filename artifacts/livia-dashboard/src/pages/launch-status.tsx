@@ -89,7 +89,7 @@ export default function LaunchStatusPage() {
           </Card>
 
           <div className="flex flex-wrap gap-3">
-            <Link href="/demo">
+            <Link href="/demo/founder">
               <Button variant="default">Demo gateway</Button>
             </Link>
             <Link href="/guides">

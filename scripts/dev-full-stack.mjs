@@ -68,8 +68,9 @@ await waitHealthy("http://127.0.0.1:5174/", "Marketing :5174");
 
 console.log(`
 Demo entry points:
-  Gateway:    http://127.0.0.1:5173/demo
-  Internal:   http://127.0.0.1:5175  (INTERNAL_OPS_SECRET from .env)
+  Prospect gate: http://127.0.0.1:5174/demo  (staging parity)
+  Founder G1:    http://127.0.0.1:5173/demo/founder
+  Internal:      http://127.0.0.1:5175  (INTERNAL_OPS_SECRET from .env)
   Password:   LiviaDemo2026!  (LIVIA_DEMO_PASSWORD)
 
 Personas: demo-founder@livia.io · demo-owner@livia.io · demo-manager@livia.io

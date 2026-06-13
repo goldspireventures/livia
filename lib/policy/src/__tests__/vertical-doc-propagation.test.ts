@@ -22,6 +22,7 @@ const VERTICAL_PROGRAM_DOC: Record<(typeof businessVerticalSchema.options)[numbe
   "allied-health": "docs/product/ALLIED-HEALTH-VERTICAL-PROGRAM.md",
   "pet-grooming": "docs/product/PET-GROOMING-VERTICAL-PROGRAM.md",
   "automotive-detailing": "docs/product/AUTOMOTIVE-DETAILING-VERTICAL-PROGRAM.md",
+  "event-vendors": "docs/product/EVENT-VENDORS-VERTICAL-PROGRAM.md",
 };
 
 function mustExist(relPath: string, label?: string) {

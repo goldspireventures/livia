@@ -41,26 +41,11 @@ const router: IRouter = Router();
 
 const RECEPTION_HINT = /(reception|front[ -]?desk|concierge)/i;
 
-function clerkProfileFromReq(req: Parameters<typeof getAuth>[0]): {
-  email?: string;
-  fullName?: string;
-} {
-  const auth = getAuth(req);
-  const email =
-    (auth.sessionClaims?.email as string | undefined) ??
-    (auth as { sessionClaims?: { primary_email_address?: string } }).sessionClaims
-      ?.primary_email_address;
-  const fullName =
-    [auth.sessionClaims?.first_name, auth.sessionClaims?.last_name]
-      .filter(Boolean)
-      .join(" ")
-      .trim() || undefined;
-  return { email, fullName };
-}
+import { resolveClerkProfile } from "../lib/clerk-profile.js";
 
 router.get("/me", requireAuth, async (req, res): Promise<void> => {
   const userId = getUserId(req);
-  const { email, fullName } = clerkProfileFromReq(req);
+  const { email, fullName } = await resolveClerkProfile(req);
   let user = await getOrCreateUser(userId, email, fullName);
   const demoEmail = email?.trim().toLowerCase();
   if (
@@ -110,23 +95,16 @@ router.get("/me/operator-surface", requireAuth, async (req, res): Promise<void> 
 
 router.post("/me/platform-legal", requireAuth, async (req, res): Promise<void> => {
   const userId = getUserId(req);
-  const { accept } = req.body as { accept?: boolean };
+  const { accept, email: bodyEmail } = req.body as { accept?: boolean; email?: string };
   if (accept !== true) {
     sendError(res, req, 400, "accept: true is required");
     return;
   }
   const auth = getAuth(req);
   const sessionId = auth.sessionId ?? undefined;
-  const email =
-    auth.sessionClaims?.email as string | undefined ??
-    (auth as { sessionClaims?: { primary_email_address?: string } }).sessionClaims
-      ?.primary_email_address;
-  const fullName =
-    [auth.sessionClaims?.first_name, auth.sessionClaims?.last_name]
-      .filter(Boolean)
-      .join(" ")
-      .trim() || undefined;
-  await getOrCreateUser(userId, email, fullName);
+  const profile = await resolveClerkProfile(req);
+  const email = profile.email ?? bodyEmail?.trim().toLowerCase();
+  await getOrCreateUser(userId, email, profile.fullName);
   const platformLegal = buildPlatformLegalAcceptance(sessionId);
   const updated = await updateUser(userId, { platformLegal });
   if (!updated) {

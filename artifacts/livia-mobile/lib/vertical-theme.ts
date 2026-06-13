@@ -11,6 +11,7 @@ export const VERTICAL_ACCENT_HEX: Record<BusinessVertical, string> = {
   "allied-health": "#0EA5E9",
   "pet-grooming": "#A855F7",
   "automotive-detailing": "#94A3B8",
+  "event-vendors": "#D97706",
 };
 
 export function verticalAccentHex(

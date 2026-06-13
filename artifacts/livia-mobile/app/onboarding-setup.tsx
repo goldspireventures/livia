@@ -13,13 +13,13 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
-  ScrollView,
   StyleSheet,
   Switch,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBusiness } from "@/contexts/BusinessContext";
 import { useColors } from "@/hooks/useColors";
@@ -43,7 +43,6 @@ import {
 } from "@/lib/onboarding-blocking";
 import { customFetch } from "@workspace/api-client-react";
 import { CrossSurfaceContinueCard } from "@/components/CrossSurfaceContinueCard";
-import { OnboardingPresentationPick } from "@/components/onboarding/OnboardingPresentationPick";
 import { SetupGuidedFlowCard } from "@/components/SetupGuidedFlowCard";
 import { useOnboardingCapabilitySync } from "@/lib/onboarding-capability-sync";
 
@@ -219,10 +218,13 @@ export default function OnboardingSetupScreen() {
     `Set up your ${vocab.locationNoun.toLowerCase()}`;
 
   return (
-    <ScrollView
+    <KeyboardAwareScrollViewCompat
       style={[styles.root, { backgroundColor: colors.background, paddingTop: insets.top + 12 }]}
-      contentContainerStyle={{ paddingBottom: insets.bottom + 28, paddingHorizontal: 20 }}
+      contentContainerStyle={{ paddingBottom: insets.bottom + 40, paddingHorizontal: 20 }}
       keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="interactive"
+      bottomOffset={insets.bottom + 24}
+      extraKeyboardSpace={20}
     >
       <Text style={[styles.pack, { color: accent }]}>{vocab.label}</Text>
       <Text style={[styles.title, { color: colors.foreground }]}>{headline}</Text>
@@ -240,8 +242,6 @@ export default function OnboardingSetupScreen() {
         slug={slug}
         sacredMetricMet={state?.checklist?.testBooking === true}
       />
-
-      <OnboardingPresentationPick businessId={bid} vertical={bizMeta?.vertical} />
 
       {isLoading ? (
         <ActivityIndicator color={accent} style={{ marginVertical: 32 }} />
@@ -261,6 +261,7 @@ export default function OnboardingSetupScreen() {
               View activation checklist
             </Text>
           </Pressable>
+          <CrossSurfaceContinueCard businessId={bid} variant="appearance" />
         </View>
       ) : (
         <View style={[styles.card, { borderColor: colors.border, backgroundColor: colors.card }]}>
@@ -383,7 +384,7 @@ export default function OnboardingSetupScreen() {
       )}
 
       <CrossSurfaceContinueCard businessId={bid} variant="onboarding" />
-    </ScrollView>
+    </KeyboardAwareScrollViewCompat>
   );
 }
 

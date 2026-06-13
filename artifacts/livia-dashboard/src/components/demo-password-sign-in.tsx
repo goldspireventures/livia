@@ -103,7 +103,7 @@ export function DemoPasswordSignIn({
               invited guest demo
             </a>
           ) : (
-            <Link href="/demo" className="text-primary underline underline-offset-2">
+            <Link href="/demo/founder" className="text-primary underline underline-offset-2">
               demo launcher
             </Link>
           )}

@@ -14,7 +14,7 @@ const TRACKS = [
     steps: [
       "Share your /b link from Settings → Studio.",
       "Guests pick a service, time, and contact details.",
-      "Liv can answer questions on the page when you enable it.",
+      "Liv answers guest questions on your booking page when enabled.",
       "Booking terms and privacy copy come from Settings → Legal & trust.",
     ],
     cta: { href: "/settings?tab=shop", label: "Copy booking link" },
@@ -111,7 +111,7 @@ export default function GuidesPage() {
         <Card className="mt-6 border-primary/20">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Preview your storefront</CardTitle>
-            <CardDescription>Open what guests see before you share the link.</CardDescription>
+            <CardDescription>Preview the guest booking experience.</CardDescription>
           </CardHeader>
           <CardContent>
             <a href={`/book/${slug}`} target="_blank" rel="noopener noreferrer">

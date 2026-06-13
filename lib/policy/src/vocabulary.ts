@@ -160,6 +160,18 @@ const VOCAB: Record<
     ownerTodayScheduleCalendarCta: "Full day calendar",
     runningLateLabel: "Running late for booking",
   },
+  "event-vendors": {
+    clientNoun: "Client",
+    serviceNoun: "Service",
+    publicBookCatalogTitle: "Catalogue",
+    locationNoun: "Studio",
+    teamNoun: "Team",
+    hint: "Event date, theme, and guest count — quote before you book.",
+    ownerTodayLine: "New enquiries and quotes awaiting your reply.",
+    ownerTodayScheduleTitle: "Upcoming events",
+    ownerTodayScheduleCalendarCta: "Event calendar",
+    runningLateLabel: "Running late for setup",
+  },
 };
 
 export function resolveVerticalKey(

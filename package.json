@@ -118,7 +118,8 @@
     "a11y:routes": "node scripts/axe-critical-routes.mjs",
     "dev:internal": "pnpm --filter @workspace/livia-internal run dev",
     "dev:marketing": "pnpm --filter @workspace/livia-marketing run dev",
-    "dev:stack": "pnpm run dev:api & pnpm run dev:dashboard & pnpm run dev:internal & pnpm run:marketing",
+    "dev:demo-surfaces": "node scripts/dev-demo-surfaces.mjs",
+    "dev:stack": "pnpm run dev:api & pnpm run dev:dashboard & pnpm run dev:internal & pnpm run dev:marketing",
     "dev:full-stack": "node scripts/dev-full-stack.mjs",
     "smoke:marketing": "node scripts/gate3-smoke.mjs"
   },

@@ -24,7 +24,8 @@ import {
 import { getMorningBriefing } from "./morning-briefing.service";
 import { getSetupGuidedFlowForBusiness } from "./setup-guided-flow.service";
 import { buildBusinessTwinPromptBlock } from "./business-twin.service";
-import { buildLivMemoryBlockForCustomer } from "./liv-memory.service";
+import { buildLivMemoryBlockForBusiness, buildLivMemoryBlockForCustomer } from "./liv-memory.service";
+import { buildOperatorLearningPromptBlock } from "./liv-operator-learning.service";
 import { resolveLivToolsForBusiness } from "./liv-tool-catalog.service";
 import { recordEvalTraceForTool } from "../lib/eval-traces";
 
@@ -60,7 +61,8 @@ export async function handleStaffLivAssist(args: {
   const promptOverrides = await getActivePromptOverrides(args.businessId);
   const pack = loadVerticalPack(cached.business.vertical, cached.packConfig);
 
-  const [services, staff, history, briefing, memoryBlock, twinBlock] = await Promise.all([
+  const [services, staff, history, briefing, memoryBlock, businessMemoryBlock, operatorLearningBlock, twinBlock] =
+    await Promise.all([
     listServices(args.businessId, true),
     listStaff(args.businessId, { isActive: true }),
     listMessagesForConversation(args.conversationId),
@@ -68,6 +70,8 @@ export async function handleStaffLivAssist(args: {
     conversation.customerId
       ? buildLivMemoryBlockForCustomer(args.businessId, conversation.customerId)
       : Promise.resolve(""),
+    buildLivMemoryBlockForBusiness(args.businessId),
+    buildOperatorLearningPromptBlock(args.businessId),
     buildBusinessTwinPromptBlock(args.businessId),
   ]);
 
@@ -112,7 +116,7 @@ export async function handleStaffLivAssist(args: {
     }) +
     (livMode === "setup"
       ? `\n\nSETUP COPILOT MODE: Help the owner finish shop setup — presets, onboarding acts, activation status. Use read-only setup tools; do not book or message customers unless they switch to ops mode.${briefingBlock}${twinBlock}`
-      : `\n\nSTAFF ASSIST MODE: You are helping a team member manage this thread. Use tools to confirm/cancel/reschedule bookings or look up customers when asked. Prefer get_owner_intelligence or get_business_twin when advising strategy; use get_commerce_signals or get_commerce_snapshot for revenue; list_capability_blockers for setup gaps.${briefingBlock}${memoryBlock}${twinBlock}`);
+      : `\n\nSTAFF ASSIST MODE: You are helping a team member manage this thread. Use tools to confirm/cancel/reschedule bookings or look up customers when asked. Prefer get_owner_intelligence or get_business_twin when advising strategy; use get_commerce_signals or get_commerce_snapshot for revenue; list_capability_blockers for setup gaps.${briefingBlock}${memoryBlock}${businessMemoryBlock}${operatorLearningBlock}${twinBlock}`);
 
   const anthropicTools: Anthropic.Tool[] = tools.map((t) => ({
     name: t.name,
@@ -418,11 +422,12 @@ export async function handleOwnerLivOps(args: {
   const promptOverrides = await getActivePromptOverrides(args.businessId);
   const pack = loadVerticalPack(cached.business.vertical, cached.packConfig);
 
-  const [services, staff, briefing, twinBlock, intelligence] = await Promise.all([
+  const [services, staff, briefing, twinBlock, operatorLearningBlock, intelligence] = await Promise.all([
     listServices(args.businessId, true),
     listStaff(args.businessId, { isActive: true }),
     getMorningBriefing(args.businessId),
     buildBusinessTwinPromptBlock(args.businessId),
+    buildOperatorLearningPromptBlock(args.businessId),
     import("./owner-intelligence.service").then((m) => m.getOwnerIntelligenceBundle(args.businessId)),
   ]);
 
@@ -478,7 +483,7 @@ export async function handleOwnerLivOps(args: {
       })),
       staff: staff.map((s) => ({ id: s.id, displayName: s.displayName })),
     }) +
-    `\n\nOWNER OPS MODE: Coach the owner on Today — commerce, capability health, Twin, and ops queue. Start with get_owner_intelligence when facts are stale. Do not message customers. Link to Settings → Billing for deposit/Stripe fixes.${briefingBlock}${intelBlock}${twinBlock}`;
+    `\n\nOWNER OPS MODE: Coach the owner on Today — commerce, capability health, Twin, and ops queue. Start with get_owner_intelligence when facts are stale. Do not message customers. Link to Settings → Billing for deposit/Stripe fixes.${briefingBlock}${intelBlock}${operatorLearningBlock}${twinBlock}`;
 
   const anthropicTools: Anthropic.Tool[] = tools.map((t) => ({
     name: t.name,

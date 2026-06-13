@@ -564,6 +564,59 @@ const BASE_PRESENTATION_PRESETS: Record<BusinessVertical, PresentationPreset[]> 
       cssPreset: "compact-mobile",
     },
   ],
+  "event-vendors": [
+    {
+      id: "event-vendor-atelier",
+      vertical: "event-vendors",
+      label: "Atelier",
+      description: "Gallery-forward decor — warm neutrals, enquire-first.",
+      isDefault: true,
+      tokens: {
+        colorMode: "light",
+        density: "comfortable",
+        display: "serif",
+        layout: "cards",
+        shell: "gallery",
+        radius: "lg",
+        motion: "calm",
+      },
+      cssPreset: "event-atelier",
+    },
+    {
+      id: "event-wedding-ledger",
+      vertical: "event-vendors",
+      label: "Wedding Ledger",
+      description: "Muted luxury — quote pipeline and milestone deposits.",
+      isDefault: false,
+      tokens: {
+        colorMode: "light",
+        density: "comfortable",
+        display: "serif",
+        layout: "list",
+        shell: "ledger",
+        radius: "md",
+        motion: "calm",
+      },
+      cssPreset: "wedding-ledger",
+    },
+    {
+      id: "event-party-pop",
+      vertical: "event-vendors",
+      label: "Party Pop",
+      description: "Birthday and kids parties — playful gallery grid.",
+      isDefault: false,
+      tokens: {
+        colorMode: "light",
+        density: "comfortable",
+        display: "sans",
+        layout: "cards",
+        shell: "gallery",
+        radius: "xl",
+        motion: "crisp",
+      },
+      cssPreset: "party-pop",
+    },
+  ],
 };
 
 /** Four presets per vertical: Platform Default (Aurora) + three vertical-native skins. */
@@ -656,6 +709,7 @@ export const DEMO_SHOWCASE_PRESENTATION_PRESET_ID: Record<BusinessVertical, stri
   "allied-health": "allied-clinic-standard",
   "pet-grooming": "pet-playful-paw",
   "automotive-detailing": "auto-bay-industrial",
+  "event-vendors": "event-vendor-atelier",
 };
 
 export function demoShowcasePresentationPresetId(vertical: BusinessVertical): string {

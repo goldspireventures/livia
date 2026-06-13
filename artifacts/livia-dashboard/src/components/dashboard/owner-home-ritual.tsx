@@ -5,6 +5,8 @@ import {
   Check,
   CheckCircle2,
   ChevronRight,
+  ClipboardList,
+  FileText,
   Flower2,
   Inbox,
   Sparkles,
@@ -23,11 +25,16 @@ import { InboxPreviewPanel } from "@/components/dashboard/inbox-preview-panel";
 import { OwnerLivGuardrails } from "@/components/dashboard/owner-liv-guardrails";
 import { VerticalHomeModules } from "@/components/dashboard/vertical-home-modules";
 import {
+  consultFirstBriefingLine,
+  isConsultFirstVertical,
+  resolveConsultFirstOwnerHomeBriefingCta,
   resolveOwnerHomeBriefingCta,
   resolveOwnerHomeKpiChips,
   resolveOwnerHomeModuleLayout,
   resolveSoloOwnerHomeFallback,
 } from "@workspace/policy";
+import { useQuery } from "@tanstack/react-query";
+import { apiFetch } from "@/lib/api-fetch";
 import { SoloOperatorCopilot } from "@/components/dashboard/solo-operator-copilot";
 import { cn } from "@/lib/utils";
 import { beautyNativeMorphForVertical, useBeautyChrome } from "@/lib/presentation-layout";
@@ -46,6 +53,7 @@ import {
   type PendingBookingActionBooking,
 } from "@/components/booking/pending-booking-actions";
 import { PendingWhyLine } from "@/components/booking/pending-why-line";
+import { ConsultFirstHomePanel } from "@/components/event-vendor/consult-first-home-panel";
 
 type PendingBooking = PendingBookingActionBooking & {
   status: string;
@@ -69,7 +77,13 @@ function customerName(c: PendingBooking["customer"]): string {
 
 const KPI_VIEW: Partial<
   Record<
-    "todayBookings" | "inboxHandoffs" | "toConfirm" | "completedToday",
+    | "todayBookings"
+    | "inboxHandoffs"
+    | "toConfirm"
+    | "completedToday"
+    | "newEnquiries"
+    | "quotedEnquiries"
+    | "staleQuotes",
     { href: string; label: string; icon: typeof Calendar }
   >
 > = {
@@ -77,6 +91,9 @@ const KPI_VIEW: Partial<
   inboxHandoffs: { href: "/inbox?lens=taken_over", label: "View inbox", icon: Inbox },
   toConfirm: { href: PENDING_BOOKINGS_LIST_HREF, label: "View pending", icon: CheckCircle2 },
   completedToday: { href: "/bookings", label: "View today", icon: Check },
+  newEnquiries: { href: "/inbox?lens=leads", label: "Review leads", icon: ClipboardList },
+  quotedEnquiries: { href: "/quotes", label: "Open quotes", icon: FileText },
+  staleQuotes: { href: "/quotes", label: "Follow up", icon: Sparkles },
 };
 
 function KpiChip({
@@ -384,19 +401,65 @@ export function OwnerHomeRitual({
     channel: c.channel,
   }));
 
-  const pendingCount = summary?.pendingCount ?? 0;
+  const consultFirst = isConsultFirstVertical(tenantVertical);
+  const pendingCount = consultFirst ? 0 : (summary?.pendingCount ?? 0);
   const handoffCount = summary?.handedOffCount ?? 0;
+
+  const { data: consultDash, isLoading: consultDashLoading } = useQuery({
+    queryKey: ["event-vendor-dashboard", bid],
+    queryFn: () =>
+      apiFetch<{
+        newEnquiries: number;
+        lowFitNewEnquiries?: number;
+        lowFitList?: Array<{
+          enquiryId: string;
+          contactName: string;
+          eventType?: string | null;
+          headline: string;
+        }>;
+        quotedEnquiries: number;
+        staleQuotes: number;
+        prepTasksDue?: number;
+        staleQuotesList?: Array<{
+          quoteId: string;
+          contactName: string;
+          eventType?: string | null;
+          daysSinceSent: number;
+        }>;
+        prepTaskList?: Array<{
+          quoteId: string;
+          contactName: string;
+          taskId: string;
+          label: string;
+          dueDate: string;
+          overdue: boolean;
+        }>;
+      }>(`/businesses/${bid}/event-vendor/dashboard`),
+    enabled: consultFirst && !!bid,
+    staleTime: 30_000,
+  });
+
   const moduleLayout = resolveOwnerHomeModuleLayout({
     pendingCount,
     openInboxCount: handoffCount,
+    consultFirst,
+    newEnquiries: consultDash?.newEnquiries,
+    staleQuotes: consultDash?.staleQuotes,
+    prepTasksDue: consultDash?.prepTasksDue,
   });
 
-  const todayTotal = summary?.todayBookings ?? 0;
-  const kpiChips = resolveOwnerHomeKpiChips({
-    todayBookings: todayTotal,
-    pendingCount,
-    handedOffCount: handoffCount,
-  });
+  const todayTotal = consultFirst ? 0 : (summary?.todayBookings ?? 0);
+  const kpiChips = resolveOwnerHomeKpiChips(
+    {
+      todayBookings: todayTotal,
+      pendingCount,
+      handedOffCount: handoffCount,
+      newEnquiries: consultDash?.newEnquiries,
+      quotedEnquiries: consultDash?.quotedEnquiries,
+      staleQuotes: consultDash?.staleQuotes,
+    },
+    tenantVertical,
+  );
   const kpiGridClass =
     kpiChips.length <= 1
       ? "grid-cols-1"
@@ -409,6 +472,14 @@ export function OwnerHomeRitual({
   const todayDelta = summary ? summary.todayBookings! - weekAvg : 0;
 
   const operatorXp = tenantXp?.operatorExperience;
+  const consultCta =
+    consultFirst && consultDash
+      ? resolveConsultFirstOwnerHomeBriefingCta({
+          newEnquiries: consultDash.newEnquiries,
+          staleQuotes: consultDash.staleQuotes,
+          handoffs: handoffCount,
+        })
+      : null;
   const briefingCta = resolveOwnerHomeBriefingCta({
     pendingCount,
     handedOffCount: handoffCount,
@@ -416,7 +487,7 @@ export function OwnerHomeRitual({
     fallbackLabel: ritual.primaryAction?.label ?? "View calendar",
   });
   const soloFallback =
-    tenantXp?.operator && operatorXp?.soloMode
+    tenantXp?.operator && operatorXp?.soloMode && !consultFirst
       ? resolveSoloOwnerHomeFallback(tenantXp.operator, {
           pendingCount,
           handedOffCount: handoffCount,
@@ -424,8 +495,17 @@ export function OwnerHomeRitual({
           weekBookings: summary?.weekBookings ?? 0,
         })
       : null;
-  const oneThingHref = soloFallback?.href ?? briefingCta.href;
-  const oneThingLabel = soloFallback?.label ?? briefingCta.label;
+  const oneThingHref = consultCta?.href ?? soloFallback?.href ?? briefingCta.href;
+  const oneThingLabel = consultCta?.label ?? soloFallback?.label ?? briefingCta.label;
+  const displayLivLine =
+    consultFirst && consultDash
+      ? consultFirstBriefingLine({
+          newEnquiries: consultDash.newEnquiries,
+          quotedEnquiries: consultDash.quotedEnquiries,
+          staleQuotes: consultDash.staleQuotes,
+          handoffs: handoffCount,
+        })
+      : livLine;
   const beauty = useBeautyChrome(tenantVertical);
   const beautyMorph =
     tenantVertical === "beauty" && tenantXp?.presentation
@@ -542,7 +622,9 @@ export function OwnerHomeRitual({
         <p className="text-xs text-muted-foreground font-mono tabular-nums">{formatHeaderDate(now)}</p>
       </header>
 
-      {operatorXp?.soloMode ? <SoloOperatorCopilot pack={operatorXp} /> : null}
+      {operatorXp?.soloMode && operatorXp.showSoloCopilotCard ? (
+        <SoloOperatorCopilot pack={operatorXp} />
+      ) : null}
 
       <section
         className={cn(
@@ -574,8 +656,8 @@ export function OwnerHomeRitual({
               </div>
             ) : (
               <>
-                <p className="text-sm leading-relaxed text-foreground/90 line-clamp-3">{livLine}</p>
-                {operatorXp?.soloMode && !briefingLoading ? (
+                <p className="text-sm leading-relaxed text-foreground/90 line-clamp-3">{displayLivLine}</p>
+                {operatorXp?.soloMode && operatorXp.showSoloCopilotCard && !briefingLoading ? (
                   <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                     {operatorXp.livSubline}
                   </p>
@@ -670,6 +752,41 @@ export function OwnerHomeRitual({
             loading={isLoadingSummary}
           />
         ) : null}
+        {kpiChips.includes("newEnquiries") ? (
+          <Link href="/inbox?lens=leads" className="block">
+            <KpiChip
+              chipId="newEnquiries"
+              label="New leads"
+              value={consultDash?.newEnquiries ?? 0}
+              sub="to review"
+              tone={consultDash?.newEnquiries ? "warn" : undefined}
+              loading={consultDashLoading}
+            />
+          </Link>
+        ) : null}
+        {kpiChips.includes("quotedEnquiries") ? (
+          <Link href="/quotes" className="block">
+            <KpiChip
+              chipId="quotedEnquiries"
+              label="Quoted"
+              value={consultDash?.quotedEnquiries ?? 0}
+              sub="with client"
+              loading={consultDashLoading}
+            />
+          </Link>
+        ) : null}
+        {kpiChips.includes("staleQuotes") ? (
+          <Link href="/quotes" className="block">
+            <KpiChip
+              chipId="staleQuotes"
+              label="Follow up"
+              value={consultDash?.staleQuotes ?? 0}
+              sub="quotes quiet"
+              tone="warn"
+              loading={consultDashLoading}
+            />
+          </Link>
+        ) : null}
       </div>
 
       {beauty && heroPending && !isLoadingSummary ? (
@@ -684,6 +801,7 @@ export function OwnerHomeRitual({
         />
       ) : null}
 
+      {!consultFirst ? (
       <TodayAppointmentsStrip
           pendingToday={bookingSlices.pendingToday}
           confirmedToday={bookingSlices.confirmedToday}
@@ -699,6 +817,7 @@ export function OwnerHomeRitual({
           category={(business as { category?: string } | null)?.category}
           skipPendingId={beauty && heroPending ? heroPending.id : null}
         />
+      ) : null}
 
       {moduleLayout.mode === "all_clear" ? (
         <div
@@ -706,19 +825,37 @@ export function OwnerHomeRitual({
           data-testid="owner-home-all-clear"
         >
           <Check className="h-4 w-4 text-[hsl(var(--chart-3))] shrink-0" aria-hidden />
-          <span>All clear — inbox and confirmations are up to date.</span>
-          <Link href="/bookings" className="ml-auto text-xs text-primary hover:underline shrink-0">
-            Calendar
+          <span>
+            {consultFirst
+              ? "All clear — enquiries and inbox are up to date."
+              : "All clear — inbox and confirmations are up to date."}
+          </span>
+          <Link
+            href={consultFirst ? "/inbox" : "/bookings"}
+            className="ml-auto text-xs text-primary hover:underline shrink-0"
+          >
+            {consultFirst ? "Inbox" : "Calendar"}
           </Link>
         </div>
       ) : moduleLayout.mode === "single" ? (
         moduleLayout.focus === "inbox" ? (
-          <InboxPreviewPanel
-            threads={previewThreads}
-            loading={convosLoading}
-            attentionCount={handoffCount}
-            compact
-          />
+          consultFirst ? (
+            <ConsultFirstHomePanel
+              newEnquiries={consultDash?.newEnquiries ?? 0}
+              lowFitNewEnquiries={consultDash?.lowFitNewEnquiries ?? 0}
+              lowFitList={consultDash?.lowFitList}
+              staleQuotesList={consultDash?.staleQuotesList}
+              prepTaskList={consultDash?.prepTaskList}
+              loading={consultDashLoading}
+            />
+          ) : (
+            <InboxPreviewPanel
+              threads={previewThreads}
+              loading={convosLoading}
+              attentionCount={handoffCount}
+              compact
+            />
+          )
         ) : hasTodaySchedule ? null : (
           <PendingPanel
             pendingBookings={pendingBookings}
@@ -769,7 +906,6 @@ export function OwnerHomeRitual({
 
       <SettingsDisclosure
         title="Quick links"
-        description="Pages and tools you reach for often — expand when you need them."
         defaultOpen={false}
       >
         <div className="pt-3">
@@ -778,13 +914,31 @@ export function OwnerHomeRitual({
       </SettingsDisclosure>
 
       <p className="text-center text-[11px] text-muted-foreground">
-        <Link href="/bookings" className="hover:text-primary underline-offset-2 hover:underline">
-          Full timeline
-        </Link>
-        <span className="mx-1 text-border">·</span>
-        <Link href="/toolkit" className="hover:text-primary underline-offset-2 hover:underline">
-          Liv toolkit
-        </Link>
+        {consultFirst ? (
+          <>
+            <Link href="/inbox" className="hover:text-primary underline-offset-2 hover:underline">
+              Inbox
+            </Link>
+            <span className="mx-1 text-border">·</span>
+            <Link href="/quotes" className="hover:text-primary underline-offset-2 hover:underline">
+              Quotes
+            </Link>
+            <span className="mx-1 text-border">·</span>
+            <Link href="/event-site" className="hover:text-primary underline-offset-2 hover:underline">
+              Event website
+            </Link>
+          </>
+        ) : (
+          <>
+            <Link href="/bookings" className="hover:text-primary underline-offset-2 hover:underline">
+              Full timeline
+            </Link>
+            <span className="mx-1 text-border">·</span>
+            <Link href="/toolkit" className="hover:text-primary underline-offset-2 hover:underline">
+              Liv toolkit
+            </Link>
+          </>
+        )}
         <span className="mx-1 text-border">·</span>
         <Link href="/settings" className="hover:text-primary underline-offset-2 hover:underline">
           Settings

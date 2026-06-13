@@ -1,5 +1,5 @@
 import { ArrowRight } from "lucide-react";
-import { Link } from "wouter";
+import { GatewayBackLink } from "@/components/gateway/gateway-back-link";
 import type { BusinessVertical, WedgeDemoBeat } from "@workspace/policy";
 import { g1TaglineForWorld, g1TitleForWorld, type G1WedgeWorld } from "@/lib/g1-wedge-worlds";
 import {
@@ -96,13 +96,13 @@ export function WedgeStudioBrief({
     <div className="wedge-brief" data-testid="gateway-demo-beats-grid">
       <header className="wedge-brief__header">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <Link
+          <GatewayBackLink
             href={backHref}
             className="inline-flex min-h-[44px] items-center rounded-full border border-[#d9b97a]/35 bg-[#d9b97a]/10 px-3.5 text-sm text-[#e6d0a5] transition hover:border-[#d9b97a]/55 hover:bg-[#d9b97a]/15"
             data-testid="gateway-demo-back-worlds"
           >
             {backLabel}
-          </Link>
+          </GatewayBackLink>
           <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#d9b97a]/85">
             G2 · Studio brief
           </span>

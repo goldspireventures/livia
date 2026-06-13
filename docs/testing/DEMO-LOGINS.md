@@ -58,6 +58,7 @@ Pattern: `owner-<short>@livia.io` — only that tenant after sign-in.
 | `motion-physio-cork` | `owner-physio@livia.io` | allied-health |
 | `peak-fitness-dublin` | `owner-peak@livia.io` | fitness |
 | `shine-studio-belfast` | `owner-shine@livia.io` | beauty |
+| `atelier-decor-dublin` | `owner-atelier@demo.livia-hq.com` | event-vendors |
 | `luxe-salon-spa` | `owner-luxe@livia.io` | hair |
 | `stoneybatter-cuts` | `owner-stoney@livia.io` | hair |
 | `dublin-barber-collective` | `owner-barber@livia.io` | hair |

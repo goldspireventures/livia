@@ -31,6 +31,9 @@ const PRESENTATION_COLOR_MODE: Record<string, "light" | "dark"> = {
   "harbour-light": "light",
   "session-rail": "light",
   "evening-ledger": "dark",
+  "event-atelier": "light",
+  "wedding-ledger": "light",
+  "party-pop": "light",
 };
 
 export function resolvePresentationColorMode(
@@ -148,6 +151,9 @@ const PRESENTATION_TOKEN_OVERRIDES: Record<
   "warm-chair": { primary: "43 74% 52%", ring: "43 74% 52%", sidebarPrimary: "43 74% 52%" },
   "clean-salon": { primary: "210 40% 45%", ring: "210 40% 45%", sidebarPrimary: "210 40% 45%" },
   "barber-bold": { primary: "0 0% 92%", ring: "0 0% 92%", sidebarPrimary: "0 0% 92%" },
+  "event-atelier": { primary: "32 95% 44%", ring: "32 95% 44%", sidebarPrimary: "32 95% 44%" },
+  "wedding-ledger": { primary: "30 25% 42%", ring: "30 25% 42%", sidebarPrimary: "30 25% 42%" },
+  "party-pop": { primary: "330 81% 60%", ring: "330 81% 60%", sidebarPrimary: "330 81% 60%" },
 };
 
 function applyPresentationTokenOverrides(root: HTMLElement, cssPreset?: string | null) {

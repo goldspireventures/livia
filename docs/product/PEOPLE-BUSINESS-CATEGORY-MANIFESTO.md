@@ -61,7 +61,7 @@ Hair, beauty, wellness, body-art, fitness, medspa, allied-health, pet-grooming, 
 | Mobile operators (van groomer, mobile detailer) | Travel buffer, geo | FIT |
 | Home/property consult-first trades | Multi-day job, deposit binds scope | FIT + partner |
 | Creative studio hire (photo, podcast, rehearsal) | Room + equipment | FIT |
-| Wedding/event vendors | Date-bound, multi-stakeholder | FIT |
+| Wedding/event vendors | Date-bound, multi-stakeholder; consult-first | FIT — [`EVENT-VENDORS-VERTICAL-PROGRAM.md`](./EVENT-VENDORS-VERTICAL-PROGRAM.md) |
 | Corporate wellness B2B | Payer ≠ attendee | Org-shape |
 | Vet consult lite (not full PMS) | Pet + clinical gate | PARTNER |
 | Education/coaching sessions | Package consumption | Defer V11 until OS dominates |

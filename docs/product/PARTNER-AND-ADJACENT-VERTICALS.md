@@ -54,12 +54,27 @@
 | Mobile groomer / mobile detailer | Travel buffer, geo, van as unit | FIT |
 | Home trades consult-first | Multi-day job, scope deposit | FIT + partner |
 | Creative studio hire | Room + equipment slots | FIT |
-| Wedding / event vendors | Date-bound, multi-stakeholder | FIT |
+| Wedding / event vendors | Date-bound, multi-stakeholder; enquiry → quote | FIT — **[program](./EVENT-VENDORS-VERTICAL-PROGRAM.md)** |
 | Corporate wellness B2B | Payer ≠ attendee | Org-shape |
 | Vet consult lite | Pet + clinical gate | PARTNER |
 | Coaching / education sessions | Package consumption | Defer |
 
 Each Ring 2 bet gets a **one-page brief** before `businessVerticalSchema` changes — template: L0 sentence + wow table + honest out-of-scope.
+
+### V12 — Event vendors & decor (Ring 2 — program complete)
+
+| | |
+|-|-|
+| **Nearest pack** | wellness (packages, couples) + medspa (deposits) |
+| **Sell** | Consult-first OS — enquire, draft quote, send, track to booked |
+| **Do not** | Enterprise CRM, planner multi-vendor OS, instant book as default |
+| **Platform primitive** | [`CONSULT-FIRST-WORKFLOW-SPEC.md`](./CONSULT-FIRST-WORKFLOW-SPEC.md) |
+| **Full program** | [`EVENT-VENDORS-VERTICAL-PROGRAM.md`](./EVENT-VENDORS-VERTICAL-PROGRAM.md) |
+| **Livia today** | No enum; first design partner drives Phase 1–2 build |
+
+**Gate to code vertical:** V2 exits + consult-first kernel shipped + design partner live on enquire → quote path.
+
+**Probably later (this vertical only):** contracts / e-sign; inventory counts for hire sub-segment.
 
 ---
 
@@ -81,4 +96,5 @@ These are **not verticals** — they attach to all packs when shipped.
 
 | Date | Change |
 |------|--------|
+| 2026-06-10 | V12 event vendors program + consult-first spec linked |
 | 2026-06-01 | Initial partner/expansion doc |

@@ -1,17 +1,22 @@
 import { getDashboardBaseUrl } from "@/lib/dashboard-url";
 
+/** Founder sign-in on web — bypasses demo launcher when demo mode is on. */
+export function webFounderHandoffUrl(path: string): string {
+  const base = getDashboardBaseUrl();
+  const params = new URLSearchParams({ beta: "1", redirect_url: path });
+  return `${base}/sign-in?${params.toString()}`;
+}
+
 /** Same business row + onboardingState — continue on web dashboard. */
 export function webOnboardingUrl(businessId?: string): string {
-  const base = getDashboardBaseUrl();
   const q = businessId ? `?businessId=${encodeURIComponent(businessId)}` : "";
-  return `${base}/onboarding${q}`;
+  return webFounderHandoffUrl(`/onboarding${q}`);
 }
 
 export function webOnboardingSettingsUrl(tab = "shop", businessId?: string): string {
-  const base = getDashboardBaseUrl();
   const q = new URLSearchParams({ tab });
   if (businessId) q.set("businessId", businessId);
-  return `${base}/settings?${q.toString()}`;
+  return webFounderHandoffUrl(`/settings?${q.toString()}`);
 }
 
 export function webMyLiviaUrl(): string {

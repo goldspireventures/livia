@@ -67,6 +67,16 @@ export const GUEST_HUB_COPY = {
     "Demo guest Mary — sign in with +353 87 100 0001. She's linked to hair, beauty, wellness, tattoo, fitness, pet, and auto demo studios.",
 } as const;
 
+/** Demo launcher — fresh founder self-serve (not demo roster). */
+export const DEMO_FRESH_FOUNDER_COPY = {
+  kicker: "Testing fresh flows",
+  title: "Create a new account & shop",
+  body: "Use a personal email (not @livia.io) — sign up, accept terms, then walk through real onboarding. Separate from demo roster logins below.",
+  ctaSignUp: "Sign up",
+  ctaOnboarding: "Onboarding",
+  endClientHint: "End clients: use the My Livia card below.",
+} as const;
+
 /** Demo launcher — end-client entry (no Clerk). */
 export const DEMO_GUEST_CLIENT_COPY = {
   title: "Try it as a client",

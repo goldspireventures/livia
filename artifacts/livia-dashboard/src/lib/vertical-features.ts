@@ -10,6 +10,8 @@ import {
   Sparkles,
   Stethoscope,
   Users,
+  ClipboardList,
+  FileText,
 } from "lucide-react";
 
 export type VerticalHomeModule = {
@@ -71,6 +73,20 @@ const MODULES: Record<string, Omit<VerticalHomeModule, "id">> = {
     icon: Sparkles,
     testId: "home-module-liv",
   },
+  enquiries: {
+    title: "Inbox",
+    description: "Leads and DMs — quote from one place.",
+    href: "/inbox",
+    icon: ClipboardList,
+    testId: "home-module-enquiries",
+  },
+  quotes: {
+    title: "Quotes",
+    description: "Draft and send quotes to clients.",
+    href: "/quotes",
+    icon: FileText,
+    testId: "home-module-quotes",
+  },
 };
 
 const PLAYBOOK_MODULE_ALIAS: Record<string, string> = {
@@ -124,6 +140,7 @@ export const VERTICAL_LIV_TOOL_HINTS: Record<BusinessVertical, string[]> = {
   "allied-health": ["find_slots", "create_booking", "reschedule_booking", "lookup_customer"],
   "pet-grooming": ["find_slots", "create_booking", "send_message", "lookup_customer"],
   "automotive-detailing": ["find_slots", "create_booking", "send_message"],
+  "event-vendors": ["send_message", "morning_briefing", "lookup_customer"],
 };
 
 export function livToolHintsForVertical(

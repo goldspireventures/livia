@@ -28,6 +28,9 @@ import {
   LayoutGrid,
   Stethoscope,
   ClipboardList,
+  MessageSquare,
+  FileText,
+  Globe,
 } from "lucide-react";
 import { businessVocabulary, resolveWellnessPersonaHome } from "@workspace/policy";
 import type { PersonaKind } from "./persona";
@@ -191,6 +194,21 @@ const NAV_POOL: RitualNavItem[] = [
     personas: ["org_admin", "owner", "manager"],
   },
   {
+    ritualName: "Quotes",
+    href: "/quotes",
+    icon: FileText,
+    min: "STAFF",
+    verticals: ["event-vendors"],
+  },
+  {
+    ritualName: "Website",
+    href: "/event-site",
+    icon: Globe,
+    min: "ADMIN",
+    verticals: ["event-vendors"],
+    personas: ["org_admin", "owner", "manager"],
+  },
+  {
     ritualName: "Mini store",
     href: "/beauty-store",
     icon: Sparkles,
@@ -257,6 +275,21 @@ export function personaNavOrder(
       "/services",
       "/settings",
     ];
+  }
+  if (businessVertical === "event-vendors" && (persona === "owner" || persona === "org_admin")) {
+    return [
+      "/dashboard",
+      "/inbox",
+      "/quotes",
+      "/event-site",
+      "/services",
+      "/customers",
+      "/toolkit",
+      "/settings",
+    ];
+  }
+  if (businessVertical === "event-vendors" && persona === "manager") {
+    return ["/inbox", "/quotes", "/dashboard", "/services", "/customers", "/settings"];
   }
   return PERSONA_NAV_ORDER[persona];
 }
@@ -330,6 +363,13 @@ const VERTICAL_NAV_LABELS: Record<string, Partial<Record<string, string>>> = {
     "/inbox": "Inbox",
     "/dashboard": "Today",
   },
+  "event-vendors": {
+    "/services": "Catalogue & pricing",
+    "/customers": "Clients",
+    "/inbox": "Inbox",
+    "/dashboard": "Today",
+    "/bookings": "Event calendar",
+  },
 };
 
 export function getRitualNav(
@@ -352,6 +392,9 @@ export function getRitualNav(
     if (item.tiers && !item.tiers.includes(tier)) return false;
     if (item.verticals && businessVertical && !item.verticals.includes(businessVertical)) return false;
     if (item.verticals && !businessVertical) return false;
+    if (businessVertical === "event-vendors" && item.href === "/bookings") return false;
+    if (businessVertical === "event-vendors" && item.href === "/staff") return false;
+    if (businessVertical === "event-vendors" && item.href === "/lifecycle") return false;
     if (item.href === "/lifecycle" && opts?.showLifecycle === false) return false;
     if (RANK[effectiveRole] < RANK[item.min]) return false;
     if (item.personas && !item.personas.includes(persona)) return false;
@@ -396,6 +439,9 @@ export function pageRitualTitle(pathname: string, persona: PersonaKind): string 
   if (pathname === "/host") return "Host floor";
   if (pathname === "/brands") return "Brand portfolio";
   if (pathname === "/toolkit") return "Liv command";
+  if (pathname === "/enquiries") return "Enquiries";
+  if (pathname === "/quotes") return "Quotes";
+  if (pathname === "/event-site") return "Website";
   if (pathname === "/rota") return "Team rota";
   return null;
 }

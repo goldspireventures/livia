@@ -11,10 +11,17 @@ function isLocalDevApi(api: string): boolean {
 
 /** Web dashboard base for deep links (settings tabs, lifecycle, policy editor). */
 export function getDashboardBaseUrl(): string {
-  const explicit = process.env.EXPO_PUBLIC_DASHBOARD_URL?.replace(/\/+$/, "");
-  if (explicit) return explicit;
   const api = getApiBaseUrl().replace(/\/+$/, "");
-  if (api.includes(":3000")) return api.replace(":3000", ":5173");
+  const localDash = api.includes(":3000") ? api.replace(":3000", ":5173") : null;
+  const explicit = process.env.EXPO_PUBLIC_DASHBOARD_URL?.replace(/\/+$/, "");
+  if (explicit) {
+    // dev:device sets LAN API; .env may still point at staging — prefer local dashboard.
+    if (localDash && isLocalDevApi(api) && !isLocalDevApi(explicit)) {
+      return localDash;
+    }
+    return explicit;
+  }
+  if (localDash) return localDash;
   return "https://app.livia-hq.com";
 }
 

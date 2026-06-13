@@ -76,6 +76,13 @@ export const VERTICAL_PLAYBOOKS: Record<BusinessVertical, VerticalPlaybook> = {
     homeModules: ["timeline", "proposals"],
     publicCta: "Book your detail",
   },
+  "event-vendors": {
+    vertical: "event-vendors",
+    wedge: "Enquiry → draft quote → send — IG leads without DM chaos.",
+    heroSteps: ["Enquire form", "Draft from catalogue", "Send quote", "Track to booked"],
+    homeModules: ["enquiries", "quotes", "timeline"],
+    publicCta: "Get a quote",
+  },
 };
 
 export function getVerticalPlaybook(vertical: BusinessVertical): VerticalPlaybook {

@@ -137,6 +137,16 @@ export const VERTICAL_COVERAGE_REGISTRY: VerticalCoverageEntry[] = [
     demoSlug: "shine-studio-belfast",
     revenueNote: "EU valeting/detailing wedge.",
   },
+  {
+    docId: "V12",
+    label: "Event vendors & decor",
+    tier: "beta-preview",
+    codeVertical: "event-vendors",
+    nearestPack: "event-vendors",
+    demoSlug: "atelier-decor-dublin",
+    revenueNote:
+      "Consult-first: enquiry → quote → book. Design-partner decor operator; see EVENT-VENDORS-VERTICAL-PROGRAM.",
+  },
 ];
 
 export function listVerticalCoverage() {

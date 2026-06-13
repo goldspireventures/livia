@@ -95,6 +95,12 @@ const WEDGE_BEATS: Record<BusinessVertical, WedgeDemoBeat[]> = {
     { headline: "Reminder", detail: "Customer confirms from SMS.", cropHint: "sms" },
     { headline: "Today — bay schedule", detail: "What's in, what's next.", cropHint: "today" },
   ],
+  "event-vendors": [
+    { headline: "IG enquiry", detail: "Send one enquire link from DMs.", cropHint: "inbox" },
+    { headline: "Your event website", detail: "Gallery, services, and structured enquire — not a booking widget.", cropHint: "public-book" },
+    { headline: "Draft quote", detail: "Catalogue → tweak → send.", cropHint: "today" },
+    { headline: "Track to booked", detail: "Pipeline from new to booked.", cropHint: "sms" },
+  ],
 };
 
 /** Registry verticals shippable in demo grid (tier ≠ defer). */
@@ -120,6 +126,7 @@ const WEDGE_DEMO_DISPLAY_ORDER: BusinessVertical[] = [
   "allied-health",
   "pet-grooming",
   "automotive-detailing",
+  "event-vendors",
   "hair",
 ];
 

@@ -36,7 +36,7 @@ export function policiesFromBusiness(
     currency: biz.currency,
     locale: biz.locale,
     timezone: biz.timezone,
-    vertical: biz.vertical,
+    vertical: biz.vertical as import("@workspace/policy").BusinessVertical,
     tier: biz.tier,
     euRegion: biz.euRegion,
   };

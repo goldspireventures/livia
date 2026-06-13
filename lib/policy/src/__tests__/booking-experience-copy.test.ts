@@ -44,7 +44,7 @@ assert.ok(
 
 assert.match(
   pendingApprovalGuidance(PENDING_REASON_CODES.AWAITING_CONTINUITY, "wellness"),
-  /guest thread/i,
+  /health notes|follow up/i,
 );
 
 console.log("booking-experience-copy.test.ts ok");

@@ -115,6 +115,19 @@ const VERTICAL_PACKS_RAW: Record<BusinessVertical, VerticalPack> = {
       { name: "Maintenance wash", durationMinutes: 45, priceMinor: 4500, category: "Wash" },
     ],
   },
+  "event-vendors": {
+    vertical: "event-vendors",
+    label: "Event vendors & decor",
+    categoryAliases: ["event-decor", "wedding-decor", "party-styling", "event-vendor", "balloons"],
+    livVocabularyHint: "Use client, event date, theme. Consult-first — enquire before quoting.",
+    defaultStaff: [OWNER_STAFF("You", "#d97706")],
+    defaultServices: [
+      { name: "Balloon garland", durationMinutes: 0, priceMinor: 18000, category: "Balloons" },
+      { name: "Table centrepieces", durationMinutes: 0, priceMinor: 1200, category: "Tables" },
+      { name: "Backdrop styling", durationMinutes: 0, priceMinor: 25000, category: "Backdrops" },
+      { name: "Setup & delivery", durationMinutes: 0, priceMinor: 8000, category: "Logistics" },
+    ],
+  },
 };
 
 /** All packs validated via `defineVerticalPack()` (R3 hub factory). */

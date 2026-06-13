@@ -6,6 +6,7 @@ export type LivMemoryKind =
   | "note"
   | "preference"
   | "ritual"
+  | "procedural"
   | "pressure"
   | "therapist_pref"
   | "health_light";
@@ -91,4 +92,17 @@ export async function buildLivMemoryBlockForCustomer(
 
   const lines = rows.map((r) => `- [${r.kind}] ${r.content}`);
   return `\n\nCUSTOMER MEMORY (use naturally, do not invent beyond this):\n${lines.join("\n")}\n`;
+}
+
+export async function buildLivMemoryBlockForBusiness(businessId: string): Promise<string> {
+  const rows = await listLivMemoryForEntity({
+    businessId,
+    entityType: "business",
+    entityId: businessId,
+    limit: 10,
+  });
+  const ritual = rows.filter((r) => r.kind === "ritual" || r.kind === "note");
+  if (!ritual.length) return "";
+  const lines = ritual.map((r) => `- [${r.kind}] ${r.content}`);
+  return `\n\nBUSINESS MEMORY (owner rituals — respect, do not invent):\n${lines.join("\n")}\n`;
 }

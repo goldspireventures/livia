@@ -86,7 +86,7 @@ export default function OnboardingPage() {
         title: "Full Livia demo ready",
         description: "Opening demo gateway…",
       });
-      window.location.href = "/demo";
+      window.location.href = "/demo/founder";
     } catch (err: unknown) {
       toast({
         title: "Could not load demo data",
@@ -127,7 +127,7 @@ export default function OnboardingPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-2 sm:flex-row">
-            <Link href="/demo" className="flex-1">
+            <Link href="/demo/founder" className="flex-1">
               <Button type="button" variant="default" className="w-full">
                 Open demo launcher
               </Button>

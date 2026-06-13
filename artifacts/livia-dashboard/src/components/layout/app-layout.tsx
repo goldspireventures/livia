@@ -275,6 +275,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
     };
   }, [business, tenantCapabilities?.readinessFacts?.staffCount, tenantExperience]);
 
+  const vertical =
+    (business as { vertical?: string } | null)?.vertical ?? tenantExperience?.vertical ?? null;
+
   const items = filterWellnessNavItems(
     filterNavItemsByOperatorShape(
       filterNavItemsByCapabilities(
@@ -289,6 +292,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           { showLifecycle },
         ),
         tenantCapabilities?.platformCapabilities,
+        vertical,
       ),
       operatorSignals,
     ),
@@ -316,8 +320,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
     return labels;
   }, [handedOffCount, pendingCount]);
 
-  const vertical =
-    (business as { vertical?: string } | null)?.vertical ?? tenantExperience?.vertical ?? null;
   const appearanceDraft = readAppearancePreviewParams(previewSearch);
   const storedCssPreset =
     appearanceDraft.cssPreset ?? tenantExperience?.presentation?.cssPreset ?? "platform-default";

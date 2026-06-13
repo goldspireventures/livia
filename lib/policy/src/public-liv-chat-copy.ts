@@ -90,6 +90,15 @@ const PUBLIC_LIV_CHAT: Record<BusinessVertical, PublicLivChatCopy> = {
     inputPlaceholder: "Ask about services, bays, or availability…",
     assistantSubtitle: "Liv · booking assistant",
   },
+  "event-vendors": {
+    suggestedPrompts: [
+      "I'd like a quote for a birthday party",
+      "What decor packages do you offer?",
+      "Can you style a wedding reception?",
+    ],
+    inputPlaceholder: "Ask about your event, theme, or get the enquire link…",
+    assistantSubtitle: "Liv · enquiry assistant",
+  },
 };
 
 const DEFAULT_PUBLIC = PUBLIC_LIV_CHAT.wellness;

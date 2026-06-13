@@ -4,10 +4,12 @@ import {
   defaultInboxQueueLens,
   inboxScreenTitle,
   INBOX_QUEUE_LENS_LABELS,
+  isUnifiedConsultInboxVertical,
   matchesInboxQueueLens,
   inboxMultiChannelListHint,
   type InboxQueueLens,
 } from "@workspace/policy";
+import EventVendorEnquiriesScreen from "../enquiries";
 import { Feather } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
@@ -59,11 +61,20 @@ function formatRelative(dateStr: string): string {
 }
 
 export default function InboxScreen() {
+  const { currentBusiness } = useBusiness();
+  const tenantVertical = (currentBusiness as { vertical?: string } | undefined)?.vertical;
+  if (isUnifiedConsultInboxVertical(tenantVertical)) {
+    return <EventVendorEnquiriesScreen />;
+  }
+  return <MessagingInboxScreen />;
+}
+
+function MessagingInboxScreen() {
+  const { currentBusiness } = useBusiness();
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const params = useLocalSearchParams<{ conversationId?: string }>();
-  const { currentBusiness } = useBusiness();
   const { kind: persona } = usePersona();
   const businessId = currentBusiness?.id ?? "";
   const bizMeta = currentBusiness as { vertical?: string; category?: string } | undefined;

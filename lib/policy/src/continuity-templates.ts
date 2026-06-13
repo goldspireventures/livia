@@ -165,6 +165,17 @@ export const CONTINUITY_TEMPLATES: Record<BusinessVertical, ContinuityTemplate> 
       "Send photos of condition or registration area if requested.",
     ],
   },
+  "event-vendors": {
+    smsBody: (a) =>
+      BASE_SMS(a, "Reply with your event date, guest count, and theme — or use our enquire link."),
+    emailSubject: (a) => `Your event enquiry — ${a.businessName}`,
+    emailBody: (a) =>
+      `${BASE_SMS(a, "We'll send a quote once we have your event details.")}`,
+    publicNextSteps: () => [
+      "We'll review your enquiry and send a quote within 24 hours.",
+      "Check your email or WhatsApp for our reply.",
+    ],
+  },
 };
 
 const DE_HAIR: ContinuityTemplate = {

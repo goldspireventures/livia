@@ -111,6 +111,12 @@ const STARTER_SERVICES: Record<BusinessVertical, StarterPackServiceTemplate[]> =
   "allied-health": ALLIED_HEALTH_STARTER,
   "pet-grooming": PET_STARTER,
   "automotive-detailing": AUTO_STARTER,
+  "event-vendors": [
+    { name: "Balloon garland", durationMinutes: 0, priceMinor: 18000, category: "Balloons" },
+    { name: "Table centrepieces", durationMinutes: 0, priceMinor: 1200, category: "Tables" },
+    { name: "Backdrop styling", durationMinutes: 0, priceMinor: 25000, category: "Backdrops" },
+    { name: "Setup & delivery", durationMinutes: 0, priceMinor: 8000, category: "Logistics" },
+  ],
 };
 
 const STARTER_OFFERS: Record<BusinessVertical, Omit<VerticalStarterPackOffer, "serviceCount">> = {
@@ -151,6 +157,10 @@ const STARTER_OFFERS: Record<BusinessVertical, Omit<VerticalStarterPackOffer, "s
   "automotive-detailing": {
     label: "Start with a template service menu",
     description: "Wash through full detail packages — match bay time and pricing.",
+  },
+  "event-vendors": {
+    label: "Start with a decor catalogue",
+    description: "Balloons, backdrops, table styling — edit prices and units after.",
   },
 };
 

@@ -2,6 +2,7 @@ import { createClerkClient } from "@clerk/express";
 import { and, eq, inArray } from "drizzle-orm";
 import { db, businessesTable, businessMembershipsTable, staffTable } from "@workspace/db";
 import { DEMO_ROLE_EMAILS, demoRoleEmailForSlug, type DemoTenantRole } from "@workspace/demo-logins";
+import { listDemoTenantRosterRoles } from "@workspace/policy";
 import { mapWithConcurrency, withClerkRetry } from "../lib/async-pool";
 import { generateId } from "../lib/id";
 import {
@@ -18,7 +19,7 @@ import { updateStaff } from "./staff.service";
 import { buildPlatformLegalAcceptance, hasCurrentPlatformLegal } from "../lib/platform-legal-gate";
 import { usersTable } from "@workspace/db";
 
-const ROSTER_ROLES: DemoTenantRole[] = ["owner", "manager", "desk", "staff"];
+const ALL_ROSTER_ROLES: DemoTenantRole[] = ["owner", "manager", "desk", "staff"];
 
 function getClerk() {
   const secretKey = process.env.CLERK_SECRET_KEY;
@@ -112,13 +113,19 @@ export async function seedDemoBusinessRosters(opts?: {
 }): Promise<{ accounts: number; slugs: number }> {
   const slugFilter = opts?.slugs?.length ? opts.slugs : [...DEMO_WORLD_SLUGS];
   const rows = await db
-    .select({ id: businessesTable.id, slug: businessesTable.slug, name: businessesTable.name })
+    .select({
+      id: businessesTable.id,
+      slug: businessesTable.slug,
+      name: businessesTable.name,
+      tier: businessesTable.tier,
+    })
     .from(businessesTable)
     .where(inArray(businessesTable.slug, slugFilter));
 
-  const tasks = rows.flatMap((row) =>
-    ROSTER_ROLES.map((role) => ({ row, role })),
-  );
+  const tasks = rows.flatMap((row) => {
+    const roles = listDemoTenantRosterRoles({ tier: row.tier });
+    return roles.map((role) => ({ row, role }));
+  });
 
   const results = await mapWithConcurrency(tasks, 1, async ({ row, role }) => {
       const def = buildDemoRoleDef(row.slug, role, row.name);
@@ -156,8 +163,13 @@ export type DemoRosterEntry = {
   personaId: DemoPersonaId;
 };
 
-export function rosterEntriesForSlug(slug: string, businessName: string): DemoRosterEntry[] {
-  return ROSTER_ROLES.map((role) => {
+export function rosterEntriesForSlug(
+  slug: string,
+  businessName: string,
+  tier?: string | null,
+): DemoRosterEntry[] {
+  const roles = listDemoTenantRosterRoles({ tier });
+  return roles.map((role) => {
     const def = buildDemoRoleDef(slug, role, businessName);
     return {
       role,
@@ -238,6 +250,14 @@ export function demoScenarioSpotlights(): Array<{
       title: "Medspa",
       description: "Clinical intake, consent step, mandate defaults",
       slug: "clarity-medspa-dublin",
+      structure: "solo",
+      group: "vertical",
+    },
+    {
+      id: "vertical-event-vendors",
+      title: "Event decor (solo)",
+      description: "Enquire → quote → booked — one owner, consult-first pipeline",
+      slug: "atelier-decor-dublin",
       structure: "solo",
       group: "vertical",
     },

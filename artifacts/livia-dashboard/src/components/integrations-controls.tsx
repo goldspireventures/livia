@@ -328,7 +328,7 @@ export default function IntegrationsControls() {
         description={
           deliveryCount > 0
             ? `${deliveryCount} recent deliver${deliveryCount === 1 ? "y" : "ies"} — troubleshooting only.`
-            : "No deliveries yet — opens when you add a webhook."
+            : "No deliveries yet."
         }
         defaultOpen={false}
       >

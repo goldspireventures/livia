@@ -65,6 +65,11 @@ export const VERTICAL_ONBOARDING_EXTRAS: Record<BusinessVertical, VerticalOnboar
     goLiveExtras: ["Vehicle size / package tiers reflected in service durations."],
     postGoLive: [],
   },
+  "event-vendors": {
+    createBusinessHint: "Add your decor catalogue and share your enquire link from Instagram.",
+    goLiveExtras: ["Set deposit % and terms before sending your first quote."],
+    postGoLive: ["Add quote templates for your most common event types."],
+  },
 };
 
 export function getVerticalOnboardingExtras(

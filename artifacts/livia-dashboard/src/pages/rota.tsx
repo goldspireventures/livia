@@ -347,7 +347,6 @@ export default function RotaPage() {
 
           <SettingsDisclosure
             title="Scheduled shifts"
-            description="Shift history — expand when you need to review or remove entries."
             defaultOpen={false}
           >
             <Card className="border-0 shadow-none">

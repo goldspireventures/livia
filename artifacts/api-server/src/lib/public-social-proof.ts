@@ -67,6 +67,14 @@ const PROOF_BY_VERTICAL: Record<BusinessVertical, PublicSocialProof> = {
     reviewCount: 61,
     highlights: ["Bay time accurate — car came back gleaming.", "Package picker by vehicle size was clear."],
   },
+  "event-vendors": {
+    rating: 4.98,
+    reviewCount: 94,
+    highlights: [
+      "Quote came back next day — exactly what we discussed on Instagram.",
+      "Setup was flawless; the blush and gold theme was perfect.",
+    ],
+  },
 };
 
 export function socialProofForVertical(vertical?: string | null): PublicSocialProof | null {

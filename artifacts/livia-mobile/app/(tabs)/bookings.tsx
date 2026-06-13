@@ -31,7 +31,7 @@ import { SPRING_QUICK } from "@/constants/motion";
 import { fonts, type } from "@/constants/typography";
 import { useBusiness } from "@/contexts/BusinessContext";
 import { useTenantExperience } from "@/hooks/useTenantExperience";
-import { verticalOperationalCopy } from "@workspace/policy";
+import { pendingApprovalsEmptyHint, pendingApprovalsEmptyLine, verticalOperationalCopy } from "@workspace/policy";
 import {
   MobileBookingsMorphHeader,
   MobileBookingsMorphLayout,
@@ -325,7 +325,7 @@ export default function BookingsScreen() {
                 isLoading
                   ? undefined
                   : statusFilter === "PENDING"
-                    ? "Nothing waiting for approval — Liv will queue edge cases here."
+                    ? `${pendingApprovalsEmptyLine()} ${pendingApprovalsEmptyHint()}`
                     : `No ${pack.serviceNoun.toLowerCase()}s for this period. Try week view or tap + to book.`
               }
               isLoading={isLoading}
@@ -379,7 +379,7 @@ export default function BookingsScreen() {
               isLoading
                 ? undefined
                 : statusFilter === "PENDING"
-                  ? "Nothing waiting for approval — Liv will queue edge cases here."
+                  ? `${pendingApprovalsEmptyLine()} ${pendingApprovalsEmptyHint()}`
                   : `No ${pack.serviceNoun.toLowerCase()}s for this period. Try week view or tap + to book.`
             }
             isLoading={isLoading}

@@ -32,6 +32,7 @@ export * from "./booking/medspa";
 export * from "./booking/booking-guest-access";
 export * from "./booking/medical-intake-guest-access";
 export * from "./booking/visit-feedback";
+export * from "./booking/consult-first";
 
 // Conversations (modality-agnostic)
 export * from "./conversations/conversations";

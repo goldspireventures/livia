@@ -126,6 +126,17 @@ export const VERTICAL_THEMES: Record<
     radius: "md",
     display: "sans",
   },
+  "event-vendors": {
+    primary: "32 95% 44%",
+    accent: "32 80% 38%",
+    ring: "32 95% 44%",
+    heroFrom: "32 25% 12%",
+    heroTo: "20 30% 14%",
+    motion: "calm",
+    shell: "warm",
+    radius: "xl",
+    display: "serif",
+  },
 };
 
 export function applyVerticalTheme(vertical?: string | null, category?: string | null) {

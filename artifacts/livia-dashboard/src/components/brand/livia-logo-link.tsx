@@ -17,7 +17,7 @@ type Props = {
 function resolveHref(home: LogoHome, href?: string): string {
   if (href) return href;
   if (home === "dashboard") return "/dashboard";
-  if (home === "demo") return "/demo";
+  if (home === "demo") return "/demo/founder";
   return getMarketingOrigin();
 }
 

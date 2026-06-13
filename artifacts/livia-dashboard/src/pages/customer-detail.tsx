@@ -20,6 +20,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Mail, Phone, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { GuestRelationshipPanel } from "@/components/customers/guest-relationship-panel";
+import { ClientConsultPipelinePanel } from "@/components/event-vendor/client-consult-pipeline-panel";
+import {
+  ownerClientNotesPlaceholder,
+  ownerClientProfileSubtitle,
+  showOwnerBookAppointmentCta,
+  showOwnerBookingHistoryPanel,
+  showOwnerConsultPipelinePanel,
+  showOwnerGuestRelationshipPanel,
+} from "@workspace/policy";
 import { LivMemoryPanel } from "@/components/customers/liv-memory-panel";
 import { GuestHistoryPanel } from "@/components/customers/guest-history-panel";
 import { CustomerPetsPanel } from "@/components/customer-pets-panel";
@@ -164,7 +173,7 @@ export default function CustomerDetailPage() {
     <OperationalPageShell
       data-testid="customer-detail-page"
       title={editing ? "Edit client" : "Client profile"}
-      subtitle={editing ? "Update contact details and notes" : "History and contact details"}
+      subtitle={editing ? "Update contact details and notes" : ownerClientProfileSubtitle(vertical)}
       width="lg"
       actions={
         <div className="flex items-center gap-2">
@@ -218,7 +227,7 @@ export default function CustomerDetailPage() {
               </div>
               <div className="space-y-2">
                 <Label>Notes</Label>
-                <Textarea {...register("notes")} placeholder="Preferences, allergies, colour formula…" data-testid="edit-notes" />
+                <Textarea {...register("notes")} placeholder={ownerClientNotesPlaceholder(vertical)} data-testid="edit-notes" />
               </div>
               <div className="flex gap-2 justify-end">
                 <Button type="button" variant="outline" onClick={() => setEditing(false)}>
@@ -324,11 +333,17 @@ export default function CustomerDetailPage() {
             </CardContent>
           </Card>
 
-          <GuestRelationshipPanel
-            businessId={bid}
-            customerId={cid}
-            customerPhone={c.phone}
-          />
+          {showOwnerGuestRelationshipPanel(vertical) ? (
+            <GuestRelationshipPanel
+              businessId={bid}
+              customerId={cid}
+              customerPhone={c.phone}
+            />
+          ) : null}
+
+          {showOwnerConsultPipelinePanel(vertical) ? (
+            <ClientConsultPipelinePanel businessId={bid} customerId={cid} />
+          ) : null}
 
           {isBeauty ? (
             <BeautyClientPanel
@@ -363,14 +378,22 @@ export default function CustomerDetailPage() {
           <GuestHistoryPanel
             businessId={bid}
             customerId={cid}
-            recentBookings={c.recentBookings}
+            recentBookings={showOwnerBookingHistoryPanel(vertical) ? c.recentBookings : []}
+            vertical={vertical}
           />
 
-          {canEdit && (
+          {showOwnerBookAppointmentCta(vertical) && canEdit ? (
             <Link href={`/bookings?create=1&customerId=${cid}`}>
               <Button className="w-full">Book appointment</Button>
             </Link>
-          )}
+          ) : null}
+          {showOwnerConsultPipelinePanel(vertical) && canEdit ? (
+            <Link href="/inbox">
+              <Button className="w-full" variant="outline">
+                Open inbox
+              </Button>
+            </Link>
+          ) : null}
         </>
       )}
       </div>

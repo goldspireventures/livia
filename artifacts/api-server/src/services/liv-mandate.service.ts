@@ -34,7 +34,9 @@ export async function getLivMandateForBusiness(businessId: string) {
   const biz = await getBusinessById(businessId);
   if (!biz) return null;
   const mandate = readMandateFromPolicy(biz.operationalPolicy, biz.vertical);
-  const defaults = mandateDefaultsForVertical(biz.vertical);
+  const defaults = mandateDefaultsForVertical(
+    biz.vertical as import("@workspace/policy").BusinessVertical,
+  );
   return {
     mandate,
     defaults,

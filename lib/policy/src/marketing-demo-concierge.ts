@@ -11,6 +11,7 @@ export const MARKETING_DEMO_WEDGE_UNLOCK_ORDER: readonly BusinessVertical[] = [
   "wellness",
   "hair",
   "medspa",
+  "event-vendors",
 ] as const;
 
 /**
@@ -26,6 +27,7 @@ export const MARKETING_DEMO_WEDGE_PIPELINE_ORDER: readonly BusinessVertical[] = 
   "allied-health",
   "pet-grooming",
   "automotive-detailing",
+  "event-vendors",
 ] as const;
 
 /**
@@ -93,6 +95,11 @@ const CONCIERGE_COPY: Partial<
     title: "Shine Studio · Belfast",
     description: "Bay scheduling and vehicle notes.",
     imagePath: "/demo/portal-automotive.jpg",
+  },
+  "event-vendors": {
+    title: "Atelier Decor · Dublin",
+    description: "Enquire → quote → booked — event styling without DM chaos.",
+    imagePath: "/demo/portal-events.jpg",
   },
 };
 

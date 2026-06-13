@@ -29,7 +29,7 @@ export function AmbientHalo({ persona }: { persona: Persona }) {
 export function BackToGateway({ accent }: { accent: Persona["accent"] }) {
   const a = ACCENT_CLASSES[accent];
   return (
-    <Link href="/demo">
+    <Link href="/demo/founder">
       <div
         className={`inline-flex items-center gap-1.5 rounded-full border ${a.border} bg-background/60 backdrop-blur-md px-3 py-1.5 text-[11px] font-mono text-muted-foreground hover:text-foreground hover-elevate cursor-pointer`}
         data-testid="demo-back-to-gateway"

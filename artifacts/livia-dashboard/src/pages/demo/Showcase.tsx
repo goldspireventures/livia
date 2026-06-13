@@ -641,7 +641,7 @@ export default function Showcase() {
   }, [persona, setPersona]);
 
   if (!persona) {
-    return <Redirect to="/demo" />;
+    return <Redirect to="/demo/founder" />;
   }
 
   switch (persona.id) {

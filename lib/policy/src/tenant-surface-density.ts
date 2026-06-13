@@ -8,6 +8,7 @@ import {
   ownerHomeUncapturedDemand,
   resolveCommerceOwnerBriefingCta,
 } from "./commerce-briefing";
+import { isConsultFirstVertical } from "./client-profile-policy";
 
 export {
   ownerHomeCommerceNeedsAttention,
@@ -43,7 +44,10 @@ export type OwnerHomeKpiId =
   | "depositsGap"
   | "fillsDue"
   | "colourDayBlocks"
-  | "medspaConsentQueue";
+  | "medspaConsentQueue"
+  | "newEnquiries"
+  | "quotedEnquiries"
+  | "staleQuotes";
 
 export type OwnerHomeCommerceSignals = {
   capturedMinor30d?: number;
@@ -52,20 +56,33 @@ export type OwnerHomeCommerceSignals = {
 };
 
 /** KPI chips on owner home — only mount when they carry signal (no empty inbox / confirm rows). */
-export function resolveOwnerHomeKpiChips(signals: {
-  todayBookings: number;
-  pendingCount: number;
-  handedOffCount: number;
-  atRiskCount?: number;
-  lowFeedbackCount?: number;
-  capturedMinor30d?: number;
-  paymentCount30d?: number;
-  confirmedCount?: number;
-  weekBookings?: number;
-  fillsDueCount?: number;
-  colourDayBlocks?: number;
-  medspaConsentQueueCount?: number;
-}): OwnerHomeKpiId[] {
+export function resolveOwnerHomeKpiChips(
+  signals: {
+    todayBookings: number;
+    pendingCount: number;
+    handedOffCount: number;
+    atRiskCount?: number;
+    lowFeedbackCount?: number;
+    capturedMinor30d?: number;
+    paymentCount30d?: number;
+    confirmedCount?: number;
+    weekBookings?: number;
+    fillsDueCount?: number;
+    colourDayBlocks?: number;
+    medspaConsentQueueCount?: number;
+    newEnquiries?: number;
+    quotedEnquiries?: number;
+    staleQuotes?: number;
+  },
+  vertical?: string | null,
+): OwnerHomeKpiId[] {
+  if (isConsultFirstVertical(vertical)) {
+    const chips: OwnerHomeKpiId[] = ["newEnquiries", "quotedEnquiries"];
+    if (Math.max(0, signals.staleQuotes ?? 0) > 0) chips.push("staleQuotes");
+    if (Math.max(0, signals.handedOffCount) > 0) chips.push("inboxHandoffs");
+    return chips;
+  }
+
   const chips: OwnerHomeKpiId[] = ["todayBookings"];
   if (Math.max(0, signals.colourDayBlocks ?? 0) > 0) chips.push("colourDayBlocks");
   if (Math.max(0, signals.medspaConsentQueueCount ?? 0) > 0) chips.push("medspaConsentQueue");
@@ -174,7 +191,21 @@ export function resolveOwnerHomeModuleLayout(signals: {
   homePendingCount?: number;
   /** When true, pending is already on the today schedule strip — skip the pending card. */
   pendingSurfacedElsewhere?: boolean;
+  /** Consult-first vertical — pipeline replaces booking pending modules. */
+  consultFirst?: boolean;
+  newEnquiries?: number;
+  staleQuotes?: number;
+  prepTasksDue?: number;
 }): OwnerHomeModuleLayout {
+  if (signals.consultFirst) {
+    const n = Math.max(0, signals.newEnquiries ?? 0);
+    const s = Math.max(0, signals.staleQuotes ?? 0);
+    const p = Math.max(0, signals.prepTasksDue ?? 0);
+    const i = Math.max(0, signals.openInboxCount);
+    if (n === 0 && s === 0 && p === 0 && i === 0) return { mode: "all_clear" };
+    return { mode: "single", focus: "inbox" };
+  }
+
   const homePending = Math.max(0, signals.homePendingCount ?? signals.pendingCount);
   const showHomePending = homePending > 0 && !signals.pendingSurfacedElsewhere;
   const i = Math.max(0, signals.openInboxCount);
@@ -250,7 +281,29 @@ export function resolveMobileOwnerLivStack(signals: {
   handoffCount: number;
   onboardingPercent: number;
   isFirstRun: boolean;
+  consultFirst?: boolean;
+  newEnquiries?: number;
+  staleQuotes?: number;
 }): MobileOwnerLivStackLayout {
+  if (signals.consultFirst) {
+    return {
+      showSectionLabel: false,
+      showBriefing: false,
+      showActBanner: false,
+      showMoments: false,
+      showIncidents: false,
+      showProposals: false,
+      showStuckContinuity: false,
+      showIntelligenceHub: false,
+      showVisitFeedback: false,
+      showCapabilityReadiness: signals.onboardingPercent < 100,
+      showLivOps: false,
+      showActivityFeed: false,
+      showVerticalInsights: false,
+      showVerticalShortcuts: false,
+    };
+  }
+
   if (signals.isFirstRun) {
     return {
       showSectionLabel: false,

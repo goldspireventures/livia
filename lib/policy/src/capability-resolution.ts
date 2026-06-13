@@ -45,6 +45,7 @@ export const VERTICAL_PLATFORM_CAPABILITY_MAP: Record<BusinessVertical, string[]
   "allied-health": ["bookings", "availability", "messaging"],
   "pet-grooming": ["bookings", "availability", "messaging", "reviews"],
   "automotive-detailing": ["bookings", "availability", "messaging"],
+  "event-vendors": ["messaging", "deposits"],
 };
 
 export type CapabilityReadinessFacts = {

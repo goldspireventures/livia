@@ -150,6 +150,14 @@ const BY_VERTICAL: Partial<Record<BusinessVertical, GuestPublicExperience>> = {
     ...defaultGuestPublic("automotive-detailing"),
     guardSectionTitle: "Your vehicle",
   },
+  "event-vendors": {
+    ...defaultGuestPublic("event-vendors"),
+    heroTitle: "Get a quote",
+    careNotes: [
+      "Share your event date, guest count, and theme so we can quote accurately.",
+      "We'll reply by email or WhatsApp — whichever you prefer.",
+    ],
+  },
   "body-art": {
     ...defaultGuestPublic("body-art"),
     heroTitle: "Book a session",

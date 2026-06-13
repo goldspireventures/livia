@@ -30,6 +30,8 @@ export const servicesTable = pgTable(
     requiresPatchTest: boolean("requires_patch_test").notNull().default(false),
     aftercareInstructions: text("aftercare_instructions"),
     linkedRetailProductId: text("linked_retail_product_id"),
+    /** Consult-first catalogue unit — flat, per_guest, per_table, per_item, per_metre */
+    quoteUnit: text("quote_unit"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

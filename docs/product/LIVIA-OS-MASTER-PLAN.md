@@ -49,7 +49,7 @@
 | **Home services** (cleaning, trades) | Travel time, job slots | Route-aware late, deposit by job size |
 | **Education / tutoring** | Term packages | Parent + student, cancellation policy |
 | **Childcare / classes** | Guardian booking | Pickup auth, allergy fields |
-| **Events / venue hire** | Slot + capacity | Package tiers, deposit schedules |
+| **Events / venue hire** | Slot + capacity; consult-first | Enquiry → quote → book — [`EVENT-VENDORS-VERTICAL-PROGRAM.md`](./EVENT-VENDORS-VERTICAL-PROGRAM.md) |
 | **Professional services** (legal, accounting) | Appointment + intake | Intake forms, document upload |
 | **Home care / nursing** | Recurring visits | Carer rota, family portal read-only |
 | **Hospitality spa (hotel)** | Room + therapist | Multi-resource packages (extends wellness) |

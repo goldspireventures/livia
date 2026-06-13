@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { refundLinkedInboxBannerBody } from "@workspace/policy";
 import { AlertTriangle, Inbox, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { resolutionSummary } from "@/lib/conversation-resolution";
@@ -56,8 +57,7 @@ export function BookingLinkedInboxBanner({
           Refund request open in inbox
         </p>
         <p className="text-xs text-muted-foreground leading-relaxed">
-          {linkedCase.summary ??
-            "The customer asked about a refund. Resolve the thread first — Liv will cancel or keep the appointment based on your outcome."}
+          {linkedCase.summary ?? refundLinkedInboxBannerBody()}
         </p>
         <Button size="sm" variant="default" asChild>
           <Link href={`/inbox?conversation=${linkedCase.conversationId}`}>

@@ -21,29 +21,39 @@ export function isWedgeHairTenant(vertical: string | null | undefined): boolean 
   return WEDGE_VERTICALS.has(v);
 }
 
+const ORG_TIERS = new Set(["franchise", "mid-chain", "chain"]);
+const PAYROLL_ELIGIBLE_TIERS = new Set(["studio", ...ORG_TIERS]);
+
+/** Consult-first verticals — no rota, payroll, or enterprise audit exports. */
+const NO_WORKFORCE_EXPORT_VERTICALS = new Set(["event-vendors"]);
+
 /** Peer insights is v1.5 — hide for hair wedge tenants. */
 export function showPeerInsightsForTenant(vertical: string | null | undefined): boolean {
   return !isWedgeHairTenant(vertical);
 }
 
-/** Enterprise audit export — franchise/chain tier or non-wedge vertical only. */
+/** Enterprise audit export — org tier only; never on consult-first verticals. */
 export function showEnterpriseToolkitExports(
   vertical: string | null | undefined,
   tier?: string | null,
 ): boolean {
+  const v = (vertical ?? "hair").toLowerCase();
   const t = tier ?? "solo";
-  if (t === "franchise" || t === "mid-chain" || t === "chain") return true;
-  return !isWedgeHairTenant(vertical);
+  if (NO_WORKFORCE_EXPORT_VERTICALS.has(v)) return false;
+  return ORG_TIERS.has(t);
 }
 
-/** Payroll export is v1.5 — hide on hair wedge solo/studio. */
+/** Payroll hours export — Studio+ with rota; never solo or consult-first. @see rfcs/0012-hours-to-payroll-export.md */
 export function showPayrollToolkitExport(
   vertical: string | null | undefined,
   tier?: string | null,
 ): boolean {
+  const v = (vertical ?? "hair").toLowerCase();
   const t = tier ?? "solo";
-  if (t === "franchise" || t === "mid-chain" || t === "chain") return true;
-  return !isWedgeHairTenant(vertical);
+  if (NO_WORKFORCE_EXPORT_VERTICALS.has(v)) return false;
+  if (ORG_TIERS.has(t)) return true;
+  if (!PAYROLL_ELIGIBLE_TIERS.has(t)) return false;
+  return !isWedgeHairTenant(v);
 }
 
 const ROUTE_VERTICALS: Record<string, readonly string[]> = {
@@ -51,6 +61,9 @@ const ROUTE_VERTICALS: Record<string, readonly string[]> = {
   "/classes": ["fitness"],
   "/design-proofs": ["body-art"],
   "/day-packages": ["allied-health", "wellness"],
+  "/enquiries": ["event-vendors"],
+  "/quotes": ["event-vendors"],
+  "/event-site": ["event-vendors"],
 };
 
 const ROUTE_TIERS: Record<string, readonly string[]> = {
@@ -88,6 +101,9 @@ export const API_FEATURE_VERTICALS: Record<string, readonly string[]> = {
   medspa: ["medspa"],
   "class-sessions": ["fitness"],
   "design-proofs": ["body-art"],
+  enquiries: ["event-vendors"],
+  quotes: ["event-vendors"],
+  "event-vendor": ["event-vendors"],
 };
 
 export function isBusinessApiFeatureAllowed(

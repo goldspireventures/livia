@@ -93,7 +93,7 @@ export const REVENUE_STREAMS = [
   {
     id: "addons",
     title: "Add-ons",
-    body: `Peer insights (${formatEur(PEER_INSIGHTS_ADDON_EUR_CENTS)}/mo), Nordic locale pack, vertical packs, enterprise SSO & audit export — you unlock these in-app when your plan allows.`,
+    body: `Peer insights (${formatEur(PEER_INSIGHTS_ADDON_EUR_CENTS)}/mo), Nordic locale pack, vertical packs, enterprise SSO & audit export — available on Growth and Chain plans.`,
   },
   {
     id: "migration",

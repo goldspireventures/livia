@@ -95,32 +95,32 @@ const WELLNESS_PENDING_LABELS: Record<string, string> = {
 
 const DEFAULT_PENDING_GUIDANCE: Record<string, string> = {
   [PENDING_REASON_CODES.AWAITING_STAFF_CONFIRM]:
-    "Assign or confirm the provider, then approve — Liv can message the client once you confirm.",
+    "Assign or confirm the provider, then approve — the client gets a confirmation once you approve.",
   [PENDING_REASON_CODES.AWAITING_DEPOSIT]:
     "Send the deposit link or mark paid, then approve so the slot stays held.",
   [PENDING_REASON_CODES.AWAITING_CONTINUITY]:
-    "Open the thread — Liv is waiting on the client. You can reply or approve if details are clear.",
+    "Guest hasn't confirmed photos or details yet — follow up in inbox or approve if you're satisfied.",
   [PENDING_REASON_CODES.AWAITING_POLICY_REVIEW]:
     "Review against your shop policy. Adjust time or service if needed, then approve.",
   [PENDING_REASON_CODES.CREATED_BY_LIV]:
-    "Liv matched availability and client request. Tap approve if it looks right — she learns from your yes/no.",
+    "Liv matched availability to the request — approve if time and service look right.",
   [PENDING_REASON_CODES.OWNER_MANUAL]:
-    "You or staff entered this manually. Confirm time, service, and client, then approve.",
+    "Confirm time, service, and client, then approve.",
 };
 
 const WELLNESS_PENDING_GUIDANCE: Record<string, string> = {
   [PENDING_REASON_CODES.AWAITING_STAFF_CONFIRM]:
-    "Assign a therapist or room, then confirm — Liv can text the guest once the session is locked.",
+    "Assign a therapist or room, then confirm — the guest gets a confirmation once locked.",
   [PENDING_REASON_CODES.AWAITING_DEPOSIT]:
     "Collect the prepaid deposit, then confirm so the room stays held.",
   [PENDING_REASON_CODES.AWAITING_CONTINUITY]:
-    "Open the guest thread — reply with intake questions or confirm once health notes are clear.",
+    "Health notes or arrival confirmation still outstanding — follow up or confirm when ready.",
   [PENDING_REASON_CODES.AWAITING_POLICY_REVIEW]:
     "Check your cancellation and reschedule policy for this package or voucher, then confirm.",
   [PENDING_REASON_CODES.CREATED_BY_LIV]:
-    "Liv matched room availability. Confirm if therapist and session length look right.",
+    "Liv matched room availability — confirm if therapist and session length look right.",
   [PENDING_REASON_CODES.OWNER_MANUAL]:
-    "Front desk or therapist entered this hold. Confirm room, session, and guest, then approve.",
+    "Confirm room, session, and guest, then approve.",
 };
 
 function pendingLabelMap(vertical: BusinessVertical): Record<string, string> {
@@ -160,12 +160,12 @@ export function pendingApprovalGuidance(
   const map = pendingGuidanceMap(key);
   if (reason && map[reason]) return map[reason];
   if (key === "wellness") {
-    return "Liv only escalates when a room hold or intake rule needs you — confirm, reschedule, or open the session.";
+    return "Confirm, reschedule, or follow up when a room hold or intake rule needs you.";
   }
   if (key === "beauty") {
-    return "Liv only escalates when a fill, deposit, or patch-test rule needs you — confirm or open the thread.";
+    return "Confirm, reschedule, or follow up when a deposit, fill, or patch-test rule needs you.";
   }
-  return "Liv only escalates when a rule needs a human — approve, edit, or open the booking for full context.";
+  return "Approve, edit, or follow up when a booking rule needs a human.";
 }
 
 export type BookingExperienceCopy = {
@@ -271,15 +271,15 @@ const BEAUTY_PENDING_LABELS: Record<string, string> = {
 
 const BEAUTY_PENDING_GUIDANCE: Record<string, string> = {
   [PENDING_REASON_CODES.AWAITING_STAFF_CONFIRM]:
-    "Assign the artist, then confirm — Liv can message the client once locked.",
+    "Assign the artist, then confirm — the client gets a confirmation once locked.",
   [PENDING_REASON_CODES.AWAITING_DEPOSIT]:
     "Send the deposit link or mark paid, then confirm the slot.",
   [PENDING_REASON_CODES.AWAITING_CONTINUITY]:
-    "Open the thread — patch test or style photos may still be needed.",
+    "Patch test or style reference still outstanding — follow up or confirm when ready.",
   [PENDING_REASON_CODES.AWAITING_POLICY_REVIEW]:
     "Check fill vs full-set policy and cancel window, then confirm.",
   [PENDING_REASON_CODES.CREATED_BY_LIV]:
-    "Liv matched availability from the DM. Confirm if treatment and duration look right.",
+    "Liv matched availability from the enquiry — confirm if treatment and duration look right.",
   [PENDING_REASON_CODES.OWNER_MANUAL]:
     "Confirm treatment, artist, and time, then approve.",
 };

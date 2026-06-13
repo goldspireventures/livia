@@ -25,6 +25,7 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import { isDemoRoute, isGatewayRoute, isGuestPublicRoute } from "@/lib/navigation";
 import { GUEST_HUB_TOKEN_KEY } from "@/lib/guest-hub";
 import { consumeMobileHomeRoute } from "@/lib/demo-session";
+import { fetchMeProfile } from "@/lib/platform-legal";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { LogBox } from "react-native";
@@ -80,6 +81,7 @@ function ClerkAuthBridge() {
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { isSignedIn, isLoaded, getToken } = useAuth();
+  const { businesses, isLoading: bizLoading, isDemoAccount } = useBusiness();
   const router = useRouter();
   const segments = useSegments();
 
@@ -97,18 +99,6 @@ function AuthGate({ children }: { children: React.ReactNode }) {
       router.replace("/");
       return;
     }
-    if (isSignedIn && (onGateway || onSignIn)) {
-      void (async () => {
-        const surface = await fetchOperatorSurface(() => getToken());
-        if (surface?.platformExec) {
-          router.replace("/_internal/desk" as never);
-          return;
-        }
-        const home = await consumeMobileHomeRoute();
-        router.replace((home ?? "/(tabs)") as never);
-      })();
-      return;
-    }
     if (!isSignedIn && onGateway) {
       void (async () => {
         const hubToken = await AsyncStorage.getItem(GUEST_HUB_TOKEN_KEY);
@@ -120,17 +110,9 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     }
     if (!isSignedIn && !onGateway && !onSignIn && !allowDemo && !onGuestPublic) {
       router.replace("/");
-    } else if (isSignedIn && onSignIn) {
-      void (async () => {
-        const surface = await fetchOperatorSurface(() => getToken());
-        if (surface?.platformExec) {
-          router.replace("/_internal/desk" as never);
-          return;
-        }
-        const home = await consumeMobileHomeRoute();
-        router.replace((home ?? "/(tabs)") as never);
-      })();
-    } else if (isSignedIn && !onExecDesk && !onDemo && !onGuestPublic && !onGateway) {
+      return;
+    }
+    if (isSignedIn && !onExecDesk && !onDemo && !onGuestPublic && !onGateway) {
       void (async () => {
         const surface = await fetchOperatorSurface(() => getToken());
         if (surface?.platformExec) {
@@ -139,6 +121,51 @@ function AuthGate({ children }: { children: React.ReactNode }) {
       })();
     }
   }, [isSignedIn, isLoaded, segments, router, getToken]);
+
+  // After auth, route founders with no shop to create-business (not empty tabs).
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn || bizLoading) return;
+    const onSignIn = segments[0] === "sign-in";
+    const onGateway = isGatewayRoute(segments);
+    if (!onSignIn && !onGateway) return;
+
+    void (async () => {
+      const surface = await fetchOperatorSurface(() => getToken());
+      if (surface?.platformExec) {
+        router.replace("/_internal/desk" as never);
+        return;
+      }
+      const home = await consumeMobileHomeRoute();
+      if (home) {
+        router.replace(home as never);
+        return;
+      }
+      if (!isDemoAccount && businesses.length === 0) {
+        try {
+          const me = await fetchMeProfile();
+          if (!me.platformLegalAccepted) {
+            router.replace("/legal-acceptance" as never);
+            return;
+          }
+        } catch {
+          router.replace("/legal-acceptance" as never);
+          return;
+        }
+        router.replace("/onboarding" as never);
+        return;
+      }
+      router.replace("/(tabs)" as never);
+    })();
+  }, [
+    isLoaded,
+    isSignedIn,
+    bizLoading,
+    businesses.length,
+    isDemoAccount,
+    segments,
+    router,
+    getToken,
+  ]);
 
   return <>{children}</>;
 }
@@ -176,6 +203,7 @@ function RootLayoutNav() {
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="sign-in" options={{ headerShown: false }} />
+          <Stack.Screen name="legal-acceptance" options={{ headerShown: false }} />
           <Stack.Screen name="my" options={{ headerShown: false }} />
           <Stack.Screen name="demo/index" options={{ headerShown: false }} />
           <Stack.Screen name="demo/wedge/[vertical]" options={{ headerShown: false }} />
@@ -200,6 +228,9 @@ function RootLayoutNav() {
           <Stack.Screen name="staff/invite" options={{ headerShown: false }} />
           <Stack.Screen name="staff/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="services/index" options={{ headerShown: false }} />
+          <Stack.Screen name="enquiries" options={{ headerShown: false }} />
+          <Stack.Screen name="quotes" options={{ headerShown: false }} />
+          <Stack.Screen name="event-site" options={{ headerShown: false }} />
           <Stack.Screen name="service/new" options={{ headerShown: false }} />
           <Stack.Screen name="settings" options={{ headerShown: false }} />
           <Stack.Screen name="_internal/desk" options={{ title: "Overview", headerShown: false }} />

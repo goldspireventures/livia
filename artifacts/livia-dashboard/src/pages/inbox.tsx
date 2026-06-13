@@ -74,6 +74,7 @@ import {
   ArrowUp,
 } from "lucide-react";
 import { Link } from "wouter";
+import EventVendorUnifiedInboxPage from "@/pages/enquiries";
 
 interface ConversationListItem {
   id: string;
@@ -157,6 +158,9 @@ export default function InboxPage() {
   const qc = useQueryClient();
   const businessId = business?.id ?? "";
   const tenantVertical = (business as { vertical?: string } | null)?.vertical ?? null;
+  if (tenantVertical === "event-vendors") {
+    return <EventVendorUnifiedInboxPage />;
+  }
   const { data: tenantXp } = useTenantExperience(businessId || undefined);
   const layoutMorph = effectivePresentationMorph(
     tenantVertical,
@@ -803,8 +807,7 @@ export default function InboxPage() {
                       data-testid="inbox-case-resolve"
                     >
                       <p className="text-xs font-medium text-foreground">
-                        Refund request — reply below, then close the case when you&apos;re ready. Liv can
-                        run the refund and booking update on your confirmation.
+                        Refund request — reply below, then confirm refund and booking update.
                       </p>
                       <div className="flex flex-wrap gap-2">
                         <Button

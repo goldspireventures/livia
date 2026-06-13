@@ -1,5 +1,6 @@
 import { SettingsDisclosure } from "@/components/ui/settings-disclosure";
 import { CustomerTimeline } from "@/components/customer-timeline";
+import { ownerClientHistoryCopy } from "@workspace/policy";
 
 type BookingRow = {
   id: string;
@@ -12,20 +13,23 @@ export function GuestHistoryPanel({
   businessId,
   customerId,
   recentBookings,
+  vertical,
 }: {
   businessId: string;
   customerId: string;
   recentBookings?: BookingRow[];
+  vertical?: string | null;
 }) {
   const bookings = recentBookings ?? [];
+  const copy = ownerClientHistoryCopy(vertical);
   const summary =
     bookings.length > 0
       ? `${bookings.length} visit${bookings.length === 1 ? "" : "s"} and messages — newest first`
-      : "Visits and messages appear here after the first booking or thread";
+      : copy.emptyDescription;
 
   return (
     <SettingsDisclosure
-      title="Bookings & activity"
+      title={copy.title}
       description={summary}
       defaultOpen={bookings.length > 0}
       data-testid="guest-history-panel"

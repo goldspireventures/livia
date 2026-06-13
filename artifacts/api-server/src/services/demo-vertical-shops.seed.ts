@@ -10,9 +10,15 @@ import {
   ensureShowcasePets,
   refreshVerticalShowcaseShop,
 } from "./demo-showcase-depth";
-import { PLATFORM_DEFAULT_PRESET_ID, type BusinessVertical } from "@workspace/policy";
+import {
+  PLATFORM_DEFAULT_PRESET_ID,
+  consultFirstDemoCustomerCap,
+  isConsultFirstVertical,
+  type BusinessVertical,
+} from "@workspace/policy";
 import { inferDemoServiceImageUrl } from "../lib/experience-skin";
 import { ensureWellnessShowcaseDepth } from "./wellness-demo-depth";
+import { ensureEventVendorsShowcaseDepth } from "./event-vendors-demo-depth";
 
 /** Demo shops stay on Constellation until the owner picks Appearance. */
 export async function ensureVerticalDemoPresentationPreset(
@@ -462,6 +468,31 @@ export async function seedVerticalShowcaseShops(
         { name: "Nutrition check-in", durationMinutes: 30, priceMinor: 3500, sortOrder: 5 },
       ],
     },
+    {
+      vertical: "event-vendors" as BusinessVertical,
+      name: "Atelier Decor Dublin",
+      slug: "atelier-decor-dublin",
+      description: "Event decor & styling — enquire → quote → booked (design-partner demo).",
+      category: "event_decor",
+      city: "Dublin",
+      staff: [
+        {
+          firstName: "Mia",
+          lastName: "Byrne",
+          displayName: "Mia Byrne",
+          email: "mia@atelierdecor.ie",
+          color: "#D97706",
+        },
+      ],
+      services: [
+        { name: "Balloon garland", durationMinutes: 0, priceMinor: 18000, sortOrder: 1, category: "Balloons" },
+        { name: "Table centrepieces", durationMinutes: 0, priceMinor: 1200, sortOrder: 2, category: "Tables" },
+        { name: "Backdrop styling", durationMinutes: 0, priceMinor: 25000, sortOrder: 3, category: "Backdrops" },
+        { name: "Chair covers & sashes", durationMinutes: 0, priceMinor: 350, sortOrder: 4, category: "Tables" },
+        { name: "Floral table runner", durationMinutes: 0, priceMinor: 4500, sortOrder: 5, category: "Tables" },
+        { name: "Setup & delivery", durationMinutes: 0, priceMinor: 8000, sortOrder: 6, category: "Logistics" },
+      ],
+    },
   ];
 
   const created: Array<{ slug: string; id: string; name: string; vertical: BusinessVertical }> = [];
@@ -486,6 +517,9 @@ export async function seedVerticalShowcaseShops(
       if (d.vertical === "wellness") {
         await ensureWellnessShowcaseDepth(existing.id);
       }
+      if (d.vertical === "event-vendors") {
+        await ensureEventVendorsShowcaseDepth(existing.id);
+      }
       created.push({
         slug: existing.slug,
         id: existing.id,
@@ -509,7 +543,8 @@ export async function seedVerticalShowcaseShops(
     });
 
     const core = await seedShopCore(biz.id, d.staff, d.services, d.vertical);
-    const customers = await ensureShowcaseCustomers(biz.id, 20);
+    const customerMin = isConsultFirstVertical(d.vertical) ? consultFirstDemoCustomerCap() : 20;
+    const customers = await ensureShowcaseCustomers(biz.id, customerMin);
     if (d.seedPets?.length) {
       await ensureShowcasePets(
         biz.id,
@@ -517,24 +552,34 @@ export async function seedVerticalShowcaseShops(
         d.seedPets,
       );
     }
-    const bookingKeys = await seedExpandedBookings(
-      biz.id,
-      customers,
-      core.staffRows.map((s) => s.id),
-      core.serviceRows.map((s) => s.id),
-      now,
-    );
+    const consultFirst = isConsultFirstVertical(d.vertical);
+    const bookingKeys = consultFirst
+      ? {}
+      : await seedExpandedBookings(
+          biz.id,
+          customers,
+          core.staffRows.map((s) => s.id),
+          core.serviceRows.map((s) => s.id),
+          now,
+          d.vertical,
+        );
     await seedDemoInbox(biz.id, customers, { vertical: d.vertical, bookingKeys });
-    await ensureDemoOperationalCases(biz.id, biz.slug, bookingKeys);
+    if (!consultFirst) {
+      await ensureDemoOperationalCases(biz.id, biz.slug, bookingKeys);
+    }
     await ensureLiveDayForBusiness(biz.id, {
-      force: true,
+      force: !consultFirst,
       customerSeed: customers,
       staffIds: core.staffRows.map((s) => s.id),
       serviceIds: core.serviceRows.map((s) => s.id),
+      vertical: d.vertical,
     });
     await ensureVerticalDemoPresentationPreset(biz.id, d.vertical);
     if (d.vertical === "wellness") {
       await ensureWellnessShowcaseDepth(biz.id);
+    }
+    if (d.vertical === "event-vendors") {
+      await ensureEventVendorsShowcaseDepth(biz.id);
     }
     created.push({ slug: biz.slug, id: biz.id, name: biz.name, vertical: d.vertical });
   }

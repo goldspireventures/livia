@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 import { useBusiness } from "@/lib/business-context";
-import { businessVocabulary } from "@workspace/policy";
+import {
+  businessVocabulary,
+  consultFirstClientsListCopy,
+  showGuestVaultOwnerCallout,
+} from "@workspace/policy";
 import {
   useListCustomers,
   getListCustomersQueryKey,
@@ -70,6 +74,7 @@ export default function CustomersPage() {
     business?.category,
   ).clientNoun.toLowerCase();
   const clientNounPlural = clientNoun.endsWith("s") ? `${clientNoun}es` : `${clientNoun}s`;
+  const clientsListCopy = consultFirstClientsListCopy(businessVertical);
   const isWellness = businessVertical === "wellness";
 
   function exportGuests() {
@@ -151,11 +156,13 @@ export default function CustomersPage() {
   return (
     <OperationalPageShell
       data-testid="customers-page"
-      title="Clients"
+      title={clientsListCopy.title}
       subtitle={
         total !== undefined
-          ? `${total} ${clientNounPlural} — search, book, and view visit history.`
-          : `Search, add ${clientNounPlural}, and open profiles for bookings and history.`
+          ? clientsListCopy.subtitle(total, clientNounPlural)
+          : businessVertical === "event-vendors"
+            ? "Contacts from enquiries and quotes — not a repeat-booking roster."
+            : `Search, add ${clientNounPlural}, and open profiles for bookings and history.`
       }
       width="full"
       actions={
@@ -172,7 +179,7 @@ export default function CustomersPage() {
               className={op.primaryButton()}
             >
               <UserPlus className="h-4 w-4 mr-2" />
-              Add client
+              {clientsListCopy.addLabel}
             </Button>
           </DialogTrigger>
           <DialogContent>
@@ -212,7 +219,7 @@ export default function CustomersPage() {
         </div>
       }
     >
-      {business?.slug ? (
+      {business?.slug && showGuestVaultOwnerCallout(businessVertical) ? (
         <GuestVaultOwnerCallout
           slug={business.slug}
           businessName={business.name}

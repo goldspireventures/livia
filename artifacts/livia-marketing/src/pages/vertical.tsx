@@ -49,7 +49,7 @@ const VERTICALS: Record<
     title: "Fitness & studios",
     headline: "Classes and 1:1s — one schedule, not three apps.",
     pains: ["DMs for class spots", "No-show on packs", "Roster chaos across trainers"],
-    liv: "Liv books class sessions and 1:1 slots, respects capacity, and nudges waitlists when you turn them on.",
+    liv: "Liv books class sessions and 1:1 slots, respects capacity, and nudges active waitlists.",
   },
   "body-art": {
     title: "Body art & piercing",
@@ -81,7 +81,7 @@ const VERTICALS: Record<
     title: "Medspa & aesthetics",
     headline: "Appointments with intake and consent — not chaos in the inbox.",
     pains: ["Consult vs treatment confusion", "Consent before chair time", "Regulated copy per market"],
-    liv: "Calm, clinical tone; intake and consent workflows when your counsel signs them off.",
+    liv: "Calm, clinical tone; intake and consent workflows aligned with your counsel.",
   },
   "automotive-detailing": {
     title: "Automotive detailing",

@@ -18,6 +18,16 @@ export const BLOCKING_ONBOARDING_ACTS: OnboardingActId[] = [
   "a8_public_link",
 ];
 
+/** Consult-first verticals — catalogue + public site, not opening hours. */
+export function blockingOnboardingActsForVertical(
+  vertical?: string | null,
+): OnboardingActId[] {
+  if (vertical === "event-vendors") {
+    return ["a2_shop_profile", "a3_service_menu", "a6_liv", "a8_public_link"];
+  }
+  return BLOCKING_ONBOARDING_ACTS;
+}
+
 /** Auto-completed on POST /businesses before any opt-in seed. */
 export const AUTO_COMPLETED_ON_CREATE_ACTS: OnboardingActId[] = ["a1_create_business"];
 
@@ -27,22 +37,31 @@ export const AUTO_COMPLETED_ON_MENU_SEED_ACTS: OnboardingActId[] = [
   "a4_team",
 ];
 
-export function blockingOnboardingPercent(completed: OnboardingActId[]): number {
+export function blockingOnboardingPercent(
+  completed: OnboardingActId[],
+  vertical?: string | null,
+): number {
+  const blocking = blockingOnboardingActsForVertical(vertical);
   const done = new Set(completed);
-  const n = BLOCKING_ONBOARDING_ACTS.filter((a) => done.has(a)).length;
-  return Math.min(100, Math.round((n / BLOCKING_ONBOARDING_ACTS.length) * 100));
+  const n = blocking.filter((a) => done.has(a)).length;
+  return Math.min(100, Math.round((n / blocking.length) * 100));
 }
 
 /** Owner can use the product (dashboard/mobile) — essentials done; test booking is activation, not a hard lock. */
-export function isOnboardingAppUnlocked(state: OnboardingState | null | undefined): boolean {
+export function isOnboardingAppUnlocked(
+  state: OnboardingState | null | undefined,
+  vertical?: string | null,
+): boolean {
   if (!state) return true;
   const completed = new Set(state.completedActs ?? []);
-  if (BLOCKING_ONBOARDING_ACTS.every((a) => completed.has(a))) return true;
+  const blocking = blockingOnboardingActsForVertical(vertical);
+  if (blocking.every((a) => completed.has(a))) return true;
   if ((state.percentComplete ?? 0) >= 100) return true;
   return false;
 }
 
 function menuActivationLabel(vertical?: string | null): string {
+  if (vertical === "event-vendors") return "Build your decor catalogue";
   if (vertical === "beauty") return "Build your treatment menu";
   if (vertical === "hair") return "Build your service menu";
   if (vertical === "wellness") return "Set up your session menu";
@@ -68,50 +87,91 @@ export function activationStepsFromState(
   const checklist = state?.checklist ?? ({} as OnboardingChecklist);
   const menuDone =
     completed.has("a3_service_menu") || checklist.servicesConfirmed === true;
-  const steps = [
-    {
-      id: "menu",
-      label: menuActivationLabel(vertical),
-      done: menuDone,
-      href: "/services",
-    },
-    {
-      id: "profile",
-      label: "Location profile",
-      done: completed.has("a2_shop_profile"),
-      href: "/onboarding",
-    },
-    {
-      id: "hours",
-      label: "Opening hours",
-      done: completed.has("a5_hours") || checklist.hoursConfirmed === true,
-      href: "/onboarding",
-    },
-    {
-      id: "liv",
-      label: "Liv voice & booking",
-      done: completed.has("a6_liv") || checklist.livEnabled === true,
-      href: "/settings?tab=liv",
-    },
-    {
-      id: "test-booking",
-      label: "Test booking",
-      done: checklist.testBooking === true,
-      href: "/bookings/new",
-    },
-    {
-      id: "channels",
-      label: "Connect WhatsApp or SMS",
-      done: completed.has("a7_channels") || checklist.smsOrVoiceConnected === true,
-      href: "/settings?tab=comms",
-    },
-    {
-      id: "team",
-      label: "Invite your team",
-      done: completed.has("a10_invite_team") || checklist.teamInvited === true,
-      href: "/staff",
-    },
-  ];
+
+  const steps =
+    vertical === "event-vendors"
+      ? [
+          {
+            id: "menu",
+            label: menuActivationLabel(vertical),
+            done: menuDone,
+            href: "/services",
+          },
+          {
+            id: "profile",
+            label: "Studio profile",
+            done: completed.has("a2_shop_profile"),
+            href: "/onboarding",
+          },
+          {
+            id: "website",
+            label: "Polish your website",
+            done: checklist.presentationPresetReviewed === true,
+            href: "/event-site",
+          },
+          {
+            id: "liv",
+            label: "Liv voice for enquiries",
+            done: completed.has("a6_liv") || checklist.livEnabled === true,
+            href: "/settings?tab=liv",
+          },
+          {
+            id: "first-quote",
+            label: "Send your first quote",
+            done: checklist.testBooking === true,
+            href: "/inbox",
+          },
+          {
+            id: "channels",
+            label: "Connect WhatsApp or SMS",
+            done: completed.has("a7_channels") || checklist.smsOrVoiceConnected === true,
+            href: "/settings?tab=comms",
+          },
+        ]
+      : [
+          {
+            id: "menu",
+            label: menuActivationLabel(vertical),
+            done: menuDone,
+            href: "/services",
+          },
+          {
+            id: "profile",
+            label: "Location profile",
+            done: completed.has("a2_shop_profile"),
+            href: "/onboarding",
+          },
+          {
+            id: "hours",
+            label: "Opening hours",
+            done: completed.has("a5_hours") || checklist.hoursConfirmed === true,
+            href: "/onboarding",
+          },
+          {
+            id: "liv",
+            label: "Liv voice & booking",
+            done: completed.has("a6_liv") || checklist.livEnabled === true,
+            href: "/settings?tab=liv",
+          },
+          {
+            id: "test-booking",
+            label: "Test booking",
+            done: checklist.testBooking === true,
+            href: "/bookings/new",
+          },
+          {
+            id: "channels",
+            label: "Connect WhatsApp or SMS",
+            done: completed.has("a7_channels") || checklist.smsOrVoiceConnected === true,
+            href: "/settings?tab=comms",
+          },
+          {
+            id: "team",
+            label: "Invite your team",
+            done: completed.has("a10_invite_team") || checklist.teamInvited === true,
+            href: "/staff",
+          },
+        ];
   return filterActivationStepsForOperator(steps, operatorSignals ?? null);
 }
 

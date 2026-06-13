@@ -39,7 +39,7 @@ const TOGGLES: { key: keyof NotificationPrefs; label: string; hint: string }[] =
   {
     key: "pushInboxHandoff",
     label: "Human handoff",
-    hint: "When you've taken over a thread from Liv.",
+    hint: "Threads assigned to you after Liv hands off.",
   },
   {
     key: "pushLivBookingViaChannel",

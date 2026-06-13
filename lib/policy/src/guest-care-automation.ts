@@ -62,6 +62,7 @@ const VERTICAL_AFTERCARE_DEFAULTS: Partial<
   fitness: { aftercareMode: "auto", aftercareDelay: "2h" },
   "pet-grooming": { aftercareMode: "auto", aftercareDelay: "2h" },
   "automotive-detailing": { aftercareMode: "auto", aftercareDelay: "same_evening" },
+  "event-vendors": { aftercareMode: "auto", aftercareDelay: "next_morning" },
 };
 
 const VERTICAL_AFTERCARE_BODY: Partial<Record<BusinessVertical, string>> = {
@@ -79,6 +80,8 @@ const VERTICAL_AFTERCARE_BODY: Partial<Record<BusinessVertical, string>> = {
     "Keep your pet calm and warm after grooming. Brush gently — reply if coat or skin looks irritated.",
   "automotive-detailing":
     "Avoid car washes for 7 days on ceramic coatings. Reply if you need maintenance booking.",
+  "event-vendors":
+    "We hope your event was wonderful! Reply with a photo — we'd love a review when you have a moment.",
 };
 
 export function recommendedGuestCareForVertical(

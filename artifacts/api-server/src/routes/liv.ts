@@ -38,6 +38,10 @@ import {
 } from "../services/persona-reports.service";
 import { personaReportSlugSchema } from "@workspace/policy";
 import { logRouteError, safeClientMessage, sendError } from "../lib/http-errors";
+import {
+  getLivOutboundSettingsView,
+  patchLivOutboundOverrides,
+} from "../services/liv-outbound.service";
 
 const router: IRouter = Router();
 
@@ -140,6 +144,36 @@ router.post(
       return;
     }
     res.json(row);
+  },
+);
+
+router.get(
+  "/businesses/:businessId/liv-outbound",
+  requireAuth,
+  requireRole("ADMIN"),
+  async (req, res): Promise<void> => {
+    const businessId = getBizId(req.params.businessId);
+    const view = await getLivOutboundSettingsView(businessId);
+    if (!view) {
+      sendError(res, req, 404, "Business not found");
+      return;
+    }
+    res.json(view);
+  },
+);
+
+router.patch(
+  "/businesses/:businessId/liv-outbound",
+  requireAuth,
+  requireRole("ADMIN"),
+  async (req, res): Promise<void> => {
+    const businessId = getBizId(req.params.businessId);
+    const row = await patchLivOutboundOverrides(businessId, req.body ?? {});
+    if (!row) {
+      sendError(res, req, 404, "Business not found");
+      return;
+    }
+    res.json(await getLivOutboundSettingsView(businessId));
   },
 );
 

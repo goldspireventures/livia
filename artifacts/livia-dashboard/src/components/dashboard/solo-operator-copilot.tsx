@@ -11,7 +11,7 @@ export function SoloOperatorCopilot({
   pack: OperatorExperiencePack | null | undefined;
   className?: string;
 }) {
-  if (!pack?.soloMode) return null;
+  if (!pack?.soloMode || pack.showSoloCopilotCard === false) return null;
 
   return (
     <section

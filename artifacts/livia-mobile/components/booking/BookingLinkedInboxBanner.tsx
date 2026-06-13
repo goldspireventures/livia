@@ -6,6 +6,7 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { GlowPressable } from "@/components/ui/GlowPressable";
 import { fonts, type } from "@/constants/typography";
 import { useColors } from "@/hooks/useColors";
+import { refundLinkedInboxBannerBody } from "@workspace/policy";
 import { resolutionSummary } from "@/lib/conversation-resolution";
 
 export type LinkedInboxCaseDto = {
@@ -63,8 +64,7 @@ export function BookingLinkedInboxBanner({
           <Text style={[styles.title, { color: colors.foreground }]}>Refund request open in inbox</Text>
         </View>
         <Text style={[styles.body, { color: colors.mutedForeground }]}>
-          {linkedCase.summary ??
-            "The customer asked about a refund. Resolve the thread first — Liv will cancel or keep the appointment based on your outcome."}
+          {linkedCase.summary ?? refundLinkedInboxBannerBody()}
         </Text>
         <GlowPressable
           onPress={() => router.push(`/conversation/${linkedCase.conversationId}` as never)}

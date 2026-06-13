@@ -10,6 +10,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Link } from "wouter";
+import { GatewayBackLink } from "@/components/gateway/gateway-back-link";
 import type { DemoRosterEntry } from "@/lib/demo-portal";
 import { demoOpenPersonaUrl } from "@/lib/demo-portal";
 import { DemoGuestClientShortcut } from "@/components/demo/demo-guest-client-shortcut";
@@ -85,13 +86,13 @@ export function GatewayDemoEnterStage({
       data-testid="gateway-demo-card-stage"
     >
       <div className="rounded-[1.35rem] border border-primary/25 bg-[#0a0c12]/90 p-4 sm:p-5">
-        <Link
+        <GatewayBackLink
           href={backHref}
           className="inline-flex min-h-[44px] items-center rounded-full border border-[#d9b97a]/35 bg-[#d9b97a]/10 px-3.5 text-sm text-[#e6d0a5] transition hover:border-[#d9b97a]/55"
           data-testid="gateway-demo-back-worlds"
         >
           {backLabel}
-        </Link>
+        </GatewayBackLink>
         <div className="mt-4 space-y-1">
           <p className="font-serif text-lg text-[#e6d0a5]/95">{tradeLabel}</p>
           <p className="text-base font-medium text-foreground">{businessName}</p>

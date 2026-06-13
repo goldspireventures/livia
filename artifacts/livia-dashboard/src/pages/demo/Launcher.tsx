@@ -39,6 +39,7 @@ import { completeDemoPortalSignIn } from "@/lib/demo/complete-demo-portal-sign-i
 import { DemoFlowStepper, type DemoFlowStep } from "@/components/demo/demo-flow-stepper";
 import { DemoGuidedExperience } from "@/components/demo/demo-guided-experience";
 import { DemoWedgeGrid } from "@/components/demo/demo-wedge-grid";
+import { DemoFreshFounderShortcut } from "@/components/demo/demo-fresh-founder-shortcut";
 import { DemoGuestClientShortcut } from "@/components/demo/demo-guest-client-shortcut";
 import { DemoWorldReadinessStrip } from "@/components/demo/demo-world-readiness-strip";
 import { writeDemoWorldStatusCache } from "@/lib/demo/demo-world-status";
@@ -65,6 +66,7 @@ const VERTICAL_LABELS: Record<string, string> = {
   medspa: "Medspa",
   "allied-health": "Allied health",
   fitness: "Fitness",
+  "event-vendors": "Event vendors",
   general: "Multi-market",
 };
 
@@ -767,7 +769,7 @@ export default function DemoLauncher() {
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1 rounded-lg border border-white/20 px-3 py-1.5 text-xs text-white/80 hover:bg-white/5"
                               >
-                                Public booking
+                                {t.vertical === "event-vendors" ? "Public website" : "Public booking"}
                                 <ExternalLink className="h-3 w-3" />
                               </a>
                             </div>
@@ -897,6 +899,7 @@ export default function DemoLauncher() {
   return (
     <GatewayDemoLauncherShell advanced={advancedPanel}>
       <GatewayG1Hero />
+      <DemoFreshFounderShortcut />
       <GatewayG1SignInHint devPassword={devPassword} />
       <DemoWorldReadinessStrip
         provisioned={provisioned}

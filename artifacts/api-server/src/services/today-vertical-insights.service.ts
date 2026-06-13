@@ -57,7 +57,7 @@ export async function getTodayVerticalInsights(
       insights.push({
         id: "design-proofs-clear",
         title: "Proof queue clear",
-        body: "No designs waiting — Liv will queue new proofs for your tap when clients submit.",
+        body: "No designs waiting — new client submissions appear here for sign-off.",
         tone: "info",
       });
     }

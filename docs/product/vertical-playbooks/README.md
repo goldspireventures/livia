@@ -18,6 +18,8 @@ One **L2+L3** doc per code vertical — screen cards, guest surfaces, demo seed,
 | pet-grooming | [pet-grooming.md](./pet-grooming.md) | [PET-GROOMING](../PET-GROOMING-VERTICAL-PROGRAM.md) | [pet-grooming](../vertical-excellence/pet-grooming.md) |
 | automotive-detailing | [automotive-detailing.md](./automotive-detailing.md) | [AUTOMOTIVE](../AUTOMOTIVE-DETAILING-VERTICAL-PROGRAM.md) | [automotive](../vertical-excellence/automotive-detailing.md) |
 
+Ring 2 (doc-first): [event-vendors.md](./event-vendors.md) → [EVENT-VENDORS](../EVENT-VENDORS-VERTICAL-PROGRAM.md)
+
 Partner / defer: [`PARTNER-AND-ADJACENT-VERTICALS.md`](../PARTNER-AND-ADJACENT-VERTICALS.md)
 
 Build plan: [`LIVIA-VERTICALS-BUILD-PLAN.md`](../LIVIA-VERTICALS-BUILD-PLAN.md)

@@ -1160,6 +1160,7 @@ export async function getDemoPortalStatus(): Promise<{
       name: businessesTable.name,
       vertical: businessesTable.vertical,
       country: businessesTable.country,
+      tier: businessesTable.tier,
       parentBusinessId: businessesTable.parentBusinessId,
     })
     .from(businessesTable)
@@ -1182,8 +1183,11 @@ export async function getDemoPortalStatus(): Promise<{
           country: r.country,
           ownerEmail: resolveRosterOwnerEmail(r.slug, chainHq),
           ownerPersonaId: chainHq ? ("org_admin" as const) : null,
-          publicBookingUrl: `${dashboardBase}/b/${r.slug}`,
-          roster: rosterEntriesForSlug(r.slug, r.name).map((entry) => ({
+          publicBookingUrl:
+            r.vertical === "event-vendors"
+              ? `${dashboardBase}/e/${r.slug}`
+              : `${dashboardBase}/b/${r.slug}`,
+          roster: rosterEntriesForSlug(r.slug, r.name, r.tier).map((entry) => ({
             ...entry,
             email:
               entry.role === "owner" && chainHq
@@ -1311,7 +1315,7 @@ export async function syncAllDemoClerkUsers(opts?: {
     ? status.businesses.filter((b) => slugSet.has(b.slug))
     : status.businesses;
   const ownerDefs = tenantRows.flatMap((b) =>
-    rosterEntriesForSlug(b.slug, b.name).map((entry) => buildDemoRoleDef(b.slug, entry.role as DemoTenantRole, b.name)),
+    b.roster.map((entry) => buildDemoRoleDef(b.slug, entry.role as DemoTenantRole, b.name)),
   );
   const uniqueByEmail = new Map<string, DemoPersonaDef>();
   const staticPersonas = slugSet

@@ -58,6 +58,7 @@ import wellnessRouter from "./wellness";
 import beautyRouter from "./beauty";
 import hairRouter from "./hair";
 import alliedHealthRouter from "./allied-health";
+import consultFirstRouter from "./consult-first";
 
 const router: IRouter = Router();
 
@@ -118,6 +119,7 @@ router.use(wellnessRouter);
 router.use(beautyRouter);
 router.use(hairRouter);
 router.use(alliedHealthRouter);
+router.use(consultFirstRouter);
 router.use(partnerApiRouter);
 router.use(devRouter);
 

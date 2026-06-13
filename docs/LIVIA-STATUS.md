@@ -69,6 +69,7 @@
 | **Vertical programs (all 9)** | [`VERTICAL-PROGRAMS-INDEX.md`](product/VERTICAL-PROGRAMS-INDEX.md) · build [`LIVIA-VERTICALS-BUILD-PLAN.md`](product/LIVIA-VERTICALS-BUILD-PLAN.md) |
 | **Execution focus** | Era 1 **depth waves D0–D4** (subdomain, `/my`, relationship, demo seed) in parallel with capability instances |
 | **Your UAT** | Nine-slug showcase + guest hub — [`FOUNDER-UAT-CHECKLIST.md`](operations/FOUNDER-UAT-CHECKLIST.md) |
+| **Ring 2 — event vendors (V12)** | Program + consult-first spec complete — [`EVENT-VENDORS-VERTICAL-PROGRAM.md`](product/EVENT-VENDORS-VERTICAL-PROGRAM.md); design-partner decor operator queued for P1 build |
 | Staging | **`livia-stg`** only — [`VERCEL-DEPLOY-ENVIRONMENTS.md`](operations/VERCEL-DEPLOY-ENVIRONMENTS.md) |
 | Local automation | `pnpm founder:uat-preflight` then `test:founder-uat` |
 

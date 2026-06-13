@@ -59,6 +59,8 @@ const PROFILES: SubverticalProfile[] = [
   // Automotive
   { id: "auto.detail", vertical: "automotive-detailing", label: "Detail studio", description: "Bay scheduling", defaultOrgShape: "owner_plus_staff" },
   { id: "auto.mobile", vertical: "automotive-detailing", label: "Mobile detail", description: "Pickup and drop-off", defaultOrgShape: "solo" },
+  { id: "event.decor", vertical: "event-vendors", label: "Event decor & styling", description: "Enquire → quote → book", defaultOrgShape: "solo" },
+  { id: "event.wedding", vertical: "event-vendors", label: "Wedding vendor", description: "Date-bound quotes and milestones", defaultOrgShape: "solo" },
 ];
 
 export function listSubverticalProfiles(vertical: BusinessVertical): SubverticalProfile[] {

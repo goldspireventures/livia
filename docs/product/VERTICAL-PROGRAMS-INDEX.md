@@ -59,6 +59,12 @@
 
 See [`PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md`](./PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md) §3 and [PARTNER-ADJACENT](./PARTNER-AND-ADJACENT-VERTICALS.md) § Ring 2.
 
+| Doc | Vertical | Tier | Program | Platform primitive |
+|-----|----------|------|---------|-------------------|
+| V12 | Event vendors & decor | **Ring 2** | [EVENT-VENDORS](./EVENT-VENDORS-VERTICAL-PROGRAM.md) | [CONSULT-FIRST-WORKFLOW](./CONSULT-FIRST-WORKFLOW-SPEC.md) |
+
+**Active design partner:** solo event-decor operator — enquire → quote → booked (IG/WhatsApp leads).
+
 ---
 
 ## Playbooks (L2+L3 quick reference)
@@ -71,6 +77,7 @@ See [`PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md`](./PEOPLE-BUSINESS-CATEGORY-MANIFES
 
 | Date | Change |
 |------|--------|
+| 2026-06-10 | V12 event vendors Ring 2 program + consult-first workflow spec; design-partner scope |
 | 2026-06-05 | GTM Wave 1 lock — nine verticals one bar; innovation program; subdomain + `/my` |
 | 2026-06-01 | Full vertical program set + build plan |
 | 2026-06-03 | Vertical excellence specs (all code verticals except wellness) |

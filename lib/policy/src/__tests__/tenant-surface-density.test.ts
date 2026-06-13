@@ -26,6 +26,14 @@ assert.deepEqual(resolveOwnerHomeKpiChips({ todayBookings: 0, pendingCount: 0, h
 ]);
 
 assert.deepEqual(
+  resolveOwnerHomeKpiChips(
+    { todayBookings: 0, pendingCount: 0, handedOffCount: 0, newEnquiries: 2, quotedEnquiries: 1 },
+    "event-vendors",
+  ),
+  ["newEnquiries", "quotedEnquiries"],
+);
+
+assert.deepEqual(
   resolveOwnerHomeKpiChips({ todayBookings: 5, pendingCount: 2, handedOffCount: 1 }),
   ["todayBookings", "inboxHandoffs", "toConfirm", "completedToday"],
 );

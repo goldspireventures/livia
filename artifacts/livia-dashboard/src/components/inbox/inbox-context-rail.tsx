@@ -9,6 +9,7 @@ import { CalendarCheck, ExternalLink, Sparkles, User } from "lucide-react";
 import { OPERATIONAL_REFETCH_MS } from "@/lib/operational-cache";
 import { beautyOutlineButton } from "@/lib/beauty-operational-ui";
 import { cn } from "@/lib/utils";
+import { unknownGuestInboxHint, unknownGuestInboxLabel } from "@workspace/policy";
 
 type LinkedBooking = {
   id: string;
@@ -103,7 +104,7 @@ export function InboxContextRail({
         ? rel?.stageLabel ?? rel?.headline ?? "Visit history"
         : customerId
           ? "No visit history yet"
-          : "Unknown guest — Liv will link when identified";
+          : `${unknownGuestInboxLabel()} — ${unknownGuestInboxHint()}`;
 
   const nextBookingSummary = booking
     ? `${booking.service?.name ?? "Appointment"} · ${formatBookingWhen(booking.startAt)}`

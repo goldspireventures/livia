@@ -4,14 +4,13 @@ import {
   type CreateBusinessBodyJurisdiction,
 } from "@workspace/api-client-react";
 import { ApiError } from "@workspace/api-client-react";
+import { fetchMeProfile } from "@/lib/platform-legal";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
   FlatList,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -35,6 +34,7 @@ import Animated, {
   type SharedValue,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { AuroraHalo } from "@/components/brand/AuroraHalo";
 import { LivPulse } from "@/components/brand/LivPulse";
 import { LiviaWordmark } from "@/components/brand/LiviaWordmark";
@@ -46,7 +46,6 @@ import { useAuth } from "@clerk/clerk-expo";
 import { asHref } from "@/lib/navigation";
 import { useBusiness } from "@/contexts/BusinessContext";
 import { getApiBaseUrl } from "@/lib/api-base";
-import { getDemoSession } from "@/lib/demo-session";
 import { seedDevWorkspace } from "@/lib/seed-demo";
 import { useColors } from "@/hooks/useColors";
 import { useHaptics } from "@/hooks/useHaptics";
@@ -101,13 +100,16 @@ const SLIDES: SlideMeta[] = [
   },
 ];
 
+const FORM_PAGE = SLIDES.length;
+
 export default function OnboardingScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const haptics = useHaptics();
   const { getToken, isLoaded: clerkLoaded, isSignedIn } = useAuth();
-  const { refetch, setCurrentBusiness, businesses, isLoading: bizLoading } = useBusiness();
+  const { refetch, setCurrentBusiness, businesses, isLoading: bizLoading, isDemoAccount } =
+    useBusiness();
   const { intent } = useLocalSearchParams<{ intent?: string }>();
   const isSecondShop = intent === "second-shop";
 
@@ -118,16 +120,21 @@ export default function OnboardingScreen() {
       router.replace("/(tabs)");
       return;
     }
-    void getDemoSession().then((session) => {
-      if (session) router.replace("/(tabs)");
+    if (isDemoAccount) router.replace("/(tabs)");
+  }, [bizLoading, businesses.length, isSecondShop, isDemoAccount, router]);
+
+  useEffect(() => {
+    if (bizLoading || isSecondShop || isDemoAccount) return;
+    void fetchMeProfile().then((me) => {
+      if (!me.platformLegalAccepted) router.replace("/legal-acceptance");
     });
-  }, [bizLoading, businesses.length, isSecondShop, router]);
+  }, [bizLoading, isSecondShop, isDemoAccount, router]);
 
-  const listRef = useRef<FlatList<SlideMeta | null>>(null);
-  const [page, setPage] = useState(0);
-  const scrollX = useSharedValue(0);
-
-  const items: (SlideMeta | null)[] = [...SLIDES, null]; // last item is the form
+  const listRef = useRef<FlatList<SlideMeta>>(null);
+  // New founders land on the setup form — business type, team size, country, etc.
+  const [page, setPage] = useState(FORM_PAGE);
+  const scrollX = useSharedValue(FORM_PAGE * SCREEN_W);
+  const isFormPage = page >= FORM_PAGE;
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (e) => {
@@ -144,10 +151,15 @@ export default function OnboardingScreen() {
   };
 
   const goNext = () => {
-    if (page < items.length - 1) {
-      haptics.selection();
+    haptics.selection();
+    if (page < SLIDES.length - 1) {
       listRef.current?.scrollToIndex({ index: page + 1, animated: true });
       setPage(page + 1);
+      return;
+    }
+    if (page === SLIDES.length - 1) {
+      scrollX.value = withTiming(FORM_PAGE * SCREEN_W, { duration: 220 });
+      setPage(FORM_PAGE);
     }
   };
 
@@ -159,6 +171,7 @@ export default function OnboardingScreen() {
   const [jurisdiction, setJurisdiction] = useState<CreateBusinessBodyJurisdiction>("IE");
   const [vertical, setVertical] = useState<BusinessVertical>("hair");
   const [starterPack, setStarterPack] = useState(false);
+  const [businessAttested, setBusinessAttested] = useState(false);
 
   useEffect(() => {
     const tz: Record<string, string> = {
@@ -206,6 +219,11 @@ export default function OnboardingScreen() {
       haptics.warning();
       return;
     }
+    if (!businessAttested) {
+      setError("Confirm you operate a legitimate business before continuing.");
+      haptics.warning();
+      return;
+    }
     setError("");
     haptics.tap();
     try {
@@ -221,15 +239,35 @@ export default function OnboardingScreen() {
           tier: tier as "solo" | "studio" | "chain",
           seedDefaults: false,
           starterPack: starterPack ? true : undefined,
-        },
+          tenantAttestation: {
+            entityKind: "sole_trader",
+            tradingName: name.trim(),
+            attestedAt: new Date().toISOString(),
+          },
+        } as Parameters<typeof createBusiness>[0]["data"],
       });
       setCurrentBusiness(created);
       await refetch();
       haptics.success();
       router.replace(asHref("/onboarding-setup"));
     } catch (err: unknown) {
-      const e = err as { message?: string };
-      setError(e?.message ?? "Failed to create business.");
+      if (err instanceof ApiError) {
+        const payload = err.data as { code?: string; error?: string } | null;
+        if (payload?.code === "PLATFORM_LEGAL_REQUIRED") {
+          setError("Accept Terms and Privacy first — opening that screen…");
+          haptics.warning();
+          router.replace("/legal-acceptance");
+          return;
+        }
+        if (payload?.code === "BETA_SIGNUP_INVITE_ONLY" || payload?.code === "BETA_SIGNUP_CLOSED") {
+          setError(payload?.error ?? err.message);
+          return;
+        }
+        setError(payload?.error ?? err.message);
+      } else {
+        const e = err as { message?: string };
+        setError(e?.message ?? "Failed to create business.");
+      }
       haptics.warning();
     }
   };
@@ -296,10 +334,7 @@ export default function OnboardingScreen() {
   ];
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.root, { backgroundColor: colors.background }]}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
       {/* ADR 0004: single soft cyan halo */}
       <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
         <AuroraHalo tone="primary" size={480} intensity={0.85} style={{ top: -120, left: -80 }} />
@@ -308,80 +343,77 @@ export default function OnboardingScreen() {
       <Animated.View style={[styles.headerStrip, { paddingTop: insets.top + 18 }, headStyle]}>
         <LiviaWordmark size="md" color={colors.foreground} />
         <View style={styles.dots}>
-          {items.map((_, i) => (
+          {Array.from({ length: SLIDES.length + 1 }).map((_, i) => (
             <Dot key={i} index={i} scrollX={scrollX} color={colors.foreground} />
           ))}
         </View>
       </Animated.View>
 
-      <Animated.FlatList
-        ref={listRef}
-        data={items}
-        keyExtractor={(_, i) => String(i)}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onScroll={scrollHandler}
-        scrollEventThrottle={16}
-        onMomentumScrollEnd={onMomentumEnd}
-        bounces={false}
-        renderItem={({ item, index }) => {
-          if (item === null) {
-            return (
-              <FormSlide
-                secondShop={isSecondShop}
-                colors={colors}
-                inputStyle={inputStyle}
-                name={name}
-                slug={slug}
-                phone={phone}
-                timezone={timezone}
-                jurisdiction={jurisdiction}
-                vertical={vertical}
-                tier={tier}
-                starterPack={starterPack}
-                showTz={showTz}
-                error={error}
-                isLoading={isLoading}
-                seedLoading={seedLoading}
-                isPending={isPending}
-                verticalOptions={verticalOptions}
-                jurisdictionOptions={jurisdictionOptions}
-                tierOptions={tierOptions}
-                getToken={getToken}
-                handlers={{
-                  setName: handleSlugFromName,
-                  setSlug,
-                  setPhone,
-                  setTimezone,
-                  setJurisdiction,
-                  setVertical: (v) => {
-                    setVertical(v);
-                    setStarterPack(false);
-                  },
-                  setTier,
-                  setStarterPack,
-                  setShowTz,
-                  handleCreate,
-                  handleLoadDemo,
-                  haptics,
-                }}
-              />
-            );
-          }
-          return (
-            <Slide
-              meta={item}
-              index={index}
-              scrollX={scrollX}
-              colors={colors}
-            />
-          );
-        }}
-      />
+      {isFormPage ? (
+        <FormSlide
+          secondShop={isSecondShop}
+          colors={colors}
+          inputStyle={inputStyle}
+          name={name}
+          slug={slug}
+          phone={phone}
+          timezone={timezone}
+          jurisdiction={jurisdiction}
+          vertical={vertical}
+          tier={tier}
+          starterPack={starterPack}
+          businessAttested={businessAttested}
+          showTz={showTz}
+          error={error}
+          isLoading={isLoading}
+          seedLoading={seedLoading}
+          isPending={isPending}
+          verticalOptions={verticalOptions}
+          jurisdictionOptions={jurisdictionOptions}
+          tierOptions={tierOptions}
+          getToken={getToken}
+          bottomInset={insets.bottom}
+          handlers={{
+            setName: handleSlugFromName,
+            setSlug,
+            setPhone,
+            setTimezone,
+            setJurisdiction,
+            setVertical: (v) => {
+              setVertical(v);
+              setStarterPack(false);
+            },
+            setTier,
+            setStarterPack,
+            setBusinessAttested,
+            setShowTz,
+            handleCreate,
+            handleLoadDemo,
+            haptics,
+          }}
+        />
+      ) : (
+        <Animated.FlatList
+          ref={listRef}
+          style={styles.carousel}
+          data={SLIDES}
+          keyExtractor={(_, i) => String(i)}
+          horizontal
+          pagingEnabled
+          keyboardShouldPersistTaps="handled"
+          showsHorizontalScrollIndicator={false}
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
+          onMomentumScrollEnd={onMomentumEnd}
+          bounces={false}
+          renderItem={({ item, index }) => (
+            <Slide meta={item} index={index} scrollX={scrollX} colors={colors} />
+          )}
+        />
+      )}
 
-      {/* Bottom CTA — context-aware */}
-      {page < items.length - 1 && (
+      {/* Bottom CTA — intro slides only */}
+      {!isFormPage && (
         <View style={[styles.bottomCta, { paddingBottom: insets.bottom + 18 }]}>
           <Pressable
             onPress={goNext}
@@ -395,12 +427,12 @@ export default function OnboardingScreen() {
             ]}
           >
             <Text style={[styles.ctaText, { color: colors.primaryForeground }]}>
-              {page === items.length - 2 ? "Set up workspace" : "Continue"}
+              {page === SLIDES.length - 1 ? "Set up workspace" : "Continue"}
             </Text>
           </Pressable>
         </View>
       )}
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -491,6 +523,7 @@ function FormSlide({
   vertical,
   tier,
   starterPack,
+  businessAttested,
   showTz,
   error,
   isLoading,
@@ -500,9 +533,12 @@ function FormSlide({
   jurisdictionOptions,
   tierOptions,
   getToken,
+  bottomInset,
   handlers,
 }: {
   secondShop?: boolean;
+  businessAttested: boolean;
+  bottomInset: number;
   colors: ReturnType<typeof useColors>;
   inputStyle: StyleProp<TextStyle>;
   name: string;
@@ -531,6 +567,7 @@ function FormSlide({
     setVertical: (v: BusinessVertical) => void;
     setTier: (v: string) => void;
     setStarterPack: (v: boolean) => void;
+    setBusinessAttested: (v: boolean) => void;
     setShowTz: (v: boolean) => void;
     handleCreate: () => void;
     handleLoadDemo: () => void;
@@ -574,11 +611,15 @@ function FormSlide({
   }, [name, vertical, jurisdiction, tier, getToken]);
 
   return (
-    <View style={[styles.slide, { width: SCREEN_W }]}>
-      <ScrollView
-        contentContainerStyle={styles.formScroll}
+    <View style={styles.formSlide}>
+      <KeyboardAwareScrollViewCompat
+        style={styles.formScrollView}
+        contentContainerStyle={[styles.formScroll, { paddingBottom: bottomInset + 40 }]}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
         showsVerticalScrollIndicator={false}
+        bottomOffset={bottomInset + 24}
+        extraKeyboardSpace={20}
       >
         <View style={styles.formHeader}>
           <Text style={[styles.formTitle, { color: colors.foreground }]}>
@@ -591,7 +632,7 @@ function FormSlide({
           <Text style={[styles.formSub, { color: colors.mutedForeground }]}>
             {secondShop
               ? "A new shop on your account — switch between locations from More (Glance appears when you have two+)."
-              : "One business, two minutes — Liv handles the rest."}
+              : "Name your studio, pick your business type and team size — then we’ll walk through the essentials."}
           </Text>
         </View>
 
@@ -856,6 +897,33 @@ function FormSlide({
             )}
           </View>
 
+          <Pressable
+            style={styles.attestRow}
+            onPress={() => {
+              handlers.haptics.selection();
+              handlers.setBusinessAttested(!businessAttested);
+            }}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: businessAttested }}
+          >
+            <View
+              style={[
+                styles.attestBox,
+                {
+                  borderColor: businessAttested ? verticalAccent : colors.border,
+                  backgroundColor: businessAttested ? verticalAccent + "22" : "transparent",
+                },
+              ]}
+            >
+              {businessAttested ? (
+                <Text style={{ color: verticalAccent, fontFamily: fonts.bodyBold }}>✓</Text>
+              ) : null}
+            </View>
+            <Text style={[styles.demoSub, { color: colors.mutedForeground, flex: 1 }]}>
+              I operate a legitimate business and am authorised to set up this location on Livia.
+            </Text>
+          </Pressable>
+
           {error ? (
             <Text style={[styles.error, { color: colors.destructive }]}>{error}</Text>
           ) : null}
@@ -864,11 +932,11 @@ function FormSlide({
             style={({ pressed }) => [
               styles.cta,
               { backgroundColor: colors.primary, transform: [{ scale: pressed ? 0.98 : 1 }] },
-              isLoading && { opacity: 0.6 },
+              (isLoading || !businessAttested) && { opacity: 0.6 },
               elevation.floating,
             ]}
             onPress={handlers.handleCreate}
-            disabled={isLoading}
+            disabled={isLoading || !businessAttested}
             testID="create-business-button"
           >
             {isPending ? (
@@ -880,13 +948,15 @@ function FormSlide({
             )}
           </Pressable>
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollViewCompat>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  carousel: { flex: 1 },
+  formSlide: { flex: 1, paddingHorizontal: 22 },
   headerStrip: {
     paddingHorizontal: 22,
     paddingBottom: 18,
@@ -947,7 +1017,8 @@ const styles = StyleSheet.create({
   ctaText: { fontSize: 16, fontFamily: fonts.bodySemi, letterSpacing: 0.3 },
 
   // Form slide
-  formScroll: { paddingTop: 8, paddingBottom: 32, gap: 22 },
+  formScrollView: { flex: 1 },
+  formScroll: { paddingTop: 8, gap: 22 },
   formHeader: { gap: 8 },
   formTitle: {
     fontFamily: fonts.serifMedium,
@@ -999,4 +1070,14 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   error: { ...type.body, fontSize: 13, textAlign: "center" },
+  attestRow: { flexDirection: "row", alignItems: "flex-start", gap: 12, marginTop: 4 },
+  attestBox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 2,
+  },
 });

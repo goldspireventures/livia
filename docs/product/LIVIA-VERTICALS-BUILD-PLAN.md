@@ -70,7 +70,21 @@ All nine verticals require founder sign-off row in [`FOUNDER-UAT-CHECKLIST.md`](
 
 ### Phase V4 — Ring 2 expansion (doc-first)
 
-Mobile operator, event vendors, corporate wellness — spec in manifesto; **no enum** until V2 exits.
+Mobile operator, corporate wellness — spec in manifesto; **no enum** until V2 exits.
+
+**Event vendors (V12) — program complete (2026-06-10):**
+
+| Phase | Scope |
+|-------|--------|
+| **P1** | Website lite + enquire form + inbox pipeline + catalogue + settings |
+| **P2** | Quote generator + templates + PDF/link + send (email + WhatsApp one-tap) + accept quote |
+| **P3** | Follow-up reminders, event-day sheet, milestone deposits, date holds, multi-contact, mood board, seasonal pricing, review ask, richer CMS |
+
+Platform kernel: [`CONSULT-FIRST-WORKFLOW-SPEC.md`](./CONSULT-FIRST-WORKFLOW-SPEC.md) · program [`EVENT-VENDORS-VERTICAL-PROGRAM.md`](./EVENT-VENDORS-VERTICAL-PROGRAM.md).
+
+**Probably later (event vertical only):** contracts / e-sign; inventory for hire sub-segment.
+
+**First tenant:** design-partner event-decor operator (solo, IG/WhatsApp).
 
 ### Phase V5 — Production gates
 
@@ -121,4 +135,5 @@ When assigned a vertical task:
 
 | Date | Change |
 |------|--------|
+| 2026-06-10 | V12 event vendors program + consult-first spec; Phase V4 scope table |
 | 2026-06-01 | Initial cross-vertical build plan |

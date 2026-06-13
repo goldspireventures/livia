@@ -107,11 +107,14 @@ export function PublicAppearancePanel({
   const coverInputRef = useRef<HTMLInputElement>(null);
   const appliedThemeRef = useRef({ presetId: "", accent: "", data: null as PresentationPayload | null });
 
-  const previewUrl = slug ? `/book/${slug}` : "";
   const contrastOk = accentMeetsWcagAa(draftAccent);
 
   const { data: tenantXp } = useTenantExperience(bid || undefined);
   const tenantVertical = (tenantXp as { vertical?: string } | undefined)?.vertical ?? null;
+
+  const isEventVendor = tenantVertical === "event-vendors";
+
+  const previewUrl = slug ? (isEventVendor ? `/e/${slug}` : `/book/${slug}`) : "";
 
   useEffect(() => {
     if (!bid || !presentationPresetsUiEnabled()) return;
@@ -230,10 +233,15 @@ export function PublicAppearancePanel({
   }, [draftPresetMeta?.cssPreset, draftPresetId, draftAccent, tenantVertical]);
 
   const publicPreviewQuery = useMemo(() => {
+    if (isEventVendor) {
+      const params = new URLSearchParams();
+      if (publicPreviewBust > 0) params.set("v", String(publicPreviewBust));
+      return params.toString();
+    }
     const params = new URLSearchParams(previewQuery);
     if (publicPreviewBust > 0) params.set("v", String(publicPreviewBust));
     return params.toString();
-  }, [previewQuery, publicPreviewBust]);
+  }, [previewQuery, publicPreviewBust, isEventVendor]);
 
   const previewIframeBg = useMemo(() => {
     const cssPreset = draftPresetMeta?.cssPreset ?? "platform-default";
@@ -307,7 +315,7 @@ export function PublicAppearancePanel({
     if (!previewUrl) return;
     const full = `${window.location.origin}${previewUrl}`;
     void navigator.clipboard.writeText(full);
-    toast({ title: "Booking link copied" });
+    toast({ title: isEventVendor ? "Website link copied" : "Booking link copied" });
   }
 
   if (!presentationPresetsUiEnabled() || !data?.presetsEnabled) {
@@ -340,7 +348,9 @@ export function PublicAppearancePanel({
                 Store appearance
               </CardTitle>
               <CardDescription className="mt-1">
-                One skin for your app and your book link — preview below, then apply.
+                {isEventVendor
+                  ? "Preset styles your Livia studio only — your client website is edited under Website & settings. Preview both below."
+                  : "One skin for your app and your book link — preview below, then apply."}
               </CardDescription>
             </div>
             <div className="flex flex-wrap items-center gap-2 shrink-0">
@@ -351,7 +361,7 @@ export function PublicAppearancePanel({
                 data-testid="appearance-apply"
                 onClick={() => void applyDraftAppearance()}
               >
-                {busy ? "Applying…" : "Apply to shop"}
+                {busy ? "Applying…" : isEventVendor ? "Apply to studio" : "Apply to shop"}
               </Button>
               {dirty ? (
                 <Button
@@ -369,7 +379,7 @@ export function PublicAppearancePanel({
           </div>
           {dirty ? (
             <p className="text-xs text-muted-foreground" data-testid="appearance-draft-hint">
-              Draft preview only — live app and public link update when you apply.
+              Unsaved preview
             </p>
           ) : null}
           <div className="flex items-center gap-2">
@@ -393,7 +403,7 @@ export function PublicAppearancePanel({
             <TabsList className="grid w-full grid-cols-2 max-w-md">
               <TabsTrigger value="public" className="gap-1.5 text-xs sm:text-sm">
                 <Smartphone className="h-3.5 w-3.5" />
-                Public /b
+                {isEventVendor ? "Client website" : "Public /b"}
               </TabsTrigger>
               <TabsTrigger value="app" className="gap-1.5 text-xs sm:text-sm">
                 <LayoutDashboard className="h-3.5 w-3.5" />

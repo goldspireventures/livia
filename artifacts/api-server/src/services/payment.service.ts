@@ -271,6 +271,18 @@ export async function upsertPaymentFromStripeIntent(
     : [];
 
   if (existingPayment) {
+    const kind = pi.metadata?.kind ?? "";
+    if (businessId && kind === "guest_quote_deposit") {
+      const quoteId = pi.metadata?.quoteId ?? null;
+      if (quoteId) {
+        const { applyGuestQuoteDepositFromWebhook } = await import("./guest-quote-pay.service");
+        await applyGuestQuoteDepositFromWebhook({
+          businessId,
+          quoteId,
+          amountMinor: pi.amount_received || pi.amount,
+        });
+      }
+    }
     return { paymentId: existingPayment.id, businessId: existingPayment.businessId };
   }
 
@@ -338,6 +350,16 @@ export async function upsertPaymentFromStripeIntent(
       .where(and(eq(bookingsTable.id, bookingId), eq(bookingsTable.businessId, businessId)));
     const { confirmBookingAfterStripePayment } = await import("./wellness-ops.service");
     void confirmBookingAfterStripePayment(businessId, bookingId).catch(() => undefined);
+  } else if (businessId && kind === "guest_quote_deposit") {
+    const quoteId = pi.metadata?.quoteId ?? bookingId;
+    if (quoteId) {
+      const { applyGuestQuoteDepositFromWebhook } = await import("./guest-quote-pay.service");
+      await applyGuestQuoteDepositFromWebhook({
+        businessId,
+        quoteId,
+        amountMinor: pi.amount_received || pi.amount,
+      });
+    }
   }
 
   if (kind === "retail_order" && retailOrderId) {

@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Sparkles, ChevronRight } from "lucide-react";
 import { apiFetch } from "@/lib/api-fetch";
 import { useBusiness } from "@/lib/business-context";
-import { dedupeLivMomentsByTitle } from "@workspace/policy";
+import { dedupeLivMomentsByTitle, resolveLivMomentsHomeCap } from "@workspace/policy";
 import { cn } from "@/lib/utils";
 
 type LivMoment = {
@@ -43,7 +43,11 @@ export function LivMomentsStrip({ className }: { className?: string }) {
     refetchInterval: 60_000,
   });
 
-  const moments = dedupeLivMomentsByTitle(data?.data ?? [], 2);
+  const vertical = (business as { vertical?: string } | null)?.vertical ?? null;
+  const moments = dedupeLivMomentsByTitle(
+    data?.data ?? [],
+    resolveLivMomentsHomeCap(vertical),
+  );
   if (moments.length === 0) return null;
 
   return (

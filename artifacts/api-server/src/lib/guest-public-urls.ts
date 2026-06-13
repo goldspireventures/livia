@@ -56,3 +56,14 @@ export function resolveGuestTokenUrl(
 export function resolveGuestBookPath(slug: string): string {
   return guestBookPath(slug);
 }
+
+/** Public quote page — subdomain in prod (`{slug}.livia-hq.com/q/{token}`), `/e/` path in dev. */
+export function resolveGuestQuoteUrl(slug: string, token: string): string {
+  const env = guestBookUrlEnv();
+  const encoded = encodeURIComponent(token);
+  if (env.forcePathMode || !env.bookHostSuffix) {
+    const origin = getDashboardUrl().replace(/\/+$/, "");
+    return `${origin}/e/${slug}/q/${encoded}`;
+  }
+  return `https://${slug}.${env.bookHostSuffix}/q/${encoded}`;
+}

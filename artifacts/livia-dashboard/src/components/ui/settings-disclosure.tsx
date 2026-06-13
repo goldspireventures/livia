@@ -11,7 +11,7 @@ type Props = {
   "data-testid"?: string;
 };
 
-/** Lightweight collapsible — keeps long settings pages scannable without extra deps. */
+/** Lightweight collapsible — title only; never use description for UI mechanics (see policy event-vendor-quote-program). */
 export function SettingsDisclosure({
   id,
   title,

@@ -6,16 +6,15 @@ import * as WebBrowser from "expo-web-browser";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -39,7 +38,7 @@ import {
   isDemoLiviaEmail,
   normalizeDemoSignInIdentifier,
 } from "@/lib/demo-sign-in";
-import { persistDemoSession } from "@/lib/demo-session";
+import { clearDemoSession, persistDemoSession } from "@/lib/demo-session";
 import { isDemoLoginEnabled, setDevPersonaOverride } from "@/hooks/usePersona";
 import { LIVIA_MOBILE_ENTRY_COPY } from "@workspace/policy";
 
@@ -140,6 +139,7 @@ export default function SignInScreen() {
 
       const result = await signIn.create({ identifier, password });
       if (result.status === "complete") {
+        await clearDemoSession();
         await setActiveSignIn({ session: result.createdSessionId });
         haptics.success();
       } else if (isDemoLiviaEmail(identifier)) {
@@ -169,6 +169,7 @@ export default function SignInScreen() {
     setLoading(true);
     setError("");
     try {
+      await clearDemoSession();
       await signUp.create({ emailAddress: email.trim(), password });
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
       setMode("verify");
@@ -190,6 +191,7 @@ export default function SignInScreen() {
     try {
       const result = await signUp.attemptEmailAddressVerification({ code: code.trim() });
       if (result.status === "complete") {
+        await clearDemoSession();
         await setActiveSignUp({ session: result.createdSessionId });
         haptics.success();
       }
@@ -216,6 +218,7 @@ export default function SignInScreen() {
       const result = await startGoogleFlow({ redirectUrl });
       const { createdSessionId, setActive, signIn: oauthSignIn, signUp: oauthSignUp } = result;
       if (createdSessionId && setActive) {
+        await clearDemoSession();
         await setActive({ session: createdSessionId });
         haptics.success();
         return;
@@ -227,6 +230,7 @@ export default function SignInScreen() {
         try {
           await signUp.create({ transfer: true });
           if (signUp.createdSessionId && setActiveSignUp) {
+            await clearDemoSession();
             await setActiveSignUp({ session: signUp.createdSessionId });
             haptics.success();
             return;
@@ -263,38 +267,50 @@ export default function SignInScreen() {
         ? "Welcome back. Your day is already in motion."
         : "Two minutes to set up. Hours back every week.";
 
+  const formFocused = focused !== null;
+
   return (
-    <KeyboardAvoidingView
-      style={[styles.root, { backgroundColor: colors.background }]}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? Math.max(0, insets.top) : 0}
-    >
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
       {/* ADR 0004 / marketing bible: single soft cyan halo */}
       <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
         <AuroraHalo tone="primary" size={480} intensity={0.85} style={{ top: -100, left: -60 }} />
       </View>
 
-      <ScrollView
+      <KeyboardAwareScrollViewCompat
+        style={styles.scroll}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        showsVerticalScrollIndicator={false}
+        bottomOffset={insets.bottom + 20}
+        extraKeyboardSpace={24}
         contentContainerStyle={[
           styles.container,
-          { paddingTop: insets.top + 28, paddingBottom: insets.bottom + 24 },
+          {
+            paddingTop: insets.top + (formFocused ? 12 : 28),
+            paddingBottom: insets.bottom + 32,
+          },
         ]}
       >
-        <View style={styles.brand}>
+        <View style={[styles.brand, formFocused && styles.brandCompact]}>
           <Animated.View style={wordmarkStyle}>
-            <LiviaWordmark size="lg" color={colors.foreground} />
+            <LiviaWordmark size={formFocused ? "md" : "lg"} color={colors.foreground} />
           </Animated.View>
 
-          <Animated.View style={headlineStyle}>
-            <GatewaySignInStory />
-          </Animated.View>
+          {!formFocused ? (
+            <>
+              <Animated.View style={headlineStyle}>
+                <GatewaySignInStory />
+              </Animated.View>
 
-          <Animated.Text
-            style={[styles.tagline, { color: colors.mutedForeground }, taglineStyle]}
-          >
-            {tagline}
-          </Animated.Text>
+              <Animated.Text
+                style={[styles.tagline, { color: colors.mutedForeground }, taglineStyle]}
+              >
+                {tagline}
+              </Animated.Text>
+            </>
+          ) : (
+            <Text style={[styles.tagline, { color: colors.mutedForeground }]}>{tagline}</Text>
+          )}
         </View>
 
         <Animated.View
@@ -544,8 +560,8 @@ export default function SignInScreen() {
         <Text style={[styles.legal, { color: colors.mutedForeground }]}>
           By continuing you agree to Livia's Terms & Privacy Policy.
         </Text>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAwareScrollViewCompat>
+    </View>
   );
 }
 
@@ -585,15 +601,19 @@ function humanizeAuthError(code: string | undefined, fallback: string | undefine
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  scroll: { flex: 1 },
   container: {
-    flex: 1,
     paddingHorizontal: 22,
-    justifyContent: "space-between",
+    gap: 20,
   },
   brand: {
     alignItems: "center",
     gap: 16,
     paddingTop: 24,
+  },
+  brandCompact: {
+    gap: 10,
+    paddingTop: 4,
   },
   headline: {
     fontFamily: fonts.serifMedium,

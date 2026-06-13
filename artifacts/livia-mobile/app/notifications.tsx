@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   groupNotificationsByDay,
   notificationFeedIcon,
+  notificationsEmptySubtitle,
   type NotificationFeedIcon,
 } from "@workspace/policy";
 import { fonts, type } from "@/constants/typography";
@@ -184,7 +185,7 @@ export default function NotificationsScreen() {
           <EmptyState
             icon="bell"
             title="You're all caught up"
-            subtitle="Liv will surface bookings, inbox handoffs, and chain alerts when they need you."
+            subtitle={notificationsEmptySubtitle()}
           />
         ) : (
           <>

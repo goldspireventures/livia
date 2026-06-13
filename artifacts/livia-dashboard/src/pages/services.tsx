@@ -47,6 +47,7 @@ interface ServiceForm {
 }
 
 function serviceNamePlaceholder(vertical: string): string {
+  if (vertical === "event-vendors") return "e.g. Balloon garland";
   if (vertical === "beauty") return "e.g. Lash fill";
   if (vertical === "hair") return "e.g. Cut & finish";
   if (vertical === "wellness") return "e.g. 60 min massage";
@@ -121,8 +122,14 @@ export default function ServicesPage() {
     (business as { category?: string } | null)?.category,
   );
   const isBeauty = verticalKey === "beauty";
-  const serviceLabel = vocab.serviceNoun;
-  const newItemLabel = isBeauty ? `New ${serviceLabel.toLowerCase()}` : "New service";
+  const isEventVendor = verticalKey === "event-vendors";
+  const serviceLabel = isEventVendor ? vocab.publicBookCatalogTitle : vocab.serviceNoun;
+  const itemNameLabel = isEventVendor ? "Catalogue item name" : `${serviceLabel} name`;
+  const newItemLabel = isBeauty
+    ? `New ${serviceLabel.toLowerCase()}`
+    : isEventVendor
+      ? "New catalogue item"
+      : "New service";
 
   function beautyPayload(vals: ServiceForm) {
     if (!isBeauty) return {};
@@ -164,7 +171,7 @@ export default function ServicesPage() {
           description: vals.description || undefined,
           aftercareInstructions: vals.aftercareInstructions?.trim() || undefined,
           category: vals.category?.trim() || undefined,
-          durationMinutes: Number(vals.durationMinutes),
+          durationMinutes: isEventVendor ? 0 : Number(vals.durationMinutes),
           priceMinor: minorFromMajor(Number(vals.priceMajor)),
           currency: vals.currency || "EUR",
           imageUrl: vals.imageUrl?.trim() || undefined,
@@ -193,7 +200,7 @@ export default function ServicesPage() {
           description: vals.description || undefined,
           aftercareInstructions: vals.aftercareInstructions?.trim() || undefined,
           category: vals.category?.trim() || undefined,
-          durationMinutes: Number(vals.durationMinutes),
+          durationMinutes: isEventVendor ? 0 : Number(vals.durationMinutes),
           priceMinor: minorFromMajor(Number(vals.priceMajor)),
           currency: vals.currency || "EUR",
           imageUrl: vals.imageUrl?.trim() || undefined,
@@ -306,7 +313,7 @@ export default function ServicesPage() {
               ) : null}
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div className="space-y-2">
-                  <Label>{serviceLabel} name *</Label>
+                  <Label>{itemNameLabel} *</Label>
                   <Input
                     {...register("name", { required: true })}
                     placeholder={serviceNamePlaceholder(verticalKey)}
@@ -328,6 +335,16 @@ export default function ServicesPage() {
                         </option>
                       ))}
                     </select>
+                  </div>
+                ) : null}
+                {isEventVendor ? (
+                  <div className="space-y-2">
+                    <Label>Category</Label>
+                    <Input
+                      {...register("category")}
+                      placeholder="e.g. Balloons, Tables, Backdrops"
+                      data-testid="input-service-category"
+                    />
                   </div>
                 ) : null}
                 {isBeauty ? (
@@ -367,10 +384,15 @@ export default function ServicesPage() {
                   <Label>Description</Label>
                   <Textarea
                     {...register("description")}
-                    placeholder="What's included..."
+                    placeholder={
+                      isEventVendor
+                        ? "What's included — setup, delivery, pack-down…"
+                        : "What's included..."
+                    }
                     data-testid="input-description"
                   />
                 </div>
+                {!isEventVendor ? (
                 <div className="space-y-2">
                   <Label>Aftercare instructions</Label>
                   <Textarea
@@ -380,6 +402,8 @@ export default function ServicesPage() {
                     rows={3}
                   />
                 </div>
+                ) : null}
+                {!isEventVendor ? (
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="flex items-center gap-1">
@@ -409,6 +433,25 @@ export default function ServicesPage() {
                     />
                   </div>
                 </div>
+                ) : (
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-1">
+                    <DollarSign className="h-3 w-3" />
+                    Starting price ({draftCurrency}) *
+                  </Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    step={0.01}
+                    {...register("priceMajor", { required: true, min: 0, valueAsNumber: true })}
+                    placeholder="180.00"
+                    data-testid="input-price"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Quotes use this as the unit price — per guest/table depends on catalogue setup.
+                  </p>
+                </div>
+                )}
                 <div className="space-y-2">
                   <Label>Currency</Label>
                   <Input {...register("currency")} placeholder="USD" data-testid="input-currency" />
@@ -442,17 +485,23 @@ export default function ServicesPage() {
       <Dialog open={!!editId} onOpenChange={(o) => !o && setEditId(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit {serviceLabel.toLowerCase()}</DialogTitle>
+            <DialogTitle>Edit {isEventVendor ? "catalogue item" : serviceLabel.toLowerCase()}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit(saveEdit)} className="space-y-4">
             <div className="space-y-2">
-              <Label>Service name *</Label>
+              <Label>{itemNameLabel} *</Label>
               <Input {...register("name", { required: true })} />
             </div>
             <div className="space-y-2">
               <Label>Description</Label>
-              <Textarea {...register("description")} />
+              <Textarea
+                {...register("description")}
+                placeholder={
+                  isEventVendor ? "What's included — setup, delivery, pack-down…" : undefined
+                }
+              />
             </div>
+            {!isEventVendor ? (
             <div className="space-y-2">
               <Label>Aftercare instructions</Label>
               <Textarea
@@ -461,6 +510,14 @@ export default function ServicesPage() {
                 rows={3}
               />
             </div>
+            ) : null}
+            {isEventVendor ? (
+              <div className="space-y-2">
+                <Label>Category</Label>
+                <Input {...register("category")} placeholder="e.g. Balloons, Tables" />
+              </div>
+            ) : null}
+            {!isEventVendor ? (
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Duration (min)</Label>
@@ -476,6 +533,17 @@ export default function ServicesPage() {
                 />
               </div>
             </div>
+            ) : (
+            <div className="space-y-2">
+              <Label>Starting price ({draftCurrency})</Label>
+              <Input
+                type="number"
+                min={0}
+                step={0.01}
+                {...register("priceMajor", { required: true, min: 0, valueAsNumber: true })}
+              />
+            </div>
+            )}
             {isBeauty ? (
               <div className="grid grid-cols-2 gap-4 border-t border-border/60 pt-3">
                 <div className="space-y-2">

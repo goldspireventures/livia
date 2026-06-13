@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, isNull, or, sql } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, isNull, or, sql } from "drizzle-orm";
 import {
   db,
   businessesTable,
@@ -8,6 +8,8 @@ import {
   servicesTable,
   staffServicesTable,
   conversationsTable,
+  enquiriesTable,
+  quotesTable,
   petsTable,
   medicalIntakeRecordsTable,
   slotWaitlistEntriesTable,
@@ -16,14 +18,15 @@ import { createStaff } from "./staff.service";
 import { createService } from "./services.service";
 import { createCustomer } from "./customers.service";
 import { createPet } from "./pets.service";
-import { seedExpandedBookings, seedDemoInbox } from "./demo-inbox.seed";
+import { resyncConsultFirstDemoInbox, seedExpandedBookings, seedDemoInbox } from "./demo-inbox.seed";
 import { ensureLiveDayForBusiness } from "./demo-live-day.service";
 import { ensureWellnessShowcaseDepth } from "./wellness-demo-depth";
 import { ensureDemoOperationalCases } from "./demo-operational-cases.seed";
 import { applyDemoPublicBranding } from "../lib/demo-public-assets";
 import { backfillDemoServiceImages } from "../lib/demo-service-images";
 import { inferDemoServiceImageUrl } from "../lib/experience-skin";
-import type { BusinessVertical } from "@workspace/policy";
+import { consultFirstDemoCustomerCap, isConsultFirstVertical, type BusinessVertical } from "@workspace/policy";
+import { ensureDefaultLivOutboundOverrides } from "./liv-outbound.service";
 
 type StaffDef = {
   firstName: string;
@@ -180,6 +183,37 @@ export async function ensureShowcaseCustomers(businessId: string, minimum = 20):
   return rows;
 }
 
+/** Consult-first demos keep enquirers tied to pipeline — not 20+ salon-style guests. */
+export async function pruneConsultFirstDemoCustomers(businessId: string): Promise<number> {
+  const keep = new Set<string>();
+  const enquiryRows = await db
+    .select({ customerId: enquiriesTable.customerId })
+    .from(enquiriesTable)
+    .where(eq(enquiriesTable.businessId, businessId));
+  const quoteRows = await db
+    .select({ customerId: quotesTable.customerId })
+    .from(quotesTable)
+    .where(eq(quotesTable.businessId, businessId));
+  const convoRows = await db
+    .select({ customerId: conversationsTable.customerId })
+    .from(conversationsTable)
+    .where(eq(conversationsTable.businessId, businessId));
+  for (const row of [...enquiryRows, ...quoteRows, ...convoRows]) {
+    if (row.customerId) keep.add(row.customerId);
+  }
+
+  const all = await db
+    .select({ id: customersTable.id })
+    .from(customersTable)
+    .where(eq(customersTable.businessId, businessId));
+  const toDelete = all.filter((c) => !keep.has(c.id)).map((c) => c.id);
+  if (!toDelete.length) return 0;
+  await db
+    .delete(customersTable)
+    .where(and(eq(customersTable.businessId, businessId), inArray(customersTable.id, toDelete)));
+  return toDelete.length;
+}
+
 export async function ensureShowcasePets(
   businessId: string,
   customerIds: string[],
@@ -222,11 +256,15 @@ export async function refreshVerticalShowcaseShop(
   },
 ): Promise<void> {
   await applyDemoPublicBranding(businessId, d.vertical);
+  await ensureDefaultLivOutboundOverrides(businessId, d.vertical);
   await backfillDemoServiceImages(businessId, d.vertical, { force: true });
 
   const staffRows = await ensureShowcaseStaff(businessId, d.staff);
   const serviceRows = await ensureShowcaseServices(businessId, d.services, d.vertical);
-  const customers = await ensureShowcaseCustomers(businessId, 20);
+  const customerMinimum = isConsultFirstVertical(d.vertical)
+    ? consultFirstDemoCustomerCap()
+    : 20;
+  const customers = await ensureShowcaseCustomers(businessId, customerMinimum);
   await linkStaffToAllServices(
     businessId,
     staffRows.map((s) => s.id),
@@ -250,15 +288,27 @@ export async function refreshVerticalShowcaseShop(
   const serviceIds = serviceRows.map((s) => s.id);
   const now = new Date();
 
+  const consultFirst = isConsultFirstVertical(d.vertical);
   let bookingKeys: Record<string, string> = {};
   if ((inboxCount?.count ?? 0) === 0) {
-    bookingKeys = await seedExpandedBookings(businessId, customers, staffIds, serviceIds, now);
+    if (!consultFirst) {
+      bookingKeys = await seedExpandedBookings(
+        businessId,
+        customers,
+        staffIds,
+        serviceIds,
+        now,
+        d.vertical,
+      );
+    }
     await seedDemoInbox(businessId, customers, {
       vertical: d.vertical,
       bookingKeys,
-      pendingBookingNotes: "Liv created — confirm when ready",
+      ...(consultFirst ? {} : { pendingBookingNotes: "Liv created — confirm when ready" }),
     });
-    await ensureDemoOperationalCases(businessId, d.slug, bookingKeys);
+    if (!consultFirst) {
+      await ensureDemoOperationalCases(businessId, d.slug, bookingKeys);
+    }
   }
 
   await ensureLiveDayForBusiness(businessId, {
@@ -266,11 +316,37 @@ export async function refreshVerticalShowcaseShop(
     customerSeed: customers,
     staffIds,
     serviceIds,
-    seedInbox: (inboxCount?.count ?? 0) === 0,
+    seedInbox: false,
+    vertical: d.vertical,
   });
 
   if (d.vertical === "wellness") {
     await ensureWellnessShowcaseDepth(businessId);
+  }
+
+  if (d.vertical === "event-vendors") {
+    await pruneConsultFirstDemoCustomers(businessId);
+    const slimCustomers = await db
+      .select({
+        id: customersTable.id,
+        displayName: customersTable.displayName,
+        firstName: customersTable.firstName,
+        lastName: customersTable.lastName,
+        email: customersTable.email,
+        phone: customersTable.phone,
+      })
+      .from(customersTable)
+      .where(eq(customersTable.businessId, businessId));
+    await resyncConsultFirstDemoInbox(
+      businessId,
+      slimCustomers.map((c) => ({
+        id: c.id,
+        displayName: c.displayName ?? (`${c.firstName ?? ""} ${c.lastName ?? ""}`.trim() || "Guest"),
+        email: c.email ?? "",
+        phone: c.phone ?? "",
+      })),
+      d.vertical,
+    );
   }
 }
 

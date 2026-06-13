@@ -11,6 +11,7 @@ import { apiFetch } from "@/lib/api-fetch";
 import { useQuery } from "@tanstack/react-query";
 import { PlatformLegalGate } from "@/components/platform-legal-gate";
 import { isDemoAccountEmail, isDemoTenantSlug } from "@/lib/demo-tenant";
+import { FOUNDER_DEMO_LAUNCHER_PATH } from "@/lib/demo-routes";
 import { isOnboardingAppUnlocked, type OnboardingState } from "@workspace/policy";
 import { PlatformExecHandoff } from "@/components/platform-exec-handoff";
 
@@ -78,7 +79,14 @@ export function AuthGuard({ children }: { children: ReactNode }) {
   }
 
   if (!isSignedIn) {
-    const gate = isDemoLoginEnabled ? "/demo" : "/sign-in";
+    const isFounderOnboarding =
+      location === "/onboarding" || location.startsWith("/onboarding/");
+    // Demo-enabled stacks must not send real founders through G1 → marketing book-demo.
+    if (isFounderOnboarding && isDemoLoginEnabled) {
+      const params = new URLSearchParams({ beta: "1", redirect_url: location });
+      return <Redirect to={`/sign-in?${params.toString()}`} />;
+    }
+    const gate = isDemoLoginEnabled ? FOUNDER_DEMO_LAUNCHER_PATH : "/sign-in";
     return <Redirect to={`${gate}?redirect_url=${encodeURIComponent(location)}`} />;
   }
 
@@ -120,8 +128,12 @@ function BusinessDataLoader({
 
   if (!hasAny && location !== "/onboarding" && location !== "/legal-acceptance") {
     // Demo roster accounts need provisioned world + membership — send to launcher, not self-serve onboarding.
-    if (demoEmail && location !== "/demo" && !location.startsWith("/demo/")) {
-      return <Redirect to="/demo?reason=no-membership" />;
+    if (
+      demoEmail &&
+      location !== FOUNDER_DEMO_LAUNCHER_PATH &&
+      !location.startsWith("/demo/")
+    ) {
+      return <Redirect to={`${FOUNDER_DEMO_LAUNCHER_PATH}?reason=no-membership`} />;
     }
     return <Redirect to="/onboarding" />;
   }

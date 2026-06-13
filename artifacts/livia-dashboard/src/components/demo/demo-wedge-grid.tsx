@@ -25,8 +25,8 @@ export function DemoWedgeGrid({ className }: { className?: string }) {
         Pick your world
       </h2>
       <p className="mb-4 text-center text-xs text-white/50 lg:text-left">
-        <span className="text-white/70">Live now:</span> Beauty · Wellness · Hair · Medspa — scroll for all
-        worlds.
+        <span className="text-white/70">Live now:</span> Beauty · Wellness · Hair · Medspa · Events — scroll for
+        all worlds.
       </p>
       <div className="gateway-g1-cards-track">
         {listG1WedgeWorldsForDisplay().map((world) => {

@@ -74,7 +74,7 @@ export function BeautyStationSchedule({
         onAssignBookingToResource={onAssignBookingToResource}
         assigningBookingId={assigningBookingId}
         hero={hero}
-        roomBoardFootnote="Assign chairs in Settings → Resources when you run multiple stations."
+        roomBoardFootnote="Assign chairs in Settings → Resources for multi-station floors."
       />
     </div>
   );

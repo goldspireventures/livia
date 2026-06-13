@@ -101,6 +101,7 @@ const PROGRAM_DOCS: Record<BusinessVertical, string> = {
   "allied-health": "docs/product/ALLIED-HEALTH-VERTICAL-PROGRAM.md",
   "pet-grooming": "docs/product/PET-GROOMING-VERTICAL-PROGRAM.md",
   "automotive-detailing": "docs/product/AUTOMOTIVE-DETAILING-VERTICAL-PROGRAM.md",
+  "event-vendors": "docs/product/EVENT-VENDORS-VERTICAL-PROGRAM.md",
 };
 
 const BASE_CAPABILITIES: VerticalCapability[] = [

@@ -15,6 +15,7 @@ export const businessVerticalSchema = z.enum([
   "allied-health",
   "pet-grooming",
   "automotive-detailing",
+  "event-vendors",
 ]);
 export type BusinessVertical = z.infer<typeof businessVerticalSchema>;
 

@@ -4,5 +4,6 @@ export function isPublicGuestPath(path: string): boolean {
   if (p === "/my" || p.startsWith("/my/")) return true;
   if (p.startsWith("/book/") || p.startsWith("/b/")) return true;
   if (p.startsWith("/p/")) return true;
+  if (p.startsWith("/e/")) return true;
   return false;
 }

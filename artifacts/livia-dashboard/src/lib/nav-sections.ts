@@ -25,6 +25,8 @@ const HREF_SECTION: Record<string, NavSectionId> = {
   "/franchise": "business",
   "/medspa": "business",
   "/design-proofs": "business",
+  "/quotes": "business",
+  "/event-site": "business",
   "/day-packages": "business",
   "/premises": "business",
   "/audit": "account",

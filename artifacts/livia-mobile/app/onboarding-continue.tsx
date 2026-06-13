@@ -18,6 +18,8 @@ import { fetchTenantExperience } from "@/lib/tenant-experience";
 import { verticalAccentHex } from "@/lib/vertical-theme";
 import { verticalPackUi } from "@/lib/vertical-pack-ui";
 import { isOnboardingAppUnlocked, type OnboardingState } from "@workspace/policy";
+import { webOnboardingUrl } from "@/lib/cross-surface-handoff";
+import { getPublicBookingUrl } from "@/lib/public-booking-url";
 
 export default function OnboardingContinueScreen() {
   const colors = useColors();
@@ -42,9 +44,6 @@ export default function OnboardingContinueScreen() {
     if (!bid) return;
     void fetchTenantExperience(bid, getToken).then(setExperience);
   }, [bid, getToken]);
-
-  const dashboardUrl =
-    process.env.EXPO_PUBLIC_DASHBOARD_URL?.replace(/\/+$/, "") ?? "https://app.livia-hq.com";
 
   const steps = experience?.onboarding.activationSteps ?? [];
   const appUnlocked = isOnboardingAppUnlocked(state);
@@ -97,7 +96,7 @@ export default function OnboardingContinueScreen() {
 
       <Pressable
         style={[styles.btnOutline, { borderColor: colors.border, marginTop: appUnlocked ? 0 : 10 }]}
-        onPress={() => void Linking.openURL(`${dashboardUrl}/onboarding`)}
+        onPress={() => void Linking.openURL(webOnboardingUrl(bid))}
       >
         <Text style={{ color: accent, fontWeight: "600" }}>Full wizard on web</Text>
       </Pressable>
@@ -105,7 +104,7 @@ export default function OnboardingContinueScreen() {
       {slug ? (
         <Pressable
           style={[styles.btnOutline, { borderColor: colors.border }]}
-          onPress={() => void Linking.openURL(`${dashboardUrl}/b/${slug}`)}
+          onPress={() => void Linking.openURL(getPublicBookingUrl(slug))}
         >
           <Text style={{ color: accent, fontWeight: "600" }}>
             {experience?.playbook.publicCta ?? "Test booking page"}

@@ -32,6 +32,8 @@ export type OperatorFirstRunStep = {
 
 export type OperatorExperiencePack = {
   soloMode: boolean;
+  /** Pitch + quick-action strip on Today — off for consult-first verticals where briefing is enough. */
+  showSoloCopilotCard: boolean;
   segmentLabel: string | null;
   livPitch: string;
   livSubline: string;
@@ -137,6 +139,10 @@ const VERTICAL_SOLO_PITCH: Partial<Record<BusinessVertical, { pitch: string; sub
     pitch: "Liv buffers bay time, pickup windows, and customer updates.",
     subline: "Solo detail — Liv runs comms while you work the paint.",
   },
+  "event-vendors": {
+    pitch: "Liv drafts quotes from your catalogue and nudges stale enquiries.",
+    subline: "Solo decor — one link from IG, organised pipeline to booked.",
+  },
 };
 
 function resolveSoloCopy(
@@ -173,10 +179,50 @@ function soloQuickActions(vertical: BusinessVertical): OperatorQuickAction[] {
       ...base,
     ];
   }
+  if (vertical === "event-vendors") {
+    return [
+      { id: "enquiries", label: "Open inbox", href: "/inbox", mobileRoute: "/inbox" },
+      { id: "quotes", label: "Draft quote", href: "/quotes", mobileRoute: "/quotes" },
+      { id: "share-website", label: "Share website", href: "/event-site", mobileRoute: "/event-site" },
+      { id: "ask-liv", label: "Ask Liv", href: "/my-livia", mobileRoute: "/my-livia" },
+    ];
+  }
   return base;
 }
 
 function soloFirstRunSteps(vertical: BusinessVertical): OperatorFirstRunStep[] {
+  if (vertical === "event-vendors") {
+    return [
+      {
+        step: 1,
+        label: "Build your catalogue",
+        body: "Add decor items with starting prices — quotes pull line items from here.",
+        href: "/services",
+        mobileRoute: "/services",
+      },
+      {
+        step: 2,
+        label: "Polish your website",
+        body: "Gallery, hero copy, and deposit rules — what clients see before they enquire.",
+        href: "/event-site",
+        mobileRoute: "/event-site",
+      },
+      {
+        step: 3,
+        label: "Share your enquire link",
+        body: "Drop the link in your Instagram bio — enquiries land in one inbox.",
+        href: "/settings?tab=shop",
+        mobileRoute: "/settings",
+      },
+      {
+        step: 4,
+        label: "Send your first quote",
+        body: "Generate from an enquiry, tweak the invoice, send by email or WhatsApp.",
+        href: "/inbox",
+        mobileRoute: "/inbox",
+      },
+    ];
+  }
   const vocab = businessVocabulary(vertical);
   return [
     {
@@ -203,7 +249,7 @@ function soloFirstRunSteps(vertical: BusinessVertical): OperatorFirstRunStep[] {
     {
       step: 4,
       label: "Take your first booking",
-      body: "Test with a manual booking or send your link — Liv will handle the rest from there.",
+      body: "Test with a manual booking or share your link — Liv handles inbox from there.",
       href: "/bookings?create=1",
       mobileRoute: "/bookings",
     },
@@ -262,6 +308,10 @@ function livOpsStartersForProfile(profile: SubverticalProfile, vertical: Busines
       "Consults waiting on deposit?",
       "Sessions needing proof approval",
     ],
+    "event-vendors.default": [
+      "Which enquiries need a quote today?",
+      "Draft a follow-up for quotes sent 5+ days ago",
+    ],
   };
   const specific = byId[profile.id];
   if (specific) return specific;
@@ -292,6 +342,7 @@ export function resolveOperatorExperience(args: {
   if (!soloMode) {
     return {
       soloMode: false,
+      showSoloCopilotCard: false,
       segmentLabel,
       livPitch: "",
       livSubline: "",
@@ -308,6 +359,7 @@ export function resolveOperatorExperience(args: {
   const name = args.businessName?.trim();
   return {
     soloMode: true,
+    showSoloCopilotCard: key !== "event-vendors",
     segmentLabel,
     livPitch: pitch,
     livSubline: subline,

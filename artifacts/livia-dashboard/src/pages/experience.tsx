@@ -163,7 +163,7 @@ export default function ExperiencePage() {
           Public — customer POV
         </h2>
         <p className="text-sm text-muted-foreground">
-          No login. This is what your client sees when they book or chat with Liv.
+          Guest preview — booking page and Liv chat, no login required.
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
           {map?.businesses.map((b) => (
@@ -190,7 +190,7 @@ export default function ExperiencePage() {
               <CardDescription>Seven persona rituals — visual only, no live data</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="secondary" size="sm" onClick={() => navigate("/demo")}>
+              <Button variant="secondary" size="sm" onClick={() => navigate("/demo/founder")}>
                 Open /demo gallery
               </Button>
             </CardContent>

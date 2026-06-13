@@ -112,7 +112,7 @@ setup("provision demo and sign in as founder", async ({ page, request }) => {
   if (!ticketOk) {
     await provisionDemo(request);
     const uiOk = await page
-      .goto("/demo", { waitUntil: "domcontentloaded" })
+      .goto("/demo/founder", { waitUntil: "domcontentloaded" })
       .then(async () => {
         await expect(page.getByText(/demo world loaded/i)).toBeVisible({ timeout: 20_000 });
         const signInPromise = page.waitForResponse(

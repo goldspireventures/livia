@@ -9,9 +9,18 @@ import { cn } from "@/lib/utils";
 
 type AssistMessage = { role: "user" | "assistant"; content: string };
 
-export function OwnerLivOpsPanel({ className, compact }: { className?: string; compact?: boolean }) {
+export function OwnerLivOpsPanel({
+  className,
+  compact,
+  variant,
+}: {
+  className?: string;
+  compact?: boolean;
+  variant?: "default" | "event-vendors";
+}) {
   const { business } = useBusiness();
   const bid = business?.id ?? "";
+  const isEventVendor = variant === "event-vendors";
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState<AssistMessage[]>([]);
@@ -52,7 +61,9 @@ export function OwnerLivOpsPanel({ className, compact }: { className?: string; c
           Ask Liv
         </CardTitle>
         <CardDescription>
-          Revenue, inbox, and setup — grounded in your shop, not generic chat.
+          {isEventVendor
+            ? "Enquiries, quotes, and follow-ups — grounded in your pipeline."
+            : "Revenue, inbox, and setup — grounded in your shop, not generic chat."}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -81,7 +92,11 @@ export function OwnerLivOpsPanel({ className, compact }: { className?: string; c
           <Textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="What's worth my attention on the floor today?"
+            placeholder={
+              isEventVendor
+                ? "Which enquiries need a quote today?"
+                : "What's worth my attention on the floor today?"
+            }
             className="min-h-[72px] text-sm"
             disabled={loading || !bid}
             onKeyDown={(e) => {

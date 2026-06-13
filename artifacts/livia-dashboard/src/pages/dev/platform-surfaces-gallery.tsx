@@ -64,7 +64,7 @@ export default function PlatformSurfacesGalleryPage() {
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <Button variant="outline" size="sm" asChild>
-            <Link href="/demo">Demo launcher (live)</Link>
+            <Link href="/demo/founder">Demo launcher (live)</Link>
           </Button>
           <Button variant="outline" size="sm" asChild>
             <Link href="/experience/brand-logos">Logo concepts</Link>

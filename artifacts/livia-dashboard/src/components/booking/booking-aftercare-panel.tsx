@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { bookingAftercareAutoSendLine } from "@workspace/policy";
 import { Sparkles } from "lucide-react";
 
 type AftercareState = {
@@ -93,7 +94,7 @@ export function BookingAftercarePanel({
           </>
         ) : (
           <p className="text-sm text-muted-foreground">
-            Liv will send aftercare automatically per your guest care settings.
+            {bookingAftercareAutoSendLine()}
           </p>
         )}
       </CardContent>

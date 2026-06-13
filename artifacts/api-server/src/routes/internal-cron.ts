@@ -221,6 +221,20 @@ router.post("/internal/cron/evening-notification-roundup", async (req, res): Pro
   res.json(result);
 });
 
+/** Event-vendor — Liv prep nudges + post-event review emails (consult-first lifecycle). */
+router.post("/internal/cron/event-vendor-lifecycle", async (req, res): Promise<void> => {
+  if (!authorize(req)) {
+    sendError(res, req, 401, "Unauthorized");
+    return;
+  }
+  const { runEventVendorLifecycleSweep } = await import(
+    "../services/event-vendor-lifecycle.service"
+  );
+  const businessId = (req.body?.businessId as string | undefined)?.trim();
+  const result = await runEventVendorLifecycleSweep(businessId ? { businessId } : undefined);
+  res.json(result);
+});
+
 router.post("/internal/cron/test-push", async (req, res): Promise<void> => {
   if (!authorize(req)) {
     sendError(res, req, 401, "Unauthorized");

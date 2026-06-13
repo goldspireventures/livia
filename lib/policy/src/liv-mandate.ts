@@ -88,6 +88,7 @@ export const VERTICAL_MANDATE_DEFAULTS: Record<BusinessVertical, Partial<LivMand
   "allied-health": { rung: "R1", trustScore: 32, maxAutoValueMinor: 0 },
   "pet-grooming": { rung: "R2", trustScore: 44 },
   "automotive-detailing": { rung: "R2", trustScore: 42 },
+  "event-vendors": { rung: "R1", trustScore: 35 },
 };
 
 export function parseLivMandate(raw: unknown): LivMandate {

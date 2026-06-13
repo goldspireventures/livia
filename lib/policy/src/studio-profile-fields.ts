@@ -107,6 +107,17 @@ const VERTICAL_ORDER: Record<BusinessVertical, StudioProfileFieldId[]> = {
     "country",
     "timezone",
   ],
+  "event-vendors": [
+    "name",
+    "slug",
+    "description",
+    "logoUrl",
+    "phone",
+    "instagramHandle",
+    "city",
+    "country",
+    "timezone",
+  ],
 };
 
 const VERTICAL_OVERRIDES: Partial<
@@ -177,6 +188,14 @@ const VERTICAL_OVERRIDES: Partial<
       placeholder: "Services, bay hours, vehicle notes you need upfront…",
     },
     logoUrl: { label: "Brand logo URL" },
+  },
+  "event-vendors": {
+    description: {
+      label: "Studio tagline",
+      placeholder: "Event styling, balloons, weddings — what you specialise in…",
+    },
+    instagramHandle: { label: "Instagram handle" },
+    logoUrl: { label: "Logo URL" },
   },
 };
 

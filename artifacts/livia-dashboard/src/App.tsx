@@ -7,7 +7,7 @@ import { SIGN_IN_AFTER_SIGN_OUT } from "@/lib/auth-routes";
 import { setAuthTokenGetter } from "@workspace/api-client-react";
 import { dark } from "@clerk/themes";
 import { ThemeProvider, useTheme } from "next-themes";
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 
 import { AuthGuard } from "@/components/auth-guard";
 import { AppLayout } from "@/components/layout/app-layout";
@@ -37,6 +37,9 @@ import {
   LazyBeautyStorePage,
   LazyStudioSetupPage,
   LazyDesignProofsPage,
+  LazyEnquiriesRedirect,
+  LazyQuotesPage,
+  LazyEventSitePage,
   LazyDemoShowcase,
   LazyExperiencePage,
   LazyFranchisePage,
@@ -80,6 +83,17 @@ import { GuestSubdomainRouter, isGuestSubdomainHost } from "@/components/guest/g
 import { LegacyGuestBookRedirect } from "@/components/guest/legacy-guest-book-redirect";
 import WellnessCorporatePage from "@/pages/wellness-corporate";
 import PublicPremisesPage from "@/pages/public-premises";
+import PublicEventVendorSitePage from "@/pages/public-event-vendor-site";
+import PublicEventVendorGalleryPage from "@/pages/public-event-vendor-gallery";
+import PublicEventVendorServicesPage from "@/pages/public-event-vendor-services";
+import PublicEventVendorAboutPage from "@/pages/public-event-vendor-about";
+import PublicEventVendorEnquirePage from "@/pages/public-event-vendor-enquire";
+import PublicEventVendorQuotePage from "@/pages/public-event-vendor-quote";
+import {
+  FOUNDER_DEMO_LAUNCHER_PATH,
+  marketingDemoGateUrl,
+  shouldRedirectAppDemoToMarketing,
+} from "@/lib/demo-routes";
 import DemoLauncher from "@/pages/demo/Launcher";
 import DemoOpenPersonaPage from "@/pages/demo/OpenPersona";
 import DemoWedgeStoryPage from "@/pages/demo/WedgeStory";
@@ -90,6 +104,24 @@ import { MarketingDemoGateSync } from "@/components/marketing-demo-gate-sync";
 import { isProductionCustomerSurface } from "@/lib/production-surface";
 import { isOnboardingPreviewRouteEnabled } from "@/lib/onboarding-preview-route";
 import { isPublicGuestPath } from "@/lib/public-guest-paths";
+import { canonicalizeEventVendorQuotePath } from "@/lib/public-guest-route-params";
+
+/** Render public event-vendor pages before AuthGuard — avoids sign-in redirect on client quote links. */
+function publicEventVendorPageFromPathname(pathname: string): ReactNode | null {
+  const canonical = canonicalizeEventVendorQuotePath(pathname);
+  if (canonical) {
+    window.history.replaceState(null, "", canonical);
+    return <PublicEventVendorQuotePage />;
+  }
+  const p = pathname.split("?")[0]?.replace(/\/+$/, "") || "/";
+  if (p.match(/^\/e\/[^/]+\/q\/[^/]+$/)) return <PublicEventVendorQuotePage />;
+  if (p.match(/^\/e\/[^/]+\/enquire$/)) return <PublicEventVendorEnquirePage />;
+  if (p.match(/^\/e\/[^/]+\/gallery$/)) return <PublicEventVendorGalleryPage />;
+  if (p.match(/^\/e\/[^/]+\/services$/)) return <PublicEventVendorServicesPage />;
+  if (p.match(/^\/e\/[^/]+\/about$/)) return <PublicEventVendorAboutPage />;
+  if (p.match(/^\/e\/[^/]+$/)) return <PublicEventVendorSitePage />;
+  return null;
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -148,6 +180,22 @@ function AuthenticatedRoutes() {
       if (bookingOnlyMatch) return <PublicBookingPage />;
     }
     if (location.startsWith("/p/")) return <PublicPremisesPage />;
+    if (location.startsWith("/e/")) {
+      const quoteCanonical = canonicalizeEventVendorQuotePath(location);
+      if (quoteCanonical) return <Redirect to={quoteCanonical} />;
+      const quoteMatch = location.match(/^\/e\/([^/]+)\/q\/([^/]+)/);
+      const enquireMatch = location.match(/^\/e\/([^/]+)\/enquire\/?$/);
+      const galleryMatch = location.match(/^\/e\/([^/]+)\/gallery\/?$/);
+      const servicesMatch = location.match(/^\/e\/([^/]+)\/services\/?$/);
+      const aboutMatch = location.match(/^\/e\/([^/]+)\/about\/?$/);
+      const siteMatch = location.match(/^\/e\/([^/]+)\/?$/);
+      if (quoteMatch) return <PublicEventVendorQuotePage />;
+      if (enquireMatch) return <PublicEventVendorEnquirePage />;
+      if (galleryMatch) return <PublicEventVendorGalleryPage />;
+      if (servicesMatch) return <PublicEventVendorServicesPage />;
+      if (aboutMatch) return <PublicEventVendorAboutPage />;
+      if (siteMatch) return <PublicEventVendorSitePage />;
+    }
   }
 
   return (
@@ -260,6 +308,27 @@ function AuthenticatedRoutes() {
               </WedgeRouteGuard>
             )}
           </Route>
+          <Route path="/enquiries">
+            {() => (
+              <WedgeRouteGuard path="/enquiries">
+                <LazyRoute page={LazyEnquiriesRedirect} />
+              </WedgeRouteGuard>
+            )}
+          </Route>
+          <Route path="/quotes">
+            {() => (
+              <WedgeRouteGuard path="/quotes">
+                <LazyRoute page={LazyQuotesPage} />
+              </WedgeRouteGuard>
+            )}
+          </Route>
+          <Route path="/event-site">
+            {() => (
+              <WedgeRouteGuard path="/event-site">
+                <LazyRoute page={LazyEventSitePage} />
+              </WedgeRouteGuard>
+            )}
+          </Route>
           <Route path="/medspa">
             {() => (
               <WedgeRouteGuard path="/medspa">
@@ -271,7 +340,14 @@ function AuthenticatedRoutes() {
           <Route path="/lifecycle">{() => <LazyRoute page={LazyLifecyclePage} />}</Route>
           <Route path="/guides">{() => <LazyRoute page={LazyGuidesPage} />}</Route>
           <Route path="/experience">{() => <LazyRoute page={LazyExperiencePage} />}</Route>
-          <Route path="/portal">{() => <Redirect to="/demo" />}</Route>
+          <Route path="/portal">
+            {() => {
+              if (typeof window !== "undefined") {
+                window.location.replace(marketingDemoGateUrl());
+              }
+              return null;
+            }}
+          </Route>
           <Route path="/launch-status">{() => <LazyRoute page={LazyLaunchStatusPage} />}</Route>
           <Route path="/settings">{() => <LazyRoute page={LazySettingsPage} />}</Route>
           <Route component={NotFound} />
@@ -284,6 +360,17 @@ function AuthenticatedRoutes() {
 function AppRouter() {
   if (isGuestSubdomainHost()) {
     return <GuestSubdomainRouter />;
+  }
+
+  if (typeof window !== "undefined") {
+    const guestPage = publicEventVendorPageFromPathname(window.location.pathname);
+    if (guestPage) return guestPage;
+  }
+
+  // App bare /demo → marketing W1 gate (matches staging.livia-hq.com/demo). Founder: /demo/founder
+  if (typeof window !== "undefined" && shouldRedirectAppDemoToMarketing(window.location.pathname)) {
+    window.location.replace(marketingDemoGateUrl());
+    return null;
   }
 
   return (
@@ -323,12 +410,18 @@ function AppRouter() {
       <Route path="/b/:slug/visit/:token">{() => <LegacyGuestBookRedirect />}</Route>
       <Route path="/b/:slug">{() => <LegacyGuestBookRedirect />}</Route>
       <Route path="/p/:slug" component={PublicPremisesPage} />
+      <Route path="/e/:slug/q/:token" component={PublicEventVendorQuotePage} />
+      <Route path="/e/:slug/enquire" component={PublicEventVendorEnquirePage} />
+      <Route path="/e/:slug/gallery" component={PublicEventVendorGalleryPage} />
+      <Route path="/e/:slug/services" component={PublicEventVendorServicesPage} />
+      <Route path="/e/:slug/about" component={PublicEventVendorAboutPage} />
+      <Route path="/e/:slug" component={PublicEventVendorSitePage} />
 
       {/* QA / sales only — stripped from production customer builds */}
       {!isProductionCustomerSurface ? (
         <>
           <Route path="/demo/open" component={DemoOpenPersonaPage} />
-          <Route path="/demo" component={DemoLauncher} />
+          <Route path={FOUNDER_DEMO_LAUNCHER_PATH} component={DemoLauncher} />
           <Route path="/demo/wedge/:vertical" component={DemoWedgeStoryPage} />
           <Route path="/demo/:persona">{() => <LazyRoute page={LazyDemoShowcase} />}</Route>
         </>

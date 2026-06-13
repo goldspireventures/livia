@@ -25,8 +25,8 @@ export function LegalPage({ kind }: { kind: LegalKind }) {
         <ConstellationGlassCard className="p-6 sm:p-8 mt-8">
           <div className="prose prose-invert max-w-none text-sm text-muted-foreground space-y-4">
             <p>
-              This page is a <strong className="text-foreground">beta scaffold</strong> — counsel-reviewed
-              versions ship before general availability.
+              Full privacy, terms, and DPA documents are maintained for EU appointment businesses.
+              Contact us for the current version during closed beta.
             </p>
             <p>
               For product access:{" "}

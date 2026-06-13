@@ -20,6 +20,17 @@ export const NAV_ROUTE_CAPABILITY_REQUIREMENTS: Record<string, string> = {
   "/my-livia": "messaging",
 };
 
+/** Consult-first verticals use different capability keys for shared hrefs. */
+export const NAV_ROUTE_CAPABILITY_BY_VERTICAL: Record<
+  string,
+  Record<string, string>
+> = {
+  "event-vendors": {
+    "/services": "deposits",
+    "/customers": "deposits",
+  },
+};
+
 /** Settings sub-areas surfaced when commerce capabilities need attention. */
 export const NAV_COMMERCE_SETUP_HREFS = ["/settings", "/toolkit"] as const;
 
@@ -67,11 +78,21 @@ export function isCapabilityAtLeastInstalled(
   return cap.state !== "defined";
 }
 
+export function resolveNavRouteCapabilityId(
+  href: string,
+  vertical?: string | null,
+): string | undefined {
+  const v = (vertical ?? "").toLowerCase();
+  const verticalCap = v ? NAV_ROUTE_CAPABILITY_BY_VERTICAL[v]?.[href] : undefined;
+  return verticalCap ?? NAV_ROUTE_CAPABILITY_REQUIREMENTS[href];
+}
+
 export function isNavRouteAllowedByCapabilities(
   href: string,
   capabilities: CapabilityNavState[],
+  vertical?: string | null,
 ): boolean {
-  const required = NAV_ROUTE_CAPABILITY_REQUIREMENTS[href];
+  const required = resolveNavRouteCapabilityId(href, vertical);
   if (!required) return true;
   return isCapabilityAtLeastInstalled(required, capabilities);
 }
@@ -108,7 +129,10 @@ export function filterMobileMenuItems<T extends { route: string }>(
 export function filterNavItemsByCapabilities<T extends { href: string }>(
   items: T[],
   capabilities: CapabilityNavState[] | null | undefined,
+  vertical?: string | null,
 ): T[] {
   if (!capabilities?.length) return items;
-  return items.filter((item) => isNavRouteAllowedByCapabilities(item.href, capabilities));
+  return items.filter((item) =>
+    isNavRouteAllowedByCapabilities(item.href, capabilities, vertical),
+  );
 }

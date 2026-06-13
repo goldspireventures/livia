@@ -1,4 +1,5 @@
 import type { LivMandateAction } from "@workspace/policy";
+import { livMandateBlockedActionsLine } from "@workspace/policy";
 import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -166,7 +167,7 @@ export default function LivMandateScreen() {
 
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Hard blocks</Text>
           <Text style={[styles.lede, { color: colors.mutedForeground, marginBottom: 8 }]}>
-            Even at a high rung, blocked actions always need you — Liv will refuse or propose only.
+            {livMandateBlockedActionsLine()}
           </Text>
           {DENY_TOGGLES.map((row) => (
             <View

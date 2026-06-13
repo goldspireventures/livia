@@ -65,7 +65,7 @@ export default function DemoOpenPersonaPage() {
     return (
       <div className="min-h-[100dvh] flex flex-col items-center justify-center gap-4 px-6 text-center bg-background">
         <p className="text-sm text-destructive max-w-md">{error}</p>
-        <a href="/demo" className="text-sm text-primary underline underline-offset-2">
+        <a href="/demo/founder" className="text-sm text-primary underline underline-offset-2">
           Back to demo launcher
         </a>
       </div>

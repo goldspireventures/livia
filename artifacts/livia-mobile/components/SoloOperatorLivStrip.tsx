@@ -37,7 +37,7 @@ export function SoloOperatorLivStrip({
 
   const pulseStyle = useAnimatedStyle(() => ({ opacity: pulse.value }));
 
-  if (!pack?.soloMode) return null;
+  if (!pack?.soloMode || pack.showSoloCopilotCard === false) return null;
 
   return (
     <Animated.View

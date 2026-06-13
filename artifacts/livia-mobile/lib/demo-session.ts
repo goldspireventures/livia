@@ -1,6 +1,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { PersonaKind } from "@/hooks/usePersona";
-import { demoOwnerSlugFromEmail, type DemoTicketSignIn } from "@/lib/demo-sign-in";
+import {
+  demoOwnerSlugFromEmail,
+  isDemoLiviaEmail,
+  type DemoTicketSignIn,
+} from "@/lib/demo-sign-in";
 
 const DEMO_SESSION_KEY = "livia.demoSession";
 const MOBILE_HOME_KEY = "livia.mobileHomeRoute";
@@ -70,6 +74,19 @@ export async function persistDemoSession(ticket: DemoTicketSignIn): Promise<void
 
 export async function clearDemoSession(): Promise<void> {
   await AsyncStorage.multiRemove([DEMO_SESSION_KEY, MOBILE_HOME_KEY]);
+}
+
+/** Stale demo session must not hijack a real founder sign-in on the same device. */
+export function isActiveDemoSession(
+  session: DemoSession | null,
+  clerkEmail: string | null | undefined,
+): boolean {
+  if (!session) return false;
+  if (!clerkEmail) return false;
+  const clerk = clerkEmail.trim().toLowerCase();
+  const sessionEmail = session.email.trim().toLowerCase();
+  if (!isDemoLiviaEmail(clerk) && clerk !== sessionEmail) return false;
+  return true;
 }
 
 export async function getDemoSession(): Promise<DemoSession | null> {

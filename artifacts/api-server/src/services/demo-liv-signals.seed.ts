@@ -47,6 +47,10 @@ const VERTICAL_PULSE_COPY: Record<
     title: "Liv is watching today",
     body: "Briefing is ready — inbox and floor are synced for this shop.",
   },
+  "event-vendors": {
+    title: "Enquiry pipeline active",
+    body: "New leads and quotes — follow up before dates slip.",
+  },
 };
 
 function pulseCopyForVertical(vertical: string | null | undefined) {
@@ -94,7 +98,7 @@ export async function seedDemoLivSignalsForBusinesses(
       .orderBy(desc(bookingsTable.startAt))
       .limit(1);
 
-    if (pending) {
+    if (pending && vertical !== "event-vendors") {
       const pendingTitle =
         vertical === "medspa"
           ? "Treatment needs confirmation"

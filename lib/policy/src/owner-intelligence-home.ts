@@ -197,6 +197,12 @@ export function buildCompactOwnerIntelligenceRows(
   };
 }
 
+/** How many Liv moment cards on owner home — consult-first stays minimal. */
+export function resolveLivMomentsHomeCap(vertical?: string | null): number {
+  if (vertical === "event-vendors") return 1;
+  return 2;
+}
+
 /** Liv moments strip — hide when owner-intelligence already surfaces the same titles. */
 export function dedupeLivMomentsByTitle<T extends { title: string }>(
   moments: T[],

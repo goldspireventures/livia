@@ -23,6 +23,7 @@ export async function sendOperationalEmail(args: {
   to: string;
   subject: string;
   body: string;
+  html?: string;
   templateKey: string;
 }): Promise<"sent" | "skipped" | "failed"> {
   if (!emailTransport) {
@@ -46,6 +47,7 @@ export async function sendOperationalEmail(args: {
       to: args.to,
       subject: args.subject,
       body: args.body,
+      html: args.html,
       from: from ?? undefined,
     });
     await db

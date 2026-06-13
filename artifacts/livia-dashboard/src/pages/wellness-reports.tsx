@@ -79,7 +79,7 @@ export default function WellnessReportsPage() {
   return (
     <OperationalPageShell
       title="Reports"
-      subtitle="Pulse first — expand sections when you need depth"
+      subtitle="Weekly pulse and detailed reports"
       width="full"
       data-testid="wellness-reports-page"
       actions={
@@ -279,7 +279,7 @@ export default function WellnessReportsPage() {
             </div>
           </SettingsDisclosure>
 
-          <SettingsDisclosure title="Persona digests" description="Scheduled email catalog — Track F">
+          <SettingsDisclosure title="Persona digests" description="Scheduled email digests">
             <ul className="text-xs space-y-1.5 pt-2 text-muted-foreground">
               {digests.map((d) => (
                 <li key={d.slug} className="flex justify-between gap-4">

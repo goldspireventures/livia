@@ -119,6 +119,21 @@ router.post("/", async (req: Request, res: Response): Promise<void> => {
             await markRetailOrderPaid(retailOrderId, bid);
           }
         }
+        if (session.mode === "payment" && session.metadata?.kind === "guest_quote_deposit") {
+          const bid = session.metadata.businessId;
+          const quoteId = session.metadata.quoteId;
+          const amountMinor = session.amount_total ?? 0;
+          if (bid && quoteId && amountMinor > 0) {
+            const { applyGuestQuoteDepositFromWebhook } = await import(
+              "../services/guest-quote-pay.service"
+            );
+            await applyGuestQuoteDepositFromWebhook({
+              businessId: bid,
+              quoteId,
+              amountMinor,
+            });
+          }
+        }
         break;
       }
       case "payment_intent.succeeded":

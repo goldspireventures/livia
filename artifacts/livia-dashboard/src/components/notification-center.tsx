@@ -10,6 +10,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useState } from "react";
+import { notificationsEmptySubtitle } from "@workspace/policy";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -207,7 +208,7 @@ export function NotificationCenter({ className }: { className?: string }) {
               </div>
               <p className="font-medium text-sm">You&apos;re all caught up</p>
               <p className="text-xs text-muted-foreground mt-2 max-w-[240px] leading-relaxed">
-                Liv will surface bookings, inbox handoffs, and chain alerts when they need you.
+                {notificationsEmptySubtitle()}
               </p>
             </div>
           ) : (

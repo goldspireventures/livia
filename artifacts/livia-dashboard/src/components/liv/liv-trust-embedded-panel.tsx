@@ -9,12 +9,13 @@ import OperationalPolicyControls from "@/components/operational-policy-controls"
 import CommunicationsControls from "@/components/communications-controls";
 
 /** Liv & trust controls embedded in Liv command — expand in place instead of tab hopping. */
-export function LivTrustEmbeddedPanel() {
+export function LivTrustEmbeddedPanel({ vertical }: { vertical?: string | null }) {
   const { business } = useBusiness();
   const { kind: persona } = usePersona();
   const livEditable = canEditLiv(persona);
   const showComms = canViewComms(persona);
   const bid = business?.id ?? "";
+  const isEventVendor = vertical === "event-vendors";
 
   if (!bid) return null;
 
@@ -34,7 +35,11 @@ export function LivTrustEmbeddedPanel() {
 
       <SettingsDisclosure
         title="Liv voice & prompts"
-        description="Greeting, tone, and what Liv knows about your shop."
+        description={
+          isEventVendor
+            ? "Greeting and tone on your public website and enquire flow."
+            : "Greeting, tone, and what Liv knows about your shop."
+        }
         defaultOpen={false}
       >
         <div className="pt-2">
@@ -47,6 +52,7 @@ export function LivTrustEmbeddedPanel() {
         </div>
       </SettingsDisclosure>
 
+      {!isEventVendor ? (
       <SettingsDisclosure
         title="Booking policy"
         description="Deposits, buffers, and when Liv can confirm automatically."
@@ -56,6 +62,21 @@ export function LivTrustEmbeddedPanel() {
           <OperationalPolicyControls />
         </div>
       </SettingsDisclosure>
+      ) : (
+      <SettingsDisclosure
+        title="Quote & deposit terms"
+        description="Default deposit % and terms — used on quotes and your public site."
+        defaultOpen={false}
+      >
+        <p className="text-sm text-muted-foreground pt-2">
+          Edit deposit rules, quote validity, and terms on{" "}
+          <a href="/event-site" className="text-primary underline underline-offset-2">
+            Website & settings
+          </a>
+          .
+        </p>
+      </SettingsDisclosure>
+      )}
 
       {showComms ? (
         <SettingsDisclosure

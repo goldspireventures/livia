@@ -52,6 +52,7 @@ export const DEMO_WORLD_SLUGS = [
   "berlin-studio-neun",
   "paris-belle-vue",
   "copenhagen-havn-wellness",
+  "atelier-decor-dublin",
 ] as const;
 
 export type DemoPersonaDef = {

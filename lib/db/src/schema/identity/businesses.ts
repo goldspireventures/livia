@@ -31,6 +31,7 @@ export const businessVerticalEnum = pgEnum("business_vertical", [
   "allied-health",
   "pet-grooming",
   "automotive-detailing",
+  "event-vendors",
 ]);
 
 export const businessTierEnum = pgEnum("business_tier", [
@@ -86,6 +87,11 @@ export const businessesTable = pgTable(
     aiGreeting: text("ai_greeting"),
     aiKnowledge: text("ai_knowledge"),
     aiCanBookDirectly: text("ai_can_book_directly").notNull().default("true"),
+    /** Per-tenant Liv outbound template overrides — keys from @workspace/policy liv-platform-program. */
+    livOutboundOverrides: jsonb("liv_outbound_overrides")
+      .$type<Record<string, string>>()
+      .notNull()
+      .default({}),
     twilioPhoneNumber: text("twilio_phone_number"),
     twilioPhoneSid: text("twilio_phone_sid"),
     resendFromAddress: text("resend_from_address"),

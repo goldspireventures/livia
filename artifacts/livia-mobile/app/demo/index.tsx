@@ -8,6 +8,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LiviaWordmark } from "@/components/brand/LiviaWordmark";
+import { MobileDemoFreshFounderShortcut } from "@/components/demo/MobileDemoFreshFounderShortcut";
 import { MobileDemoGuestShortcut } from "@/components/demo/MobileDemoGuestShortcut";
 import { MobileDemoReadinessStrip } from "@/components/demo/MobileDemoReadinessStrip";
 import { MobileDemoWedgeGrid } from "@/components/demo/MobileDemoWedgeGrid";
@@ -108,6 +109,8 @@ export default function MobileDemoLauncher() {
             </Text>
           </Text>
         </View>
+
+        <MobileDemoFreshFounderShortcut />
 
         <MobileDemoReadinessStrip
           provisioned={provisioned}

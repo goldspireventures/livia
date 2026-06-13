@@ -32,6 +32,8 @@
 | **Wellness master backlog (full inventory)** | [`product/WELLNESS-MASTER-BACKLOG.md`](./product/WELLNESS-MASTER-BACKLOG.md) |
 | **Verticals build plan** | [`product/LIVIA-VERTICALS-BUILD-PLAN.md`](./product/LIVIA-VERTICALS-BUILD-PLAN.md) |
 | **Partner / defer verticals** | [`product/PARTNER-AND-ADJACENT-VERTICALS.md`](./product/PARTNER-AND-ADJACENT-VERTICALS.md) |
+| **Event vendors (Ring 2)** | [`product/EVENT-VENDORS-VERTICAL-PROGRAM.md`](./product/EVENT-VENDORS-VERTICAL-PROGRAM.md) |
+| **Consult-first workflow** | [`product/CONSULT-FIRST-WORKFLOW-SPEC.md`](./product/CONSULT-FIRST-WORKFLOW-SPEC.md) |
 | **Doc propagation (vertical/platform)** | [`engineering/DOC-PROPAGATION-CASCADE.md`](./engineering/DOC-PROPAGATION-CASCADE.md) · `pnpm vertical:doc-check` |
 | **Vertical starter pack (create)** | [`engineering/VERTICAL-STARTER-PACK.md`](./engineering/VERTICAL-STARTER-PACK.md) |
 | **Systems gap audit** | [`product/SYSTEMS-COMPLETENESS-AUDIT.md`](./product/SYSTEMS-COMPLETENESS-AUDIT.md) |

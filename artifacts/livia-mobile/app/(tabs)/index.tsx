@@ -66,6 +66,7 @@ import {
   OwnerMobileRevenueStat,
 } from "@/components/OwnerMobileBriefing";
 import { getDashboardBaseUrl } from "@/lib/dashboard-url";
+import { fetchMeProfile } from "@/lib/platform-legal";
 import { PersonaRitualHeader } from "@/components/ritual/PersonaRitualHeader";
 import { ScreenTopBar } from "@/components/ScreenTopBar";
 import { verticalPackUi } from "@/lib/vertical-pack-ui";
@@ -105,9 +106,12 @@ import { ConstellationTodayHome } from "@/components/constellation/Constellation
 import { TENANT_SHELL_LAYOUT, tenantScreenBackground } from "@/lib/tenant-shell-layout";
 import { useManualRefresh } from "@/lib/manual-refresh";
 import {
+  isConsultFirstVertical,
   resolveMobileOwnerLivStack,
   shouldShowMobileOwnerRitualHeader,
 } from "@workspace/policy";
+import { ConsultFirstTodayHome } from "@/components/event-vendor/ConsultFirstTodayHome";
+import { fetchConsultDashboard, type ConsultDashboard } from "@/lib/event-vendor-consult";
 
 function formatTimeInBusinessTz(iso: string, timeZone: string) {
   return new Date(iso).toLocaleTimeString(undefined, {
@@ -145,7 +149,11 @@ export default function DashboardScreen() {
       if (businesses.length > 0) return;
       // Demo accounts already have shops — never send them to "create business".
       if (isDemoAccount) return;
-      router.replace("/onboarding");
+      void fetchMeProfile()
+        .then((me) => {
+          router.replace(me.platformLegalAccepted ? "/onboarding" : "/legal-acceptance");
+        })
+        .catch(() => router.replace("/legal-acceptance"));
       return;
     }
     if (personaLoading || roleLoading || override) return;
@@ -249,7 +257,10 @@ export default function DashboardScreen() {
   const isOwnerHome = role === "OWNER" || role === "ADMIN";
 
   const vertical = (currentBusiness as { vertical?: string } | undefined)?.vertical;
+  const consultFirst = isConsultFirstVertical(vertical);
   const pack = verticalPackUi(vertical, (bizDetail as { category?: string } | undefined)?.category);
+  const [consultDash, setConsultDash] = useState<ConsultDashboard | null>(null);
+  const [consultDashLoading, setConsultDashLoading] = useState(false);
   const beautyPreset = (
     tenantExperience as { presentation?: { cssPreset?: string; label?: string } } | null | undefined
   )?.presentation;
@@ -306,10 +317,13 @@ export default function DashboardScreen() {
   const livStack = resolveMobileOwnerLivStack({
     useMorphToday,
     soloMode: !!operatorXp?.soloMode,
-    pendingCount,
+    pendingCount: consultFirst ? 0 : pendingCount,
     handoffCount,
     onboardingPercent: onboardingPct,
     isFirstRun: isOwnerHome && isFirstRun,
+    consultFirst: consultFirst && isOwnerHome,
+    newEnquiries: consultDash?.newEnquiries,
+    staleQuotes: consultDash?.staleQuotes,
   });
   const showRitualHeader = shouldShowMobileOwnerRitualHeader({
     useMorphToday,
@@ -333,6 +347,18 @@ export default function DashboardScreen() {
   };
 
   const { refreshing: pullRefreshing, onRefresh: onPullRefresh } = useManualRefresh(refetch);
+
+  useEffect(() => {
+    if (!consultFirst || !currentBusiness?.id) {
+      setConsultDash(null);
+      return;
+    }
+    setConsultDashLoading(true);
+    void fetchConsultDashboard(currentBusiness.id)
+      .then(setConsultDash)
+      .catch(() => setConsultDash(null))
+      .finally(() => setConsultDashLoading(false));
+  }, [consultFirst, currentBusiness?.id, pullRefreshing]);
 
   if (!currentBusiness) {
     if (bizLoading || businesses.length > 0) {
@@ -491,7 +517,14 @@ export default function DashboardScreen() {
         </>
       ) : null}
 
-      {useConstellationToday ? (
+      {consultFirst && isOwnerHome ? (
+        <ConsultFirstTodayHome
+          dash={consultDash}
+          handoffCount={handoffCount}
+          loading={consultDashLoading}
+          livLoading={briefingLoading}
+        />
+      ) : useConstellationToday ? (
         <ConstellationTodayHome
           businessId={currentBusiness.id}
           businessName={currentBusiness.name}
@@ -577,7 +610,7 @@ export default function DashboardScreen() {
         <BeautyTodayHandoffStrip handoffCount={handoffCount} pendingCount={pendingCount} />
       ) : null}
 
-      {pendingCount > 0 ? (
+      {!consultFirst && pendingCount > 0 ? (
         <View
           style={[
             styles.pendingBlock,
@@ -901,7 +934,8 @@ export default function DashboardScreen() {
         </View>
       ) : null}
 
-      {!useConstellationToday &&
+      {!(consultFirst && isOwnerHome) &&
+      !useConstellationToday &&
       (role === "OWNER" || role === "ADMIN") &&
       currentBusiness?.id &&
       (livStack.showSectionLabel ||

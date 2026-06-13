@@ -71,6 +71,13 @@ export function menuItemsForPersona(args: {
     items.push({ icon: "image", label: "Design proofs", route: "/design-proofs", section: "operations" });
   }
 
+  if (vertical === "event-vendors" && isFloorLead) {
+    items.push(
+      { icon: "file-text", label: "Quotes", route: "/quotes", section: "operations" },
+      { icon: "globe", label: "Event website", route: "/event-site", section: "operations" },
+    );
+  }
+
   if (vertical === "pet-grooming" && isFloorLead) {
     items.push({ icon: "heart", label: "Pet clients", route: "/(tabs)/customers", section: "operations" });
   }

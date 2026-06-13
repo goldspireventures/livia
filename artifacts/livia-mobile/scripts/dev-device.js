@@ -121,12 +121,14 @@ async function main() {
 
 
   const apiBase = `http://${ip}:3000`;
+  const dashboardBase = `http://${ip}:5173`;
 
   console.log("");
 
   console.log("  Physical device dev");
 
-  console.log(`  API:   ${apiBase}`);
+  console.log(`  API:       ${apiBase}`);
+  console.log(`  Dashboard: ${dashboardBase}`);
 
   console.log(`  Metro: exp://${ip}:${port}`);
   console.log("");
@@ -150,6 +152,7 @@ async function main() {
   const env = {
     ...processEnv,
     EXPO_PUBLIC_API_BASE_URL: apiBase,
+    EXPO_PUBLIC_DASHBOARD_URL: dashboardBase,
     EXPO_PUBLIC_DOMAIN: `${ip}:3000`,
     REACT_NATIVE_PACKAGER_HOSTNAME: ip,
     EXPO_OFFLINE: "1",

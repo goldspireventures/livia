@@ -30,10 +30,13 @@ export async function ensureLiveDayForBusiness(
     customerSeed?: Array<{ id: string; displayName: string; email: string; phone: string }>;
     staffIds?: string[];
     serviceIds?: string[];
+    vertical?: string;
   },
 ): Promise<{ seededBookings: number; briefing: boolean }> {
   const biz = await getBusinessById(businessId);
   if (!biz) return { seededBookings: 0, briefing: false };
+  const vertical = opts?.vertical ?? biz.vertical ?? undefined;
+  const consultFirst = vertical === "event-vendors";
 
   const { start, end } = todayWindow();
 
@@ -49,7 +52,7 @@ export async function ensureLiveDayForBusiness(
     );
 
   let seededBookings = 0;
-  if (opts?.force || (existingToday?.count ?? 0) === 0) {
+  if (!consultFirst && (opts?.force || (existingToday?.count ?? 0) === 0)) {
     const staffIds = opts?.staffIds ?? [];
     const serviceIds = opts?.serviceIds ?? [];
     const customers = opts?.customerSeed ?? [];
@@ -85,7 +88,8 @@ export async function ensureLiveDayForBusiness(
 
   if (opts?.seedInbox && opts.customerSeed?.length) {
     await seedDemoInbox(businessId, opts.customerSeed, {
-      pendingBookingNotes: "Liv created — confirm when ready",
+      vertical,
+      ...(consultFirst ? {} : { pendingBookingNotes: "Liv created — confirm when ready" }),
     });
   }
 

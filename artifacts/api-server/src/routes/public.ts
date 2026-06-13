@@ -73,6 +73,19 @@ import { getSignInAppearanceHintForEmail } from "../services/sign-in-appearance-
 import { purchaseWellnessGiftPackage } from "../services/wellness-gift.service";
 import { isWellnessGiftPublicBookEnabled } from "@workspace/policy";
 import {
+  acceptPublicQuote,
+  declinePublicQuote,
+  getPublicEventSite,
+  getPublicQuoteByToken,
+  renderPublicQuoteHtml,
+  submitPublicEnquiry,
+} from "../services/consult-first.service";
+import {
+  createGuestQuoteDepositCheckout,
+  confirmGuestQuoteDepositCheckout,
+  getGuestQuotePayView,
+} from "../services/guest-quote-pay.service";
+import {
   createPublicRetailOrder,
   createRetailOrderCheckout,
   getRetailOrderByToken,
@@ -1272,6 +1285,118 @@ router.get("/public/wedge-demo", async (_req, res): Promise<void> => {
       .map((v) => getWedgeDemoStory(v))
       .filter((s): s is NonNullable<typeof s> => s != null),
   });
+});
+
+router.get("/public/:slug/event-site", async (req, res) => {
+  const site = await getPublicEventSite(req.params.slug);
+  if (!site) {
+    sendError(res, req, 404, "not_found");
+    return;
+  }
+  res.json(site);
+});
+
+router.post("/public/:slug/enquire", async (req, res) => {
+  const row = await submitPublicEnquiry(req.params.slug, req.body ?? {});
+  if (!row) {
+    sendError(res, req, 404, "not_found");
+    return;
+  }
+  res.status(201).json({ ok: true, enquiryId: row.id });
+});
+
+router.get("/public/:slug/q/:token", async (req, res) => {
+  const data = await getPublicQuoteByToken(req.params.slug, req.params.token);
+  if (!data) {
+    sendError(res, req, 404, "not_found");
+    return;
+  }
+  res.json(data);
+});
+
+router.post("/public/:slug/q/:token/accept", async (req, res) => {
+  const row = await acceptPublicQuote(req.params.slug, req.params.token);
+  if (!row) {
+    sendError(res, req, 404, "not_found");
+    return;
+  }
+  const { onQuoteAccepted } = await import("../services/event-vendor-lifecycle.service");
+  void onQuoteAccepted(row.businessId, row.id).catch(() => undefined);
+  res.json({ ok: true, status: row.status });
+});
+
+router.post("/public/:slug/q/:token/decline", async (req, res) => {
+  const row = await declinePublicQuote(req.params.slug, req.params.token);
+  if (!row) {
+    sendError(res, req, 404, "not_found");
+    return;
+  }
+  res.json({ ok: true, status: row.status });
+});
+
+router.get("/public/:slug/q/:token/html", async (req, res) => {
+  const html = await renderPublicQuoteHtml(req.params.slug, req.params.token);
+  if (!html) {
+    sendError(res, req, 404, "not_found");
+    return;
+  }
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.send(html);
+});
+
+router.get("/public/:slug/q/:token/pay", async (req, res) => {
+  const view = await getGuestQuotePayView(req.params.slug, req.params.token);
+  if (!view) {
+    sendError(res, req, 404, "not_found");
+    return;
+  }
+  res.json(view);
+});
+
+router.post("/public/:slug/q/:token/pay/confirm", async (req, res) => {
+  try {
+    const sessionId =
+      typeof req.body?.sessionId === "string"
+        ? req.body.sessionId
+        : typeof req.query.session_id === "string"
+          ? req.query.session_id
+          : null;
+    if (!sessionId) {
+      sendError(res, req, 400, "bad_request", { message: "Missing checkout session" });
+      return;
+    }
+    const result = await confirmGuestQuoteDepositCheckout(
+      req.params.slug,
+      req.params.token,
+      sessionId,
+    );
+    if (result.mode === "error") {
+      sendError(res, req, 400, "bad_request", { message: result.message });
+      return;
+    }
+    res.json(result);
+  } catch (err) {
+    logRouteError(req, err, "[public] guest quote pay confirm failed");
+    sendError(res, req, 500, "internal_error", {
+      message: safeClientMessage(err, "Could not confirm payment"),
+    });
+  }
+});
+
+router.post("/public/:slug/q/:token/pay/checkout", async (req, res) => {
+  try {
+    const result = await createGuestQuoteDepositCheckout(req.params.slug, req.params.token);
+    if (result.mode === "error") {
+      sendError(res, req, 400, "bad_request", { message: result.message });
+      return;
+    }
+    res.json(result);
+  } catch (err) {
+    logRouteError(req, err, "[public] guest quote pay checkout failed");
+    sendError(res, req, 500, "internal_error", {
+      message: safeClientMessage(err, "Could not start checkout"),
+    });
+  }
 });
 
 export default router;

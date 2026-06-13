@@ -14,6 +14,7 @@
 | allied-health | `motion-physio-cork` | 5 | 3 | plan rebook |
 | fitness | `peak-fitness-dublin` | 5 | 3 | class + waitlist |
 | automotive-detailing | `shine-studio-belfast` | 5 | 3 | long bay packages |
+| event-vendors | `atelier-decor-dublin` | 6 | 1 | enquire + quote seed, gallery, templates |
 
 **Market shops (locale):** `demo-market-shops.seed.ts` — `copenhagen-havn-wellness`, `london-rose-spa`, `berlin-studio-neun`, `paris-belle-vue` (≥5 services, ≥3 staff, ≥20 customers each).
 

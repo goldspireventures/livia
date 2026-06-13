@@ -27,6 +27,8 @@ import { policiesFromBusiness } from "./policies.service";
 import { getCachedTenantRuntime } from "../lib/tenant-runtime-pool";
 import { resolveLivToolsForBusiness } from "./liv-tool-catalog.service";
 import { getActivePromptOverrides } from "./prompt-store.service";
+import { livConversationalFallbackCopy, resolveLivRuntimeCopy } from "@workspace/policy";
+import { resolveLivOutboundForBusiness } from "./liv-outbound.service";
 const MODEL = "claude-sonnet-4-6";
 const MAX_TOOL_HOPS = 6;
 
@@ -82,44 +84,64 @@ async function afterCreateBookingNotifications(args: {
       .catch(() => undefined);
   }
   const firstName = String(toolInput.customerFirstName ?? "there");
+  const startLocalFull = new Date(startAt).toLocaleString("en-IE", {
+    dateStyle: "full",
+    timeStyle: "short",
+  });
+  const startLocalShort = new Date(startAt).toLocaleString("en-IE", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+  const svc = serviceName ?? "your appointment";
+  const staffLine = staffName ? ` with ${staffName}` : "";
+  const copyVars = {
+    firstName,
+    businessName: business.name,
+    serviceName: svc,
+    staffLine,
+    startLocal: startLocalFull,
+  };
 
   if (toolInput.customerEmail) {
-    const startLocal = new Date(startAt).toLocaleString("en-IE", {
-      dateStyle: "full",
-      timeStyle: "short",
-    });
-    const svc = serviceName ?? "your appointment";
-    const staffLine = staffName ? ` with ${staffName}` : "";
-    sendAiEmail({
-      businessId: business.id,
-      businessName: business.name,
-      customerId,
-      bookingId,
-      to: String(toolInput.customerEmail),
-      subject: `Booking confirmed — ${svc} at ${business.name}`,
-      body: `Hi ${firstName},\n\nYour booking is confirmed:\n\n${svc}${staffLine}\n${startLocal}\n\nReply to this email if you need to reschedule.`,
-      signature: `— The ${business.name} team`,
-      templateKey: "liv-booking-confirmation",
-    }).catch((err) => {
-      logger.warn({ err }, "[ai-chat] sendAiEmail failed");
-    });
+    void Promise.all([
+      resolveLivOutboundForBusiness(business.id, "booking_confirm_email_subject", copyVars),
+      resolveLivOutboundForBusiness(business.id, "booking_confirm_email_body", copyVars),
+    ])
+      .then(([subject, body]) =>
+        sendAiEmail({
+          businessId: business.id,
+          businessName: business.name,
+          customerId,
+          bookingId,
+          to: String(toolInput.customerEmail),
+          subject,
+          body,
+          signature: `— The ${business.name} team`,
+          templateKey: "liv-booking-confirmation",
+        }),
+      )
+      .catch((err) => {
+        logger.warn({ err }, "[ai-chat] sendAiEmail failed");
+      });
   } else if (toolInput.customerPhone) {
-    const startLocal = new Date(startAt).toLocaleString("en-IE", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
-    const svc = serviceName ?? "your appointment";
-    sendAiSms({
-      conversationId,
-      businessId: business.id,
-      businessName: business.name,
-      customerId,
-      customerPhone: String(toolInput.customerPhone),
-      content: `${svc} confirmed for ${startLocal} at ${business.name}. Reply to reschedule.`,
-      fromPhone: business.twilioPhoneNumber ?? null,
-    }).catch((err) => {
-      logger.warn({ err }, "[ai-chat] sendAiSms failed");
-    });
+    resolveLivOutboundForBusiness(business.id, "booking_confirm_sms", {
+      ...copyVars,
+      startLocal: startLocalShort,
+    })
+      .then((content) =>
+        sendAiSms({
+          conversationId,
+          businessId: business.id,
+          businessName: business.name,
+          customerId,
+          customerPhone: String(toolInput.customerPhone),
+          content,
+          fromPhone: business.twilioPhoneNumber ?? null,
+        }),
+      )
+      .catch((err) => {
+        logger.warn({ err }, "[ai-chat] sendAiSms failed");
+      });
   }
 }
 
@@ -196,8 +218,8 @@ export async function handlePublicChat(args: {
   if (!shouldLivUseTools({ status: conversation.status, aiHandled: conversation.aiHandled })) {
     const reply =
       conversation.status === "CLOSED"
-        ? "This conversation is closed. Please start a new chat or contact the shop directly."
-        : "Thanks — a team member will get back to you shortly.";
+        ? resolveLivRuntimeCopy("conversation_closed")
+        : resolveLivRuntimeCopy("conversation_handed_off");
     return {
       conversationId: conversation.id,
       reply,
@@ -206,8 +228,7 @@ export async function handlePublicChat(args: {
   }
 
   if (!isAnthropicConfigured()) {
-    const reply =
-      "Our booking assistant is not available right now. Please use the booking steps on this page or contact the studio directly.";
+    const reply = resolveLivRuntimeCopy("assistant_unavailable");
     if (!args.skipPersistence) {
       await appendMessage({
         conversationId: conversation.id,
@@ -222,13 +243,19 @@ export async function handlePublicChat(args: {
     };
   }
 
-  const [services, staff, history, memoryBlock] = await Promise.all([
+  const consultFirst = businessRow.vertical === "event-vendors";
+  const [services, staff, history, memoryBlock, operatorLearningBlock] = await Promise.all([
     listServices(business.id, true),
     listStaff(business.id, { isActive: true }),
     listMessagesForConversation(conversation.id),
     conversation.customerId
       ? import("./liv-memory.service").then(({ buildLivMemoryBlockForCustomer }) =>
           buildLivMemoryBlockForCustomer(business.id, conversation!.customerId!),
+        )
+      : Promise.resolve(""),
+    consultFirst
+      ? import("./liv-operator-learning.service").then(({ buildOperatorLearningPromptBlock }) =>
+          buildOperatorLearningPromptBlock(business.id),
         )
       : Promise.resolve(""),
   ]);
@@ -277,7 +304,7 @@ export async function handlePublicChat(args: {
         phone: conversation.customerPhone ?? args.customerPhone ?? null,
       },
       channelType,
-    }) + memoryBlock;
+    }) + memoryBlock + operatorLearningBlock;
 
   const anthropicMessages: Anthropic.MessageParam[] = [];
   for (const m of history) {
@@ -325,6 +352,18 @@ export async function handlePublicChat(args: {
         if (exec.bookingId) {
           lastBookingId = exec.bookingId;
           if (tu.name === LIV_TOOL_CREATE_BOOKING && exec.result.ok === true) {
+            const result = exec.result as Record<string, unknown>;
+            if (result.status === "PENDING") {
+              const serviceDetail =
+                typeof result.serviceName === "string" && result.serviceName.trim()
+                  ? result.serviceName.trim()
+                  : "your request";
+              result.suggestedGuestReply = await resolveLivOutboundForBusiness(
+                businessRow.id,
+                "pending_booking_assist",
+                { serviceDetail },
+              );
+            }
             const customerId =
               typeof exec.result.customerId === "string" ? exec.result.customerId : null;
             if (customerId) {
@@ -371,12 +410,12 @@ export async function handlePublicChat(args: {
       continue;
     }
 
-    finalText = partialText || "Sorry, I didn't catch that. Could you rephrase?";
+    finalText = partialText || livConversationalFallbackCopy("unclear_rephrase");
     break;
   }
 
   if (!finalText) {
-    finalText = "Hmm, that took a few tries. Could you tell me again what you'd like to book?";
+    finalText = livConversationalFallbackCopy("tool_hop_exhausted");
   }
 
   if (!args.skipPersistence) {

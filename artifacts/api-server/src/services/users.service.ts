@@ -78,11 +78,38 @@ export async function reconcileClerkUserId(oldId: string, newId: string): Promis
   });
 }
 
-export async function getOrCreateUser(clerkUserId: string, email?: string, fullName?: string) {
-  const [existing] = await db.select().from(usersTable).where(eq(usersTable.id, clerkUserId));
-  if (existing) return existing;
+function isPlaceholderUserEmail(email: string | null | undefined): boolean {
+  if (!email) return true;
+  return email.endsWith("@unknown.livia") || email.endsWith("@unknown.livia.local");
+}
 
+export async function getOrCreateUser(clerkUserId: string, email?: string, fullName?: string) {
   const normalizedEmail = email?.trim().toLowerCase();
+  const [existing] = await db.select().from(usersTable).where(eq(usersTable.id, clerkUserId));
+  if (existing) {
+    if (
+      normalizedEmail &&
+      isPlaceholderUserEmail(existing.email) &&
+      existing.email !== normalizedEmail
+    ) {
+      const [patched] = await db
+        .update(usersTable)
+        .set({ email: normalizedEmail, updatedAt: new Date() })
+        .where(eq(usersTable.id, clerkUserId))
+        .returning();
+      if (patched) {
+        if (fullName && patched.fullName !== fullName) {
+          await updateUser(clerkUserId, { fullName });
+        }
+        return patched;
+      }
+    }
+    if (fullName && existing.fullName !== fullName) {
+      await updateUser(clerkUserId, { fullName });
+    }
+    return existing;
+  }
+
   if (normalizedEmail) {
     const [byEmail] = await db.select().from(usersTable).where(eq(usersTable.email, normalizedEmail));
     if (byEmail && byEmail.id !== clerkUserId) {

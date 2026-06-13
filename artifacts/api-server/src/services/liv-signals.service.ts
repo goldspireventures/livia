@@ -1,4 +1,4 @@
-import { db, livSignalsTable, bookingsTable, conversationsTable } from "@workspace/db";
+import { db, livSignalsTable, bookingsTable, conversationsTable, businessesTable } from "@workspace/db";
 import { and, eq, gte, isNull, desc } from "drizzle-orm";
 import { generateId } from "../lib/id";
 import type { LivSignalPriority } from "@workspace/liv-runtime";
@@ -22,6 +22,7 @@ function hrefForEntity(
   if (!entityType || !entityId) return null;
   if (entityType === "booking") return `/bookings/${entityId}`;
   if (entityType === "conversation") return `/inbox?conversation=${entityId}`;
+  if (entityType === "enquiry") return `/inbox?lead=${entityId}`;
   if (entityType === "commerce") return `/settings?tab=billing`;
   if (entityType === "payment") return `/settings?tab=billing`;
   if (
@@ -39,6 +40,13 @@ export async function listActiveLivMoments(
   businessId: string,
   limit = 8,
 ): Promise<LivMoment[]> {
+  const [biz] = await db
+    .select({ vertical: businessesTable.vertical })
+    .from(businessesTable)
+    .where(eq(businessesTable.id, businessId))
+    .limit(1);
+  const vertical = biz?.vertical ?? null;
+
   const since = new Date(Date.now() - 48 * 60 * 60 * 1000);
   const rows = await db
     .select()
@@ -56,6 +64,7 @@ export async function listActiveLivMoments(
   const seen = new Set<string>();
   const deduped = [];
   for (const r of rows) {
+    if (vertical === "event-vendors" && r.entityType === "booking") continue;
     const key = (r.dedupeKey ?? r.title).toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);

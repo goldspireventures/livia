@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Settings, Sparkles, Palette, UserCircle } from "lucide-react";
+import { LivOutboundTemplatesSection } from "@/components/event-vendor/liv-outbound-templates-section";
 import { PublicBookLinkCard } from "@/components/settings/public-book-link-card";
 import { GuestVaultOwnerCallout } from "@/components/customers/guest-vault-owner-callout";
 import { useForm, Controller } from "react-hook-form";
@@ -155,6 +156,7 @@ export default function SettingsPage() {
 
   const bid = business?.id ?? "";
   const businessVertical = (business as { vertical?: string } | null)?.vertical;
+  const isEventVendor = businessVertical === "event-vendors";
   const vocab = verticalPackUi(businessVertical, business?.category);
   const showBookingResources = showBookingResourcesSettings(businessVertical);
 
@@ -320,8 +322,13 @@ export default function SettingsPage() {
                 <PublicBookLinkCard
                   slug={bookingSlug}
                   businessName={b?.name as string | undefined}
+                  vertical={businessVertical}
                   compact
-                  onCopy={() => toast({ title: "Booking link copied" })}
+                  onCopy={() =>
+                    toast({
+                      title: businessVertical === "event-vendors" ? "Website link copied" : "Booking link copied",
+                    })
+                  }
                 />
                 <GuestVaultOwnerCallout
                   slug={bookingSlug}
@@ -333,7 +340,6 @@ export default function SettingsPage() {
 
             <SettingsDisclosure
               title={`${vocab.locationNoun} profile`}
-              description="Name, slug, timezone, and contact — expand when you need to edit details."
               defaultOpen={shopEditable}
             >
               <StudioProfileForm
@@ -399,15 +405,18 @@ export default function SettingsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Sparkles className="h-4 w-4 text-primary" />
-                  Liv on your booking page
+                  {isEventVendor ? "Liv for your studio" : "Liv on your booking page"}
                 </CardTitle>
                 <CardDescription>
-                  How Liv greets guests on `/b`, answers questions, and books when you allow it.
+                  {isEventVendor
+                    ? "Tone and behaviour for inbox replies and operator tools."
+                    : "How Liv greets guests on `/b`, answers questions, and books when you allow it."}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={aiForm.handleSubmit(onSubmitAI)} className="space-y-6">
                   <fieldset disabled={!livEditable} className="space-y-6 disabled:opacity-80">
+                  {!isEventVendor ? (
                   <Controller
                     control={aiForm.control}
                     name="aiEnabled"
@@ -427,7 +436,9 @@ export default function SettingsPage() {
                       </div>
                     )}
                   />
+                  ) : null}
 
+                  {!isEventVendor ? (
                   <Controller
                     control={aiForm.control}
                     name="aiCanBookDirectly"
@@ -447,6 +458,7 @@ export default function SettingsPage() {
                       </div>
                     )}
                   />
+                  ) : null}
 
                   <Controller
                     control={aiForm.control}
@@ -455,7 +467,10 @@ export default function SettingsPage() {
                       <div className="space-y-2">
                         <Label>Tone of voice</Label>
                         <Select value={field.value} onValueChange={field.onChange}>
-                          <SelectTrigger aria-label="Liv tone on booking page" data-testid="select-ai-tone">
+                          <SelectTrigger
+                            aria-label={isEventVendor ? "Liv tone on website" : "Liv tone on booking page"}
+                            data-testid="select-ai-tone"
+                          >
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -476,7 +491,11 @@ export default function SettingsPage() {
 
                   <SettingsDisclosure
                     title="Greeting & optional chat notes"
-                    description="Fine-tune copy on `/b` — most teams only touch the switches above."
+                    description={
+                      isEventVendor
+                        ? "Fine-tune copy on your public site — most studios only touch the switches above."
+                        : "Fine-tune copy on `/b` — most teams only touch the switches above."
+                    }
                     defaultOpen={false}
                   >
                     <div className="space-y-4 pt-1">
@@ -484,7 +503,11 @@ export default function SettingsPage() {
                         <Label>Greeting message</Label>
                         <Textarea
                           {...aiForm.register("aiGreeting")}
-                          placeholder="Hi — I'm Liv. Ask about services, hours, or pick a time to visit."
+                          placeholder={
+                            isEventVendor
+                              ? "Hi — I'm Liv. Tell me about your event and I'll help you enquire."
+                              : "Hi — I'm Liv. Ask about services, hours, or pick a time to visit."
+                          }
                           rows={2}
                           data-testid="input-ai-greeting"
                         />
@@ -515,6 +538,8 @@ export default function SettingsPage() {
                       </div>
                     </div>
                   </SettingsDisclosure>
+
+                  {bid ? <LivOutboundTemplatesSection businessId={bid} /> : null}
 
                   {livEditable && (
                   <Button
@@ -597,7 +622,7 @@ export default function SettingsPage() {
                 <SettingsDisclosure
                   id="ownership-succession"
                   title="Ownership succession"
-                  description="Pass the keys when you sell or step back — rare, kept here so it is not in your everyday settings."
+                  description="Business succession when you sell or step back."
                   defaultOpen={false}
                   className="scroll-mt-24"
                 >
@@ -646,7 +671,6 @@ export default function SettingsPage() {
               {(persona === "owner" || persona === "org_admin") && bid ? (
                 <SettingsDisclosure
                   title="Activity log"
-                  description="Who changed what — expand to review recent actions."
                   defaultOpen={false}
                 >
                   <AuditLogPanel businessId={bid} embedded />

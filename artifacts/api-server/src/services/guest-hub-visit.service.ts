@@ -190,7 +190,7 @@ export async function getGuestShopRelationship(hubToken: string, slug: string) {
         businessId: shop.businessId,
         customerId: customer.id,
         slug,
-        vertical: shop.vertical,
+        vertical: (shop.vertical ?? "beauty") as BusinessVertical,
       })
     : {
         pets: [],

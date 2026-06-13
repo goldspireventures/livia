@@ -97,6 +97,7 @@ const BY_VERTICAL: Record<BusinessVertical, GuestMyModuleId[]> = {
   fitness: ["visit", "message", "rebook", "class_pack"],
   "pet-grooming": ["visit", "message", "rebook", "pet"],
   "automotive-detailing": ["visit", "message", "rebook", "vehicle"],
+  "event-vendors": ["message", "memory"],
 };
 
 export function guestMyModulesForVertical(vertical: string | null | undefined): GuestMyModuleDef[] {

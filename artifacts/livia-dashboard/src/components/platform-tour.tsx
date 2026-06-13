@@ -116,7 +116,7 @@ const TOUR_STEPS: TourStep[] = [
 
     title: "Inbox",
 
-    body: "Every WhatsApp, Instagram DM, SMS, and web chat in one queue. Take over anytime; Liv resumes when you are done.",
+    body: "WhatsApp, Instagram DMs, SMS, and web chat in one queue. Hand off to your team anytime.",
 
     href: "/inbox",
 

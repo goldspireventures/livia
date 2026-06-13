@@ -12,6 +12,10 @@ import {
 import { demoOpenPersonaUrl, type DemoRosterEntry } from "@/lib/demo-portal";
 import { useDemoWorldStatus } from "@/lib/demo/demo-world-status";
 import { resolveG1WedgeWorld } from "@/lib/g1-wedge-worlds";
+import {
+  FOUNDER_DEMO_LAUNCHER_PATH,
+  demoWorldsBackUrl,
+} from "@/lib/demo-routes";
 
 type WedgeSlide = "story" | "enter";
 
@@ -56,9 +60,9 @@ export default function DemoWedgeStoryPage() {
     return (
       <DemoFlowShell>
         <p className="text-muted-foreground">Unknown vertical wedge.</p>
-        <Link href="/demo" className="mt-4 text-[#d9b97a] underline-offset-4 hover:underline">
+        <a href={demoWorldsBackUrl()} className="mt-4 text-[#d9b97a] underline-offset-4 hover:underline">
           Back to worlds
-        </Link>
+        </a>
       </DemoFlowShell>
     );
   }
@@ -78,8 +82,8 @@ export default function DemoWedgeStoryPage() {
         <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm">
           <p className="font-medium text-amber-100">Demo world not ready yet</p>
           <p className="mt-1 text-amber-200/80">
-            <Link href="/demo#demo-setup" className="underline underline-offset-2">
-              Open /demo
+            <Link href={`${FOUNDER_DEMO_LAUNCHER_PATH}#demo-setup`} className="underline underline-offset-2">
+              Open founder launcher
             </Link>{" "}
             and run <strong>Set up demo world</strong> once (~30–60s). Then return here — Enter live demo
             will sign you in as owner.
@@ -105,7 +109,7 @@ export default function DemoWedgeStoryPage() {
           businessName={businessName}
           roster={roster}
           disabled={!provisioned}
-          backHref="/demo"
+          backHref={demoWorldsBackUrl()}
           backLabel="← Worlds"
           guestOpenHref={demoOpenPersonaUrl({ persona: "customer" })}
           onBack={() => setSlide("story")}
@@ -119,11 +123,11 @@ export default function DemoWedgeStoryPage() {
           continueLabel={
             provisioned ? "Walk into the live demo" : "Set up demo world first"
           }
-          backHref="/demo"
+          backHref={demoWorldsBackUrl()}
           backLabel="← Worlds"
           onContinue={() => {
             if (!provisioned) {
-              navigate("/demo#demo-setup");
+              navigate(`${FOUNDER_DEMO_LAUNCHER_PATH}#demo-setup`);
               return;
             }
             setSlide("enter");
@@ -136,11 +140,11 @@ export default function DemoWedgeStoryPage() {
           vertical={story.vertical}
           world={world}
           continueLabel={provisioned ? "Enter live demo" : "Set up demo world first"}
-          backHref="/demo"
+          backHref={demoWorldsBackUrl()}
           backLabel="← Worlds"
           onContinue={() => {
             if (!provisioned) {
-              navigate("/demo#demo-setup");
+              navigate(`${FOUNDER_DEMO_LAUNCHER_PATH}#demo-setup`);
               return;
             }
             setSlide("enter");

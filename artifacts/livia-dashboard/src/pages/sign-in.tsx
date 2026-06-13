@@ -10,6 +10,7 @@ import { fetchDemoCatalog } from "@/lib/demo-portal";
 import { isDemoLoginEnabled } from "@/lib/persona";
 import { isSignedOutLanding } from "@/lib/auth-routes";
 import { clerkGatewayAppearance } from "@/lib/clerk-gateway-appearance";
+import { FOUNDER_DEMO_LAUNCHER_PATH } from "@/lib/demo-routes";
 import { getMarketingOrigin } from "@/lib/surface-urls";
 import {
   getMarketingDemoConciergeUrl,
@@ -46,7 +47,7 @@ export default function SignInPage() {
   }, []);
 
   if (isDemoLoginEnabled && !betaMode && !isSignedOutLanding()) {
-    return <Redirect to="/demo" />;
+    return <Redirect to={FOUNDER_DEMO_LAUNCHER_PATH} />;
   }
 
   const showProductionStory = !isDemoLoginEnabled;
@@ -72,7 +73,7 @@ export default function SignInPage() {
               <ArrowRight className="h-3.5 w-3.5" />
             </a>
           ) : (
-            <Link href="/demo">
+            <Link href={FOUNDER_DEMO_LAUNCHER_PATH}>
               <span className="inline-flex min-h-[44px] items-center gap-1 text-xs text-primary transition-colors hover:text-primary/80">
                 Demo launcher
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -115,7 +116,7 @@ export default function SignInPage() {
                 </h1>
                 <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
                   For internal staging demos, use the{" "}
-                  <Link href="/demo" className="text-primary underline underline-offset-2">
+                  <Link href={FOUNDER_DEMO_LAUNCHER_PATH} className="text-primary underline underline-offset-2">
                     demo launcher
                   </Link>{" "}
                   — one-click logins for every role. This page is for real Clerk beta accounts only.
@@ -129,7 +130,7 @@ export default function SignInPage() {
                   {invitedDemo ? "Staging team? Use the internal G1 launcher." : "Staging team? Skip this form."}
                 </p>
                 <Button asChild className="w-full" variant={invitedDemo ? "outline" : "default"}>
-                  <Link href="/demo">Open internal demo launcher (G1)</Link>
+                  <Link href={FOUNDER_DEMO_LAUNCHER_PATH}>Open internal demo launcher (G1)</Link>
                 </Button>
                 {invitedDemo ? (
                   <Button asChild className="w-full mt-2">

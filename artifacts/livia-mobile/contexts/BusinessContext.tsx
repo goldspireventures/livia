@@ -1,8 +1,15 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useUser } from "@clerk/clerk-expo";
 import { useGetMyBusinesses } from "@workspace/api-client-react";
 import type { Business } from "@workspace/api-client-react";
 import { useSegments } from "expo-router";
-import { businessAllowedForDemo, getDemoSession, type DemoSession } from "@/lib/demo-session";
+import {
+  businessAllowedForDemo,
+  clearDemoSession,
+  getDemoSession,
+  isActiveDemoSession,
+  type DemoSession,
+} from "@/lib/demo-session";
 import { isDemoRoute } from "@/lib/navigation";
 import React, {
   ReactNode,
@@ -34,6 +41,8 @@ const STORAGE_KEY = "livia.currentBusinessId";
 const LEGACY_KEYS = ["livia_current_business_id"];
 
 export function BusinessProvider({ children }: { children: ReactNode }) {
+  const { user, isLoaded: clerkUserLoaded } = useUser();
+  const clerkEmail = user?.primaryEmailAddress?.emailAddress ?? null;
   const [currentBusinessId, setCurrentBusinessId] = useState<string | null>(
     null
   );
@@ -63,6 +72,13 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     void getDemoSession().then(setDemoSession);
   }, []);
+
+  useEffect(() => {
+    if (!clerkUserLoaded || !demoSession) return;
+    if (!isActiveDemoSession(demoSession, clerkEmail)) {
+      void clearDemoSession().then(() => setDemoSession(null));
+    }
+  }, [clerkUserLoaded, demoSession, clerkEmail]);
 
   useEffect(() => {
     // One-shot migration: walk the legacy keys (in priority order) and copy
@@ -124,6 +140,11 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     return { data: result.data };
   };
 
+  const isDemoAccount = useMemo(
+    () => isActiveDemoSession(demoSession, clerkEmail),
+    [demoSession, clerkEmail],
+  );
+
   const value = useMemo(
     () => ({
       businesses,
@@ -131,11 +152,11 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       isLoading,
       isError,
       demoSession,
-      isDemoAccount: !!demoSession,
+      isDemoAccount,
       setCurrentBusiness,
       refetch: refetchBusinesses,
     }),
-    [businesses, currentBusiness, isLoading, isError, demoSession, refetch]
+    [businesses, currentBusiness, isLoading, isError, demoSession, isDemoAccount, refetch]
   );
 
   return (

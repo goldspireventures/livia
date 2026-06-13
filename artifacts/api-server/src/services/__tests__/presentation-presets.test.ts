@@ -10,20 +10,12 @@ import {
   presentationPresetsActive,
   presentationPresetsEnabled,
   presentationPresetsProductionEnabled,
+  REQUIRED_BUSINESS_VERTICALS,
   resolvePresentationPreset,
 } from "@workspace/policy";
 
-const verticals = [
-  "hair",
-  "beauty",
-  "body-art",
-  "wellness",
-  "fitness",
-  "medspa",
-  "allied-health",
-  "pet-grooming",
-  "automotive-detailing",
-] as const;
+/** Policy hub is source of truth — new verticals must not require editing this test. */
+const verticals = REQUIRED_BUSINESS_VERTICALS;
 
 for (const vertical of verticals) {
   const presets = listPresentationPresets(vertical);
@@ -63,6 +55,7 @@ assert.equal(resolvePresentationPreset("body-art", null).tokens.layout, "pipelin
 assert.equal(resolvePresentationPreset("hair", "not-a-real-preset").id, "hair-warm-chair");
 assert.equal(demoShowcasePresentationPresetId("body-art"), "body-art-studio-dark");
 assert.equal(demoShowcasePresentationPresetId("hair"), "hair-warm-chair");
+assert.equal(demoShowcasePresentationPresetId("event-vendors"), "event-vendor-atelier");
 
 assert.equal(isValidPresentationPreset("hair", "hair-barber-bold"), true);
 assert.equal(isValidPresentationPreset("hair", "body-art-studio-dark"), false);
@@ -94,7 +87,11 @@ const expectedMatrixRows = verticals.reduce(
   (sum, vertical) => sum + listPresentationPresets(vertical).length,
   0,
 );
-assert.equal(matrix.length, expectedMatrixRows, "promotion matrix rows (9 verticals; beauty has 5 presets)");
+assert.equal(
+  matrix.length,
+  expectedMatrixRows,
+  `promotion matrix rows (${verticals.length} verticals; beauty has 5 presets)`,
+);
 assert.ok(matrix.every((r) => r.productionReady), "all presets production-ready when flag on");
 
 console.log("presentation-presets.test.ts OK");

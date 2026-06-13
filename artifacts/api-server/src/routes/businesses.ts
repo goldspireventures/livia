@@ -37,6 +37,7 @@ import {
 } from "@workspace/policy";
 import { evaluateBetaSignup } from "../lib/beta-signup-gate";
 import { isLegalGateSkipped } from "../lib/platform-legal-gate";
+import { resolveClerkProfile } from "../lib/clerk-profile.js";
 import { getOrCreateUser } from "../services/users.service";
 import {
   getPresentationForBusiness,
@@ -49,7 +50,8 @@ const router: IRouter = Router();
 // Access: authenticated user with platform legal acceptance + beta invite (when configured).
 router.post("/businesses", requireAuth, async (req, res): Promise<void> => {
   const userId = getUserId(req);
-  const user = await getOrCreateUser(userId);
+  const profile = await resolveClerkProfile(req);
+  const user = await getOrCreateUser(userId, profile.email, profile.fullName);
 
   if (!isLegalGateSkipped() && !hasCurrentPlatformLegal(user.platformLegal)) {
     sendError(res, req, 403, "Accept Livia Terms and Privacy before creating a business", {
@@ -178,7 +180,7 @@ router.post("/businesses", requireAuth, async (req, res): Promise<void> => {
       name: biz.name,
       country: biz.country,
       category: biz.category,
-      vertical: biz.vertical,
+      vertical: biz.vertical as import("@workspace/policy").BusinessVertical,
       tier: biz.tier,
     });
   }

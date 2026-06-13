@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { livMemoryKindOptions, livMemoryPlaceholder } from "@workspace/policy";
+import { livMemoryKindOptions, livMemoryPlaceholder, livMemoryCorrectionSavedToast } from "@workspace/policy";
 import { SettingsDisclosure } from "@/components/ui/settings-disclosure";
 
 type MemoryRow = {
@@ -65,7 +65,7 @@ export function LivMemoryPanel({
       });
       setDraft("");
       await qc.invalidateQueries({ queryKey: ["liv-memory", businessId, customerId] });
-      toast({ title: "Correction saved — Liv will weigh this on the next thread" });
+      toast({ title: livMemoryCorrectionSavedToast() });
     } catch {
       toast({ title: "Could not save memory", variant: "destructive" });
     }

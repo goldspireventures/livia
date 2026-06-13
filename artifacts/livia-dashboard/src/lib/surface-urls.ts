@@ -24,6 +24,11 @@ export function publicBookingUrl(slug: string): string {
   return `https://${slug}.livia-hq.com`;
 }
 
+export function publicEventVendorSiteUrl(slug: string): string {
+  if (import.meta.env.DEV) return `${dashboardOrigin()}/e/${slug}`;
+  return `https://${slug}.livia-hq.com`;
+}
+
 export function marketingPricingUrl(): string {
   return `${marketingOrigin}/pricing`;
 }
