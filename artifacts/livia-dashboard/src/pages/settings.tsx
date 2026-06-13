@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { Settings, Sparkles, Palette, UserCircle } from "lucide-react";
 import { LivOutboundTemplatesSection } from "@/components/event-vendor/liv-outbound-templates-section";
+import { QuoteTemplatesSection } from "@/components/event-vendor/quote-templates-section";
 import { PublicBookLinkCard } from "@/components/settings/public-book-link-card";
 import { GuestVaultOwnerCallout } from "@/components/customers/guest-vault-owner-callout";
 import { useForm, Controller } from "react-hook-form";
@@ -539,8 +540,6 @@ export default function SettingsPage() {
                     </div>
                   </SettingsDisclosure>
 
-                  {bid ? <LivOutboundTemplatesSection businessId={bid} /> : null}
-
                   {livEditable && (
                   <Button
                     type="submit"
@@ -555,12 +554,21 @@ export default function SettingsPage() {
                 </form>
               </CardContent>
             </Card>
+            {isEventVendor && livEditable && bid ? <QuoteTemplatesSection /> : null}
             <p className="text-sm text-muted-foreground rounded-lg border border-border/80 bg-muted/20 px-3 py-2.5">
               Day-to-day rules and inbox behaviour live in{" "}
               <Link href="/toolkit" className="text-primary font-medium hover:underline">
                 Advanced Liv
               </Link>
-              . This tab is guest-facing tone and chat on `/b` only.
+              . Outbound message templates live in{" "}
+              <button
+                type="button"
+                className="text-primary font-medium hover:underline"
+                onClick={() => onSettingsTabChange("comms")}
+              >
+                Channels
+              </button>
+              .
             </p>
           </TabsContent>
           )}
@@ -569,6 +577,7 @@ export default function SettingsPage() {
             <TabsContent value="comms" className="space-y-3 mt-0" data-testid="settings-comms-tab">
               {bid ? (
                 <>
+                  {livEditable ? <LivOutboundTemplatesSection businessId={bid} /> : null}
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-base">Notifications</CardTitle>

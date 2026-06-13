@@ -9,8 +9,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { PersonaRitualHeader } from "@/components/ritual/persona-ritual-header";
 import { PageFrame } from "@/components/ui/page-frame";
 import { ExternalLink, Plus, Trash2 } from "lucide-react";
-import { LivOutboundTemplatesSection } from "@/components/event-vendor/liv-outbound-templates-section";
-import { QuoteTemplatesSection } from "@/components/event-vendor/quote-templates-section";
 
 type MilestoneTemplate = { label: string; percent: number; dueDaysBeforeEvent?: number };
 
@@ -78,8 +76,8 @@ export default function EventSitePage() {
     <PageFrame width="md" className="space-y-4" data-testid="event-site-page">
       <PersonaRitualHeader
         variant="page"
-        title="Website & settings"
-        subtitle="Gallery, deposit rules, and terms — you control everything."
+        title="Website"
+        subtitle="Hero copy, gallery, deposit rules, and quote terms for your public site."
       />
 
       {publicUrl ? (
@@ -272,10 +270,6 @@ export default function EventSitePage() {
         </div>
       </div>
       </div>
-
-      {bid ? <LivOutboundTemplatesSection businessId={bid} /> : null}
-
-      <QuoteTemplatesSection />
 
       <Button onClick={() => void save(site)} data-testid="event-site-save">
         Save all

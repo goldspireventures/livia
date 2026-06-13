@@ -208,9 +208,9 @@ export function livOutboundTemplatesSettingsCopy(vertical: string | null | undef
   };
 
   return {
-    sectionTitle: "Liv messages",
+    sectionTitle: "Message templates",
     sectionSubtitle:
-      "Outbound messages Liv sends when you qualify leads, share quotes, and follow up.",
+      "Prefilled emails and WhatsApp assists Liv sends when you qualify leads, share quotes, and follow up.",
     fields: keys.map((key) => ({
       key,
       label: fieldMeta[key].label,

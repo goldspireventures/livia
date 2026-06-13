@@ -47,6 +47,14 @@ export function parsePublicEventVendorSlug(pathname: string): string | null {
   return decodeURIComponent(m[1]);
 }
 
+/** Slug from `/e/{slug}` or nested paths like `/e/{slug}/q/{token}`. */
+export function parsePublicEventVendorPathSlug(pathname: string): string | null {
+  const p = pathname.split("?")[0] ?? "";
+  const m = p.match(/^\/e\/([^/]+)/);
+  if (!m?.[1]) return null;
+  return decodeURIComponent(m[1]);
+}
+
 /** Quote token from `/e/{slug}/q/{token}`, legacy `/e/{slug}/{token}`, or subdomain `/q/{token}`. */
 export function parsePublicQuotePath(
   pathname: string,

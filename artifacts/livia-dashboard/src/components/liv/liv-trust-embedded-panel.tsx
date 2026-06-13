@@ -71,7 +71,7 @@ export function LivTrustEmbeddedPanel({ vertical }: { vertical?: string | null }
         <p className="text-sm text-muted-foreground pt-2">
           Edit deposit rules, quote validity, and terms on{" "}
           <a href="/event-site" className="text-primary underline underline-offset-2">
-            Website & settings
+            Website
           </a>
           .
         </p>

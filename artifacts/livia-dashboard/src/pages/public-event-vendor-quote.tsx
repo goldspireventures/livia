@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { useSearch } from "wouter";
 import { useGuestQuoteRoute } from "@/lib/use-guest-book-slug";
 import { formatCurrency } from "@/lib/format";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, CreditCard, Download, Loader2 } from "lucide-react";
@@ -301,13 +300,14 @@ export default function PublicEventVendorQuotePage() {
           <p className="text-xs text-muted-foreground">{quote.termsSnapshot}</p>
         ) : null}
 
-        <div className="flex flex-col gap-2">
+        <div className="ev-quote-actions">
           {quote.status === "sent" ? (
             <>
-              <Button
+              <button
+                type="button"
                 onClick={() => void acceptQuote()}
                 disabled={acceptBusy || payBusy}
-                className="w-full"
+                className="ev-btn ev-btn--primary"
                 data-testid="guest-quote-accept"
               >
                 {acceptBusy || payBusy ? (
@@ -315,18 +315,23 @@ export default function PublicEventVendorQuotePage() {
                 ) : (
                   "Accept quote & pay deposit"
                 )}
-              </Button>
-              <Button variant="ghost" onClick={() => void declineQuote()} disabled={acceptBusy} className="w-full">
+              </button>
+              <button
+                type="button"
+                onClick={() => void declineQuote()}
+                disabled={acceptBusy}
+                className="ev-quote-actions__decline"
+              >
                 Decline quote
-              </Button>
+              </button>
             </>
           ) : null}
 
           {quote.status === "accepted" && depositDue > 0 ? (
             <>
-              <Button
-                size="lg"
-                className="w-full"
+              <button
+                type="button"
+                className="ev-btn ev-btn--primary"
                 onClick={() => void startCheckout()}
                 disabled={payBusy || acceptBusy || pay?.checkoutAvailable === false}
                 data-testid="guest-quote-pay-checkout"
@@ -335,13 +340,13 @@ export default function PublicEventVendorQuotePage() {
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <>
-                    <CreditCard className="mr-2 h-4 w-4" />
+                    <CreditCard className="h-4 w-4" />
                     Pay deposit {formatCurrency(depositDue, currency)}
                   </>
                 )}
-              </Button>
+              </button>
               {pay?.checkoutAvailable === false ? (
-                <p className="text-xs text-center text-muted-foreground">
+                <p className="text-xs text-center text-muted-foreground max-w-sm">
                   Card checkout isn&apos;t available yet — contact {business.name} to pay your deposit.
                 </p>
               ) : null}
@@ -352,16 +357,15 @@ export default function PublicEventVendorQuotePage() {
             <p className="text-center text-sm text-primary font-medium">Deposit paid — you&apos;re booked!</p>
           ) : null}
 
-          <Button variant="outline" asChild>
-            <a
-              href={`/api/public/${slug}/q/${token}/html`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Download invoice PDF
-            </a>
-          </Button>
+          <a
+            href={`/api/public/${slug}/q/${token}/html`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ev-btn ev-btn--outline !text-stone-800 !border-stone-300 !bg-white"
+          >
+            <Download className="h-4 w-4" />
+            Download invoice PDF
+          </a>
         </div>
 
         <EventVendorPoweredBy compact />

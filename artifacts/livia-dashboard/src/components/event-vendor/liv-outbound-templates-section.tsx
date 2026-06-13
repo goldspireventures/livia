@@ -23,6 +23,7 @@ type Props = {
 export function LivOutboundTemplatesSection({ businessId, onSaved }: Props) {
   const [fields, setFields] = useState<Field[]>([]);
   const [overrides, setOverrides] = useState<Partial<Record<LivOutboundCopyKey, string>>>({});
+  const [title, setTitle] = useState("Message templates");
   const [subtitle, setSubtitle] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -31,11 +32,13 @@ export function LivOutboundTemplatesSection({ businessId, onSaved }: Props) {
     void customFetch<{
       fields: Field[];
       overrides: Partial<Record<LivOutboundCopyKey, string>>;
+      sectionTitle?: string;
       sectionSubtitle?: string;
     }>(`/api/businesses/${businessId}/liv-outbound`)
       .then((view) => {
         setFields(view.fields);
         setOverrides(view.overrides ?? {});
+        setTitle(view.sectionTitle ?? "Message templates");
         setSubtitle(view.sectionSubtitle ?? "");
       })
       .catch(() => setFields([]));
@@ -61,7 +64,7 @@ export function LivOutboundTemplatesSection({ businessId, onSaved }: Props) {
   return (
     <div className="rounded-xl border bg-card/60 p-4 space-y-4" data-testid="liv-outbound-templates">
       <div>
-        <h3 className="text-sm font-semibold">Liv messages</h3>
+        <h3 className="text-sm font-semibold">{title}</h3>
         <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
         <p className="text-[10px] text-muted-foreground mt-2">
           Variables: {LIV_OUTBOUND_TEMPLATE_VARS.join(", ")}
@@ -104,7 +107,7 @@ export function LivOutboundTemplatesSection({ businessId, onSaved }: Props) {
       ))}
 
       <Button type="button" onClick={() => void save()} disabled={busy} data-testid="liv-outbound-save">
-        {busy ? "Saving…" : "Save Liv messages"}
+        {busy ? "Saving…" : "Save templates"}
       </Button>
     </div>
   );

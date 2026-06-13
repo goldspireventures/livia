@@ -2,7 +2,7 @@ import { useParams } from "wouter";
 import { guestBookSlugFromWindow } from "@/lib/guest-host-routing";
 import {
   parsePublicBookingSlug,
-  parsePublicEventVendorSlug,
+  parsePublicEventVendorPathSlug,
   parsePublicQuotePath,
   parsePublicTokenPath,
 } from "@/lib/public-guest-route-params";
@@ -42,7 +42,7 @@ export function useEventVendorSlug(): string | undefined {
   const hostSlug = guestBookSlugFromWindow();
   if (hostSlug) return hostSlug;
   if (typeof window !== "undefined") {
-    return parsePublicEventVendorSlug(window.location.pathname) ?? undefined;
+    return parsePublicEventVendorPathSlug(window.location.pathname) ?? undefined;
   }
   return undefined;
 }
@@ -52,12 +52,12 @@ export function useGuestQuoteRoute(): {
   token: string | undefined;
 } {
   const { slug: routeSlug, token: routeToken } = useParams<{ slug?: string; token?: string }>();
+  const parsed =
+    typeof window !== "undefined"
+      ? parsePublicQuotePath(window.location.pathname)
+      : null;
   const eventSlug = useEventVendorSlug();
-  const slug = routeSlug ?? eventSlug;
-  const token =
-    routeToken ??
-    (typeof window !== "undefined"
-      ? parsePublicQuotePath(window.location.pathname)?.token
-      : undefined);
+  const slug = routeSlug ?? eventSlug ?? parsed?.slug ?? undefined;
+  const token = routeToken ?? parsed?.token ?? undefined;
   return { slug, token };
 }

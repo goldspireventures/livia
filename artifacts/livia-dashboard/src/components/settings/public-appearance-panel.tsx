@@ -349,7 +349,7 @@ export function PublicAppearancePanel({
               </CardTitle>
               <CardDescription className="mt-1">
                 {isEventVendor
-                  ? "Preset styles your Livia studio only — your client website is edited under Website & settings. Preview both below."
+                  ? "Preset styles your Livia studio only — your client website is edited under Website. Preview both below."
                   : "One skin for your app and your book link — preview below, then apply."}
               </CardDescription>
             </div>

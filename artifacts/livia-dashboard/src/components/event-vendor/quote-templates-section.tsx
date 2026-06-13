@@ -59,7 +59,10 @@ export function QuoteTemplatesSection() {
   return (
     <section className="rounded-xl border p-4 space-y-3" data-testid="quote-templates-section">
       <div>
-        <h2 className="font-medium">Quote templates</h2>
+        <h2 className="font-medium text-sm">Quote line templates</h2>
+        <p className="text-xs text-muted-foreground mt-1">
+          Presets for new quotes — event types and starter line items.
+        </p>
       </div>
       <ul className="space-y-2">
         {templates.map((t) => (
