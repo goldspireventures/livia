@@ -2,8 +2,10 @@ import {
   ArrowRight,
   Calendar,
   ClipboardCheck,
+  FileText,
   ImageIcon,
   Inbox,
+  Layers,
   Loader2,
   MessageSquare,
   Sparkles,
@@ -56,6 +58,18 @@ export const WEDGE_BEAT_CROP_META: Record<
     icon: Sparkles,
     chip: "bg-sky-500/15 text-sky-300",
     ring: "border-sky-500/30",
+  },
+  "quote-gen": {
+    label: "Quote",
+    icon: FileText,
+    chip: "bg-amber-500/15 text-amber-300",
+    ring: "border-amber-500/30",
+  },
+  catalogue: {
+    label: "Catalogue",
+    icon: Layers,
+    chip: "bg-orange-500/15 text-orange-300",
+    ring: "border-orange-500/30",
   },
 };
 

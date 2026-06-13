@@ -28,7 +28,14 @@ type QuoteDetail = QuoteRow & {
   depositAmountMinor: number;
   depositPaidMinor?: number;
   lines: Array<{ name: string; quantity: string; lineTotalMinor: number }>;
-  eventDaySheet?: { setupChecklist?: string[] } | null;
+  eventDaySheet?: {
+    setupChecklist?: string[];
+    eventDate?: string | null;
+    eventType?: string | null;
+    theme?: string | null;
+    guestCount?: number | null;
+    venue?: string | null;
+  } | null;
 };
 
 type PrepView = {
@@ -160,6 +167,37 @@ export default function QuotesScreen() {
       <Text style={{ color: colors.mutedForeground, fontSize: 13, marginBottom: 8 }}>
         {selected.status.toUpperCase()} · Deposit {selected.depositPercent}% ({eur(selected.depositAmountMinor)})
       </Text>
+      {(selected.eventDaySheet?.eventDate ||
+        selected.eventDaySheet?.venue ||
+        selected.enquiry?.eventDate ||
+        selected.enquiry?.venue) ? (
+        <View
+          style={[
+            styles.eventDaySheet,
+            { borderColor: colors.primary, backgroundColor: `${colors.primary}12` },
+          ]}
+        >
+          <Text style={[styles.sectionLabel, { color: colors.primary }]}>EVENT DAY SHEET</Text>
+          {selected.eventDaySheet?.eventDate || selected.enquiry?.eventDate ? (
+            <Text style={{ color: colors.foreground, fontSize: 13, marginTop: 4 }}>
+              {selected.eventDaySheet?.eventDate ?? selected.enquiry?.eventDate}
+              {(selected.eventDaySheet?.eventType ?? selected.enquiry?.eventType)
+                ? ` · ${selected.eventDaySheet?.eventType ?? selected.enquiry?.eventType}`
+                : ""}
+            </Text>
+          ) : null}
+          {selected.eventDaySheet?.venue || selected.enquiry?.venue ? (
+            <Text style={{ color: colors.mutedForeground, fontSize: 13, marginTop: 4 }}>
+              {selected.eventDaySheet?.venue ?? selected.enquiry?.venue}
+            </Text>
+          ) : null}
+          {selected.eventDaySheet?.theme || selected.enquiry?.theme ? (
+            <Text style={{ color: colors.mutedForeground, fontSize: 13, marginTop: 4 }}>
+              Theme: {selected.eventDaySheet?.theme ?? selected.enquiry?.theme}
+            </Text>
+          ) : null}
+        </View>
+      ) : null}
       {selected.personalMessage ? (
         <Text style={{ color: colors.foreground, fontSize: 14, marginBottom: 8 }}>{selected.personalMessage}</Text>
       ) : null}
@@ -301,6 +339,7 @@ const styles = StyleSheet.create({
   rowTitle: { fontWeight: "600", fontSize: 16 },
   detailPane: { marginTop: 12, marginHorizontal: 16, borderWidth: 1, borderRadius: 12, padding: 16 },
   detailTitle: { fontSize: 18, fontWeight: "600" },
+  eventDaySheet: { borderWidth: 1, borderRadius: 10, padding: 12, marginBottom: 12 },
   lineRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 4 },
   totalRow: { flexDirection: "row", justifyContent: "space-between", borderTopWidth: 1, marginTop: 8, paddingTop: 8 },
   sectionLabel: { fontSize: 10, fontWeight: "600", letterSpacing: 0.6 },

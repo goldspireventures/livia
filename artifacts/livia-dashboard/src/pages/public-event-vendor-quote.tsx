@@ -8,9 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, CreditCard, Download, Loader2 } from "lucide-react";
 import { EventVendorPageShell } from "@/components/event-vendor/event-vendor-page-shell";
 import { EventVendorPoweredBy } from "@/components/event-vendor/event-vendor-powered-by";
+import { resolveGalleryImage } from "@/lib/event-vendor-media";
 
 type QuotePayload = {
   business: { name: string; slug: string };
+  eventType?: string | null;
+  similarWork?: Array<{ url: string; caption?: string; eventType?: string }>;
   quote: {
     id: string;
     status: string;
@@ -214,7 +217,7 @@ export default function PublicEventVendorQuotePage() {
     );
   }
 
-  const { business, quote } = data;
+  const { business, quote, similarWork, eventType } = data;
   const currency = pay?.currency ?? "EUR";
   const paymentState = pay?.milestones
     ? {
@@ -256,6 +259,33 @@ export default function PublicEventVendorQuotePage() {
 
         {quote.personalMessage ? (
           <p className="text-center text-muted-foreground">{quote.personalMessage}</p>
+        ) : null}
+
+        {similarWork && similarWork.length > 0 ? (
+          <div className="space-y-3" data-testid="guest-quote-similar-work">
+            <h2 className="text-sm font-medium text-center font-serif">
+              Similar work{eventType ? ` — ${eventType}` : ""}
+            </h2>
+            <div className="grid grid-cols-3 gap-2">
+              {similarWork.map((item, i) => {
+                const resolved = resolveGalleryImage(item, i);
+                return (
+                  <figure key={`${resolved.url}-${i}`} className="overflow-hidden rounded-lg border border-amber-900/10">
+                    <img
+                      src={resolved.url}
+                      alt={resolved.caption ?? "Event styling"}
+                      className="aspect-[4/3] w-full object-cover"
+                    />
+                    {resolved.caption ? (
+                      <figcaption className="px-1.5 py-1 text-[10px] text-muted-foreground truncate">
+                        {resolved.caption}
+                      </figcaption>
+                    ) : null}
+                  </figure>
+                );
+              })}
+            </div>
+          </div>
         ) : null}
 
         <Card className="shadow-sm border-amber-900/10">

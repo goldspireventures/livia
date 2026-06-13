@@ -3,7 +3,7 @@
 **Status:** canonical (2026-06-05)  
 **Purpose:** One row per vertical — business meaning, wow thesis, demo, program doc, GTM wave.  
 **GTM authority:** [`GTM-VERTICAL-DEPTH-PROGRAM.md`](./GTM-VERTICAL-DEPTH-PROGRAM.md) — **all nine code verticals, one parity bar**  
-**Innovation:** [`VERTICAL-INNOVATION-PROGRAM.md`](./VERTICAL-INNOVATION-PROGRAM.md)  
+**Innovation:** [`VERTICAL-INNOVATION-PROGRAM.md`](./VERTICAL-INNOVATION-PROGRAM.md) · event vendors: [`EVENT-VENDORS-INNOVATION-PROGRAM.md`](./EVENT-VENDORS-INNOVATION-PROGRAM.md)  
 **Propagation:** [`DOC-PROPAGATION-CASCADE.md`](../engineering/DOC-PROPAGATION-CASCADE.md) · `pnpm vertical:doc-check`  
 **Build sequencing:** [`LIVIA-VERTICALS-BUILD-PLAN.md`](./LIVIA-VERTICALS-BUILD-PLAN.md)
 
@@ -61,7 +61,7 @@ See [`PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md`](./PEOPLE-BUSINESS-CATEGORY-MANIFES
 
 | Doc | Vertical | Tier | Program | Platform primitive |
 |-----|----------|------|---------|-------------------|
-| V12 | Event vendors & decor | **Ring 2** | [EVENT-VENDORS](./EVENT-VENDORS-VERTICAL-PROGRAM.md) | [CONSULT-FIRST-WORKFLOW](./CONSULT-FIRST-WORKFLOW-SPEC.md) |
+| V12 | Event vendors & decor | **Ring 2** | [EVENT-VENDORS](./EVENT-VENDORS-VERTICAL-PROGRAM.md) · [Innovation](./EVENT-VENDORS-INNOVATION-PROGRAM.md) | [CONSULT-FIRST-WORKFLOW](./CONSULT-FIRST-WORKFLOW-SPEC.md) |
 
 **Active design partner:** solo event-decor operator — enquire → quote → booked (IG/WhatsApp leads).
 
@@ -78,6 +78,7 @@ See [`PEOPLE-BUSINESS-CATEGORY-MANIFESTO.md`](./PEOPLE-BUSINESS-CATEGORY-MANIFES
 | Date | Change |
 |------|--------|
 | 2026-06-10 | V12 event vendors Ring 2 program + consult-first workflow spec; design-partner scope |
+| 2026-06-10 | V12 innovation program — showstopper map + shipped gallery/stale/brief/event-day |
 | 2026-06-05 | GTM Wave 1 lock — nine verticals one bar; innovation program; subdomain + `/my` |
 | 2026-06-01 | Full vertical program set + build plan |
 | 2026-06-03 | Vertical excellence specs (all code verticals except wellness) |

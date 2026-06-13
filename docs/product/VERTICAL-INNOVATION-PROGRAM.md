@@ -280,6 +280,36 @@ Detail bay · ceramic coating · fleet · mobile pickup/drop-off
 
 ---
 
+## Event vendors & decor (`event-vendors`) — Ring 2
+
+**Deep-dive:** [`EVENT-VENDORS-INNOVATION-PROGRAM.md`](./EVENT-VENDORS-INNOVATION-PROGRAM.md)
+
+### Sub-segments
+
+Event decor · wedding vendors · party & celebration · venue hire · equipment hire
+
+### Operator wow
+
+| Idea | Problem | Pri | Status |
+|------|---------|-----|--------|
+| **Brief intelligence** | Incomplete DM briefs | P0 | ✅ |
+| **Quote generator** | Hours in Notes | P0 | ✅ |
+| **Stale-quote Liv nudge** | Quotes die silently | P1 | ✅ |
+| **Event-day sheet** | Day-of chaos | P1 | ✅ |
+| **Milestone deposits** | Wedding payment schedules | P1 | 🟡 |
+| **Mood board approval** | Pinterest tennis | P2 | 🔲 |
+
+### Guest wow
+
+| Idea | Pri | Status |
+|------|-----|--------|
+| **Structured enquire** | P0 | ✅ |
+| **Similar work on quote** | P1 | ✅ |
+| **Accept + pay deposit** | P0 | ✅ |
+| **Milestone schedule on quote** | P1 | ✅ |
+
+---
+
 ## Implementation status legend
 
 | Mark | Meaning |
@@ -297,3 +327,4 @@ Detail bay · ceramic coating · fleet · mobile pickup/drop-off
 | Date | Change |
 |------|--------|
 | 2026-06-05 | Initial GTM Wave 1 innovation matrix — all nine code verticals + sub-segments |
+| 2026-06-10 | V12 event-vendors Ring 2 section + innovation program doc |

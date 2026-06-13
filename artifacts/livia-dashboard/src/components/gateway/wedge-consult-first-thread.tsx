@@ -22,9 +22,9 @@ type Props = {
 };
 
 const CHAPTER_LABEL: Record<string, string> = {
-  inbox: "Capture",
-  "public-book": "Website",
-  today: "Pipeline",
+  inbox: "Inbox",
+  "quote-gen": "Quote generator",
+  catalogue: "Catalogue",
 };
 
 /**
@@ -42,7 +42,7 @@ export function WedgeConsultFirstThread({
   backLabel = "← Worlds",
   onContinue,
 }: Props) {
-  const chapters = filterWedgeChapters(beats);
+  const chapters = filterWedgeChapters(beats, vertical);
   const g1Title = g1TitleForWorld(world ?? null) ?? tradeLabel;
   const g1Tagline = g1TaglineForWorld(world ?? null);
   const livIntro = resolveWedgeLivIntro(vertical);

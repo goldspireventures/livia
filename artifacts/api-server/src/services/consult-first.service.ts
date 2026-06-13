@@ -40,6 +40,7 @@ import {
   STALE_QUOTE_DAYS,
   buildQuoteBriefIntelligence,
   matchTemplateByEventType,
+  matchGallerySimilarWork,
   personalMessageFromBrief,
   scalePresetQuantity,
   setupChecklistForEventType,
@@ -1102,7 +1103,20 @@ export async function getPublicQuoteByToken(slug: string, token: string) {
     .orderBy(quoteLineItemsTable.sortOrder);
 
   const site = await getEventVendorSite(biz.id);
-  return { business: biz, quote: { ...quote, lines }, site };
+
+  let eventType: string | null = null;
+  if (quote.enquiryId) {
+    const [enquiry] = await db
+      .select({ eventType: enquiriesTable.eventType })
+      .from(enquiriesTable)
+      .where(and(eq(enquiriesTable.businessId, biz.id), eq(enquiriesTable.id, quote.enquiryId)))
+      .limit(1);
+    eventType = enquiry?.eventType ?? null;
+  }
+
+  const similarWork = matchGallerySimilarWork(site.gallery ?? [], eventType);
+
+  return { business: biz, quote: { ...quote, lines }, site, similarWork, eventType };
 }
 
 export async function declinePublicQuote(slug: string, token: string) {

@@ -152,7 +152,7 @@ export function EventVendorLivCommandPanel() {
       ) : null}
 
       {dash?.staleQuotesList?.length ? (
-        <StaleQuotesPanel rows={dash.staleQuotesList} />
+        <StaleQuotesPanel rows={dash.staleQuotesList} businessId={bid} />
       ) : null}
 
       <OwnerLivOpsPanel compact variant="event-vendors" />

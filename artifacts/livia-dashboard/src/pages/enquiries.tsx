@@ -519,7 +519,7 @@ export default function EventVendorUnifiedInboxPage() {
       ) : null}
 
       {stats?.staleQuotesList?.length ? (
-        <StaleQuotesPanel rows={stats.staleQuotesList} />
+        <StaleQuotesPanel rows={stats.staleQuotesList} businessId={bid} />
       ) : null}
 
       <div className="grid gap-4 lg:grid-cols-2 min-h-[min(720px,70vh)]">

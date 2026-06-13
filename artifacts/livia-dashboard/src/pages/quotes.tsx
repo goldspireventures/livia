@@ -15,7 +15,7 @@ import { QuoteBillToPanel } from "@/components/event-vendor/quote-bill-to-panel"
 import { QuoteLineItemsEditor } from "@/components/event-vendor/quote-line-items-editor";
 import { QuoteSendReviewDialog } from "@/components/event-vendor/quote-send-review-dialog";
 import { QuoteSentNextSteps } from "@/components/event-vendor/quote-sent-next-steps";
-import { LivEventPrepTeaser } from "@/components/event-vendor/quote-workflow-panels";
+import { LivEventPrepTeaser, QuoteBriefPanel, EventDaySheetPanel } from "@/components/event-vendor/quote-workflow-panels";
 import { EventPrepTimelinePanel, type PrepView } from "@/components/event-vendor/event-prep-timeline-panel";
 import {
   Dialog,
@@ -41,6 +41,8 @@ import {
   type EventDaySheet,
 } from "@/lib/event-vendor-studio";
 import { Plus, Send, Trash2 } from "lucide-react";
+import { STALE_QUOTE_DAYS } from "@workspace/policy";
+import type { QuoteBriefHint } from "@workspace/policy";
 
 type Milestone = { label: string; percent: number; amountMinor: number; dueDate?: string };
 
@@ -86,6 +88,14 @@ type Quote = {
     lastName?: string | null;
     email?: string | null;
   } | null;
+};
+
+type QuoteBrief = {
+  suggestedTemplateName: string | null;
+  briefIntelligence: {
+    hints: QuoteBriefHint[];
+    suggestedMessage: string;
+  };
 };
 
 function normalizeQuote(raw: Partial<Quote> & { id: string }): Quote {
@@ -139,6 +149,7 @@ export default function QuotesPage() {
     Array<{ id: string; name: string; priceMinor: number; quoteUnit?: string | null }>
   >([]);
   const [enquiries, setEnquiries] = useState<EnquirySummary[]>([]);
+  const [quoteBrief, setQuoteBrief] = useState<QuoteBrief | null>(null);
 
   const params = new URLSearchParams(window.location.search);
   const highlightId = params.get("id");
@@ -188,6 +199,16 @@ export default function QuotesPage() {
       .catch(() => setPrepView(null))
       .finally(() => setPrepLoading(false));
   }, [bid, selected?.id, selected?.status, selected?.depositPaidMinor, selected?.depositAmountMinor]);
+
+  useEffect(() => {
+    if (!bid || !selected?.enquiryId || selected.status !== "draft") {
+      setQuoteBrief(null);
+      return;
+    }
+    void customFetch<QuoteBrief>(`/api/businesses/${bid}/enquiries/${selected.enquiryId}/quote-brief`)
+      .then((b) => setQuoteBrief(b))
+      .catch(() => setQuoteBrief(null));
+  }, [bid, selected?.enquiryId, selected?.status]);
 
   useEffect(() => {
     if (!bid) return;
@@ -656,25 +677,20 @@ export default function QuotesPage() {
                 }}
               />
 
-              {sheet && (sheet.theme || sheet.venue) ? (
-                <div className="rounded-lg border bg-muted/10 p-3 grid gap-2 sm:grid-cols-2 text-sm">
-                  {sheet.theme ? (
-                    <div>
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                        Theme
-                      </p>
-                      <p>{sheet.theme}</p>
-                    </div>
-                  ) : null}
-                  {sheet.venue ? (
-                    <div>
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                        Venue
-                      </p>
-                      <p>{sheet.venue}</p>
-                    </div>
-                  ) : null}
-                </div>
+              <EventDaySheetPanel sheet={sheet} enquiry={selected.enquiry} />
+
+              {quoteBrief && selected.status === "draft" ? (
+                <QuoteBriefPanel
+                  hints={quoteBrief.briefIntelligence.hints}
+                  suggestedTemplateName={quoteBrief.suggestedTemplateName}
+                  suggestedMessage={quoteBrief.briefIntelligence.suggestedMessage}
+                  onUseMessage={() =>
+                    setSelected({
+                      ...selected,
+                      personalMessage: quoteBrief.briefIntelligence.suggestedMessage,
+                    })
+                  }
+                />
               ) : null}
 
               <div className="space-y-2">
@@ -798,10 +814,37 @@ export default function QuotesPage() {
                   </Button>
                 )}
                 {selected.status === "sent" ? (
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={async () => {
+                  <>
+                    {selected.sentAt &&
+                    Math.floor(
+                      (Date.now() - new Date(selected.sentAt).getTime()) / (24 * 60 * 60 * 1000),
+                    ) >= STALE_QUOTE_DAYS ? (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={async () => {
+                          if (!bid) return;
+                          try {
+                            const row = await customFetch<{ whatsappText: string }>(
+                              `/api/businesses/${bid}/quotes/${selected.id}/stale-liv-draft`,
+                            );
+                            await navigator.clipboard.writeText(row.whatsappText);
+                            toast({
+                              title: "Follow-up copied",
+                              description: "Paste into WhatsApp — Liv drafted it.",
+                            });
+                          } catch {
+                            toast({ title: "Could not copy follow-up", variant: "destructive" });
+                          }
+                        }}
+                      >
+                        Copy Liv follow-up
+                      </Button>
+                    ) : null}
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={async () => {
                       if (!bid) return;
                       try {
                         await customFetch(`/api/businesses/${bid}/quotes/${selected.id}`, {
@@ -818,6 +861,7 @@ export default function QuotesPage() {
                   >
                     Mark declined
                   </Button>
+                  </>
                 ) : null}
               </div>
             </div>

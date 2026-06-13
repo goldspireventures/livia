@@ -1,7 +1,7 @@
 import type { WedgeDemoBeat } from "@workspace/policy";
 import { cn } from "@/lib/utils";
 
-/** Event-vendor G2 mini UI — consult-first, not salon booking chrome. */
+/** Event-vendor G2 mini UI — inbox, quote generator, catalogue. */
 export function WedgeConsultFirstPreview({ beat }: { beat: WedgeDemoBeat }) {
   return (
     <div
@@ -21,58 +21,62 @@ function previewBody(hint: WedgeDemoBeat["cropHint"]) {
           <p className="text-[9px] font-mono uppercase tracking-widest text-amber-200/50">Inbox</p>
           <div className="rounded-lg border border-violet-500/25 bg-violet-500/10 px-2.5 py-2">
             <p className="text-[11px] font-medium text-white/90">Sarah Murphy</p>
-            <p className="text-[10px] text-white/55 mt-0.5">Birthday quote — tweak centrepieces?</p>
+            <p className="text-[10px] text-white/55 mt-0.5">Birthday · blush & gold · 40 guests</p>
+            <span className="mt-1 inline-block rounded-full bg-amber-500/20 px-1.5 py-0.5 text-[8px] text-amber-200/90">
+              Quote ready
+            </span>
           </div>
           <div className="rounded-lg border border-white/8 bg-white/[0.03] px-2.5 py-2 opacity-80">
             <p className="text-[11px] text-white/75">Aoife Brennan</p>
-            <p className="text-[10px] text-white/45 mt-0.5">Wedding draping — call requested</p>
+            <p className="text-[10px] text-white/45 mt-0.5">Wedding draping — handoff to you</p>
           </div>
         </div>
       );
-    case "public-book":
-      return (
-        <div className="relative min-h-[7.5rem]">
-          <img
-            src="/event-vendor-media/wedding-reception.jpg"
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover opacity-40"
-            loading="lazy"
-          />
-          <div className="relative p-3 space-y-2">
-            <p className="text-[9px] font-mono uppercase tracking-widest text-amber-100/70">
-              /e/atelier-decor-dublin
-            </p>
-            <p className="font-serif text-sm text-amber-50/95">Enquire for your celebration</p>
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              {["Wedding", "Birthday", "Christening"].map((t) => (
-                <span
-                  key={t}
-                  className="rounded-full border border-amber-200/25 bg-amber-950/50 px-2 py-0.5 text-[9px] text-amber-100/80"
-                >
-                  {t}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      );
-    case "today":
+    case "quote-gen":
       return (
         <div className="p-3 space-y-2">
-          <p className="text-[9px] font-mono uppercase tracking-widest text-sky-200/50">Pipeline</p>
+          <p className="text-[9px] font-mono uppercase tracking-widest text-amber-200/50">Quote generator</p>
+          <p className="text-[10px] text-amber-100/80 font-medium">Birthday – standard template</p>
+          <div className="space-y-1 rounded-lg border border-white/10 bg-black/30 p-2 text-[9px]">
+            <div className="flex justify-between text-white/75">
+              <span>Balloon garland × 1</span>
+              <span className="font-mono">€280</span>
+            </div>
+            <div className="flex justify-between text-white/75">
+              <span>Table centrepieces × 8</span>
+              <span className="font-mono">€320</span>
+            </div>
+            <div className="flex justify-between text-white/75">
+              <span>Setup & delivery × 1</span>
+              <span className="font-mono">€95</span>
+            </div>
+            <div className="flex justify-between border-t border-white/10 pt-1 font-medium text-amber-200/90">
+              <span>Deposit 30%</span>
+              <span className="font-mono">€208</span>
+            </div>
+          </div>
+          <p className="text-[8px] text-emerald-300/80">Generated from enquiry · 14s</p>
+        </div>
+      );
+    case "catalogue":
+      return (
+        <div className="p-3 space-y-2">
+          <p className="text-[9px] font-mono uppercase tracking-widest text-orange-200/50">Catalogue</p>
           {[
-            { label: "New", value: "2", tone: "text-white/70" },
-            { label: "Quoted", value: "1", tone: "text-amber-200/90" },
-            { label: "Booked", value: "1", tone: "text-emerald-300/90" },
+            { name: "Balloon garland", unit: "flat", price: "€280" },
+            { name: "Table centrepieces", unit: "per table", price: "€40" },
+            { name: "Chair covers & sashes", unit: "per guest", price: "€6" },
           ].map((row) => (
-            <div key={row.label} className="flex items-center justify-between text-[10px]">
-              <span className={cn("font-medium", row.tone)}>{row.label}</span>
-              <span className="font-mono text-white/40">{row.value}</span>
+            <div
+              key={row.name}
+              className="flex items-center justify-between gap-2 rounded-md border border-white/8 bg-white/[0.03] px-2 py-1.5"
+            >
+              <span className="text-[10px] text-white/80 truncate">{row.name}</span>
+              <span className="shrink-0 text-[8px] font-mono text-orange-200/70">{row.unit}</span>
+              <span className="shrink-0 text-[9px] font-mono text-white/55">{row.price}</span>
             </div>
           ))}
-          <p className="text-[9px] text-white/35 pt-1 border-t border-white/8">
-            Deposit milestone · balance before event day
-          </p>
+          <p className="text-[8px] text-white/35">Units scale from guest count & tables</p>
         </div>
       );
     default:

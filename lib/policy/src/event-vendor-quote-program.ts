@@ -245,6 +245,27 @@ export function resolveEnquiryDeclineCopy(args: {
  * State outcomes and next actions only — see event-vendor surfaces + SettingsDisclosure titles.
  */
 
+export type EventVendorGalleryItem = {
+  url: string;
+  caption?: string;
+  eventType?: string;
+};
+
+/** Guest quote “similar work” — prefer gallery shots tagged for this event type. */
+export function matchGallerySimilarWork(
+  gallery: EventVendorGalleryItem[],
+  eventType?: string | null,
+  limit = 3,
+): EventVendorGalleryItem[] {
+  if (!gallery.length) return [];
+  const key = (eventType ?? "").toLowerCase().trim();
+  if (!key) return gallery.slice(0, limit);
+  const matched = gallery.filter((g) => (g.eventType ?? "").toLowerCase() === key);
+  if (matched.length >= limit) return matched.slice(0, limit);
+  const rest = gallery.filter((g) => (g.eventType ?? "").toLowerCase() !== key);
+  return [...matched, ...rest].slice(0, limit);
+}
+
 export function matchTemplateByEventType<
   T extends { id: string; eventTypes?: string[] | null; isActive?: boolean | null; name?: string },
 >(templates: T[], eventType?: string | null): T | undefined {

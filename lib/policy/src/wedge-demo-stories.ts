@@ -7,7 +7,15 @@ export type WedgeDemoBeat = {
   /** Short subline for interstitial card. */
   detail: string;
   /** Visual hint for design/dev galleries — not user-facing. */
-  cropHint: "inbox" | "public-book" | "sms" | "today" | "proof" | "consent";
+  cropHint:
+    | "inbox"
+    | "public-book"
+    | "sms"
+    | "today"
+    | "proof"
+    | "consent"
+    | "quote-gen"
+    | "catalogue";
 };
 
 export type WedgeDemoStory = {
@@ -97,19 +105,19 @@ const WEDGE_BEATS: Record<BusinessVertical, WedgeDemoBeat[]> = {
   ],
   "event-vendors": [
     {
-      headline: "Enquiries in one inbox",
-      detail: "Instagram DMs and web enquires — Liv drafts replies and surfaces quote-ready leads.",
+      headline: "Unified inbox",
+      detail: "Instagram, WhatsApp, email, and web enquire — one thread per celebration, Liv on draft.",
       cropHint: "inbox",
     },
     {
-      headline: "Your event website",
-      detail: "Gallery, services, and structured enquire — not a salon booking widget.",
-      cropHint: "public-book",
+      headline: "Quote generator",
+      detail: "Enquiry brief → template + catalogue → itemised quote in under a minute. Tweak, send, done.",
+      cropHint: "quote-gen",
     },
     {
-      headline: "Quote to booked",
-      detail: "Itemised quotes, milestone deposits, and a calm pipeline to secured dates.",
-      cropHint: "today",
+      headline: "Your catalogue",
+      detail: "Balloon garlands, per-table centrepieces, per-guest sashes — units that scale quotes automatically.",
+      cropHint: "catalogue",
     },
   ],
 };

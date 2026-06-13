@@ -49,7 +49,13 @@ export type QuoteRow = {
   subtotalMinor: number;
   enquiryId?: string | null;
   publicToken: string;
-  enquiry?: { contactName: string; eventType?: string | null; eventDate?: string | null } | null;
+  enquiry?: {
+    contactName: string;
+    eventType?: string | null;
+    eventDate?: string | null;
+    venue?: string | null;
+    theme?: string | null;
+  } | null;
 };
 
 export function eur(minor: number): string {
