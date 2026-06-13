@@ -2,6 +2,7 @@ import { db, businessesTable, quotesTable, enquiriesTable } from "@workspace/db"
 import { and, eq } from "drizzle-orm";
 import { resolveQuoteMilestonePayment } from "@workspace/policy";
 import { getStripe, isStripeConfigured, logStripeSkip } from "../lib/stripe";
+import { tenantHasEntitlementForBusiness } from "./billing.service";
 import { getStagingRelaxations } from "../lib/staging-relaxations";
 import { safeClientMessage } from "../lib/http-errors";
 import { logger } from "../lib/logger";
@@ -30,8 +31,14 @@ export async function getGuestQuotePayView(slug: string, token: string) {
     .limit(1);
   if (!quote) return null;
 
+  const milestoneEntitled = await tenantHasEntitlementForBusiness(
+    biz.id,
+    "milestone_deposits",
+  );
+
   const payment = resolveQuoteMilestonePayment(quote);
   const canPay =
+    milestoneEntitled &&
     quote.status === "accepted" &&
     payment.nextDueMinor > 0 &&
     (isStripeConfigured() || guestQuotePayDevSimAllowed());

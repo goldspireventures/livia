@@ -1,52 +1,27 @@
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import { InternalSubNav } from "./InternalSubNav";
 
 const MODES = [
-  { to: "/support", label: "Thread" },
-  { to: "/support/board", label: "Board" },
-  { to: "/support/radar", label: "Radar" },
-  { to: "/support/investigate", label: "Investigate" },
+  { id: "inbox", to: "/support", label: "Inbox", hint: "Work tickets" },
+  { id: "board", to: "/support/board", label: "Board", hint: "By status" },
+  { id: "radar", to: "/support/radar", label: "Radar", hint: "What needs attention" },
+  { id: "investigate", to: "/support/investigate", label: "Trace", hint: "Request ID lookup" },
 ] as const;
+
+function activeMode(pathname: string): string {
+  if (pathname.startsWith("/support/board")) return "board";
+  if (pathname.startsWith("/support/radar")) return "radar";
+  if (pathname.startsWith("/support/investigate")) return "investigate";
+  return "inbox";
+}
 
 export function SupportSurfaceNav() {
   const { pathname } = useLocation();
+  const mode = activeMode(pathname);
+
   return (
-    <nav
-      style={{
-        display: "flex",
-        gap: 8,
-        marginBottom: 16,
-        flexWrap: "wrap",
-      }}
-      aria-label="Support layout"
-      data-testid="support-surface-nav"
-    >
-      {MODES.map((mode) => {
-        const segment = pathname.replace(/^\/support\/?/, "").split("/")[0] ?? "";
-        const threadTicket =
-          pathname === "/support" ||
-          pathname === "/support/queue" ||
-          /^\/support\/tickets\//.test(pathname) ||
-          (segment.length > 0 && !["board", "radar", "investigate", "queue"].includes(segment));
-        const active = mode.to === "/support" ? threadTicket : pathname.startsWith(mode.to);
-        return (
-          <Link
-            key={mode.to}
-            to={mode.to}
-            style={{
-              padding: "6px 12px",
-              borderRadius: 6,
-              fontSize: 12,
-              fontWeight: active ? 600 : 400,
-              color: active ? "#38bdf8" : "#94a3b8",
-              background: active ? "rgba(56, 189, 248, 0.1)" : "transparent",
-              border: `1px solid ${active ? "rgba(56, 189, 248, 0.35)" : "rgba(148, 163, 184, 0.2)"}`,
-              textDecoration: "none",
-            }}
-          >
-            {mode.label}
-          </Link>
-        );
-      })}
-    </nav>
+    <div data-testid="support-surface-nav">
+      <InternalSubNav items={[...MODES]} activeId={mode} aria-label="Support views" />
+    </div>
   );
 }

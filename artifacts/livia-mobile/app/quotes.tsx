@@ -31,6 +31,7 @@ import { useHaptics } from "@/hooks/useHaptics";
 import { copyStaleNudge, eur, fetchQuotes, type QuoteRow } from "@/lib/event-vendor-consult";
 import { getDashboardBaseUrl } from "@/lib/dashboard-url";
 import { getApiBaseUrl } from "@/lib/api-base";
+import { FeatureUnlockGate } from "@/components/FeatureUnlockCard";
 
 type QuoteDetail = QuoteRow & {
   personalMessage?: string | null;
@@ -404,6 +405,7 @@ export default function QuotesScreen() {
       title="Quotes & invoices"
       subtitle="Send itemised quotes — invoice PDF for clients."
     >
+      <FeatureUnlockGate featureId="quote_generator" businessId={bid}>
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
@@ -471,6 +473,7 @@ export default function QuotesScreen() {
           </View>
         </View>
       </Modal>
+      </FeatureUnlockGate>
     </OperationalScreen>
   );
 }

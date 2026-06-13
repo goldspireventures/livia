@@ -65,6 +65,7 @@ Per principle 6 (trust-amplification by default) + EU-anchored posture:
 
 ## What IS an obvious upsell
 
+- **Event Operator pack.** €49/mo add-on on Solo or Studio (event-vendors vertical). Consult-first inbox, quote generator, milestone deposits, event prep lifecycle, public /e/ site. Not bundled in base tiers — appointment-led verticals do not subsidise event depth.
 - **Cross-tenant intelligence panel.** v1.5 add-on at €49/mo (after k≥10 peer-set forms). Optional.
 - **Voice mode in additional locales/verticals** beyond the v1 wedge. Per-locale add-on at €29/mo when shipped.
 - **Concierge migration** beyond the first 100 design-partner customers. €500–€2,500 one-shot depending on incumbent.

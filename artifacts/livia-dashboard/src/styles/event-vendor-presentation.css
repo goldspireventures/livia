@@ -1,0 +1,59 @@
+/**
+ * Event-vendor presentation morphs — consult-first inbox, quotes, Today.
+ * Morph is on `html[data-layout-morph]`; preset colours on `html[data-presentation]`.
+ */
+
+html[data-vertical="event-vendors"][data-presentation="event-atelier"] {
+  --ev-accent-soft: hsl(32 95% 44% / 0.12);
+}
+
+html[data-vertical="event-vendors"][data-presentation="wedding-ledger"] {
+  --ev-accent-soft: hsl(30 25% 42% / 0.14);
+}
+
+html[data-vertical="event-vendors"][data-presentation="party-pop"] {
+  --ev-accent-soft: hsl(330 81% 60% / 0.14);
+}
+
+/* Atelier — gallery hero, roomy enquire cards */
+html[data-vertical="event-vendors"][data-layout-morph="atrium"] [data-testid="consult-first-home-panel"] > div:first-child {
+  border-radius: 1rem;
+  background: linear-gradient(135deg, var(--ev-accent-soft, hsl(32 95% 44% / 0.1)), transparent);
+}
+
+html[data-vertical="event-vendors"][data-layout-morph="atrium"] [data-testid="event-vendor-unified-inbox"] .rounded-xl.border {
+  border-radius: 1rem;
+}
+
+/* Wedding ledger — pipeline emphasis, compact list rows */
+html[data-vertical="event-vendors"][data-layout-morph="pipeline"] [data-testid="consult-first-home-panel"] {
+  display: grid;
+  gap: 0.75rem;
+}
+
+html[data-vertical="event-vendors"][data-layout-morph="pipeline"] [data-testid="pipeline-forecast-kpi"] {
+  order: -1;
+  border-style: dashed;
+}
+
+html[data-vertical="event-vendors"][data-layout-morph="pipeline"] [data-testid="event-vendor-unified-inbox"] button.rounded-lg {
+  border-radius: 0.5rem;
+}
+
+html[data-vertical="event-vendors"][data-layout-morph="pipeline"] [data-testid="event-vendor-unified-inbox"] .font-medium.truncate {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Party pop — menu-card grid, playful radii */
+html[data-vertical="event-vendors"][data-layout-morph="menu-card"] [data-testid="consult-first-home-panel"] > div {
+  border-radius: 1.25rem;
+}
+
+html[data-vertical="event-vendors"][data-layout-morph="menu-card"] [data-testid="event-vendor-unified-inbox"] .rounded-xl {
+  border-radius: 1.25rem;
+  box-shadow: 0 8px 24px -12px hsl(330 81% 40% / 0.25);
+}
+
+html[data-vertical="event-vendors"][data-layout-morph="menu-card"] [data-testid="event-prep-timeline"] {
+  border-radius: 1.25rem;
+}

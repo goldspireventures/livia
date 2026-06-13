@@ -13,6 +13,10 @@ const card: React.CSSProperties = {
 };
 
 const btn: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  width: "fit-content",
   padding: "8px 12px",
   borderRadius: 8,
   border: "1px solid rgba(148, 163, 184, 0.25)",
@@ -97,7 +101,11 @@ export function WorkforceAccessPanel({
           style={input}
         />
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <select value={tier} onChange={(e) => setTier(e.target.value as "restricted" | "full")} style={input}>
+          <select
+            value={tier}
+            onChange={(e) => setTier(e.target.value as "restricted" | "full")}
+            style={{ ...input, width: "auto", minWidth: 140 }}
+          >
             <option value="full">Full</option>
             <option value="restricted">Restricted</option>
           </select>

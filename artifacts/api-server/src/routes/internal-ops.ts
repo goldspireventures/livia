@@ -25,6 +25,7 @@ import {
   getInternalOpsOnboardingChecklist,
   getMonitoringOverview,
   getMonitoringTimeSeries,
+  getPlatformCascadeHealth,
   queryExternalLogsForOps,
   searchPlatformLogs,
 } from "../services/internal-monitoring.service";
@@ -370,6 +371,10 @@ router.get("/internal/ops/observability", async (_req, res): Promise<void> => {
 
 router.get("/internal/ops/monitoring/overview", async (_req, res): Promise<void> => {
   res.json(await getMonitoringOverview());
+});
+
+router.get("/internal/ops/monitoring/cascade", async (_req, res): Promise<void> => {
+  res.json(await getPlatformCascadeHealth());
 });
 
 router.get("/internal/ops/monitoring/series", async (req, res): Promise<void> => {

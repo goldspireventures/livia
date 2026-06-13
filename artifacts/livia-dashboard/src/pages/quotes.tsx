@@ -42,6 +42,7 @@ import {
 } from "@/lib/event-vendor-studio";
 import { Plus, Send, Trash2 } from "lucide-react";
 import { STALE_QUOTE_DAYS, studioQuoteListLabel, studioQuoteDetailTitle, resolveQuoteExitActions, CLIENT_WITHDRAW_REASONS, type QuoteBriefHint, type ClientWithdrawReasonId } from "@workspace/policy";
+import { FeatureUnlockGate } from "@/components/billing/feature-unlock-panel";
 
 type Milestone = { label: string; percent: number; amountMinor: number; dueDate?: string };
 
@@ -469,6 +470,7 @@ export default function QuotesPage() {
       : null;
 
   return (
+    <FeatureUnlockGate featureId="quote_generator">
     <PageFrame width="lg" className="space-y-4" data-testid="quotes-page">
       <PersonaRitualHeader
         variant="page"
@@ -982,5 +984,6 @@ export default function QuotesPage() {
         </DialogContent>
       </Dialog>
     </PageFrame>
+    </FeatureUnlockGate>
   );
 }

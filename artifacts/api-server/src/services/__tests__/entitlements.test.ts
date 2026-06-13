@@ -7,6 +7,7 @@ import {
   tenantHasEntitlement,
   PLAN_CATALOGUE,
   voiceOutcomeCapLabel,
+  hasEffectiveEntitlement,
 } from "@workspace/entitlements";
 
 const solo = lookupPlan("solo")!;
@@ -25,5 +26,14 @@ assert.ok(
 assert.equal(PLAN_CATALOGUE.solo.baseEurCentsPerMonth, 7900);
 assert.equal(PLAN_CATALOGUE.studio.seatEurCentsPerMonth, 1500);
 assert.match(voiceOutcomeCapLabel(solo)!, /€50\/mo/);
+
+assert.ok(
+  hasEffectiveEntitlement(["event_operator_pack"], "quote_generator"),
+  "event pack implies quote_generator",
+);
+assert.ok(
+  !hasEffectiveEntitlement(["voice_receptionist"], "quote_generator"),
+  "solo voice does not imply quotes",
+);
 
 console.log("entitlements.test.ts: ok");

@@ -14,6 +14,7 @@ const BUSINESS_VERTICALS = new Set<string>([
   "allied-health",
   "pet-grooming",
   "automotive-detailing",
+  "event-vendors",
 ]);
 
 /** Guard — policy preset lookup throws when vertical is missing/invalid. */
@@ -27,9 +28,11 @@ export function resolvePresentationLayoutMorphSafe(
 
 export const WELLNESS_NATIVE_MORPHS = ["atrium", "timeline-rail", "ledger"] as const;
 export const BEAUTY_NATIVE_MORPHS = ["split-inbox", "atrium", "menu-card", "cockpit"] as const;
+export const EVENT_VENDOR_NATIVE_MORPHS = ["atrium", "pipeline", "menu-card"] as const;
 
 const WELLNESS_CSS = new Set(["harbour-light", "session-rail", "evening-ledger"]);
 const BEAUTY_CSS = new Set(["noir-dusk", "soft-studio", "editorial", "premium-dark"]);
+const EVENT_VENDOR_CSS = new Set(["event-atelier", "wedding-ledger", "party-pop"]);
 
 export function isWellnessNativeMorph(
   morph?: string | null,
@@ -57,6 +60,24 @@ export function beautyNativeMorphForVertical(
 ): PresentationLayoutMorph | null {
   if (vertical !== "beauty" || !isBeautyNativeMorph(morph)) return null;
   return morph;
+}
+
+export function isEventVendorNativeMorph(
+  morph?: string | null,
+): morph is (typeof EVENT_VENDOR_NATIVE_MORPHS)[number] {
+  return morph != null && (EVENT_VENDOR_NATIVE_MORPHS as readonly string[]).includes(morph);
+}
+
+export function eventVendorNativeMorphForVertical(
+  vertical?: string | null,
+  morph?: string | null,
+): PresentationLayoutMorph | null {
+  if (vertical !== "event-vendors" || !isEventVendorNativeMorph(morph)) return null;
+  return morph;
+}
+
+export function isEventVendorPresentationPreset(preset?: string | null): boolean {
+  return preset != null && EVENT_VENDOR_CSS.has(preset);
 }
 
 export function isBeautyPresentationPreset(preset?: string | null): boolean {

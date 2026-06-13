@@ -370,6 +370,9 @@ importers:
       '@workspace/api-client-react':
         specifier: workspace:*
         version: link:../../lib/api-client-react
+      '@workspace/entitlements':
+        specifier: workspace:*
+        version: link:../../lib/entitlements
       '@workspace/policy':
         specifier: workspace:*
         version: link:../../lib/policy
@@ -727,6 +730,9 @@ importers:
       '@workspace/demo-logins':
         specifier: workspace:*
         version: link:../../lib/demo-logins
+      '@workspace/entitlements':
+        specifier: workspace:*
+        version: link:../../lib/entitlements
       '@workspace/policy':
         specifier: workspace:*
         version: link:../../lib/policy

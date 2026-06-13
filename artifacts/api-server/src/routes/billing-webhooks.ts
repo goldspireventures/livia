@@ -4,7 +4,7 @@ import Stripe from "stripe";
 import { db, businessesTable, paymentsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { getStripe, planIdFromPriceId, stripeWebhookSecret } from "../lib/stripe";
-import { syncBusinessPlanFromStripe } from "../services/billing.service";
+import { syncBusinessPlanFromStripe, grantAddonBundle } from "../services/billing.service";
 import { logger } from "../lib/logger";
 import { redactObject } from "../lib/pii-redaction";
 import { sendError } from "../lib/http-errors";
@@ -87,7 +87,17 @@ router.post("/", async (req: Request, res: Response): Promise<void> => {
       }
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
-        if (session.mode === "subscription" && session.subscription && session.metadata?.businessId) {
+        const bid = session.metadata?.businessId;
+        const addonId = session.metadata?.addon;
+        if (session.mode === "subscription" && bid && addonId) {
+          await grantAddonBundle(bid, addonId);
+        }
+        if (
+          session.mode === "subscription" &&
+          session.subscription &&
+          bid &&
+          !addonId
+        ) {
           const sub = await stripe.subscriptions.retrieve(session.subscription as string);
           await handleSubscription(sub);
         }
@@ -179,6 +189,11 @@ router.post("/", async (req: Request, res: Response): Promise<void> => {
 async function handleSubscription(sub: Stripe.Subscription): Promise<void> {
   const businessId = sub.metadata?.businessId;
   if (!businessId) return;
+
+  if (sub.metadata?.addon) {
+    await grantAddonBundle(businessId, sub.metadata.addon);
+    return;
+  }
 
   const item = sub.items.data[0];
   const priceId = item?.price?.id;

@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { PersonaRitualHeader } from "@/components/ritual/persona-ritual-header";
 import { PageFrame } from "@/components/ui/page-frame";
 import { ExternalLink, Plus, Trash2 } from "lucide-react";
+import { FeatureUnlockGate } from "@/components/billing/feature-unlock-panel";
 
 type MilestoneTemplate = { label: string; percent: number; dueDaysBeforeEvent?: number };
 
@@ -75,6 +76,7 @@ export default function EventSitePage() {
   const publicGalleryUrl = business?.slug ? `${publicUrl}/gallery` : "";
 
   return (
+    <FeatureUnlockGate featureId="event_public_site">
     <PageFrame width="md" className="space-y-4" data-testid="event-site-page">
       <PersonaRitualHeader
         variant="page"
@@ -323,5 +325,6 @@ export default function EventSitePage() {
         Save all
       </Button>
     </PageFrame>
+    </FeatureUnlockGate>
   );
 }

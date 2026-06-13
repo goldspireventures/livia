@@ -1,9 +1,11 @@
 import { db, businessesTable } from "@workspace/db";
-import { isBusinessApiFeatureAllowed } from "@workspace/policy";
+import { isBusinessApiFeatureAllowed, apiFeatureEntitlementKey } from "@workspace/policy";
 import { eq } from "drizzle-orm";
 import type { RequestHandler } from "express";
 import { getUserId, requireAuth, requireRole, type Role } from "./auth.js";
 import { sendError } from "./http-errors.js";
+import { tenantHasEntitlementForBusiness } from "../services/billing.service.js";
+import type { EntitlementKey } from "@workspace/entitlements";
 
 function businessIdFromParams(req: Parameters<RequestHandler>[0]): string | null {
   const raw = req.params.businessId;
@@ -41,6 +43,29 @@ export function requireBusinessApiFeature(featureKey: string): RequestHandler {
           feature: featureKey,
         });
         return;
+      }
+
+      const entKey = apiFeatureEntitlementKey(featureKey);
+      if (entKey) {
+        const entitled = await tenantHasEntitlementForBusiness(
+          businessId,
+          entKey as EntitlementKey,
+        );
+        if (!entitled) {
+          sendError(
+            res,
+            req,
+            403,
+            "Upgrade to Event Operator to unlock this feature.",
+            {
+              code: "ENTITLEMENT_REQUIRED",
+              entitlement: entKey,
+              addon: "event_operator_pack",
+              feature: featureKey,
+            },
+          );
+          return;
+        }
       }
 
       next();

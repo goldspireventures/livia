@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { SupportSurfaceNav } from "../components/SupportSurfaceNav";
 import { listSupportTickets, type SupportTicketRow } from "../lib/api";
-import { buttonStyle } from "../styles/ops-ui";
+import { buttonStyle, cardStyle } from "../styles/ops-ui";
 
 const LANES: Array<{ key: string; label: string; statuses: string[] }> = [
   { key: "open", label: "Open", statuses: ["open"] },
@@ -54,9 +53,10 @@ export function SupportBoardView() {
 
   return (
     <div>
-      <SupportSurfaceNav />
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <h1 style={{ fontSize: 18, margin: 0 }}>Board</h1>
+        <p style={{ margin: 0, fontSize: 13, color: "#94a3b8" }}>
+          Kanban by status — open a card to work it in the inbox.
+        </p>
         <button type="button" style={buttonStyle} onClick={() => void load()} disabled={loading}>
           Refresh
         </button>
@@ -72,16 +72,7 @@ export function SupportBoardView() {
         data-testid="support-board"
       >
         {LANES.map((lane) => (
-          <section
-            key={lane.key}
-            style={{
-              background: "rgba(15, 23, 42, 0.6)",
-              border: "1px solid rgba(148, 163, 184, 0.2)",
-              borderRadius: 12,
-              padding: 10,
-              minHeight: 120,
-            }}
-          >
+          <section key={lane.key} style={{ ...cardStyle, minHeight: 160 }}>
             <h2 style={{ fontSize: 13, margin: "0 0 8px", color: "#94a3b8" }}>
               {lane.label} ({byLane.get(lane.key)?.length ?? 0})
             </h2>
@@ -104,8 +95,8 @@ export function SupportBoardView() {
                     {t.description.slice(0, 120)}
                     {t.description.length > 120 ? "…" : ""}
                   </p>
-                  <Link to={`/support?ticket=${t.id}`} style={{ color: "#38bdf8", fontSize: 11 }}>
-                    Open in thread →
+                  <Link to={`/support/${encodeURIComponent(t.id)}`} style={{ color: "#38bdf8", fontSize: 11 }}>
+                    Open in inbox →
                   </Link>
                 </li>
               ))}

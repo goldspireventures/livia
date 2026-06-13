@@ -30,4 +30,10 @@ assert.equal(resolvePresentationLayoutMorph("beauty", "beauty-editorial"), "menu
 assert.equal(resolvePresentationLayoutMorph("beauty", "beauty-premium-dark"), "cockpit");
 assert.equal(resolvePresentationLayoutMorph("beauty", "beauty-soft-studio"), "atrium");
 
+const eventVendors = validateVerticalPresentationPack("event-vendors");
+assert.ok(eventVendors.ok, eventVendors.errors.join("; "));
+assert.equal(resolvePresentationLayoutMorph("event-vendors", "event-atelier"), "atrium");
+assert.equal(resolvePresentationLayoutMorph("event-vendors", "wedding-ledger"), "pipeline");
+assert.equal(resolvePresentationLayoutMorph("event-vendors", "party-pop"), "menu-card");
+
 console.log("presentation-surface.test.ts: ok");

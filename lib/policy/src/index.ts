@@ -118,6 +118,7 @@ export * from "./capability-resolution";
 export * from "./chain-commerce-alerts";
 export * from "./commerce-act-playbooks";
 export * from "./commerce-briefing";
+export * from "./commerce-entitlements-program";
 export * from "./commerce-signals";
 export * from "./event-vendor-quote-program";
 export * from "./event-vendor-lifecycle-program";

@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { getPlatformHealth, type PlatformHealth } from "../lib/api";
+import { INTERNAL_PAGES } from "../lib/internal-page-meta";
+import { InternalPage } from "../components/InternalPage";
+import { cardStyle } from "../styles/ops-ui";
 
 export function PlatformView() {
   const [health, setHealth] = useState<PlatformHealth | null>(null);
@@ -11,14 +15,35 @@ export function PlatformView() {
       .catch((e) => setErr(e instanceof Error ? e.message : "Failed"));
   }, []);
 
-  if (err) return <p style={{ color: "#f87171" }}>{err}</p>;
-  if (!health) return <p style={{ color: "#94a3b8" }}>Loading platform health…</p>;
+  if (err) {
+    return (
+      <InternalPage title={INTERNAL_PAGES.health.title} subtitle={INTERNAL_PAGES.health.purpose}>
+        <p style={{ color: "#f87171" }}>{err}</p>
+      </InternalPage>
+    );
+  }
+  if (!health) {
+    return (
+      <InternalPage title={INTERNAL_PAGES.health.title} subtitle={INTERNAL_PAGES.health.purpose}>
+        <p style={{ color: "#94a3b8" }}>Loading platform health…</p>
+      </InternalPage>
+    );
+  }
 
   const v3 = health.v3;
 
   return (
-    <div style={{ display: "grid", gap: 16, maxWidth: 640 }}>
-      <h2 style={{ fontSize: 16, margin: 0, color: "#e2e8f0" }}>Platform health (v3)</h2>
+    <InternalPage
+      title={INTERNAL_PAGES.health.title}
+      subtitle={INTERNAL_PAGES.health.purpose}
+      actions={
+        <Link to="/platform" style={{ fontSize: 13, color: "#94a3b8", textDecoration: "none" }}>
+          ← Platform
+        </Link>
+      }
+    >
+      <div style={{ ...cardStyle, maxWidth: 720 }}>
+      <h2 style={{ fontSize: 16, margin: "0 0 12px", color: "#e2e8f0" }}>Platform health (v3)</h2>
       <dl style={dl}>
         <dt>Tenants</dt>
         <dd>{health.tenantCount}</dd>
@@ -60,11 +85,12 @@ export function PlatformView() {
         </>
       ) : null}
 
-      <p style={{ fontSize: 12, color: "#64748b", lineHeight: 1.5, margin: 0 }}>
+      <p style={{ fontSize: 12, color: "#64748b", lineHeight: 1.5, margin: "12px 0 0" }}>
         Livia Internal is the operator surface — separate from tenant dashboard (<code>:5173</code>)
         and mobile. Apply migrations 011–012 before trusting continuity/medspa/waitlist counts.
       </p>
-    </div>
+      </div>
+    </InternalPage>
   );
 }
 

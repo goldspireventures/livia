@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { buttonStyle } from "../styles/ops-ui";
+import { buttonStyle, cardStyle } from "../styles/ops-ui";
+import { Link } from "react-router-dom";
+import { INTERNAL_PAGES } from "../lib/internal-page-meta";
+import { InternalPage } from "../components/InternalPage";
 
 export function WeeklyReportView() {
   const [markdown, setMarkdown] = useState<string | null>(null);
@@ -20,28 +23,35 @@ export function WeeklyReportView() {
   }, []);
 
   return (
-    <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <h2 style={{ fontSize: 18, margin: 0 }}>Weekly platform report</h2>
-        <button type="button" style={buttonStyle} onClick={() => void load()}>
-          Refresh
-        </button>
-      </div>
+    <InternalPage
+      title={INTERNAL_PAGES.reports.title}
+      subtitle={INTERNAL_PAGES.reports.purpose}
+      actions={
+        <>
+          <Link to="/platform" style={{ fontSize: 13, color: "#94a3b8", textDecoration: "none" }}>
+            ← Platform
+          </Link>
+          <button type="button" style={buttonStyle} onClick={() => void load()}>
+            Refresh
+          </button>
+        </>
+      }
+    >
       {generatedAt ? (
-        <p style={{ color: "#94a3b8", fontSize: 12, marginBottom: 12 }}>Generated {generatedAt}</p>
+        <p style={{ color: "#94a3b8", fontSize: 12, margin: 0 }}>Generated {generatedAt}</p>
       ) : null}
       <pre
         style={{
+          ...cardStyle,
           whiteSpace: "pre-wrap",
-          background: "#1e293b",
-          padding: 16,
-          borderRadius: 8,
           fontSize: 13,
           lineHeight: 1.55,
+          maxHeight: "calc(100vh - 220px)",
+          overflow: "auto",
         }}
       >
         {markdown ?? "Loading…"}
       </pre>
-    </div>
+    </InternalPage>
   );
 }

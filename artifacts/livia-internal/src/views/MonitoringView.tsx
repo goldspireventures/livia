@@ -1,4 +1,5 @@
-import { Fragment, useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
+import { Link } from "react-router-dom";
 import {
   acknowledgeAlertFiring,
   backfillDemoLegal,
@@ -11,6 +12,8 @@ import {
   getMonitoringActivation,
   getMonitoringOnboarding,
   getMonitoringOverview,
+  getPlatformCascadeHealth,
+  type PlatformCascadeHealth,
   type PlatformActivationRollup,
   getMonitoringReport,
   getMonitoringSeries,
@@ -32,14 +35,18 @@ import {
   type SavedLogSearchRow,
   type StressProbeResult,
 } from "../lib/api";
-import { buttonStyle, inputStyle } from "../styles/ops-ui";
+import { buttonStyle, cardStyle, inputStyle } from "../styles/ops-ui";
+import { InternalPage } from "../components/InternalPage";
+import { InternalSubNav } from "../components/InternalSubNav";
+import { CollapsibleSection } from "../components/CollapsibleSection";
+import { INTERNAL_PAGES } from "../lib/internal-page-meta";
 
 type SubTab =
   | "overview"
   | "alerts"
   | "logs"
   | "flows"
-  | "reports"
+  | "cascade"
   | "onboarding"
   | "tools";
 
@@ -50,11 +57,30 @@ const btn: CSSProperties = {
 };
 
 const card: CSSProperties = {
+  ...cardStyle,
   padding: 14,
-  borderRadius: 10,
-  border: "1px solid #334155",
-  background: "#0f172a",
 };
+
+const PRIMARY_TABS: Array<{ id: SubTab; label: string; hint: string }> = [
+  { id: "overview", label: "Status", hint: "Health now" },
+  { id: "alerts", label: "Alerts", hint: "What's firing" },
+  { id: "logs", label: "Logs", hint: "Search errors" },
+];
+
+const ADVANCED_TABS: Array<{ id: SubTab; label: string; hint: string }> = [
+  { id: "flows", label: "Data flows", hint: "Pipeline map" },
+  { id: "cascade", label: "Cascade", hint: "Policy ↔ surfaces" },
+  { id: "onboarding", label: "Ops checklist", hint: "New operator setup" },
+  { id: "tools", label: "Repair tools", hint: "Demo & stress" },
+];
+
+async function loadSettled<T>(fn: () => Promise<T>): Promise<{ ok: true; value: T } | { ok: false; error: string }> {
+  try {
+    return { ok: true, value: await fn() };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Request failed" };
+  }
+}
 
 function BarChart({
   title,
@@ -140,35 +166,52 @@ export function MonitoringView() {
   const [firings, setFirings] = useState<AlertFiringRow[]>([]);
   const [savedSearches, setSavedSearches] = useState<SavedLogSearchRow[]>([]);
   const [report, setReport] = useState<MonitoringReport | null>(null);
+  const [cascade, setCascade] = useState<PlatformCascadeHealth | null>(null);
   const [logFields, setLogFields] = useState<LogFieldContract | null>(null);
+  const [cascadeErr, setCascadeErr] = useState<string | null>(null);
   const [saveSearchName, setSaveSearchName] = useState("");
 
   const loadCore = useCallback(async () => {
     setErr(null);
-    try {
-      const [ov, ser, fl, ob, act, rulesRes, firingsRes, saved, fields] = await Promise.all([
-        getMonitoringOverview(),
-        getMonitoringSeries(24),
-        getMonitoringFlows(),
-        getMonitoringOnboarding(),
-        getMonitoringActivation(),
-        listAlertRules(),
-        listAlertFirings(true),
-        listSavedLogSearches(),
-        getMonitoringLogFields(),
-      ]);
-      setOverview(ov);
-      setSeries(ser);
-      setFlows(fl.flows);
-      setOnboarding(ob);
-      setActivation(act);
-      setRules(rulesRes.data);
-      setFirings(firingsRes.data);
-      setSavedSearches(saved.data);
-      setLogFields(fields);
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : "Monitoring load failed");
+    const [ovR, serR, flR, obR, actR, rulesR, firingsR, savedR, fieldsR] = await Promise.all([
+      loadSettled(() => getMonitoringOverview()),
+      loadSettled(() => getMonitoringSeries(24)),
+      loadSettled(() => getMonitoringFlows()),
+      loadSettled(() => getMonitoringOnboarding()),
+      loadSettled(() => getMonitoringActivation()),
+      loadSettled(() => listAlertRules()),
+      loadSettled(() => listAlertFirings(true)),
+      loadSettled(() => listSavedLogSearches()),
+      loadSettled(() => getMonitoringLogFields()),
+    ]);
+
+    if (!ovR.ok) {
+      setErr(ovR.error);
+      setOverview(null);
+      return;
     }
+
+    setOverview(ovR.value);
+    const partial: string[] = [];
+
+    if (serR.ok) setSeries(serR.value);
+    else partial.push(serR.error);
+    if (flR.ok) setFlows(flR.value.flows);
+    else partial.push(flR.error);
+    if (obR.ok) setOnboarding(obR.value);
+    else partial.push(obR.error);
+    if (actR.ok) setActivation(actR.value);
+    else partial.push(actR.error);
+    if (rulesR.ok) setRules(rulesR.value.data);
+    else partial.push(rulesR.error);
+    if (firingsR.ok) setFirings(firingsR.value.data);
+    else partial.push(firingsR.error);
+    if (savedR.ok) setSavedSearches(savedR.value.data);
+    else partial.push(savedR.error);
+    if (fieldsR.ok) setLogFields(fieldsR.value);
+    else partial.push(fieldsR.error);
+
+    setErr(partial.length > 0 ? `Some panels unavailable: ${partial.slice(0, 2).join(" · ")}` : null);
   }, []);
 
   const loadLogs = useCallback(async () => {
@@ -221,8 +264,14 @@ export function MonitoringView() {
   }, [sub, loadLogs]);
 
   useEffect(() => {
-    if (sub !== "reports") return;
-    void getMonitoringReport().then(setReport).catch(() => setReport(null));
+    if (sub !== "cascade") return;
+    setCascadeErr(null);
+    void getPlatformCascadeHealth()
+      .then(setCascade)
+      .catch((e) => {
+        setCascade(null);
+        setCascadeErr(e instanceof Error ? e.message : "Cascade health unavailable");
+      });
   }, [sub]);
 
   const bookingChart = useMemo(() => {
@@ -257,85 +306,112 @@ export function MonitoringView() {
     }
   }
 
-  if (err && !overview) return <p style={{ color: "#f87171" }}>{err}</p>;
-  if (!overview || !obs) return <p style={{ color: "#94a3b8" }}>Loading monitoring…</p>;
+  if (!overview || !obs) {
+    return (
+      <InternalPage title={INTERNAL_PAGES.monitoring.title} subtitle={INTERNAL_PAGES.monitoring.purpose}>
+        {err ? (
+          <p style={{ color: "#f87171", lineHeight: 1.5 }} role="alert">
+            {err}
+          </p>
+        ) : (
+          <p style={{ color: "#94a3b8" }}>Loading…</p>
+        )}
+      </InternalPage>
+    );
+  }
+
+  const alertBadge = overview.alerts.openCount > 0 ? overview.alerts.openCount : undefined;
+  const subPurpose =
+    sub === "alerts"
+      ? INTERNAL_PAGES.monitoringAlerts.purpose
+      : sub === "logs"
+        ? INTERNAL_PAGES.monitoringLogs.purpose
+        : INTERNAL_PAGES.monitoring.purpose;
 
   return (
-    <div style={{ display: "grid", gap: 16, maxWidth: 1100 }}>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-        {(
-          [
-            ["overview", "Overview"],
-            ["alerts", `Alerts${overview.alerts.openCount ? ` (${overview.alerts.openCount})` : ""}`],
-            ["logs", "Log explorer"],
-            ["flows", "Data flows"],
-            ["reports", "Reports"],
-            ["onboarding", "Onboarding"],
-            ["tools", "Tools"],
-          ] as const
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            style={{
-              ...btn,
-              background: sub === id ? "#0ea5e9" : "#334155",
-              color: sub === id ? "#0f172a" : "#e2e8f0",
-            }}
-            onClick={() => setSub(id)}
-          >
-            {label}
+    <InternalPage
+      wide
+      title={INTERNAL_PAGES.monitoring.title}
+      subtitle={subPurpose}
+      actions={
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+          <Link to="/platform" style={{ fontSize: 13, color: "#94a3b8", textDecoration: "none" }}>
+            ← Platform
+          </Link>
+          <button type="button" style={btn} onClick={() => void loadCore()} disabled={busy}>
+            Refresh
           </button>
-        ))}
-        {grafanaAvailable ? (
-          <button
-            key="grafana-optional"
-            type="button"
-            style={{
-              ...btn,
-              background: "#334155",
-              color: "#e2e8f0",
-            }}
-            onClick={() => {
-              const url = overview.logBackends.grafanaLocalUrl;
-              if (url) window.open(url, "_blank", "noopener,noreferrer");
-            }}
-            title="Optional: open Grafana in a new tab"
-          >
-            Grafana (optional)
-          </button>
-        ) : null}
-        <button type="button" style={btn} onClick={() => void loadCore()} disabled={busy}>
-          Refresh
-        </button>
-        <label style={{ fontSize: 12, color: "#94a3b8", display: "flex", gap: 6, alignItems: "center" }}>
-          <input type="checkbox" checked={live} onChange={(e) => setLive(e.target.checked)} />
-          Live (15s)
-        </label>
-        {onboarding && (
-          <span
-            style={{
-              marginLeft: "auto",
-              fontSize: 12,
-              padding: "4px 10px",
-              borderRadius: 999,
-              background: onboarding.ready ? "#064e3b" : "#422006",
-              color: onboarding.ready ? "#6ee7b7" : "#fcd34d",
-            }}
-          >
-            Ops readiness {onboarding.score}%
-          </span>
+          <label style={{ fontSize: 12, color: "#94a3b8", display: "flex", gap: 6, alignItems: "center" }}>
+            <input type="checkbox" checked={live} onChange={(e) => setLive(e.target.checked)} />
+            Live (15s)
+          </label>
+          {onboarding ? (
+            <span
+              style={{
+                fontSize: 12,
+                padding: "4px 10px",
+                borderRadius: 999,
+                background: onboarding.ready ? "#064e3b" : "#422006",
+                color: onboarding.ready ? "#6ee7b7" : "#fcd34d",
+              }}
+            >
+              Ops readiness {onboarding.score}%
+            </span>
+          ) : null}
+          {grafanaAvailable ? (
+            <button
+              type="button"
+              style={{ ...btn, background: "#334155" }}
+              onClick={() => {
+                const url = overview.logBackends.grafanaLocalUrl;
+                if (url) window.open(url, "_blank", "noopener,noreferrer");
+              }}
+            >
+              Grafana ↗
+            </button>
+          ) : null}
+        </div>
+      }
+    >
+      <InternalSubNav
+        items={PRIMARY_TABS.map((t) =>
+          t.id === "alerts" ? { ...t, badge: alertBadge } : t,
         )}
-      </div>
+        activeId={sub}
+        onSelect={(id) => setSub(id as SubTab)}
+        aria-label="Live status"
+      />
+
+      {!PRIMARY_TABS.some((t) => t.id === sub) && !ADVANCED_TABS.some((t) => t.id === sub) ? null : (
+        ADVANCED_TABS.some((t) => t.id === sub) ? (
+          <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>
+            Engineering view — most staff only need <strong>Status</strong>, <strong>Alerts</strong>, or <strong>Logs</strong> above.
+          </p>
+        ) : null
+      )}
+
+      <CollapsibleSection
+        title="Engineering tools"
+        summary="Data flows, cascade health, ops checklist, and demo repair — expand if you need them."
+        defaultOpen={ADVANCED_TABS.some((t) => t.id === sub)}
+      >
+        <InternalSubNav
+          items={ADVANCED_TABS}
+          activeId={sub}
+          onSelect={(id) => setSub(id as SubTab)}
+          secondary
+          aria-label="Engineering tools"
+        />
+      </CollapsibleSection>
 
       {err ? (
-        <p style={{ color: "#f87171", margin: 0 }} role="alert">
+        <p style={{ color: "#fbbf24", margin: 0, fontSize: 13 }} role="status">
           {err}
         </p>
       ) : null}
 
       {sub === "overview" ? (
-        <Fragment>
+        <>
           <div
             style={{
               display: "grid",
@@ -431,7 +507,7 @@ export function MonitoringView() {
               </>
             ) : null}
           </div>
-        </Fragment>
+        </>
       ) : null}
 
       {sub === "logs" ? (
@@ -695,53 +771,6 @@ export function MonitoringView() {
 
       {/* Grafana intentionally treated as optional and opened externally (no iframes here). */}
 
-      {sub === "reports" ? (
-        <div style={{ display: "grid", gap: 12 }}>
-          <button
-            type="button"
-            style={btn}
-            onClick={() => void getMonitoringReport().then(setReport)}
-          >
-            Generate report
-          </button>
-          {report ? (
-            <>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-                {(["api", "database", "logSink"] as const).map((k) => (
-                  <div key={k} style={card}>
-                    <div style={{ fontSize: 11, color: "#64748b" }}>{k}</div>
-                    <div style={{ fontSize: 16, fontWeight: 700, textTransform: "capitalize" }}>
-                      {report.uptime[k].replace("_", " ")}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div style={card}>
-                <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 8 }}>Live metrics</div>
-                <pre style={{ margin: 0, fontSize: 12, color: "#cbd5e1" }}>
-                  {JSON.stringify(report.metrics, null, 2)}
-                </pre>
-              </div>
-              {report.topErrorTypes.length > 0 ? (
-                <div style={card}>
-                  <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 8 }}>Top ERROR event types (24h)</div>
-                  <ul style={{ margin: 0, paddingLeft: 18 }}>
-                    {report.topErrorTypes.map((e) => (
-                      <li key={e.type}>
-                        {e.type}: {e.count}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-              <p style={{ fontSize: 11, color: "#64748b" }}>Generated {report.generatedAt}</p>
-            </>
-          ) : (
-            <p style={{ color: "#64748b" }}>Click generate for ops snapshot.</p>
-          )}
-        </div>
-      ) : null}
-
       {sub === "flows" ? (
         <div style={{ display: "grid", gap: 10 }}>
           {flows.map((f) => (
@@ -776,6 +805,84 @@ export function MonitoringView() {
             </div>
           ))}
         </div>
+      ) : null}
+
+      {sub === "cascade" ? (
+        cascadeErr ? (
+          <p style={{ color: "#f87171", fontSize: 13 }} role="alert">
+            {cascadeErr}
+          </p>
+        ) : cascade ? (
+        <div style={{ display: "grid", gap: 12 }}>
+          <div style={card}>
+            <div style={{ fontWeight: 600, marginBottom: 8 }}>Payments automation</div>
+            <p style={{ fontSize: 13, color: "#94a3b8", lineHeight: 1.5 }}>
+              Booking deposits (`guest_deposit`) confirm appointments across appointment verticals.
+              Quote deposits (`guest_quote_deposit`) secure event-vendor dates — booked quote + enquiry +
+              Liv prep + in-app notification.
+            </p>
+            <ul style={{ fontSize: 13, color: "#cbd5e1", margin: "10px 0 0", paddingLeft: 18 }}>
+              <li>Guest quote deposits (24h): {cascade.payments.guestQuoteDeposits24h}</li>
+              <li>Guest booking deposits (24h): {cascade.payments.guestBookingDeposits24h}</li>
+              <li>Stripe: {cascade.payments.stripeConfigured ? "configured" : "not configured"}</li>
+            </ul>
+          </div>
+          <div style={card}>
+            <div style={{ fontWeight: 600, marginBottom: 8 }}>Consult-first (event-vendors)</div>
+            <ul style={{ fontSize: 13, color: "#cbd5e1", margin: 0, paddingLeft: 18 }}>
+              <li>Event-vendor tenants: {cascade.consultFirst.eventVendorTenants}</li>
+              <li>Open enquiries: {cascade.consultFirst.openEnquiries}</li>
+              <li>Quotes booked (24h): {cascade.consultFirst.bookedQuotes24h}</li>
+              <li>Engagement notifications (24h): {cascade.consultFirst.engagementNotifications24h}</li>
+            </ul>
+          </div>
+          <div style={card}>
+            <div style={{ fontWeight: 600, marginBottom: 8 }}>Event Operator entitlements</div>
+            <ul style={{ fontSize: 13, color: "#cbd5e1", margin: 0, paddingLeft: 18 }}>
+              <li>With pack: {cascade.entitlements.eventVendorsWithPack}</li>
+              <li>Without pack (upsell): {cascade.entitlements.eventVendorsWithoutPack}</li>
+              <li>
+                Stripe price configured:{" "}
+                {cascade.entitlements.stripeEventOperatorPriceConfigured ? "yes" : "no"}
+              </li>
+              <li>
+                List price: €{Math.round(cascade.entitlements.eventOperatorAddonEurCents / 100)}/mo
+              </li>
+            </ul>
+          </div>
+          <div style={card}>
+            <div style={{ fontWeight: 600, marginBottom: 8 }}>Presentation presets (all verticals)</div>
+            <p style={{ fontSize: 12, color: "#64748b", marginBottom: 10 }}>
+              Each vertical ships Platform Default + 3 native skins with distinct layout morphs where
+              required. Failures block preset handshake CI.
+            </p>
+            <div style={{ display: "grid", gap: 6 }}>
+              {cascade.presentation.map((row) => (
+                <div
+                  key={row.vertical}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 12,
+                    fontSize: 13,
+                    padding: "8px 10px",
+                    borderRadius: 8,
+                    background: row.ok ? "rgba(52,211,153,0.08)" : "rgba(248,113,113,0.12)",
+                    border: `1px solid ${row.ok ? "#065f46" : "#7f1d1d"}`,
+                  }}
+                >
+                  <span style={{ fontWeight: 600 }}>{row.vertical}</span>
+                  <span style={{ color: "#94a3b8", textAlign: "right" }}>
+                    {row.ok ? row.morphs.join(", ") : row.errors.join(" · ")}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        ) : (
+          <p style={{ color: "#94a3b8" }}>Loading cascade health…</p>
+        )
       ) : null}
 
       {sub === "onboarding" ? (
@@ -875,7 +982,7 @@ export function MonitoringView() {
           ) : null}
         </div>
       ) : null}
-    </div>
+    </InternalPage>
   );
 }
 

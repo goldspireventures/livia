@@ -50,6 +50,7 @@ import {
   inboxReplyDeliveredOnChannel,
   inboxReplyPlaceholder,
   inboxSiblingThreadsBanner,
+  inboxNeedsOwnerReply,
   type InboxQueueLens,
 } from "@workspace/policy";
 import { InboxThreadList } from "@/components/inbox/inbox-thread-list";
@@ -132,12 +133,6 @@ function channelIcon(channel: string) {
     default:
       return <MessageSquare className="h-3 w-3" />;
   }
-}
-
-/** Owner compose when Liv paused or thread handed off — matches mobile inbox. */
-function inboxNeedsOwnerReply(conv: ConversationListItem | null | undefined): boolean {
-  if (!conv || conv.status === "CLOSED") return false;
-  return conv.status === "HANDED_OFF" || !conv.aiHandled;
 }
 
 function inboxGreeting(firstName: string | null | undefined, multiShop: boolean): string {

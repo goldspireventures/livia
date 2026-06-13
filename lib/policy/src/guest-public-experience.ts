@@ -37,6 +37,13 @@ const BEAUTY_HERO_TAGLINES: Record<string, string> = {
   "premium-dark": "PREMIUM · EXPERIENCE",
 };
 
+const EVENT_VENDOR_HERO_TAGLINES: Record<string, string> = {
+  "platform-default": "ENQUIRE · QUOTE · CELEBRATE",
+  "event-atelier": "GALLERY · ENQUIRE · DESIGN",
+  "wedding-ledger": "QUOTE · MILESTONE · SECURE",
+  "party-pop": "THEME · PARTY · WOW",
+};
+
 function defaultGuestPublic(vertical: BusinessVertical): GuestPublicExperience {
   const v = businessVocabulary(vertical, null);
   const service = v.serviceNoun.toLowerCase();
@@ -153,10 +160,15 @@ const BY_VERTICAL: Partial<Record<BusinessVertical, GuestPublicExperience>> = {
   "event-vendors": {
     ...defaultGuestPublic("event-vendors"),
     heroTitle: "Get a quote",
+    heroTaglineByPreset: EVENT_VENDOR_HERO_TAGLINES,
+    catalogLayout: "grid-2x2",
+    catalogTitle: "Services & packages",
     careNotes: [
       "Share your event date, guest count, and theme so we can quote accurately.",
       "We'll reply by email or WhatsApp — whichever you prefer.",
     ],
+    confirmPendingTitle: "Enquiry received",
+    confirmBookedTitle: "Date secured",
   },
   "body-art": {
     ...defaultGuestPublic("body-art"),
@@ -185,7 +197,13 @@ export function guestPublicHeroTagline(
   if (!exp.heroTaglineByPreset) return undefined;
   const key = resolveVerticalKey(vertical, category);
   const fallback =
-    key === "beauty" ? "noir-dusk" : key === "wellness" ? "harbour-light" : undefined;
+    key === "beauty"
+      ? "noir-dusk"
+      : key === "wellness"
+        ? "harbour-light"
+        : key === "event-vendors"
+          ? "event-atelier"
+          : undefined;
   const preset = cssPreset ?? fallback;
   if (!preset || !exp.heroTaglineByPreset) return undefined;
   return exp.heroTaglineByPreset[preset] ?? (fallback ? exp.heroTaglineByPreset[fallback] : undefined);

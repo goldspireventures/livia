@@ -4,7 +4,11 @@
 **Registry:** V12 · **defer** · no `codeVertical` yet · nearest pack `wellness` (packages, couples) + `medspa` (deposits, high consideration)  
 **Platform primitive:** [`CONSULT-FIRST-WORKFLOW-SPEC.md`](./CONSULT-FIRST-WORKFLOW-SPEC.md)  
 **Design partner:** solo event-decor operator (IG/WhatsApp leads, quote-first) — see § Design partner profile  
-**Reads with:** [`vertical-playbooks/event-vendors.md`](./vertical-playbooks/event-vendors.md) · [`PARTNER-AND-ADJACENT-VERTICALS.md`](./PARTNER-AND-ADJACENT-VERTICALS.md) § Ring 2
+**Reads with:** [`vertical-playbooks/event-vendors.md`](./vertical-playbooks/event-vendors.md) · [`PARTNER-AND-ADJACENT-VERTICALS.md`](./PARTNER-AND-ADJACENT-VERTICALS.md) § Ring 2 · [`pricing-and-packaging.md`](../business/pricing-and-packaging.md) § Event Operator pack
+
+### Commercial packaging (2026-06)
+
+Consult-first depth ships as **Event Operator** add-on (€49/mo on Solo/Studio) — entitlement `event_operator_pack` in `@workspace/entitlements`. Gated surfaces: `/inbox`, `/quotes`, `/event-site`, guest quote deposits. Design partners receive the pack during DP window; demo slug `atelier-decor-dublin` is pre-granted.
 
 ---
 

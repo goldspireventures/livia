@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { SupportSurfaceNav } from "../components/SupportSurfaceNav";
 import { listSupportTickets, listRadarProactiveFeeds, type RadarProactiveFeed, type SupportTicketRow } from "../lib/api";
-import { buttonStyle } from "../styles/ops-ui";
+import { buttonStyle, cardStyle } from "../styles/ops-ui";
 
 type RadarMetric = { label: string; value: number; tone: "ok" | "warn" | "urgent" };
 
@@ -62,9 +61,10 @@ export function SupportRadarView() {
 
   return (
     <div>
-      <SupportSurfaceNav />
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <h1 style={{ fontSize: 18, margin: 0 }}>Radar</h1>
+        <p style={{ margin: 0, fontSize: 13, color: "#94a3b8" }}>
+          Urgent tickets and tenants that may need a check-in call.
+        </p>
         <button type="button" style={buttonStyle} onClick={() => void load()} disabled={loading}>
           Refresh
         </button>
@@ -148,8 +148,8 @@ export function SupportRadarView() {
               <strong style={{ color: "#fbbf24" }}>{ticketPriority(t)}</strong>
               <span style={{ color: "#64748b", marginLeft: 8 }}>{t.category}</span>
               <p style={{ margin: "6px 0", color: "#cbd5e1" }}>{t.description.slice(0, 100)}…</p>
-              <Link to={`/support?ticket=${t.id}`} style={{ color: "#38bdf8" }}>
-                Thread →
+              <Link to={`/support/${encodeURIComponent(t.id)}`} style={{ color: "#38bdf8" }}>
+                Open in inbox →
               </Link>
             </li>
           ))}

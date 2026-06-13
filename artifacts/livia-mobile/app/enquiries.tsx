@@ -34,6 +34,7 @@ import {
   generateQuote,
   type EnquiryRow,
 } from "@/lib/event-vendor-consult";
+import { FeatureUnlockGate } from "@/components/FeatureUnlockCard";
 
 export default function EnquiriesScreen() {
   const colors = useColors();
@@ -226,6 +227,7 @@ export default function EnquiriesScreen() {
 
   return (
     <OperationalScreen scroll={false} ritualPage title="Inbox" subtitle={unifiedConsultInboxSubtitle()}>
+      <FeatureUnlockGate featureId="consult_first_inbox" businessId={bid}>
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: insets.bottom + 16, flexGrow: 1 }}
@@ -299,6 +301,7 @@ export default function EnquiriesScreen() {
           </View>
         </View>
       </Modal>
+      </FeatureUnlockGate>
     </OperationalScreen>
   );
 }

@@ -1,5 +1,10 @@
 /** v2 Block I — locale voice cast registry (ops; full tooling lands incrementally). */
 
+import { Link } from "react-router-dom";
+import { INTERNAL_PAGES } from "../lib/internal-page-meta";
+import { InternalPage } from "../components/InternalPage";
+import { cardStyle } from "../styles/ops-ui";
+
 const LOCALES = [
   { id: "en-IE", label: "English (Ireland)", voice: "production", cast: "Liv IE" },
   { id: "en-GB", label: "English (UK)", voice: "gated", cast: "UK_VOICE_ENABLED" },
@@ -11,12 +16,16 @@ const LOCALES = [
 
 export function VoiceCastView() {
   return (
-    <div style={{ maxWidth: 640 }}>
-      <h2 style={{ fontSize: 16, margin: "0 0 12px", color: "#e2e8f0" }}>Locale & voice cast</h2>
-      <p style={{ fontSize: 13, color: "#94a3b8", lineHeight: 1.5, marginBottom: 16 }}>
-        Per ADR 0016 — each locale needs a character lead, golden corpus, and eval pass before voice
-        ships. Edit prompts in tenant Settings until per-locale internal editor ships.
-      </p>
+    <InternalPage
+      title={INTERNAL_PAGES.voice.title}
+      subtitle={INTERNAL_PAGES.voice.purpose}
+      actions={
+        <Link to="/platform" style={{ fontSize: 13, color: "#94a3b8", textDecoration: "none" }}>
+          ← Platform
+        </Link>
+      }
+    >
+      <div style={{ ...cardStyle, maxWidth: 720, overflowX: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
         <thead>
           <tr style={{ borderBottom: "1px solid #334155", color: "#94a3b8", textAlign: "left" }}>
@@ -37,6 +46,7 @@ export function VoiceCastView() {
           ))}
         </tbody>
       </table>
-    </div>
+      </div>
+    </InternalPage>
   );
 }

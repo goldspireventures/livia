@@ -93,3 +93,17 @@ export function inboxScreenTitle(persona: string): string {
   if (persona === "receptionist") return "Messages";
   return "Inbox";
 }
+
+/**
+ * When the owner reply composer is shown — web + mobile must match.
+ * Hidden when Liv is handling (OPEN + aiHandled) or thread is archived.
+ */
+export function inboxNeedsOwnerReply(conv: InboxQueueConversation | null | undefined): boolean {
+  if (!conv || conv.status === "CLOSED") return false;
+  return conv.status === "HANDED_OFF" || !conv.aiHandled;
+}
+
+/** Liv is actively handling — show "Liv on" chrome, hide compose. */
+export function inboxLivHandling(conv: InboxQueueConversation | null | undefined): boolean {
+  return !!conv && conv.status === "OPEN" && conv.aiHandled;
+}

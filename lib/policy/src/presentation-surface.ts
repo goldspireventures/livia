@@ -39,6 +39,13 @@ const BEAUTY_MORPH_BY_CSS: Record<string, PresentationLayoutMorph> = {
   "premium-dark": "cockpit",
 };
 
+/** Event-vendor consult-first — gallery enquire, quote pipeline, playful party grid. */
+const EVENT_VENDORS_MORPH_BY_CSS: Record<string, PresentationLayoutMorph> = {
+  "event-atelier": "atrium",
+  "wedding-ledger": "pipeline",
+  "party-pop": "menu-card",
+};
+
 const GENERIC_LAYOUT_MORPH: Record<string, PresentationLayoutMorph> = {
   cards: "standard",
   list: "standard",
@@ -73,6 +80,9 @@ export function resolvePresentationLayoutMorph(
   }
   if (vertical === "beauty" && preset.cssPreset in BEAUTY_MORPH_BY_CSS) {
     return BEAUTY_MORPH_BY_CSS[preset.cssPreset]!;
+  }
+  if (vertical === "event-vendors" && preset.cssPreset in EVENT_VENDORS_MORPH_BY_CSS) {
+    return EVENT_VENDORS_MORPH_BY_CSS[preset.cssPreset]!;
   }
   if (preset.cssPreset === "platform-default") {
     return "constellation";
@@ -143,6 +153,24 @@ export function validateVerticalPresentationPack(
     }
   }
 
+  if (vertical === "event-vendors") {
+    const required: PresentationLayoutMorph[] = [
+      "constellation",
+      "atrium",
+      "pipeline",
+      "menu-card",
+    ];
+    for (const m of required) {
+      if (!morphs.includes(m)) {
+        errors.push(`event-vendors: missing layout morph "${m}"`);
+      }
+    }
+    const nativeMorphs = native.map((p) => resolvePresentationLayoutMorph(vertical, p));
+    if (new Set(nativeMorphs).size !== nativeMorphs.length) {
+      errors.push("event-vendors: native presets must have distinct layout morphs");
+    }
+  }
+
   return {
     vertical,
     presetCount: presets.length,
@@ -158,4 +186,11 @@ export function listPresentationPresetsForOwnerPicker(
   vertical: BusinessVertical,
 ): PresentationPreset[] {
   return filterPresetsForPicker(PRESENTATION_PRESETS[vertical]);
+}
+
+/** Internal ops + CI — presentation pack health across all verticals. */
+export function auditAllVerticalPresentationPacks(): VerticalPresentationHandshake[] {
+  return (Object.keys(PRESENTATION_PRESETS) as BusinessVertical[]).map((vertical) =>
+    validateVerticalPresentationPack(vertical),
+  );
 }

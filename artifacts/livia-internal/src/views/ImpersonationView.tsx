@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import { buttonStyle, inputStyle } from "../styles/ops-ui";
+import { buttonStyle, cardStyle, inputStyle } from "../styles/ops-ui";
+import { INTERNAL_PAGES } from "../lib/internal-page-meta";
+import { InternalPage } from "../components/InternalPage";
 
 type Intent = {
   ticketId: string;
@@ -51,37 +53,36 @@ export function ImpersonationView({ defaultBusinessId }: { defaultBusinessId?: s
   };
 
   return (
-    <div>
-      <h2 style={{ fontSize: 18, marginBottom: 8 }}>Support access</h2>
+    <InternalPage
+      title={INTERNAL_PAGES.access.title}
+      subtitle={INTERNAL_PAGES.access.purpose}
+    >
       {ssoBanner ? (
-        <p style={{ color: "#fbbf24", fontSize: 13, lineHeight: 1.5, marginBottom: 16 }}>{ssoBanner}</p>
+        <p style={{ color: "#fbbf24", fontSize: 13, lineHeight: 1.5, margin: 0 }}>{ssoBanner}</p>
       ) : null}
-      <p style={{ color: "#94a3b8", fontSize: 13, marginBottom: 16 }}>
-        Ticket-gated intent only — no tenant JWT. Use deep links while on workforce SSO.
-      </p>
-      <form onSubmit={(e) => void submit(e)} style={{ display: "grid", gap: 8, maxWidth: 480 }}>
+      <form onSubmit={(e) => void submit(e)} style={{ ...cardStyle, display: "flex", flexDirection: "column", gap: 8, alignItems: "stretch", width: "100%", maxWidth: 480 }}>
         <input
           value={ticketId}
           onChange={(e) => setTicketId(e.target.value)}
           placeholder="Support ticket ID"
-          style={inputStyle}
+          style={{ ...inputStyle, width: "100%" }}
           required
         />
         <input
           value={businessId}
           onChange={(e) => setBusinessId(e.target.value)}
           placeholder="Business UUID"
-          style={inputStyle}
+          style={{ ...inputStyle, width: "100%" }}
           required
         />
         <textarea
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           placeholder="Reason (min 8 chars)"
-          style={{ ...inputStyle, minHeight: 80 }}
+          style={{ ...inputStyle, minHeight: 80, width: "100%" }}
           required
         />
-        <button type="submit" style={buttonStyle}>
+        <button type="submit" style={{ ...buttonStyle, alignSelf: "flex-start" }}>
           Record intent & get links
         </button>
       </form>
@@ -107,6 +108,6 @@ export function ImpersonationView({ defaultBusinessId }: { defaultBusinessId?: s
           </ul>
         </div>
       ) : null}
-    </div>
+    </InternalPage>
   );
 }

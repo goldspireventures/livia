@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { invalidateOperationalState } from "@/lib/operational-cache";
 import { CreditCard, Mic, TrendingUp } from "lucide-react";
@@ -10,8 +10,11 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { customFetch } from "@workspace/api-client-react";
 import { useBillingState } from "@/hooks/use-billing-state";
+import { hasEffectiveEntitlement, ADDON_CATALOGUE, formatAddonPriceEur, type EntitlementKey } from "@workspace/entitlements";
+import { Sparkles } from "lucide-react";
 
 type BillingState = {
   planId: string;
@@ -42,6 +45,20 @@ export default function BillingControls() {
   const bid = business?.id ?? "";
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const { data: billing, isLoading, isError, refetch } = useBillingState();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const addon = params.get("addon");
+    const status = params.get("addon_status");
+    if (addon === "event_operator_pack" && status === "success") {
+      toast({ title: "Event Operator unlocked", description: "Consult-first inbox and quotes are live." });
+      params.delete("addon");
+      params.delete("addon_status");
+      const next = `${window.location.pathname}?${params.toString()}`.replace(/\?$/, "");
+      window.history.replaceState({}, "", next);
+      void refetch();
+    }
+  }, [toast, refetch]);
 
   if (!bid) {
     return <Skeleton className="h-48 w-full rounded-xl" data-testid="billing-loading" />;
@@ -82,6 +99,11 @@ export default function BillingControls() {
 
   const hasVoice = billing.entitlements.includes("voice_receptionist");
   const hasWhatsApp = billing.entitlements.includes("whatsapp_inbound");
+  const hasEventOperator = hasEffectiveEntitlement(
+    billing.entitlements as EntitlementKey[],
+    "event_operator_pack",
+  );
+  const eventAddon = ADDON_CATALOGUE.event_operator_pack;
   const bookingsDone = billing.usage.booking_completed ?? 0;
   const smsSent = billing.usage.sms_message_outbound ?? 0;
   const waSent = billing.usage.whatsapp_message_outbound ?? 0;
@@ -143,6 +165,39 @@ export default function BillingControls() {
       } else {
         toast({ title: "Checkout failed", description: detail, variant: "destructive" });
       }
+    } finally {
+      setCheckoutLoading(null);
+    }
+  }
+
+  async function startAddonCheckout(addonId: string, returnPath = "/settings?tab=billing") {
+    setCheckoutLoading(addonId);
+    try {
+      const res = await customFetch<{ url?: string; mode?: string; message?: string; active?: boolean }>(
+        `/api/businesses/${bid}/billing/checkout-addon`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ addonId, returnPath }),
+        },
+      );
+      if (res.url) {
+        window.location.href = res.url;
+        return;
+      }
+      toast({
+        title: res.mode === "dev" ? "Add-on active (dev)" : "Add-on active",
+        description: res.message,
+      });
+      await refetch();
+      if (bid) invalidateOperationalState(qc, bid);
+    } catch (err: unknown) {
+      const data = (err as { data?: { code?: string; error?: string } })?.data;
+      toast({
+        title: "Checkout failed",
+        description: data?.error ?? (err instanceof Error ? err.message : "Try again"),
+        variant: "destructive",
+      });
     } finally {
       setCheckoutLoading(null);
     }
@@ -211,6 +266,41 @@ export default function BillingControls() {
                 onClick={() => startCheckout("chair-host", { renterCount: 1 })}
               >
                 {checkoutLoading === "chair-host" ? "…" : "Host (€99 + €19/renter)"}
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card data-testid="billing-addons-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Sparkles className="h-4 w-4" />
+            Add-ons
+          </CardTitle>
+          <CardDescription>
+            Unlock vertical depth beyond your base plan — one tap checkout, active immediately.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="rounded-lg border px-3 py-3 flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm">{eventAddon.name}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{eventAddon.description}</p>
+            </div>
+            {hasEventOperator ? (
+              <Badge variant="secondary">Active</Badge>
+            ) : (
+              <Button
+                type="button"
+                size="sm"
+                disabled={!!checkoutLoading}
+                onClick={() => void startAddonCheckout("event_operator_pack")}
+                data-testid="billing-addon-event-operator"
+              >
+                {checkoutLoading === "event_operator_pack"
+                  ? "…"
+                  : `Unlock · ${formatAddonPriceEur(eventAddon.eurCentsPerMonth)}/mo`}
               </Button>
             )}
           </div>

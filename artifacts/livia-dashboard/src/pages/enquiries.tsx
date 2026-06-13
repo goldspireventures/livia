@@ -32,6 +32,7 @@ import {
   unifiedConsultInboxTitle,
 } from "@workspace/policy";
 import { cn } from "@/lib/utils";
+import { FeatureUnlockGate } from "@/components/billing/feature-unlock-panel";
 
 type Enquiry = {
   id: string;
@@ -329,6 +330,7 @@ export default function EventVendorUnifiedInboxPage() {
     : null;
 
   return (
+    <FeatureUnlockGate featureId="consult_first_inbox">
     <PageFrame width="lg" className="space-y-4" data-testid="event-vendor-unified-inbox">
       <PersonaRitualHeader
         variant="page"
@@ -623,5 +625,6 @@ export default function EventVendorUnifiedInboxPage() {
         </DialogContent>
       </Dialog>
     </PageFrame>
+    </FeatureUnlockGate>
   );
 }

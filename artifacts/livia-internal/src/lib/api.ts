@@ -734,6 +734,39 @@ export async function getMonitoringOverview() {
   return internalFetch<MonitoringOverview>("/internal/ops/monitoring/overview");
 }
 
+export type PlatformCascadeHealth = {
+  refreshedAt: string;
+  presentation: Array<{
+    vertical: string;
+    ok: boolean;
+    presetCount: number;
+    morphs: string[];
+    errors: string[];
+  }>;
+  payments: {
+    guestQuoteDeposits24h: number;
+    guestBookingDeposits24h: number;
+    lastQuoteDepositAt: string | null;
+    stripeConfigured: boolean;
+  };
+  consultFirst: {
+    eventVendorTenants: number;
+    openEnquiries: number;
+    bookedQuotes24h: number;
+    engagementNotifications24h: number;
+  };
+  entitlements: {
+    eventVendorsWithPack: number;
+    eventVendorsWithoutPack: number;
+    stripeEventOperatorPriceConfigured: boolean;
+    eventOperatorAddonEurCents: number;
+  };
+};
+
+export async function getPlatformCascadeHealth() {
+  return internalFetch<PlatformCascadeHealth>("/internal/ops/monitoring/cascade");
+}
+
 export async function getMonitoringSeries(hours = 24) {
   return internalFetch<MonitoringTimeSeries>(
     `/internal/ops/monitoring/series?hours=${encodeURIComponent(String(hours))}`,

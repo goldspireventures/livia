@@ -2,6 +2,7 @@ import { useGetBusinessBilling } from "@workspace/api-client-react";
 import { useMemo } from "react";
 import { useBusiness } from "@/contexts/BusinessContext";
 import { useMembership } from "@/hooks/useMembership";
+import { hasEffectiveEntitlement, type EntitlementKey } from "@workspace/entitlements";
 
 export function useEntitlements() {
   const { currentBusiness } = useBusiness();
@@ -14,12 +15,13 @@ export function useEntitlements() {
   });
 
   const entitlements = useMemo(() => new Set(data?.entitlements ?? []), [data?.entitlements]);
+  const list = useMemo(() => [...entitlements] as EntitlementKey[], [entitlements]);
 
   return {
     isLoading: canReadBilling && isLoading,
     planId: data?.planId ?? "trial",
     entitlements,
-    has: (key: string) => entitlements.has(key),
-    voiceEnabled: entitlements.has("voice_receptionist"),
+    has: (key: EntitlementKey) => hasEffectiveEntitlement(list, key),
+    voiceEnabled: hasEffectiveEntitlement(list, "voice_receptionist"),
   };
 }

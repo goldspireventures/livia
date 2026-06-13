@@ -1,6 +1,7 @@
 import type { PresentationLayoutMorph } from "@workspace/policy";
 import {
   beautyNativeMorphForVertical,
+  eventVendorNativeMorphForVertical,
   wellnessNativeMorphForVertical,
 } from "@/lib/presentation-layout";
 import type { TenantPresentationSurface } from "@/lib/tenant-presentation-surface";
@@ -10,6 +11,7 @@ export type MobileSkinFamily =
   | "constellation"
   | "beauty-native"
   | "wellness-native"
+  | "event-vendor-native"
   | "aurora-dark"
   | "aurora-light";
 
@@ -27,6 +29,7 @@ export type MobileOwnerTodayVariant =
   | "constellation"
   | "beauty-morph"
   | "wellness-morph"
+  | "event-vendor-morph"
   | "standard";
 
 export type MobileSkin = TenantPresentationSurface & {
@@ -43,6 +46,7 @@ function resolveSkinFamily(surface: TenantPresentationSurface): MobileSkinFamily
   if (surface.isConstellation) return "constellation";
   if (surface.isBeautyNative) return "beauty-native";
   if (surface.isWellnessNative) return "wellness-native";
+  if (surface.isEventVendorNative) return "event-vendor-native";
   return surface.colorMode === "light" ? "aurora-light" : "aurora-dark";
 }
 
@@ -54,6 +58,8 @@ function resolveAtmosphere(family: MobileSkinFamily): MobileAtmosphere {
       return "wellness-breath";
     case "beauty-native":
       return "beauty-glow";
+    case "event-vendor-native":
+      return "aurora-halo";
     case "aurora-dark":
       return "aurora-halo";
     default:
@@ -70,7 +76,10 @@ export function resolveMobileSkin(surface: TenantPresentationSurface): MobileSki
   const family = resolveSkinFamily(surface);
   const atmosphere = resolveAtmosphere(family);
   const transparentScreens =
-    family === "constellation" || family === "wellness-native" || family === "beauty-native";
+    family === "constellation" ||
+    family === "wellness-native" ||
+    family === "beauty-native" ||
+    family === "event-vendor-native";
   const ritualAccentFromVertical =
     family === "constellation" &&
     (surface.vertical === "beauty" || surface.vertical === "wellness");
@@ -96,8 +105,10 @@ export function resolveMobileOwnerTodayVariant(
 
   const beautyMorph = beautyNativeMorphForVertical(skin.vertical, layoutMorph);
   const wellnessMorph = wellnessNativeMorphForVertical(skin.vertical, layoutMorph);
+  const eventMorph = eventVendorNativeMorphForVertical(skin.vertical, layoutMorph);
   if (beautyMorph) return "beauty-morph";
   if (wellnessMorph) return "wellness-morph";
+  if (eventMorph) return "event-vendor-morph";
   if (skin.family === "constellation" && (persona === "owner" || persona === "org_admin")) {
     return "constellation";
   }

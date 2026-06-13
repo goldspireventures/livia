@@ -11,6 +11,9 @@ import { Switch } from "@/components/ui/switch";
 import { customFetch } from "@workspace/api-client-react";
 import { LIV_MANDATE_RUNG_LABELS, type LivMandateAction } from "@workspace/policy";
 import { Bot } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const MANDATE_RUNGS = ["R0", "R1", "R2", "R3", "R4"] as const;
 
 const DENY_TOGGLES: Array<{ action: LivMandateAction; label: string }> = [
   { action: "process_refund", label: "Block auto refunds" },
@@ -149,24 +152,35 @@ export default function LivMandateControls() {
           <Badge variant="secondary">Trust {state.mandate.trustScore}%</Badge>
           <Badge variant="outline">{state.vertical} default: {state.defaults.rung}</Badge>
         </div>
-        <div className="grid gap-2 sm:grid-cols-2">
-          {(["R0", "R1", "R2", "R3", "R4"] as const).map((r) => (
-            <Button
-              key={r}
-              type="button"
-              variant={state.mandate.rung === r ? "default" : "outline"}
-              disabled={saving}
-              onClick={() => void setRung(r)}
-              className="justify-start h-auto py-3 text-left"
-            >
-              <span className="font-mono text-xs mr-2">{r}</span>
-              <span className="text-sm">
-                {LIV_MANDATE_RUNG_LABELS[r as keyof typeof LIV_MANDATE_RUNG_LABELS]?.short ?? r} —{" "}
-                {LIV_MANDATE_RUNG_LABELS[r as keyof typeof LIV_MANDATE_RUNG_LABELS]?.description ??
-                  ""}
-              </span>
-            </Button>
-          ))}
+        <div className="flex flex-col gap-2" data-testid="liv-mandate-rungs">
+          {MANDATE_RUNGS.map((r) => {
+            const meta = LIV_MANDATE_RUNG_LABELS[r];
+            const selected = state.mandate.rung === r;
+            return (
+              <Button
+                key={r}
+                type="button"
+                variant={selected ? "default" : "outline"}
+                disabled={saving}
+                onClick={() => void setRung(r)}
+                data-testid={`liv-mandate-rung-${r}`}
+                className={cn(
+                  "w-full min-w-0 h-auto py-3 px-3 text-left whitespace-normal",
+                  "justify-start items-start gap-2",
+                )}
+              >
+                <span className="font-mono text-xs shrink-0 pt-0.5">{r}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-medium leading-snug">
+                    {meta?.short ?? r}
+                  </span>
+                  <span className="block text-xs font-normal leading-relaxed opacity-90 mt-0.5">
+                    {meta?.description ?? ""}
+                  </span>
+                </span>
+              </Button>
+            );
+          })}
         </div>
         <div className="space-y-2">
           <Label>Refund auto-cap (€)</Label>

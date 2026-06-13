@@ -529,6 +529,8 @@ export async function seedVerticalShowcaseShops(
       }
       if (d.vertical === "event-vendors") {
         await runEventVendorsShowcaseDepth(existing.id, d.slug);
+        const { grantAddonBundle } = await import("./billing.service");
+        await grantAddonBundle(existing.id, "event_operator_pack");
       }
       created.push({
         slug: existing.slug,
@@ -590,6 +592,8 @@ export async function seedVerticalShowcaseShops(
     }
     if (d.vertical === "event-vendors") {
       await runEventVendorsShowcaseDepth(biz.id, d.slug);
+      const { grantAddonBundle } = await import("./billing.service");
+      await grantAddonBundle(biz.id, "event_operator_pack");
     }
     created.push({ slug: biz.slug, id: biz.id, name: biz.name, vertical: d.vertical });
   }

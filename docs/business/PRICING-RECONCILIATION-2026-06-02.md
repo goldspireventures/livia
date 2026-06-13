@@ -16,6 +16,7 @@
 | **Public marketing hero** | Studio **€149/mo** with Solo floor in FAQ | Closed beta free; list prices lock at GA |
 | **Voice % default** | **Off until digest proof** from design partners | Opt-in when weekly digest shows recovered bookings |
 | **GA price review** | Revisit list prices **after 10 paying cells** with real voice digest data | Optional modest bump (e.g. Solo €89) — structure unchanged |
+| **Event Operator pack** | **€49/mo** add-on — `event_operator_pack` in `ADDON_CATALOGUE` | Consult-first stack gated; design partners get pack during DP window |
 
 ---
 

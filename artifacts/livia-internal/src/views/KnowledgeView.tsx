@@ -4,7 +4,7 @@ import {
   fetchCompanyDocsIndex,
   type CompanyDocEntry,
 } from "../lib/api";
-import { buttonStyle, inputStyle } from "../styles/ops-ui";
+import { inputStyle, listNavItemStyle } from "../styles/ops-ui";
 
 export function KnowledgeView({ initialDocPath }: { initialDocPath?: string }) {
   const [canonical, setCanonical] = useState<CompanyDocEntry[]>([]);
@@ -77,7 +77,7 @@ export function KnowledgeView({ initialDocPath }: { initialDocPath?: string }) {
   return (
     <div style={{ display: "grid", gridTemplateColumns: "minmax(240px, 320px) 1fr", gap: 20 }}>
       <aside>
-        <h2 style={{ fontSize: 18, marginBottom: 8 }}>Knowledge hub</h2>
+        <h2 style={{ fontSize: 14, margin: "0 0 8px", color: "#94a3b8" }}>Doc index</h2>
         <p style={{ color: "#94a3b8", fontSize: 13, lineHeight: 1.5, marginBottom: 12 }}>
           Business, engineering, and ops docs from the repo — read-only for Livia Inc support.
         </p>
@@ -100,13 +100,7 @@ export function KnowledgeView({ initialDocPath }: { initialDocPath?: string }) {
                 <button
                   type="button"
                   onClick={() => void openDoc(d.path)}
-                  style={{
-                    ...buttonStyle,
-                    width: "100%",
-                    textAlign: "left",
-                    background: selectedPath === d.path ? "#334155" : "#1e293b",
-                    fontSize: 12,
-                  }}
+                  style={listNavItemStyle(selectedPath === d.path)}
                 >
                   {d.title}
                 </button>
@@ -125,10 +119,7 @@ export function KnowledgeView({ initialDocPath }: { initialDocPath?: string }) {
                         type="button"
                         onClick={() => void openDoc(d.path)}
                         style={{
-                          ...buttonStyle,
-                          width: "100%",
-                          textAlign: "left",
-                          background: selectedPath === d.path ? "#334155" : "transparent",
+                          ...listNavItemStyle(selectedPath === d.path),
                           fontSize: 11,
                           padding: "4px 8px",
                         }}

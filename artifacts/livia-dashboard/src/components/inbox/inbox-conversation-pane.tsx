@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/api-fetch";
 import { invalidateOperationalState } from "@/lib/operational-cache";
-import { inboxReplyDeliveredOnChannel, inboxReplyPlaceholder } from "@workspace/policy";
+import { inboxReplyDeliveredOnChannel, inboxReplyPlaceholder, inboxNeedsOwnerReply } from "@workspace/policy";
 import { CheckCircle2, Globe, HandHelping, MessageSquare, Phone, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -202,24 +202,46 @@ export function InboxConversationPane({
         ) : null}
       </div>
 
-      {conversation.status !== "CLOSED" ? (
+      {inboxNeedsOwnerReply(conversation) ? (
         <div className="border-t p-3 space-y-2 shrink-0 bg-card/90 backdrop-blur-sm">
+          {conversation.status === "HANDED_OFF" ? (
+            <p className="text-xs text-muted-foreground">
+              You&apos;re replying — send when ready, or release to Liv without sending.
+            </p>
+          ) : null}
           <Textarea
             value={replyDraft}
             onChange={(e) => setReplyDraft(e.target.value)}
             placeholder={inboxReplyPlaceholder(conversation.channel)}
             rows={2}
             className="resize-none text-sm"
+            data-testid="inbox-reply-input"
           />
           <div className="flex justify-end gap-2">
             <Button
               size="sm"
               disabled={!replyDraft.trim() || sending}
               onClick={() => void sendReply(releaseAfterSend)}
+              data-testid="inbox-send-reply"
             >
               {releaseAfterSend ? "Send & release to Liv" : "Send reply"}
             </Button>
           </div>
+          {conversation.status === "HANDED_OFF" && replyDraft.trim() ? (
+            <button
+              type="button"
+              className="text-xs text-muted-foreground hover:text-foreground"
+              data-testid="inbox-release-without-send"
+              onClick={() => void handleStatusChange("OPEN")}
+            >
+              Release to Liv without sending
+            </button>
+          ) : null}
+        </div>
+      ) : conversation.status === "OPEN" && conversation.aiHandled ? (
+        <div className="border-t px-4 py-3 shrink-0 bg-card/80 text-xs text-muted-foreground flex items-center gap-2">
+          <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" />
+          Liv is handling this thread — take over if you want to reply yourself.
         </div>
       ) : null}
     </div>

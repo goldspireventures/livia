@@ -1,4 +1,8 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { INTERNAL_PAGES } from "../lib/internal-page-meta";
+import { InternalPage } from "../components/InternalPage";
+import { cardStyle } from "../styles/ops-ui";
 
 type Trace = {
   bookingId: string;
@@ -30,13 +34,25 @@ export function ContinuityTracesView({ secret }: { secret: string }) {
       .catch((e) => setErr(e instanceof Error ? e.message : "Failed"));
   }, [secret]);
 
-  if (err) return <p style={{ color: "#f87171" }}>{err}</p>;
+  if (err) {
+    return (
+      <InternalPage title={INTERNAL_PAGES.continuity.title} subtitle={INTERNAL_PAGES.continuity.purpose}>
+        <p style={{ color: "#f87171" }}>{err}</p>
+      </InternalPage>
+    );
+  }
 
   return (
-    <div>
-      <h2 style={{ fontSize: 16, margin: "0 0 12px", color: "#e2e8f0" }}>
-        Booking continuity traces ({rows.length})
-      </h2>
+    <InternalPage
+      title={INTERNAL_PAGES.continuity.title}
+      subtitle={`${rows.length} bookings — ${INTERNAL_PAGES.continuity.purpose}`}
+      actions={
+        <Link to="/platform" style={{ fontSize: 13, color: "#94a3b8", textDecoration: "none" }}>
+          ← Platform
+        </Link>
+      }
+    >
+      <div style={{ ...cardStyle, overflowX: "auto" }}>
       <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
         <thead>
           <tr style={{ color: "#94a3b8", textAlign: "left" }}>
@@ -59,6 +75,7 @@ export function ContinuityTracesView({ secret }: { secret: string }) {
           ))}
         </tbody>
       </table>
-    </div>
+      </div>
+    </InternalPage>
   );
 }

@@ -5,6 +5,8 @@ import {
   messageLogsTable,
   bookingsTable,
   businessesTable,
+  quotesTable,
+  enquiriesTable,
 } from "@workspace/db";
 import { sql, and, gte, desc, eq, or, ilike, inArray } from "drizzle-orm";
 import {
@@ -16,6 +18,9 @@ import { getPlatformObservability } from "./internal-observability.service";
 import { evaluateAlertRules, listAlertFirings } from "./internal-ops-alerts.service";
 import { getDemoPortalStatus } from "./demo-portal.service";
 import { DEMO_WORLD_SLUGS } from "../lib/demo-portal-config";
+import { auditAllVerticalPresentationPacks } from "@workspace/policy";
+import { EVENT_OPERATOR_ADDON_EUR_CENTS, hasEffectiveEntitlement } from "@workspace/entitlements";
+import { priceIdForEventOperatorAddon } from "../lib/stripe";
 
 export type PlatformLogEntry = {
   id: string;
@@ -84,6 +89,145 @@ export type OpsOnboardingCheck = {
   detail: string;
   action?: string;
 };
+
+export type PlatformCascadeHealth = {
+  refreshedAt: string;
+  presentation: Array<{
+    vertical: string;
+    ok: boolean;
+    presetCount: number;
+    morphs: string[];
+    errors: string[];
+  }>;
+  payments: {
+    guestQuoteDeposits24h: number;
+    guestBookingDeposits24h: number;
+    lastQuoteDepositAt: string | null;
+    stripeConfigured: boolean;
+  };
+  consultFirst: {
+    eventVendorTenants: number;
+    openEnquiries: number;
+    bookedQuotes24h: number;
+    engagementNotifications24h: number;
+  };
+  entitlements: {
+    eventVendorsWithPack: number;
+    eventVendorsWithoutPack: number;
+    stripeEventOperatorPriceConfigured: boolean;
+    eventOperatorAddonEurCents: number;
+  };
+};
+
+/** Policy cascade + consult-first automation health for Livia internal ops. */
+export async function getPlatformCascadeHealth(): Promise<PlatformCascadeHealth> {
+  const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const presentation = auditAllVerticalPresentationPacks().map((row) => ({
+    vertical: row.vertical,
+    ok: row.ok,
+    presetCount: row.presetCount,
+    morphs: row.morphs,
+    errors: row.errors,
+  }));
+
+  const quoteDepositEvents = await db
+    .select({ count: sql<number>`count(*)::int`, last: sql<string>`max(${eventsTable.createdAt})::text` })
+    .from(eventsTable)
+    .where(
+      and(
+        gte(eventsTable.createdAt, dayAgo),
+        eq(eventsTable.type, "PAYMENT_SUCCEEDED"),
+        sql`${eventsTable.context}::text ilike '%guestQuoteDeposit%'`,
+      ),
+    );
+
+  const bookingDepositEvents = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(eventsTable)
+    .where(
+      and(
+        gte(eventsTable.createdAt, dayAgo),
+        eq(eventsTable.type, "PAYMENT_SUCCEEDED"),
+        sql`${eventsTable.context}::text ilike '%guestDeposit%'`,
+      ),
+    );
+
+  const [eventVendorTenants, openEnquiries, bookedQuotes, engagementNotifs, paymentOps, eventVendorRows] =
+    await Promise.all([
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(businessesTable)
+        .where(eq(businessesTable.vertical, "event-vendors")),
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(enquiriesTable)
+        .where(inArray(enquiriesTable.status, ["new", "quoted", "accepted"])),
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(quotesTable)
+        .where(and(gte(quotesTable.updatedAt, dayAgo), eq(quotesTable.status, "booked"))),
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(notificationLogsTable)
+        .where(
+          and(
+            gte(notificationLogsTable.createdAt, dayAgo),
+            or(
+              ilike(notificationLogsTable.templateKey, "%quote.%"),
+              ilike(notificationLogsTable.templateKey, "%client_withdrew%"),
+            ),
+          ),
+        ),
+      import("./payment.service")
+        .then((m) => m.getPaymentOpsSummary())
+        .catch(() => ({ stripeConfigured: false })),
+      db
+        .select({
+          id: businessesTable.id,
+          entitlementGrants: businessesTable.entitlementGrants,
+          designPartnerEndsAt: businessesTable.designPartnerEndsAt,
+        })
+        .from(businessesTable)
+        .where(eq(businessesTable.vertical, "event-vendors")),
+    ]);
+
+  let eventVendorsWithPack = 0;
+  let eventVendorsWithoutPack = 0;
+  const now = new Date();
+  for (const row of eventVendorRows) {
+    const grants = Array.isArray(row.entitlementGrants) ? row.entitlementGrants : [];
+    const designPartner =
+      !!row.designPartnerEndsAt && new Date(row.designPartnerEndsAt) > now;
+    const entitled =
+      designPartner ||
+      hasEffectiveEntitlement(grants as never, "event_operator_pack");
+    if (entitled) eventVendorsWithPack += 1;
+    else eventVendorsWithoutPack += 1;
+  }
+
+  return {
+    refreshedAt: new Date().toISOString(),
+    presentation,
+    payments: {
+      guestQuoteDeposits24h: quoteDepositEvents[0]?.count ?? 0,
+      guestBookingDeposits24h: bookingDepositEvents[0]?.count ?? 0,
+      lastQuoteDepositAt: quoteDepositEvents[0]?.last ?? null,
+      stripeConfigured: paymentOps.stripeConfigured ?? false,
+    },
+    consultFirst: {
+      eventVendorTenants: eventVendorTenants[0]?.count ?? 0,
+      openEnquiries: openEnquiries[0]?.count ?? 0,
+      bookedQuotes24h: bookedQuotes[0]?.count ?? 0,
+      engagementNotifications24h: engagementNotifs[0]?.count ?? 0,
+    },
+    entitlements: {
+      eventVendorsWithPack,
+      eventVendorsWithoutPack,
+      stripeEventOperatorPriceConfigured: !!priceIdForEventOperatorAddon(),
+      eventOperatorAddonEurCents: EVENT_OPERATOR_ADDON_EUR_CENTS,
+    },
+  };
+}
 
 /** Operator dashboard — extends observability with live counters and log backend status. */
 export async function getMonitoringOverview(): Promise<MonitoringOverview> {
@@ -448,7 +592,7 @@ export async function getDataFlowStatus(): Promise<{ flows: DataFlowNode[]; refr
     return { count: rows[0]?.count ?? 0, last: rows[0]?.last ?? null };
   };
 
-  const [payments, messages, ai, bookings] = await Promise.all([
+  const [payments, messages, ai, bookings, quoteDeposits, consultQuotes] = await Promise.all([
     countTypes(["PAYMENT_SUCCEEDED", "PAYMENT_FAILED", "PAYMENT_INTENT_CREATED"]),
     countTypes(["MESSAGE_RECEIVED", "MESSAGE_SENT", "NOTIFICATION_SENT", "NOTIFICATION_FAILED"]),
     countTypes(["AI_OBSERVATION_CREATED"]),
@@ -459,6 +603,23 @@ export async function getDataFlowStatus(): Promise<{ flows: DataFlowNode[]; refr
       })
       .from(bookingsTable)
       .where(gte(bookingsTable.createdAt, dayAgo)),
+    countTypes(["PAYMENT_SUCCEEDED"]).then(async (base) => {
+      const rows = await db
+        .select({ count: sql<number>`count(*)::int`, last: sql<string>`max(${eventsTable.createdAt})::text` })
+        .from(eventsTable)
+        .where(
+          and(
+            gte(eventsTable.createdAt, dayAgo),
+            eq(eventsTable.type, "PAYMENT_SUCCEEDED"),
+            sql`${eventsTable.context}::text ilike '%guestQuoteDeposit%'`,
+          ),
+        );
+      return { count: rows[0]?.count ?? 0, last: rows[0]?.last ?? base.last };
+    }),
+    db
+      .select({ count: sql<number>`count(*)::int`, last: sql<string>`max(${quotesTable.updatedAt})::text` })
+      .from(quotesTable)
+      .where(and(gte(quotesTable.updatedAt, dayAgo), eq(quotesTable.status, "booked"))),
   ]);
 
   const stripeStatus: DataFlowNode["status"] = obs.integrations.stripe
@@ -530,6 +691,22 @@ export async function getDataFlowStatus(): Promise<{ flows: DataFlowNode[]; refr
       detail: obs.integrations.inngest ? "Workflow runner enabled" : "Inngest disabled",
       lastActivityAt: null,
       count24h: obs.v3?.stuckContinuity ?? 0,
+    },
+    {
+      id: "guest-quote-deposit",
+      label: "Event quote deposits",
+      status: quoteDeposits.count > 0 ? "healthy" : obs.integrations.stripe ? "unknown" : "degraded",
+      detail: `${quoteDeposits.count} guest quote deposit events (24h) — event-vendors only`,
+      lastActivityAt: quoteDeposits.last,
+      count24h: quoteDeposits.count,
+    },
+    {
+      id: "consult-first-quotes",
+      label: "Consult-first quotes",
+      status: consultQuotes[0]?.count ? "healthy" : "unknown",
+      detail: `${consultQuotes[0]?.count ?? 0} quotes marked booked (24h)`,
+      lastActivityAt: consultQuotes[0]?.last ?? null,
+      count24h: consultQuotes[0]?.count ?? 0,
     },
     {
       id: "loki",

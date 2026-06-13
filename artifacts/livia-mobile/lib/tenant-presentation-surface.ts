@@ -1,6 +1,7 @@
 import type { PresentationLayoutMorph } from "@workspace/policy";
 import {
   isBeautyPresentationPreset,
+  isEventVendorPresentationPreset,
   isWellnessPresentationPreset,
   resolvePresentationLayoutMorphSafe,
 } from "@/lib/presentation-layout";
@@ -18,6 +19,7 @@ export type TenantPresentationSurface = {
   colorOverrides: PresentationColorOverrides;
   isBeautyNative: boolean;
   isWellnessNative: boolean;
+  isEventVendorNative: boolean;
   isConstellation: boolean;
   colorMode: "light" | "dark";
 };
@@ -48,8 +50,13 @@ export function resolveTenantPresentationSurface(args: {
   const isBeautyNative = vertical === "beauty" && isBeautyPresentationPreset(effectiveCssPreset);
   const isWellnessNative =
     vertical === "wellness" && isWellnessPresentationPreset(effectiveCssPreset);
+  const isEventVendorNative =
+    vertical === "event-vendors" && isEventVendorPresentationPreset(effectiveCssPreset);
   const isConstellation =
-    effectiveCssPreset === "platform-default" && !isBeautyNative && !isWellnessNative;
+    effectiveCssPreset === "platform-default" &&
+    !isBeautyNative &&
+    !isWellnessNative &&
+    !isEventVendorNative;
 
   return {
     vertical,
@@ -59,6 +66,7 @@ export function resolveTenantPresentationSurface(args: {
     colorOverrides,
     isBeautyNative,
     isWellnessNative,
+    isEventVendorNative,
     isConstellation,
     colorMode,
   };

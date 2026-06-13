@@ -8,7 +8,9 @@ import {
   type InternalTenantDetail,
   type InternalTenantListItem,
 } from "../lib/api";
-import { buttonStyle, inputStyle } from "../styles/ops-ui";
+import { INTERNAL_PAGES } from "../lib/internal-page-meta";
+import { InternalPage } from "../components/InternalPage";
+import { buttonStyle, inputStyle, listRowStyle, panelStyle } from "../styles/ops-ui";
 
 function formatWhen(iso: string | null): string {
   if (!iso) return "—";
@@ -81,8 +83,21 @@ export function TenantsPage() {
   }, [routeTenantId, loadDetail]);
 
   return (
-    <div>
-      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+    <InternalPage
+      wide
+      title={INTERNAL_PAGES.tenants.title}
+      subtitle={INTERNAL_PAGES.tenants.purpose}
+    >
+      <div
+        style={{
+          ...panelStyle,
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 8,
+          alignItems: "center",
+          padding: "10px 12px",
+        }}
+      >
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -100,32 +115,28 @@ export function TenantsPage() {
       </div>
 
       {error ? (
-        <p style={{ color: "#f87171", marginBottom: 12 }} role="alert">
+        <p style={{ color: "#f87171", margin: 0 }} role="alert">
           {error}
         </p>
       ) : null}
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, alignItems: "start" }}>
-        <section>
-          <h2 style={{ fontSize: 14, color: "#94a3b8", margin: "0 0 8px" }}>
-            {loading ? "Loading…" : `${total} tenant${total === 1 ? "" : "s"}`}
-          </h2>
-          <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "minmax(280px, 360px) minmax(0, 1fr)",
+          gap: 16,
+          alignItems: "start",
+          minHeight: "calc(100vh - 260px)",
+        }}
+      >
+        <section style={{ minWidth: 0 }}>
+          <ul style={{ listStyle: "none", margin: 0, padding: 0, maxHeight: "calc(100vh - 280px)", overflow: "auto" }}>
             {rows.map((r) => (
               <li key={r.id} style={{ marginBottom: 6 }}>
                 <button
                   type="button"
                   onClick={() => navigate(`/tenants/${encodeURIComponent(r.id)}`)}
-                  style={{
-                    width: "100%",
-                    textAlign: "left",
-                    padding: "10px 12px",
-                    borderRadius: 8,
-                    border: selectedId === r.id ? "1px solid #f59e0b" : "1px solid #334155",
-                    background: selectedId === r.id ? "#1e293b" : "#0f172a",
-                    color: "#e2e8f0",
-                    cursor: "pointer",
-                  }}
+                  style={listRowStyle(selectedId === r.id)}
                 >
                   <div style={{ fontWeight: 600 }}>{r.name}</div>
                   <div style={{ fontSize: 12, color: "#94a3b8" }}>
@@ -137,7 +148,7 @@ export function TenantsPage() {
           </ul>
         </section>
 
-        <section>
+        <section style={{ minWidth: 0 }}>
           {detail ? (
             <HealthCard detail={detail} bundle={supportBundle} />
           ) : (
@@ -145,7 +156,7 @@ export function TenantsPage() {
           )}
         </section>
       </div>
-    </div>
+    </InternalPage>
   );
 }
 

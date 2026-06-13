@@ -8,14 +8,10 @@ import {
 import { getDashboardUrl } from "../lib/dashboard-url";
 import { WorkforceAccessPanel } from "../components/WorkforceAccessPanel";
 import { ShipLanePanel } from "../components/ShipLanePanel";
-
-function internalRoute(href: string, base: string): string | null {
-  const b = base.replace(/\/+$/, "");
-  const h = href.replace(/\/+$/, "");
-  if (h === b) return "/";
-  if (h.startsWith(`${b}/`)) return h.slice(b.length);
-  return null;
-}
+import { INTERNAL_PAGES } from "../lib/internal-page-meta";
+import { InternalPage } from "../components/InternalPage";
+import { InternalSubNav } from "../components/InternalSubNav";
+import { CollapsibleSection } from "../components/CollapsibleSection";
 
 export function FounderCockpitView() {
   const [data, setData] = useState<FounderCockpitSnapshot | null>(null);
@@ -41,8 +37,20 @@ export function FounderCockpitView() {
     void load();
   }, [load]);
 
-  if (err && !data) return <p style={{ color: "#f87171" }}>{err}</p>;
-  if (!data) return <p style={{ color: "#94a3b8" }}>Loading command center…</p>;
+  if (err && !data) {
+    return (
+      <InternalPage title={INTERNAL_PAGES.overview.title} subtitle={INTERNAL_PAGES.overview.purpose}>
+        <p style={{ color: "#f87171" }}>{err}</p>
+      </InternalPage>
+    );
+  }
+  if (!data) {
+    return (
+      <InternalPage title={INTERNAL_PAGES.overview.title} subtitle={INTERNAL_PAGES.overview.purpose}>
+        <p style={{ color: "#94a3b8" }}>Loading command center…</p>
+      </InternalPage>
+    );
+  }
 
   const runAutomation = async (id: string, destructive?: boolean) => {
     if (destructive && !window.confirm("This sends real emails to stuck onboarding owners. Continue?")) {
@@ -71,7 +79,6 @@ export function FounderCockpitView() {
   const ph = data.platformHealth;
   const support = data.support;
   const rollouts = data.rollouts;
-  const internalBase = data.commandCenter.internalPortalBase;
 
   const founderGateOk =
     typeof data.gate.founderGate === "object" && data.gate.founderGate !== null
@@ -87,40 +94,34 @@ export function FounderCockpitView() {
   const prodOk = data.production.allRequiredOk;
 
   return (
-    <div style={{ display: "grid", gap: 16, maxWidth: 980 }}>
-      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+    <InternalPage
+      wide
+      title={INTERNAL_PAGES.overview.title}
+      subtitle={INTERNAL_PAGES.overview.purpose}
+      actions={
         <button type="button" style={btn} onClick={() => void load()} disabled={busy}>
           {busy ? "Refreshing…" : "Refresh"}
         </button>
-        <span style={{ fontSize: 12, color: "#64748b" }}>
-          Ops {new Date(obs.timestamp).toLocaleString()} · Prod checks{" "}
-          {new Date(data.production.checkedAt).toLocaleString()}
-        </span>
-      </div>
+      }
+    >
+      <p style={{ fontSize: 12, color: "#64748b", margin: 0 }}>
+        Ops {new Date(obs.timestamp).toLocaleString()} · Prod checks{" "}
+        {new Date(data.production.checkedAt).toLocaleString()}
+      </p>
 
       {err ? <p style={{ color: "#f87171", fontSize: 13, margin: 0 }}>{err}</p> : null}
 
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }} data-testid="exec-cockpit-tabs">
-        {(
-          [
-            ["exceptions", "Exceptions"],
-            ["ship-lane", "Ship lane"],
-            ["hats", "Hats"],
-          ] as const
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            style={{
-              ...btn,
-              borderColor: execTab === id ? "rgba(56, 189, 248, 0.5)" : undefined,
-              color: execTab === id ? "#38bdf8" : undefined,
-            }}
-            onClick={() => setExecTab(id)}
-          >
-            {label}
-          </button>
-        ))}
+      <div data-testid="exec-cockpit-tabs">
+      <InternalSubNav
+        items={[
+          { id: "exceptions", label: "Exceptions" },
+          { id: "ship-lane", label: "Ship lane" },
+          { id: "hats", label: "Hats" },
+        ]}
+        activeId={execTab}
+        onSelect={(id) => setExecTab(id as typeof execTab)}
+        aria-label="Exec cockpit"
+      />
       </div>
 
       {execTab === "exceptions" ? (
@@ -141,11 +142,16 @@ export function FounderCockpitView() {
         </p>
       </section>
 
-      <WorkforceAccessPanel
-        goldspireDomain={data.workforceAccess.goldspireDomain}
-        grants={data.workforceAccess.grants}
-        onChanged={() => void load()}
-      />
+      <CollapsibleSection
+        title="Goldspire workforce access"
+        summary="Grant @goldspireventures.com inboxes — domain alone grants nothing."
+      >
+        <WorkforceAccessPanel
+          goldspireDomain={data.workforceAccess.goldspireDomain}
+          grants={data.workforceAccess.grants}
+          onChanged={() => void load()}
+        />
+      </CollapsibleSection>
 
       <section style={card}>
         <h2 style={h2}>Automations</h2>
@@ -191,60 +197,6 @@ export function FounderCockpitView() {
       </section>
 
       <section style={card}>
-        <h2 style={h2}>Surfaces & links</h2>
-        <p style={{ margin: "0 0 12px", fontSize: 12, color: "#94a3b8", lineHeight: 1.5 }}>
-          Customer apps and internal modules. Prefer in-app links; external consoles last.
-        </p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
-          {[
-            { to: "/support", label: "Support" },
-            { to: "/tenants", label: "Tenants" },
-            { to: "/monitoring", label: "Monitoring" },
-            { to: "/flags", label: "Flags" },
-            { to: "/knowledge", label: "Atlas" },
-          ].map((item) => (
-            <Link key={item.to} to={item.to} style={chipLink}>
-              {item.label}
-            </Link>
-          ))}
-        </div>
-        <div style={{ display: "grid", gap: 8 }}>
-          {data.commandCenter.links.map((link) => {
-            const route = link.kind === "internal" ? internalRoute(link.href, internalBase) : null;
-            const content = (
-              <>
-                <span style={{ color: "#e2e8f0", fontSize: 13 }}>{link.label}</span>
-                {link.description ? (
-                  <span style={{ display: "block", fontSize: 11, color: "#64748b", marginTop: 2 }}>
-                    {link.description}
-                  </span>
-                ) : null}
-              </>
-            );
-            if (route) {
-              return (
-                <Link key={link.id} to={route} style={linkRow}>
-                  {content}
-                </Link>
-              );
-            }
-            return (
-              <a
-                key={link.id}
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={linkRow}
-              >
-                {content}
-                <span style={{ fontSize: 11, color: "#38bdf8" }}>↗</span>
-              </a>
-            );
-          })}
-        </div>
-      </section>
-
-      <section style={card}>
         <h2 style={h2}>Today at a glance</h2>
         <Grid
           rows={[
@@ -278,9 +230,22 @@ export function FounderCockpitView() {
             </ul>
           </div>
         ) : null}
+        <p style={{ margin: "12px 0 0", fontSize: 12 }}>
+          <Link to="/monitoring" style={{ color: "#38bdf8" }}>
+            Full monitoring →
+          </Link>
+          {" · "}
+          <Link to="/flags" style={{ color: "#38bdf8" }}>
+            Feature flags →
+          </Link>
+        </p>
       </section>
 
-      <section style={card}>
+      <CollapsibleSection
+        title="Platform detail"
+        summary="Rollouts, local gates, staging prep, and demo coverage."
+      >
+      <section style={{ ...card, padding: 0, border: "none", background: "transparent" }}>
         <h2 style={h2}>Rollouts & flags</h2>
         <Grid
           rows={[
@@ -403,6 +368,7 @@ export function FounderCockpitView() {
           Monday business OKRs: <code>docs/company/NORTH-STAR-DASHBOARD.md</code>
         </p>
       </section>
+      </CollapsibleSection>
         </>
       ) : null}
 
@@ -497,7 +463,7 @@ export function FounderCockpitView() {
           </div>
         </section>
       ) : null}
-    </div>
+    </InternalPage>
   );
 }
 
@@ -511,35 +477,16 @@ const card: React.CSSProperties = {
 const h2: React.CSSProperties = { margin: 0, marginBottom: 10, fontSize: 14, color: "#e2e8f0" };
 
 const btn: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  width: "fit-content",
   padding: "8px 10px",
   borderRadius: 10,
   border: "1px solid rgba(148, 163, 184, 0.25)",
   background: "#0f172a",
   color: "#e2e8f0",
   cursor: "pointer",
-};
-
-const chipLink: React.CSSProperties = {
-  display: "inline-block",
-  padding: "6px 12px",
-  borderRadius: 999,
-  border: "1px solid rgba(56, 189, 248, 0.35)",
-  background: "rgba(56, 189, 248, 0.08)",
-  color: "#7dd3fc",
-  fontSize: 12,
-  textDecoration: "none",
-};
-
-const linkRow: React.CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: 12,
-  padding: "10px 12px",
-  borderRadius: 10,
-  border: "1px solid rgba(148, 163, 184, 0.15)",
-  background: "rgba(15, 23, 42, 0.5)",
-  textDecoration: "none",
 };
 
 function Grid({ rows }: { rows: Array<[string, string]> }) {

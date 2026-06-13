@@ -13,6 +13,9 @@ import {
   CHECKOUT_PLAN_IDS,
   SELF_SERVE_PLAN_IDS,
   entitlementKeySchema,
+  lookupAddon,
+  hasEffectiveEntitlement,
+  EVENT_OPERATOR_PACK_GRANTS,
   type EntitlementKey,
   type ProductPlan,
 } from "@workspace/entitlements";
@@ -60,11 +63,20 @@ function effectiveEntitlements(
   plan: ProductPlan,
   denylist: Set<string>,
   grants: Set<string>,
+  opts?: { designPartnerActive?: boolean; vertical?: string | null },
 ): EntitlementKey[] {
   const keys = new Set<EntitlementKey>([...plan.entitlements]);
   for (const g of grants) {
     if (entitlementKeySchema.safeParse(g).success) {
       keys.add(g as EntitlementKey);
+    }
+  }
+  if (
+    opts?.designPartnerActive &&
+    (opts.vertical ?? "").toLowerCase() === "event-vendors"
+  ) {
+    for (const k of EVENT_OPERATOR_PACK_GRANTS) {
+      keys.add(k);
     }
   }
   return [...keys].filter((k) => !denylist.has(k));
@@ -90,7 +102,12 @@ export async function resolveBillingState(businessId: string): Promise<BillingSt
 
   const denylist = parseDenylist(biz.entitlementDenylist);
   const grants = parseGrants(biz.entitlementGrants);
-  const entitlements = effectiveEntitlements(plan, denylist, grants);
+  const designPartnerActive =
+    !!biz.designPartnerEndsAt && new Date(biz.designPartnerEndsAt) > new Date();
+  const entitlements = effectiveEntitlements(plan, denylist, grants, {
+    designPartnerActive,
+    vertical: biz.vertical,
+  });
 
   const periodStart = biz.billingPeriodStart ?? startOfMonth(new Date());
   const usageRows = await db
@@ -121,9 +138,6 @@ export async function resolveBillingState(businessId: string): Promise<BillingSt
 
   const voiceShare = await computeVoiceOutcomeShareCents(businessId, plan, periodStart);
 
-  const designPartnerActive =
-    !!biz.designPartnerEndsAt && new Date(biz.designPartnerEndsAt) > new Date();
-
   return {
     businessId,
     planId: plan.id,
@@ -149,15 +163,8 @@ export async function tenantHasEntitlementForBusiness(
   businessId: string,
   key: EntitlementKey,
 ): Promise<boolean> {
-  const biz = await getBusinessById(businessId);
-  if (!biz) return false;
-  const planId = effectivePlanId(biz);
-  const plan = lookupPlan(planId);
-  if (!plan) return false;
-  const denylist = parseDenylist(biz.entitlementDenylist);
-  const grants = parseGrants(biz.entitlementGrants);
-  if (grants.has(key) && !denylist.has(key)) return true;
-  return tenantHasEntitlement(plan, key, denylist);
+  const state = await resolveBillingState(businessId);
+  return hasEffectiveEntitlement(state.entitlements, key);
 }
 
 export async function grantEntitlementAddon(
@@ -169,6 +176,27 @@ export async function grantEntitlementAddon(
   const grants = parseGrants(biz.entitlementGrants);
   if (grants.has(key)) return;
   grants.add(key);
+  await db
+    .update(businessesTable)
+    .set({ entitlementGrants: [...grants], updatedAt: new Date() })
+    .where(eq(businessesTable.id, businessId));
+}
+
+/** Grant all entitlements for a purchasable add-on bundle. */
+export async function grantAddonBundle(businessId: string, addonId: string): Promise<void> {
+  const addon = lookupAddon(addonId);
+  if (!addon) throw new Error("UNKNOWN_ADDON");
+  const biz = await getBusinessById(businessId);
+  if (!biz) throw new Error("BUSINESS_NOT_FOUND");
+  const grants = parseGrants(biz.entitlementGrants);
+  let changed = false;
+  for (const key of addon.grants) {
+    if (!grants.has(key)) {
+      grants.add(key);
+      changed = true;
+    }
+  }
+  if (!changed) return;
   await db
     .update(businessesTable)
     .set({ entitlementGrants: [...grants], updatedAt: new Date() })

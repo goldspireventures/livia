@@ -11,8 +11,12 @@ export type BeautyCssPreset = (typeof BEAUTY_CSS_PRESETS)[number];
 export const WELLNESS_CSS_PRESETS = ["harbour-light", "session-rail", "evening-ledger"] as const;
 export type WellnessCssPreset = (typeof WELLNESS_CSS_PRESETS)[number];
 
+export const EVENT_VENDOR_CSS_PRESETS = ["event-atelier", "wedding-ledger", "party-pop"] as const;
+export type EventVendorCssPreset = (typeof EVENT_VENDOR_CSS_PRESETS)[number];
+
 const BEAUTY_PRESETS = new Set<string>(BEAUTY_CSS_PRESETS);
 const WELLNESS_PRESETS = new Set<string>(WELLNESS_CSS_PRESETS);
+const EVENT_VENDOR_PRESETS = new Set<string>(EVENT_VENDOR_CSS_PRESETS);
 
 /** Read active presentation preset from document (W4/W5). */
 export function readCssPresentation(): string | null {
@@ -44,6 +48,15 @@ export function isWellnessVertical(vertical?: string | null): boolean {
   return vertical === "wellness";
 }
 
+export function isEventVendorPresentationPreset(preset?: string | null): boolean {
+  const p = preset ?? readCssPresentation();
+  return p != null && EVENT_VENDOR_PRESETS.has(p);
+}
+
+export function isEventVendorVertical(vertical?: string | null): boolean {
+  return vertical === "event-vendors";
+}
+
 export function useBeautyChrome(vertical?: string | null): boolean {
   return isBeautyVertical(vertical) && isBeautyPresentationPreset();
 }
@@ -60,6 +73,7 @@ export function wellnessEffectiveCssPreset(cssPreset?: string | null): string | 
 
 export const WELLNESS_NATIVE_MORPHS = ["atrium", "timeline-rail", "ledger"] as const;
 export const BEAUTY_NATIVE_MORPHS = ["split-inbox", "atrium", "menu-card", "cockpit"] as const;
+export const EVENT_VENDOR_NATIVE_MORPHS = ["atrium", "pipeline", "menu-card"] as const;
 
 export function readLayoutMorph(): PresentationLayoutMorph | null {
   if (typeof document === "undefined") return null;
@@ -95,6 +109,21 @@ export function beautyNativeMorphForVertical(
 ): PresentationLayoutMorph | null {
   if (!isBeautyVertical(vertical) || !isBeautyNativeMorph(morph)) return null;
   return morph;
+}
+
+/** Event-vendor presets with distinct consult-first shells. */
+export function eventVendorNativeMorphForVertical(
+  vertical?: string | null,
+  morph?: string | null,
+): PresentationLayoutMorph | null {
+  if (!isEventVendorVertical(vertical) || !isEventVendorNativeMorph(morph)) return null;
+  return morph;
+}
+
+export function isEventVendorNativeMorph(
+  morph?: string | null,
+): morph is (typeof EVENT_VENDOR_NATIVE_MORPHS)[number] {
+  return morph != null && (EVENT_VENDOR_NATIVE_MORPHS as readonly string[]).includes(morph);
 }
 
 export function wellnessPanel(wellnessChrome: boolean): string {
@@ -175,6 +204,9 @@ const VERTICAL_PRESET_SWATCH: Record<string, { a: string; b: string }> = {
   "bay-industrial": { a: "45 93% 47%", b: "220 10% 9%" },
   "showroom-light": { a: "221 83% 53%", b: "220 15% 97%" },
   "compact-mobile": { a: "215 25% 35%", b: "210 18% 96%" },
+  "event-atelier": { a: "32 95% 44%", b: "36 33% 96%" },
+  "wedding-ledger": { a: "30 25% 42%", b: "40 28% 97%" },
+  "party-pop": { a: "330 81% 60%", b: "330 40% 98%" },
 };
 
 export function presetCardSwatch(
@@ -189,6 +221,9 @@ export function presetCardSwatch(
   }
   if (vertical === "wellness" && (WELLNESS_CSS_PRESETS as readonly string[]).includes(cssPreset)) {
     return WELLNESS_PRESET_SWATCH[cssPreset as WellnessCssPreset];
+  }
+  if (vertical === "event-vendors" && (EVENT_VENDOR_CSS_PRESETS as readonly string[]).includes(cssPreset)) {
+    return VERTICAL_PRESET_SWATCH[cssPreset];
   }
   return VERTICAL_PRESET_SWATCH[cssPreset];
 }

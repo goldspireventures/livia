@@ -7,6 +7,7 @@
 @import "./styles/gateway-g1.css";
 @import "./styles/gateway-handoff.css";
 @import "./styles/platform-default-constellation.css";
+@import "./styles/event-vendor-presentation.css";
 @plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));

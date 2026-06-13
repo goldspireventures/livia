@@ -1,5 +1,8 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { buttonStyle, inputStyle } from "../styles/ops-ui";
+import { buttonStyle, cardStyle, inputStyle, listNavItemStyle } from "../styles/ops-ui";
+import { Link } from "react-router-dom";
+import { INTERNAL_PAGES } from "../lib/internal-page-meta";
+import { InternalPage } from "../components/InternalPage";
 
 type FlagRow = {
   id: string;
@@ -76,13 +79,17 @@ export function FeatureFlagsView() {
   }, [bizQ]);
 
   return (
-    <div>
-      <h2 style={{ fontSize: 18, marginBottom: 8 }}>Feature flags</h2>
-      <p style={{ color: "#94a3b8", fontSize: 13, marginBottom: 16 }}>
-        Tenant and global toggles — known keys: {knownKeys.join(", ")}
-      </p>
-      {error ? <p style={{ color: "#f87171" }}>{error}</p> : null}
-      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+    <InternalPage
+      title={INTERNAL_PAGES.flags.title}
+      subtitle={INTERNAL_PAGES.flags.purpose}
+      actions={
+        <Link to="/platform" style={{ fontSize: 13, color: "#94a3b8", textDecoration: "none" }}>
+          ← Platform
+        </Link>
+      }
+    >
+      {error ? <p style={{ color: "#f87171", margin: 0 }}>{error}</p> : null}
+      <div style={{ ...cardStyle, display: "flex", gap: 8, flexWrap: "wrap", padding: "10px 12px" }}>
         <input
           value={bizQ}
           onChange={(e) => setBizQ(e.target.value)}
@@ -93,13 +100,18 @@ export function FeatureFlagsView() {
           All tenants
         </button>
       </div>
+      {knownKeys.length > 0 ? (
+        <p style={{ color: "#64748b", fontSize: 12, margin: 0 }}>
+          Known keys: {knownKeys.join(", ")}
+        </p>
+      ) : null}
       {bizHits.length > 0 ? (
         <ul style={{ margin: "0 0 12px", padding: 0, listStyle: "none" }}>
           {bizHits.map((b) => (
             <li key={b.id}>
               <button
                 type="button"
-                style={{ ...buttonStyle, width: "100%", textAlign: "left", marginBottom: 4 }}
+                style={listNavItemStyle(false)}
                 onClick={() => {
                   setSelectedBiz(b.id);
                   setBizQ(b.name);
@@ -134,6 +146,6 @@ export function FeatureFlagsView() {
           ))}
         </tbody>
       </table>
-    </div>
+    </InternalPage>
   );
 }

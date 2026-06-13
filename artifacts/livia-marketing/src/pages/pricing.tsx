@@ -8,10 +8,11 @@ import {
   ADD_ONS,
   CORE_PLANS,
   EXPANSION_PLANS,
-  REVENUE_STREAMS,
   planMarketingCard,
+  formatEur,
 } from "@/lib/pricing-catalog";
 import { Check } from "lucide-react";
+import { EVENT_OPERATOR_ADDON_EUR_CENTS } from "@workspace/entitlements";
 
 const PLAN_FEATURES: Record<string, string[]> = {
   solo: [
@@ -122,22 +123,26 @@ export default function PricingPage() {
       </section>
 
       <section className="cst-page-section px-4 sm:px-6 max-w-3xl mx-auto">
-        <p className="cst-section-label">Transparent</p>
-        <h2 className="cst-page-section__title">How Livia earns</h2>
-        <ul className="space-y-5">
-          {REVENUE_STREAMS.map((r) => (
-            <li key={r.id} className="cst-glass-card p-5 border-l-2 border-l-[#d9c39a]/30">
-              <h3 className="font-medium text-foreground">{r.title}</h3>
-              <p className="text-sm text-muted-foreground mt-2">{r.body}</p>
-            </li>
-          ))}
-        </ul>
+        <p className="cst-section-label">Event operators</p>
+        <h2 className="cst-page-section__title">Event Operator add-on</h2>
+        <ConstellationGlassCard className="p-6">
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Balloon artists, florists, and decor studios run enquiry → quote → milestone deposit.
+            Add <strong className="text-foreground">Event Operator</strong> ({formatEur(EVENT_OPERATOR_ADDON_EUR_CENTS)}/mo)
+            on Solo or Studio for consult-first inbox, quotes, milestone deposits, and your public site.
+            Appointment-led businesses stay on base tiers only.
+          </p>
+        </ConstellationGlassCard>
       </section>
 
       <section className="cst-page-section px-4 sm:px-6 max-w-4xl mx-auto">
+        <p className="cst-section-label">Optional</p>
         <h2 className="cst-page-section__title">Add-ons</h2>
+        <p className="text-sm text-muted-foreground mb-4 max-w-2xl">
+          Optional packs on top of your plan — shown at checkout when you need them, not hidden later.
+        </p>
         <div className="grid sm:grid-cols-2 gap-4">
-          {ADD_ONS.map((a) => (
+          {ADD_ONS.filter((a) => a.name !== "Event Operator").map((a) => (
             <ConstellationGlassCard key={a.name} className="p-4 text-sm">
               <div className="flex justify-between gap-2">
                 <span className="font-medium">{a.name}</span>

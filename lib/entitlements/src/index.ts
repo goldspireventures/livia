@@ -44,6 +44,12 @@ export const entitlementKeySchema = z.enum([
   "vertical_pack_allied_health",
   "vertical_pack_pet_grooming",
   "vertical_pack_automotive_detailing",
+  "vertical_pack_event_vendors",
+  "event_operator_pack",
+  "consult_first_inbox",
+  "quote_generator",
+  "milestone_deposits",
+  "event_prep_lifecycle",
   "class_booking",
   "tattoo_design_proof",
   "package_credits",
@@ -272,6 +278,11 @@ export const CHECKOUT_PLAN_IDS = [
 
 /** Peer insights add-on — €49/mo per pricing-and-packaging.md */
 export const PEER_INSIGHTS_ADDON_EUR_CENTS = 4900;
+
+/** Event Operator pack — consult-first + quotes + milestone deposits. */
+export const EVENT_OPERATOR_ADDON_EUR_CENTS = 4900;
+
+export * from "./addons";
 
 /** F9 role-based seat rates (v1.5 target). Stripe v1 uses flat seatEurCentsPerMonth from catalogue. */
 export const SEAT_ROLE_RATES_EUR_CENTS = {

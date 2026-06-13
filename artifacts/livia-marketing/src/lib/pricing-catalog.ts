@@ -2,7 +2,7 @@
  * Single source for livia.io pricing copy — mirrors @workspace/entitlements PLAN_CATALOGUE
  * and docs/business/pricing-and-packaging.md (F9 hybrid).
  */
-import { PEER_INSIGHTS_ADDON_EUR_CENTS, PLAN_CATALOGUE, voiceOutcomeCapLabel } from "@workspace/entitlements";
+import { PEER_INSIGHTS_ADDON_EUR_CENTS, PLAN_CATALOGUE, voiceOutcomeCapLabel, EVENT_OPERATOR_ADDON_EUR_CENTS, ADDON_CATALOGUE } from "@workspace/entitlements";
 
 export function formatEur(cents: number): string {
   return `€${Math.round(cents / 100)}`;
@@ -93,7 +93,7 @@ export const REVENUE_STREAMS = [
   {
     id: "addons",
     title: "Add-ons",
-    body: `Peer insights (${formatEur(PEER_INSIGHTS_ADDON_EUR_CENTS)}/mo), Nordic locale pack, vertical packs, enterprise SSO & audit export — available on Growth and Chain plans.`,
+    body: `Peer insights (${formatEur(PEER_INSIGHTS_ADDON_EUR_CENTS)}/mo), Event Operator (${formatEur(EVENT_OPERATOR_ADDON_EUR_CENTS)}/mo), Nordic locale pack, vertical packs, enterprise SSO & audit export.`,
   },
   {
     id: "migration",
@@ -108,6 +108,11 @@ export const REVENUE_STREAMS = [
 ] as const;
 
 export const ADD_ONS = [
+  {
+    name: "Event Operator",
+    price: formatEur(EVENT_OPERATOR_ADDON_EUR_CENTS),
+    desc: ADDON_CATALOGUE.event_operator_pack.description,
+  },
   {
     name: "Peer insights",
     price: formatEur(PEER_INSIGHTS_ADDON_EUR_CENTS),
