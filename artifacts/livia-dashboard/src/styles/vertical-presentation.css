@@ -257,3 +257,17 @@ html[data-presentation="minimal-mono"] .public-proof-shell header h1 {
   text-transform: uppercase;
   font-size: 0.75rem;
 }
+
+/* Appearance settings — iframe-only preview (no shell flash) */
+.appearance-settings-panel .appearance-preview-iframe {
+  opacity: 1;
+  transition: opacity 220ms ease;
+}
+
+.appearance-settings-panel .preview-iframe-scroll-host[data-loading="true"] .appearance-preview-iframe {
+  opacity: 0.35;
+}
+
+.appearance-settings-panel .body-art-preset-swatch {
+  box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.06);
+}

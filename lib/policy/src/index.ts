@@ -25,6 +25,7 @@ export * from "./onboarding-program";
 export * from "./tenant-experience";
 export * from "./presentation-presets";
 export * from "./presentation-surface";
+export * from "./preset-picker-meta";
 export * from "./wellness-operator-shell";
 export * from "./beauty-operator-shell";
 export * from "./beauty-service-templates";

@@ -395,7 +395,12 @@ export default function SettingsPage() {
           </TabsContent>
 
           {visibleTabs.includes("appearance") && (
-            <TabsContent value="appearance" className="space-y-4 mt-0">
+            <TabsContent
+              value="appearance"
+              forceMount
+              hidden={settingsTab !== "appearance"}
+              className="space-y-4 mt-0 data-[state=inactive]:hidden"
+            >
               {!shopEditable && (
                 <p className="text-sm text-muted-foreground rounded-lg border border-border p-3">
                   View-only — ask the owner to change store appearance.

@@ -51,6 +51,12 @@ run("Preset surface coverage", [
   "../../lib/policy/src/__tests__/preset-surface-coverage.test.ts",
 ]);
 
+run("Preset picker meta", [
+  "--import",
+  "tsx/esm",
+  "../../lib/policy/src/__tests__/preset-picker-meta.test.ts",
+]);
+
 run("Vertical doc propagation", [
   "--import",
   "tsx/esm",
