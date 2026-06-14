@@ -13,7 +13,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { customFetch } from "@workspace/api-client-react";
 import { useBillingState } from "@/hooks/use-billing-state";
-import { hasEffectiveEntitlement, ADDON_CATALOGUE, formatAddonPriceEur, type EntitlementKey } from "@workspace/entitlements";
+import { hasEffectiveEntitlement, ADDON_CATALOGUE, formatAddonPriceEur, lookupAddon, type EntitlementKey } from "@workspace/entitlements";
+import { commerceAddonsForVertical } from "@workspace/policy";
 import { Sparkles } from "lucide-react";
 
 type BillingState = {
@@ -50,8 +51,17 @@ export default function BillingControls() {
     const params = new URLSearchParams(window.location.search);
     const addon = params.get("addon");
     const status = params.get("addon_status");
-    if (addon === "event_operator_pack" && status === "success") {
-      toast({ title: "Event Operator unlocked", description: "Consult-first inbox and quotes are live." });
+    if (status === "success" && addon) {
+      const def = lookupAddon(addon);
+      toast({
+        title: `${def?.name ?? "Add-on"} unlocked`,
+        description:
+          addon === "event_operator_pack"
+            ? "Consult-first inbox and quotes are live."
+            : addon === "retail_pack"
+              ? "Take-home retail is live on your book page."
+              : "Your add-on is active.",
+      });
       params.delete("addon");
       params.delete("addon_status");
       const next = `${window.location.pathname}?${params.toString()}`.replace(/\?$/, "");
@@ -103,7 +113,14 @@ export default function BillingControls() {
     billing.entitlements as EntitlementKey[],
     "event_operator_pack",
   );
-  const eventAddon = ADDON_CATALOGUE.event_operator_pack;
+  const hasRetailPack = hasEffectiveEntitlement(
+    billing.entitlements as EntitlementKey[],
+    "retail_pack",
+  );
+  const vertical = (business as { vertical?: string } | null)?.vertical;
+  const applicableAddons = commerceAddonsForVertical(vertical).filter(
+    (e) => e.id === "event_operator_pack" || e.id === "retail_pack",
+  );
   const bookingsDone = billing.usage.booking_completed ?? 0;
   const smsSent = billing.usage.sms_message_outbound ?? 0;
   const waSent = billing.usage.whatsapp_message_outbound ?? 0;
@@ -283,27 +300,48 @@ export default function BillingControls() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="rounded-lg border px-3 py-3 flex flex-col sm:flex-row sm:items-center gap-3">
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm">{eventAddon.name}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{eventAddon.description}</p>
-            </div>
-            {hasEventOperator ? (
-              <Badge variant="secondary">Active</Badge>
-            ) : (
-              <Button
-                type="button"
-                size="sm"
-                disabled={!!checkoutLoading}
-                onClick={() => void startAddonCheckout("event_operator_pack")}
-                data-testid="billing-addon-event-operator"
-              >
-                {checkoutLoading === "event_operator_pack"
-                  ? "…"
-                  : `Unlock · ${formatAddonPriceEur(eventAddon.eurCentsPerMonth)}/mo`}
-              </Button>
-            )}
-          </div>
+          {applicableAddons.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No vertical add-ons for this business type — base plan includes your core ops.
+            </p>
+          ) : (
+            applicableAddons.map((entry) => {
+              const catalogue = ADDON_CATALOGUE[entry.id];
+              if (!catalogue) return null;
+              const active =
+                entry.id === "event_operator_pack"
+                  ? hasEventOperator
+                  : entry.id === "retail_pack"
+                    ? hasRetailPack
+                    : billing.entitlements.includes(entry.primaryEntitlement);
+              return (
+                <div
+                  key={entry.id}
+                  className="rounded-lg border px-3 py-3 flex flex-col sm:flex-row sm:items-center gap-3"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm">{catalogue.name}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{catalogue.description}</p>
+                  </div>
+                  {active ? (
+                    <Badge variant="secondary">Active</Badge>
+                  ) : (
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={!!checkoutLoading}
+                      onClick={() => void startAddonCheckout(entry.id)}
+                      data-testid={`billing-addon-${entry.id}`}
+                    >
+                      {checkoutLoading === entry.id
+                        ? "…"
+                        : `Unlock · ${formatAddonPriceEur(catalogue.eurCentsPerMonth)}/mo`}
+                    </Button>
+                  )}
+                </div>
+              );
+            })
+          )}
         </CardContent>
       </Card>
 

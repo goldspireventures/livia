@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import {
   buildEventPrepPlan,
   depositDueReminderCopy,
+  formatEventTypeLabel,
   quoteOperatorFlowSteps,
   quotePaymentReference,
   resolveDueLifecycleActions,
@@ -83,5 +84,9 @@ const paidSteps = quoteOperatorFlowSteps({
 assert.equal(paidSteps.find((s) => s.id === "booked")?.state, "current");
 
 assert.equal(quotePaymentReference("abc123xyz"), "ABC123XY");
+
+assert.equal(formatEventTypeLabel("birthday"), "Birthday");
+assert.equal(formatEventTypeLabel("corporate_away_day"), "Corporate away day");
+assert.equal(formatEventTypeLabel(null), "Event");
 
 console.log("event-vendor-lifecycle.test.ts: ok");

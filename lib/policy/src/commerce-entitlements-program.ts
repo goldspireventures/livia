@@ -3,12 +3,21 @@
  * Hub for policy-driven pricing surfaces (dashboard, mobile, marketing).
  * Prices mirror @workspace/entitlements ADDON_CATALOGUE — keep in sync.
  */
+import {
+  EVENT_OPERATOR_ADDON_EUR_CENTS,
+  RETAIL_PACK_ADDON_EUR_CENTS,
+} from "@workspace/entitlements";
+import type { CommerceAddonId } from "./commerce-addon-program";
 
 /** Event Operator pack — locked €49/mo (2026-06). */
-export const EVENT_OPERATOR_PACK_EUR_CENTS = 4900;
+export const EVENT_OPERATOR_PACK_EUR_CENTS = EVENT_OPERATOR_ADDON_EUR_CENTS;
+
+/** Take-Home Retail — locked €29/mo (2026-06). */
+export const RETAIL_PACK_EUR_CENTS = RETAIL_PACK_ADDON_EUR_CENTS;
 
 export type EntitlementFeatureKey =
   | "event_operator_pack"
+  | "retail_pack"
   | "consult_first_inbox"
   | "quote_generator"
   | "milestone_deposits"
@@ -20,13 +29,15 @@ export type CommerceFeatureId =
   | "quote_generator"
   | "milestone_deposits"
   | "event_prep_lifecycle"
-  | "event_public_site";
+  | "event_public_site"
+  | "take_home_retail";
 
 /** API wedge feature keys → entitlement required (beyond vertical scope). */
 export const API_FEATURE_ENTITLEMENTS: Record<string, EntitlementFeatureKey> = {
   enquiries: "consult_first_inbox",
   quotes: "quote_generator",
   "event-vendor": "consult_first_inbox",
+  retail: "retail_pack",
 };
 
 export function apiFeatureEntitlementKey(featureKey: string): EntitlementFeatureKey | null {
@@ -37,17 +48,22 @@ export function formatEventOperatorPackPrice(): string {
   return `€${Math.round(EVENT_OPERATOR_PACK_EUR_CENTS / 100)}`;
 }
 
+export function formatRetailPackPrice(): string {
+  return `€${Math.round(RETAIL_PACK_EUR_CENTS / 100)}`;
+}
+
 export type FeatureUnlockCopy = {
   featureId: CommerceFeatureId;
   title: string;
   description: string;
-  addonId: "event_operator_pack";
+  addonId: CommerceAddonId;
   priceLabel: string;
   bullets: string[];
   successReturnPath: string;
 };
 
 const eventPackPrice = formatEventOperatorPackPrice();
+const retailPackPrice = formatRetailPackPrice();
 
 export const FEATURE_UNLOCK_COPY: Record<CommerceFeatureId, FeatureUnlockCopy> = {
   consult_first_inbox: {
@@ -115,6 +131,20 @@ export const FEATURE_UNLOCK_COPY: Record<CommerceFeatureId, FeatureUnlockCopy> =
     ],
     successReturnPath: "/event-site",
   },
+  take_home_retail: {
+    featureId: "take_home_retail",
+    title: "Unlock Take-Home Retail",
+    description:
+      "Mini store on your book page, guest cart checkout, post-session pay links, and your product catalogue.",
+    addonId: "retail_pack",
+    priceLabel: `${retailPackPrice}/mo`,
+    bullets: [
+      "Curated product catalogue (up to 12 SKUs)",
+      "Guest bag on your public book page",
+      "Liv pay links after appointments",
+    ],
+    successReturnPath: "/store",
+  },
 };
 
 export function featureUnlockCopy(featureId: CommerceFeatureId): FeatureUnlockCopy {
@@ -127,9 +157,14 @@ export function commerceFeatureForPath(pathname: string): CommerceFeatureId | nu
   if (path === "/inbox" || path.startsWith("/enquiries")) return "consult_first_inbox";
   if (path === "/quotes" || path.startsWith("/quotes/")) return "quote_generator";
   if (path === "/event-site" || path.startsWith("/event-site/")) return "event_public_site";
+  if (path === "/store" || path.startsWith("/store/")) return "take_home_retail";
   return null;
 }
 
 export function eventOperatorPackMarketingBlurb(): string {
   return `Event Operator — ${eventPackPrice}/mo add-on on Solo or Studio. Includes consult-first inbox, quotes, milestone deposits, and event prep.`;
+}
+
+export function retailPackMarketingBlurb(): string {
+  return `Take-Home Retail — ${retailPackPrice}/mo add-on on Solo or Studio. Guest cart on /b, owner catalogue, and post-session attach.`;
 }

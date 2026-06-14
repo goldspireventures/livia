@@ -1,7 +1,7 @@
 /**
  * Guest retail bag — pure cart logic shared by web /b and mobile public book.
  */
-import { BEAUTY_RETAIL_PROGRAM, normalizeRetailCartItems } from "./beauty-retail";
+import { TENANT_RETAIL_PROGRAM, normalizeRetailCartItems } from "./tenant-retail-program";
 
 export type GuestRetailCartProduct = {
   id: string;
@@ -30,8 +30,8 @@ export type GuestRetailCart = {
 };
 
 export const GUEST_RETAIL_CART_LIMITS = {
-  maxLines: BEAUTY_RETAIL_PROGRAM.maxCartLines,
-  maxQtyPerLine: BEAUTY_RETAIL_PROGRAM.maxQtyPerLine,
+  maxLines: TENANT_RETAIL_PROGRAM.maxCartLines,
+  maxQtyPerLine: TENANT_RETAIL_PROGRAM.maxQtyPerLine,
 } as const;
 
 export function guestRetailCartLineCount(cart: GuestRetailCart | null): number {
@@ -113,9 +113,8 @@ export function guestRetailCartApiItems(
   );
 }
 
-/** Verticals that expose take-home retail on guest /b. */
-export const PUBLIC_RETAIL_VERTICALS = ["beauty", "wellness"] as const;
-
-export function isPublicRetailVertical(vertical: string | null | undefined): boolean {
-  return (PUBLIC_RETAIL_VERTICALS as readonly string[]).includes(vertical ?? "");
-}
+export {
+  PUBLIC_RETAIL_VERTICALS,
+  isPublicRetailVertical,
+  verticalSupportsRetail,
+} from "./tenant-retail-program";

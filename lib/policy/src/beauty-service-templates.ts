@@ -99,7 +99,7 @@ export const BEAUTY_SERVICE_TEMPLATES: BeautyServiceTemplate[] = [
 /** Studio setup checklist steps for onboarding hub. */
 export const BEAUTY_STUDIO_SETUP_STEPS = [
   { id: "menu", label: "Build your menu", href: "/services", minServices: 3 },
-  { id: "store", label: "Set up mini store", href: "/beauty-store" },
+  { id: "store", label: "Set up mini store", href: "/store" },
   { id: "patch", label: "Patch-test policy", href: "/studio-setup#patch-test" },
   { id: "appearance", label: "Brand your book page", href: "/settings?tab=appearance" },
   { id: "liv", label: "Connect Liv channels", href: "/settings?tab=liv" },

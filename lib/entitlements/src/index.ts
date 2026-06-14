@@ -46,6 +46,7 @@ export const entitlementKeySchema = z.enum([
   "vertical_pack_automotive_detailing",
   "vertical_pack_event_vendors",
   "event_operator_pack",
+  "retail_pack",
   "consult_first_inbox",
   "quote_generator",
   "milestone_deposits",
@@ -281,6 +282,9 @@ export const PEER_INSIGHTS_ADDON_EUR_CENTS = 4900;
 
 /** Event Operator pack — consult-first + quotes + milestone deposits. */
 export const EVENT_OPERATOR_ADDON_EUR_CENTS = 4900;
+
+/** Take-Home Retail — guest cart + owner catalogue across appointment verticals. */
+export const RETAIL_PACK_ADDON_EUR_CENTS = 2900;
 
 export * from "./addons";
 

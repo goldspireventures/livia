@@ -11,15 +11,16 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, majorFromMinor, minorFromMajor } from "@/lib/format";
 import {
-  BEAUTY_RETAIL_CATEGORIES,
-  BEAUTY_RETAIL_PROGRAM,
-  BEAUTY_RETAIL_TEMPLATES,
-  buildBeautyPostSessionInboxDraft,
-  defaultBeautyRetailStoreSettings,
+  TENANT_RETAIL_PROGRAM,
+  buildTenantPostSessionInboxDraft,
+  defaultTenantRetailStoreSettings,
   formatRetailInventoryLabel,
-  isBeautyRetailVisibleOnPublicBook,
-  type BeautyRetailStoreSettings,
+  isTenantRetailVisibleOnPublicBook,
+  resolveTenantRetailPack,
+  verticalSupportsRetail,
+  type TenantRetailStoreSettings,
 } from "@workspace/policy";
+import { FeatureUnlockGate } from "@/components/billing/feature-unlock-panel";
 import { useOperationalChrome } from "@/lib/operational-chrome";
 import {
   beautyPrimaryButton,
@@ -44,13 +45,16 @@ function apiErrorMessage(err: unknown, fallback: string): string {
   return fallback;
 }
 
-export default function BeautyStorePage() {
+export default function TenantStorePage() {
   const { business } = useBusiness();
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const bid = business?.id ?? "";
-  const op = useOperationalChrome((business as { vertical?: string } | null)?.vertical);
-  const [settings, setSettings] = useState<BeautyRetailStoreSettings | null>(null);
+  const vertical = (business as { vertical?: string; subverticalProfileId?: string | null } | null)?.vertical;
+  const subverticalProfileId = (business as { subverticalProfileId?: string | null } | null)?.subverticalProfileId;
+  const retailPack = resolveTenantRetailPack(vertical, subverticalProfileId);
+  const op = useOperationalChrome(vertical);
+  const [settings, setSettings] = useState<TenantRetailStoreSettings | null>(null);
   const [products, setProducts] = useState<RetailProductRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -61,7 +65,7 @@ export default function BeautyStorePage() {
     description: "",
     priceMajor: "",
     sku: "",
-    category: "Aftercare",
+    category: retailPack?.categories[0] ?? "Other",
     imageUrl: null as string | null,
     stockQuantity: "",
   });
@@ -74,11 +78,11 @@ export default function BeautyStorePage() {
 
   const templateDraft = useMemo(
     () =>
-      buildBeautyPostSessionInboxDraft({
+      buildTenantPostSessionInboxDraft(vertical, {
         guestFirstName: "Alex",
         productName: featuredProduct?.name,
       }),
-    [featuredProduct?.name],
+    [featuredProduct?.name, vertical],
   );
 
   const load = useCallback(async () => {
@@ -89,7 +93,7 @@ export default function BeautyStorePage() {
     setLoading(true);
     setLoadError(null);
     try {
-      const bundle = await apiFetch<{ settings: BeautyRetailStoreSettings; products: RetailProductRow[] }>(
+      const bundle = await apiFetch<{ settings: TenantRetailStoreSettings; products: RetailProductRow[] }>(
         `/api/businesses/${bid}/retail/store`,
       );
       setSettings(bundle.settings);
@@ -111,11 +115,11 @@ export default function BeautyStorePage() {
     setInboxDraftBody(templateDraft.body);
   }, [templateDraft.body]);
 
-  async function patchSettings(patch: Partial<BeautyRetailStoreSettings>) {
+  async function patchSettings(patch: Partial<TenantRetailStoreSettings>) {
     if (!bid || !settings) return;
     setBusy(true);
     try {
-      const next = await apiFetch<BeautyRetailStoreSettings>(`/api/businesses/${bid}/retail/settings`, {
+      const next = await apiFetch<TenantRetailStoreSettings>(`/api/businesses/${bid}/retail/settings`, {
         method: "PATCH",
         body: JSON.stringify(patch),
       });
@@ -254,16 +258,27 @@ export default function BeautyStorePage() {
     }
   }
 
-  const settingsReady = settings ?? defaultBeautyRetailStoreSettings();
+  const settingsReady = settings ?? defaultTenantRetailStoreSettings(vertical);
   const activeProductCount = products.filter((p) => p.isActive !== false).length;
-  const visibleOnPublicBook = isBeautyRetailVisibleOnPublicBook(settingsReady, activeProductCount);
+  const visibleOnPublicBook = isTenantRetailVisibleOnPublicBook(settingsReady, activeProductCount);
+  const categories = retailPack?.categories ?? ["Other"];
+  const templates = retailPack?.templates ?? [];
+
+  if (!verticalSupportsRetail(vertical)) {
+    return (
+      <OperationalPageShell title="Shop" subtitle="Retail is not available for this business type." width="lg">
+        <p className="text-sm text-muted-foreground">Switch to a retail-enabled tenant or contact support.</p>
+      </OperationalPageShell>
+    );
+  }
 
   return (
-    <OperationalPageShell
-      title={BEAUTY_RETAIL_PROGRAM.title}
-      subtitle={BEAUTY_RETAIL_PROGRAM.subtitle}
+    <FeatureUnlockGate featureId="take_home_retail">
+      <OperationalPageShell
+      title={retailPack?.ownerTitle ?? "Shop"}
+      subtitle={retailPack?.ownerSubtitle ?? ""}
       width="lg"
-      data-testid="beauty-store-page"
+      data-testid="tenant-store-page"
     >
       <Card className={cn(op.beauty && "beauty-operational-panel")}>
         <CardHeader>
@@ -354,7 +369,7 @@ export default function BeautyStorePage() {
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Products</CardTitle>
           <CardDescription>
-            Up to {BEAUTY_RETAIL_PROGRAM.maxActiveProducts} items — {BEAUTY_RETAIL_PROGRAM.inventoryHint}
+            Up to {TENANT_RETAIL_PROGRAM.maxActiveProducts} items — {TENANT_RETAIL_PROGRAM.inventoryHint}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -365,11 +380,11 @@ export default function BeautyStorePage() {
               <div className="flex flex-wrap gap-2">
                 <Button type="button" size="sm" variant="outline" disabled={busy || loading} onClick={() => void seedTemplates()}>
                   <Sparkles className="h-3.5 w-3.5 mr-1" aria-hidden />
-                  Load aftercare templates
+                  {retailPack?.templateSeedLabel ?? "Load templates"}
                 </Button>
               </div>
               <div className="flex flex-wrap gap-2 pb-1">
-                {BEAUTY_RETAIL_TEMPLATES.map((t) => (
+                {templates.map((t) => (
                   <Button
                     key={t.name}
                     type="button"
@@ -444,7 +459,7 @@ export default function BeautyStorePage() {
                     value={draft.category}
                     onChange={(e) => setDraft({ ...draft, category: e.target.value })}
                   >
-                    {BEAUTY_RETAIL_CATEGORIES.map((c) => (
+                    {categories.map((c) => (
                       <option key={c} value={c}>
                         {c}
                       </option>
@@ -466,7 +481,7 @@ export default function BeautyStorePage() {
                   </Button>
                 </div>
               </div>
-              <ul className="divide-y text-sm" data-testid="beauty-store-product-list">
+              <ul className="divide-y text-sm" data-testid="tenant-store-product-list">
                 {products.map((p) => (
                   <li key={p.id} className="flex justify-between gap-3 py-2.5 first:pt-0">
                     <div className="flex gap-3 min-w-0">
@@ -508,6 +523,7 @@ export default function BeautyStorePage() {
                 product={editingProduct}
                 businessId={bid}
                 currency={business?.currency ?? "EUR"}
+                categories={categories}
                 busy={busy}
                 onOpenChange={(open) => {
                   if (!open) setEditingProduct(null);
@@ -561,5 +577,6 @@ export default function BeautyStorePage() {
         </CardContent>
       </Card>
     </OperationalPageShell>
+    </FeatureUnlockGate>
   );
 }

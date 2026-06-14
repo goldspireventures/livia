@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearch } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { useBusiness } from "@/lib/business-context";
 import { useToast } from "@/hooks/use-toast";
@@ -31,6 +32,7 @@ import {
   type EnquiryDeclineReasonId,
   consultEnquiryStatusLabel,
   consultQuotesHref,
+  formatEventTypeLabel,
   resolveConsultLeadDecision,
   unifiedConsultInboxSubtitle,
   unifiedConsultInboxTitle,
@@ -113,8 +115,10 @@ export default function EventVendorUnifiedInboxPage() {
   );
   const threads = (convos ?? []) as unknown as ThreadRow[];
 
+  const search = useSearch();
+
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(search);
     const leadId = params.get("lead") ?? params.get("id");
     const conversationId = params.get("conversation") ?? params.get("conversationId");
     const lensParam = params.get("lens");
@@ -133,7 +137,7 @@ export default function EventVendorUnifiedInboxPage() {
         setSelectedThreadId(null);
       }
     }
-  }, [bid, rows]);
+  }, [bid, rows, search]);
 
   const unified = useMemo(() => {
     const leadItems: LeadListItem[] = rows.map((enquiry) => ({
@@ -485,7 +489,7 @@ export default function EventVendorUnifiedInboxPage() {
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {item.enquiry.eventType ?? "Event"} · {item.enquiry.eventDate ?? "Date TBC"} ·{" "}
+                  {formatEventTypeLabel(item.enquiry.eventType)} · {item.enquiry.eventDate ?? "Date TBC"} ·{" "}
                   {item.enquiry.guestCount ?? "?"} guests
                 </p>
               </button>
@@ -549,7 +553,7 @@ export default function EventVendorUnifiedInboxPage() {
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {selected.eventType ?? "Event"}
+                  {formatEventTypeLabel(selected.eventType)}
                   {selected.eventDate ? ` · ${selected.eventDate}` : ""}
                   {selected.eventDateFlexible ? " · flexible date" : ""}
                   {selected.guestCount ? ` · ${selected.guestCount} guests` : ""}
@@ -600,7 +604,7 @@ export default function EventVendorUnifiedInboxPage() {
                     <div className="space-y-0.5">
                       <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Event</dt>
                       <dd>
-                        {selected.eventType ?? "—"}
+                        {selected.eventType ? formatEventTypeLabel(selected.eventType) : "—"}
                         {selected.eventDate ? ` · ${selected.eventDate}` : ""}
                         {selected.eventDateFlexible ? " (flexible)" : ""}
                         {selected.guestCount ? ` · ${selected.guestCount} guests` : ""}

@@ -25,6 +25,8 @@ import {
   getVerticalOnboardingExtras,
   getVerticalPlaybook,
   verticalStarterPackIncludesRetail,
+  onboardingCommerceBlocksForVertical,
+  retailStarterPackFootnote,
   listSubverticalProfiles,
   defaultSubverticalProfile,
   getSubverticalProfile,
@@ -559,12 +561,31 @@ export function OnboardingCreateBusinessStep({
                     .join(" · ")}…`
                 : `Add your own ${packUi.serviceNoun.toLowerCase()}s on the next step.`}
             </p>
-            {starterPack && verticalStarterPackIncludesRetail(watchVertical) && starterOffer.extraLine ? (
-              <p className="text-xs text-muted-foreground">{starterOffer.extraLine}</p>
+            {starterPack && verticalStarterPackIncludesRetail(watchVertical) ? (
+              <p className="text-xs text-muted-foreground">
+                {retailStarterPackFootnote(watchVertical) ?? starterOffer.extraLine}
+              </p>
             ) : null}
             <p className="text-xs italic text-muted-foreground/90 line-clamp-2">
               Liv: {preview.aiGreeting}
             </p>
+          </div>
+        ) : null}
+        {onboardingCommerceBlocksForVertical(watchVertical).length > 0 ? (
+          <div className="rounded-lg border border-border/80 bg-muted/30 p-4 space-y-3" data-testid="onboarding-commerce-blocks">
+            <p className="text-sm font-medium">Included in base · optional add-ons</p>
+            <p className="text-xs text-muted-foreground">
+              Core booking, team, and guest book are in your plan. These depth packs unlock after setup:
+            </p>
+            <ul className="space-y-2">
+              {onboardingCommerceBlocksForVertical(watchVertical).map((block) => (
+                <li key={block.addonId} className="text-xs rounded-md border border-border/60 bg-background px-3 py-2">
+                  <span className="font-medium text-foreground">{block.label}</span>
+                  <span className="text-muted-foreground"> · {block.priceLabel}</span>
+                  <p className="text-muted-foreground mt-0.5">{block.description}</p>
+                </li>
+              ))}
+            </ul>
           </div>
         ) : null}
         <label className="flex items-start gap-3 cursor-pointer rounded-lg border border-border p-3">

@@ -19,6 +19,7 @@ const FEATURE_ENTITLEMENT: Record<CommerceFeatureId, EntitlementKey> = {
   milestone_deposits: "milestone_deposits",
   event_prep_lifecycle: "event_prep_lifecycle",
   event_public_site: "consult_first_inbox",
+  take_home_retail: "retail_pack",
 };
 
 export function useMobileFeatureEntitled(featureId: CommerceFeatureId): boolean {

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import { useBusiness } from "@/lib/business-context";
 import { useToast } from "@/hooks/use-toast";
 import { customFetch } from "@workspace/api-client-react";
@@ -15,6 +15,7 @@ import { QuoteBillToPanel } from "@/components/event-vendor/quote-bill-to-panel"
 import { QuoteLineItemsEditor } from "@/components/event-vendor/quote-line-items-editor";
 import { QuoteSendReviewDialog } from "@/components/event-vendor/quote-send-review-dialog";
 import { QuoteSentNextSteps } from "@/components/event-vendor/quote-sent-next-steps";
+import { QuoteRefCopy } from "@/components/event-vendor/quote-ref-copy";
 import { QuoteBriefPanel } from "@/components/event-vendor/quote-workflow-panels";
 import { EventPrepTimelinePanel, type PrepView } from "@/components/event-vendor/event-prep-timeline-panel";
 import {
@@ -41,7 +42,7 @@ import {
   type EventDaySheet,
 } from "@/lib/event-vendor-studio";
 import { Plus, Send, Trash2 } from "lucide-react";
-import { STALE_QUOTE_DAYS, studioQuoteListLabel, studioQuoteDetailTitle, resolveQuoteExitActions, CLIENT_WITHDRAW_REASONS, type QuoteBriefHint, type ClientWithdrawReasonId } from "@workspace/policy";
+import { STALE_QUOTE_DAYS, studioQuoteListLabel, formatEventTypeLabel, resolveQuoteExitActions, CLIENT_WITHDRAW_REASONS, type QuoteBriefHint, type ClientWithdrawReasonId } from "@workspace/policy";
 import { FeatureUnlockGate } from "@/components/billing/feature-unlock-panel";
 
 type Milestone = { label: string; percent: number; amountMinor: number; dueDate?: string };
@@ -153,8 +154,8 @@ export default function QuotesPage() {
   const [withdrewOpen, setWithdrewOpen] = useState(false);
   const [withdrewReason, setWithdrewReason] = useState<ClientWithdrawReasonId>("unknown");
 
-  const params = new URLSearchParams(window.location.search);
-  const highlightId = params.get("id");
+  const search = useSearch();
+  const highlightId = useMemo(() => new URLSearchParams(search).get("id"), [search]);
 
   async function load() {
     if (!bid) return;
@@ -183,6 +184,12 @@ export default function QuotesPage() {
     const timer = window.setInterval(() => void load(), 10_000);
     return () => window.clearInterval(timer);
   }, [bid]);
+
+  useEffect(() => {
+    if (!highlightId || rows.length === 0) return;
+    const match = rows.find((q) => q.id === highlightId);
+    if (match) setSelected(match);
+  }, [highlightId, rows]);
 
   useEffect(() => {
     if (!bid || !selected) {
@@ -638,7 +645,7 @@ export default function QuotesPage() {
                 <div className="flex items-start gap-1 min-w-0">
                   <div className="min-w-0">
                     <div className="flex items-center gap-1">
-                      <h2 className="font-semibold">{studioQuoteDetailTitle(selected.publicToken)}</h2>
+                      <QuoteRefCopy publicToken={selected.publicToken} />
                       {selected.status !== "draft" ? (
                         <QuoteSentNextSteps
                           status={selected.status}
@@ -649,7 +656,7 @@ export default function QuotesPage() {
                       ) : null}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {sheet?.eventType ?? selected.enquiry?.eventType ?? "Event"}
+                      {formatEventTypeLabel(sheet?.eventType ?? selected.enquiry?.eventType)}
                       {sheet?.eventDate ? ` · ${sheet.eventDate}` : ""}
                       {sheet?.guestCount ? ` · ${sheet.guestCount} guests` : ""}
                     </p>

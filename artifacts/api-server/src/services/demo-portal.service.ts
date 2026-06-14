@@ -21,6 +21,7 @@ import {
   ONBOARDING_ACT_IDS,
   onboardingChecklistSchema,
   listDemoPartnerTracks,
+  resolveDemoShowcaseBusinessSpec,
   type DemoPartnerLoginKind,
 } from "@workspace/policy";
 import { DEMO_ROLE_EMAILS } from "@workspace/demo-logins";
@@ -650,6 +651,8 @@ export async function provisionDemoWorld(opts?: {
   }
 
   const repair = !!opts?.repair;
+  const auroraSpec = resolveDemoShowcaseBusinessSpec("aurora-studio");
+  const conorsSpec = resolveDemoShowcaseBusinessSpec("conors-cut-co");
   const auroraStudio = await ensureDemoBusiness(orgAdminId, {
     name: "Aurora Studio",
     slug: "aurora-studio",
@@ -660,7 +663,8 @@ export async function provisionDemoWorld(opts?: {
     timezone: "Europe/Dublin",
     city: "Dublin",
     country: "IE",
-    tier: "studio",
+    tier: auroraSpec?.tier ?? "studio",
+    subverticalProfileId: auroraSpec?.subverticalProfileId,
   }, repair);
   const auroraMews = await ensureDemoBusiness(orgAdminId, {
     name: "Aurora Mews",
@@ -671,7 +675,8 @@ export async function provisionDemoWorld(opts?: {
     timezone: "Europe/Dublin",
     city: "Dublin",
     country: "IE",
-    tier: "studio",
+    tier: resolveDemoShowcaseBusinessSpec("aurora-mews")?.tier ?? "studio",
+    subverticalProfileId: resolveDemoShowcaseBusinessSpec("aurora-mews")?.subverticalProfileId,
     parentBusinessId: auroraStudio.id,
     structureKind: "location",
   }, repair);
@@ -684,7 +689,8 @@ export async function provisionDemoWorld(opts?: {
     timezone: "Europe/Dublin",
     city: "Galway",
     country: "IE",
-    tier: "studio",
+    tier: resolveDemoShowcaseBusinessSpec("aurora-galway")?.tier ?? "studio",
+    subverticalProfileId: resolveDemoShowcaseBusinessSpec("aurora-galway")?.subverticalProfileId,
     parentBusinessId: auroraStudio.id,
     structureKind: "location",
   }, repair);
@@ -697,7 +703,8 @@ export async function provisionDemoWorld(opts?: {
     timezone: "Europe/Dublin",
     city: "Cork",
     country: "IE",
-    tier: "solo",
+    tier: conorsSpec?.tier ?? "solo",
+    subverticalProfileId: conorsSpec?.subverticalProfileId,
   }, repair);
 
   const studioSeed = await seedShopCore(
@@ -835,6 +842,10 @@ export async function provisionDemoWorld(opts?: {
   await seedDemoHierarchyLinks();
   await seedDemoBusinessRosters();
   const realWorld = await seedRealWorldScenarios(orgAdminId);
+
+  const { syncAllDemoShowcaseMetaAndRetail } = await import("./demo-showcase-sync.service");
+  const showcaseSync = await syncAllDemoShowcaseMetaAndRetail();
+  logger.info(showcaseSync, "demo.showcase_meta_retail.synced");
 
   for (const shop of [
     { id: auroraStudio.id, core: studioSeed },
@@ -1071,6 +1082,9 @@ export async function syncDemoWorld(): Promise<{
     await seedOperatorLivWorld();
     const { ensureCrossChannelDemoThreadsForAurora } = await import("./demo-channels.seed");
     await ensureCrossChannelDemoThreadsForAurora();
+    const { syncAllDemoShowcaseMetaAndRetail } = await import("./demo-showcase-sync.service");
+    const showcaseSync = await syncAllDemoShowcaseMetaAndRetail();
+    logger.info(showcaseSync, "demo.showcase_meta_retail.synced");
   } catch (err) {
     logger.warn({ err }, "demo.guest_hub.sync_failed");
   }

@@ -22,6 +22,9 @@ export const EVENT_OPERATOR_PACK_GRANTS = [
   "vertical_pack_event_vendors",
 ] as const satisfies readonly EntitlementKey[];
 
+/** Take-home retail — guest cart on /b, owner catalogue, post-session attach. */
+export const RETAIL_PACK_GRANTS = ["retail_pack"] as const satisfies readonly EntitlementKey[];
+
 export const ADDON_CATALOGUE: Record<string, AddonDefinition> = {
   event_operator_pack: {
     id: "event_operator_pack",
@@ -39,6 +42,15 @@ export const ADDON_CATALOGUE: Record<string, AddonDefinition> = {
     eurCentsPerMonth: 4900,
     stripePriceEnv: "STRIPE_PRICE_PEER_INSIGHTS",
     grants: ["peer_set_insights"],
+  },
+  retail_pack: {
+    id: "retail_pack",
+    name: "Take-Home Retail",
+    description:
+      "Mini store on your book page, guest cart checkout, post-session pay links, and product catalogue.",
+    eurCentsPerMonth: 2900,
+    stripePriceEnv: "STRIPE_PRICE_RETAIL_PACK",
+    grants: RETAIL_PACK_GRANTS,
   },
 } as const;
 
@@ -59,6 +71,10 @@ export const EVENT_PACK_IMPLIED_ENTITLEMENTS: ReadonlySet<EntitlementKey> = new 
   EVENT_OPERATOR_PACK_GRANTS.filter((k) => k !== "event_operator_pack"),
 );
 
+export const RETAIL_PACK_IMPLIED_ENTITLEMENTS: ReadonlySet<EntitlementKey> = new Set(
+  RETAIL_PACK_GRANTS.filter((k) => k !== "retail_pack"),
+);
+
 export function hasEffectiveEntitlement(
   entitlements: ReadonlySet<EntitlementKey> | readonly EntitlementKey[],
   key: EntitlementKey,
@@ -66,5 +82,6 @@ export function hasEffectiveEntitlement(
   const set = entitlements instanceof Set ? entitlements : new Set(entitlements);
   if (set.has(key)) return true;
   if (EVENT_PACK_IMPLIED_ENTITLEMENTS.has(key) && set.has("event_operator_pack")) return true;
+  if (key === "retail_pack" && set.has("retail_pack")) return true;
   return false;
 }

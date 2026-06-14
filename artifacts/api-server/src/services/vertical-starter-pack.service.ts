@@ -10,7 +10,7 @@ import {
 import { createService, listServices } from "./services.service";
 import { createStaff, setStaffServices } from "./staff.service";
 import { getBusinessById, updateBusiness } from "./businesses.service";
-import { seedBeautyRetailTemplates } from "./beauty-retail.service";
+import { seedRetailTemplatesForBusiness } from "./beauty-retail.service";
 
 /** Opt-in onboarding seed — full vertical starter menu (+ beauty retail). */
 export async function seedVerticalStarterPack(businessId: string) {
@@ -65,7 +65,7 @@ export async function seedVerticalStarterPack(businessId: string) {
 
   let retailSeeded = 0;
   if (verticalStarterPackIncludesRetail(vertical)) {
-    const retail = await seedBeautyRetailTemplates(businessId);
+    const retail = await seedRetailTemplatesForBusiness(businessId);
     retailSeeded = retail.seeded;
   }
 

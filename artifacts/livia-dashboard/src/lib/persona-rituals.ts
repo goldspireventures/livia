@@ -32,7 +32,12 @@ import {
   FileText,
   Globe,
 } from "lucide-react";
-import { businessVocabulary, resolveWellnessPersonaHome } from "@workspace/policy";
+import {
+  businessVocabulary,
+  PUBLIC_RETAIL_VERTICALS,
+  resolveWellnessPersonaHome,
+  tenantRetailOwnerRoute,
+} from "@workspace/policy";
 import type { PersonaKind } from "./persona";
 import type { Role } from "./membership-context";
 
@@ -209,11 +214,11 @@ const NAV_POOL: RitualNavItem[] = [
     personas: ["org_admin", "owner", "manager"],
   },
   {
-    ritualName: "Mini store",
-    href: "/beauty-store",
+    ritualName: "Shop",
+    href: tenantRetailOwnerRoute(),
     icon: Sparkles,
     min: "ADMIN",
-    verticals: ["beauty"],
+    verticals: [...PUBLIC_RETAIL_VERTICALS],
     personas: ["org_admin", "owner", "manager"],
   },
   {
@@ -271,10 +276,17 @@ export function personaNavOrder(
       "/beauty-reception",
       "/inbox",
       "/bookings",
-      "/beauty-store",
+      "/store",
       "/services",
       "/settings",
     ];
+  }
+  if (
+    businessVertical &&
+    (PUBLIC_RETAIL_VERTICALS as readonly string[]).includes(businessVertical) &&
+    (persona === "manager" || persona === "owner")
+  ) {
+    return ["/dashboard", "/inbox", "/bookings", "/store", "/services", "/customers", "/settings"];
   }
   if (businessVertical === "event-vendors" && (persona === "owner" || persona === "org_admin")) {
     return [
@@ -330,11 +342,12 @@ const VERTICAL_NAV_LABELS: Record<string, Partial<Record<string, string>>> = {
     "/customers": "Clients",
     "/bookings": "Schedule",
     "/inbox": "Inbox",
-    "/beauty-store": "Mini store",
+    "/store": "Mini store",
   },
   hair: {
     "/services": "Services",
     "/customers": "Clients",
+    "/store": "Shop",
   },
   "allied-health": {
     "/customers": "Patients",

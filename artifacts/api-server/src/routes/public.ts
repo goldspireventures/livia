@@ -184,8 +184,10 @@ async function getPublicBusinessProfile(req: Request, res: Response): Promise<vo
 
   const retailSettings = parseBeautyRetailStoreSettings(biz.retailStore);
   const { isPublicRetailVertical } = await import("@workspace/policy");
+  const { tenantHasEntitlementForBusiness } = await import("../services/billing.service");
+  const retailEntitled = await tenantHasEntitlementForBusiness(biz.id, "retail_pack");
   const retailProducts =
-    isPublicRetailVertical(biz.vertical) && retailSettings.enabled
+    isPublicRetailVertical(biz.vertical) && retailSettings.enabled && retailEntitled
       ? await listActiveRetailProducts(biz.id)
       : [];
 
@@ -252,7 +254,7 @@ async function getPublicBusinessProfile(req: Request, res: Response): Promise<vo
     })(),
     socialProof: socialProofForVertical(biz.vertical),
     retailStore:
-      isPublicRetailVertical(biz.vertical)
+      isPublicRetailVertical(biz.vertical) && retailEntitled
         ? {
             settings: retailSettings,
             products: retailProducts.map((p) => ({
@@ -1228,6 +1230,12 @@ router.post("/public/b/:slug/retail/order", async (req, res): Promise<void> => {
   }
   const settings = parseBeautyRetailStoreSettings(biz.retailStore);
   if (!settings.enabled) {
+    sendError(res, req, 403, "Store is not available");
+    return;
+  }
+  const { tenantHasEntitlementForBusiness } = await import("../services/billing.service");
+  const retailEntitled = await tenantHasEntitlementForBusiness(biz.id, "retail_pack");
+  if (!retailEntitled) {
     sendError(res, req, 403, "Store is not available");
     return;
   }

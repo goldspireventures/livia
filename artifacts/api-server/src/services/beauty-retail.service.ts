@@ -8,16 +8,16 @@ import {
 } from "@workspace/db";
 import { and, asc, eq, or, isNull, gt, inArray } from "drizzle-orm";
 import {
-  BEAUTY_RETAIL_PROGRAM,
-  BEAUTY_RETAIL_TEMPLATES,
+  TENANT_RETAIL_PROGRAM,
   inferPublicServiceImageFromName,
   isRetailProductInStock,
   normalizeRetailCartItems,
-  parseBeautyRetailStoreSettings,
-  WELLNESS_DEMO_RETAIL_SKUS,
-  WELLNESS_RETAIL_PROGRAM,
-  type BeautyRetailStoreSettings,
+  parseTenantRetailStoreSettings,
+  resolveTenantRetailPack,
+  tenantRetailTemplatesForBusiness,
+  verticalSupportsRetail,
   type RetailCartItemInput,
+  type TenantRetailStoreSettings,
 } from "@workspace/policy";
 import { generateId } from "../lib/id";
 import { getBusinessById } from "./businesses.service";
@@ -35,7 +35,7 @@ function payToken(): string {
 export async function getRetailStoreBundle(businessId: string) {
   const biz = await getBusinessById(businessId);
   if (!biz) return null;
-  const settings = parseBeautyRetailStoreSettings(biz.retailStore);
+  const settings = parseTenantRetailStoreSettings(biz.retailStore);
   const products = await db
     .select()
     .from(retailProductsTable)
@@ -56,23 +56,23 @@ export async function listActiveRetailProducts(businessId: string) {
       ),
     )
     .orderBy(asc(retailProductsTable.sortOrder), asc(retailProductsTable.name))
-    .limit(BEAUTY_RETAIL_PROGRAM.publicMaxVisible);
+    .limit(TENANT_RETAIL_PROGRAM.publicMaxVisible);
 }
 
 export async function updateRetailStoreSettings(
   businessId: string,
-  patch: Partial<BeautyRetailStoreSettings>,
+  patch: Partial<TenantRetailStoreSettings>,
 ) {
   const biz = await getBusinessById(businessId);
   if (!biz) return null;
-  const current = parseBeautyRetailStoreSettings(biz.retailStore);
+  const current = parseTenantRetailStoreSettings(biz.retailStore);
   const next = { ...current, ...patch };
   const [row] = await db
     .update(businessesTable)
     .set({ retailStore: next, updatedAt: new Date() })
     .where(eq(businessesTable.id, businessId))
     .returning({ retailStore: businessesTable.retailStore });
-  return parseBeautyRetailStoreSettings(row?.retailStore);
+  return parseTenantRetailStoreSettings(row?.retailStore);
 }
 
 export async function createRetailProduct(
@@ -227,57 +227,58 @@ export async function updateRetailProduct(
   return row ?? null;
 }
 
-export async function seedBeautyRetailTemplates(businessId: string) {
+export async function seedRetailTemplatesForBusiness(
+  businessId: string,
+  opts?: { enableStore?: boolean },
+) {
+  const biz = await getBusinessById(businessId);
+  if (!biz || !verticalSupportsRetail(biz.vertical)) return { seeded: 0 };
+
   const existing = await db
     .select({ id: retailProductsTable.id })
     .from(retailProductsTable)
     .where(eq(retailProductsTable.businessId, businessId))
     .limit(1);
   if (existing.length > 0) return { seeded: 0 };
-  const biz = await getBusinessById(businessId);
-  const currency = biz?.currency ?? "EUR";
-  for (const t of BEAUTY_RETAIL_TEMPLATES) {
+
+  const templates = tenantRetailTemplatesForBusiness(biz.vertical, biz.subverticalProfileId);
+  const pack = resolveTenantRetailPack(biz.vertical, biz.subverticalProfileId);
+  const currency = biz.currency ?? "EUR";
+
+  for (const t of templates) {
     await createRetailProduct(businessId, {
       name: t.name,
       description: t.description ?? undefined,
       priceMinor: t.priceMinor,
-      currency,
+      currency: t.currency ?? currency,
       sku: t.sku ?? undefined,
       imageUrl: t.imageUrl ?? inferPublicServiceImageFromName(t.name),
       sortOrder: t.sortOrder ?? 0,
       category: t.category,
     });
   }
-  await updateRetailStoreSettings(businessId, { enabled: true });
-  return { seeded: BEAUTY_RETAIL_TEMPLATES.length };
+
+  await updateRetailStoreSettings(businessId, {
+    enabled: opts?.enableStore === true,
+    title: pack?.defaultPublicTitle,
+  });
+
+  return { seeded: templates.length };
 }
 
+/** @deprecated use seedRetailTemplatesForBusiness */
+export async function seedBeautyRetailTemplates(businessId: string) {
+  return seedRetailTemplatesForBusiness(businessId);
+}
+
+/** @deprecated use seedRetailTemplatesForBusiness */
 export async function seedWellnessRetailTemplates(businessId: string) {
-  const existing = await db
-    .select({ id: retailProductsTable.id })
-    .from(retailProductsTable)
-    .where(eq(retailProductsTable.businessId, businessId))
-    .limit(1);
-  if (existing.length > 0) return { seeded: 0 };
-  const biz = await getBusinessById(businessId);
-  const currency = biz?.currency ?? "EUR";
-  let sort = 1;
-  for (const sku of WELLNESS_DEMO_RETAIL_SKUS) {
-    await createRetailProduct(businessId, {
-      name: sku.name,
-      description: sku.description,
-      priceMinor: sku.priceMinor,
-      currency: sku.currency ?? currency,
-      sku: sku.sku,
-      sortOrder: sort++,
-      category: "Ritual",
-    });
-  }
-  await updateRetailStoreSettings(businessId, {
-    enabled: true,
-    title: WELLNESS_RETAIL_PROGRAM.defaultPublicTitle,
-  });
-  return { seeded: WELLNESS_DEMO_RETAIL_SKUS.length };
+  return seedRetailTemplatesForBusiness(businessId);
+}
+
+export async function ensureRetailShowcaseDepth(businessId: string) {
+  const result = await seedRetailTemplatesForBusiness(businessId, { enableStore: true });
+  return result.seeded;
 }
 
 export async function createPublicRetailOrder(args: {

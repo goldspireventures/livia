@@ -27,7 +27,7 @@ export const VERTICAL_COVERAGE_REGISTRY: VerticalCoverageEntry[] = [
     codeVertical: "hair",
     nearestPack: "hair",
     demoSlug: "luxe-salon-spa",
-    revenueNote: "Primary wedge; full OS.",
+    revenueNote: "Primary wedge; full OS + guest shop on /b.",
   },
   {
     docId: "V2",

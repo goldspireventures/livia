@@ -1115,6 +1115,9 @@ importers:
 
   lib/policy:
     dependencies:
+      '@workspace/entitlements':
+        specifier: workspace:*
+        version: link:../entitlements
       zod:
         specifier: 'catalog:'
         version: 3.25.76

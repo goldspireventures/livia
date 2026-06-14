@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { BEAUTY_RETAIL_CATEGORIES, BEAUTY_RETAIL_PROGRAM } from "@workspace/policy";
+import { TENANT_RETAIL_PROGRAM } from "@workspace/policy";
 import { majorFromMinor, minorFromMajor } from "@/lib/format";
 import { RetailProductImageField } from "@/components/beauty/retail-product-image-field";
 
@@ -34,6 +34,7 @@ export function BeautyRetailProductEditor({
   product,
   businessId,
   currency,
+  categories = ["Other"],
   busy,
   onOpenChange,
   onSave,
@@ -42,6 +43,7 @@ export function BeautyRetailProductEditor({
   product: RetailProductEditRow | null;
   businessId: string;
   currency: string;
+  categories?: readonly string[];
   busy?: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (patch: {
@@ -58,7 +60,7 @@ export function BeautyRetailProductEditor({
   const [description, setDescription] = useState("");
   const [priceMajor, setPriceMajor] = useState("");
   const [sku, setSku] = useState("");
-  const [category, setCategory] = useState("Aftercare");
+  const [category, setCategory] = useState(categories[0] ?? "Other");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [stockInput, setStockInput] = useState("");
 
@@ -68,7 +70,7 @@ export function BeautyRetailProductEditor({
     setDescription(product.description ?? "");
     setPriceMajor(String(majorFromMinor(product.priceMinor)));
     setSku(product.sku ?? "");
-    setCategory(product.category ?? "Aftercare");
+    setCategory(product.category ?? categories[0] ?? "Other");
     setImageUrl(product.imageUrl ?? null);
     setStockInput(product.stockQuantity != null ? String(product.stockQuantity) : "");
   }, [product]);
@@ -139,7 +141,7 @@ export function BeautyRetailProductEditor({
                 disabled={busy}
                 onChange={(e) => setCategory(e.target.value)}
               >
-                {BEAUTY_RETAIL_CATEGORIES.map((c) => (
+                {categories.map((c) => (
                   <option key={c} value={c}>
                     {c}
                   </option>
@@ -159,7 +161,7 @@ export function BeautyRetailProductEditor({
                 disabled={busy}
                 onChange={(e) => setStockInput(e.target.value)}
               />
-              <p className="text-[11px] text-muted-foreground">{BEAUTY_RETAIL_PROGRAM.inventoryHint}</p>
+              <p className="text-[11px] text-muted-foreground">{TENANT_RETAIL_PROGRAM.inventoryHint}</p>
             </div>
             <div className="space-y-2">
               <Label>Sold (Liv tracked)</Label>

@@ -2,7 +2,7 @@
  * PII-safe display rules — studio lists, notifications, and public surfaces.
  * Client names belong in authenticated detail views, not list rows or alert titles.
  */
-import { quotePaymentReference } from "./event-vendor-lifecycle-program";
+import { formatEventTypeLabel, quotePaymentReference } from "./event-vendor-lifecycle-program";
 
 export function formatStudioQuoteRef(publicToken: string): string {
   return `Quote #${quotePaymentReference(publicToken)}`;
@@ -16,7 +16,7 @@ export function studioQuoteListLabel(args: {
 }): { primary: string; secondary: string } {
   const primary = formatStudioQuoteRef(args.publicToken);
   const parts: string[] = [];
-  if (args.eventType?.trim()) parts.push(args.eventType.trim());
+  if (args.eventType?.trim()) parts.push(formatEventTypeLabel(args.eventType));
   if (args.eventDate?.trim()) parts.push(args.eventDate.trim());
   return {
     primary,

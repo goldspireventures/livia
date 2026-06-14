@@ -28,7 +28,9 @@ import { BookingContextRail } from "@/components/booking/booking-context-rail";
 import { BookingContinuityPanel } from "@/components/booking-continuity-panel";
 import { BookingAftercarePanel } from "@/components/booking/booking-aftercare-panel";
 import { BeautyWalletPassPanel } from "@/components/beauty/beauty-wallet-pass-panel";
-import { BeautyRetailAttachPanel } from "@/components/beauty/beauty-retail-attach-panel";
+import { TenantRetailAttachPanel } from "@/components/retail/tenant-retail-attach-panel";
+import { useFeatureEntitled } from "@/components/billing/feature-unlock-panel";
+import { verticalSupportsRetail } from "@workspace/policy";
 import { BookingSourceBadge } from "@/components/booking/booking-source-badge";
 import { invalidateOperationalState } from "@/lib/operational-cache";
 import { OperationalPageShell } from "@/components/layout/operational-page-shell";
@@ -72,6 +74,7 @@ export default function BookingDetailPage() {
   const businessCategory = (business as { category?: string } | null)?.category;
   const exp = bookingExperienceCopy(businessVertical, businessCategory);
   const op = useOperationalChrome(businessVertical);
+  const hasRetailEntitlement = useFeatureEntitled("take_home_retail");
 
   const bid = business?.id ?? "";
   const bkId = bookingId ?? "";
@@ -99,7 +102,7 @@ export default function BookingDetailPage() {
         settings: { enabled: boolean; postSessionSuggest?: boolean };
         products: Array<{ id: string; name: string; priceMinor: number; currency: string; isActive?: boolean }>;
       }>(`/api/businesses/${bid}/retail/store`),
-    enabled: !!bid && businessVertical === "beauty",
+    enabled: !!bid && verticalSupportsRetail(businessVertical),
   });
 
   const retailProducts = useMemo(
@@ -315,14 +318,17 @@ export default function BookingDetailPage() {
             status={booking.status}
           />
 
-          {businessVertical === "beauty" && booking.status === "COMPLETED" ? (
-            <BeautyRetailAttachPanel
+          {verticalSupportsRetail(businessVertical) && booking.status === "COMPLETED" ? (
+            <TenantRetailAttachPanel
               businessId={bid}
               businessName={business?.name ?? "Studio"}
+              businessVertical={businessVertical}
               guestFirstName={(booking as { customer?: { firstName?: string } }).customer?.firstName}
               products={retailProducts}
               enabled={
-                retailBundle?.settings?.enabled && retailBundle.settings.postSessionSuggest !== false
+                hasRetailEntitlement &&
+                retailBundle?.settings?.enabled &&
+                retailBundle.settings.postSessionSuggest !== false
               }
             />
           ) : null}

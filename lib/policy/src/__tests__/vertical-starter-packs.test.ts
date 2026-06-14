@@ -28,7 +28,9 @@ for (const vertical of businessVerticalSchema.options) {
 }
 
 assert.equal(verticalStarterPackIncludesRetail("beauty"), true);
-assert.equal(verticalStarterPackIncludesRetail("hair"), false);
+assert.equal(verticalStarterPackIncludesRetail("hair"), true);
+assert.equal(verticalStarterPackIncludesRetail("wellness"), true);
+assert.equal(verticalStarterPackIncludesRetail("event-vendors"), false);
 
 const lashMenu = getVerticalStarterPackServicesForProfile("beauty", "beauty.lash");
 assert.ok(lashMenu.every((s) => s.category === "Lashes"), "lash profile filters to Lashes");

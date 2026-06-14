@@ -2,6 +2,7 @@
  * Gate 2 wedge scope — hide non-hair surfaces until CEO lifts moratorium.
  * @see docs/product/SCOPE-MORATORIUM.md · docs/audits/v1-scope-drift-audit.md
  */
+import { PUBLIC_RETAIL_VERTICALS } from "./tenant-retail-program";
 
 export const WEDGE_VERTICALS = new Set(["hair", "beauty"]);
 
@@ -104,6 +105,7 @@ export const API_FEATURE_VERTICALS: Record<string, readonly string[]> = {
   enquiries: ["event-vendors"],
   quotes: ["event-vendors"],
   "event-vendor": ["event-vendors"],
+  retail: [...PUBLIC_RETAIL_VERTICALS],
 };
 
 export function isBusinessApiFeatureAllowed(

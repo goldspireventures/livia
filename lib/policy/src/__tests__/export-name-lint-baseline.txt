@@ -3,9 +3,6 @@ long:analytics-event-bridge.ts:assertAnalyticsEventCatalogComplete
 long:analytics-event-bridge.ts:listUncataloguedAnalyticsTypes
 long:beauty-operator-shell.ts:isBeautyOperatorShellVertical
 long:beauty-retail.ts:buildBeautyPostSessionInboxDraft
-long:beauty-retail.ts:defaultBeautyRetailStoreSettings
-long:beauty-retail.ts:isBeautyRetailVisibleOnPublicBook
-long:beauty-retail.ts:parseBeautyRetailStoreSettings
 long:booking-experience-copy.ts:publicAwaitingContinuityHoldLines
 long:capability-commerce-bridge.ts:resolveCommerceCapabilityBlockers
 long:capability-instances.ts:applyManualCapabilityInstanceState
@@ -24,7 +21,10 @@ long:commerce-briefing.ts:ownerHomeCommerceNeedsAttention
 long:commerce-briefing.ts:resolveCommerceOwnerBriefingCta
 long:commerce-entitlements-program.ts:eventOperatorPackMarketingBlurb
 long:commerce-signals.ts:commerceSignalsNeedOwnerAction
+long:consult-inbox-policy.ts:consultInboxLeadNeedsAttention
+long:consult-inbox-policy.ts:consultInboxThreadNeedsAttention
 long:consult-inbox-policy.ts:isUnifiedConsultInboxVertical
+long:consult-inbox-policy.ts:resolveConsultInboxNavAttention
 long:engagement-exit-program.ts:clientWithdrewNotificationCopy
 long:engagement-exit-program.ts:quoteAcceptedNotificationCopy
 long:event-catalog.ts:getEventCatalogEntryByAnalyticsType
@@ -79,6 +79,11 @@ long:public-service-images.ts:inferPublicServiceImageFromName
 long:structure.ts:defaultStructureKindForCreate
 long:studio-profile-fields.ts:studioProfileFieldsForVertical
 long:subvertical-profiles.ts:resolveOnboardingTierFromSubvertical
+long:tenant-retail-program.ts:buildTenantPostSessionInboxDraft
+long:tenant-retail-program.ts:defaultTenantRetailStoreSettings
+long:tenant-retail-program.ts:isTenantRetailVisibleOnPublicBook
+long:tenant-retail-program.ts:parseTenantRetailStoreSettings
+long:tenant-retail-program.ts:tenantRetailTemplatesForBusiness
 long:tenant-surface-density.ts:designProofsSubmitDefaultOpen
 long:tenant-surface-density.ts:shouldExpandOwnerHomeInsightsDisclosure
 long:tenant-surface-density.ts:shouldShowActivationMilestoneOnHome
@@ -96,6 +101,7 @@ long:vertical-announcement.ts:getVerticalAnnouncementPackage
 long:vertical-starter-packs.ts:getVerticalStarterPackServices
 long:vertical-starter-packs.ts:getVerticalStarterPackServicesForProfile
 long:vertical-starter-packs.ts:verticalStarterPackIncludesRetail
+long:vertical-starter-packs.ts:verticalStarterPackRetailExtraLine
 long:wedge-demo-stories.ts:listWedgeDemoVerticalsForDisplay
 long:wedge-gate.ts:isDashboardRouteAllowedForTenant
 long:wellness-gift.ts:isWellnessGiftPublicBookEnabled
@@ -111,7 +117,6 @@ wide:activation-metrics.ts:computeTimeToFirstBookingMs
 wide:beauty-booking-rules.ts:publicServiceFillHint
 wide:beauty-operator-shell.ts:beautyShellNavItems
 wide:beauty-operator-shell.ts:beautyStudioNav
-wide:beauty-retail.ts:isBeautyRetailVisibleOnPublicBook
 wide:booking-experience-copy.ts:bookingExperienceCopy
 wide:booking-experience-copy.ts:pendingApprovalGuidance
 wide:booking-experience-copy.ts:pendingReasonLabel
@@ -125,6 +130,7 @@ wide:capability-nav.ts:isNavRouteAllowedByCapabilities
 wide:capability-nav.ts:isWellnessNavHrefAllowed
 wide:capability-nav.ts:resolveNavRouteCapabilityId
 wide:channels.ts:guardChannelPackForProduction
+wide:consult-inbox-policy.ts:consultInboxThreadNeedsAttention
 wide:consult-inbox-policy.ts:countConsultInboxLens
 wide:consult-inbox-policy.ts:resolveConsultLeadDecision
 wide:continuity-templates.ts:getContinuityTemplate
@@ -185,6 +191,10 @@ wide:staging-relaxations.ts:resolveStagingRelaxations
 wide:studio-profile-fields.ts:studioProfileFieldsForVertical
 wide:subvertical-profiles.ts:resolveOnboardingTierFromSubvertical
 wide:tenant-experience.ts:resolveTenantExperienceSkin
+wide:tenant-retail-program.ts:buildTenantPostSessionInboxDraft
+wide:tenant-retail-program.ts:isTenantRetailVisibleOnPublicBook
+wide:tenant-retail-program.ts:resolveTenantRetailPack
+wide:tenant-retail-program.ts:tenantRetailTemplatesForBusiness
 wide:tenant-surface-density.ts:resolveOwnerHomeKpiChips
 wide:tenant-surface-density.ts:shouldShowOwnerPendingPanel
 wide:tenant-surface-density.ts:shouldShowRunningLateAffordance

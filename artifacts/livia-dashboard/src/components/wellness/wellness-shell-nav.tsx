@@ -149,7 +149,7 @@ export function WellnessShellNav({
       { id: "reception", href: "/wellness-reception", label: "⌂", title: "Reception" },
       { id: "inbox", href: "/inbox", label: "✉", title: "Inbox" },
       { id: "rooms", href: "/bookings", label: "▣", title: "Rooms" },
-      { id: "retail", href: "/wellness-retail", label: "◇", title: "Retail" },
+      { id: "retail", href: "/store", label: "◇", title: "Retail" },
       { id: "sessions", href: "/services", label: "◆", title: serviceNoun },
       { id: "staff", href: "/staff", label: "👥", title: teamNoun },
       { id: "settings", href: "/settings", label: "⚙", title: "Settings" },

@@ -109,6 +109,11 @@ export const REVENUE_STREAMS = [
 
 export const ADD_ONS = [
   {
+    name: "Take-Home Retail",
+    price: formatEur(ADDON_CATALOGUE.retail_pack.eurCentsPerMonth),
+    desc: ADDON_CATALOGUE.retail_pack.description,
+  },
+  {
     name: "Event Operator",
     price: formatEur(EVENT_OPERATOR_ADDON_EUR_CENTS),
     desc: ADDON_CATALOGUE.event_operator_pack.description,

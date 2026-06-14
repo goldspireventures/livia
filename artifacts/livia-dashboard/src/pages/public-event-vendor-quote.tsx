@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useSearch } from "wouter";
 import { useGuestQuoteRoute } from "@/lib/use-guest-book-slug";
 import { formatCurrency } from "@/lib/format";
-import { resolveQuoteMilestonePayment } from "@workspace/policy";
+import { resolveQuoteMilestonePayment, formatEventTypeLabel } from "@workspace/policy";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, CreditCard, Download, Loader2 } from "lucide-react";
@@ -283,7 +283,7 @@ export default function PublicEventVendorQuotePage() {
         {similarWork && similarWork.length > 0 ? (
           <div className="space-y-3" data-testid="guest-quote-similar-work">
             <h2 className="text-sm font-medium text-center font-serif">
-              Similar work{eventType ? ` — ${eventType}` : ""}
+              Similar work{eventType ? ` — ${formatEventTypeLabel(eventType)}` : ""}
             </h2>
             <div className="grid grid-cols-3 gap-2">
               {similarWork.map((item, i) => {

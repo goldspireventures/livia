@@ -14,12 +14,27 @@ import {
   PLATFORM_DEFAULT_PRESET_ID,
   consultFirstDemoCustomerCap,
   isConsultFirstVertical,
+  resolveDemoShowcaseBusinessSpec,
+  verticalSupportsRetail,
   type BusinessVertical,
 } from "@workspace/policy";
 import { inferDemoServiceImageUrl } from "../lib/experience-skin";
 import { ensureWellnessShowcaseDepth } from "./wellness-demo-depth";
 import { ensureEventVendorsShowcaseDepth } from "./event-vendors-demo-depth";
 import { logger } from "../lib/logger";
+
+async function ensureRetailDemoDepth(businessId: string, slug: string, vertical: BusinessVertical) {
+  if (!verticalSupportsRetail(vertical)) return;
+  try {
+    const { grantAddonBundle } = await import("./billing.service");
+    await grantAddonBundle(businessId, "retail_pack");
+    const { ensureDemoRetailShowcaseDepth } = await import("./demo-showcase-sync.service");
+    await ensureDemoRetailShowcaseDepth(businessId, slug);
+  } catch (err) {
+    logger.error({ err, businessId, slug, vertical }, "[demo] retail showcase depth failed");
+    if (process.env.CI !== "true") throw err;
+  }
+}
 
 async function runEventVendorsShowcaseDepth(businessId: string, slug: string) {
   try {
@@ -522,6 +537,8 @@ export async function seedVerticalShowcaseShops(
       .limit(1);
 
     if (existing) {
+      const { syncDemoBusinessShowcaseMeta } = await import("./demo-showcase-sync.service");
+      await syncDemoBusinessShowcaseMeta(existing.id, d.slug);
       await refreshVerticalShowcaseShop(existing.id, d);
       await ensureVerticalDemoPresentationPreset(existing.id, d.vertical);
       if (d.vertical === "wellness") {
@@ -532,6 +549,7 @@ export async function seedVerticalShowcaseShops(
         const { grantAddonBundle } = await import("./billing.service");
         await grantAddonBundle(existing.id, "event_operator_pack");
       }
+      await ensureRetailDemoDepth(existing.id, d.slug, d.vertical);
       created.push({
         slug: existing.slug,
         id: existing.id,
@@ -541,6 +559,7 @@ export async function seedVerticalShowcaseShops(
       continue;
     }
 
+    const showcaseSpec = resolveDemoShowcaseBusinessSpec(d.slug);
     const biz = await createBusiness(founderUserId, {
       name: d.name,
       slug: d.slug,
@@ -551,7 +570,8 @@ export async function seedVerticalShowcaseShops(
       timezone: d.timezone ?? "Europe/Dublin",
       city: d.city,
       country: d.country ?? "IE",
-      tier: "solo",
+      tier: showcaseSpec?.tier ?? "solo",
+      subverticalProfileId: showcaseSpec?.subverticalProfileId,
     });
 
     const core = await seedShopCore(biz.id, d.staff, d.services, d.vertical);
@@ -595,6 +615,7 @@ export async function seedVerticalShowcaseShops(
       const { grantAddonBundle } = await import("./billing.service");
       await grantAddonBundle(biz.id, "event_operator_pack");
     }
+    await ensureRetailDemoDepth(biz.id, d.slug, d.vertical);
     created.push({ slug: biz.slug, id: biz.id, name: biz.name, vertical: d.vertical });
   }
 

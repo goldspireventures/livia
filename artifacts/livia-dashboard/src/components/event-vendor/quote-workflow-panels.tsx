@@ -4,7 +4,7 @@ import { Link } from "wouter";
 import { AlertCircle, Calendar, MapPin, Sparkles, Users } from "lucide-react";
 import { customFetch } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
-import type { QuoteBriefHint } from "@workspace/policy";
+import { formatEventTypeLabel, type QuoteBriefHint } from "@workspace/policy";
 import type { EventDaySheet } from "@/lib/event-vendor-studio";
 
 type Props = {
@@ -111,7 +111,7 @@ export function StaleQuotesPanel({
             <div>
               <p className="font-medium">{row.contactName}</p>
               <p className="text-xs text-muted-foreground">
-                {row.eventType ?? "Event"} · {row.daysSinceSent} days ago
+                {formatEventTypeLabel(row.eventType)} · {row.daysSinceSent} days ago
               </p>
             </div>
             <div className="flex gap-1">
@@ -177,7 +177,7 @@ export function EventDaySheetPanel({
             <Calendar className="h-3.5 w-3.5 shrink-0" />
             <span>
               <span className="text-foreground font-medium">{eventDate}</span>
-              {eventType ? ` · ${eventType}` : ""}
+              {eventType ? ` · ${formatEventTypeLabel(eventType)}` : ""}
             </span>
           </p>
         ) : null}
@@ -250,7 +250,7 @@ export function LivEventPrepTeaser({
       </ul>
       {eventDate ? (
         <p className="text-xs font-medium text-primary/90 pt-1 border-t border-primary/10">
-          {eventType ?? "Event"} · {eventDate}
+          {formatEventTypeLabel(eventType)} · {eventDate}
         </p>
       ) : null}
     </div>

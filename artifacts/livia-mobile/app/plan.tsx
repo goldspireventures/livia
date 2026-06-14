@@ -1,6 +1,7 @@
 import { customFetch } from "@workspace/api-client-react";
 import { Feather } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -20,6 +21,8 @@ import { useBusiness } from "@/contexts/BusinessContext";
 import { useColors } from "@/hooks/useColors";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useBillingSummary } from "@/hooks/useBillingSummary";
+import { ADDON_CATALOGUE, formatAddonPriceEur, hasEffectiveEntitlement, type EntitlementKey } from "@workspace/entitlements";
+import { commerceAddonsForVertical } from "@workspace/policy";
 
 const UPGRADE_PLANS = [
   { id: "solo" as const, name: "Solo", blurb: "One chair, full Liv on SMS and bookings." },
@@ -36,7 +39,45 @@ export default function PlanScreen() {
   const bid = currentBusiness?.id ?? "";
   const { data, isLoading, refetch } = useBillingSummary(bid);
   const [checkoutPlan, setCheckoutPlan] = useState<string | null>(null);
+  const [checkoutAddon, setCheckoutAddon] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const qc = useQueryClient();
+  const vertical = (currentBusiness as { vertical?: string } | undefined)?.vertical;
+  const applicableAddons = commerceAddonsForVertical(vertical).filter(
+    (e) => e.id === "event_operator_pack" || e.id === "retail_pack",
+  );
+
+  const startAddonCheckout = async (addonId: string) => {
+    if (!bid) return;
+    setCheckoutAddon(addonId);
+    setError("");
+    haptics.tap();
+    try {
+      const res = await customFetch<{ url?: string; mode?: string; message?: string }>(
+        `/api/businesses/${bid}/billing/checkout-addon`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ addonId, returnPath: "/plan" }),
+        },
+      );
+      if (res.url) {
+        await WebBrowser.openBrowserAsync(res.url);
+        await refetch();
+        void qc.invalidateQueries({ queryKey: ["entitlements", bid] });
+        haptics.success();
+        return;
+      }
+      await refetch();
+      haptics.success();
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      setError(e.message ?? "Add-on checkout failed.");
+      haptics.warning();
+    } finally {
+      setCheckoutAddon(null);
+    }
+  };
 
   const startCheckout = async (planId: "solo" | "studio" | "chain") => {
     if (!bid) return;
@@ -153,6 +194,58 @@ export default function PlanScreen() {
           </Pressable>
         );
       })}
+
+      {applicableAddons.length > 0 ? (
+        <>
+          <Text style={[styles.sectionTitle, { color: colors.mutedForeground, marginTop: 16 }]}>
+            Add-ons
+          </Text>
+          {applicableAddons.map((entry) => {
+            const catalogue = ADDON_CATALOGUE[entry.id];
+            if (!catalogue) return null;
+            const entitled = hasEffectiveEntitlement(
+              (data?.entitlements ?? []) as EntitlementKey[],
+              entry.primaryEntitlement as EntitlementKey,
+            );
+            const loading = checkoutAddon === entry.id;
+            return (
+              <Pressable
+                key={entry.id}
+                disabled={entitled || !!checkoutAddon || !!checkoutPlan}
+                onPress={() => void startAddonCheckout(entry.id)}
+                style={({ pressed }) => [
+                  styles.planCard,
+                  {
+                    backgroundColor: colors.card,
+                    borderColor: entitled ? aurora.cyan + "66" : colors.border,
+                    opacity: pressed ? 0.92 : 1,
+                  },
+                  elevation.resting,
+                ]}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.planName, { color: colors.foreground }]}>
+                    {catalogue.name}
+                    {entitled ? " · active" : ""}
+                  </Text>
+                  <Text style={[styles.planBlurb, { color: colors.mutedForeground }]}>
+                    {catalogue.description}
+                  </Text>
+                </View>
+                {loading ? (
+                  <ActivityIndicator color={colors.primary} />
+                ) : entitled ? (
+                  <Feather name="check-circle" size={22} color={aurora.cyan} />
+                ) : (
+                  <Text style={{ color: colors.primary, fontFamily: fonts.bodySemi, fontSize: 13 }}>
+                    {formatAddonPriceEur(catalogue.eurCentsPerMonth)}/mo
+                  </Text>
+                )}
+              </Pressable>
+            );
+          })}
+        </>
+      ) : null}
     </ScrollView>
   );
 }

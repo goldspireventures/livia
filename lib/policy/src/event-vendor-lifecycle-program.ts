@@ -230,6 +230,14 @@ export function quoteOperatorFlowPanelLabel(): string {
   return "What happens next";
 }
 
+/** Sentence-case label for stored event type slugs (birthday, corporate_away_day). */
+export function formatEventTypeLabel(raw?: string | null): string {
+  if (!raw?.trim()) return "Event";
+  const normalized = raw.trim().replace(/[_-]+/g, " ");
+  const lower = normalized.toLowerCase();
+  return lower.charAt(0).toUpperCase() + lower.slice(1);
+}
+
 /** Short payment reference shown on PDF / invoice (first 8 of public token). */
 export function quotePaymentReference(publicToken: string): string {
   const clean = publicToken.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();

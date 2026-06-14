@@ -141,7 +141,7 @@ export default function WellnessReceptionPage() {
             <Link href="/wellness-tv">TV mode</Link>
           </Button>
           <Button asChild size="sm" variant="outline" className="h-8 text-xs gap-1">
-            <Link href="/wellness-retail">
+            <Link href="/store">
               <ShoppingBag className="h-3.5 w-3.5" aria-hidden />
               Retail
             </Link>

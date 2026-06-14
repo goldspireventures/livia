@@ -1,5 +1,6 @@
 import type { Feather } from "@expo/vector-icons";
 import type { PersonaKind } from "@/hooks/usePersona";
+import { verticalSupportsRetail } from "@workspace/policy";
 
 export interface MenuItem {
   icon: keyof typeof Feather.glyphMap;
@@ -73,9 +74,14 @@ export function menuItemsForPersona(args: {
 
   if (vertical === "event-vendors" && isFloorLead) {
     items.push(
+      { icon: "inbox", label: "Enquiries", route: "/enquiries", section: "operations" },
       { icon: "file-text", label: "Quotes", route: "/quotes", section: "operations" },
       { icon: "globe", label: "Event website", route: "/event-site", section: "operations" },
     );
+  }
+
+  if (verticalSupportsRetail(vertical) && isFloorLead) {
+    items.push({ icon: "shopping-bag", label: "Take-home shop", route: "/store", section: "operations" });
   }
 
   if (vertical === "pet-grooming" && isFloorLead) {

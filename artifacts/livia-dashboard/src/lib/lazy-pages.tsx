@@ -49,5 +49,6 @@ export const LazyWellnessRetailPage = lazyPage(() => import("@/pages/wellness-re
 export const LazyStudioSetupPage = lazyPage(() => import("@/pages/studio-setup"));
 export const LazyBeautyReceptionPage = lazyPage(() => import("@/pages/beauty-reception"));
 export const LazyBeautyTvPage = lazyPage(() => import("@/pages/beauty-tv"));
-export const LazyBeautyStorePage = lazyPage(() => import("@/pages/beauty-store"));
+export const LazyTenantStorePage = lazyPage(() => import("@/pages/store"));
+export const LazyBeautyStorePage = LazyTenantStorePage;
 export const LazyDemoShowcase = lazyPage(() => import("@/pages/demo/Showcase"));

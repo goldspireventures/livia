@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Scissors, Plus, Clock, DollarSign, Star } from "lucide-react";
+import { Scissors, Plus, Clock, Star } from "lucide-react";
 import { customFetch } from "@workspace/api-client-react";
 import { useForm } from "react-hook-form";
 import { invalidateOperationalState } from "@/lib/operational-cache";
@@ -55,6 +55,9 @@ function serviceNamePlaceholder(vertical: string): string {
   if (vertical === "wellness") return "e.g. 60 min massage";
   return "e.g. Service name";
 }
+
+const CATALOGUE_DIALOG_CLASS =
+  "max-h-[min(90vh,720px)] overflow-y-auto sm:max-w-lg gap-3";
 
 export default function ServicesPage() {
   const { business } = useBusiness();
@@ -299,7 +302,7 @@ export default function ServicesPage() {
                 {newItemLabel}
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className={CATALOGUE_DIALOG_CLASS}>
               <DialogHeader>
                 <DialogTitle>Create {serviceLabel.toLowerCase()}</DialogTitle>
               </DialogHeader>
@@ -436,10 +439,7 @@ export default function ServicesPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="flex items-center gap-1">
-                      <DollarSign className="h-3 w-3" />
-                      Price ({draftCurrency}) *
-                    </Label>
+                    <Label>Price ({draftCurrency}) *</Label>
                     <Input
                       type="number"
                       min={0}
@@ -452,10 +452,7 @@ export default function ServicesPage() {
                 </div>
                 ) : (
                 <div className="space-y-2">
-                  <Label className="flex items-center gap-1">
-                    <DollarSign className="h-3 w-3" />
-                    Starting price ({draftCurrency}) *
-                  </Label>
+                  <Label>Starting price ({draftCurrency}) *</Label>
                   <Input
                     type="number"
                     min={0}
@@ -524,7 +521,7 @@ export default function ServicesPage() {
       }
     >
       <Dialog open={!!editId} onOpenChange={(o) => !o && setEditId(null)}>
-        <DialogContent>
+        <DialogContent className={CATALOGUE_DIALOG_CLASS}>
           <DialogHeader>
             <DialogTitle>Edit {isEventVendor ? "catalogue item" : serviceLabel.toLowerCase()}</DialogTitle>
           </DialogHeader>

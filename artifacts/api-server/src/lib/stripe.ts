@@ -69,15 +69,21 @@ export function priceIdForEventOperatorAddon(): string | null {
   return process.env.STRIPE_PRICE_EVENT_OPERATOR ?? null;
 }
 
+export function priceIdForRetailPackAddon(): string | null {
+  return process.env.STRIPE_PRICE_RETAIL_PACK ?? null;
+}
+
 export function priceIdForAddon(addonId: string): string | null {
   if (addonId === "peer_set_insights") return priceIdForPeerInsightsAddon();
   if (addonId === "event_operator_pack") return priceIdForEventOperatorAddon();
+  if (addonId === "retail_pack") return priceIdForRetailPackAddon();
   return null;
 }
 
 export function stripePriceEnvKeyForAddon(addonId: string): string | null {
   if (addonId === "peer_set_insights") return "STRIPE_PRICE_PEER_INSIGHTS";
   if (addonId === "event_operator_pack") return "STRIPE_PRICE_EVENT_OPERATOR";
+  if (addonId === "retail_pack") return "STRIPE_PRICE_RETAIL_PACK";
   return null;
 }
 

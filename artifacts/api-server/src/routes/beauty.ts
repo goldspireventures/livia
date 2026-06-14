@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { requireAuth, requireRole } from "../lib/auth";
+import { withBusinessFeature } from "../lib/wedge-api-gate.js";
 import {
   getBeautyFillCycleRadar,
   getBeautyStationCompass,
@@ -12,7 +13,7 @@ import {
   createRetailPayLinkForStaff,
   createRetailProduct,
   getRetailStoreBundle,
-  seedBeautyRetailTemplates,
+  seedRetailTemplatesForBusiness,
   updateRetailProduct,
   updateRetailStoreSettings,
 } from "../services/beauty-retail.service";
@@ -137,13 +138,11 @@ router.get(
   },
 );
 
-// --- Retail mini-store (beauty; extensible to other verticals) ---
+// --- Retail mini-store (appointment verticals; gated by retail_pack add-on) ---
 
 router.get(
   "/businesses/:businessId/retail/store",
-  requireAuth,
-  requireRole("ADMIN"),
-  async (req, res): Promise<void> => {
+  ...withBusinessFeature("retail", "ADMIN", async (req, res): Promise<void> => {
     try {
       const businessId = getBizId(req.params.businessId);
       const bundle = await getRetailStoreBundle(businessId);
@@ -156,14 +155,12 @@ router.get(
       logRouteError(req, e, "retail store get");
       sendError(res, req, 500, "Could not load store");
     }
-  },
+  }),
 );
 
 router.patch(
   "/businesses/:businessId/retail/settings",
-  requireAuth,
-  requireRole("ADMIN"),
-  async (req, res): Promise<void> => {
+  ...withBusinessFeature("retail", "ADMIN", async (req, res): Promise<void> => {
     try {
       const businessId = getBizId(req.params.businessId);
       const settings = await updateRetailStoreSettings(businessId, req.body ?? {});
@@ -176,14 +173,12 @@ router.patch(
       logRouteError(req, e, "retail settings patch");
       sendError(res, req, 500, "Could not update store settings");
     }
-  },
+  }),
 );
 
 router.post(
   "/businesses/:businessId/retail/products",
-  requireAuth,
-  requireRole("ADMIN"),
-  async (req, res): Promise<void> => {
+  ...withBusinessFeature("retail", "ADMIN", async (req, res): Promise<void> => {
     try {
       const businessId = getBizId(req.params.businessId);
       const { name, description, priceMinor, currency, sku, imageUrl, sortOrder, category, stockQuantity } =
@@ -209,14 +204,12 @@ router.post(
       logRouteError(req, e, "retail product create");
       sendError(res, req, 500, "Could not create product");
     }
-  },
+  }),
 );
 
 router.patch(
   "/businesses/:businessId/retail/products/:productId",
-  requireAuth,
-  requireRole("ADMIN"),
-  async (req, res): Promise<void> => {
+  ...withBusinessFeature("retail", "ADMIN", async (req, res): Promise<void> => {
     try {
       const businessId = getBizId(req.params.businessId);
       const productId = getBizId(req.params.productId);
@@ -238,29 +231,25 @@ router.patch(
       logRouteError(req, e, "retail product patch");
       sendError(res, req, 500, "Could not update product");
     }
-  },
+  }),
 );
 
 router.post(
   "/businesses/:businessId/retail/seed-templates",
-  requireAuth,
-  requireRole("ADMIN"),
-  async (req, res): Promise<void> => {
+  ...withBusinessFeature("retail", "ADMIN", async (req, res): Promise<void> => {
     try {
       const businessId = getBizId(req.params.businessId);
-      res.json(await seedBeautyRetailTemplates(businessId));
+      res.json(await seedRetailTemplatesForBusiness(businessId));
     } catch (e) {
       logRouteError(req, e, "retail seed");
       sendError(res, req, 500, "Could not seed templates");
     }
-  },
+  }),
 );
 
 router.post(
   "/businesses/:businessId/retail/pay-link",
-  requireAuth,
-  requireRole("STAFF"),
-  async (req, res): Promise<void> => {
+  ...withBusinessFeature("retail", "STAFF", async (req, res): Promise<void> => {
     try {
       const businessId = getBizId(req.params.businessId);
       const { productId, guestName } = req.body ?? {};
@@ -278,7 +267,7 @@ router.post(
       logRouteError(req, e, "retail pay-link");
       sendError(res, req, 500, "Could not create pay link");
     }
-  },
+  }),
 );
 
 export default router;

@@ -1,5 +1,5 @@
 import { quoteOperatorFlowPanelLabel, quoteOperatorFlowSteps } from "@workspace/policy";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CheckCircle2, Copy, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -84,6 +84,24 @@ export function QuoteSentNextSteps({
   variant = "inline",
 }: Props) {
   const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onPointerDown(event: MouseEvent) {
+      if (rootRef.current?.contains(event.target as Node)) return;
+      setOpen(false);
+    }
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
 
   if (status === "draft" || status === "declined") return null;
 
@@ -100,7 +118,7 @@ export function QuoteSentNextSteps({
   }
 
   return (
-    <div className="relative inline-flex shrink-0 self-start">
+    <div ref={rootRef} className="relative inline-flex shrink-0 self-start">
       <Button
         type="button"
         variant="ghost"

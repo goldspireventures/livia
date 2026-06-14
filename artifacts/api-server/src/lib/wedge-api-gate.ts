@@ -1,5 +1,5 @@
 import { db, businessesTable } from "@workspace/db";
-import { isBusinessApiFeatureAllowed, apiFeatureEntitlementKey } from "@workspace/policy";
+import { isBusinessApiFeatureAllowed, apiFeatureEntitlementKey, addonIdForEntitlement, addonUnlockMessage } from "@workspace/policy";
 import { eq } from "drizzle-orm";
 import type { RequestHandler } from "express";
 import { getUserId, requireAuth, requireRole, type Role } from "./auth.js";
@@ -52,15 +52,16 @@ export function requireBusinessApiFeature(featureKey: string): RequestHandler {
           entKey as EntitlementKey,
         );
         if (!entitled) {
+          const addon = addonIdForEntitlement(entKey) ?? "event_operator_pack";
           sendError(
             res,
             req,
             403,
-            "Upgrade to Event Operator to unlock this feature.",
+            addonUnlockMessage(addon),
             {
               code: "ENTITLEMENT_REQUIRED",
               entitlement: entKey,
-              addon: "event_operator_pack",
+              addon,
               feature: featureKey,
             },
           );

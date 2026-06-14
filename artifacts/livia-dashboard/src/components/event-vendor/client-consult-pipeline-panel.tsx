@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { customFetch } from "@workspace/api-client-react";
-import { consultInboxLeadHref } from "@workspace/policy";
+import { consultInboxLeadHref, formatEventTypeLabel } from "@workspace/policy";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -85,7 +85,7 @@ export function ClientConsultPipelinePanel({
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
                       <p className="text-sm font-medium">
-                        {enq.eventType ?? "Event enquiry"}
+                        {enq.eventType ? formatEventTypeLabel(enq.eventType) : "Event enquiry"}
                         {enq.eventDate ? ` · ${enq.eventDate}` : ""}
                       </p>
                       {enq.theme ? (

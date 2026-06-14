@@ -16,10 +16,12 @@ import {
   lookupAddon,
   hasEffectiveEntitlement,
   EVENT_OPERATOR_PACK_GRANTS,
+  RETAIL_PACK_GRANTS,
   type EntitlementKey,
   type ProductPlan,
 } from "@workspace/entitlements";
 import type { MeterKey } from "@workspace/metering";
+import { verticalSupportsRetail } from "@workspace/policy";
 import { getBusinessById } from "./businesses.service";
 
 export type BillingState = {
@@ -76,6 +78,11 @@ function effectiveEntitlements(
     (opts.vertical ?? "").toLowerCase() === "event-vendors"
   ) {
     for (const k of EVENT_OPERATOR_PACK_GRANTS) {
+      keys.add(k);
+    }
+  }
+  if (opts?.designPartnerActive && verticalSupportsRetail(opts.vertical)) {
+    for (const k of RETAIL_PACK_GRANTS) {
       keys.add(k);
     }
   }

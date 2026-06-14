@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { formatEventTypeLabel } from "@workspace/policy";
 import { ArrowRight, CalendarClock, ClipboardList, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -143,7 +144,7 @@ export function ConsultFirstHomePanel({
                 <div className="min-w-0">
                   <p className="font-medium truncate">{row.contactName}</p>
                   <p className="text-xs text-muted-foreground">
-                    {row.eventType ?? "Event"} · sent {row.daysSinceSent}d ago
+                    {formatEventTypeLabel(row.eventType)} · sent {row.daysSinceSent}d ago
                   </p>
                 </div>
                 <Button type="button" size="sm" variant="outline" asChild>

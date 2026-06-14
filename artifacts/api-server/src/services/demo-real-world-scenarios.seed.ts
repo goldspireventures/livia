@@ -2,6 +2,7 @@
  * Real-life scenario seed — complements Aurora chain + vertical showcase.
  */
 import { eq } from "drizzle-orm";
+import { resolveDemoShowcaseBusinessSpec } from "@workspace/policy";
 import { db, businessesTable, customersTable } from "@workspace/db";
 import { createBusiness } from "./businesses.service";
 import { seedShopCore } from "./demo-portal.service";
@@ -46,9 +47,15 @@ async function ensureShop(
     .where(eq(businessesTable.slug, def.slug))
     .limit(1);
   if (existing) {
+    const { syncDemoBusinessShowcaseMeta, ensureDemoRetailShowcaseDepth } = await import(
+      "./demo-showcase-sync.service"
+    );
+    await syncDemoBusinessShowcaseMeta(existing.id, def.slug);
+    await ensureDemoRetailShowcaseDepth(existing.id, def.slug);
     return existing;
   }
 
+  const spec = resolveDemoShowcaseBusinessSpec(def.slug);
   const biz = await createBusiness(ownerId, {
     name: def.name,
     slug: def.slug,
@@ -60,8 +67,8 @@ async function ensureShop(
     timezone: "Europe/Dublin",
     city: def.city,
     country: "IE",
-    tier: def.tier,
-    subverticalProfileId: def.subverticalProfileId,
+    tier: spec?.tier ?? def.tier,
+    subverticalProfileId: spec?.subverticalProfileId ?? def.subverticalProfileId,
     addressLine1: "14 Main Street",
   });
   const core = await seedShopCore(biz.id, def.staff, def.services);
@@ -79,6 +86,8 @@ async function ensureShop(
     staffIds: core.staffRows.map((s) => s.id),
     serviceIds: core.serviceRows.map((s) => s.id),
   });
+  const { ensureDemoRetailShowcaseDepth } = await import("./demo-showcase-sync.service");
+  await ensureDemoRetailShowcaseDepth(biz.id, def.slug);
   return { slug: biz.slug, id: biz.id, name: biz.name };
 }
 

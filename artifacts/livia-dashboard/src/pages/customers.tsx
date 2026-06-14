@@ -76,6 +76,7 @@ export default function CustomersPage() {
   const clientNounPlural = clientNoun.endsWith("s") ? `${clientNoun}es` : `${clientNoun}s`;
   const clientsListCopy = consultFirstClientsListCopy(businessVertical);
   const isWellness = businessVertical === "wellness";
+  const isConsultFirst = businessVertical === "event-vendors";
 
   function exportGuests() {
     if (!bid) return;
@@ -227,6 +228,10 @@ export default function CustomersPage() {
         />
       ) : null}
 
+      {!isConsultFirst ? <MergeSuggestionsPanel /> : null}
+
+      {!isConsultFirst ? <BeautyFillCycleCard id="fill-cycle" /> : null}
+
       {total !== undefined ? (
         <div className="grid grid-cols-2 gap-3 max-w-md">
           <Card className={cn(beautyPanel(beautyChrome), op.wellness && op.panel())}>
@@ -256,16 +261,12 @@ export default function CustomersPage() {
                 {accumulated.length}
               </p>
               {hasMore ? (
-                <p className="text-[10px] text-muted-foreground mt-1">Scroll the list for more</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Load more below the list</p>
               ) : null}
             </CardContent>
           </Card>
         </div>
       ) : null}
-
-      <MergeSuggestionsPanel />
-
-      <BeautyFillCycleCard id="fill-cycle" />
 
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -305,6 +306,7 @@ export default function CustomersPage() {
               <div
                 className={cn(
                   beautyChrome ? beautyCustomerListScroll(beautyChrome) : op.listScroll(),
+                  !beautyChrome && !op.wellness && "max-h-[min(70vh,640px)] overflow-y-auto",
                 )}
                 onWheel={onContainedScrollWheel}
               >

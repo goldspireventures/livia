@@ -123,6 +123,18 @@ run("Capability commerce bridge", [
   "../../lib/policy/src/__tests__/capability-commerce-bridge.test.ts",
 ]);
 
+run("Commerce add-on registry", [
+  "--import",
+  "tsx/esm",
+  "../../lib/policy/src/__tests__/commerce-addon-program.test.ts",
+]);
+
+run("Commerce entitlements unlock copy", [
+  "--import",
+  "tsx/esm",
+  "../../lib/policy/src/__tests__/commerce-entitlements.test.ts",
+]);
+
 run("Owner Liv inbox suggestions", [
   "--import",
   "tsx/esm",
@@ -182,6 +194,24 @@ run("Setup guided flow (copilot v2)", [
   "--import",
   "tsx/esm",
   "../../lib/policy/src/__tests__/setup-guided-flow.test.ts",
+]);
+
+run("Vertical starter packs", [
+  "--import",
+  "tsx/esm",
+  "../../lib/policy/src/__tests__/vertical-starter-packs.test.ts",
+]);
+
+run("Tenant retail program", [
+  "--import",
+  "tsx/esm",
+  "../../lib/policy/src/__tests__/tenant-retail-program.test.ts",
+]);
+
+run("Demo showcase program", [
+  "--import",
+  "tsx/esm",
+  "../../lib/policy/src/__tests__/demo-showcase-program.test.ts",
 ]);
 
 run("Analytics event bridge (blueprint H)", [

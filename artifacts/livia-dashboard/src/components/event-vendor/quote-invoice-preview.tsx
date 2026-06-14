@@ -4,7 +4,7 @@ import {
   formatQuoteUnit,
   type EventDaySheet,
 } from "@/lib/event-vendor-studio";
-import { guestQuotePayFlowExplanation, quotePaymentReference } from "@workspace/policy";
+import { guestQuotePayFlowExplanation, quotePaymentReference, formatEventTypeLabel } from "@workspace/policy";
 
 type PreviewLine = {
   name: string;
@@ -126,7 +126,7 @@ export function QuoteInvoicePreview({
 
         {sheet && (sheet.eventType || sheet.eventDate || sheet.theme || sheet.venue) ? (
           <div className="grid gap-1 rounded-md border border-stone-200 bg-white/80 p-2.5 text-[10px]">
-            {sheet.eventType ? <Row label="Event" value={sheet.eventType} /> : null}
+            {sheet.eventType ? <Row label="Event" value={formatEventTypeLabel(sheet.eventType)} /> : null}
             {sheet.eventDate ? <Row label="Date" value={sheet.eventDate} /> : null}
             {sheet.guestCount ? <Row label="Guests" value={String(sheet.guestCount)} /> : null}
             {sheet.theme ? <Row label="Theme" value={sheet.theme} /> : null}

@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { formatEventTypeLabel } from "@workspace/policy";
 import { ArrowRight } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { EventVendorPageShell } from "@/components/event-vendor/event-vendor-page-shell";
@@ -85,7 +86,7 @@ export default function PublicEventVendorSitePage() {
                         <div className="ev-card__body">
                           <p className="font-medium">{g.caption ?? "Event styling"}</p>
                           {g.eventType ? (
-                            <p className="ev-muted text-sm capitalize">{g.eventType}</p>
+                            <p className="ev-muted text-sm">{formatEventTypeLabel(g.eventType)}</p>
                           ) : null}
                         </div>
                       </article>

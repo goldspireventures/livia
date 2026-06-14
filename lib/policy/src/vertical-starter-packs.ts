@@ -1,6 +1,6 @@
 import type { BusinessVertical } from "./types";
 import { BEAUTY_SERVICE_TEMPLATES } from "./beauty-service-templates";
-import { BEAUTY_RETAIL_PROGRAM } from "./beauty-retail";
+import { TENANT_RETAIL_PROGRAM, verticalSupportsRetail } from "./tenant-retail-program";
 import { getSubverticalProfile, isMultiSegmentProfile } from "./subvertical-profiles";
 import { getVerticalPack } from "./verticals";
 
@@ -121,42 +121,51 @@ const STARTER_SERVICES: Record<BusinessVertical, StarterPackServiceTemplate[]> =
 
 const STARTER_OFFERS: Record<BusinessVertical, Omit<VerticalStarterPackOffer, "serviceCount">> = {
   hair: {
-    label: "Start with a template service menu",
-    description: "Cuts, colour, styling, and grooming — edit prices and durations after.",
+    label: "Start with template menu + shop",
+    description:
+      "Cuts, colour, and styling plus take-home bundles on your /b page — edit or remove anything after.",
+    extraLine: `Up to ${TENANT_RETAIL_PROGRAM.maxActiveProducts} retail SKUs on your /b page.`,
   },
   beauty: {
     label: "Start with template menu + mini store",
     description:
       "Lash, nail, and brow treatments plus take-home products on your /b page — edit or remove anything after.",
-    extraLine: `${BEAUTY_RETAIL_PROGRAM.maxActiveProducts} aftercare products on your /b page.`,
+    extraLine: `${TENANT_RETAIL_PROGRAM.maxActiveProducts} aftercare products on your /b page.`,
   },
   "body-art": {
-    label: "Start with a template service menu",
-    description: "Consult, tattoo sessions, piercing, and touch-ups — ready to customise.",
+    label: "Start with template menu + aftercare shop",
+    description: "Consult, sessions, piercing, and aftercare retail — ready to customise.",
+    extraLine: "Aftercare products on your /b page.",
   },
   wellness: {
-    label: "Start with a template session menu",
-    description: "Massage lengths and couples options — tune for your rooms and therapists.",
+    label: "Start with template session menu + ritual retail",
+    description: "Massage lengths and take-home oils on your /b page — tune for your rooms.",
+    extraLine: "Post-session retail on your /b page.",
   },
   fitness: {
-    label: "Start with a template session menu",
-    description: "PT, classes, assessment, and a pack — adjust for your studio model.",
+    label: "Start with template session menu + studio shop",
+    description: "PT, classes, and merch on your /b page — adjust for your studio model.",
+    extraLine: "Studio shop on your /b page.",
   },
   medspa: {
-    label: "Start with a template procedure menu",
-    description: "Consult plus injectables and facial tiers — align with your consent flow.",
+    label: "Start with template procedure menu + skincare retail",
+    description: "Consult, injectables, and home-care SKUs — align with your consent flow.",
+    extraLine: "Retail skincare on your /b page.",
   },
   "allied-health": {
-    label: "Start with a template session menu",
-    description: "Assessment and follow-up sessions — set your clinical durations.",
+    label: "Start with template session menu + support products",
+    description: "Assessment sessions and home support SKUs — set your clinical durations.",
+    extraLine: "Support products on your /b page.",
   },
   "pet-grooming": {
-    label: "Start with a template groom menu",
-    description: "Full grooms, bath & tidy, and add-ons by size — edit for your salon.",
+    label: "Start with template groom menu + pet retail",
+    description: "Full grooms, bath & tidy, and take-home treats — edit for your salon.",
+    extraLine: "Pet retail on your /b page.",
   },
   "automotive-detailing": {
-    label: "Start with a template service menu",
-    description: "Wash through full detail packages — match bay time and pricing.",
+    label: "Start with template service menu + care products",
+    description: "Wash through full detail plus maintenance kits on your /b page.",
+    extraLine: "Care products on your /b page.",
   },
   "event-vendors": {
     label: "Start with a decor catalogue",
@@ -195,7 +204,12 @@ export function getVerticalStarterPackOffer(vertical: BusinessVertical): Vertica
 }
 
 export function verticalStarterPackIncludesRetail(vertical: BusinessVertical): boolean {
-  return vertical === "beauty";
+  return verticalSupportsRetail(vertical);
+}
+
+export function verticalStarterPackRetailExtraLine(vertical: BusinessVertical): string | undefined {
+  const offer = STARTER_OFFERS[vertical];
+  return offer.extraLine;
 }
 
 /** @deprecated use getVerticalStarterPackOffer("beauty") */
