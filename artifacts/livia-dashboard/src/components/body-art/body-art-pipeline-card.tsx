@@ -8,6 +8,7 @@ import { Loader2, Paintbrush } from "lucide-react";
 
 type PipelineRow = {
   bookingId: string;
+  customerId: string;
   customerName: string;
   serviceName: string;
   startAt: string;
@@ -82,7 +83,7 @@ export function BodyArtPipelineCard() {
           <ul className="space-y-2">
             {rows.map((row) => (
               <li
-                key={row.bookingId}
+                key={row.customerId}
                 className="rounded-lg border border-border/70 px-3 py-2 text-sm flex justify-between gap-2"
               >
                 <div className="min-w-0">

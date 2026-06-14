@@ -102,6 +102,7 @@ import DemoWedgeStoryPage from "@/pages/demo/WedgeStory";
 import { DemoProvider } from "@/lib/demo/demo-context";
 import { GatewaySkinHandoffProvider } from "@/components/gateway/gateway-skin-handoff-provider";
 import { GatewaySurfaceThemeSync } from "@/components/gateway/gateway-surface-theme-sync";
+import { TenantNavigationSync } from "@/components/layout/tenant-navigation-sync";
 import { MarketingDemoGateSync } from "@/components/marketing-demo-gate-sync";
 import { isProductionCustomerSurface } from "@/lib/production-surface";
 import { isOnboardingPreviewRouteEnabled } from "@/lib/onboarding-preview-route";
@@ -523,6 +524,7 @@ function App() {
               <GatewaySkinHandoffProvider>
                 <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
                   <GatewaySurfaceThemeSync />
+                  <TenantNavigationSync />
                   <MarketingDemoGateSync />
                   <AppRouter />
                 </WouterRouter>

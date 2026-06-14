@@ -14,9 +14,13 @@ export type WellnessCssPreset = (typeof WELLNESS_CSS_PRESETS)[number];
 export const EVENT_VENDOR_CSS_PRESETS = ["event-atelier", "wedding-ledger", "party-pop"] as const;
 export type EventVendorCssPreset = (typeof EVENT_VENDOR_CSS_PRESETS)[number];
 
+export const BODY_ART_CSS_PRESETS = ["studio-dark", "flash-light", "minimal-mono"] as const;
+export type BodyArtCssPreset = (typeof BODY_ART_CSS_PRESETS)[number];
+
 const BEAUTY_PRESETS = new Set<string>(BEAUTY_CSS_PRESETS);
 const WELLNESS_PRESETS = new Set<string>(WELLNESS_CSS_PRESETS);
 const EVENT_VENDOR_PRESETS = new Set<string>(EVENT_VENDOR_CSS_PRESETS);
+const BODY_ART_PRESETS = new Set<string>(BODY_ART_CSS_PRESETS);
 
 /** Read active presentation preset from document (W4/W5). */
 export function readCssPresentation(): string | null {
@@ -55,6 +59,19 @@ export function isEventVendorPresentationPreset(preset?: string | null): boolean
 
 export function isEventVendorVertical(vertical?: string | null): boolean {
   return vertical === "event-vendors";
+}
+
+export function isBodyArtPresentationPreset(preset?: string | null): boolean {
+  const p = preset ?? readCssPresentation();
+  return p != null && BODY_ART_PRESETS.has(p);
+}
+
+export function isBodyArtVertical(vertical?: string | null): boolean {
+  return vertical === "body-art";
+}
+
+export function useBodyArtChrome(vertical?: string | null): boolean {
+  return isBodyArtVertical(vertical) && isBodyArtPresentationPreset();
 }
 
 export function useBeautyChrome(vertical?: string | null): boolean {

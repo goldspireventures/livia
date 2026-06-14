@@ -167,6 +167,12 @@ interface PublicBusiness {
       category?: string | null;
     }>;
   };
+  designShowcase?: Array<{
+    id: string;
+    imageUrl: string;
+    title: string;
+    note?: string | null;
+  }>;
   services: PublicService[];
   staff: PublicStaff[];
   countryPack?: {
@@ -922,6 +928,7 @@ export default function PublicBookingPage() {
             pickServiceHint={pickServiceHint}
             cancelWindowHours={b.policyTrust?.cancelWindowHours}
             giftComingSoonNote={guestPublic.giftComingSoonNote}
+            designShowcase={b.designShowcase}
             onBook={() => {
               if (selectedService) {
                 setPickServiceHint(false);

@@ -1,5 +1,5 @@
 import { db, designProofAssetsTable, designProofGuestAccessTable } from "@workspace/db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, isNotNull } from "drizzle-orm";
 import { generateId } from "../lib/id";
 import { inngest, isInngestWorkflowsEnabled } from "../lib/inngest";
 import { ensureDesignProofGuestAccess } from "./design-proof-guest-access.service";
@@ -109,4 +109,42 @@ export async function updateDesignProofStatus(
     );
   }
   return row ?? null;
+}
+
+export type PublicDesignShowcaseItem = {
+  id: string;
+  imageUrl: string;
+  title: string;
+  note: string | null;
+};
+
+/** Approved artwork for public /b flash gallery (body-art). */
+export async function listPublicDesignShowcase(
+  businessId: string,
+): Promise<PublicDesignShowcaseItem[]> {
+  const rows = await db
+    .select({
+      id: designProofAssetsTable.id,
+      imageUrl: designProofAssetsTable.imageUrl,
+      note: designProofAssetsTable.note,
+    })
+    .from(designProofAssetsTable)
+    .where(
+      and(
+        eq(designProofAssetsTable.businessId, businessId),
+        eq(designProofAssetsTable.status, "approved"),
+        isNotNull(designProofAssetsTable.imageUrl),
+      ),
+    )
+    .orderBy(desc(designProofAssetsTable.updatedAt))
+    .limit(12);
+
+  return rows
+    .filter((r) => r.imageUrl)
+    .map((r) => ({
+      id: r.id,
+      imageUrl: r.imageUrl!,
+      title: r.note?.split("—")[0]?.trim() || r.note?.trim() || "Custom design",
+      note: r.note,
+    }));
 }

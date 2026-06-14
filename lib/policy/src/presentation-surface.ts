@@ -46,6 +46,12 @@ const EVENT_VENDORS_MORPH_BY_CSS: Record<string, PresentationLayoutMorph> = {
   "party-pop": "menu-card",
 };
 
+const BODY_ART_MORPH_BY_CSS: Record<string, PresentationLayoutMorph> = {
+  "studio-dark": "pipeline",
+  "flash-light": "pipeline",
+  "minimal-mono": "standard",
+};
+
 const GENERIC_LAYOUT_MORPH: Record<string, PresentationLayoutMorph> = {
   cards: "standard",
   list: "standard",
@@ -83,6 +89,9 @@ export function resolvePresentationLayoutMorph(
   }
   if (vertical === "event-vendors" && preset.cssPreset in EVENT_VENDORS_MORPH_BY_CSS) {
     return EVENT_VENDORS_MORPH_BY_CSS[preset.cssPreset]!;
+  }
+  if (vertical === "body-art" && preset.cssPreset in BODY_ART_MORPH_BY_CSS) {
+    return BODY_ART_MORPH_BY_CSS[preset.cssPreset]!;
   }
   if (preset.cssPreset === "platform-default") {
     return "constellation";

@@ -355,9 +355,24 @@ export default function TenantStorePage() {
               {business?.slug ? (
                 <p className="text-xs text-muted-foreground">
                   Preview on{" "}
-                  <Link href={`/book/${business.slug}`} className="text-primary hover:underline">
+                  <a
+                    href={`/book/${business.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
                     /book/{business.slug}
+                  </a>
+                  <span className="text-muted-foreground/80"> (opens in new tab)</span>
+                </p>
+              ) : null}
+              {vertical === "body-art" ? (
+                <p className="text-xs text-muted-foreground">
+                  Approved proofs appear on /b under flash & custom work. Manage artwork in{" "}
+                  <Link href="/design-proofs" className="text-primary hover:underline">
+                    Design proofs
                   </Link>
+                  .
                 </p>
               ) : null}
             </>

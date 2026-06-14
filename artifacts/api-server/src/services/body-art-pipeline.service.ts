@@ -100,10 +100,27 @@ export async function getBodyArtPipeline(businessId: string): Promise<{
     };
   });
 
+  const stageRank: Record<BodyArtPipelineRow["stage"], number> = {
+    proof: 0,
+    consult: 1,
+    session: 2,
+    complete: 3,
+  };
+  const deduped = new Map<string, BodyArtPipelineRow>();
+  for (const row of rows) {
+    const existing = deduped.get(row.customerId);
+    if (!existing || stageRank[row.stage] < stageRank[existing.stage]) {
+      deduped.set(row.customerId, row);
+    }
+  }
+  const uniqueRows = [...deduped.values()].sort(
+    (a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime(),
+  );
+
   return {
-    consultCount: rows.filter((r) => r.stage === "consult").length,
-    proofPendingCount: rows.filter((r) => r.stage === "proof").length,
-    sessionReadyCount: rows.filter((r) => r.stage === "session").length,
-    rows,
+    consultCount: uniqueRows.filter((r) => r.stage === "consult").length,
+    proofPendingCount: uniqueRows.filter((r) => r.stage === "proof").length,
+    sessionReadyCount: uniqueRows.filter((r) => r.stage === "session").length,
+    rows: uniqueRows,
   };
 }

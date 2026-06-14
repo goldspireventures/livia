@@ -8,13 +8,15 @@ import { SettingsDisclosure } from "@/components/ui/settings-disclosure";
 import { PublicStaffStrip } from "@/components/public-booking/public-staff-strip";
 import { PublicServiceCatalog } from "@/components/public-booking/public-service-catalog";
 import { PublicBeautyShop } from "@/components/public-booking/public-beauty-shop";
+import type { PublicRetailProduct } from "@/components/public-booking/public-beauty-shop";
 import { PublicWellnessGiftPanel } from "@/components/public/public-wellness-gift-panel";
 import { PublicCareNotes } from "@/components/public-booking/public-care-notes";
 import { PublicBookSectionNav } from "@/components/public-booking/public-book-section-nav";
 import { PublicBookBookingRail } from "@/components/public-booking/public-book-booking-rail";
 import { PublicFitnessClassGrid } from "@/components/public-booking/public-fitness-class-grid";
 import type { PublicServiceRow, PublicStaffRow } from "@/lib/public-booking-helpers";
-import type { PublicRetailProduct } from "@/components/public-booking/public-beauty-shop";
+import { PublicBodyArtFlashGallery } from "@/components/public-booking/public-body-art-flash-gallery";
+import type { PublicDesignShowcaseItem } from "@/components/public-booking/public-body-art-flash-gallery";
 
 export function PublicBookServicesStep({
   density: densityProp,
@@ -47,6 +49,7 @@ export function PublicBookServicesStep({
   pickServiceHint,
   cancelWindowHours,
   giftComingSoonNote,
+  designShowcase,
 }: {
   density?: PublicBookLayoutDensity;
   staffForward: boolean;
@@ -79,6 +82,7 @@ export function PublicBookServicesStep({
   pickServiceHint: boolean;
   cancelWindowHours?: number | null;
   giftComingSoonNote?: string | null;
+  designShowcase?: PublicDesignShowcaseItem[];
 }) {
   const productCount = retailProducts.length;
   const density =
@@ -95,6 +99,8 @@ export function PublicBookServicesStep({
   const showShop = retailEnabled && productCount > 0;
   const useRail = density.shopPlacement === "rail" && (beautyBook || wellnessPublic);
   const usePresentationShell = beautyBook || wellnessPublic;
+
+  const showFlash = vertical === "body-art" && (designShowcase?.length ?? 0) > 0;
 
   const teamBlock = showTeam ? (
     <PublicStaffStrip
@@ -162,6 +168,9 @@ export function PublicBookServicesStep({
         )}
       >
         <div className="public-book-primary space-y-10 min-w-0">
+          {showFlash ? (
+            <PublicBodyArtFlashGallery items={designShowcase!} />
+          ) : null}
           <section id="public-book-treatments" className="scroll-mt-16">
             {!density.teamAfterCatalog && teamSection ? (
               <div id="public-book-team" className="scroll-mt-16 mb-8">

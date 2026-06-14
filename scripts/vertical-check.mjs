@@ -45,6 +45,12 @@ run("Presentation surface handshake", [
   "../../lib/policy/src/__tests__/presentation-surface.test.ts",
 ]);
 
+run("Preset surface coverage", [
+  "--import",
+  "tsx/esm",
+  "../../lib/policy/src/__tests__/preset-surface-coverage.test.ts",
+]);
+
 run("Vertical doc propagation", [
   "--import",
   "tsx/esm",

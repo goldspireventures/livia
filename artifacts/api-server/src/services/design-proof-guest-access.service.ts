@@ -39,6 +39,9 @@ export type GuestProofView = {
   note: string | null;
   customerFirstName: string | null;
   logoUrl: string | null;
+  presentationPresetId: string | null;
+  brandAccentHex: string | null;
+  country: string | null;
   createdAt: Date;
 };
 
@@ -58,6 +61,9 @@ export async function getGuestProofByToken(
       slug: businessesTable.slug,
       vertical: businessesTable.vertical,
       logoUrl: businessesTable.logoUrl,
+      presentationPresetId: businessesTable.presentationPresetId,
+      brandAccentHex: businessesTable.brandAccentHex,
+      country: businessesTable.country,
       customerFirstName: customersTable.firstName,
       token: designProofGuestAccessTable.token,
     })
@@ -85,6 +91,9 @@ export async function getGuestProofByToken(
     note: row.note,
     customerFirstName: row.customerFirstName,
     logoUrl: row.logoUrl,
+    presentationPresetId: row.presentationPresetId,
+    brandAccentHex: row.brandAccentHex,
+    country: row.country,
     createdAt: row.createdAt,
   };
 }

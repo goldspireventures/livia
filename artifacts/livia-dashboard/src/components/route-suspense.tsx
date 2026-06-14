@@ -1,4 +1,5 @@
-import { Suspense, type LazyExoticComponent, type ComponentType } from "react";
+import { Suspense, type ComponentType, type LazyExoticComponent } from "react";
+import { useLocation } from "wouter";
 import { Spinner } from "@/components/ui/spinner";
 
 export function PageLoadFallback() {
@@ -15,11 +16,12 @@ export function PageLoadFallback() {
 export function LazyRoute({
   page: Page,
 }: {
-  page: LazyExoticComponent<ComponentType<object>>;
+  page: React.LazyExoticComponent<React.ComponentType<object>>;
 }) {
+  const [location] = useLocation();
   return (
     <Suspense fallback={<PageLoadFallback />}>
-      <Page />
+      <Page key={location} />
     </Suspense>
   );
 }

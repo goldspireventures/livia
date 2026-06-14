@@ -180,10 +180,12 @@ async function getPublicBusinessProfile(req: Request, res: Response): Promise<vo
   const biz = await getBusinessBySlug(slug);
   if (!biz) { sendError(res, req, 404, "Business not found"); return; }
 
-  const [services, staff, dayPackages] = await Promise.all([
+  const { listPublicDesignShowcase } = await import("../services/design-proofs.service");
+  const [services, staff, dayPackages, designShowcase] = await Promise.all([
     listServices(biz.id, true),
     listStaff(biz.id, { isActive: true }),
     getPublicDayPackages(biz.id),
+    biz.vertical === "body-art" ? listPublicDesignShowcase(biz.id) : Promise.resolve([]),
   ]);
 
   const retailSettings = parseBeautyRetailStoreSettings(biz.retailStore);
@@ -275,6 +277,8 @@ async function getPublicBusinessProfile(req: Request, res: Response): Promise<vo
             })),
           }
         : undefined,
+    designShowcase:
+      biz.vertical === "body-art" && designShowcase.length > 0 ? designShowcase : undefined,
   });
 }
 
@@ -1050,6 +1054,10 @@ router.get("/public/b/:slug/proof/:token", async (req, res): Promise<void> => {
     sendError(res, req, 404, "Proof link not found");
     return;
   }
+  const preset = resolvePresentationPreset(
+    view.vertical as BusinessVertical,
+    view.presentationPresetId ?? PLATFORM_DEFAULT_PRESET_ID,
+  );
   res.json({
     proofId: view.proofId,
     businessName: view.businessName,
@@ -1061,6 +1069,12 @@ router.get("/public/b/:slug/proof/:token", async (req, res): Promise<void> => {
     customerFirstName: view.customerFirstName,
     logoUrl: view.logoUrl,
     createdAt: view.createdAt.toISOString(),
+    experienceSkin: {
+      ...publicExperienceSkin(view.vertical, view.country),
+      presentation: preset.cssPreset,
+      presentationColorMode: preset.tokens.colorMode,
+      brandAccentHex: view.brandAccentHex ?? null,
+    },
   });
 });
 

@@ -2,13 +2,18 @@ import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { useGuestBookTokenRoute } from "@/lib/use-guest-book-slug";
 import { clientGuestBookHref } from "@/lib/guest-book-url";
-import { applyVerticalTheme } from "@/lib/vertical-theme";
+import {
+  applyTenantPresentationSurface,
+  clearPresentationTheme,
+} from "@/lib/experience-theme";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle2, ChevronLeft, Loader2, XCircle } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ImageIcon, Loader2, XCircle } from "lucide-react";
 import { PublicSurfaceNotFound } from "@/components/public/public-surface-chrome";
 import { PublicProofLoading } from "@/components/public/public-proof-loading";
 import { usePublicGuestPwa } from "@/lib/public-guest-pwa";
+import { useEdgeSwipeBack } from "@/lib/use-edge-swipe-back";
+import { cn } from "@/lib/utils";
 
 type ProofPayload = {
   proofId: string;
@@ -21,9 +26,15 @@ type ProofPayload = {
   customerFirstName: string | null;
   logoUrl: string | null;
   createdAt: string;
+  experienceSkin?: {
+    presentation?: string;
+    presentationColorMode?: "light" | "dark";
+    brandAccentHex?: string | null;
+  };
 };
 
 const COMMENT_MAX = 500;
+const FALLBACK_ART = "/w2-gateway/cards/tattoo.jpg";
 
 export default function PublicProofPage() {
   const { slug, token } = useGuestBookTokenRoute("proof");
@@ -35,8 +46,10 @@ export default function PublicProofPage() {
   const [depositPayUrl, setDepositPayUrl] = useState<string | null>(null);
   const [sessionBookUrl, setSessionBookUrl] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [imageBroken, setImageBroken] = useState(false);
 
   usePublicGuestPwa(slug);
+  useEdgeSwipeBack(Boolean(data));
 
   useEffect(() => {
     if (!slug || !token) return;
@@ -48,12 +61,21 @@ export default function PublicProofPage() {
       })
       .then((d) => {
         setData(d);
-        applyVerticalTheme(d.vertical, null);
+        setImageBroken(false);
+        applyTenantPresentationSurface({
+          vertical: d.vertical,
+          cssPreset: d.experienceSkin?.presentation ?? null,
+          brandAccentHex: d.experienceSkin?.brandAccentHex ?? null,
+          colorMode: d.experienceSkin?.presentationColorMode ?? null,
+        });
+        document.documentElement.dataset.guestSurface = "proof";
       })
       .catch(() => setData(null))
       .finally(() => setLoading(false));
     return () => {
+      clearPresentationTheme();
       document.documentElement.removeAttribute("data-vertical");
+      delete document.documentElement.dataset.guestSurface;
     };
   }, [slug, token]);
 
@@ -117,18 +139,19 @@ export default function PublicProofPage() {
 
   const canDecide = data.status === "pending_review";
   const bookUrl = clientGuestBookHref(data.slug);
+  const artSrc = imageBroken || !data.imageUrl ? FALLBACK_ART : data.imageUrl;
 
   return (
     <div
-      className="min-h-screen bg-[#0a0a0b] text-zinc-100 public-proof-shell"
+      className="min-h-screen bg-background text-foreground public-proof-shell preset-guest-surface"
       data-testid="guest-proof-page"
     >
-      <header className="sticky top-0 z-30 flex h-14 items-center gap-2 px-3 border-b border-zinc-800/80 bg-[#0a0a0b]/92 backdrop-blur-md">
+      <header className="sticky top-0 z-30 flex h-14 items-center gap-2 px-3 border-b border-border/80 bg-background/92 backdrop-blur-md">
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          className="shrink-0 text-zinc-300 hover:text-white hover:bg-zinc-800"
+          className="shrink-0"
           aria-label="Go back"
           onClick={() => window.history.back()}
         >
@@ -139,7 +162,7 @@ export default function PublicProofPage() {
           <img
             src={data.logoUrl}
             alt=""
-            className="h-8 w-8 shrink-0 rounded-full object-cover border border-zinc-700"
+            className="h-8 w-8 shrink-0 rounded-full object-cover border border-border"
           />
         ) : (
           <div className="h-8 w-8 shrink-0" aria-hidden />
@@ -147,59 +170,63 @@ export default function PublicProofPage() {
       </header>
 
       <section
-        className="relative border-b border-zinc-800 bg-zinc-950 motion-hero-fade-in"
+        className="relative border-b border-border bg-card/40 motion-hero-fade-in"
         data-testid="guest-proof-artwork"
       >
-        <div className="flex h-[55vh] min-h-[240px] items-center justify-center p-2">
-          {data.imageUrl ? (
+        <div className="flex h-[55vh] min-h-[240px] items-center justify-center p-3 sm:p-4">
+          {data.imageUrl || !imageBroken ? (
             <img
-              src={data.imageUrl}
+              src={artSrc}
               alt="Design proof"
-              className="max-h-full max-w-full object-contain"
+              className="max-h-full max-w-full object-contain rounded-md"
               data-testid="guest-proof-image"
+              onError={() => setImageBroken(true)}
             />
           ) : (
-            <p className="text-sm text-zinc-500">No image attached yet.</p>
+            <div className="flex flex-col items-center gap-2 text-muted-foreground">
+              <ImageIcon className="h-10 w-10 opacity-40" aria-hidden />
+              <p className="text-sm">Artwork preview unavailable</p>
+            </div>
           )}
         </div>
       </section>
 
-      <div className={`max-w-lg mx-auto px-4 pt-4 ${canDecide ? "pb-36" : "pb-10"}`}>
+      <div className={cn("max-w-lg mx-auto px-4 pt-4", canDecide ? "pb-36" : "pb-10")}>
         <div className="space-y-1 mb-4">
-          <p className="text-sm text-zinc-400">{data.businessName}</p>
+          <p className="text-sm text-muted-foreground">{data.businessName}</p>
           {data.customerFirstName ? (
-            <p className="text-base text-zinc-200">
+            <p className="text-base">
               Hi {data.customerFirstName} — review your design below.
             </p>
           ) : null}
           {data.note ? (
-            <p className="text-sm text-zinc-400 whitespace-pre-wrap pt-1">{data.note}</p>
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap pt-1">{data.note}</p>
           ) : null}
         </div>
 
         {message ? (
           <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm flex flex-col gap-3 mb-4 motion-glow-success">
             <div className="flex gap-2">
-              <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+              <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
               {message}
             </div>
             {depositPayUrl ? (
-              <Button asChild className="bg-emerald-600 hover:bg-emerald-500 text-white">
+              <Button asChild>
                 <a href={depositPayUrl}>Pay deposit</a>
               </Button>
             ) : sessionBookUrl ? (
-              <Button asChild variant="secondary" className="bg-zinc-800 hover:bg-zinc-700">
+              <Button asChild variant="secondary">
                 <a href={sessionBookUrl}>Book your session</a>
               </Button>
             ) : null}
           </div>
         ) : null}
 
-        {err ? <p className="text-sm text-rose-400 text-center mb-4">{err}</p> : null}
+        {err ? <p className="text-sm text-destructive text-center mb-4">{err}</p> : null}
 
         {canDecide ? (
           <div className="space-y-2">
-            <label htmlFor="guest-proof-comment" className="text-xs text-zinc-500">
+            <label htmlFor="guest-proof-comment" className="text-xs text-muted-foreground">
               Notes for your artist
             </label>
             <Textarea
@@ -209,33 +236,35 @@ export default function PublicProofPage() {
               onChange={(e) => setComment(e.target.value.slice(0, COMMENT_MAX))}
               rows={3}
               maxLength={COMMENT_MAX}
-              className="bg-zinc-900 border-zinc-700 text-zinc-100 placeholder:text-zinc-500 resize-none"
+              className="resize-none"
               data-testid="guest-proof-comment"
             />
-            <p className="text-[11px] text-zinc-600 text-right">{comment.length}/{COMMENT_MAX}</p>
+            <p className="text-[11px] text-muted-foreground text-right">
+              {comment.length}/{COMMENT_MAX}
+            </p>
           </div>
         ) : data.status === "approved" ? (
-          <div className="text-center text-sm text-zinc-400 flex flex-col items-center gap-3 py-6">
-            <CheckCircle2 className="h-8 w-8 text-emerald-400" />
+          <div className="text-center text-sm text-muted-foreground flex flex-col items-center gap-3 py-6">
+            <CheckCircle2 className="h-8 w-8 text-emerald-500" />
             <p>You approved this design.</p>
-            <Button asChild variant="secondary" className="bg-zinc-800 hover:bg-zinc-700">
+            <Button asChild variant="secondary">
               <Link href={bookUrl}>Book your session</Link>
             </Button>
           </div>
         ) : data.status === "rejected" ? (
-          <div className="text-center text-sm text-zinc-400 flex items-center justify-center gap-2 py-6">
+          <div className="text-center text-sm text-muted-foreground flex items-center justify-center gap-2 py-6">
             <XCircle className="h-4 w-4" />
             Change requests were sent to the studio.
           </div>
         ) : (
-          <p className="text-center text-sm text-zinc-500 capitalize py-4">
+          <p className="text-center text-sm text-muted-foreground capitalize py-4">
             Status: {data.status.replace(/_/g, " ")}
           </p>
         )}
 
         {!canDecide && !message ? (
           <p className="text-center pt-4">
-            <Link href={bookUrl} className="text-sm text-zinc-400 underline underline-offset-2">
+            <Link href={bookUrl} className="text-sm text-muted-foreground underline underline-offset-2">
               Message the studio
             </Link>
           </p>
@@ -243,12 +272,12 @@ export default function PublicProofPage() {
       </div>
 
       {canDecide ? (
-        <div className="fixed bottom-0 inset-x-0 z-40 border-t border-zinc-800 bg-[#0a0a0b]/95 backdrop-blur-md px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur-md px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <div className="max-w-lg mx-auto grid grid-cols-2 gap-3">
             <Button
               type="button"
               variant="outline"
-              className="min-h-[52px] border-zinc-600 bg-transparent text-zinc-100 hover:bg-zinc-800"
+              className="min-h-[52px]"
               disabled={busy}
               onClick={() => void submitDecision("rejected")}
               data-testid="guest-proof-reject"

@@ -1,0 +1,220 @@
+/**
+ * Preset-aware guest + operator surfaces — morph + cssPreset drive layout/mood.
+ * Shared flows (proof review, proof desk, public book) inherit html[data-presentation]
+ * and html[data-layout-morph]; never hardcode one skin for all tenants.
+ */
+
+/* ── Operator: design proof desk ── */
+.design-proof-desk {
+  --proof-desk-gap: 1rem;
+  --proof-card-radius: var(--radius);
+}
+
+html[data-layout-morph="pipeline"] .design-proof-desk {
+  --proof-desk-gap: 1.25rem;
+}
+
+html[data-layout-morph="pipeline"] .design-proof-desk [data-testid^="design-proof-card-"] {
+  border-left: 3px solid hsl(var(--primary) / 0.35);
+}
+
+html[data-layout-morph="standard"] .design-proof-desk ul {
+  grid-template-columns: 1fr !important;
+  max-width: 42rem;
+}
+
+html[data-layout-morph="standard"] .design-proof-desk [data-testid^="design-proof-card-"] {
+  border-radius: calc(var(--radius) - 2px);
+  box-shadow: none;
+}
+
+html[data-presentation-density="compact"] .design-proof-desk {
+  --proof-desk-gap: 0.75rem;
+}
+
+html[data-presentation-density="compact"] .design-proof-desk [data-testid^="design-proof-card-"] .aspect-\[4\/3\] {
+  aspect-ratio: 16 / 10;
+}
+
+html[data-presentation-motion="calm"] .design-proof-desk [data-testid^="design-proof-card-"] {
+  transition: box-shadow 280ms ease, border-color 280ms ease;
+}
+
+html[data-presentation-motion="crisp"] .design-proof-desk [data-testid^="design-proof-card-"] {
+  transition: box-shadow 160ms ease, transform 160ms ease;
+}
+
+html[data-presentation-motion="crisp"] .design-proof-desk [data-testid^="design-proof-card-"]:hover {
+  transform: translateY(-1px);
+}
+
+/* Body-art proof desk — preset character */
+html[data-presentation="studio-dark"] .design-proof-desk aside {
+  background: linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%);
+}
+
+html[data-presentation="flash-light"] .design-proof-desk [data-testid^="design-proof-card-"] {
+  box-shadow: 0 1px 0 hsl(var(--foreground) / 0.04), 0 8px 24px hsl(var(--foreground) / 0.04);
+  border-color: hsl(var(--border));
+}
+
+html[data-presentation="flash-light"] .design-proof-desk [data-testid^="design-proof-card-"] .aspect-\[4\/3\] {
+  background: hsl(0 0% 99%);
+}
+
+html[data-presentation="minimal-mono"] .design-proof-desk {
+  letter-spacing: -0.01em;
+}
+
+html[data-presentation="minimal-mono"] .design-proof-desk [data-testid^="design-proof-card-"] {
+  border-radius: 0.375rem;
+  border-width: 1px;
+}
+
+html[data-presentation="minimal-mono"] .design-proof-desk aside h3 {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+/* ── Guest: public design proof ── */
+.preset-guest-surface.public-proof-shell {
+  min-height: 100dvh;
+}
+
+html[data-presentation="studio-dark"] .public-proof-shell [data-testid="guest-proof-artwork"] {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 40%, hsl(var(--primary) / 0.06), transparent 70%),
+    hsl(var(--card));
+}
+
+html[data-presentation="studio-dark"] .public-proof-shell [data-testid="guest-proof-artwork"] img {
+  filter: drop-shadow(0 12px 32px hsl(0 0% 0% / 0.45));
+}
+
+html[data-presentation="flash-light"] .public-proof-shell [data-testid="guest-proof-artwork"] {
+  background: hsl(0 0% 96%);
+  border-bottom-color: hsl(var(--border));
+}
+
+html[data-presentation="flash-light"] .public-proof-shell [data-testid="guest-proof-artwork"] img {
+  box-shadow: 0 4px 24px hsl(var(--foreground) / 0.08);
+  border-radius: 0.25rem;
+}
+
+html[data-presentation="minimal-mono"] .public-proof-shell header {
+  border-bottom-width: 1px;
+}
+
+html[data-presentation="minimal-mono"] .public-proof-shell [data-testid="guest-proof-artwork"] {
+  background: hsl(var(--background));
+}
+
+html[data-presentation="minimal-mono"] .public-proof-shell [data-testid="guest-proof-artwork"] img {
+  border: 1px solid hsl(var(--border));
+}
+
+/* Beauty / wellness guest proof inheritance (cross-vertical token links) */
+html[data-presentation="noir-dusk"] .public-proof-shell [data-testid="guest-proof-artwork"] {
+  background: radial-gradient(ellipse 70% 50% at 50% 30%, hsl(var(--primary) / 0.12), hsl(var(--card)));
+}
+
+html[data-presentation="harbour-light"] .public-proof-shell [data-testid="guest-proof-artwork"] {
+  background: linear-gradient(180deg, hsl(174 40% 94%) 0%, hsl(var(--background)) 100%);
+}
+
+html[data-presentation="clinical-calm"] .public-proof-shell [data-testid="guest-proof-artwork"] {
+  border-radius: 0;
+}
+
+html[data-presentation="clinical-calm"] .public-proof-shell [data-testid="guest-proof-artwork"] img {
+  border-radius: 0.25rem;
+}
+
+/* ── Public book canvas — preset mood ── */
+html[data-presentation-motion="calm"] .public-book-canvas {
+  scroll-behavior: smooth;
+}
+
+html[data-presentation="studio-dark"] .public-book-canvas {
+  background: linear-gradient(180deg, hsl(var(--card) / 0.35) 0%, transparent 4rem);
+}
+
+html[data-presentation="noir-dusk"] .public-book-canvas,
+html[data-presentation="premium-dark"] .public-book-canvas {
+  background: radial-gradient(ellipse 90% 40% at 50% -8%, hsl(var(--primary) / 0.08), transparent 55%);
+}
+
+html[data-presentation="soft-studio"] .public-book-canvas {
+  background: linear-gradient(180deg, hsl(330 50% 97%) 0%, hsl(var(--background)) 5rem);
+}
+
+html[data-presentation="harbour-light"] .public-book-canvas {
+  background: linear-gradient(180deg, hsl(174 35% 95%) 0%, hsl(var(--background)) 6rem);
+}
+
+html[data-presentation="evening-ledger"] .public-book-canvas {
+  background: linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 8rem);
+}
+
+html[data-presentation="event-atelier"] .public-book-canvas {
+  background: linear-gradient(180deg, hsl(32 30% 96%) 0%, hsl(var(--background)) 6rem);
+}
+
+html[data-presentation="party-pop"] .public-book-canvas {
+  background: radial-gradient(circle at 90% 0%, hsl(330 81% 60% / 0.08), transparent 45%);
+}
+
+/* Dark industrial / gym — subtle edge glow on book */
+html[data-presentation="gym-bold"] .public-book-canvas,
+html[data-presentation="bay-industrial"] .public-book-canvas,
+html[data-presentation="barber-bold"] .public-book-canvas {
+  background: linear-gradient(180deg, hsl(var(--primary) / 0.06) 0%, transparent 5rem);
+}
+
+/* ── Operator shell ambient (non-beauty/wellness vertical presets) ── */
+html[data-presentation="warm-chair"] .app-shell-main {
+  background-image: linear-gradient(180deg, hsl(36 33% 93%) 0%, hsl(var(--background)) 6rem);
+}
+
+html[data-presentation="clean-salon"] .app-shell-main {
+  background-image: linear-gradient(180deg, hsl(210 25% 96%) 0%, hsl(var(--background)) 5rem);
+}
+
+html[data-presentation="clinical-calm"] .app-shell-main {
+  background-image: linear-gradient(180deg, hsl(260 30% 96%) 0%, hsl(var(--background)) 5rem);
+}
+
+html[data-presentation="luxury-serif"] .app-shell-main {
+  background-image:
+    radial-gradient(ellipse 70% 45% at 50% -10%, hsl(var(--primary) / 0.1), transparent),
+    linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 10rem);
+}
+
+html[data-presentation="playful-paw"] .app-shell-main {
+  background-image: radial-gradient(circle at 10% 0%, hsl(271 81% 56% / 0.06), transparent 40%);
+}
+
+html[data-presentation="event-atelier"] .app-shell-main {
+  background-image: linear-gradient(180deg, hsl(32 25% 95%) 0%, hsl(var(--background)) 6rem);
+}
+
+html[data-presentation="wedding-ledger"] .app-shell-main {
+  background-image: linear-gradient(180deg, hsl(30 20% 94%) 0%, hsl(var(--background)) 6rem);
+}
+
+html[data-presentation="studio-clean"] .app-shell-main {
+  background-image: linear-gradient(180deg, hsl(200 30% 95%) 0%, hsl(var(--background)) 5rem);
+}
+
+html[data-presentation="showroom-light"] .app-shell-main {
+  background-image: linear-gradient(180deg, hsl(220 20% 96%) 0%, hsl(var(--background)) 5rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .design-proof-desk [data-testid^="design-proof-card-"] {
+    transition: none !important;
+    transform: none !important;
+  }
+}

@@ -14,8 +14,8 @@ import { listDesignProofs } from "./design-proofs.service";
 import { listClassSessions } from "./class-sessions.service";
 import { listPendingConsents, listIntakesAwaitingReview } from "./medspa.service";
 
-const DEMO_TATTOO_PROOF_IMAGE =
-  "https://images.unsplash.com/photo-1598371839696-5c5bb00bc9bc?w=800&h=800&fit=crop";
+/** Bundled asset — reliable on staging (no hotlink blocks). */
+const DEMO_TATTOO_PROOF_IMAGE = "/w2-gateway/cards/tattoo.jpg";
 
 /** Vertical-specific demo richness for beta showcase shops. */
 export async function seedVerticalDemoExtras(): Promise<{
@@ -67,6 +67,32 @@ export async function seedVerticalDemoExtras(): Promise<{
       if (row) {
         const { ensureDesignProofGuestAccess } = await import("./design-proof-guest-access.service");
         await ensureDesignProofGuestAccess(ink.id, row.id);
+        if (row.imageUrl?.includes("unsplash.com")) {
+          await db
+            .update(designProofAssetsTable)
+            .set({ imageUrl: DEMO_TATTOO_PROOF_IMAGE, updatedAt: new Date() })
+            .where(eq(designProofAssetsTable.id, row.id));
+        }
+      }
+    }
+
+    const approved = await listDesignProofs(ink.id, "approved");
+    if (approved.length === 0) {
+      const proofId = generateId();
+      await db.insert(designProofAssetsTable).values({
+        id: proofId,
+        businessId: ink.id,
+        status: "approved",
+        note: "Flash: anchor & rope — walk-in available",
+        imageUrl: DEMO_TATTOO_PROOF_IMAGE,
+      });
+      designProofs += 1;
+    } else if (approved.some((p) => p.imageUrl?.includes("unsplash.com"))) {
+      for (const p of approved.filter((x) => x.imageUrl?.includes("unsplash.com"))) {
+        await db
+          .update(designProofAssetsTable)
+          .set({ imageUrl: DEMO_TATTOO_PROOF_IMAGE, updatedAt: new Date() })
+          .where(eq(designProofAssetsTable.id, p.id));
       }
     }
   }

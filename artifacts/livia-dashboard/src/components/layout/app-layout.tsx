@@ -530,7 +530,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           {!appearanceEmbed ? <OnboardingProgressBanner /> : null}
           {!appearanceEmbed && !wellnessNativeMorph ? <OperatorMaturityBanner /> : null}
           {!appearanceEmbed ? <PlatformTour /> : null}
-          <ErrorBoundary>{children}</ErrorBoundary>
+          <ErrorBoundary key={location}>{children}</ErrorBoundary>
         </div>
         <KeysChangedRitual />
         {!appearanceEmbed ? <LivNotificationToastBridge /> : null}
