@@ -301,24 +301,30 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
 
 
-  const { pendingCount, handedOffCount, intelBadges } = useNavActionCounts();
+  const { pendingCount, handedOffCount, inboxAttentionCount, inboxAttentionLabel, consultFirst, intelBadges } =
+    useNavActionCounts();
   const navBadges = useMemo(() => {
     const badges: Record<string, number> = { ...intelBadges };
-    if (handedOffCount > 0) badges["/inbox"] = handedOffCount;
+    const inboxCount = consultFirst ? inboxAttentionCount : handedOffCount;
+    if (inboxCount > 0) badges["/inbox"] = inboxCount;
     if (pendingCount > 0) badges["/bookings"] = pendingCount;
     return badges;
-  }, [handedOffCount, pendingCount, intelBadges]);
+  }, [handedOffCount, inboxAttentionCount, consultFirst, pendingCount, intelBadges]);
 
   const navBadgeLabels = useMemo(() => {
     const labels: Record<string, string> = {};
-    if (handedOffCount > 0) {
-      labels["/inbox"] = `${handedOffCount} handoff${handedOffCount === 1 ? "" : "s"} waiting`;
+    const inboxCount = consultFirst ? inboxAttentionCount : handedOffCount;
+    if (inboxCount > 0) {
+      labels["/inbox"] =
+        consultFirst && inboxAttentionLabel
+          ? inboxAttentionLabel
+          : `${inboxCount} handoff${inboxCount === 1 ? "" : "s"} waiting`;
     }
     if (pendingCount > 0) {
       labels["/bookings"] = `${pendingCount} pending booking${pendingCount === 1 ? "" : "s"}`;
     }
     return labels;
-  }, [handedOffCount, pendingCount]);
+  }, [handedOffCount, inboxAttentionCount, inboxAttentionLabel, consultFirst, pendingCount]);
 
   const appearanceDraft = readAppearancePreviewParams(previewSearch);
   const storedCssPreset =

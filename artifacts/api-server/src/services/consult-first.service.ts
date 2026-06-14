@@ -1094,7 +1094,7 @@ export async function createManualQuote(
 
 export async function deleteDraftQuote(businessId: string, quoteId: string) {
   const existing = await getQuoteWithLines(businessId, quoteId);
-  if (!existing || existing.status !== "draft") return null;
+  if (!existing || !["draft", "expired"].includes(existing.status)) return null;
   await db.delete(quoteLineItemsTable).where(eq(quoteLineItemsTable.quoteId, quoteId));
   await db.delete(quotesTable).where(
     and(eq(quotesTable.id, quoteId), eq(quotesTable.businessId, businessId)),

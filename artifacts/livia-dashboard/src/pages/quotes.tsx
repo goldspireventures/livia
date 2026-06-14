@@ -398,17 +398,22 @@ export default function QuotesPage() {
     }
   }
 
-  async function deleteDraft() {
-    if (!bid || !selected || selected.status !== "draft") return;
-    if (!window.confirm("Delete this draft quote? This cannot be undone.")) return;
+  async function removeQuote() {
+    if (!bid || !selected || !["draft", "expired"].includes(selected.status)) return;
+    const label = selected.status === "expired" ? "Remove this expired quote from your list?" : "Delete this draft quote?";
+    if (!window.confirm(`${label} This cannot be undone.`)) return;
     try {
       await customFetch(`/api/businesses/${bid}/quotes/${selected.id}`, { method: "DELETE" });
-      toast({ title: "Draft deleted" });
+      toast({ title: selected.status === "expired" ? "Quote removed" : "Draft deleted" });
       setSelected(null);
       void load();
     } catch {
-      toast({ title: "Could not delete draft", variant: "destructive" });
+      toast({ title: "Could not remove quote", variant: "destructive" });
     }
+  }
+
+  async function deleteDraft() {
+    return removeQuote();
   }
 
   async function copyPrepNudge(taskId: string) {
@@ -827,7 +832,9 @@ export default function QuotesPage() {
                         className={action.destructive ? "border-destructive/40 text-destructive hover:bg-destructive/10" : ""}
                         onClick={() => {
                           if (action.id === "client_withdrew") setWithdrewOpen(true);
-                          else if (action.id === "mark_lost" && bid && selected) {
+                          else if (action.id === "remove_quote" && bid && selected) {
+                            void removeQuote();
+                          } else if (action.id === "mark_lost" && bid && selected) {
                             void customFetch(`/api/businesses/${bid}/quotes/${selected.id}/client-withdrew`, {
                               method: "POST",
                               headers: { "Content-Type": "application/json" },
@@ -848,19 +855,23 @@ export default function QuotesPage() {
               ) : null}
 
               <div className="flex flex-wrap gap-2 pt-2 border-t">
-                {selected.status === "draft" ? (
+                {selected.status === "draft" || selected.status === "expired" ? (
                   <>
-                    <Button size="sm" onClick={() => void saveDraft()}>
-                      Save draft
-                    </Button>
-                    <Button size="sm" variant="destructive" onClick={() => void deleteDraft()}>
+                    {selected.status === "draft" ? (
+                      <Button size="sm" onClick={() => void saveDraft()}>
+                        Save draft
+                      </Button>
+                    ) : null}
+                    <Button size="sm" variant="destructive" onClick={() => void removeQuote()}>
                       <Trash2 className="mr-1 h-3 w-3" />
-                      Delete draft
+                      {selected.status === "expired" ? "Remove" : "Delete draft"}
                     </Button>
-                    <Button size="sm" className="ml-auto" onClick={() => void openSendReview()}>
-                      <Send className="mr-1 h-3 w-3" />
-                      Review & send
-                    </Button>
+                    {selected.status === "draft" ? (
+                      <Button size="sm" className="ml-auto" onClick={() => void openSendReview()}>
+                        <Send className="mr-1 h-3 w-3" />
+                        Review & send
+                      </Button>
+                    ) : null}
                   </>
                 ) : (
                   <Button size="sm" variant="outline" onClick={() => setSendReviewOpen(true)}>

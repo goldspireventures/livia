@@ -1,4 +1,4 @@
-import { db, bookingsTable, customersTable, conversationsTable, eventsTable, businessesTable } from "@workspace/db";
+import { db, bookingsTable, customersTable, conversationsTable, eventsTable, businessesTable, enquiriesTable } from "@workspace/db";
 import { eq, and, gte, lte, sql, inArray } from "drizzle-orm";
 import { enrichBookingsBatch } from "./bookings.service";
 import { desc } from "drizzle-orm";
@@ -13,7 +13,7 @@ import { listAtRiskGuestPreviews } from "./relationship.service";
 import { listRecentVisitFeedback } from "./visit-feedback.service";
 import { formatCommerceMinor, getCommerceSnapshot } from "./commerce-intelligence.service";
 import { syncCommerceIntelligenceLoop } from "./commerce-signals.service";
-import { enrichActivityFeedItem } from "@workspace/policy";
+import { enrichActivityFeedItem, isConsultFirstVertical } from "@workspace/policy";
 
 export async function getDashboardSummary(businessId: string) {
   const now = new Date();
@@ -81,8 +81,24 @@ export async function getDashboardSummary(businessId: string) {
       and(
         eq(conversationsTable.businessId, businessId),
         eq(conversationsTable.status, "HANDED_OFF"),
+        sql`coalesce(${conversationsTable.resolution}->>'operatorViewedAt', '') = ''`,
       ),
     );
+
+  const consultFirst = isConsultFirstVertical(biz?.vertical);
+  let newEnquiriesCount = 0;
+  if (consultFirst) {
+    const [newEnq] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(enquiriesTable)
+      .where(
+        and(eq(enquiriesTable.businessId, businessId), eq(enquiriesTable.status, "new")),
+      );
+    newEnquiriesCount = newEnq?.count ?? 0;
+  }
+  const inboxAttentionCount = consultFirst
+    ? newEnquiriesCount + (handedOffCount?.count ?? 0)
+    : handedOffCount?.count ?? 0;
 
   const [confirmedCount] = await db
     .select({ count: sql<number>`count(*)::int` })
@@ -180,6 +196,8 @@ export async function getDashboardSummary(businessId: string) {
     weekBookings: weekCount?.count ?? 0,
     pendingCount: pendingCount?.count ?? 0,
     handedOffCount: handedOffCount?.count ?? 0,
+    newEnquiriesCount: consultFirst ? newEnquiriesCount : undefined,
+    inboxAttentionCount,
     confirmedCount: confirmedCount?.count ?? 0,
     completedTodayCount: completedToday?.count ?? 0,
     noShowTodayCount: noShowToday?.count ?? 0,

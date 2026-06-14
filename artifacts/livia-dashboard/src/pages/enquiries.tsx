@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useBusiness } from "@/lib/business-context";
 import { useToast } from "@/hooks/use-toast";
-import { customFetch, useListConversations } from "@workspace/api-client-react";
+import { customFetch, useListConversations, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -21,6 +22,8 @@ import {
 import { InboxConversationPane } from "@/components/inbox/inbox-conversation-pane";
 import {
   CONSULT_INBOX_LENS_LABELS,
+  consultInboxLeadNeedsAttention,
+  consultInboxThreadNeedsAttention,
   countConsultInboxLens,
   ENQUIRY_DECLINE_REASONS,
   type ConsultInboxLens,
@@ -76,6 +79,7 @@ type ThreadRow = {
   lastMessage: string | null;
   lastMessageAt: string;
   aiHandled: boolean;
+  resolution?: { operatorViewedAt?: string | null } | null;
 };
 
 type LeadListItem = { kind: "lead"; id: string; at: string; enquiry: Enquiry };
@@ -88,6 +92,7 @@ const LENSES: ConsultInboxLens[] = ["all", "leads", "messages"];
 export default function EventVendorUnifiedInboxPage() {
   const { business } = useBusiness();
   const { toast } = useToast();
+  const qc = useQueryClient();
   const bid = business?.id ?? "";
   const [rows, setRows] = useState<Enquiry[]>([]);
   const [linkedQuoteId, setLinkedQuoteId] = useState<string | null>(null);
@@ -222,6 +227,14 @@ export default function EventVendorUnifiedInboxPage() {
   function selectThread(threadId: string) {
     setSelectedThreadId(threadId);
     setSelected(null);
+    if (!bid) return;
+    void customFetch(`/api/businesses/${bid}/conversations/${threadId}/ack-view`, {
+      method: "POST",
+    })
+      .then(() => {
+        void qc.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey(bid) });
+      })
+      .catch(() => undefined);
   }
 
   async function load() {
@@ -459,6 +472,11 @@ export default function EventVendorUnifiedInboxPage() {
                     <Badge variant="secondary" className="text-[10px]">
                       {consultEnquiryStatusLabel(item.enquiry.status)}
                     </Badge>
+                    {consultInboxLeadNeedsAttention(item.enquiry.status) ? (
+                      <Badge variant="default" className="text-[9px]">
+                        New
+                      </Badge>
+                    ) : null}
                     {item.enquiry.status === "new" && lowFitIds.has(item.enquiry.id) ? (
                       <Badge variant="outline" className="text-[9px] text-muted-foreground">
                         Low fit
@@ -494,6 +512,14 @@ export default function EventVendorUnifiedInboxPage() {
                   <Badge variant="outline" className="text-[9px] uppercase shrink-0">
                     DM
                   </Badge>
+                  {consultInboxThreadNeedsAttention(
+                    item.thread.status,
+                    item.thread.resolution?.operatorViewedAt,
+                  ) ? (
+                    <Badge variant="default" className="text-[9px] shrink-0">
+                      Needs reply
+                    </Badge>
+                  ) : null}
                 </div>
                 <p className="text-sm text-muted-foreground truncate">
                   {item.thread.lastMessage ?? "No messages yet"}

@@ -1,5 +1,5 @@
 import { useGetOwnerIntelligence } from "@workspace/api-client-react";
-import { ownerIntelBadgesForNav } from "@workspace/policy";
+import { ownerIntelBadgesForNav, resolveConsultInboxNavAttention, isConsultFirstVertical } from "@workspace/policy";
 import { useBusiness } from "@/lib/business-context";
 import { useGetDashboardSummary } from "@workspace/api-client-react";
 import { useInAppNotifications } from "@/hooks/use-in-app-notifications";
@@ -9,6 +9,8 @@ import { useMemo } from "react";
 export function useNavActionCounts() {
   const { business } = useBusiness();
   const bid = business?.id ?? "";
+  const vertical = (business as { vertical?: string } | null)?.vertical;
+  const consultFirst = isConsultFirstVertical(vertical);
   const { data: summary } = useGetDashboardSummary(bid, {
     query: { enabled: !!bid, refetchInterval: 60_000 } as never,
   });
@@ -20,8 +22,31 @@ export function useNavActionCounts() {
   const pendingCount = summary?.pendingCount ?? 0;
   const handedOffCount =
     (summary as { handedOffCount?: number } | undefined)?.handedOffCount ?? 0;
+  const newEnquiriesCount =
+    (summary as { newEnquiriesCount?: number } | undefined)?.newEnquiriesCount ?? 0;
+  const inboxAttentionCount =
+    (summary as { inboxAttentionCount?: number } | undefined)?.inboxAttentionCount ??
+    handedOffCount;
+
+  const consultInboxAttention = useMemo(
+    () =>
+      resolveConsultInboxNavAttention({
+        newEnquiries: newEnquiriesCount,
+        unviewedHandoffs: handedOffCount,
+      }),
+    [newEnquiriesCount, handedOffCount],
+  );
 
   const intelBadges = useMemo(() => ownerIntelBadgesForNav(ownerIntel ?? null), [ownerIntel]);
 
-  return { pendingCount, handedOffCount, unreadCount, intelBadges };
+  return {
+    pendingCount,
+    handedOffCount,
+    newEnquiriesCount,
+    inboxAttentionCount: consultFirst ? consultInboxAttention.count : inboxAttentionCount,
+    inboxAttentionLabel: consultFirst ? consultInboxAttention.label : "",
+    consultFirst,
+    unreadCount,
+    intelBadges,
+  };
 }

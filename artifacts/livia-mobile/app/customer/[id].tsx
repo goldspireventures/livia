@@ -17,6 +17,7 @@ import { fonts, type } from "@/constants/typography";
 import { useBusiness } from "@/contexts/BusinessContext";
 import { useColors } from "@/hooks/useColors";
 import { useMembership } from "@/hooks/useMembership";
+import { showOwnerLivMemoryPanel } from "@workspace/policy";
 import { LivMemoryCard } from "@/components/LivMemoryCard";
 import { OperationalScreen } from "@/components/OperationalScreen";
 import { OperatorSurfaceShell } from "@/components/shell/OperatorSurfaceShell";
@@ -207,7 +208,7 @@ export default function CustomerDetailScreen() {
         </CollapsibleSettingsSection>
       ) : null}
 
-      {bid && id ? (
+      {bid && id && showOwnerLivMemoryPanel(vertical) ? (
         <CollapsibleSettingsSection
           id="memory"
           icon="cpu"

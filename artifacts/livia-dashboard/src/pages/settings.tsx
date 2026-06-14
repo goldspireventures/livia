@@ -83,6 +83,7 @@ import {
 import { CrossSurfaceContinueCard } from "@/components/onboarding/cross-surface-continue-card";
 import { PublicAppearancePanel } from "@/components/settings/public-appearance-panel";
 import { LivSetupPanel } from "@/components/liv/liv-setup-panel";
+import { BillingRemediationStrip } from "@/components/billing/billing-remediation-strip";
 import { AuditLogPanel } from "@/components/audit/audit-log-panel";
 import { Users, FileText } from "lucide-react";
 import {
@@ -261,6 +262,8 @@ export default function SettingsPage() {
               : "Your login, notifications, and shop basics."
         }
       />
+
+      <BillingRemediationStrip />
 
       {isLoading ? (
         <div className="space-y-4">

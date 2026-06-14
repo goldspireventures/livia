@@ -83,6 +83,10 @@ export function consultFirstClientsListCopy(vertical: string | null | undefined)
   };
 }
 
+export function showOwnerLivMemoryPanel(vertical: string | null | undefined): boolean {
+  return !isConsultFirstVertical(vertical);
+}
+
 /** Demo seed cap — solo decor has a handful of real enquirers, not 20+ salon guests. */
 export function consultFirstDemoCustomerCap(): number {
   return 6;

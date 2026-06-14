@@ -262,6 +262,37 @@ export async function updateConversationStatus(
   return row;
 }
 
+/** Operator opened a handed-off thread — clears consult-first nav attention. */
+export async function acknowledgeConversationView(
+  businessId: string,
+  conversationId: string,
+): Promise<Conversation | null> {
+  const [row] = await db
+    .select()
+    .from(conversationsTable)
+    .where(
+      and(
+        eq(conversationsTable.id, conversationId),
+        eq(conversationsTable.businessId, businessId),
+      ),
+    )
+    .limit(1);
+  if (!row || row.status !== "HANDED_OFF") return row ?? null;
+
+  const prior = (row.resolution ?? {}) as Record<string, unknown>;
+  if (typeof prior.operatorViewedAt === "string") return row;
+
+  const [updated] = await db
+    .update(conversationsTable)
+    .set({
+      resolution: { ...prior, operatorViewedAt: new Date().toISOString() },
+      updatedAt: new Date(),
+    })
+    .where(eq(conversationsTable.id, conversationId))
+    .returning();
+  return updated ?? null;
+}
+
 export async function updateConversationContact(
   conversationId: string,
   details: { name?: string; email?: string; phone?: string },

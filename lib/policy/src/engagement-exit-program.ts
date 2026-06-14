@@ -54,7 +54,7 @@ export const ENGAGEMENT_EXIT_VERTICALS: Partial<
   fitness: ["client_cancelled_booking", "client_no_show"],
 };
 
-export type QuoteExitActionId = "open_inbox" | "client_withdrew" | "mark_lost";
+export type QuoteExitActionId = "open_inbox" | "client_withdrew" | "mark_lost" | "remove_quote";
 
 export type QuoteExitAction = {
   id: QuoteExitActionId;
@@ -73,6 +73,17 @@ export function resolveQuoteExitActions(args: {
   const depositPaid =
     args.depositAmountMinor > 0 && args.depositPaidMinor >= args.depositAmountMinor;
   const partialDeposit = args.depositPaidMinor > 0 && !depositPaid;
+
+  if (args.quoteStatus === "expired") {
+    return [
+      {
+        id: "remove_quote",
+        label: "Remove from list",
+        destructive: true,
+        hint: "Archive this expired quote — enquiry history stays intact.",
+      },
+    ];
+  }
 
   if (args.quoteStatus === "declined" || args.enquiryStatus === "lost") {
     return [];

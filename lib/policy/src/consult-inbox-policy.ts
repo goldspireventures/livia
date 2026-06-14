@@ -75,6 +75,38 @@ export function countConsultInboxLens(
   };
 }
 
+/** Nav + list attention — new leads and unviewed handoffs only (not every open thread). */
+export function resolveConsultInboxNavAttention(args: {
+  newEnquiries: number;
+  unviewedHandoffs: number;
+}): { count: number; label: string } {
+  const count = Math.max(0, args.newEnquiries) + Math.max(0, args.unviewedHandoffs);
+  if (count === 0) return { count: 0, label: "" };
+  const parts: string[] = [];
+  if (args.newEnquiries > 0) {
+    parts.push(
+      `${args.newEnquiries} new lead${args.newEnquiries === 1 ? "" : "s"}`,
+    );
+  }
+  if (args.unviewedHandoffs > 0) {
+    parts.push(
+      `${args.unviewedHandoffs} thread${args.unviewedHandoffs === 1 ? "" : "s"} need${args.unviewedHandoffs === 1 ? "s" : ""} reply`,
+    );
+  }
+  return { count, label: parts.join(" · ") };
+}
+
+export function consultInboxLeadNeedsAttention(status: string): boolean {
+  return status === "new";
+}
+
+export function consultInboxThreadNeedsAttention(
+  status: string,
+  operatorViewedAt?: string | null,
+): boolean {
+  return status === "HANDED_OFF" && !operatorViewedAt;
+}
+
 export function consultQuotesHref(quoteId: string): string {
   return `/quotes?id=${encodeURIComponent(quoteId)}`;
 }

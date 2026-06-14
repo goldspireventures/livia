@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import {
   countConsultInboxLens,
   isConsultDmChannel,
+  resolveConsultInboxNavAttention,
   shouldCloseConsultDm,
 } from "../consult-inbox-policy";
 
@@ -32,6 +33,11 @@ assert.deepEqual(
     ],
   ),
   { all: 4, leads: 2, messages: 2 },
+);
+
+assert.deepEqual(
+  resolveConsultInboxNavAttention({ newEnquiries: 3, unviewedHandoffs: 1 }),
+  { count: 4, label: "3 new leads · 1 thread needs reply" },
 );
 
 console.log("consult-inbox-policy.test.ts OK");

@@ -28,6 +28,7 @@ import {
   showOwnerBookingHistoryPanel,
   showOwnerConsultPipelinePanel,
   showOwnerGuestRelationshipPanel,
+  showOwnerLivMemoryPanel,
 } from "@workspace/policy";
 import { LivMemoryPanel } from "@/components/customers/liv-memory-panel";
 import { GuestHistoryPanel } from "@/components/customers/guest-history-panel";
@@ -367,6 +368,7 @@ export default function CustomerDetailPage() {
             vertical={(business as { vertical?: string } | undefined)?.vertical}
           />
 
+          {showOwnerLivMemoryPanel(vertical) ? (
           <LivMemoryPanel
             businessId={bid}
             customerId={cid}
@@ -374,6 +376,7 @@ export default function CustomerDetailPage() {
             vertical={(business as { vertical?: string } | null)?.vertical}
             category={(business as { category?: string } | null)?.category}
           />
+          ) : null}
 
           <GuestHistoryPanel
             businessId={bid}

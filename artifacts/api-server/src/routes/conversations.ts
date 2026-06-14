@@ -13,6 +13,7 @@ import {
   listMessagesForConversation,
   listSiblingOpenThreads,
   updateConversationStatus,
+  acknowledgeConversationView,
   sendStaffMessage,
   type ConversationStatus,
 } from "../services/conversations.service";
@@ -81,6 +82,22 @@ router.get(
         createdAt: m.createdAt,
       })),
     });
+  },
+);
+
+router.post(
+  "/businesses/:businessId/conversations/:conversationId/ack-view",
+  requireAuth,
+  requireRole("STAFF"),
+  async (req, res): Promise<void> => {
+    const businessId = getBizId(req.params.businessId);
+    const conversationId = getBizId(req.params.conversationId);
+    const row = await acknowledgeConversationView(businessId, conversationId);
+    if (!row) {
+      sendError(res, req, 404, "Conversation not found");
+      return;
+    }
+    res.json(row);
   },
 );
 
