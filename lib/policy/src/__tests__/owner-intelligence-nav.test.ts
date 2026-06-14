@@ -2,12 +2,36 @@ import assert from "node:assert/strict";
 import { ownerIntelBadgesForNav, ownerIntelligenceNavBadges } from "../owner-intelligence-nav";
 
 const badges = ownerIntelligenceNavBadges({
-  remediationTasks: [{ severity: "act" }, { severity: "watch" }],
-  commerce: { topSignal: { severity: "act" } },
-  commerceCapabilityBlockers: [{ capabilityId: "payments" }],
+  remediationTasks: [
+    {
+      signalId: "a",
+      severity: "act",
+      title: "Turn on deposits",
+      body: "x",
+      href: "/settings?tab=billing#commerce-fix",
+    },
+    { signalId: "b", severity: "watch", title: "Watch", body: "y", href: "/settings?tab=billing" },
+  ],
+  commerce: {
+    topSignal: {
+      severity: "act",
+      title: "Top",
+      body: "z",
+      href: "/settings?tab=billing#commerce-fix",
+    },
+  },
+  commerceCapabilityBlockers: [
+    {
+      capabilityId: "payments",
+      capabilityName: "Payments",
+      blocker: "Stripe",
+      href: "/settings?tab=billing#commerce-fix",
+    },
+  ],
   livPrompts: ["Review billing"],
 });
 assert.equal(badges.billingActCount, 3);
+assert.ok(badges.settingsActCount >= 1);
 assert.equal(badges.homeActCount, 4);
 assert.equal(badges.livActCount, 1);
 

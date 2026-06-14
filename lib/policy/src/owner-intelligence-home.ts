@@ -277,6 +277,7 @@ export function buildSettingsAttentionRows(intel: unknown): OwnerIntelligenceAct
   const seen = new Set<string>();
   const rows: OwnerIntelligenceActionRow[] = [];
   const push = (row: OwnerIntelligenceActionRow) => {
+    if (!row.title?.trim()) return;
     const key = normalizeIntelligenceTitle(row.title);
     if (!key || seen.has(key)) return;
     seen.add(key);
