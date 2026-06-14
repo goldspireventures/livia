@@ -14,7 +14,7 @@
     "test:founder-checklist": "playwright test --project=founder-checklist",
     "test:contextual-web": "playwright test --project=contextual-web",
     "test:full-visual-audit": "playwright test --project=full-visual-audit",
-    "test:all-verticals": "playwright test --project=all-verticals-smoke --workers=1",
+    "test:guest-retail-cart": "playwright test --project=guest-retail-cart --workers=1",
     "test:demo-depth": "playwright test --project=demo-live-day --project=demo-proof-token --project=demo-intake-token --project=demo-waitlist-token --project=guest-pay --project=public-booking-quality --workers=1",
     "test:guest-tokens": "playwright test --project=guest-token-suite --workers=1",
     "test:ux-quality-gate": "playwright test tests/ux-quality-gate.spec.ts --project=dashboard",

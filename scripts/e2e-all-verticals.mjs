@@ -98,6 +98,9 @@ if (dashOk) {
   ok =
     run("pnpm", [...e2e, "--project=public-booking-quality", "--workers=1"], "Public booking B2C quality") &&
     ok;
+  ok =
+    run("pnpm", [...e2e, "--project=guest-retail-cart", "--workers=1"], "Guest retail bag + checkout") &&
+    ok;
   ok = run("pnpm", [...e2e, "--project=ux-quality-gate", "--workers=1"], "UX quality gate (hair wedge)") && ok;
   ok = run("pnpm", [...e2e, "--project=settings-preset-picker", "--workers=1"], "Settings preset picker (E7)") && ok;
 } else {

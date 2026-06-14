@@ -101,6 +101,7 @@ import {
 import { parseBeautyRetailStoreSettings, normalizeGuestRetailFulfillmentMode, guestRetailFulfillmentOptions } from "@workspace/policy";
 import { getDashboardUrl } from "../lib/public-urls";
 import { resolveGuestTokenUrl } from "../lib/guest-public-urls";
+import { guestMaySimulatePayments, isStripeConfigured } from "../lib/stripe";
 
 const router: IRouter = Router();
 
@@ -1228,7 +1229,10 @@ router.get("/public/b/:slug/shop/:token", async (req, res): Promise<void> => {
     slug: business.slug,
     vertical: business.vertical,
     logoUrl: business.logoUrl,
-    checkoutAvailable: order.status !== "PAID",
+    fulfillmentMode: order.fulfillmentMode,
+    fulfillmentDetail: order.fulfillmentDetail,
+    checkoutAvailable:
+      order.status !== "PAID" && (isStripeConfigured() || guestMaySimulatePayments()),
   });
 });
 

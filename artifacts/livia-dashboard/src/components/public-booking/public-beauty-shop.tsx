@@ -95,11 +95,7 @@ function ProductCard({
   if (layout === "rail") {
     return (
       <li className="public-shop-card public-shop-card--rail" data-testid={`public-shop-item-${p.id}`}>
-        <PublicRetailProductThumb
-          name={p.name}
-          imageUrl={p.imageUrl}
-          className="public-shop-card-thumb--rail shrink-0"
-        />
+        <PublicRetailProductThumb name={p.name} imageUrl={p.imageUrl} variant="rail" />
         <div className="public-shop-card-rail-body min-w-0 flex-1">
           <p
             className="public-shop-card-title text-sm font-medium leading-snug line-clamp-2"

@@ -17,10 +17,11 @@ import {
 import { PublicRetailProductThumb } from "@/components/public-booking/public-retail-product-thumb";
 import {
   guestRetailFulfillmentDetailHint,
+  guestRetailFulfillmentLabel,
   type GuestRetailFulfillmentMode,
   type GuestRetailFulfillmentOption,
 } from "@workspace/policy";
-import { Minus, Plus, Loader2 } from "lucide-react";
+import { Minus, Plus, Loader2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function PublicRetailCartDrawer({
@@ -57,62 +58,92 @@ export function PublicRetailCartDrawer({
   const currency = cartCurrency(cart);
   const selectedFulfillment = fulfillmentOptions.find((o) => o.mode === fulfillmentMode);
   const detailHint = guestRetailFulfillmentDetailHint(fulfillmentMode);
+  const checkoutBlocked =
+    checkoutBusy || (selectedFulfillment?.requiresAddress && !fulfillmentDetail.trim());
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="max-h-[min(92vh,720px)] rounded-t-2xl px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-        <SheetHeader className="text-left pb-2">
+      <SheetContent
+        side="bottom"
+        className="flex max-h-[min(92vh,720px)] flex-col overflow-hidden rounded-t-2xl px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-6"
+      >
+        <SheetHeader className="shrink-0 text-left pb-3">
           <SheetTitle>Your bag</SheetTitle>
           <SheetDescription>
             {count} {count === 1 ? "item" : "items"} · {formatCurrency(subtotal, currency)}
           </SheetDescription>
         </SheetHeader>
 
-        <ul className="space-y-3 overflow-y-auto max-h-[38vh] pr-1 -mr-1" data-testid="public-retail-cart-lines">
+        <ul
+          className="min-h-0 flex-1 space-y-2 overflow-y-auto overflow-x-hidden overscroll-contain pr-1"
+          data-testid="public-retail-cart-lines"
+        >
           {cart.lines.map((line) => (
             <li
               key={line.productId}
-              className="flex items-center gap-3 rounded-lg border border-border/80 p-2.5"
+              className="flex items-center gap-3 rounded-lg border border-border/80 bg-card/50 p-2.5"
+              data-testid={`public-cart-line-${line.productId}`}
             >
               <PublicRetailProductThumb
                 name={line.name}
                 imageUrl={line.imageUrl}
-                className="h-14 w-14 shrink-0 rounded-md"
+                variant="compact"
               />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium truncate">{line.name}</p>
-                <p className="text-xs text-primary tabular-nums">
-                  {formatCurrency(line.priceMinor, line.currency)}
+                <p className="text-sm font-medium leading-snug line-clamp-2">{line.name}</p>
+                <p className="text-xs text-muted-foreground tabular-nums mt-0.5">
+                  {formatCurrency(line.priceMinor, line.currency)} each
+                </p>
+                <p className="text-xs font-medium text-primary tabular-nums mt-0.5">
+                  {formatCurrency(line.priceMinor * line.quantity, line.currency)}
                 </p>
               </div>
-              <div className="flex items-center gap-1 shrink-0">
+              <div className="flex flex-col items-end gap-1.5 shrink-0">
+                <div className="flex items-center gap-1">
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="outline"
+                    className="h-8 w-8"
+                    aria-label={`Remove one ${line.name}`}
+                    onClick={() => onChangeQty(line.productId, line.quantity - 1)}
+                  >
+                    <Minus className="h-3.5 w-3.5" />
+                  </Button>
+                  <span
+                    className="text-sm font-medium tabular-nums w-6 text-center"
+                    data-testid={`public-cart-qty-${line.productId}`}
+                  >
+                    {line.quantity}
+                  </span>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="outline"
+                    className="h-8 w-8"
+                    aria-label={`Add one ${line.name}`}
+                    onClick={() => onChangeQty(line.productId, line.quantity + 1)}
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
                 <Button
                   type="button"
-                  size="icon"
-                  variant="outline"
-                  className="h-8 w-8"
-                  aria-label={`Remove one ${line.name}`}
-                  onClick={() => onChangeQty(line.productId, line.quantity - 1)}
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs text-muted-foreground"
+                  aria-label={`Remove ${line.name} from bag`}
+                  onClick={() => onChangeQty(line.productId, 0)}
                 >
-                  <Minus className="h-3.5 w-3.5" />
-                </Button>
-                <span className="text-xs font-medium tabular-nums w-5 text-center">{line.quantity}</span>
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="outline"
-                  className="h-8 w-8"
-                  aria-label={`Add one ${line.name}`}
-                  onClick={() => onChangeQty(line.productId, line.quantity + 1)}
-                >
-                  <Plus className="h-3.5 w-3.5" />
+                  <Trash2 className="h-3.5 w-3.5 mr-1" />
+                  Remove
                 </Button>
               </div>
             </li>
           ))}
         </ul>
 
-        <div className="mt-4 space-y-2">
+        <div className="shrink-0 mt-3 space-y-2 overflow-x-hidden">
           <p className="text-sm font-medium">How should we get this to you?</p>
           <div className="grid gap-2">
             {fulfillmentOptions.map((opt) => (
@@ -120,7 +151,7 @@ export function PublicRetailCartDrawer({
                 key={opt.mode}
                 type="button"
                 className={cn(
-                  "rounded-lg border px-3 py-2.5 text-left transition-colors",
+                  "w-full rounded-lg border px-3 py-2.5 text-left transition-colors",
                   fulfillmentMode === opt.mode
                     ? "border-primary bg-primary/5"
                     : "border-border/80 hover:border-primary/30",
@@ -145,16 +176,20 @@ export function PublicRetailCartDrawer({
           ) : null}
         </div>
 
-        <div className="mt-4 space-y-2 border-t border-border pt-4">
+        <div className="shrink-0 mt-4 space-y-2 border-t border-border pt-4">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Subtotal</span>
             <span className="font-medium tabular-nums">{formatCurrency(subtotal, currency)}</span>
           </div>
+          <p className="text-xs text-muted-foreground">
+            {guestRetailFulfillmentLabel(fulfillmentMode)}
+            {fulfillmentDetail.trim() ? ` · ${fulfillmentDetail.trim()}` : null}
+          </p>
           {combinedAvailable && onCheckoutCombined ? (
             <Button
               type="button"
               className="w-full"
-              disabled={checkoutBusy || (selectedFulfillment?.requiresAddress && !fulfillmentDetail.trim())}
+              disabled={checkoutBlocked}
               onClick={onCheckoutCombined}
               data-testid="public-cart-combined-checkout"
             >
@@ -166,12 +201,12 @@ export function PublicRetailCartDrawer({
             type="button"
             variant={combinedAvailable ? "outline" : "default"}
             className="w-full"
-            disabled={checkoutBusy || (selectedFulfillment?.requiresAddress && !fulfillmentDetail.trim())}
+            disabled={checkoutBlocked}
             onClick={onCheckoutRetailOnly}
             data-testid="public-cart-retail-checkout"
           >
             {checkoutBusy ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-            Checkout bag only
+            Checkout bag
           </Button>
         </div>
       </SheetContent>

@@ -1183,7 +1183,8 @@ html[data-beauty-native-skin][data-presentation="premium-dark"] .beauty-public-s
   border-color: hsl(var(--primary) / 0.35);
 }
 
-.public-shop-card-thumb {
+/* Tile thumbs: width 100% only inside grid media — never on bare flex rows (cart uses Tailwind). */
+.public-shop-card-media .public-shop-card-thumb {
   width: 100%;
   aspect-ratio: 1 / 1;
   background: hsl(var(--muted));

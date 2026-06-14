@@ -476,9 +476,13 @@ export default function PublicBookingPage() {
       guestRetailFulfillmentOptions({
         vertical: b?.vertical,
         category: b?.category,
-        hasLinkedBooking: Boolean(confirmation?.bookingId || selectedSlot),
+        hasLinkedBooking: Boolean(
+          confirmation?.bookingId ||
+            selectedSlot ||
+            (step !== "services" && !!selectedService),
+        ),
       }),
-    [b?.vertical, b?.category, confirmation?.bookingId, selectedSlot],
+    [b?.vertical, b?.category, confirmation?.bookingId, selectedSlot, selectedService, step],
   );
 
   const cartBarHeightPx = showRetailCartBar ? 72 : 0;

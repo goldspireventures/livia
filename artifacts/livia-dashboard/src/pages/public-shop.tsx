@@ -14,6 +14,10 @@ import {
 } from "@/components/public/public-surface-chrome";
 import { usePublicGuestPwa } from "@/lib/public-guest-pwa";
 import { parsePublicShopPath } from "@/lib/public-guest-route-params";
+import {
+  guestRetailFulfillmentLabel,
+  type GuestRetailFulfillmentMode,
+} from "@workspace/policy";
 
 type ShopLine = {
   id: string;
@@ -43,6 +47,8 @@ type ShopPayload = {
   vertical: string | null;
   logoUrl: string | null;
   checkoutAvailable: boolean;
+  fulfillmentMode?: string | null;
+  fulfillmentDetail?: string | null;
 };
 
 export default function PublicShopPage() {
@@ -195,6 +201,12 @@ export default function PublicShopPage() {
                 {formatCurrency(data.amountMinor, data.currency)}
               </span>
             </div>
+            {data.fulfillmentMode ? (
+              <p className="text-sm text-muted-foreground">
+                {guestRetailFulfillmentLabel(data.fulfillmentMode as GuestRetailFulfillmentMode)}
+                {data.fulfillmentDetail?.trim() ? ` · ${data.fulfillmentDetail.trim()}` : null}
+              </p>
+            ) : null}
             {flash ? <p className="text-sm text-muted-foreground">{flash}</p> : null}
             {paid ? (
               <div className="flex items-center gap-2 text-sm text-[hsl(var(--chart-3))]">

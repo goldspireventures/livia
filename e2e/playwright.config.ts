@@ -284,6 +284,16 @@ export default defineConfig({
       },
     },
     {
+      name: "guest-retail-cart",
+      testMatch: /guest-retail-cart\.spec\.ts/,
+      timeout: 300_000,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+      },
+    },
+    {
       name: "internal-ops-smoke",
       testMatch: /internal-ops-smoke\.spec\.ts/,
       timeout: 120_000,

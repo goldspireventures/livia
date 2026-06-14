@@ -75,6 +75,7 @@ import PublicProofPage from "@/pages/public-proof";
 import PublicIntakePage from "@/pages/public-intake";
 import PublicWaitlistPage from "@/pages/public-waitlist";
 import PublicPayPage from "@/pages/public-pay";
+import PublicShopPage from "@/pages/public-shop";
 import MyLiviaPage from "@/pages/my-livia";
 import MyLiviaShopPage from "@/pages/my-livia-shop";
 import MyLiviaVisitPage from "@/pages/my-livia-visit";
@@ -388,7 +389,7 @@ function AppRouter() {
       <Route path="/book/:slug/intake/:token" component={PublicIntakePage} />
       <Route path="/book/:slug/waitlist/:token" component={PublicWaitlistPage} />
       <Route path="/book/:slug/pay/:token" component={PublicPayPage} />
-      <Route path="/book/:slug/shop/:token">{() => <LegacyGuestBookRedirect />}</Route>
+      <Route path="/book/:slug/shop/:token" component={PublicShopPage} />
       <Route path="/book/:slug/visit/:token" component={PublicVisitPage} />
       <Route path="/book/:slug" component={PublicBookingPage} />
       <Route path="/b/:slug/proof/:token">{() => <LegacyGuestBookRedirect />}</Route>
