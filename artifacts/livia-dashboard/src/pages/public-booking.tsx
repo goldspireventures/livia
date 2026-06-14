@@ -14,6 +14,7 @@ import { publicGuestPwaEnabled, usePublicGuestPwa } from "@/lib/public-guest-pwa
 import { Link } from "wouter";
 import PublicShopPage from "@/pages/public-shop";
 import { PublicRetailCartBar } from "@/components/public-booking/public-retail-cart-bar";
+import { PublicRetailCartDrawer } from "@/components/public-booking/public-retail-cart-drawer";
 import {
   addToRetailCart,
   clearRetailCart,
@@ -25,7 +26,7 @@ import {
 import type { PublicRetailProduct } from "@/components/public-booking/public-beauty-shop";
 import { isPublicShopPath } from "@/lib/public-guest-route-params";
 import { useGuestBookSlug } from "@/lib/use-guest-book-slug";
-import { guestBookTokenPath, isPublicRetailVertical, resolveActiveBookingGuards, type BusinessVertical } from "@workspace/policy";
+import { guestBookTokenPath, isPublicRetailVertical, resolveActiveBookingGuards, guestRetailFulfillmentOptions, type BusinessVertical, type GuestRetailFulfillmentMode } from "@workspace/policy";
 import {
   useGetPublicBusiness,
   useGetPublicSlots,
@@ -55,6 +56,7 @@ import {
   Calendar,
   CalendarPlus,
   Loader2,
+  CreditCard,
 } from "lucide-react";
 const ChatWidget = lazy(() => import("@/components/chat-widget"));
 import {
@@ -209,6 +211,9 @@ interface BookingConfirmation {
   guestToken?: string | null;
   myLiviaPath?: string | null;
   savedToMyLivia?: boolean;
+  depositDueMinor?: number | null;
+  depositPayUrl?: string | null;
+  currency?: string;
 }
 
 function buildIcsDataUri(args: {
@@ -296,6 +301,9 @@ export default function PublicBookingPage() {
   const [retailCart, setRetailCart] = useState<RetailCart | null>(null);
   const [retailCheckoutBusy, setRetailCheckoutBusy] = useState(false);
   const [combinedCheckoutBusy, setCombinedCheckoutBusy] = useState(false);
+  const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
+  const [fulfillmentMode, setFulfillmentMode] = useState<GuestRetailFulfillmentMode>("collect_in_store");
+  const [fulfillmentDetail, setFulfillmentDetail] = useState("");
   const dateInputRef = useRef<HTMLInputElement>(null);
   const [consentAgreed, setConsentAgreed] = useState(false);
   const [chatMount, setChatMount] = useState(false);
@@ -462,6 +470,18 @@ export default function PublicBookingPage() {
     isPublicRetailVertical(b?.vertical) &&
     b?.retailStore?.settings?.enabled &&
     (retailCart?.lines.length ?? 0) > 0;
+
+  const retailFulfillmentOptions = useMemo(
+    () =>
+      guestRetailFulfillmentOptions({
+        vertical: b?.vertical,
+        category: b?.category,
+        hasLinkedBooking: Boolean(confirmation?.bookingId || selectedSlot),
+      }),
+    [b?.vertical, b?.category, confirmation?.bookingId, selectedSlot],
+  );
+
+  const cartBarHeightPx = showRetailCartBar ? 72 : 0;
 
   const activeBookingGuards = useMemo(() => {
     if (!b?.vertical) return [];
@@ -661,6 +681,9 @@ export default function PublicBookingPage() {
           guestName: [firstName, lastName].filter(Boolean).join(" ").trim() || undefined,
           guestEmail: email.trim() || undefined,
           guestPhone: phone.trim() || undefined,
+          bookingId: confirmation?.bookingId,
+          fulfillmentMode,
+          fulfillmentDetail: fulfillmentDetail.trim() || undefined,
         }),
       });
       if (!r.ok) {
@@ -670,6 +693,7 @@ export default function PublicBookingPage() {
       const body = (await r.json()) as { payUrl: string; payToken?: string };
       clearRetailCart(sl);
       setRetailCart(null);
+      setCartDrawerOpen(false);
       window.location.href =
         body.payToken && sl ? guestBookTokenPath(sl, "shop", body.payToken) : body.payUrl;
     } catch (e) {
@@ -690,7 +714,11 @@ export default function PublicBookingPage() {
       const r = await fetch(`/api/public/b/${sl}/pay/${payToken}/checkout-combined`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: retailCartApiItems(retailCart) }),
+        body: JSON.stringify({
+          items: retailCartApiItems(retailCart),
+          fulfillmentMode,
+          fulfillmentDetail: fulfillmentDetail.trim() || undefined,
+        }),
       });
       const j = (await r.json().catch(() => ({}))) as {
         mode?: string;
@@ -709,6 +737,7 @@ export default function PublicBookingPage() {
       if (j.mode === "dev") {
         clearRetailCart(sl);
         setRetailCart(null);
+        setCartDrawerOpen(false);
         window.location.href = j.payUrl ?? guestBookTokenPath(sl, "pay", payToken);
         return;
       }
@@ -777,7 +806,9 @@ export default function PublicBookingPage() {
       <main
         className={cn(
           "mx-auto px-4 sm:px-6 py-6 pb-6 md:pb-8 relative z-10",
-          showRetailCartBar && "pb-24",
+          showRetailCartBar && pastHero && aiOn && "pb-32",
+          showRetailCartBar && !(pastHero && aiOn) && "pb-24",
+          !showRetailCartBar && pastHero && aiOn && "pb-20",
           step === "services" ? "max-w-6xl w-full" : "max-w-xl",
           beautyBook && step === "services" && "beauty-public-shell",
           beautyBook &&
@@ -1617,6 +1648,30 @@ export default function PublicBookingPage() {
               </CardContent>
             </Card>
 
+            {confirmation.depositPayUrl && (confirmation.depositDueMinor ?? 0) > 0 ? (
+              <Card className="text-left border-amber-500/40 bg-amber-500/10">
+                <CardContent className="pt-4 space-y-3">
+                  <p className="text-sm font-medium flex items-center gap-2">
+                    <CreditCard className="h-4 w-4" />
+                    Deposit required to hold your slot
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {pendingReasonLabel(confirmation.pendingReason, b?.vertical, b?.category)}
+                  </p>
+                  <p className="text-lg font-semibold tabular-nums">
+                    {formatCurrency(
+                      confirmation.depositDueMinor ?? 0,
+                      confirmation.currency ?? selectedService?.currency ?? "EUR",
+                    )}{" "}
+                    due now
+                  </p>
+                  <Button asChild className="w-full" data-testid="public-pay-deposit">
+                    <a href={confirmation.depositPayUrl}>Pay deposit</a>
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : null}
+
             {confirmation.visitPath || confirmation.myLiviaPath ? (
               <Link href={confirmation.visitPath ?? confirmation.myLiviaPath ?? "/my"}>
                 <Button variant="default" className="w-full" data-testid="link-manage-visit">
@@ -1716,12 +1771,37 @@ export default function PublicBookingPage() {
         ) : null}
       </main>
 
-      {step === "services" && aiOn && !beautyPublic ? (
+      {step === "services" && aiOn ? (
         <PublicBookLivBar
           visible={pastHero}
           livActive={chatOpenRequest > 0}
           onOpenChat={requestChatOpen}
+          bottomOffsetPx={cartBarHeightPx}
         />
+      ) : null}
+
+      {showRetailCartBar && retailCart ? (
+        <>
+          <PublicRetailCartBar
+            cart={retailCart}
+            checkoutBusy={retailCheckoutBusy || combinedCheckoutBusy}
+            onViewBag={() => setCartDrawerOpen(true)}
+          />
+          <PublicRetailCartDrawer
+            open={cartDrawerOpen}
+            onOpenChange={setCartDrawerOpen}
+            cart={retailCart}
+            fulfillmentOptions={retailFulfillmentOptions}
+            fulfillmentMode={fulfillmentMode}
+            onFulfillmentModeChange={setFulfillmentMode}
+            fulfillmentDetail={fulfillmentDetail}
+            onFulfillmentDetailChange={setFulfillmentDetail}
+            onChangeQty={handleChangeRetailQty}
+            checkoutBusy={retailCheckoutBusy || combinedCheckoutBusy}
+            onCheckoutRetailOnly={() => void checkoutRetailCart()}
+            combinedAvailable={false}
+          />
+        </>
       ) : null}
 
       {showStickyCta && selectedService && (
@@ -1755,14 +1835,6 @@ export default function PublicBookingPage() {
           }}
         />
       )}
-
-      {showRetailCartBar ? (
-        <PublicRetailCartBar
-          cart={retailCart!}
-          checkoutBusy={retailCheckoutBusy}
-          onCheckout={() => void checkoutRetailCart()}
-        />
-      ) : null}
 
       {chatMount && aiOn && step !== "confirmed" && (
         <Suspense fallback={null}>

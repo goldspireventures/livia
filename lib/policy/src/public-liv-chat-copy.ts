@@ -12,10 +12,10 @@ const PUBLIC_LIV_CHAT: Record<BusinessVertical, PublicLivChatCopy> = {
   wellness: {
     suggestedPrompts: [
       "I'd like a 90 min massage this Saturday afternoon",
-      "What treatments and durations do you offer?",
+      "What retail or gift items do you sell?",
       "Do you have gift vouchers or couples sessions?",
     ],
-    inputPlaceholder: "Ask about treatments, times, or packages…",
+    inputPlaceholder: "Ask about treatments, products, times, or packages…",
     assistantSubtitle: "Liv · spa booking assistant",
   },
   medspa: {
@@ -30,19 +30,19 @@ const PUBLIC_LIV_CHAT: Record<BusinessVertical, PublicLivChatCopy> = {
   hair: {
     suggestedPrompts: [
       "I need a cut tomorrow afternoon",
-      "What services do you offer?",
+      "What's in the take-home shop?",
       "Can I book with my usual stylist?",
     ],
-    inputPlaceholder: "Ask about services, stylists, or availability…",
+    inputPlaceholder: "Ask about services, products, stylists, or availability…",
     assistantSubtitle: "Liv · booking assistant",
   },
   beauty: {
     suggestedPrompts: [
       "I'd like gel nails this Friday",
-      "What services do you offer?",
+      "Help me find aftercare products",
       "Do you have availability this weekend?",
     ],
-    inputPlaceholder: "Ask about treatments, times, or availability…",
+    inputPlaceholder: "Ask about treatments, products, times, or availability…",
     assistantSubtitle: "Liv · booking assistant",
   },
   "body-art": {

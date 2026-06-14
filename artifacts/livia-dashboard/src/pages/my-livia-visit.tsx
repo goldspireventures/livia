@@ -332,7 +332,7 @@ export default function MyLiviaVisitPage() {
 
           <section
             id="guest-hub-visit-message"
-            className="space-y-3 rounded-xl border border-border/80 p-4 sticky top-20 scroll-mt-24"
+            className="space-y-3 rounded-xl border border-border/80 p-4 scroll-mt-24"
           >
             <h2 className="text-sm font-medium flex items-center gap-2">
               <MessageSquare className="h-4 w-4" />
@@ -348,7 +348,8 @@ export default function MyLiviaVisitPage() {
               data-testid="guest-hub-visit-message"
             />
             <Button
-              className="w-full min-h-[44px]"
+              className="w-full"
+              size="sm"
               disabled={busy || !replyDraft.trim()}
               onClick={() => void sendMessage()}
             >
@@ -357,13 +358,13 @@ export default function MyLiviaVisitPage() {
           </section>
 
           <div className="flex flex-col gap-2">
-            <Button asChild variant="secondary" className="w-full gap-2 min-h-[44px]">
+            <Button asChild variant="secondary" size="sm" className="w-full gap-2">
               <a href={data.bookUrl}>
                 <CalendarCheck className="h-4 w-4" />
                 {GUEST_HUB_COPY.bookAgainCta}
               </a>
             </Button>
-            <Button asChild variant="ghost" className="w-full text-muted-foreground">
+            <Button asChild variant="ghost" size="sm" className="w-full text-muted-foreground">
               <Link href="/my">{GUEST_HUB_COPY.backToVault}</Link>
             </Button>
           </div>

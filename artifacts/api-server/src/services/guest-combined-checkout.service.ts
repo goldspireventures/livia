@@ -5,7 +5,7 @@ import { getGuestBookingByToken } from "./booking-guest-access.service";
 import { policiesFromBusiness } from "./policies.service";
 import { computeDepositDueMinor } from "./guest-deposit-pay.service";
 import { createPublicRetailOrder, createRetailOrderCheckout } from "./beauty-retail.service";
-import { getStripe, isStripeConfigured, logStripeSkip } from "../lib/stripe";
+import { getStripe, isStripeConfigured, logStripeSkip, guestMaySimulatePayments } from "../lib/stripe";
 import { createBookingPaymentIntent } from "./payment.service";
 import { resolveGuestTokenUrl } from "../lib/guest-public-urls";
 import { businessesTable } from "@workspace/db";
@@ -20,6 +20,8 @@ export async function createGuestCombinedCheckout(args: {
   slug: string;
   payToken: string;
   items: RetailCartItemInput[];
+  fulfillmentMode?: string | null;
+  fulfillmentDetail?: string | null;
 }): Promise<GuestCombinedCheckoutResult> {
   const view = await getGuestBookingByToken(args.slug, args.payToken);
   if (!view) return { mode: "error", message: "Booking not found" };
@@ -72,6 +74,8 @@ export async function createGuestCombinedCheckout(args: {
     customerId: view.customerId,
     bookingId: view.bookingId,
     guestName: view.customerFirstName ?? undefined,
+    fulfillmentMode: args.fulfillmentMode,
+    fulfillmentDetail: args.fulfillmentDetail,
   });
   if (!retailOrder) return { mode: "error", message: "Retail items unavailable" };
 
@@ -98,21 +102,25 @@ export async function createGuestCombinedCheckout(args: {
 
   const stripe = getStripe();
   if (!stripe || !isStripeConfigured()) {
-    if (process.env.NODE_ENV === "production") {
+    if (!guestMaySimulatePayments()) {
       return { mode: "error", message: "Card checkout is not available yet" };
     }
     logStripeSkip("guest-combined-checkout");
     const { applySimulatedGuestDeposit } = await import("./guest-deposit-pay.service");
     const { markRetailOrderPaid } = await import("./beauty-retail.service");
-    await applySimulatedGuestDeposit({
-      businessId: view.businessId,
-      bookingId: view.bookingId,
-      amountMinor: depositDueMinor,
-    });
+    if (depositDueMinor > 0) {
+      await applySimulatedGuestDeposit({
+        businessId: view.businessId,
+        bookingId: view.bookingId,
+        amountMinor: depositDueMinor,
+      });
+    }
     await markRetailOrderPaid(retailOrder.order.id, view.businessId);
+    const { confirmBookingAfterStripePayment } = await import("./wellness-ops.service");
+    await confirmBookingAfterStripePayment(view.businessId, view.bookingId);
     return {
       mode: "dev",
-      message: "Deposit and bag recorded (development — Stripe not configured).",
+      message: "Deposit and bag recorded — your booking is updated.",
       payUrl,
     };
   }

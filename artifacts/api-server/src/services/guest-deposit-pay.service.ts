@@ -2,7 +2,7 @@ import { getGuestBookingByToken } from "./booking-guest-access.service";
 import { policiesFromBusiness } from "./policies.service";
 import { createBookingPaymentIntent } from "./payment.service";
 import { resolveGuestTokenUrl } from "../lib/guest-public-urls";
-import { getStripe, isStripeConfigured, logStripeSkip } from "../lib/stripe";
+import { getStripe, isStripeConfigured, logStripeSkip, guestMaySimulatePayments } from "../lib/stripe";
 import { db, bookingsTable, businessesTable } from "@workspace/db";
 import { and, eq } from "drizzle-orm";
 import { EventType } from "@workspace/db";
@@ -65,7 +65,7 @@ export async function getGuestDepositPayView(
 
   const canPay =
     depositDueMinor > 0 &&
-    (isStripeConfigured() || process.env.NODE_ENV !== "production");
+    (isStripeConfigured() || guestMaySimulatePayments());
 
   return {
     bookingId: view.bookingId,
@@ -154,7 +154,7 @@ export async function createGuestDepositCheckout(
 
   const stripe = getStripe();
   if (!stripe || !isStripeConfigured()) {
-    if (process.env.NODE_ENV === "production") {
+    if (!guestMaySimulatePayments()) {
       return { mode: "error", message: "Card checkout is not available yet" };
     }
     logStripeSkip("guest-deposit-checkout");
@@ -163,9 +163,11 @@ export async function createGuestDepositCheckout(
       bookingId: view.bookingId,
       amountMinor: depositDueMinor,
     });
+    const { confirmBookingAfterStripePayment } = await import("./wellness-ops.service");
+    await confirmBookingAfterStripePayment(view.businessId, view.bookingId);
     return {
       mode: "dev",
-      message: "Deposit recorded (development — Stripe not configured).",
+      message: "Deposit recorded — your booking is updated.",
     };
   }
 

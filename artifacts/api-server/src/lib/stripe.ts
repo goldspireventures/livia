@@ -112,6 +112,7 @@ export function isStripeConfigured(): boolean {
 }
 
 /** Dev, staging demo, or explicit demo-in-prod — grant plans/add-ons without Stripe price ids. */
+/** Dev, staging demo, or explicit demo-in-prod — grant plans/add-ons without Stripe price ids. */
 export function billingMayGrantWithoutStripe(): boolean {
   if (process.env.NODE_ENV !== "production") return true;
   if (
@@ -127,6 +128,11 @@ export function billingMayGrantWithoutStripe(): boolean {
     return true;
   }
   return false;
+}
+
+/** Guest deposit / retail checkout without Stripe — same gates as billing local grant. */
+export function guestMaySimulatePayments(): boolean {
+  return billingMayGrantWithoutStripe();
 }
 
 export function billingLocalGrantMode(): "dev" | "staging-demo" | "demo-override" | null {

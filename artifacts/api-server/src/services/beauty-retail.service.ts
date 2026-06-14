@@ -21,7 +21,7 @@ import {
 } from "@workspace/policy";
 import { generateId } from "../lib/id";
 import { getBusinessById } from "./businesses.service";
-import { getStripe, isStripeConfigured, logStripeSkip } from "../lib/stripe";
+import { getStripe, isStripeConfigured, logStripeSkip, guestMaySimulatePayments } from "../lib/stripe";
 import { resolveGuestTokenUrl } from "../lib/guest-public-urls";
 import { createBookingPaymentIntent } from "./payment.service";
 import { EventType } from "@workspace/db";
@@ -291,6 +291,8 @@ export async function createPublicRetailOrder(args: {
   quantity?: number;
   customerId?: string;
   bookingId?: string;
+  fulfillmentMode?: string | null;
+  fulfillmentDetail?: string | null;
 }) {
   const normalized = normalizeRetailCartItems(
     args.items?.length
@@ -357,6 +359,8 @@ export async function createPublicRetailOrder(args: {
       currency,
       status: "PENDING",
       payToken: token,
+      fulfillmentMode: args.fulfillmentMode?.trim() || null,
+      fulfillmentDetail: args.fulfillmentDetail?.trim() || null,
     })
     .returning();
 
@@ -487,14 +491,14 @@ export async function createRetailOrderCheckout(slug: string, token: string): Pr
 
   const stripe = getStripe();
   if (!stripe || !isStripeConfigured()) {
-    if (process.env.NODE_ENV === "production") {
+    if (!guestMaySimulatePayments()) {
       return { mode: "error", message: "Card checkout is not available yet" };
     }
     logStripeSkip("retail-checkout");
     await markRetailOrderPaid(order.id, order.businessId);
     return {
       mode: "dev",
-      message: "Order recorded (development — Stripe not configured).",
+      message: "Order recorded — thank you.",
       payUrl,
     };
   }

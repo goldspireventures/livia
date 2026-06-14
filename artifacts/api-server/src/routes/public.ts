@@ -50,6 +50,9 @@ import { listMedspaProcedures, recordPublicMedspaConsent } from "../services/med
 import { getPremisesBySlug } from "../services/premises.service";
 import { buildCountryPackForBusiness } from "../services/country-pack.service";
 import { getPublicDayPackages, bookDayPackage } from "../services/day-packages.service";
+import {
+  computeDepositDueMinor,
+} from "../services/guest-deposit-pay.service";
 import { ensureBookingGuestAccess, getGuestBookingByToken } from "../services/booking-guest-access.service";
 import { ensureGuestVaultLinkFromBook } from "../services/guest-hub.service";
 import {
@@ -95,7 +98,7 @@ import {
   listActiveRetailProducts,
   resolveRetailOrderLines,
 } from "../services/beauty-retail.service";
-import { parseBeautyRetailStoreSettings } from "@workspace/policy";
+import { parseBeautyRetailStoreSettings, normalizeGuestRetailFulfillmentMode, guestRetailFulfillmentOptions } from "@workspace/policy";
 import { getDashboardUrl } from "../lib/public-urls";
 import { resolveGuestTokenUrl } from "../lib/guest-public-urls";
 
@@ -901,6 +904,22 @@ router.post("/public/b/:slug/book", async (req, res): Promise<void> => {
       source: "public",
     }).catch(() => undefined);
 
+    const opPolicies = policiesFromBusiness(biz).operational;
+    const servicePriceMinor = booking.service?.priceMinor ?? 0;
+    const depositDueMinor =
+      booking.pendingReason === "awaiting_deposit"
+        ? computeDepositDueMinor({
+            priceMinor: servicePriceMinor,
+            depositPercent: opPolicies.depositPercent ?? 0,
+            depositRequired: opPolicies.depositRequired,
+            depositPaidMinor: booking.depositPaidEurCents ?? 0,
+          })
+        : 0;
+    const depositPayUrl =
+      depositDueMinor > 0 && guestToken
+        ? resolveGuestTokenUrl(biz.slug, "pay", guestToken)
+        : null;
+
     res.status(201).json({
       bookingId: booking.id,
       status: booking.status,
@@ -916,6 +935,9 @@ router.post("/public/b/:slug/book", async (req, res): Promise<void> => {
       visitPath,
       myLiviaPath: myLivia?.myLiviaPath ?? null,
       savedToMyLivia: Boolean(myLivia),
+      depositDueMinor: depositDueMinor > 0 ? depositDueMinor : null,
+      depositPayUrl,
+      currency: booking.service?.currency ?? "EUR",
     });
   } catch (err: unknown) {
     if (replyDomainError(req, res, err)) return;
@@ -1156,13 +1178,19 @@ router.post("/public/b/:slug/pay/:token/checkout", async (req, res): Promise<voi
 router.post("/public/b/:slug/pay/:token/checkout-combined", async (req, res): Promise<void> => {
   const slug = Array.isArray(req.params.slug) ? req.params.slug[0] : req.params.slug;
   const token = Array.isArray(req.params.token) ? req.params.token[0] : req.params.token;
-  const body = req.body as { items?: { productId: string; quantity: number }[] };
+  const body = req.body as {
+    items?: { productId: string; quantity: number }[];
+    fulfillmentMode?: string;
+    fulfillmentDetail?: string;
+  };
   const { createGuestCombinedCheckout } = await import("../services/guest-combined-checkout.service");
   try {
     const result = await createGuestCombinedCheckout({
       slug,
       payToken: token,
       items: body.items ?? [],
+      fulfillmentMode: body.fulfillmentMode,
+      fulfillmentDetail: body.fulfillmentDetail,
     });
     if (result.mode === "error") {
       sendError(res, req, 400, result.message);
@@ -1239,10 +1267,24 @@ router.post("/public/b/:slug/retail/order", async (req, res): Promise<void> => {
     sendError(res, req, 403, "Store is not available");
     return;
   }
-  const { productId, items, guestName, guestEmail, guestPhone, quantity } = req.body ?? {};
+  const { productId, items, guestName, guestEmail, guestPhone, quantity, fulfillmentMode, fulfillmentDetail, bookingId } =
+    req.body ?? {};
   const hasItems = Array.isArray(items) && items.length > 0;
   if (!hasItems && !productId) {
     sendError(res, req, 400, "productId or items is required");
+    return;
+  }
+  const fulfillmentOpts = guestRetailFulfillmentOptions({
+    vertical: biz.vertical,
+    category: biz.category,
+    hasLinkedBooking: Boolean(bookingId),
+  });
+  const normalizedFulfillment = normalizeGuestRetailFulfillmentMode(fulfillmentMode, fulfillmentOpts);
+  if (
+    fulfillmentOpts.find((o) => o.mode === normalizedFulfillment)?.requiresAddress &&
+    !String(fulfillmentDetail ?? "").trim()
+  ) {
+    sendError(res, req, 400, "Delivery address is required for shipping");
     return;
   }
   const created = await createPublicRetailOrder({
@@ -1253,6 +1295,9 @@ router.post("/public/b/:slug/retail/order", async (req, res): Promise<void> => {
     guestEmail,
     guestPhone,
     quantity,
+    bookingId: bookingId ? String(bookingId) : undefined,
+    fulfillmentMode: normalizedFulfillment,
+    fulfillmentDetail: fulfillmentDetail ? String(fulfillmentDetail) : undefined,
   });
   if (!created) {
     sendError(res, req, 404, "Product not found or out of stock");

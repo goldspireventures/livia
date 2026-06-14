@@ -12,12 +12,12 @@ import { cn } from "@/lib/utils";
 export function PublicRetailCartBar({
   cart,
   checkoutBusy,
-  onCheckout,
+  onViewBag,
   className,
 }: {
   cart: RetailCart;
   checkoutBusy?: boolean;
-  onCheckout: () => void;
+  onViewBag: () => void;
   className?: string;
 }) {
   const count = cartLineCount(cart);
@@ -35,24 +35,29 @@ export function PublicRetailCartBar({
       data-testid="public-retail-cart-bar"
     >
       <div className="max-w-lg mx-auto flex items-center justify-between gap-3">
-        <div className="min-w-0">
+        <button
+          type="button"
+          className="min-w-0 text-left"
+          onClick={onViewBag}
+          data-testid="public-retail-cart-view"
+        >
           <p className="text-sm font-medium flex items-center gap-2">
             <ShoppingBag className="h-4 w-4 text-primary shrink-0" />
             Bag · {count} {count === 1 ? "item" : "items"}
           </p>
           <p className="text-xs text-muted-foreground tabular-nums">
-            {formatCurrency(subtotal, currency)} subtotal
+            {formatCurrency(subtotal, currency)} · tap to review
           </p>
-        </div>
+        </button>
         <Button
           type="button"
           size="sm"
           disabled={checkoutBusy}
-          onClick={onCheckout}
+          onClick={onViewBag}
           data-testid="public-retail-cart-checkout"
         >
           {checkoutBusy ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
-          Checkout
+          View bag
         </Button>
       </div>
     </div>

@@ -128,6 +128,7 @@ export * from "./event-catalog";
 export * from "./fitness-booking-rules";
 export * from "./guest-policies";
 export * from "./guest-retail-cart";
+export * from "./guest-retail-fulfillment";
 export * from "./guest-visit-copy";
 export * from "./liv-proposal-navigation";
 export * from "./morning-briefing-intel";

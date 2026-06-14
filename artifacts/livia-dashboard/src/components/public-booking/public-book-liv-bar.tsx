@@ -6,16 +6,23 @@ export function PublicBookLivBar({
   visible,
   livActive,
   onOpenChat,
+  bottomOffsetPx = 0,
 }: {
   visible: boolean;
   livActive?: boolean;
   onOpenChat: () => void;
+  /** Stack above retail cart bar when both are visible. */
+  bottomOffsetPx?: number;
 }) {
   if (!visible) return null;
 
   return (
     <div
-      className="fixed bottom-0 inset-x-0 z-40 flex justify-center px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 pointer-events-none"
+      className="fixed bottom-0 inset-x-0 z-40 flex justify-center px-4 pt-2 pointer-events-none"
+      style={{
+        paddingBottom: `max(0.75rem, env(safe-area-inset-bottom))`,
+        transform: bottomOffsetPx > 0 ? `translateY(-${bottomOffsetPx}px)` : undefined,
+      }}
       data-testid="public-book-liv-bar"
     >
       <Button

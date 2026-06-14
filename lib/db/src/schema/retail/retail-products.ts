@@ -54,6 +54,8 @@ export const retailOrdersTable = pgTable(
     currency: text("currency").notNull().default("EUR"),
     status: text("status").notNull().default("PENDING"),
     payToken: text("pay_token").notNull().unique(),
+    fulfillmentMode: text("fulfillment_mode"),
+    fulfillmentDetail: text("fulfillment_detail"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

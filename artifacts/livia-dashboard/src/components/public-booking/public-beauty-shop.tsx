@@ -118,7 +118,12 @@ function ProductCard({
   }
 
   return (
-    <li className="public-shop-card public-shop-card--tile" data-testid={`public-shop-item-${p.id}`}>
+    <li
+      className={cn(
+        "public-shop-card public-shop-card--tile beauty-service-card beauty-treatment-card",
+      )}
+      data-testid={`public-shop-item-${p.id}`}
+    >
       <div className="public-shop-card-media relative">
         <PublicRetailProductThumb name={p.name} imageUrl={p.imageUrl} />
         {hint ? (
@@ -178,7 +183,7 @@ export function PublicBeautyShop({
   }, [products, activeCategory]);
 
   const isStorefront = variant === "storefront";
-  const cardLayout: ShopCardLayout = isStorefront ? "tile" : "rail";
+  const cardLayout: ShopCardLayout = "tile";
   const previewLimit = initialVisible ?? (isStorefront ? 8 : products.length);
   const visible =
     showAll || filtered.length <= previewLimit ? filtered : filtered.slice(0, previewLimit);
@@ -240,7 +245,8 @@ export function PublicBeautyShop({
 
       <ul
         className={cn(
-          isStorefront ? "public-shop-grid public-shop-grid--tiles" : "public-shop-rail-list flex flex-col gap-2",
+          "public-shop-grid beauty-service-grid public-service-catalog-grid",
+          isStorefront && "public-shop-grid--tiles",
         )}
       >
         {visible.map((p) => (

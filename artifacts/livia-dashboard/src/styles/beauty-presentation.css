@@ -1275,6 +1275,21 @@ html[data-beauty-native-skin][data-presentation="premium-dark"] .beauty-public-s
   color: hsl(var(--primary));
 }
 
+.public-book-canvas .public-shop-card--tile.beauty-treatment-card .public-shop-card-thumb,
+.beauty-public-shell .public-shop-card--tile.beauty-treatment-card .public-shop-card-thumb {
+  aspect-ratio: 8 / 3;
+}
+
+.public-book-canvas .public-shop-card--tile.beauty-treatment-card .public-shop-card-body,
+.beauty-public-shell .public-shop-card--tile.beauty-treatment-card .public-shop-card-body {
+  padding: 0.35rem 0.45rem 0.45rem;
+}
+
+.public-book-canvas .public-shop-grid.beauty-service-grid,
+.beauty-public-shell .public-shop-grid.beauty-service-grid {
+  gap: 0.5rem;
+}
+
 .public-shop-grid--tiles {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
