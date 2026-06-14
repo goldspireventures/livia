@@ -242,15 +242,7 @@ export function eventVendorPoweredByLine(): string {
   return "Quotes & enquiries powered by Livia";
 }
 
-/** Default decline — operator may override via `businesses.liv_outbound_overrides.decline_reply`. Use {{reasonSentence}} for reason-aware replies. */
-export const DEFAULT_ENQUIRY_DECLINE_REPLY = `Hi {{firstName}},
-
-Thank you for reaching out to {{businessName}}. {{reasonSentence}}
-
-We hope your celebration is wonderful, and we'd love to hear from you again for a future event.
-
-Warmly,
-{{businessName}}`;
+export { DEFAULT_ENQUIRY_DECLINE_REPLY } from "./liv-platform-program";
 
 export {
   resolveEnquiryDeclineCopy,

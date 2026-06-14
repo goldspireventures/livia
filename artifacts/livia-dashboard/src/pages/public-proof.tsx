@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 import { useGuestBookTokenRoute } from "@/lib/use-guest-book-slug";
 import { clientGuestBookHref } from "@/lib/guest-book-url";
@@ -8,9 +8,17 @@ import {
 } from "@/lib/experience-theme";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle2, ChevronLeft, ImageIcon, Loader2, XCircle } from "lucide-react";
+import {
+  canGuestReviewDesignProof,
+  sortDesignProofRevisionsAsc,
+  type DesignProofRevisionView,
+} from "@workspace/policy";
+import { CheckCircle2, ChevronLeft, Loader2, XCircle } from "lucide-react";
 import { PublicSurfaceNotFound } from "@/components/public/public-surface-chrome";
 import { PublicProofLoading } from "@/components/public/public-proof-loading";
+import { DesignProofViewTabs } from "@/components/body-art/design-proof-skin-preview";
+import { ProofVersionNav } from "@/components/body-art/design-proof-version-frame";
+import { inferProofPlacementZone } from "@/lib/body-art-proof-placement";
 import { usePublicGuestPwa } from "@/lib/public-guest-pwa";
 import { useEdgeSwipeBack } from "@/lib/use-edge-swipe-back";
 import { cn } from "@/lib/utils";
@@ -26,6 +34,8 @@ type ProofPayload = {
   customerFirstName: string | null;
   logoUrl: string | null;
   createdAt: string;
+  version?: number;
+  versions?: DesignProofRevisionView[];
   experienceSkin?: {
     presentation?: string;
     presentationColorMode?: "light" | "dark";
@@ -34,7 +44,7 @@ type ProofPayload = {
 };
 
 const COMMENT_MAX = 500;
-const FALLBACK_ART = "/w2-gateway/cards/tattoo.jpg";
+const FALLBACK_ART = "/body-art/demo-proofs/serpent-bloom.svg";
 
 export default function PublicProofPage() {
   const { slug, token } = useGuestBookTokenRoute("proof");
@@ -47,6 +57,23 @@ export default function PublicProofPage() {
   const [sessionBookUrl, setSessionBookUrl] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [imageBroken, setImageBroken] = useState(false);
+  const [versionIdx, setVersionIdx] = useState(0);
+
+  const versions = useMemo(
+    () =>
+      sortDesignProofRevisionsAsc(
+        data?.versions?.length
+          ? data.versions
+          : data
+            ? [{ version: data.version ?? 1, imageUrl: data.imageUrl }]
+            : [],
+      ),
+    [data],
+  );
+
+  useEffect(() => {
+    setVersionIdx(Math.max(0, versions.length - 1));
+  }, [data?.proofId, versions.length]);
 
   usePublicGuestPwa(slug);
   useEdgeSwipeBack(Boolean(data));
@@ -137,9 +164,18 @@ export default function PublicProofPage() {
     );
   }
 
-  const canDecide = data.status === "pending_review";
+  const canDecide = canGuestReviewDesignProof(
+    data.status,
+    versionIdx === versions.length - 1,
+  );
   const bookUrl = clientGuestBookHref(data.slug);
-  const artSrc = imageBroken || !data.imageUrl ? FALLBACK_ART : data.imageUrl;
+  const currentVersion = versions[versionIdx] ?? versions[versions.length - 1];
+  const artSrc =
+    imageBroken || !currentVersion?.imageUrl
+      ? !data.imageUrl || imageBroken
+        ? FALLBACK_ART
+        : data.imageUrl
+      : currentVersion.imageUrl;
 
   return (
     <div
@@ -169,26 +205,20 @@ export default function PublicProofPage() {
         )}
       </header>
 
-      <section
-        className="relative border-b border-border bg-card/40 motion-hero-fade-in"
-        data-testid="guest-proof-artwork"
-      >
-        <div className="flex h-[55vh] min-h-[240px] items-center justify-center p-3 sm:p-4">
-          {data.imageUrl || !imageBroken ? (
-            <img
-              src={artSrc}
-              alt="Design proof"
-              className="max-h-full max-w-full object-contain rounded-md"
-              data-testid="guest-proof-image"
-              onError={() => setImageBroken(true)}
-            />
-          ) : (
-            <div className="flex flex-col items-center gap-2 text-muted-foreground">
-              <ImageIcon className="h-10 w-10 opacity-40" aria-hidden />
-              <p className="text-sm">Artwork preview unavailable</p>
-            </div>
-          )}
-        </div>
+      <section className="relative border-b border-border bg-card/40 motion-hero-fade-in px-4 py-4">
+        <DesignProofViewTabs imageUrl={artSrc} defaultZone={inferProofPlacementZone(data.note)} />
+        <ProofVersionNav
+          currentVersion={currentVersion?.version ?? 1}
+          latestVersion={versions[versions.length - 1]?.version ?? 1}
+          canGoPrev={versionIdx > 0}
+          canGoNext={versionIdx < versions.length - 1}
+          onPrev={() => setVersionIdx((i) => Math.max(0, i - 1))}
+          onNext={() => setVersionIdx((i) => Math.min(versions.length - 1, i + 1))}
+          testIdPrefix="guest-proof"
+        />
+        {versionIdx < versions.length - 1 ? (
+          <p className="text-center text-xs text-muted-foreground mt-1">View only — older version</p>
+        ) : null}
       </section>
 
       <div className={cn("max-w-lg mx-auto px-4 pt-4", canDecide ? "pb-36" : "pb-10")}>
@@ -196,7 +226,7 @@ export default function PublicProofPage() {
           <p className="text-sm text-muted-foreground">{data.businessName}</p>
           {data.customerFirstName ? (
             <p className="text-base">
-              Hi {data.customerFirstName} — review your design below.
+              Hi {data.customerFirstName} — review your artist&apos;s design below.
             </p>
           ) : null}
           {data.note ? (

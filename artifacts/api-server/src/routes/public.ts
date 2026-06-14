@@ -842,13 +842,20 @@ router.post("/public/b/:slug/book", async (req, res): Promise<void> => {
       const refUrl =
         typeof consultReferenceUrl === "string" ? consultReferenceUrl.trim() : "";
       if (isConsult && refUrl) {
-        const proof = await createDesignProof(biz.id, {
-          customerId: customer.id,
-          bookingId: booking.id,
-          imageUrl: refUrl,
-          note: "Guest reference on consult book",
-        });
-        await updateDesignProofStatus(biz.id, proof.id, "pending_review");
+        const { listDesignProofs } = await import("../services/design-proofs.service");
+        const existing = await listDesignProofs(biz.id);
+        const openForCustomer = existing.find(
+          (p) => p.customerId === customer.id && p.status === "pending_review",
+        );
+        if (!openForCustomer) {
+          const proof = await createDesignProof(biz.id, {
+            customerId: customer.id,
+            bookingId: booking.id,
+            imageUrl: refUrl,
+            note: "Guest reference on consult book",
+          });
+          await updateDesignProofStatus(biz.id, proof.id, "pending_review");
+        }
       }
     }
 
@@ -1069,6 +1076,8 @@ router.get("/public/b/:slug/proof/:token", async (req, res): Promise<void> => {
     customerFirstName: view.customerFirstName,
     logoUrl: view.logoUrl,
     createdAt: view.createdAt.toISOString(),
+    version: view.version,
+    versions: view.versions,
     experienceSkin: {
       ...publicExperienceSkin(view.vertical, view.country),
       presentation: preset.cssPreset,

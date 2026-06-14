@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearch } from "wouter";
 import { useBusiness } from "@/lib/business-context";
+import { useInAppNotifications } from "@/hooks/use-in-app-notifications";
 import { useToast } from "@/hooks/use-toast";
 import { customFetch } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
@@ -133,6 +134,7 @@ function normalizeQuote(raw: Partial<Quote> & { id: string }): Quote {
 export default function QuotesPage() {
   const { business } = useBusiness();
   const { toast } = useToast();
+  const { markReadByResource } = useInAppNotifications();
   const bid = business?.id ?? "";
   const [rows, setRows] = useState<Quote[]>([]);
   const [selected, setSelected] = useState<Quote | null>(null);
@@ -190,6 +192,15 @@ export default function QuotesPage() {
     const match = rows.find((q) => q.id === highlightId);
     if (match) setSelected(match);
   }, [highlightId, rows]);
+
+  useEffect(() => {
+    if (!highlightId || !bid) return;
+    void markReadByResource({
+      resourceKind: "quote",
+      resourceId: highlightId,
+      businessId: bid,
+    });
+  }, [highlightId, bid, markReadByResource]);
 
   useEffect(() => {
     if (!bid || !selected) {

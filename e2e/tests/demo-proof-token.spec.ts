@@ -34,6 +34,7 @@ test.describe("Demo guest proof token", () => {
 
     await page.goto(path, { waitUntil: "domcontentloaded", timeout: 45_000 });
     await expect(page.getByTestId("guest-proof-page")).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByTestId("guest-proof-version-nav")).toBeVisible();
     await expect(page.getByTestId("guest-proof-approve")).toBeVisible();
     await expect(page.getByTestId("guest-proof-reject")).toBeVisible();
   });

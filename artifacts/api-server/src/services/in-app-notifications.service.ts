@@ -169,6 +169,7 @@ export async function deliverInAppNotification(delivery: InAppDelivery): Promise
     conversationId:
       delivery.resourceKind === "conversation" ? delivery.resourceId : undefined,
     quoteId: delivery.resourceKind === "quote" ? delivery.resourceId : undefined,
+    proofId: delivery.resourceKind === "design_proof" ? delivery.resourceId : undefined,
   });
 
   let written = 0;

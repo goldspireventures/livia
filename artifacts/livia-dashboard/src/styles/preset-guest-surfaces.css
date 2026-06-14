@@ -6,7 +6,7 @@
 
 /* ── Operator: design proof desk ── */
 .design-proof-desk {
-  --proof-desk-gap: 1rem;
+  --proof-desk-gap: 0.9rem;
   --proof-card-radius: var(--radius);
 }
 
@@ -19,8 +19,7 @@ html[data-layout-morph="pipeline"] .design-proof-desk [data-testid^="design-proo
 }
 
 html[data-layout-morph="standard"] .design-proof-desk ul {
-  grid-template-columns: 1fr !important;
-  max-width: 42rem;
+  max-width: none;
 }
 
 html[data-layout-morph="standard"] .design-proof-desk [data-testid^="design-proof-card-"] {
@@ -32,8 +31,8 @@ html[data-presentation-density="compact"] .design-proof-desk {
   --proof-desk-gap: 0.75rem;
 }
 
-html[data-presentation-density="compact"] .design-proof-desk [data-testid^="design-proof-card-"] .aspect-\[4\/3\] {
-  aspect-ratio: 16 / 10;
+html[data-presentation-density="compact"] .design-proof-desk [data-testid^="design-proof-card-"] .aspect-square {
+  aspect-ratio: 1;
 }
 
 html[data-presentation-motion="calm"] .design-proof-desk [data-testid^="design-proof-card-"] {
@@ -58,7 +57,7 @@ html[data-presentation="flash-light"] .design-proof-desk [data-testid^="design-p
   border-color: hsl(var(--border));
 }
 
-html[data-presentation="flash-light"] .design-proof-desk [data-testid^="design-proof-card-"] .aspect-\[4\/3\] {
+html[data-presentation="flash-light"] .design-proof-desk [data-testid^="design-proof-card-"] .aspect-square {
   background: hsl(0 0% 99%);
 }
 

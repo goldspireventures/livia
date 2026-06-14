@@ -237,6 +237,39 @@ router.post("/internal/cron/event-vendor-lifecycle", async (req, res): Promise<v
   res.json({ ...sweep, milestoneReminders: milestones.reminders });
 });
 
+/** Platform resource follow-up — client nudges, auto-close, revision reminders (policy registry). */
+router.post("/internal/cron/resource-follow-up", async (req, res): Promise<void> => {
+  if (!authorize(req)) {
+    sendError(res, req, 401, "Unauthorized");
+    return;
+  }
+  const { runResourceFollowUpSweep } = await import("../services/resource-follow-up.service");
+  const result = await runResourceFollowUpSweep();
+  res.json(result);
+});
+
+/** @deprecated alias — use /internal/cron/resource-follow-up */
+router.post("/internal/cron/design-proof-follow-up", async (req, res): Promise<void> => {
+  if (!authorize(req)) {
+    sendError(res, req, 401, "Unauthorized");
+    return;
+  }
+  const { runResourceFollowUpSweep } = await import("../services/resource-follow-up.service");
+  const result = await runResourceFollowUpSweep();
+  res.json(result);
+});
+
+/** Retry stuck SMS/email outbox rows (notification_logs PENDING/FAILED). */
+router.post("/internal/cron/outbound-delivery-retry", async (req, res): Promise<void> => {
+  if (!authorize(req)) {
+    sendError(res, req, 401, "Unauthorized");
+    return;
+  }
+  const { sweepStuckOutboundDeliveries } = await import("../services/outbound-delivery.service");
+  const result = await sweepStuckOutboundDeliveries();
+  res.json(result);
+});
+
 router.post("/internal/cron/test-push", async (req, res): Promise<void> => {
   if (!authorize(req)) {
     sendError(res, req, 401, "Unauthorized");

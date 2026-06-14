@@ -16,6 +16,14 @@ import { getPoliciesForBusinessId } from "./policies.service";
 import { createMetaClient, isMetaConfigured } from "@workspace/integrations-meta";
 import { getMessagingChannels } from "./messaging-channels.service";
 
+function metaAccessToken(): string | null {
+  return (
+    process.env["META_ACCESS_TOKEN"]?.trim() ??
+    process.env["WHATSAPP_ACCESS_TOKEN"]?.trim() ??
+    null
+  );
+}
+
 export type SmsTransport = (args: {
   to: string;
   body: string;
@@ -53,33 +61,137 @@ export function setEmailTransport(t: EmailTransport): void {
   emailTransport = t;
 }
 
-/** Outbound SMS without a conversation thread (e.g. premises tenant menu). */
+/** Used by outbound-delivery hub after thread persist. */
+export async function runOutboundChannelTransport(
+  job: import("@workspace/policy").OutboundDeliveryJob,
+): Promise<{ externalMessageId?: string }> {
+  switch (job.channel) {
+    case "SMS":
+      return smsTransport({
+        to: job.to,
+        body: job.body,
+        ...(job.from ? { from: job.from } : {}),
+      });
+    case "EMAIL":
+      return emailTransport({
+        to: job.to,
+        subject: job.subject ?? "(no subject)",
+        body: job.body,
+        ...(job.html ? { html: job.html } : {}),
+        ...(job.from ? { from: job.from } : {}),
+        ...(job.replyTo ? { replyTo: job.replyTo } : {}),
+      });
+    case "WHATSAPP": {
+      const token = metaAccessToken();
+      if (!token) {
+        if (process.env["META_DEV_SIMULATE"] === "true") return {};
+        throw new Error("META_NOT_CONFIGURED");
+      }
+      if (!job.senderId) throw new Error("MISSING_WHATSAPP_PHONE_NUMBER_ID");
+      const meta = createMetaClient({ accessToken: token });
+      await meta.sendWhatsAppText({
+        phoneNumberId: job.senderId,
+        to: job.to,
+        body: job.body,
+      });
+      return {};
+    }
+    case "INSTAGRAM":
+    case "MESSENGER": {
+      const token = metaAccessToken();
+      if (!token) {
+        if (process.env["META_DEV_SIMULATE"] === "true") return {};
+        throw new Error("META_NOT_CONFIGURED");
+      }
+      if (!job.senderId) throw new Error("MISSING_META_PAGE_ID");
+      const meta = createMetaClient({ accessToken: token });
+      await meta.sendPageMessage({
+        pageId: job.senderId,
+        recipientId: job.recipientId ?? job.to,
+        body: job.body,
+      });
+      return {};
+    }
+    default:
+      throw new Error(`UNSUPPORTED_OUTBOUND_CHANNEL:${job.channel}`);
+  }
+}
+
+/** Outbound SMS without a conversation thread (e.g. premises menu, waitlist). */
 export async function sendDirectSms(args: {
   to: string;
   body: string;
   from?: string;
-}): Promise<void> {
-  await smsTransport({ to: args.to, body: args.body, from: args.from });
+  businessId?: string | null;
+  templateKey?: string;
+}): Promise<{ status: "PENDING" | "SENT" | "FAILED" }> {
+  const notifId = generateId();
+  await db.insert(notificationLogsTable).values({
+    id: notifId,
+    businessId: args.businessId ?? null,
+    channel: "SMS",
+    templateKey: args.templateKey ?? "direct-sms",
+    status: "PENDING",
+    payload: {
+      to: args.to,
+      body: args.body,
+      ...(args.from ? { from: args.from } : {}),
+      direct: true,
+    },
+  });
+
+  const { scheduleOutboundDelivery } = await import("./outbound-delivery.service");
+  const delivery = await scheduleOutboundDelivery({
+    channel: "SMS",
+    businessId: args.businessId ?? null,
+    notifLogId: notifId,
+    to: args.to,
+    body: args.body,
+    from: args.from ?? null,
+  });
+  return { status: delivery === "QUEUED" ? "PENDING" : delivery };
 }
 
 export async function sendDirectWhatsapp(args: {
   phoneNumberId: string;
   to: string;
   body: string;
-}): Promise<void> {
-  const token = metaAccessToken();
-  if (!token) {
-    if (process.env["META_DEV_SIMULATE"] !== "true") {
-      throw new Error("META_NOT_CONFIGURED");
+  businessId?: string | null;
+  templateKey?: string;
+}): Promise<{ status: "PENDING" | "SENT" | "FAILED" }> {
+  if (!metaAccessToken()) {
+    if (process.env["META_DEV_SIMULATE"] === "true") {
+      return { status: "SENT" };
     }
-    return;
+    return { status: "FAILED" };
   }
-  const meta = createMetaClient({ accessToken: token });
-  await meta.sendWhatsAppText({
-    phoneNumberId: args.phoneNumberId,
+
+  const notifId = generateId();
+  await db.insert(notificationLogsTable).values({
+    id: notifId,
+    businessId: args.businessId ?? null,
+    channel: "WHATSAPP",
+    templateKey: args.templateKey ?? "direct-whatsapp",
+    status: "PENDING",
+    payload: {
+      to: args.to,
+      body: args.body,
+      platformChannel: "WHATSAPP",
+      senderId: args.phoneNumberId,
+      direct: true,
+    },
+  });
+
+  const { scheduleOutboundDelivery } = await import("./outbound-delivery.service");
+  const delivery = await scheduleOutboundDelivery({
+    channel: "WHATSAPP",
+    businessId: args.businessId ?? null,
+    notifLogId: notifId,
     to: args.to,
     body: args.body,
+    senderId: args.phoneNumberId,
   });
+  return { status: delivery === "QUEUED" ? "PENDING" : delivery };
 }
 
 // Pure prefix-once decision. Exposed for unit tests so we can prove the
@@ -160,44 +272,26 @@ export async function sendAiSms(args: {
     channel: "SMS",
     templateKey: "liv-sms-reply",
     status: "PENDING",
-    payload: { to: args.customerPhone, body, conversationId: args.conversationId },
-  });
-
-  try {
-    const transport = await smsTransport({
+    payload: {
       to: args.customerPhone,
       body,
+      conversationId: args.conversationId,
       ...(args.fromPhone ? { from: args.fromPhone } : {}),
-    });
-    await db
-      .update(notificationLogsTable)
-      .set({
-        status: "SENT",
-        sentAt: new Date(),
-        payload: {
-          to: args.customerPhone,
-          body,
-          conversationId: args.conversationId,
-          externalMessageId: transport.externalMessageId ?? null,
-        },
-      })
-      .where(eq(notificationLogsTable.id, notifId));
-    return { body, status: "SENT" };
-  } catch (err) {
-    await db
-      .update(notificationLogsTable)
-      .set({
-        status: "FAILED",
-        payload: {
-          to: args.customerPhone,
-          body,
-          conversationId: args.conversationId,
-          error: err instanceof Error ? err.message : String(err),
-        },
-      })
-      .where(eq(notificationLogsTable.id, notifId));
-    return { body, status: "FAILED" };
-  }
+    },
+  });
+
+  const { scheduleOutboundDelivery } = await import("./outbound-delivery.service");
+  const delivery = await scheduleOutboundDelivery({
+    channel: "SMS",
+    businessId: args.businessId,
+    notifLogId: notifId,
+    conversationId: args.conversationId,
+    to: args.customerPhone,
+    body,
+    from: args.fromPhone ?? null,
+  });
+  const status = delivery === "QUEUED" ? "PENDING" : delivery;
+  return { body, status };
 }
 
 // Pure: wraps body with the Art. 50 disclosure block above the signature.
@@ -251,55 +345,30 @@ export async function sendAiEmail(args: {
     channel: "EMAIL",
     templateKey: args.templateKey ?? "liv-email",
     status: "PENDING",
-    payload: { to: args.to, subject: args.subject, body: composed },
-  });
-
-  try {
-    const transport = await emailTransport({
+    payload: {
       to: args.to,
       subject: args.subject,
       body: composed,
       ...(args.html ? { html: args.html } : {}),
       ...(args.fromAddress ? { from: args.fromAddress } : {}),
       ...(args.replyTo ? { replyTo: args.replyTo } : {}),
-    });
-    await db
-      .update(notificationLogsTable)
-      .set({
-        status: "SENT",
-        sentAt: new Date(),
-        payload: {
-          to: args.to,
-          subject: args.subject,
-          body: composed,
-          externalMessageId: transport.externalMessageId ?? null,
-        },
-      })
-      .where(eq(notificationLogsTable.id, notifId));
-    return { body: composed, status: "SENT" };
-  } catch (err) {
-    await db
-      .update(notificationLogsTable)
-      .set({
-        status: "FAILED",
-        payload: {
-          to: args.to,
-          subject: args.subject,
-          body: composed,
-          error: err instanceof Error ? err.message : String(err),
-        },
-      })
-      .where(eq(notificationLogsTable.id, notifId));
-    return { body: composed, status: "FAILED" };
-  }
-}
+    },
+  });
 
-function metaAccessToken(): string | null {
-  return (
-    process.env["META_ACCESS_TOKEN"]?.trim() ??
-    process.env["WHATSAPP_ACCESS_TOKEN"]?.trim() ??
-    null
-  );
+  const { scheduleOutboundDelivery } = await import("./outbound-delivery.service");
+  const delivery = await scheduleOutboundDelivery({
+    channel: "EMAIL",
+    businessId: args.businessId,
+    notifLogId: notifId,
+    to: args.to,
+    body: composed,
+    subject: args.subject,
+    html: args.html,
+    from: args.fromAddress ?? null,
+    replyTo: args.replyTo,
+  });
+  const status = delivery === "QUEUED" ? "PENDING" : delivery;
+  return { body: composed, status };
 }
 
 async function appendAssistantChannelMessage(args: {
@@ -340,6 +409,57 @@ async function appendAssistantChannelMessage(args: {
   return body;
 }
 
+async function scheduleMetaChannelOutbound(args: {
+  businessId: string;
+  conversationId: string;
+  customerId?: string | null;
+  body: string;
+  platformChannel: "WHATSAPP" | "INSTAGRAM" | "MESSENGER";
+  to: string;
+  senderId: string | null;
+  recipientId?: string | null;
+  templateKey: string;
+}): Promise<{ body: string; status: "PENDING" | "SENT" | "FAILED" }> {
+  if (!args.senderId || !metaAccessToken()) {
+    if (process.env["META_DEV_SIMULATE"] === "true") {
+      return { body: args.body, status: "SENT" };
+    }
+    return { body: args.body, status: "FAILED" };
+  }
+
+  const notifId = generateId();
+  await db.insert(notificationLogsTable).values({
+    id: notifId,
+    businessId: args.businessId,
+    customerId: args.customerId ?? null,
+    channel: "WHATSAPP",
+    templateKey: args.templateKey,
+    status: "PENDING",
+    payload: {
+      to: args.to,
+      body: args.body,
+      conversationId: args.conversationId,
+      platformChannel: args.platformChannel,
+      senderId: args.senderId,
+      recipientId: args.recipientId ?? null,
+    },
+  });
+
+  const { scheduleOutboundDelivery } = await import("./outbound-delivery.service");
+  const delivery = await scheduleOutboundDelivery({
+    channel: args.platformChannel,
+    businessId: args.businessId,
+    notifLogId: notifId,
+    conversationId: args.conversationId,
+    to: args.to,
+    body: args.body,
+    senderId: args.senderId,
+    recipientId: args.recipientId ?? null,
+  });
+  const status = delivery === "QUEUED" ? "PENDING" : delivery;
+  return { body: args.body, status };
+}
+
 export async function sendAiWhatsapp(args: {
   conversationId: string;
   businessId: string;
@@ -359,27 +479,18 @@ export async function sendAiWhatsapp(args: {
   });
 
   const channels = await getMessagingChannels(args.businessId);
-  const phoneNumberId = channels.whatsapp?.phoneNumberId;
-  const token = metaAccessToken();
+  const phoneNumberId = channels.whatsapp?.phoneNumberId ?? null;
 
-  if (!phoneNumberId || !token) {
-    if (process.env["META_DEV_SIMULATE"] === "true") {
-      return { body, status: "SENT" };
-    }
-    return { body, status: "FAILED" };
-  }
-
-  try {
-    const meta = createMetaClient({ accessToken: token });
-    await meta.sendWhatsAppText({
-      phoneNumberId,
-      to: args.customerPhone,
-      body,
-    });
-    return { body, status: "SENT" };
-  } catch {
-    return { body, status: "FAILED" };
-  }
+  return scheduleMetaChannelOutbound({
+    businessId: args.businessId,
+    conversationId: args.conversationId,
+    customerId: args.customerId,
+    body,
+    platformChannel: "WHATSAPP",
+    to: args.customerPhone,
+    senderId: phoneNumberId,
+    templateKey: "liv-whatsapp-reply",
+  });
 }
 
 export async function sendAiInstagram(args: {
@@ -401,21 +512,19 @@ export async function sendAiInstagram(args: {
   });
 
   const channels = await getMessagingChannels(args.businessId);
-  const pageId = channels.instagram?.pageId;
-  const token = metaAccessToken();
+  const pageId = channels.instagram?.pageId ?? null;
 
-  if (!pageId || !token) {
-    if (process.env["META_DEV_SIMULATE"] === "true") return { body, status: "SENT" };
-    return { body, status: "FAILED" };
-  }
-
-  try {
-    const meta = createMetaClient({ accessToken: token });
-    await meta.sendPageMessage({ pageId, recipientId: args.recipientId, body });
-    return { body, status: "SENT" };
-  } catch {
-    return { body, status: "FAILED" };
-  }
+  return scheduleMetaChannelOutbound({
+    businessId: args.businessId,
+    conversationId: args.conversationId,
+    customerId: args.customerId,
+    body,
+    platformChannel: "INSTAGRAM",
+    to: args.recipientId,
+    senderId: pageId,
+    recipientId: args.recipientId,
+    templateKey: "liv-instagram-reply",
+  });
 }
 
 export async function sendAiMessenger(args: {
@@ -437,21 +546,19 @@ export async function sendAiMessenger(args: {
   });
 
   const channels = await getMessagingChannels(args.businessId);
-  const pageId = channels.messenger?.pageId ?? channels.instagram?.pageId;
-  const token = metaAccessToken();
+  const pageId = channels.messenger?.pageId ?? channels.instagram?.pageId ?? null;
 
-  if (!pageId || !token) {
-    if (process.env["META_DEV_SIMULATE"] === "true") return { body, status: "SENT" };
-    return { body, status: "FAILED" };
-  }
-
-  try {
-    const meta = createMetaClient({ accessToken: token });
-    await meta.sendPageMessage({ pageId, recipientId: args.recipientId, body });
-    return { body, status: "SENT" };
-  } catch {
-    return { body, status: "FAILED" };
-  }
+  return scheduleMetaChannelOutbound({
+    businessId: args.businessId,
+    conversationId: args.conversationId,
+    customerId: args.customerId,
+    body,
+    platformChannel: "MESSENGER",
+    to: args.recipientId,
+    senderId: pageId,
+    recipientId: args.recipientId,
+    templateKey: "liv-messenger-reply",
+  });
 }
 
 export { isMetaConfigured };

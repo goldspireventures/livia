@@ -177,6 +177,12 @@ const BY_VERTICAL: Partial<Record<BusinessVertical, GuestPublicExperience>> = {
       "Consultations are free — session work may require a deposit to hold long slots.",
       "Come rested, fed, and hydrated; avoid alcohol before your session.",
     ],
+    visitPrep: [
+      "Eat well and stay hydrated — long sessions need fuel.",
+      "Avoid alcohol and blood thinners for 24 hours before your session.",
+      "Review your design proof and message the artist if anything needs changing.",
+      "Allow a few minutes for check-in and consent when you arrive.",
+    ],
   },
 };
 

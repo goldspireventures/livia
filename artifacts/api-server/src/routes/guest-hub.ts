@@ -127,6 +127,30 @@ router.get("/public/guest-hub/shops/:slug", async (req, res): Promise<void> => {
   res.json(payload);
 });
 
+router.get(
+  "/public/guest-hub/shops/:slug/proofs/:proofId/versions",
+  async (req, res): Promise<void> => {
+    const token = typeof req.headers["x-guest-hub-token"] === "string" ? req.headers["x-guest-hub-token"] : "";
+    const slug = Array.isArray(req.params.slug) ? req.params.slug[0] : req.params.slug;
+    const proofId = Array.isArray(req.params.proofId) ? req.params.proofId[0] : req.params.proofId;
+    if (!token) {
+      sendError(res, req, 401, "Guest hub token required");
+      return;
+    }
+    const { getGuestProofVersions } = await import("../services/guest-hub-vertical-artifacts.service");
+    const payload = await getGuestProofVersions({
+      hubToken: token,
+      slug: slug ?? "",
+      proofId: proofId ?? "",
+    });
+    if (!payload) {
+      sendError(res, req, 404, "Proof not found");
+      return;
+    }
+    res.json(payload);
+  },
+);
+
 router.get("/public/guest-hub/shops/:slug/visits/:bookingId", async (req, res): Promise<void> => {
   const token = typeof req.headers["x-guest-hub-token"] === "string" ? req.headers["x-guest-hub-token"] : "";
   const slug = Array.isArray(req.params.slug) ? req.params.slug[0] : req.params.slug;

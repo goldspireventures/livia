@@ -1086,6 +1086,7 @@ export async function syncDemoWorld(): Promise<{
     const { syncAllDemoShowcaseMetaAndRetail } = await import("./demo-showcase-sync.service");
     const showcaseSync = await syncAllDemoShowcaseMetaAndRetail();
     logger.info(showcaseSync, "demo.showcase_meta_retail.synced");
+    await seedVerticalDemoExtras();
   } catch (err) {
     logger.warn({ err }, "demo.guest_hub.sync_failed");
   }

@@ -220,6 +220,42 @@ router.get("/internal/ops/platform-health", async (_req, res): Promise<void> => 
   res.json(await getInternalPlatformHealth());
 });
 
+router.get("/internal/ops/delivery-outbox/summary", async (_req, res): Promise<void> => {
+  const { getDeliveryOutboxSummary } = await import("../services/delivery-outbox.service");
+  res.json(await getDeliveryOutboxSummary());
+});
+
+router.get("/internal/ops/delivery-outbox", async (req, res): Promise<void> => {
+  const { listDeliveryOutbox } = await import("../services/delivery-outbox.service");
+  const status = req.query.status as "PENDING" | "FAILED" | undefined;
+  const businessId = (req.query.businessId as string | undefined)?.trim();
+  const limit = Number(req.query.limit ?? 40);
+  res.json(
+    await listDeliveryOutbox({
+      status: status === "PENDING" || status === "FAILED" ? status : undefined,
+      businessId,
+      limit: Number.isFinite(limit) ? limit : 40,
+    }),
+  );
+});
+
+router.post(
+  "/internal/ops/delivery-outbox/:notifLogId/replay",
+  requireInternalOpsMutation("engineer"),
+  async (req, res): Promise<void> => {
+    const { replayDeliveryOutboxRow } = await import("../services/delivery-outbox.service");
+    const notifLogId = Array.isArray(req.params.notifLogId)
+      ? req.params.notifLogId[0]
+      : req.params.notifLogId;
+    const result = await replayDeliveryOutboxRow(notifLogId);
+    if (!result.ok) {
+      sendError(res, req, 400, result.reason ?? "Replay failed");
+      return;
+    }
+    res.json(result);
+  },
+);
+
 /** Exec command center — prefer this path; unguessable surface for solo operator. */
 router.get(
   "/internal/ops/exec/snapshot",

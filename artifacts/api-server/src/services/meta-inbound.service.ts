@@ -4,7 +4,6 @@ import { isAnthropicConfigured } from "@workspace/integrations-anthropic-ai";
 import { generateId } from "../lib/id";
 import { logger } from "../lib/logger";
 import { redactObject } from "../lib/pii-redaction";
-import { handlePublicChat } from "./ai-chat.service";
 import {
   appendMessage,
   attachCustomer,
@@ -15,7 +14,8 @@ import {
 import { upsertChannelIdentity } from "./channel-identities.service";
 import { findBusinessByMessagingLookup } from "./messaging-channels.service";
 import { resolveInboundWhatsappBusiness } from "./channel-routing.service";
-import { sendAiInstagram, sendAiMessenger, sendAiWhatsapp, sendDirectWhatsapp } from "./ai-outbound.service";
+import { sendDirectWhatsapp } from "./ai-outbound.service";
+import { scheduleInboundReply } from "./inbound-reply.service";
 
 function mapChannel(ch: InboundMetaMessage["channel"]): ConversationChannel {
   if (ch === "MESSENGER") return "MESSENGER";
@@ -33,6 +33,7 @@ export async function processInboundMetaMessage(msg: InboundMetaMessage): Promis
   conversationId?: string;
   aiReplySkipped?: boolean;
   aiReplySkipReason?: string;
+  aiReplyQueued?: boolean;
 }> {
   let business = await findBusinessByMessagingLookup(msg.businessLookup);
   if (
@@ -146,66 +147,28 @@ export async function processInboundMetaMessage(msg: InboundMetaMessage): Promis
     };
   }
 
-  let result: Awaited<ReturnType<typeof handlePublicChat>> | undefined;
-  try {
-    result = await handlePublicChat({
-      slug: business.slug,
-      conversationId: conversation.id,
-      message: msg.text,
-      customerName: msg.displayName,
-      customerPhone: channel === "WHATSAPP" ? msg.externalParticipantId : undefined,
-      channelType:
-        channel === "WHATSAPP" || channel === "INSTAGRAM" || channel === "MESSENGER"
-          ? channel
-          : "WEB",
-      skipPersistence: true,
-    });
-  } catch (err) {
+  void scheduleInboundReply({
+    businessId: business.id,
+    businessSlug: business.slug,
+    businessName: business.name,
+    conversationId: conversation.id,
+    channel: channel as "WHATSAPP" | "INSTAGRAM" | "MESSENGER",
+    message: msg.text,
+    customerName: msg.displayName,
+    customerPhone: channel === "WHATSAPP" ? msg.externalParticipantId : phoneKey,
+    customerId,
+    recipientId: channel !== "WHATSAPP" ? msg.externalParticipantId : null,
+  }).catch((err) => {
     logger.error(
       { err: redactObject(err), businessId: business.id, channel },
-      "Meta inbound: Liv reply failed",
+      "Meta inbound: failed to queue Liv reply",
     );
-    return {
-      handled: true,
-      businessId: business.id,
-      conversationId: conversation.id,
-      aiReplySkipped: true,
-      aiReplySkipReason: err instanceof Error ? err.message : "Liv reply failed",
-    };
-  }
+  });
 
-  if (!result?.reply) {
-    return { handled: true, businessId: business.id, conversationId: conversation.id };
-  }
-
-  if (channel === "WHATSAPP") {
-    await sendAiWhatsapp({
-      conversationId: conversation.id,
-      businessId: business.id,
-      businessName: business.name,
-      customerId,
-      customerPhone: msg.externalParticipantId,
-      content: result.reply,
-    });
-  } else if (channel === "INSTAGRAM") {
-    await sendAiInstagram({
-      conversationId: conversation.id,
-      businessId: business.id,
-      businessName: business.name,
-      customerId,
-      recipientId: msg.externalParticipantId,
-      content: result.reply,
-    });
-  } else {
-    await sendAiMessenger({
-      conversationId: conversation.id,
-      businessId: business.id,
-      businessName: business.name,
-      customerId,
-      recipientId: msg.externalParticipantId,
-      content: result.reply,
-    });
-  }
-
-  return { handled: true, businessId: business.id, conversationId: conversation.id };
+  return {
+    handled: true,
+    businessId: business.id,
+    conversationId: conversation.id,
+    aiReplyQueued: true,
+  };
 }

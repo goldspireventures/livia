@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { DesignProofVersionFrame } from "@/components/body-art/design-proof-version-frame";
 import { clientGuestSurfacePathFromUrl } from "@/lib/guest-book-url";
 import {
   Car,
@@ -22,12 +23,19 @@ export type GuestMyArtifacts = {
     behaviourNotes: string | null;
     allergyNotes: string | null;
   }>;
-  proofs: Array<{
-    proofId: string;
-    status: string;
-    note: string | null;
-    reviewUrl: string;
-  }>;
+    proofs: Array<{
+      proofId: string;
+      status: string;
+      note: string | null;
+      imageUrl?: string | null;
+      reviewUrl: string;
+      version?: number;
+      versions?: Array<{
+        version: number;
+        imageUrl: string | null;
+        createdAt?: string;
+      }>;
+    }>;
   vehicleHighlight: string | null;
   consentItems?: Array<{
     id: string;
@@ -57,11 +65,24 @@ export type GuestMyArtifacts = {
   } | null;
 };
 
-export function GuestMyArtifactPanels({ artifacts }: { artifacts: GuestMyArtifacts }) {
+export function GuestMyArtifactPanels({
+  artifacts,
+  vertical,
+  hideProofs = false,
+  hubToken,
+  shopSlug,
+}: {
+  artifacts: GuestMyArtifacts;
+  vertical?: string | null;
+  /** Visit page renders proofs in the engagement strip — avoid duplicate cards. */
+  hideProofs?: boolean;
+  hubToken?: string | null;
+  shopSlug?: string | null;
+}) {
   const consentItems = artifacts.consentItems ?? [];
   const wellnessPrep = artifacts.wellnessPrep ?? [];
   const hasPets = artifacts.pets.length > 0;
-  const hasProofs = artifacts.proofs.length > 0;
+  const hasProofs = !hideProofs && artifacts.proofs.length > 0;
   const hasVehicle = Boolean(artifacts.vehicleHighlight);
   const hasConsent = consentItems.length > 0;
   const hasCarePlan = Boolean(artifacts.carePlan);
@@ -88,6 +109,26 @@ export function GuestMyArtifactPanels({ artifacts }: { artifacts: GuestMyArtifac
 
   return (
     <section className="space-y-3" data-testid="guest-my-artifact-panels">
+      {hasProofs ? (
+        <Card className="border-primary/25" data-testid="guest-design-proof-panel">
+          <CardContent className="py-4 space-y-3">
+            <p className="text-[10px] uppercase tracking-widest font-mono text-primary flex items-center gap-1.5">
+              <Image className="h-3.5 w-3.5" />
+              {vertical === "body-art" ? "Design proof — approve before your session" : "Design proof"}
+            </p>
+            {artifacts.proofs.map((proof) => (
+              <DesignProofVersionFrame
+                key={proof.proofId}
+                proof={proof}
+                testIdPrefix="guest-my-proof"
+                hubToken={hubToken}
+                shopSlug={shopSlug}
+              />
+            ))}
+          </CardContent>
+        </Card>
+      ) : null}
+
       {hasConsent ? (
         <Card
           id="guest-consent"
@@ -251,30 +292,6 @@ export function GuestMyArtifactPanels({ artifacts }: { artifacts: GuestMyArtifac
                     Allergies: {pet.allergyNotes}
                   </p>
                 ) : null}
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      ) : null}
-
-      {hasProofs ? (
-        <Card className="border-primary/25">
-          <CardContent className="py-4 space-y-3">
-            <p className="text-[10px] uppercase tracking-widest font-mono text-primary flex items-center gap-1.5">
-              <Image className="h-3.5 w-3.5" />
-              Design proof
-            </p>
-            {artifacts.proofs.map((proof) => (
-              <div key={proof.proofId} className="flex items-start justify-between gap-3">
-                <div className="min-w-0 text-sm">
-                  <p className="font-medium capitalize">{proof.status.replace(/_/g, " ")}</p>
-                  {proof.note ? (
-                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{proof.note}</p>
-                  ) : null}
-                </div>
-                <Button size="sm" variant="outline" className="shrink-0 gap-1" asChild>
-                  <Link href={clientGuestSurfacePathFromUrl(proof.reviewUrl)}>Review</Link>
-                </Button>
               </div>
             ))}
           </CardContent>

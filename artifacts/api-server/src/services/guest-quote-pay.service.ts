@@ -255,14 +255,14 @@ export async function applyGuestQuoteDepositFromWebhook(args: {
     .limit(1);
 
   const { notifyQuoteDepositPaid } = await import("./engagement-exit.service");
-  void notifyQuoteDepositPaid({
+  notifyQuoteDepositPaid({
     businessId: args.businessId,
     quoteId: args.quoteId,
     publicToken: quote.publicToken,
     amountMinor: creditMinor,
     currency: biz?.currency ?? "EUR",
     dateSecured: after.dateSecured,
-  }).catch(() => undefined);
+  });
 
   await logEvent({
     businessId: args.businessId,

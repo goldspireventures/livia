@@ -30,12 +30,13 @@ Artist/owner: **consult → design proof → deposit → session** on one thread
 
 | Works | Gaps |
 |-------|------|
-| `/design-proofs` nav | Proof revision annotations (R1.1) |
-| Guest `/proof/:token` | Flash day numbered sheet |
-| Deposit + consult guards | Multi-session **series** entity |
-| Wedge story | Hourly vs multi-day booking modes |
-| studio-dark preset | Aftercare sequence automation |
-| ink-anchor demo | Kanban pipeline home density |
+| `/design-proofs` nav + ownership | Proof annotation (R1.1) |
+| Guest `/proof/:token` + skin preview | Flash day numbered sheet |
+| Publish gate on `/b` gallery | Multi-session **series** entity |
+| Deposit + consult guards | Hourly vs multi-day booking modes |
+| Wedge story | Aftercare sequence automation |
+| studio-dark preset | Kanban pipeline home density |
+| ink-anchor demo (6 proofs) | AI skin Phase 3 |
 
 ---
 

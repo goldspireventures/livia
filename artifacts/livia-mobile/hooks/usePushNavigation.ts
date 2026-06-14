@@ -1,5 +1,6 @@
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
+import { operatorRouteForResource, type PlatformResourceKind } from "@workspace/policy";
 import { isPushSupportedInThisBuild, loadNotificationsModule } from "@/lib/push-notifications";
 
 type PushData = {
@@ -7,13 +8,38 @@ type PushData = {
   businessId?: string;
   bookingId?: string;
   conversationId?: string;
+  quoteId?: string;
+  proofId?: string;
+  resourceKind?: string;
+  resourceId?: string;
   slug?: string;
   token?: string;
   guestKind?: string;
 };
 
+function routeFromResourceKind(kind: string | undefined, resourceId: string | undefined): string | null {
+  if (!kind || !resourceId) return null;
+  const allowed: PlatformResourceKind[] = [
+    "booking",
+    "conversation",
+    "quote",
+    "design_proof",
+    "refund",
+    "time_off",
+  ];
+  if (!allowed.includes(kind as PlatformResourceKind)) return null;
+  return operatorRouteForResource(kind as PlatformResourceKind, resourceId).mobileHref;
+}
+
 function routeForPush(data: PushData | undefined): string | null {
   if (!data?.type) return null;
+
+  const resourceRoute = routeFromResourceKind(
+    data.resourceKind,
+    data.resourceId ?? data.quoteId ?? data.proofId ?? data.bookingId ?? data.conversationId,
+  );
+  if (resourceRoute) return resourceRoute;
+
   switch (data.type) {
     case "guest.visit":
     case "guest.intake":
@@ -36,11 +62,23 @@ function routeForPush(data: PushData | undefined): string | null {
       return data.conversationId
         ? `/conversation/${data.conversationId}`
         : "/(tabs)/inbox";
+    case "design-proof.changes_requested":
+    case "design-proof.approved":
+    case "design-proof.awaiting_client":
+      return data.proofId
+        ? operatorRouteForResource("design_proof", data.proofId).mobileHref
+        : "/design-proofs";
+    case "quote.accepted":
+    case "quote.deposit_paid":
+    case "quote.client_withdrew":
+      return data.quoteId
+        ? operatorRouteForResource("quote", data.quoteId).mobileHref
+        : "/quotes";
     case "twin.risk":
     case "twin.opportunity":
-      return "/(tabs)/index";
     case "commerce.signal":
     case "payment.failed":
+    case "morning.briefing.ready":
       return "/(tabs)/index";
     case "test":
       return "/(tabs)";

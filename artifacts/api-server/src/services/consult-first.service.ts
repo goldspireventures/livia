@@ -309,14 +309,14 @@ export async function recordOperatorClientWithdrew(
   }
 
   const { notifyClientWithdrew } = await import("./engagement-exit.service");
-  void notifyClientWithdrew({
+  notifyClientWithdrew({
     businessId,
     quoteId,
     publicToken: quote.publicToken,
     depositPaidMinor: quote.depositPaidMinor,
     depositAmountMinor: quote.depositAmountMinor,
     initiatedBy: "operator",
-  }).catch(() => undefined);
+  });
 
   void opts;
   return { ok: true };
@@ -1294,14 +1294,14 @@ export async function declinePublicQuote(slug: string, token: string) {
     await updateEnquiry(data.business.id, data.quote.enquiryId, { status: "lost" });
   }
   const { notifyClientWithdrew } = await import("./engagement-exit.service");
-  void notifyClientWithdrew({
+  notifyClientWithdrew({
     businessId: data.business.id,
     quoteId: data.quote.id,
     publicToken: data.quote.publicToken,
     depositPaidMinor: data.quote.depositPaidMinor ?? 0,
     depositAmountMinor: data.quote.depositAmountMinor ?? 0,
     initiatedBy: "client",
-  }).catch(() => undefined);
+  });
   return row;
 }
 
@@ -1320,7 +1320,7 @@ export async function acceptPublicQuote(slug: string, token: string) {
   }
 
   const { notifyQuoteAccepted } = await import("./engagement-exit.service");
-  void notifyQuoteAccepted(data.business.id, row.id, row.publicToken).catch(() => undefined);
+  notifyQuoteAccepted(data.business.id, row.id, row.publicToken);
 
   return row;
 }

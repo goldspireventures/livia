@@ -16,9 +16,21 @@ import { useColors } from "@/hooks/useColors";
 import { getApiBaseUrl } from "@/lib/api-base";
 import { GUEST_HUB_TOKEN_KEY, openGuestBookUrl } from "@/lib/guest-hub";
 import { GUEST_HUB_COPY } from "@workspace/policy";
+import { GuestDesignProofPanel } from "@/components/guest/GuestDesignProofPanel";
+import { verticalAccentHex } from "@/lib/vertical-theme";
+
+type GuestProofArtifact = {
+  proofId: string;
+  status: string;
+  note: string | null;
+  imageUrl?: string | null;
+  reviewUrl: string;
+  version?: number;
+  versions?: Array<{ version: number; imageUrl: string | null; createdAt?: string }>;
+};
 
 type ShopRelationship = {
-  shop: { businessName: string; slug: string };
+  shop: { businessName: string; slug: string; vertical?: string | null };
   upcomingBookings: Array<{
     bookingId: string;
     serviceName: string;
@@ -32,6 +44,9 @@ type ShopRelationship = {
   }>;
   relationship: { headline: string; memoryHighlight: string | null } | null;
   bookUrl: string;
+  verticalArtifacts?: {
+    proofs: GuestProofArtifact[];
+  };
 };
 
 export default function MyLiviaShopScreen() {
@@ -41,6 +56,7 @@ export default function MyLiviaShopScreen() {
   const api = getApiBaseUrl();
   const [data, setData] = useState<ShopRelationship | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hubToken, setHubToken] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const token = await AsyncStorage.getItem(GUEST_HUB_TOKEN_KEY);
@@ -48,6 +64,7 @@ export default function MyLiviaShopScreen() {
       setLoading(false);
       return;
     }
+    setHubToken(token);
     const r = await fetch(`${api}/api/public/guest-hub/shops/${encodeURIComponent(slug)}`, {
       headers: { "X-Guest-Hub-Token": token },
     });
@@ -85,6 +102,12 @@ export default function MyLiviaShopScreen() {
     );
   }
 
+  const accent = verticalAccentHex(data.shop.vertical ?? undefined, undefined);
+  const activeProof =
+    data.verticalArtifacts?.proofs.find((p) => p.status === "pending_review") ??
+    data.verticalArtifacts?.proofs.find((p) => p.status === "rejected") ??
+    data.verticalArtifacts?.proofs[0];
+
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]}>
       <Pressable onPress={() => router.back()} style={styles.back}>
@@ -96,6 +119,15 @@ export default function MyLiviaShopScreen() {
           <Text style={[type.caption, { color: colors.mutedForeground, marginTop: 8 }]}>
             {data.relationship.memoryHighlight}
           </Text>
+        ) : null}
+
+        {activeProof && hubToken && slug ? (
+          <GuestDesignProofPanel
+            proof={activeProof}
+            hubToken={hubToken}
+            shopSlug={slug}
+            accent={accent}
+          />
         ) : null}
 
         {data.upcomingBookings.map((b) => (

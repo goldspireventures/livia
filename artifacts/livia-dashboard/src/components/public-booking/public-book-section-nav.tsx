@@ -1,25 +1,27 @@
 import { cn } from "@/lib/utils";
 import type { PublicBookSectionId } from "@workspace/policy";
+import { publicBookSectionLabels } from "@workspace/policy";
 
-const SECTION_META: Record<
-  PublicBookSectionId,
-  { label: string; targetId: string }
-> = {
-  treatments: { label: "Treatments", targetId: "public-book-treatments" },
-  team: { label: "Team", targetId: "public-book-team" },
-  shop: { label: "Shop", targetId: "public-book-shop" },
+const SECTION_TARGETS: Record<PublicBookSectionId, string> = {
+  treatments: "public-book-treatments",
+  team: "public-book-team",
+  shop: "public-book-shop",
 };
 
 export function PublicBookSectionNav({
   sections,
   counts,
+  vertical,
   className,
 }: {
   sections: PublicBookSectionId[];
   counts?: Partial<Record<PublicBookSectionId, number>>;
+  vertical?: string | null;
   className?: string;
 }) {
   if (sections.length < 2) return null;
+
+  const labels = publicBookSectionLabels(vertical);
 
   function scrollTo(id: string) {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -37,20 +39,20 @@ export function PublicBookSectionNav({
     >
       <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-none">
         {sections.map((section) => {
-          const meta = SECTION_META[section];
+          const targetId = SECTION_TARGETS[section];
           const count = counts?.[section];
           return (
             <button
               key={section}
               type="button"
-              onClick={() => scrollTo(meta.targetId)}
+              onClick={() => scrollTo(targetId)}
               className={cn(
-                "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors",
+                "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors cursor-pointer",
                 "border-border/80 bg-card/60 hover:border-primary/40 hover:bg-primary/5",
               )}
               data-testid={`public-book-nav-${section}`}
             >
-              {meta.label}
+              {labels[section]}
               {count != null && count > 0 ? (
                 <span className="ml-1.5 tabular-nums text-muted-foreground">{count}</span>
               ) : null}

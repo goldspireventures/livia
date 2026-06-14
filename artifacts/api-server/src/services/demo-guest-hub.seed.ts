@@ -142,17 +142,24 @@ async function upsertGuestHubBooking(
   customerId: string,
   daysAhead: number,
   note: string,
+  opts?: { serviceName?: string; staffDisplayName?: string },
 ): Promise<string | null> {
-  const [staff] = await db
-    .select({ id: staffTable.id })
+  const staffRows = await db
+    .select({ id: staffTable.id, displayName: staffTable.displayName })
     .from(staffTable)
-    .where(eq(staffTable.businessId, businessId))
-    .limit(1);
-  const [service] = await db
-    .select({ id: servicesTable.id })
+    .where(eq(staffTable.businessId, businessId));
+  const serviceRows = await db
+    .select({ id: servicesTable.id, name: servicesTable.name })
     .from(servicesTable)
-    .where(eq(servicesTable.businessId, businessId))
-    .limit(1);
+    .where(eq(servicesTable.businessId, businessId));
+
+  const staff =
+    (opts?.staffDisplayName
+      ? staffRows.find((s) => s.displayName === opts.staffDisplayName)
+      : null) ?? staffRows[0];
+  const service =
+    (opts?.serviceName ? serviceRows.find((s) => s.name === opts.serviceName) : null) ??
+    serviceRows[0];
   if (!staff || !service) return null;
 
   const { startAt, endAt } = bookingWindow(daysAhead);
@@ -184,6 +191,8 @@ async function upsertGuestHubBooking(
         status: "CONFIRMED",
         notes: note,
         cancellationReason: null,
+        staffId: staff.id,
+        serviceId: service.id,
       })
       .where(eq(bookingsTable.id, seeded.id));
     await cancelGuestFutureBookings(businessId, customerId, note, seeded.id);
@@ -263,7 +272,11 @@ async function seedEndClient(client: DemoEndClient): Promise<{
 
     const daysAhead = client.upcomingDaysBySlug[slug];
     if (daysAhead != null) {
-      const id = await upsertGuestHubBooking(biz.id, customerId, daysAhead, note);
+      const bookingOpts =
+        slug === "ink-anchor-galway" && client.id === "mary"
+          ? { serviceName: "Touch-up", staffDisplayName: "Rory Mannion" }
+          : undefined;
+      const id = await upsertGuestHubBooking(biz.id, customerId, daysAhead, note, bookingOpts);
       if (id) upcomingEnsured += 1;
     } else {
       await cancelGuestFutureBookings(biz.id, customerId, note);

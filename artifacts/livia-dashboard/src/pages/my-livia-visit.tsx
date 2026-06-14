@@ -5,10 +5,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { PublicSurfaceLoading } from "@/components/public/public-surface-chrome";
 import { GuestHubPageHeader, GuestHubShell } from "@/components/guest/guest-hub-chrome";
+import { GuestHubLivChat } from "@/components/guest/guest-hub-liv-chat";
 import { formatVisitHeroTime } from "@/lib/format";
 import { GUEST_HUB_COPY, guestMyQuickActions } from "@workspace/policy";
 import { GuestMyVaultModules } from "@/components/guest/guest-my-vault-modules";
 import { GuestMyArtifactPanels } from "@/components/guest/guest-my-artifact-panels";
+import { GuestStudioEngagementPanel } from "@/components/guest/guest-studio-engagement-panel";
 import {
   ArrowLeft,
   CalendarCheck,
@@ -62,6 +64,7 @@ type VisitPayload = {
       proofId: string;
       status: string;
       note: string | null;
+      imageUrl?: string | null;
       reviewUrl: string;
     }>;
     vehicleHighlight: string | null;
@@ -240,8 +243,21 @@ export default function MyLiviaVisitPage() {
             ) : null}
           </section>
 
+          <GuestStudioEngagementPanel
+            vertical={b.vertical}
+            bookUrl={data.bookUrl}
+            proofs={data.verticalArtifacts?.proofs}
+            hubToken={hubToken}
+            shopSlug={slug}
+            onMessage={() =>
+              document
+                .getElementById("guest-hub-visit-message")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" })
+            }
+          />
+
           {data.relationship?.memoryHighlight ? (
-            <Card className="border-primary/20 bg-primary/5">
+            <Card className="border-primary/20 bg-primary/5" id="guest-hub-memory">
               <CardContent className="py-4 text-sm flex gap-3">
                 <Sparkles className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                 <div>
@@ -270,10 +286,14 @@ export default function MyLiviaVisitPage() {
           ) : null}
 
           {data.verticalArtifacts ? (
-            <GuestMyArtifactPanels artifacts={data.verticalArtifacts} />
+            <GuestMyArtifactPanels
+              artifacts={data.verticalArtifacts}
+              vertical={b.vertical}
+              hideProofs
+            />
           ) : null}
 
-          <GuestMyVaultModules vertical={b.vertical} />
+          <GuestMyVaultModules vertical={b.vertical} displayOnly={false} bookUrl={data.bookUrl} />
         </div>
 
         <aside className="lg:col-span-2 space-y-6 min-w-0">
@@ -368,6 +388,8 @@ export default function MyLiviaVisitPage() {
               <Link href="/my">{GUEST_HUB_COPY.backToVault}</Link>
             </Button>
           </div>
+
+          <GuestHubLivChat hubToken={hubToken} variant="inline" />
         </aside>
       </div>
     </GuestHubShell>

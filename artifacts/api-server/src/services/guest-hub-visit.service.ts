@@ -28,6 +28,7 @@ import { createConversation } from "./conversations.service";
 import { getRelationshipSummary } from "./relationship.service";
 import { listGuestPackageCreditsForGuest } from "./package-credits.service";
 import { loadGuestVerticalArtifacts } from "./guest-hub-vertical-artifacts.service";
+import { fanOutSideEffect } from "../lib/side-effect-emitter";
 
 function guestBookUrlForSlug(slug: string, query = ""): string {
   return resolveGuestBookUrl(slug, query);
@@ -407,6 +408,22 @@ export async function postGuestVisitMessage(
     content: trimmed,
     bookingId: booking.bookingId,
   });
+
+  fanOutSideEffect(
+    "guest.visit.message",
+    async () => {
+      const { notifyInboxInbound } = await import("./notification-orchestrator.service");
+      await notifyInboxInbound({
+        businessId: booking.businessId,
+        conversationId,
+        channel: "WEB",
+        customerName: booking.customerFirstName,
+        preview: trimmed.slice(0, 120),
+        livWillReply: false,
+      });
+    },
+    { conversationId, bookingId: booking.bookingId },
+  );
 
   return { ok: true as const, conversationId, messageId };
 }

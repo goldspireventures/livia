@@ -9,6 +9,7 @@ import { formatDateTime } from "@/lib/format";
 import { GUEST_HUB_COPY } from "@workspace/policy";
 import { GuestMyVaultModules } from "@/components/guest/guest-my-vault-modules";
 import { GuestMyArtifactPanels } from "@/components/guest/guest-my-artifact-panels";
+import { GuestStudioEngagementPanel } from "@/components/guest/guest-studio-engagement-panel";
 import { ArrowLeft, CalendarCheck, Heart, MessageSquare, Sparkles } from "lucide-react";
 
 const HUB_TOKEN_KEY = "livia_guest_hub_token";
@@ -56,6 +57,7 @@ type ShopPayload = {
       proofId: string;
       status: string;
       note: string | null;
+      imageUrl?: string | null;
       reviewUrl: string;
     }>;
     vehicleHighlight: string | null;
@@ -201,10 +203,32 @@ export default function MyLiviaShopPage() {
           ) : null}
 
           {data.verticalArtifacts ? (
-            <GuestMyArtifactPanels artifacts={data.verticalArtifacts} />
+            <GuestMyArtifactPanels
+              artifacts={data.verticalArtifacts}
+              vertical={data.shop.vertical}
+              hubToken={hubToken}
+              shopSlug={slug}
+            />
           ) : null}
 
-          <GuestMyVaultModules vertical={data.shop.vertical} />
+          <GuestStudioEngagementPanel
+            vertical={data.shop.vertical}
+            bookUrl={data.bookUrl}
+            proofs={
+              data.shop.vertical === "body-art" ? [] : data.verticalArtifacts?.proofs
+            }
+            hubToken={hubToken}
+            shopSlug={slug}
+            onMessage={() => {
+              if (next) window.location.href = next.manageUrl;
+            }}
+          />
+
+          <GuestMyVaultModules
+            vertical={data.shop.vertical}
+            displayOnly={false}
+            bookUrl={data.bookUrl}
+          />
         </div>
 
         <aside className="space-y-6 min-w-0">

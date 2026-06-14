@@ -10,6 +10,9 @@ import { multiBrandBriefing } from "./multi-brand-briefing";
 import { partnerVoteWorkflow } from "./partner-vote";
 import { classSessionReminder } from "./class-session-reminder";
 import { tattooDesignProofWorkflow } from "./tattoo-design-proof";
+import { platformNotificationDeliver } from "./platform-notification-deliver";
+import { platformOutboundDeliver } from "./platform-outbound-deliver";
+import { platformInboundReply } from "./platform-inbound-reply";
 import { bookingContinuityBridge } from "./booking-continuity";
 import { waitlistOfferOnCancel } from "./waitlist-offer";
 import { runningLateBroadcast } from "./running-late-broadcast";
@@ -34,6 +37,9 @@ export const workflowFunctions = [
   partnerVoteWorkflow,
   classSessionReminder,
   tattooDesignProofWorkflow,
+  platformNotificationDeliver,
+  platformOutboundDeliver,
+  platformInboundReply,
   bookingContinuityBridge,
   waitlistOfferOnCancel,
   runningLateBroadcast,

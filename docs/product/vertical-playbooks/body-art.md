@@ -16,8 +16,8 @@
 
 ## 2. Hero workflows
 
-1. **Design proofs desk** → [`w4.ops.design-proofs.web.yaml`](../design/screen-cards/w4.ops.design-proofs.web.yaml)
-2. **Guest proof approve** → [`w5.public.proof.mobile.yaml`](../design/screen-cards/w5.public.proof.mobile.yaml)
+1. **Design proofs desk** → studio artwork, publish rights, replace/revision → [`BODY-ART-DESIGN-PROOF-PROGRAM.md`](../BODY-ART-DESIGN-PROOF-PROGRAM.md)
+2. **Guest proof approve** → Design \| On skin → [`w5.public.proof.mobile.yaml`](../design/screen-cards/w5.public.proof.mobile.yaml)
 3. **Owner pipeline home** — kanban module on dashboard (body-art preset)
 
 ---

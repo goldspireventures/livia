@@ -60,13 +60,16 @@ function CatalogFilterToolbar({
   categories,
   activeCategory,
   onCategoryChange,
+  catalogTitle,
 }: {
   query: string;
   onQueryChange: (value: string) => void;
   categories: string[];
   activeCategory: string | null;
   onCategoryChange: (category: string | null) => void;
+  catalogTitle: string;
 }) {
+  const searchLabel = `Search ${catalogTitle.toLowerCase()}…`;
   return (
     <div className="mb-4 space-y-3" data-testid="public-catalog-filter">
       <div className="relative">
@@ -77,9 +80,9 @@ function CatalogFilterToolbar({
         <Input
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
-          placeholder="Search treatments…"
+          placeholder={searchLabel}
           className="h-9 pl-9 text-sm"
-          aria-label="Search treatments"
+          aria-label={searchLabel}
         />
       </div>
       {categories.length > 1 ? (
@@ -331,6 +334,7 @@ export function PublicServiceCatalog({
             categories={categoryList}
             activeCategory={activeCategory}
             onCategoryChange={setActiveCategory}
+            catalogTitle={catalogTitle}
           />
         ) : null}
         {filteredServices.length === 0 ? (

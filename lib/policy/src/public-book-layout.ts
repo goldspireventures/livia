@@ -3,6 +3,9 @@
  * @see docs/design/EXPERIENCE-ARCHITECTURE.md
  */
 
+import type { BusinessVertical } from "./types";
+import { businessVocabulary } from "./vocabulary";
+
 export type PublicBookSectionId = "treatments" | "team" | "shop";
 
 export type PublicBookStaffPickerMode = "strip" | "grid" | "collapsible";
@@ -76,5 +79,17 @@ export function resolvePublicBookLayoutDensity(signals: {
     shopPlacement,
     productPreviewLimit,
     teamAfterCatalog: staffPicker !== "strip",
+  };
+}
+
+/** Guest-facing section nav labels on `/book` — vocabulary-aware. */
+export function publicBookSectionLabels(
+  vertical?: string | null,
+): Record<PublicBookSectionId, string> {
+  const vocab = businessVocabulary(vertical ?? "beauty", null);
+  return {
+    treatments: vocab.publicBookCatalogTitle,
+    team: vocab.teamNoun,
+    shop: "Shop",
   };
 }

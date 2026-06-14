@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import React, { useCallback, useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -17,6 +17,7 @@ import { ScreenTopBar } from "@/components/ScreenTopBar";
 import { useBusiness } from "@/contexts/BusinessContext";
 import { useColors } from "@/hooks/useColors";
 import { useHaptics } from "@/hooks/useHaptics";
+import { useInAppNotifications } from "@/hooks/useInAppNotifications";
 import { useMembership } from "@/hooks/useMembership";
 import {
   createDesignProof,
@@ -27,6 +28,8 @@ import {
 } from "@/lib/design-proofs-api";
 import { pickImageAndUpload } from "@/lib/upload-media";
 import { verticalAccentHex } from "@/lib/vertical-theme";
+import { parseDesignProofGuestFeedback, stripDesignProofGuestFeedback } from "@workspace/policy";
+import { DesignProofVersionBar } from "@/components/design-proofs/DesignProofVersionBar";
 import { fonts, type } from "@/constants/typography";
 
 const FILTERS: Array<{ id: DesignProofStatus | "all"; label: string }> = [
@@ -34,14 +37,16 @@ const FILTERS: Array<{ id: DesignProofStatus | "all"; label: string }> = [
   { id: "pending_review", label: "Pending" },
   { id: "draft", label: "Draft" },
   { id: "approved", label: "Approved" },
-  { id: "rejected", label: "Rejected" },
+  { id: "rejected", label: "Changes" },
 ];
 
 export default function DesignProofsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const params = useLocalSearchParams<{ proof?: string }>();
   const haptics = useHaptics();
+  const { markReadByResource } = useInAppNotifications();
   const { currentBusiness } = useBusiness();
   const { role } = useMembership();
   const bid = currentBusiness?.id ?? "";
@@ -59,23 +64,56 @@ export default function DesignProofsScreen() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+  const scrolledProof = useRef(false);
 
   const load = useCallback(async () => {
     if (!bid) return;
     setLoading(true);
     try {
       const status = filter === "all" ? undefined : filter;
-      setRows(await listDesignProofs(bid, status));
+      const list = await listDesignProofs(bid, status);
+      setRows(list);
+      const proofId = params.proof?.trim();
+      if (proofId) {
+        const match = list.find((p) => p.id === proofId);
+        if (!match) {
+          const all = await listDesignProofs(bid);
+          const found = all.find((p) => p.id === proofId);
+          if (found) {
+            setFilter("all");
+            setRows(all);
+            setHighlightId(proofId);
+          }
+        } else {
+          setHighlightId(proofId);
+        }
+      }
     } catch {
       setRows([]);
     } finally {
       setLoading(false);
     }
-  }, [bid, filter]);
+  }, [bid, filter, params.proof]);
 
   React.useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    const proofId = params.proof?.trim();
+    if (!proofId || !bid) return;
+    void markReadByResource({
+      resourceKind: "design_proof",
+      resourceId: proofId,
+      businessId: bid,
+    }).catch(() => undefined);
+  }, [params.proof, bid, markReadByResource]);
+
+  useEffect(() => {
+    if (!highlightId || scrolledProof.current || rows.length === 0) return;
+    scrolledProof.current = true;
+  }, [highlightId, rows.length]);
 
   async function onCreate() {
     if (!bid || !canEdit) return;
@@ -208,10 +246,21 @@ export default function DesignProofsScreen() {
           }
         />
       ) : (
-        rows.map((p) => (
+        rows.map((p) => {
+          const guestRemarks =
+            p.guestFeedback ?? parseDesignProofGuestFeedback(p.note);
+          const studioLabel = stripDesignProofGuestFeedback(p.note) ?? p.note ?? "—";
+          return (
           <View
             key={p.id}
-            style={[styles.card, { backgroundColor: colors.card, borderColor: accent + "44" }]}
+            style={[
+              styles.card,
+              {
+                backgroundColor: colors.card,
+                borderColor: p.id === highlightId ? accent : accent + "44",
+                borderWidth: p.id === highlightId ? 2 : 1,
+              },
+            ]}
           >
             <View style={styles.cardRow}>
               {p.imageUrl ? (
@@ -225,9 +274,28 @@ export default function DesignProofsScreen() {
                 <Text style={[styles.cardTitle, { color: colors.foreground }]}>
                   {p.status.replace(/_/g, " ")}
                 </Text>
-                <Text style={{ color: colors.mutedForeground, fontSize: 12 }} numberOfLines={3}>
-                  {p.note ?? "—"}
+                <Text style={{ color: colors.mutedForeground, fontSize: 12 }} numberOfLines={2}>
+                  {studioLabel}
                 </Text>
+                {guestRemarks ? (
+                  <View
+                    style={[
+                      styles.remarksBox,
+                      { backgroundColor: accent + "12", borderColor: accent + "44" },
+                    ]}
+                  >
+                    <Text style={{ color: colors.foreground, fontSize: 12, fontFamily: fonts.bodySemi }}>
+                      Client remarks
+                    </Text>
+                    <Text style={{ color: colors.foreground, fontSize: 12, marginTop: 4 }}>
+                      {guestRemarks}
+                    </Text>
+                  </View>
+                ) : p.status === "rejected" ? (
+                  <Text style={{ color: colors.mutedForeground, fontSize: 11, marginTop: 6 }}>
+                    Changes requested — no written notes from client.
+                  </Text>
+                ) : null}
                 <View style={styles.links}>
                   {p.bookingId ? (
                     <Pressable onPress={() => router.push(`/booking/${p.bookingId}` as never)}>
@@ -246,19 +314,29 @@ export default function DesignProofsScreen() {
                 </View>
               </View>
             </View>
-            {canEdit && (p.status === "pending_review" || p.status === "draft") ? (
+            {p.id === highlightId || p.status === "pending_review" || p.status === "rejected" ? (
+              <DesignProofVersionBar
+                businessId={bid}
+                proofId={p.id}
+                version={p.version}
+                imageUrl={p.imageUrl}
+                accent={accent}
+                onReverted={() => void load()}
+              />
+            ) : null}
+            {canEdit && (p.status === "draft" || p.status === "rejected") ? (
               <View style={styles.actions}>
                 <Pressable
                   onPress={() => void setStatus(p.id, "approved")}
                   style={[styles.actionBtn, { backgroundColor: accent }]}
                 >
-                  <Text style={styles.primaryBtnText}>Approve</Text>
+                  <Text style={styles.primaryBtnText}>Signed off in studio</Text>
                 </Pressable>
                 <Pressable
                   onPress={() => void setStatus(p.id, "rejected")}
                   style={[styles.actionBtn, { borderColor: colors.border, borderWidth: 1 }]}
                 >
-                  <Text style={{ color: colors.foreground, fontFamily: fonts.bodySemi }}>Reject</Text>
+                  <Text style={{ color: colors.foreground, fontFamily: fonts.bodySemi }}>Request changes</Text>
                 </Pressable>
                 {p.status === "draft" ? (
                   <Pressable onPress={() => void setStatus(p.id, "pending_review")}>
@@ -266,9 +344,14 @@ export default function DesignProofsScreen() {
                   </Pressable>
                 ) : null}
               </View>
+            ) : p.status === "pending_review" ? (
+              <Text style={{ color: colors.mutedForeground, fontSize: 12, marginTop: 8 }}>
+                Awaiting client on their guest link.
+              </Text>
             ) : null}
           </View>
-        ))
+          );
+        })
       )}
     </ScrollView>
   );
@@ -319,6 +402,7 @@ const styles = StyleSheet.create({
   cardRow: { flexDirection: "row", gap: 12 },
   thumb: { width: 56, height: 56, borderRadius: 8, alignItems: "center", justifyContent: "center" },
   cardTitle: { fontFamily: fonts.bodySemi, fontSize: 15, textTransform: "capitalize" },
+  remarksBox: { marginTop: 8, padding: 8, borderRadius: 8, borderWidth: 1 },
   links: { flexDirection: "row", gap: 12, marginTop: 6 },
   actions: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12, alignItems: "center" },
   actionBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8 },

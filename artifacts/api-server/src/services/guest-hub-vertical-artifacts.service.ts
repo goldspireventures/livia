@@ -3,13 +3,14 @@
  */
 import {
   db,
+  businessesTable,
   customersTable,
   designProofAssetsTable,
   medspaConsentRecordsTable,
   medicalIntakeRecordsTable,
   staffTable,
 } from "@workspace/db";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import type { BusinessVertical } from "@workspace/policy";
 import { guestPublicVisitPrep, isPatchTestValid } from "@workspace/policy";
 import { listPetsForCustomer } from "./pets.service";
@@ -20,6 +21,8 @@ import { listCareSeries } from "./care-series.service";
 import { listGuestFitnessEnrollments } from "./fitness-public.service";
 import { getBeautyFillCycleRadar } from "./beauty-ops.service";
 import { resolveGuestTokenUrl } from "../lib/guest-public-urls";
+import { getGuestHubSession } from "./guest-hub.service";
+import { normalizePhoneE164 } from "@workspace/policy";
 
 export type GuestHubVerticalArtifacts = {
   pets: Array<{
@@ -34,7 +37,14 @@ export type GuestHubVerticalArtifacts = {
     proofId: string;
     status: string;
     note: string | null;
+    imageUrl: string | null;
     reviewUrl: string;
+    version: number;
+    versions: Array<{
+      version: number;
+      imageUrl: string | null;
+      createdAt: string;
+    }>;
   }>;
   vehicleHighlight: string | null;
   consentItems: Array<{
@@ -100,30 +110,51 @@ export async function loadGuestVerticalArtifacts(args: {
   }
 
   if (vertical === "body-art") {
+    const {
+      consolidateDesignProofThreadsForCustomer,
+      ensureDesignProofRevisionsSeeded,
+      revisionsToGuestVersions,
+    } = await import("./design-proof-revisions.service");
+
+    await consolidateDesignProofThreadsForCustomer(businessId, customerId);
+
     const proofs = await db
       .select({
         id: designProofAssetsTable.id,
         status: designProofAssetsTable.status,
         note: designProofAssetsTable.note,
+        imageUrl: designProofAssetsTable.imageUrl,
+        version: designProofAssetsTable.version,
+        createdAt: designProofAssetsTable.createdAt,
       })
       .from(designProofAssetsTable)
       .where(
         and(
           eq(designProofAssetsTable.businessId, businessId),
           eq(designProofAssetsTable.customerId, customerId),
+          inArray(designProofAssetsTable.status, ["pending_review", "rejected"]),
         ),
       )
       .orderBy(desc(designProofAssetsTable.createdAt))
-      .limit(5);
+      .limit(8);
 
-    for (const proof of proofs) {
-      if (proof.status === "approved") continue;
+    const pending = proofs.filter((p) => p.status === "pending_review");
+    const actionable = pending.length > 0 ? [pending[0]!] : proofs[0] ? [proofs[0]] : [];
+
+    for (const proof of actionable) {
+      const revisions = await ensureDesignProofRevisionsSeeded(proof.id);
       const token = await ensureDesignProofGuestAccess(businessId, proof.id);
       out.proofs.push({
         proofId: proof.id,
         status: proof.status,
         note: proof.note,
+        imageUrl: proof.imageUrl,
         reviewUrl: resolveGuestTokenUrl(slug, "proof", token),
+        version: proof.version ?? 1,
+        versions: revisionsToGuestVersions(revisions, {
+          version: proof.version ?? 1,
+          imageUrl: proof.imageUrl,
+        }),
       });
     }
     return out;
@@ -280,6 +311,69 @@ export async function loadGuestVerticalArtifacts(args: {
   }
 
   return out;
+}
+
+export async function getGuestProofVersions(args: {
+  hubToken: string;
+  slug: string;
+  proofId: string;
+}): Promise<{
+  version: number;
+  imageUrl: string | null;
+  versions: Array<{ version: number; imageUrl: string | null; createdAt: string }>;
+} | null> {
+  const session = await getGuestHubSession(args.hubToken);
+  if (!session?.guestId || !session.phoneE164) return null;
+
+  const [shop] = await db
+    .select({ id: businessesTable.id, vertical: businessesTable.vertical })
+    .from(businessesTable)
+    .where(eq(businessesTable.slug, args.slug))
+    .limit(1);
+  if (!shop || shop.vertical !== "body-art") return null;
+
+  const phone = normalizePhoneE164(session.phoneE164);
+  if (!phone) return null;
+
+  const [customer] = await db
+    .select({ id: customersTable.id })
+    .from(customersTable)
+    .where(
+      and(eq(customersTable.businessId, shop.id), eq(customersTable.phone, phone)),
+    )
+    .limit(1);
+  if (!customer) return null;
+
+  const [proof] = await db
+    .select({
+      version: designProofAssetsTable.version,
+      imageUrl: designProofAssetsTable.imageUrl,
+    })
+    .from(designProofAssetsTable)
+    .where(
+      and(
+        eq(designProofAssetsTable.id, args.proofId),
+        eq(designProofAssetsTable.businessId, shop.id),
+        eq(designProofAssetsTable.customerId, customer.id),
+      ),
+    )
+    .limit(1);
+  if (!proof) return null;
+
+  const {
+    ensureDesignProofRevisionsSeeded,
+    revisionsToGuestVersions,
+  } = await import("./design-proof-revisions.service");
+  const revisions = await ensureDesignProofRevisionsSeeded(args.proofId);
+
+  return {
+    version: proof.version ?? 1,
+    imageUrl: proof.imageUrl,
+    versions: revisionsToGuestVersions(revisions, {
+      version: proof.version ?? 1,
+      imageUrl: proof.imageUrl,
+    }),
+  };
 }
 
 export function summarizeGuestShopHint(

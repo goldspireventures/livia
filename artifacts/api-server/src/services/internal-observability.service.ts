@@ -137,6 +137,7 @@ export async function getPlatformObservability() {
     unhandledErrorReturnsRequestId: true,
     publicChatRateLimit: true,
     webhookRawBodyStripe: true,
+    sideEffectsMode: (await import("@workspace/policy")).resolveSideEffectMode(),
   };
 
   const alerts: Array<{ level: "warn" | "critical"; message: string }> = [];

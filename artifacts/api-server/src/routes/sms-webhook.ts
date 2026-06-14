@@ -17,11 +17,12 @@ import {
   appendMessage,
   findOpenConversationByChannelAndPhone,
 } from "../services/conversations.service";
-import { handlePublicChat } from "../services/ai-chat.service";
 import { extractTwilioMediaUrls } from "../services/booking-media.service";
 import { handleContinuityInbound } from "../services/continuity-inbound.service";
 import { resolveInboundSmsBusiness } from "../services/channel-routing.service";
-import { sendAiSms, sendDirectSms } from "../services/ai-outbound.service";
+import { sendDirectSms } from "../services/ai-outbound.service";
+import { scheduleInboundReply } from "../services/inbound-reply.service";
+import { isAnthropicConfigured } from "@workspace/integrations-anthropic-ai";
 import { logger } from "../lib/logger";
 import { twilioSignatureRequired } from "../lib/webhook-guard";
 
@@ -104,9 +105,12 @@ router.post(
       }
       if (route.kind === "menu_required") {
         ack();
-        void sendDirectSms({ to: from, body: route.menuText, from: to }).catch((err) =>
-          logger.error({ err }, "Premises menu SMS failed"),
-        );
+        void sendDirectSms({
+          to: from,
+          body: route.menuText,
+          from: to,
+          templateKey: "premises-menu-sms",
+        }).catch((err) => logger.error({ err }, "Premises menu SMS failed"));
         return;
       }
       const business = route.business;
@@ -144,6 +148,8 @@ router.post(
           to: from,
           body: waitlistResult.message,
           from: to,
+          businessId: business.id,
+          templateKey: "waitlist-accept-sms",
         }).catch((err) => logger.error({ err }, "Waitlist accept SMS failed"));
         return;
       }
@@ -153,6 +159,8 @@ router.post(
           to: from,
           body: waitlistResult.message,
           from: to,
+          businessId: business.id,
+          templateKey: "waitlist-expiry-sms",
         }).catch((err) => logger.error({ err }, "Waitlist expiry SMS failed"));
         return;
       }
@@ -203,38 +211,43 @@ router.post(
         metadata: { from, to, conversationId: conversation.id },
       });
 
-      // ACK Twilio NOW — kick AI work off the request thread so we
-      // don't risk a slow Anthropic call timing out the webhook.
+      const livWillReply =
+        conversation.aiHandled && conversation.status === "OPEN" && isAnthropicConfigured();
+      void import("../services/notification-orchestrator.service")
+        .then(({ notifyInboxInbound }) =>
+          notifyInboxInbound({
+            businessId: business.id,
+            conversationId: conversation.id,
+            channel: "SMS",
+            customerName: customer.displayName,
+            preview: body,
+            livWillReply,
+          }),
+        )
+        .catch((err) => logger.warn({ err }, "SMS inbound studio notify failed"));
+
+      // ACK Twilio NOW — Liv reply runs async via inbound queue.
       ack();
 
-      // Fire-and-forget AI reply. Errors are logged but don't bubble.
-      void (async () => {
-        try {
-          const result = await handlePublicChat({
-            slug: business.slug,
-            conversationId: conversation.id,
-            message: body,
-            customerName: customer.displayName ?? undefined,
-            customerPhone: from,
-            skipPersistence: true,
-          });
-          if (!result?.reply) return;
-          await sendAiSms({
-            conversationId: conversation.id,
-            businessId: business.id,
-            businessName: business.name,
-            customerId: customer.id,
-            customerPhone: from,
-            content: result.reply,
-            fromPhone: business.twilioPhoneNumber ?? null,
-          });
-        } catch (err) {
+      if (livWillReply) {
+        void scheduleInboundReply({
+          businessId: business.id,
+          businessSlug: business.slug,
+          businessName: business.name,
+          conversationId: conversation.id,
+          channel: "SMS",
+          message: body,
+          customerName: customer.displayName,
+          customerPhone: from,
+          customerId: customer.id,
+          fromPhone: business.twilioPhoneNumber ?? null,
+        }).catch((err) =>
           logger.error(
             { err, conversationId: conversation.id, businessId: business.id },
-            "Inbound SMS AI reply failed",
-          );
-        }
-      })();
+            "Inbound SMS AI reply queue failed",
+          ),
+        );
+      }
     } catch (err) {
       logger.error({ err }, "Inbound SMS webhook unexpected error");
       ack(); // Still ACK so Twilio doesn't retry against broken state.

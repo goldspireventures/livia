@@ -17,6 +17,11 @@ import {
   type PlatformActivationRollup,
   getMonitoringReport,
   getMonitoringSeries,
+  getDeliveryOutboxSummary,
+  listDeliveryOutbox,
+  replayDeliveryOutbox,
+  type DeliveryOutboxRow,
+  type DeliveryOutboxSummary,
   listAlertFirings,
   listAlertRules,
   listSavedLogSearches,
@@ -170,6 +175,18 @@ export function MonitoringView() {
   const [logFields, setLogFields] = useState<LogFieldContract | null>(null);
   const [cascadeErr, setCascadeErr] = useState<string | null>(null);
   const [saveSearchName, setSaveSearchName] = useState("");
+  const [outboxSummary, setOutboxSummary] = useState<DeliveryOutboxSummary | null>(null);
+  const [outboxRows, setOutboxRows] = useState<DeliveryOutboxRow[]>([]);
+  const [outboxFilter, setOutboxFilter] = useState<"FAILED" | "PENDING">("FAILED");
+
+  const loadDeliveryOutbox = useCallback(async () => {
+    const [sumR, rowsR] = await Promise.all([
+      loadSettled(() => getDeliveryOutboxSummary()),
+      loadSettled(() => listDeliveryOutbox({ status: outboxFilter, limit: 30 })),
+    ]);
+    if (sumR.ok) setOutboxSummary(sumR.value);
+    if (rowsR.ok) setOutboxRows(rowsR.value);
+  }, [outboxFilter]);
 
   const loadCore = useCallback(async () => {
     setErr(null);
@@ -252,6 +269,10 @@ export function MonitoringView() {
   useEffect(() => {
     void loadCore();
   }, [loadCore]);
+
+  useEffect(() => {
+    if (sub === "tools") void loadDeliveryOutbox();
+  }, [sub, outboxFilter, loadDeliveryOutbox]);
 
   useEffect(() => {
     if (!live) return;
@@ -957,7 +978,121 @@ export function MonitoringView() {
             >
               Sync demo identities
             </button>
+            <button
+              type="button"
+              style={{ ...btn, background: "#1e3a5f", color: "#bae6fd" }}
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                try {
+                  await loadDeliveryOutbox();
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              Refresh delivery outbox
+            </button>
           </div>
+
+          <div style={card}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "#e2e8f0", marginBottom: 8 }}>
+              Message delivery outbox
+            </div>
+            <p style={{ margin: "0 0 10px", fontSize: 12, color: "#94a3b8" }}>
+              SMS, email, and Meta outbound rows from <code>notification_logs</code>. Replay stuck or failed sends without touching tenant bookings.
+            </p>
+            {outboxSummary ? (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 12, fontSize: 13, marginBottom: 12 }}>
+                <span>
+                  Pending: <strong style={{ color: "#fcd34d" }}>{outboxSummary.pending}</strong>
+                </span>
+                <span>
+                  Failed: <strong style={{ color: "#f87171" }}>{outboxSummary.failed}</strong>
+                </span>
+                <span>
+                  Sent 24h: <strong style={{ color: "#34d399" }}>{outboxSummary.sent24h}</strong>
+                </span>
+                <span style={{ color: "#64748b" }}>
+                  Mode: {outboxSummary.sideEffectsMode}
+                </span>
+              </div>
+            ) : null}
+            <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+              {(["FAILED", "PENDING"] as const).map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  style={{
+                    ...btn,
+                    background: outboxFilter === f ? "#334155" : "transparent",
+                    border: "1px solid #334155",
+                  }}
+                  onClick={() => setOutboxFilter(f)}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+            {outboxRows.length === 0 ? (
+              <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>No {outboxFilter.toLowerCase()} rows.</p>
+            ) : (
+              <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ color: "#94a3b8", textAlign: "left" }}>
+                    <th>When</th>
+                    <th>Tenant</th>
+                    <th>Ch</th>
+                    <th>Preview</th>
+                    <th>Err</th>
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
+                  {outboxRows.map((row) => (
+                    <tr key={row.id} style={{ borderTop: "1px solid #334155", verticalAlign: "top" }}>
+                      <td style={{ paddingTop: 6, whiteSpace: "nowrap" }}>
+                        {formatHour(row.createdAt)}
+                      </td>
+                      <td style={{ paddingTop: 6 }}>{row.businessName ?? row.businessId?.slice(0, 8)}</td>
+                      <td style={{ paddingTop: 6 }}>{row.channel}</td>
+                      <td style={{ paddingTop: 6, color: "#cbd5e1", maxWidth: 200 }}>
+                        {row.preview || "—"}
+                      </td>
+                      <td style={{ paddingTop: 6, color: "#f87171", maxWidth: 140 }}>
+                        {row.error?.slice(0, 60) ?? "—"}
+                      </td>
+                      <td style={{ paddingTop: 4 }}>
+                        <button
+                          type="button"
+                          style={{ ...btn, fontSize: 11, padding: "4px 8px" }}
+                          disabled={busy || row.status === "SENT"}
+                          onClick={async () => {
+                            setBusy(true);
+                            try {
+                              const r = await replayDeliveryOutbox(row.id);
+                              if (!r.ok) {
+                                setErr(r.reason ?? "Replay failed");
+                              } else {
+                                await loadDeliveryOutbox();
+                              }
+                            } catch (e) {
+                              setErr(e instanceof Error ? e.message : "Replay failed");
+                            } finally {
+                              setBusy(false);
+                            }
+                          }}
+                        >
+                          Replay
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+
           {stress ? (
             <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
               <thead>

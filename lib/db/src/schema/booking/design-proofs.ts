@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, index } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, integer, index } from "drizzle-orm/pg-core";
 import { businessesTable } from "../identity/businesses";
 import { customersTable } from "./customers";
 import { bookingsTable } from "./bookings";
@@ -15,10 +15,17 @@ export const designProofAssetsTable = pgTable(
     status: text("status").notNull().default("draft"),
     imageUrl: text("image_url"),
     note: text("note"),
+    proofKind: text("proof_kind").notNull().default("custom_commission"),
+    publishRight: text("publish_right").notNull().default("private"),
+    version: integer("version").notNull().default(1),
+    parentProofId: text("parent_proof_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("design_proof_assets_business_idx").on(t.businessId, t.status)],
+  (t) => [
+    index("design_proof_assets_business_idx").on(t.businessId, t.status),
+    index("design_proof_assets_publish_idx").on(t.businessId, t.status, t.publishRight),
+  ],
 );
 
 export type DesignProofAsset = typeof designProofAssetsTable.$inferSelect;

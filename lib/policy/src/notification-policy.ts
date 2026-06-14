@@ -129,6 +129,9 @@ export type InAppNotificationKind =
   | "continuity.stuck"
   | "time_off.pending"
   | "liv.proposal.pending"
+  | "design-proof.changes_requested"
+  | "design-proof.approved"
+  | "design-proof.awaiting_client"
   | "morning.briefing.ready"
   | "refund.pending"
   | "commerce.signal"
@@ -146,14 +149,77 @@ export type NotificationPersonaHint =
   | "staff"
   | "receptionist";
 
+/** Tracked resources for operator deep links (any vertical). */
+export type PlatformResourceKind =
+  | "booking"
+  | "conversation"
+  | "quote"
+  | "design_proof"
+  | "refund"
+  | "time_off";
+
+export function operatorRouteForResource(
+  resourceKind: PlatformResourceKind,
+  resourceId?: string,
+): { href: string; mobileHref: string } {
+  switch (resourceKind) {
+    case "booking":
+      return resourceId
+        ? { href: `/bookings/${resourceId}`, mobileHref: `/booking/${resourceId}` }
+        : { href: "/bookings?status=PENDING", mobileHref: "/(tabs)/approvals" };
+    case "conversation":
+      return resourceId
+        ? { href: `/inbox?conversation=${resourceId}`, mobileHref: `/conversation/${resourceId}` }
+        : { href: "/inbox", mobileHref: "/(tabs)/inbox" };
+    case "quote":
+      return resourceId
+        ? {
+            href: `/quotes?id=${encodeURIComponent(resourceId)}`,
+            mobileHref: `/quotes?id=${encodeURIComponent(resourceId)}`,
+          }
+        : { href: "/quotes", mobileHref: "/quotes" };
+    case "design_proof":
+      return resourceId
+        ? {
+            href: `/design-proofs?proof=${encodeURIComponent(resourceId)}`,
+            mobileHref: `/design-proofs?proof=${encodeURIComponent(resourceId)}`,
+          }
+        : { href: "/design-proofs", mobileHref: "/design-proofs" };
+    case "refund":
+      return { href: "/inbox?lens=taken_over", mobileHref: "/(tabs)/inbox" };
+    case "time_off":
+      return { href: "/team/time-off", mobileHref: "/time-off" };
+    default:
+      return { href: "/dashboard", mobileHref: "/(tabs)" };
+  }
+}
+
+export function resourceKindForNotificationKind(kind: InAppNotificationKind): PlatformResourceKind | null {
+  if (kind.startsWith("booking.")) return "booking";
+  if (kind.startsWith("inbox.")) return "conversation";
+  if (kind.startsWith("quote.")) return "quote";
+  if (kind.startsWith("design-proof.")) return "design_proof";
+  if (kind === "refund.pending") return "refund";
+  if (kind === "time_off.pending") return "time_off";
+  return null;
+}
+
 export function buildNotificationDeepLinks(args: {
   kind: InAppNotificationKind;
   businessId: string;
   bookingId?: string;
   conversationId?: string;
   quoteId?: string;
+  proofId?: string;
 }): { href: string; mobileHref: string } {
-  const { kind, businessId, bookingId, conversationId, quoteId } = args;
+  const { kind, businessId, bookingId, conversationId, quoteId, proofId } = args;
+  const resourceFromKind = resourceKindForNotificationKind(kind);
+  if (resourceFromKind === "design_proof" && proofId) {
+    return operatorRouteForResource("design_proof", proofId);
+  }
+  if (resourceFromKind === "quote" && quoteId) {
+    return operatorRouteForResource("quote", quoteId);
+  }
   switch (kind) {
     case "booking.created":
     case "booking.pending":
@@ -199,22 +265,20 @@ export function buildNotificationDeepLinks(args: {
       }
       return { href: "/inbox?lens=taken_over", mobileHref: "/(tabs)/inbox" };
     case "liv.proposal.pending":
-      return { href: "/dashboard", mobileHref: "/(tabs)/approvals" };
+      return operatorRouteForResource("design_proof", proofId);
+    case "design-proof.changes_requested":
+    case "design-proof.approved":
+    case "design-proof.awaiting_client":
+      return operatorRouteForResource("design_proof", proofId);
     case "morning.briefing.ready":
-      return { href: "/dashboard", mobileHref: "/(tabs)/today" };
+      return { href: "/dashboard", mobileHref: "/(tabs)/index" };
     case "commerce.signal":
     case "payment.failed":
-      return { href: "/settings?tab=billing", mobileHref: "/(tabs)/today" };
+      return { href: "/settings?tab=billing", mobileHref: "/(tabs)/index" };
     case "quote.accepted":
     case "quote.deposit_paid":
     case "quote.client_withdrew":
-      if (quoteId) {
-        return {
-          href: `/quotes?id=${encodeURIComponent(quoteId)}`,
-          mobileHref: `/quotes?id=${encodeURIComponent(quoteId)}`,
-        };
-      }
-      return { href: "/quotes", mobileHref: "/quotes" };
+      return operatorRouteForResource("quote", quoteId);
     case "twin.risk":
     case "twin.opportunity":
       return { href: "/dashboard", mobileHref: "/(tabs)/index" };
@@ -242,8 +306,8 @@ export type NotificationFeedIcon = "booking" | "inbox" | "approval" | "chain" | 
 export function notificationFeedIcon(kind: string): NotificationFeedIcon {
   if (kind.startsWith("booking")) return "booking";
   if (kind.startsWith("inbox")) return "inbox";
+  if (kind.startsWith("design-proof.") || kind.startsWith("quote.")) return "approval";
   if (kind === "chain.alert") return "chain";
-  if (kind.startsWith("quote.")) return "commerce";
   if (kind === "commerce.signal" || kind === "payment.failed" || kind === "capability.state") {
     return "commerce";
   }

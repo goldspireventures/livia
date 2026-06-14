@@ -17,6 +17,18 @@ import { fonts, type } from "@/constants/typography";
 import { useColors } from "@/hooks/useColors";
 import { getApiBaseUrl } from "@/lib/api-base";
 import { GUEST_HUB_TOKEN_KEY, openGuestBookUrl } from "@/lib/guest-hub";
+import { GuestDesignProofPanel } from "@/components/guest/GuestDesignProofPanel";
+import { verticalAccentHex } from "@/lib/vertical-theme";
+
+type GuestProofArtifact = {
+  proofId: string;
+  status: string;
+  note: string | null;
+  imageUrl?: string | null;
+  reviewUrl: string;
+  version?: number;
+  versions?: Array<{ version: number; imageUrl: string | null; createdAt?: string }>;
+};
 
 type VisitPayload = {
   booking: {
@@ -25,12 +37,16 @@ type VisitPayload = {
     status: string;
     startAt: string;
     staffDisplayName: string | null;
+    vertical?: string | null;
     depositLine?: { label: string; tone: string } | null;
   };
   prepNotes: string[];
   visitGreeting: string;
   depositPayUrl?: string | null;
   bookUrl: string;
+  verticalArtifacts?: {
+    proofs: GuestProofArtifact[];
+  };
 };
 
 export default function MyLiviaVisitScreen() {
@@ -134,6 +150,11 @@ export default function MyLiviaVisitScreen() {
   }
 
   const b = data.booking;
+  const accent = verticalAccentHex(b.vertical ?? undefined, undefined);
+  const activeProof =
+    data.verticalArtifacts?.proofs.find((p) => p.status === "pending_review") ??
+    data.verticalArtifacts?.proofs.find((p) => p.status === "rejected") ??
+    data.verticalArtifacts?.proofs[0];
   const visitTime = new Date(b.startAt).toLocaleString(undefined, {
     weekday: "short",
     month: "short",
@@ -200,6 +221,15 @@ export default function MyLiviaVisitScreen() {
               Pay deposit
             </Text>
           </Pressable>
+        ) : null}
+
+        {activeProof && hubToken && slug ? (
+          <GuestDesignProofPanel
+            proof={activeProof}
+            hubToken={hubToken}
+            shopSlug={slug}
+            accent={accent}
+          />
         ) : null}
 
         {data.prepNotes.length > 0 ? (

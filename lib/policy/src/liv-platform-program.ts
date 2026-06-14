@@ -3,8 +3,17 @@
  * Surfaces and services resolve copy here; tenants override via `livOutboundOverrides` on businesses.
  */
 import type { BusinessVertical } from "./types";
-import { DEFAULT_ENQUIRY_DECLINE_REPLY } from "./event-vendor-quote-program";
 import { isConsultFirstVertical } from "./client-profile-policy";
+
+/** Default decline — tenants override via `livOutboundOverrides.decline_reply`. */
+export const DEFAULT_ENQUIRY_DECLINE_REPLY = `Hi {{firstName}},
+
+Thank you for reaching out to {{businessName}}. {{reasonSentence}}
+
+We hope your celebration is wonderful, and we'd love to hear from you again for a future event.
+
+Warmly,
+{{businessName}}`;
 
 /** System messages when LLM is off or conversation state blocks tools. */
 export type LivRuntimeCopyKey =

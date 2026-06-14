@@ -1,31 +1,25 @@
 /**
- * Engagement exit notifications — PII-safe in-app + push (API layer).
+ * Engagement exit notifications — routes through platform resource transition hub.
+ * Non-blocking: quote accept/deposit/withdraw responses are not delayed by alerts.
  */
-import {
-  clientWithdrewNotificationCopy,
-  depositPaidNotificationCopy,
-  quoteAcceptedNotificationCopy,
-  type EngagementExitActor,
-} from "@workspace/policy";
-import { deliverInAppNotification } from "./in-app-notifications.service";
-import { notifyBusinessMembersPush } from "./push.service";
+import type { EngagementExitActor } from "@workspace/policy";
+import { fanOutSideEffect } from "../lib/side-effect-emitter";
 
-export async function notifyQuoteAccepted(businessId: string, quoteId: string, publicToken: string) {
-  const copy = quoteAcceptedNotificationCopy(publicToken);
-  await deliverInAppNotification({
-    kind: "quote.accepted",
-    businessId,
-    title: copy.title,
-    body: copy.body,
-    priority: "act",
-    resourceKind: "quote",
-    resourceId: quoteId,
-    dedupeKey: `quote.accepted:${quoteId}`,
-    audience: "operators",
-  });
+export function notifyQuoteAccepted(businessId: string, quoteId: string, publicToken: string) {
+  fanOutSideEffect(
+    "quote.accepted",
+    async () => {
+      const { emitResourceEngagementEvent } = await import("./resource-transition.service");
+      await emitResourceEngagementEvent({
+        event: "quote.accepted",
+        context: { businessId, resourceId: quoteId, publicToken },
+      });
+    },
+    { businessId, quoteId },
+  );
 }
 
-export async function notifyQuoteDepositPaid(args: {
+export function notifyQuoteDepositPaid(args: {
   businessId: string;
   quoteId: string;
   publicToken: string;
@@ -33,32 +27,27 @@ export async function notifyQuoteDepositPaid(args: {
   currency: string;
   dateSecured: boolean;
 }) {
-  const copy = depositPaidNotificationCopy({
-    publicToken: args.publicToken,
-    amountMinor: args.amountMinor,
-    currency: args.currency,
-    dateSecured: args.dateSecured,
-  });
-  await deliverInAppNotification({
-    kind: "quote.deposit_paid",
-    businessId: args.businessId,
-    title: copy.title,
-    body: copy.body,
-    priority: "act",
-    resourceKind: "quote",
-    resourceId: args.quoteId,
-    dedupeKey: `quote.deposit_paid:${args.quoteId}:${args.amountMinor}`,
-    audience: "operators",
-  });
-  await notifyBusinessMembersPush({
-    businessId: args.businessId,
-    title: copy.title,
-    body: copy.body,
-    data: { quoteId: args.quoteId, type: "quote_deposit_paid" },
-  });
+  fanOutSideEffect(
+    "quote.deposit_paid",
+    async () => {
+      const { emitResourceEngagementEvent } = await import("./resource-transition.service");
+      await emitResourceEngagementEvent({
+        event: "quote.deposit_paid",
+        context: {
+          businessId: args.businessId,
+          resourceId: args.quoteId,
+          publicToken: args.publicToken,
+          amountMinor: args.amountMinor,
+          currency: args.currency,
+          dateSecured: args.dateSecured,
+        },
+      });
+    },
+    { businessId: args.businessId, quoteId: args.quoteId },
+  );
 }
 
-export async function notifyClientWithdrew(args: {
+export function notifyClientWithdrew(args: {
   businessId: string;
   quoteId: string;
   publicToken: string;
@@ -66,21 +55,22 @@ export async function notifyClientWithdrew(args: {
   depositAmountMinor: number;
   initiatedBy: EngagementExitActor;
 }) {
-  const copy = clientWithdrewNotificationCopy({
-    publicToken: args.publicToken,
-    depositPaidMinor: args.depositPaidMinor,
-    depositAmountMinor: args.depositAmountMinor,
-    initiatedBy: args.initiatedBy,
-  });
-  await deliverInAppNotification({
-    kind: "quote.client_withdrew",
-    businessId: args.businessId,
-    title: copy.title,
-    body: copy.body,
-    priority: "watch",
-    resourceKind: "quote",
-    resourceId: args.quoteId,
-    dedupeKey: `quote.client_withdrew:${args.quoteId}`,
-    audience: "operators",
-  });
+  fanOutSideEffect(
+    "quote.client_withdrew",
+    async () => {
+      const { emitResourceEngagementEvent } = await import("./resource-transition.service");
+      await emitResourceEngagementEvent({
+        event: "quote.client_withdrew",
+        context: {
+          businessId: args.businessId,
+          resourceId: args.quoteId,
+          publicToken: args.publicToken,
+          depositPaidMinor: args.depositPaidMinor,
+          depositAmountMinor: args.depositAmountMinor,
+          initiatedBy: args.initiatedBy,
+        },
+      });
+    },
+    { businessId: args.businessId, quoteId: args.quoteId },
+  );
 }

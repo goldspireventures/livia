@@ -5,9 +5,18 @@ export type DesignProofRow = {
   status: string;
   imageUrl?: string | null;
   note?: string | null;
+  guestFeedback?: string | null;
+  studioNote?: string | null;
   customerId?: string | null;
   bookingId?: string | null;
+  version?: number;
   createdAt?: string;
+};
+
+export type DesignProofRevisionRow = {
+  version: number;
+  imageUrl: string | null;
+  createdAt: string;
 };
 
 export type DesignProofStatus =
@@ -46,6 +55,39 @@ export async function updateDesignProofStatus(
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
+    },
+  );
+}
+
+export async function listDesignProofRevisions(
+  businessId: string,
+  proofId: string,
+): Promise<DesignProofRevisionRow[]> {
+  const res = await customFetch<DesignProofRevisionRow[]>(
+    `/api/businesses/${businessId}/design-proofs/${proofId}/revisions`,
+  );
+  return Array.isArray(res) ? res : [];
+}
+
+export async function patchDesignProof(
+  businessId: string,
+  proofId: string,
+  body: {
+    revertToVersion?: number;
+    resendAfterRevert?: boolean;
+    replaceArtwork?: boolean;
+    resendAfterReplace?: boolean;
+    imageUrl?: string;
+    note?: string;
+    status?: DesignProofStatus;
+  },
+) {
+  return customFetch<DesignProofRow>(
+    `/api/businesses/${businessId}/design-proofs/${proofId}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
     },
   );
 }

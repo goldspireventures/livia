@@ -43,6 +43,12 @@ export type GuestProofView = {
   brandAccentHex: string | null;
   country: string | null;
   createdAt: Date;
+  version: number;
+  versions: Array<{
+    version: number;
+    imageUrl: string | null;
+    createdAt: string;
+  }>;
 };
 
 export async function getGuestProofByToken(
@@ -57,6 +63,7 @@ export async function getGuestProofByToken(
       imageUrl: designProofAssetsTable.imageUrl,
       note: designProofAssetsTable.note,
       createdAt: designProofAssetsTable.createdAt,
+      version: designProofAssetsTable.version,
       businessName: businessesTable.name,
       slug: businessesTable.slug,
       vertical: businessesTable.vertical,
@@ -80,6 +87,13 @@ export async function getGuestProofByToken(
     .limit(1);
 
   if (!row) return null;
+
+  const {
+    ensureDesignProofRevisionsSeeded,
+    revisionsToGuestVersions,
+  } = await import("./design-proof-revisions.service");
+  const revisions = await ensureDesignProofRevisionsSeeded(row.proofId);
+
   return {
     proofId: row.proofId,
     businessId: row.businessId,
@@ -95,6 +109,11 @@ export async function getGuestProofByToken(
     brandAccentHex: row.brandAccentHex,
     country: row.country,
     createdAt: row.createdAt,
+    version: row.version ?? 1,
+    versions: revisionsToGuestVersions(revisions, {
+      version: row.version ?? 1,
+      imageUrl: row.imageUrl,
+    }),
   };
 }
 
@@ -122,7 +141,7 @@ export async function submitGuestProofDecision(
   }
 
   const { updateDesignProofStatus } = await import("./design-proofs.service");
-  const row = await updateDesignProofStatus(view.businessId, view.proofId, decision);
+  const row = await updateDesignProofStatus(view.businessId, view.proofId, decision, "guest");
   let depositBind: Awaited<
     ReturnType<(typeof import("./body-art-proof-deposit.service"))["bindDepositAfterProofApproval"]>
   > | null = null;

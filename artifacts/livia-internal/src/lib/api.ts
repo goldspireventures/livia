@@ -529,6 +529,55 @@ export async function getPlatformHealth() {
   return internalFetch<PlatformHealth>("/internal/ops/platform-health");
 }
 
+export type DeliveryOutboxSummary = {
+  pending: number;
+  failed: number;
+  sent24h: number;
+  sideEffectsMode: string;
+  circuits: Record<string, { state: string; failures: number }>;
+};
+
+export type DeliveryOutboxRow = {
+  id: string;
+  businessId: string | null;
+  businessName: string | null;
+  channel: string;
+  status: string;
+  templateKey: string | null;
+  createdAt: string;
+  sentAt: string | null;
+  preview: string;
+  error: string | null;
+  deliveryAttempts: number;
+  conversationId: string | null;
+};
+
+export async function getDeliveryOutboxSummary() {
+  return internalFetch<DeliveryOutboxSummary>("/internal/ops/delivery-outbox/summary");
+}
+
+export async function listDeliveryOutbox(filters?: {
+  status?: "PENDING" | "FAILED";
+  businessId?: string;
+  limit?: number;
+}) {
+  const params = new URLSearchParams();
+  if (filters?.status) params.set("status", filters.status);
+  if (filters?.businessId) params.set("businessId", filters.businessId);
+  if (filters?.limit) params.set("limit", String(filters.limit));
+  const qs = params.toString();
+  return internalFetch<DeliveryOutboxRow[]>(
+    `/internal/ops/delivery-outbox${qs ? `?${qs}` : ""}`,
+  );
+}
+
+export async function replayDeliveryOutbox(notifLogId: string) {
+  return internalFetch<{ ok: boolean; status?: string; reason?: string }>(
+    `/internal/ops/delivery-outbox/${encodeURIComponent(notifLogId)}/replay`,
+    { method: "POST" },
+  );
+}
+
 export type PlatformObservability = PlatformHealth & {
   collectedInMs: number;
   database: { ok: boolean; latencyMs: number };

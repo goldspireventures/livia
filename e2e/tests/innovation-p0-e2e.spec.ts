@@ -244,7 +244,7 @@ test.describe("Innovation P0 — owner operator surfaces", () => {
     { slug: "luxe-salon-spa", vertical: "hair", testId: "hair-colour-day-card" },
     { slug: "harbour-wellness-cork", vertical: "wellness", testId: "wellness-morph-today-atrium" },
     { slug: "shine-studio-belfast", vertical: "automotive-detailing", testId: "automotive-bay-board" },
-    { slug: "ink-anchor-galway", vertical: "body-art", testId: "body-art-pipeline-card", route: "/design-proofs" },
+    { slug: "ink-anchor-galway", vertical: "body-art", testId: "design-proofs-queue", route: "/design-proofs" },
     { slug: "clarity-medspa-dublin", vertical: "medspa", testId: "medspa-hub-page", route: "/medspa" },
   ];
 

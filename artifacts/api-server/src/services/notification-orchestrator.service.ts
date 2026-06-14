@@ -22,6 +22,7 @@ import {
 } from "@workspace/policy";
 import { generateId } from "../lib/id";
 import { logger } from "../lib/logger";
+import { fanOutSideEffect } from "../lib/side-effect-emitter";
 import { enrichBooking } from "./bookings.service";
 import { getConversation } from "./conversations.service";
 import {
@@ -80,8 +81,22 @@ export async function notifyInboxInbound(args: {
   preview: string;
   livWillReply: boolean;
 }): Promise<void> {
+  fanOutSideEffect("inbox.inbound", () => deliverInboxInbound(args), {
+    conversationId: args.conversationId,
+    businessId: args.businessId,
+  });
+}
+
+async function deliverInboxInbound(args: {
+  businessId: string;
+  conversationId: string;
+  channel: string;
+  customerName?: string | null;
+  preview: string;
+  livWillReply: boolean;
+}): Promise<void> {
   const ctx = await loadBusinessContext(args.businessId);
-  if (!ctx?.prefs.pushInboxInbound) return;
+  if (!ctx) return;
 
   const copy = buildInboxInboundPush({
     businessName: ctx.name,
@@ -91,41 +106,56 @@ export async function notifyInboxInbound(args: {
     livWillReply: args.livWillReply,
   });
 
-  const result = await notifyBusinessMembersPushForRoles({
-    businessId: args.businessId,
-    roles: ["OWNER", "ADMIN"],
-    title: copy.title,
-    body: copy.body,
-    data: {
-      type: "inbox.inbound",
-      businessId: args.businessId,
-      conversationId: args.conversationId,
-    },
-  });
-
-  if (result.sent > 0) {
-    await logPush(args.businessId, "push-inbox-inbound", {
-      conversationId: args.conversationId,
-      sent: result.sent,
-    });
-  }
-
   if (ctx.prefs.pushInboxInbound) {
-    await deliverInAppNotification({
-      kind: "inbox.inbound",
+    const result = await notifyBusinessMembersPushForRoles({
       businessId: args.businessId,
+      roles: ["OWNER", "ADMIN"],
       title: copy.title,
       body: copy.body,
-      priority: args.livWillReply ? "info" : "watch",
-      resourceKind: "conversation",
-      resourceId: args.conversationId,
-      dedupeKey: `inbox-inbound:${args.conversationId}`,
-      audience: "inbox_team",
+      data: {
+        type: "inbox.inbound",
+        businessId: args.businessId,
+        conversationId: args.conversationId,
+      },
     });
+
+    if (result.sent > 0) {
+      await logPush(args.businessId, "push-inbox-inbound", {
+        conversationId: args.conversationId,
+        sent: result.sent,
+      });
+    }
   }
+
+  await deliverInAppNotification({
+    kind: "inbox.inbound",
+    businessId: args.businessId,
+    title: copy.title,
+    body: copy.body,
+    priority: args.livWillReply ? "info" : "watch",
+    resourceKind: "conversation",
+    resourceId: args.conversationId,
+    dedupeKey: `inbox-inbound:${args.conversationId}`,
+    audience: "inbox_team",
+  });
 }
 
-export async function notifyLivBookedViaChannel(args: {
+export function notifyLivBookedViaChannel(args: {
+  businessId: string;
+  bookingId: string;
+  conversationId: string;
+  channel: string;
+  customerName?: string | null;
+  serviceName?: string | null;
+  startAt: string;
+}): void {
+  fanOutSideEffect("inbox.liv_booked", () => deliverLivBookedViaChannel(args), {
+    bookingId: args.bookingId,
+    conversationId: args.conversationId,
+  });
+}
+
+async function deliverLivBookedViaChannel(args: {
   businessId: string;
   bookingId: string;
   conversationId: string;
@@ -135,7 +165,7 @@ export async function notifyLivBookedViaChannel(args: {
   startAt: string;
 }): Promise<void> {
   const ctx = await loadBusinessContext(args.businessId);
-  if (!ctx?.prefs.pushLivBookingViaChannel) return;
+  if (!ctx) return;
 
   const ch = args.channel.toUpperCase();
   const source =
@@ -163,25 +193,27 @@ export async function notifyLivBookedViaChannel(args: {
     source,
   });
 
-  const result = await notifyBusinessMembersPushForRoles({
-    businessId: args.businessId,
-    roles: ["OWNER", "ADMIN"],
-    title: `Liv booked · ${copy.title}`,
-    body: copy.body,
-    data: {
-      type: "inbox.liv_booked",
+  if (ctx.prefs.pushLivBookingViaChannel) {
+    const result = await notifyBusinessMembersPushForRoles({
       businessId: args.businessId,
-      bookingId: args.bookingId,
-      conversationId: args.conversationId,
-    },
-  });
-
-  if (result.sent > 0) {
-    await logPush(args.businessId, "push-liv-booked-channel", {
-      bookingId: args.bookingId,
-      conversationId: args.conversationId,
-      sent: result.sent,
+      roles: ["OWNER", "ADMIN"],
+      title: `Liv booked · ${copy.title}`,
+      body: copy.body,
+      data: {
+        type: "inbox.liv_booked",
+        businessId: args.businessId,
+        bookingId: args.bookingId,
+        conversationId: args.conversationId,
+      },
     });
+
+    if (result.sent > 0) {
+      await logPush(args.businessId, "push-liv-booked-channel", {
+        bookingId: args.bookingId,
+        conversationId: args.conversationId,
+        sent: result.sent,
+      });
+    }
   }
 
   await deliverInAppNotification({
@@ -197,12 +229,21 @@ export async function notifyLivBookedViaChannel(args: {
   });
 }
 
-export async function notifyInboxHandoff(args: {
+export function notifyInboxHandoff(args: {
+  businessId: string;
+  conversationId: string;
+}): void {
+  fanOutSideEffect("inbox.handoff", () => deliverInboxHandoff(args), {
+    conversationId: args.conversationId,
+  });
+}
+
+async function deliverInboxHandoff(args: {
   businessId: string;
   conversationId: string;
 }): Promise<void> {
   const ctx = await loadBusinessContext(args.businessId);
-  if (!ctx?.prefs.pushInboxHandoff) return;
+  if (!ctx) return;
 
   const conv = await getConversation(args.conversationId);
   if (!conv) return;
@@ -213,23 +254,25 @@ export async function notifyInboxHandoff(args: {
     customerName: conv.customerName,
   });
 
-  const result = await notifyBusinessMembersPushForRoles({
-    businessId: args.businessId,
-    roles: ["OWNER", "ADMIN"],
-    title: copy.title,
-    body: copy.body,
-    data: {
-      type: "inbox.handoff",
+  if (ctx.prefs.pushInboxHandoff) {
+    const result = await notifyBusinessMembersPushForRoles({
       businessId: args.businessId,
-      conversationId: args.conversationId,
-    },
-  });
-
-  if (result.sent > 0) {
-    await logPush(args.businessId, "push-inbox-handoff", {
-      conversationId: args.conversationId,
-      sent: result.sent,
+      roles: ["OWNER", "ADMIN"],
+      title: copy.title,
+      body: copy.body,
+      data: {
+        type: "inbox.handoff",
+        businessId: args.businessId,
+        conversationId: args.conversationId,
+      },
     });
+
+    if (result.sent > 0) {
+      await logPush(args.businessId, "push-inbox-handoff", {
+        conversationId: args.conversationId,
+        sent: result.sent,
+      });
+    }
   }
 
   await deliverInAppNotification({
@@ -414,8 +457,17 @@ export async function notifyBookingCancelledFromPayload(
   }
 }
 
-/** Domain-event fan-out for staff push (idempotent with domain dedupe). */
-export async function processPushNotificationsForEvent(
+/** Domain-event fan-out for staff push (idempotent with domain dedupe). Non-blocking. */
+export function processPushNotificationsForEvent(
+  name: EventName,
+  payload: EventPayload<EventName>,
+): void {
+  fanOutSideEffect(`domain-event.${name}`, () => deliverPushNotificationsForEvent(name, payload), {
+    event: name,
+  });
+}
+
+async function deliverPushNotificationsForEvent(
   name: EventName,
   payload: EventPayload<EventName>,
 ): Promise<void> {

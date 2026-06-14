@@ -28,6 +28,7 @@ import { OperationalScreen } from "@/components/OperationalScreen";
 import { useBusiness } from "@/contexts/BusinessContext";
 import { useColors } from "@/hooks/useColors";
 import { useHaptics } from "@/hooks/useHaptics";
+import { useInAppNotifications } from "@/hooks/useInAppNotifications";
 import { copyStaleNudge, eur, fetchQuotes, type QuoteRow } from "@/lib/event-vendor-consult";
 import { getDashboardBaseUrl } from "@/lib/dashboard-url";
 import { getApiBaseUrl } from "@/lib/api-base";
@@ -81,6 +82,7 @@ export default function QuotesScreen() {
   const bid = currentBusiness?.id ?? "";
   const slug = currentBusiness?.slug ?? "";
   const params = useLocalSearchParams<{ id?: string }>();
+  const { markReadByResource } = useInAppNotifications();
 
   const [rows, setRows] = useState<QuoteRow[]>([]);
   const [selected, setSelected] = useState<QuoteDetail | null>(null);
@@ -137,6 +139,16 @@ export default function QuotesScreen() {
   useEffect(() => {
     void loadList();
   }, [loadList]);
+
+  useEffect(() => {
+    const quoteId = params.id?.trim();
+    if (!quoteId || !bid) return;
+    void markReadByResource({
+      resourceKind: "quote",
+      resourceId: quoteId,
+      businessId: bid,
+    }).catch(() => undefined);
+  }, [params.id, bid, markReadByResource]);
 
   async function sendVia(via: "email" | "whatsapp_assisted") {
     if (!bid || !selected) return;

@@ -57,6 +57,12 @@ run("Preset picker meta", [
   "../../lib/policy/src/__tests__/preset-picker-meta.test.ts",
 ]);
 
+run("Body-art design proof program", [
+  "--import",
+  "tsx/esm",
+  "../../lib/policy/src/__tests__/body-art-design-proof-program.test.ts",
+]);
+
 run("Vertical doc propagation", [
   "--import",
   "tsx/esm",

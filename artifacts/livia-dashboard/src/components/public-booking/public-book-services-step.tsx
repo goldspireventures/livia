@@ -154,6 +154,7 @@ export function PublicBookServicesStep({
       {density.showSectionNav ? (
         <PublicBookSectionNav
           sections={density.sections}
+          vertical={vertical}
           counts={{
             treatments: services.length,
             team: showTeam ? staff.length : undefined,

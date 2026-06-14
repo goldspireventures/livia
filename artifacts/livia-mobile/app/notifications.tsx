@@ -49,6 +49,11 @@ function feedIconName(type: NotificationFeedIcon): keyof typeof Feather.glyphMap
       return "message-circle";
     case "chain":
       return "layers";
+    case "commerce":
+      return "trending-up";
+    case "twin":
+      return "activity";
+    case "approval":
     default:
       return "check-circle";
   }

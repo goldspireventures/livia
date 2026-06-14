@@ -6,7 +6,14 @@ import { useInAppNotifications } from "@/hooks/useInAppNotifications";
 import { useColors } from "@/hooks/useColors";
 import { fonts } from "@/constants/typography";
 
-const TOAST_KINDS = new Set(["twin.risk", "twin.opportunity", "commerce.signal"]);
+const TOAST_KINDS = new Set([
+  "twin.risk",
+  "twin.opportunity",
+  "commerce.signal",
+  "design-proof.changes_requested",
+  "quote.accepted",
+  "booking.pending",
+]);
 
 /** Foreground banner for act-priority Twin/commerce in-app alerts. */
 export function ActNotificationBanner() {
@@ -41,6 +48,8 @@ export function ActNotificationBanner() {
   if (!active) return null;
 
   const isRisk = active.kind === "twin.risk";
+  const isProof = active.kind.startsWith("design-proof.");
+  const isQuote = active.kind.startsWith("quote.");
 
   return (
     <Pressable
@@ -51,13 +60,17 @@ export function ActNotificationBanner() {
       style={[
         styles.wrap,
         {
-          backgroundColor: isRisk ? "#7f1d1d" : colors.card,
+          backgroundColor: isRisk ? "#7f1d1d" : isProof || isQuote ? colors.primary + "18" : colors.card,
           borderColor: isRisk ? "#b91c1c" : colors.primary + "44",
         },
       ]}
       testID="act-notification-banner"
     >
-      <Feather name={isRisk ? "alert-triangle" : "zap"} size={16} color={isRisk ? "#fecaca" : colors.primary} />
+      <Feather
+        name={isRisk ? "alert-triangle" : isProof ? "image" : isQuote ? "file-text" : "zap"}
+        size={16}
+        color={isRisk ? "#fecaca" : colors.primary}
+      />
       <View style={styles.copy}>
         <Text style={[styles.title, { color: isRisk ? "#fff" : colors.foreground }]} numberOfLines={1}>
           {active.title}
