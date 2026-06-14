@@ -1,6 +1,7 @@
 /**
  * Consult-first verticals — one inbox for structured leads + message threads.
  */
+import { isConsultFirstVertical } from "./client-profile-policy";
 import type { BusinessVertical } from "./types";
 
 export const UNIFIED_CONSULT_INBOX_VERTICALS = new Set<BusinessVertical>(["event-vendors"]);
@@ -27,7 +28,51 @@ export function unifiedConsultInboxTitle(): string {
 }
 
 export function unifiedConsultInboxSubtitle(): string {
-  return "Website leads and DMs — review, reply, or move to the next stage.";
+  return "Website leads first — Liv clears DMs after sending your enquire link.";
+}
+
+/** Channels that redirect to the public enquire form — not operator-actionable. */
+export const CONSULT_DM_CHANNELS = new Set([
+  "WHATSAPP",
+  "INSTAGRAM",
+  "MESSENGER",
+  "SMS",
+  "VOICE",
+]);
+
+export function isConsultDmChannel(channel: string | null | undefined): boolean {
+  return CONSULT_DM_CHANNELS.has((channel ?? "").toUpperCase());
+}
+
+/** Consult-first DMs auto-close after Liv replies — operators work website leads. */
+export function shouldCloseConsultDm(meta: {
+  vertical: string | null | undefined;
+  channel: string | null | undefined;
+  status?: string | null;
+}): boolean {
+  if (meta.status === "HANDED_OFF" || meta.status === "CLOSED") return false;
+  return isConsultFirstVertical(meta.vertical) && isConsultDmChannel(meta.channel);
+}
+
+export type ConsultInboxListItem = {
+  status: string;
+  channel?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+  lastMessageAt?: string | null;
+};
+
+/** Count open leads + non-closed DM threads for consult inbox lenses. */
+export function countConsultInboxLens(
+  leads: ConsultInboxListItem[],
+  threads: ConsultInboxListItem[],
+): Record<ConsultInboxLens, number> {
+  const openThreads = threads.filter((t) => t.status !== "CLOSED");
+  return {
+    all: leads.length + openThreads.length,
+    leads: leads.length,
+    messages: openThreads.length,
+  };
 }
 
 export function consultQuotesHref(quoteId: string): string {
@@ -47,7 +92,7 @@ export const CONSULT_INBOX_LENS_LABELS: Record<
 > = {
   all: { short: "All", description: "Every lead and DM thread." },
   leads: { short: "Leads", description: "Structured enquires from your website and forms." },
-  messages: { short: "DMs", description: "WhatsApp, SMS, and web chat threads." },
+  messages: { short: "DMs", description: "Auto-cleared after Liv sends your enquire link." },
 };
 
 /** Consult-first enquiry pipeline — mirrors real decor operator workflow. */

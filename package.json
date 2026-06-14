@@ -20,6 +20,8 @@
     "platform:truth-audit": "node scripts/platform-truth-audit.mjs",
     "vertical:check": "node scripts/vertical-check.mjs",
     "capability:check": "node scripts/capability-check.mjs",
+    "policy:name-check": "node scripts/policy-name-check.mjs",
+    "policy:name-check:baseline": "node scripts/policy-name-check-baseline.mjs",
     "vertical:doc-check": "node scripts/vertical-doc-check.mjs",
     "northstar:check": "node scripts/check-northstar-p0-assets.mjs",
     "screen-cards:status": "node scripts/screen-cards-status.mjs",

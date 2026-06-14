@@ -12,6 +12,7 @@ import {
 import { eq, and, desc, asc, sql } from "drizzle-orm";
 import { generateId } from "../lib/id";
 import { logEvent } from "./events.service";
+import { shouldCloseConsultDm } from "@workspace/policy";
 import {
   sendAiEmail,
   sendAiInstagram,
@@ -175,6 +176,29 @@ export async function appendMessage(input: {
     .update(conversationsTable)
     .set({ lastMessageAt: new Date(), updatedAt: new Date() })
     .where(eq(conversationsTable.id, input.conversationId));
+
+  if (input.role === "ASSISTANT" && !input.authorUserId) {
+    const [meta] = await db
+      .select({
+        channel: conversationsTable.channel,
+        status: conversationsTable.status,
+        vertical: businessesTable.vertical,
+      })
+      .from(conversationsTable)
+      .innerJoin(businessesTable, eq(businessesTable.id, conversationsTable.businessId))
+      .where(eq(conversationsTable.id, input.conversationId))
+      .limit(1);
+    if (
+      meta &&
+      shouldCloseConsultDm({
+        vertical: meta.vertical,
+        channel: meta.channel,
+        status: meta.status,
+      })
+    ) {
+      await updateConversationStatus(input.conversationId, "CLOSED", true);
+    }
+  }
 
   void (async () => {
     const [conv] = await db

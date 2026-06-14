@@ -21,6 +21,7 @@ import {
 import { InboxConversationPane } from "@/components/inbox/inbox-conversation-pane";
 import {
   CONSULT_INBOX_LENS_LABELS,
+  countConsultInboxLens,
   ENQUIRY_DECLINE_REASONS,
   type ConsultInboxLens,
   type ConsultLeadActionId,
@@ -60,6 +61,7 @@ type Enquiry = {
   notes?: string | null;
   internalNotes?: string | null;
   createdAt: string;
+  updatedAt?: string;
 };
 
 type DashboardStats = {
@@ -76,9 +78,9 @@ type ThreadRow = {
   aiHandled: boolean;
 };
 
-type UnifiedListItem =
-  | { kind: "lead"; id: string; at: string; enquiry: Enquiry }
-  | { kind: "thread"; id: string; at: string; thread: ThreadRow };
+type LeadListItem = { kind: "lead"; id: string; at: string; enquiry: Enquiry };
+type ThreadListItem = { kind: "thread"; id: string; at: string; thread: ThreadRow };
+type UnifiedListItem = LeadListItem | ThreadListItem;
 
 const LENSES: ConsultInboxLens[] = ["all", "leads", "messages"];
 
@@ -128,17 +130,17 @@ export default function EventVendorUnifiedInboxPage() {
     }
   }, [bid, rows]);
 
-  const unifiedList = useMemo((): UnifiedListItem[] => {
-    const leadItems: UnifiedListItem[] = rows.map((enquiry) => ({
-      kind: "lead",
+  const unified = useMemo(() => {
+    const leadItems: LeadListItem[] = rows.map((enquiry) => ({
+      kind: "lead" as const,
       id: `lead-${enquiry.id}`,
-      at: enquiry.createdAt,
+      at: enquiry.updatedAt ?? enquiry.createdAt,
       enquiry,
     }));
-    const threadItems: UnifiedListItem[] = threads
+    const threadItems: ThreadListItem[] = threads
       .filter((t) => t.status !== "CLOSED")
       .map((thread) => ({
-        kind: "thread",
+        kind: "thread" as const,
         id: `thread-${thread.id}`,
         at: thread.lastMessageAt,
         thread,
@@ -146,10 +148,71 @@ export default function EventVendorUnifiedInboxPage() {
     const merged = [...leadItems, ...threadItems].sort(
       (a, b) => new Date(b.at).getTime() - new Date(a.at).getTime(),
     );
-    if (lens === "leads") return leadItems.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
-    if (lens === "messages") return threadItems.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
-    return merged;
+    const list =
+      lens === "leads"
+        ? leadItems.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
+        : lens === "messages"
+          ? threadItems.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
+          : merged;
+    const lensCounts = countConsultInboxLens(rows, threads);
+    return { leadItems, threadItems, unifiedList: list, lensCounts };
   }, [rows, threads, lens]);
+
+  const { leadItems, threadItems, unifiedList, lensCounts } = unified;
+
+  useEffect(() => {
+    if (loadingThreads && lens !== "leads") return;
+
+    if (lens === "messages") {
+      const threadSelected =
+        selectedThreadId != null && threadItems.some((item) => item.thread.id === selectedThreadId);
+      if (!threadSelected) {
+        const first = threadItems[0];
+        setSelectedThreadId(first?.thread.id ?? null);
+        setSelected(null);
+      }
+      return;
+    }
+
+    if (lens === "leads") {
+      const leadSelected =
+        selected != null && leadItems.some((item) => item.enquiry.id === selected.id);
+      if (!leadSelected) {
+        const first = leadItems[0];
+        setSelected(first?.enquiry ?? null);
+        setSelectedThreadId(null);
+      }
+      return;
+    }
+
+    const threadSelected =
+      selectedThreadId != null && threadItems.some((item) => item.thread.id === selectedThreadId);
+    const leadSelected =
+      selected != null && leadItems.some((item) => item.enquiry.id === selected.id);
+    if (threadSelected || leadSelected) return;
+
+    const first = unifiedList[0];
+    if (!first) {
+      setSelected(null);
+      setSelectedThreadId(null);
+      return;
+    }
+    if (first.kind === "lead") {
+      setSelected(first.enquiry);
+      setSelectedThreadId(null);
+    } else {
+      setSelectedThreadId(first.thread.id);
+      setSelected(null);
+    }
+  }, [
+    lens,
+    leadItems,
+    threadItems,
+    unifiedList,
+    loadingThreads,
+    selected?.id,
+    selectedThreadId,
+  ]);
 
   function selectLead(enquiry: Enquiry) {
     setSelected(enquiry);
@@ -359,6 +422,7 @@ export default function EventVendorUnifiedInboxPage() {
             )}
           >
             {CONSULT_INBOX_LENS_LABELS[key].short}
+            {lensCounts[key] > 0 ? ` (${lensCounts[key]})` : ""}
           </button>
         ))}
       </div>

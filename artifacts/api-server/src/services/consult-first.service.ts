@@ -174,7 +174,7 @@ export async function listEnquiries(
     .select()
     .from(enquiriesTable)
     .where(and(...conditions))
-    .orderBy(desc(enquiriesTable.createdAt));
+    .orderBy(desc(enquiriesTable.updatedAt));
 }
 
 export async function getEnquiry(businessId: string, enquiryId: string) {

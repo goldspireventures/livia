@@ -272,7 +272,7 @@ const FITNESS_THREADS: DemoInboxThreadSpec[] = [
 const EVENT_VENDOR_THREADS: DemoInboxThreadSpec[] = [
   {
     channel: "SMS",
-    status: "OPEN",
+    status: "CLOSED",
     aiHandled: true,
     name: "Sarah Murphy",
     phone: "+353871234567",
@@ -295,7 +295,7 @@ const EVENT_VENDOR_THREADS: DemoInboxThreadSpec[] = [
   },
   {
     channel: "WEB",
-    status: "OPEN",
+    status: "CLOSED",
     aiHandled: false,
     name: "Sarah Murphy",
     phone: "+353871234567",
@@ -333,7 +333,7 @@ const EVENT_VENDOR_THREADS: DemoInboxThreadSpec[] = [
   },
   {
     channel: "SMS",
-    status: "OPEN",
+    status: "CLOSED",
     aiHandled: true,
     name: "Patrick O'Neill",
     phone: "+353 87 100 0004",
@@ -352,7 +352,7 @@ const EVENT_VENDOR_THREADS: DemoInboxThreadSpec[] = [
   {
     anonymous: true,
     channel: "VOICE",
-    status: "OPEN",
+    status: "CLOSED",
     aiHandled: true,
     name: "Unknown caller",
     phone: "+353 87 199 8822",

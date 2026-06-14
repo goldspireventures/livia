@@ -265,11 +265,15 @@ export default function InboxPage() {
   const conversations = (convos ?? []) as unknown as ConversationListItem[];
   const queueCounts = useMemo(() => countByInboxQueueLens(conversations), [conversations]);
   const filteredConversations = useMemo(() => {
-    if (!showRitual) return conversations;
-    return conversations.filter((c) => {
-      if (queueLens === "all") return c.status !== "CLOSED";
-      return matchesInboxQueueLens(c, queueLens);
-    });
+    const base = !showRitual
+      ? conversations
+      : conversations.filter((c) => {
+          if (queueLens === "all") return c.status !== "CLOSED";
+          return matchesInboxQueueLens(c, queueLens);
+        });
+    return [...base].sort(
+      (a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime(),
+    );
   }, [conversations, queueLens, showRitual]);
 
   const detailData = detail as
