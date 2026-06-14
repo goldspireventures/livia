@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import {
   buildCompactOwnerIntelligenceRows,
+  buildSettingsAttentionRows,
   ownerIntelligenceActSignalCount,
   ownerIntelligenceHasSurfaceContent,
 } from "../owner-intelligence-home";
@@ -74,5 +75,26 @@ const compact = buildCompactOwnerIntelligenceRows({
 assert.equal(compact.primary?.title, "Demand without deposits");
 assert.equal(compact.more.length, 1);
 assert.equal(compact.more[0]?.title, "Confirmation backlog building");
+
+const settingsRows = buildSettingsAttentionRows({
+  commerceCapabilityBlockers: [
+    {
+      capabilityId: "payments",
+      capabilityName: "Payments",
+      blocker: "Connect Stripe to take deposits",
+      href: "/settings?tab=billing#commerce-fix",
+    },
+  ],
+  twinRisks: [
+    {
+      id: "handoff",
+      title: "Inbox handoffs waiting",
+      body: "Reply to guests Liv handed to you",
+      href: "/inbox",
+    },
+  ],
+});
+assert.equal(settingsRows.length, 2);
+assert.equal(settingsRows[0]?.title, "Payments");
 
 console.log("owner-intelligence-home.test.ts OK");

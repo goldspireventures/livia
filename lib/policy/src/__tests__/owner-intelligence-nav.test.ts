@@ -12,8 +12,20 @@ assert.equal(badges.homeActCount, 4);
 assert.equal(badges.livActCount, 1);
 
 const nav = ownerIntelBadgesForNav({
-  commerceCapabilityBlockers: [{}],
+  commerceCapabilityBlockers: [
+    {
+      capabilityId: "payments",
+      capabilityName: "Payments",
+      blocker: "Connect Stripe",
+      href: "/settings?tab=billing#commerce-fix",
+    },
+  ],
 });
-assert.ok(nav["/settings"] >= 1);
+assert.equal(nav["/settings"], 1);
+
+const inboxOnly = ownerIntelBadgesForNav({
+  twinRisks: [{ id: "h", title: "Handoffs", body: "Reply", href: "/inbox" }],
+});
+assert.equal(inboxOnly["/settings"], undefined);
 
 console.log("owner-intelligence-nav.test.ts OK");

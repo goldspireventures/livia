@@ -1,5 +1,5 @@
 import { useGetOwnerIntelligence } from "@workspace/api-client-react";
-import { ownerIntelBadgesForNav, resolveConsultInboxNavAttention, isConsultFirstVertical } from "@workspace/policy";
+import { ownerIntelBadgesForNav, resolveConsultInboxNavAttention, isConsultFirstVertical, buildSettingsAttentionRows } from "@workspace/policy";
 import { useBusiness } from "@/lib/business-context";
 import { useGetDashboardSummary } from "@workspace/api-client-react";
 import { useInAppNotifications } from "@/hooks/use-in-app-notifications";
@@ -38,6 +38,14 @@ export function useNavActionCounts() {
   );
 
   const intelBadges = useMemo(() => ownerIntelBadgesForNav(ownerIntel ?? null), [ownerIntel]);
+  const settingsAttentionLabel = useMemo(() => {
+    const rows = buildSettingsAttentionRows(ownerIntel ?? null).filter((r) =>
+      r.href.includes("/settings"),
+    );
+    if (rows.length === 0) return "";
+    if (rows.length === 1) return rows[0]!.title;
+    return `${rows.length} settings items need attention`;
+  }, [ownerIntel]);
 
   return {
     pendingCount,
@@ -45,6 +53,7 @@ export function useNavActionCounts() {
     newEnquiriesCount,
     inboxAttentionCount: consultFirst ? consultInboxAttention.count : inboxAttentionCount,
     inboxAttentionLabel: consultFirst ? consultInboxAttention.label : "",
+    settingsAttentionLabel,
     consultFirst,
     unreadCount,
     intelBadges,

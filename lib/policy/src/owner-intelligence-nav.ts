@@ -2,7 +2,7 @@
  * Owner-intelligence → nav badge hints (web + mobile).
  */
 
-import { ownerIntelligenceActSignalCount, type OwnerIntelHomeInput } from "./owner-intelligence-home";
+import { ownerIntelligenceActSignalCount, type OwnerIntelHomeInput, buildSettingsAttentionRows } from "./owner-intelligence-home";
 
 export type OwnerIntelNavInput = OwnerIntelHomeInput & {
   ops?: { pendingCount?: number; handedOffCount?: number };
@@ -15,6 +15,11 @@ export type OwnerIntelNavBadges = {
   homeActCount: number;
   livActCount: number;
 };
+
+/** Settings nav badge — only items with a fix link inside Settings. */
+export function settingsNavAttentionCount(intel: unknown): number {
+  return buildSettingsAttentionRows(intel).filter((r) => r.href.includes("/settings")).length;
+}
 
 export function ownerIntelligenceNavBadges(
   intel: OwnerIntelNavInput | null | undefined,
@@ -34,7 +39,7 @@ export function ownerIntelligenceNavBadges(
   const setupAct = intel.commerceCapabilityBlockers?.length ?? 0;
   const billingActCount = ownerIntelligenceActSignalCount(intel);
   const toolkitActCount = commerceAct;
-  const settingsActCount = setupAct > 0 ? setupAct : billingActCount > 0 ? 1 : 0;
+  const settingsActCount = settingsNavAttentionCount(intel);
   const livActCount = (intel.livPrompts?.length ?? 0) > 0 ? 1 : 0;
   const homeActCount = billingActCount + livActCount;
   return { billingActCount, toolkitActCount, settingsActCount, homeActCount, livActCount };
@@ -46,8 +51,10 @@ export function ownerIntelBadgesForNav(
 ): Record<string, number> {
   const b = ownerIntelligenceNavBadges(intel);
   const out: Record<string, number> = {};
-  if (b.billingActCount > 0) {
+  if (b.settingsActCount > 0) {
     out["/settings"] = b.settingsActCount;
+  }
+  if (b.billingActCount > 0) {
     out["/toolkit"] = Math.max(out["/toolkit"] ?? 0, b.toolkitActCount);
   }
   if (b.homeActCount > 0) {

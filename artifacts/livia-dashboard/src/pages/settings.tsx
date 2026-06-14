@@ -83,7 +83,10 @@ import {
 import { CrossSurfaceContinueCard } from "@/components/onboarding/cross-surface-continue-card";
 import { PublicAppearancePanel } from "@/components/settings/public-appearance-panel";
 import { LivSetupPanel } from "@/components/liv/liv-setup-panel";
-import { BillingRemediationStrip } from "@/components/billing/billing-remediation-strip";
+import {
+  SettingsAttentionStrip,
+  useSettingsAttentionRows,
+} from "@/components/settings/settings-attention-strip";
 import { AuditLogPanel } from "@/components/audit/audit-log-panel";
 import { Users, FileText } from "lucide-react";
 import {
@@ -157,6 +160,7 @@ export default function SettingsPage() {
   );
 
   const bid = business?.id ?? "";
+  const { tabsWithAttention } = useSettingsAttentionRows();
   const businessVertical = (business as { vertical?: string } | null)?.vertical;
   const isEventVendor = businessVertical === "event-vendors";
   const vocab = verticalPackUi(businessVertical, business?.category);
@@ -263,7 +267,7 @@ export default function SettingsPage() {
         }
       />
 
-      <BillingRemediationStrip />
+      <SettingsAttentionStrip />
 
       {isLoading ? (
         <div className="space-y-4">
@@ -299,10 +303,19 @@ export default function SettingsPage() {
                   key={tab}
                   value={tab}
                   data-testid={`tab-${tab}`}
-                  className="text-xs sm:text-sm"
+                  data-attention={tabsWithAttention.has(tab) ? "true" : undefined}
+                  className="text-xs sm:text-sm relative"
                 >
                   {icons[tab]}
                   {label}
+                  {tabsWithAttention.has(tab) ? (
+                    <span
+                      className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[9px] font-semibold text-amber-950"
+                      aria-hidden
+                    >
+                      !
+                    </span>
+                  ) : null}
                 </TabsTrigger>
               );
             })}

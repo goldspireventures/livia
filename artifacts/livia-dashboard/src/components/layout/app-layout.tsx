@@ -301,7 +301,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
 
 
-  const { pendingCount, handedOffCount, inboxAttentionCount, inboxAttentionLabel, consultFirst, intelBadges } =
+  const { pendingCount, handedOffCount, inboxAttentionCount, inboxAttentionLabel, consultFirst, settingsAttentionLabel, intelBadges } =
     useNavActionCounts();
   const navBadges = useMemo(() => {
     const badges: Record<string, number> = { ...intelBadges };
@@ -323,8 +323,11 @@ export function AppLayout({ children }: { children: ReactNode }) {
     if (pendingCount > 0) {
       labels["/bookings"] = `${pendingCount} pending booking${pendingCount === 1 ? "" : "s"}`;
     }
+    if ((intelBadges["/settings"] ?? 0) > 0 && settingsAttentionLabel) {
+      labels["/settings"] = settingsAttentionLabel;
+    }
     return labels;
-  }, [handedOffCount, inboxAttentionCount, inboxAttentionLabel, consultFirst, pendingCount]);
+  }, [handedOffCount, inboxAttentionCount, inboxAttentionLabel, consultFirst, pendingCount, settingsAttentionLabel, intelBadges]);
 
   const appearanceDraft = readAppearancePreviewParams(previewSearch);
   const storedCssPreset =

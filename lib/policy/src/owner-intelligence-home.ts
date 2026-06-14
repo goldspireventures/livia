@@ -220,6 +220,114 @@ export function dedupeLivMomentsByTitle<T extends { title: string }>(
   return out;
 }
 
+/** Rows that explain the Settings nav badge — same sources as ownerIntelligenceActSignalCount. */
+export function buildSettingsAttentionRows(intel: unknown): OwnerIntelligenceActionRow[] {
+  const data = intel as OwnerIntelHomeInput & {
+    remediationTasks?: Array<{
+      signalId: string;
+      severity: string;
+      title: string;
+      body: string;
+      href: string;
+    }>;
+    commerceCapabilityBlockers?: Array<{
+      capabilityId: string;
+      capabilityName: string;
+      blocker: string;
+      href: string;
+    }>;
+    commerce?: {
+      signals?: Array<{
+        id?: string;
+        severity: string;
+        title: string;
+        body: string;
+        href: string;
+      }>;
+      topSignal?: {
+        id?: string;
+        severity: string;
+        title: string;
+        body: string;
+        href: string;
+      } | null;
+    };
+    twinRisks?: Array<{
+      id: string;
+      title: string;
+      body: string;
+      href?: string | null;
+    }>;
+    twinObservations?: Array<{
+      id: string;
+      title: string;
+      body: string;
+      href?: string | null;
+      severity?: string;
+    }>;
+    twinTopRecommendation?: {
+      title: string;
+      reason: string;
+      href?: string;
+    } | null;
+  };
+
+  if (!data) return [];
+
+  const seen = new Set<string>();
+  const rows: OwnerIntelligenceActionRow[] = [];
+  const push = (row: OwnerIntelligenceActionRow) => {
+    const key = normalizeIntelligenceTitle(row.title);
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    rows.push(row);
+  };
+
+  for (const blocker of data.commerceCapabilityBlockers ?? []) {
+    push({
+      id: `cap-${blocker.capabilityId}`,
+      title: blocker.capabilityName,
+      body: blocker.blocker,
+      href: blocker.href,
+      severity: "act",
+      source: "remediation",
+    });
+  }
+
+  for (const signal of (
+    data.commerce?.signals as
+      | Array<{
+          id?: string;
+          severity: string;
+          title: string;
+          body: string;
+          href: string;
+        }>
+      | undefined
+  )?.filter((s) => s.severity === "act") ?? []) {
+    push({
+      id: signal.id ?? `commerce-${rows.length}`,
+      title: signal.title,
+      body: signal.body,
+      href: signal.href,
+      severity: "act",
+      source: "commerce",
+    });
+  }
+
+  const compact = buildCompactOwnerIntelligenceRows(data as never);
+  if (compact.primary && compact.primary.severity !== "info") {
+    push(compact.primary);
+  }
+  for (const row of compact.more) {
+    if (row.severity !== "info") push(row);
+  }
+
+  const rank = (s: OwnerIntelligenceActionRow["severity"]) =>
+    s === "act" ? 0 : s === "watch" ? 1 : 2;
+  return rows.sort((a, b) => rank(a.severity) - rank(b.severity)).slice(0, 5);
+}
+
 /** Count of act-severity items across commerce + remediation + setup blockers. */
 export function ownerIntelligenceActSignalCount(
   intel: OwnerIntelHomeInput | null | undefined,
