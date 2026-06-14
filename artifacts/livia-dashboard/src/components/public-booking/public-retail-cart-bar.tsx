@@ -29,7 +29,7 @@ export function PublicRetailCartBar({
   return (
     <div
       className={cn(
-        "sticky bottom-0 z-20 border-t border-border/80 bg-background/95 backdrop-blur-md px-4 py-3",
+        "fixed inset-x-0 bottom-0 z-50 border-t border-border/80 bg-background/95 backdrop-blur-md px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(0,0,0,0.12)]",
         className,
       )}
       data-testid="public-retail-cart-bar"

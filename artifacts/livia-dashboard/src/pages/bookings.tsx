@@ -217,6 +217,7 @@ export default function BookingsPage() {
         <div className="flex gap-2">
           <Button
             variant="outline"
+            size="sm"
             className={op.outlineButton()}
             data-testid="button-new-booking-quick"
             onClick={() => setBookingDialogOpen(true)}
@@ -225,6 +226,7 @@ export default function BookingsPage() {
             {bookingCopy.listQuickAddLabel}
           </Button>
           <Button
+            size="sm"
             data-testid="button-new-booking-guided"
             className={op.primaryButton()}
             onClick={() => setGuidedDialogOpen(true)}

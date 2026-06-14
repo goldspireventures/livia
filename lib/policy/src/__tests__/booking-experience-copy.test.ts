@@ -3,6 +3,7 @@ import {
   PENDING_REASON_CODES,
   pendingReasonLabel,
   pendingApprovalGuidance,
+  livPendingAutoConfirmBlocker,
   bookingExperienceCopy,
   publicAwaitingContinuityHoldLines,
   resolvePendingReasonCode,
@@ -45,6 +46,11 @@ assert.ok(
 assert.match(
   pendingApprovalGuidance(PENDING_REASON_CODES.AWAITING_CONTINUITY, "wellness"),
   /health notes|follow up/i,
+);
+
+assert.match(
+  livPendingAutoConfirmBlocker(PENDING_REASON_CODES.AWAITING_DEPOSIT, "beauty") ?? "",
+  /deposit/i,
 );
 
 console.log("booking-experience-copy.test.ts ok");

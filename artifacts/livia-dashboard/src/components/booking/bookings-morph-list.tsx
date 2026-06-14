@@ -45,13 +45,22 @@ type Props = {
 function ConstellationBookingsList({
   bookings,
   pendingCount,
+  vertical,
+  category,
   rowClass,
   avatarClass,
   bookingStatusClass,
   statusColors,
 }: Pick<
   Props,
-  "bookings" | "pendingCount" | "rowClass" | "avatarClass" | "bookingStatusClass" | "statusColors"
+  | "bookings"
+  | "pendingCount"
+  | "vertical"
+  | "category"
+  | "rowClass"
+  | "avatarClass"
+  | "bookingStatusClass"
+  | "statusColors"
 >) {
   return (
     <section className="constellation-bookings-morph space-y-4" data-testid="bookings-morph-constellation">
@@ -93,6 +102,14 @@ function ConstellationBookingsList({
                   {booking.service?.name}
                   {booking.staff ? ` · ${booking.staff.displayName}` : ""}
                 </p>
+                {booking.status === "PENDING" ? (
+                  <PendingWhyLine
+                    reason={booking.pendingReason}
+                    vertical={vertical}
+                    category={category}
+                    className="mt-0.5"
+                  />
+                ) : null}
               </div>
               <div className="flex flex-col items-end gap-1 shrink-0">
                 <span className="text-sm font-medium">{formatDateTime(booking.startAt ?? booking.startTime ?? "")}</span>
@@ -215,6 +232,8 @@ export function BookingsMorphList({
       <ConstellationBookingsList
         bookings={bookings}
         pendingCount={pendingCount}
+        vertical={vertical}
+        category={category}
         rowClass={rowClass}
         avatarClass={avatarClass}
         bookingStatusClass={bookingStatusClass}

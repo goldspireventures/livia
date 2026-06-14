@@ -178,7 +178,10 @@ export async function enrichBookingsBatch(
   });
 }
 
-export async function enrichBooking(booking: typeof bookingsTable.$inferSelect) {
+export async function enrichBooking(
+  booking: typeof bookingsTable.$inferSelect,
+  opts?: { resolvePending?: boolean },
+) {
   const [service] = await db
     .select()
     .from(servicesTable)
@@ -207,7 +210,31 @@ export async function enrichBooking(booking: typeof bookingsTable.$inferSelect) 
     )
     .orderBy(desc(mediaAssetsTable.createdAt));
 
-  return { ...booking, service, customer, staff, media };
+  let pendingReason = booking.pendingReason;
+  if (opts?.resolvePending !== false && booking.status === "PENDING") {
+    const pendingCtx = await pendingResolveCtxForBusiness(booking.businessId);
+    if (pendingCtx) {
+      const trusted = customerTrustedForDeposit(pendingCtx, customer);
+      pendingReason =
+        resolvePendingReasonForBooking(
+          {
+            status: booking.status,
+            pendingReason: booking.pendingReason,
+            source: booking.source,
+            depositPaidEurCents: booking.depositPaidEurCents,
+          },
+          {
+            ...pendingCtx,
+            depositRequired: pendingCtx.depositRequired && !trusted,
+            customerTrusted: trusted,
+            customerHasPhone: !!customer?.phone?.trim(),
+            customerHasEmail: !!customer?.email?.trim(),
+          },
+        ) ?? booking.pendingReason;
+    }
+  }
+
+  return { ...booking, pendingReason, service, customer, staff, media };
 }
 
 export async function getBookingById(businessId: string, bookingId: string) {

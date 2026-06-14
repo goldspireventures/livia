@@ -168,6 +168,33 @@ export function pendingApprovalGuidance(
   return "Approve, edit, or follow up when a booking rule needs a human.";
 }
 
+/** Why Liv did not auto-confirm — policy-driven, shown on owner surfaces. */
+export function livPendingAutoConfirmBlocker(
+  reason: string | null | undefined,
+  vertical?: string | null,
+  category?: string | null,
+): string | null {
+  if (!reason?.trim()) return null;
+  const key = resolveVerticalKey(vertical, category);
+  const slot = key === "wellness" ? "session" : "appointment";
+  switch (reason) {
+    case PENDING_REASON_CODES.AWAITING_DEPOSIT:
+      return `Liv can't auto-confirm — your policy requires a deposit before this ${slot} locks.`;
+    case PENDING_REASON_CODES.AWAITING_CONTINUITY:
+      return "Liv is waiting for the client to reply in the continuity thread before confirming.";
+    case PENDING_REASON_CODES.AWAITING_STAFF_CONFIRM:
+      return `Liv won't auto-confirm — staff must approve this ${slot} per your booking rules.`;
+    case PENDING_REASON_CODES.AWAITING_POLICY_REVIEW:
+      return "Liv flagged this for policy review — confirm once you've checked your rules.";
+    case PENDING_REASON_CODES.CREATED_BY_LIV:
+      return `Liv matched the slot but your rules still need owner confirmation.`;
+    case PENDING_REASON_CODES.OWNER_MANUAL:
+      return null;
+    default:
+      return null;
+  }
+}
+
 export type BookingExperienceCopy = {
   detailPageTitle: string;
   detailPageSubtitle: string;
@@ -251,7 +278,7 @@ const BEAUTY_EXPERIENCE: BookingExperienceCopy = {
   statusFilterNoShow: "No-show",
   toastStatusUpdated: (status) => `Appointment ${status.toLowerCase()}`,
   statusActions: {
-    CONFIRMED: "Confirm appointment",
+    CONFIRMED: "Confirm",
     COMPLETED: "Complete",
     CANCELLED: "Cancel",
     NO_SHOW: "No-show",

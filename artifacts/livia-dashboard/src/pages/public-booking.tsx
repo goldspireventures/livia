@@ -457,6 +457,12 @@ export default function PublicBookingPage() {
       ? wellnessPublicCatalogLayout(presentationPreset)
       : "list";
 
+  const showRetailCartBar =
+    step === "services" &&
+    isPublicRetailVertical(b?.vertical) &&
+    b?.retailStore?.settings?.enabled &&
+    (retailCart?.lines.length ?? 0) > 0;
+
   const activeBookingGuards = useMemo(() => {
     if (!b?.vertical) return [];
     return resolveActiveBookingGuards({
@@ -771,6 +777,7 @@ export default function PublicBookingPage() {
       <main
         className={cn(
           "mx-auto px-4 sm:px-6 py-6 pb-6 md:pb-8 relative z-10",
+          showRetailCartBar && "pb-24",
           step === "services" ? "max-w-6xl w-full" : "max-w-xl",
           beautyBook && step === "services" && "beauty-public-shell",
           beautyBook &&
@@ -1749,13 +1756,9 @@ export default function PublicBookingPage() {
         />
       )}
 
-      {step === "services" &&
-      isPublicRetailVertical(b.vertical) &&
-      b.retailStore?.settings?.enabled &&
-      retailCart &&
-      retailCart.lines.length > 0 ? (
+      {showRetailCartBar ? (
         <PublicRetailCartBar
-          cart={retailCart}
+          cart={retailCart!}
           checkoutBusy={retailCheckoutBusy}
           onCheckout={() => void checkoutRetailCart()}
         />

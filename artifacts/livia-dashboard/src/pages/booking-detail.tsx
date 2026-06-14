@@ -13,7 +13,6 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { formatDateTime } from "@/lib/format";
-import { pendingReasonLabel } from "@/lib/booking-pending";
 import { bookingExperienceCopy } from "@workspace/policy";
 import { canMarkNoShow, noShowUnavailableHint } from "@/lib/booking-appointment-window";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +24,7 @@ import { useOperationalChrome } from "@/lib/operational-chrome";
 import { BookingRescheduleDialog } from "@/components/booking/booking-reschedule-dialog";
 import { HelpSupportDialog } from "@/components/help-support-dialog";
 import { BookingContextRail } from "@/components/booking/booking-context-rail";
+import { PendingWhyLine } from "@/components/booking/pending-why-line";
 import { BookingContinuityPanel } from "@/components/booking-continuity-panel";
 import { BookingAftercarePanel } from "@/components/booking/booking-aftercare-panel";
 import { BeautyWalletPassPanel } from "@/components/beauty/beauty-wallet-pass-panel";
@@ -206,14 +206,14 @@ export default function BookingDetailPage() {
               <div className="mb-3">
                 <BookingSourceBadge source={(booking as { source?: string }).source} />
               </div>
-              {(booking as any).status === "PENDING" && (booking as any).pendingReason ? (
-                <p className="text-sm text-muted-foreground mb-3">
-                  {pendingReasonLabel(
-                    (booking as any).pendingReason,
-                    businessVertical,
-                    businessCategory,
-                  )}
-                </p>
+              {(booking as any).status === "PENDING" ? (
+                <div className="mb-3 rounded-md border border-amber-500/25 bg-amber-500/5 px-3 py-2">
+                  <PendingWhyLine
+                    reason={(booking as { pendingReason?: string }).pendingReason}
+                    vertical={businessVertical}
+                    category={businessCategory}
+                  />
+                </div>
               ) : null}
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
                 <Clock className="h-4 w-4" />
