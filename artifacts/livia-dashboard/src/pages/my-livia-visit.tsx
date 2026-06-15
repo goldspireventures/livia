@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PublicSurfaceLoading } from "@/components/public/public-surface-chrome";
 import { GuestHubPageHeader, GuestHubShell } from "@/components/guest/guest-hub-chrome";
 import { GuestHubLivChat } from "@/components/guest/guest-hub-liv-chat";
+import { GuestVisitSummaryCard } from "@/components/guest/guest-visit-summary-card";
 import { formatVisitHeroTime } from "@/lib/format";
 import { GUEST_HUB_COPY, guestMyQuickActions } from "@workspace/policy";
 import { GuestMyVaultModules } from "@/components/guest/guest-my-vault-modules";
@@ -35,6 +36,11 @@ type VisitPayload = {
     customerFirstName: string | null;
     timezone: string;
     depositPaidEurCents: number;
+    priceMinor?: number;
+    currency?: string;
+    depositPercent?: number;
+    depositRequired?: boolean;
+    depositDueMinor?: number;
     pendingReason?: string | null;
     depositLine?: { label: string; tone: "paid" | "due" | "hold" | "none" } | null;
     logoUrl: string | null;
@@ -219,28 +225,6 @@ export default function MyLiviaVisitPage() {
             {b.staffDisplayName ? (
               <p className="text-sm text-muted-foreground mt-1">with {b.staffDisplayName}</p>
             ) : null}
-            <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground mt-4">
-              {b.status}
-            </p>
-            {b.depositLine ? (
-              <p
-                className={`text-sm mt-4 rounded-lg px-3 py-2.5 ${
-                  b.depositLine.tone === "paid"
-                    ? "bg-emerald-500/10 text-emerald-800 dark:text-emerald-200"
-                    : b.depositLine.tone === "due"
-                      ? "bg-amber-500/10 text-amber-900 dark:text-amber-100"
-                      : "bg-muted/80 text-muted-foreground"
-                }`}
-                data-testid="guest-hub-visit-deposit-line"
-              >
-                {b.depositLine.label}
-              </p>
-            ) : null}
-            {data.depositPayUrl ? (
-              <Button asChild className="mt-4" data-testid="guest-hub-visit-pay-deposit">
-                <a href={data.depositPayUrl}>Pay deposit</a>
-              </Button>
-            ) : null}
           </section>
 
           <GuestStudioEngagementPanel
@@ -297,6 +281,22 @@ export default function MyLiviaVisitPage() {
         </div>
 
         <aside className="lg:col-span-2 space-y-6 min-w-0">
+          <GuestVisitSummaryCard
+            serviceName={b.serviceName}
+            startAt={b.startAt}
+            staffDisplayName={b.staffDisplayName}
+            status={b.status}
+            currency={b.currency ?? "EUR"}
+            priceMinor={b.priceMinor}
+            depositPercent={b.depositPercent}
+            depositDueMinor={b.depositDueMinor}
+            depositPaidMinor={b.depositPaidEurCents}
+            depositRequired={b.depositRequired}
+            depositLineLabel={b.depositLine?.label}
+            depositPayUrl={data.depositPayUrl}
+            timezone={b.timezone}
+          />
+
           {message ? (
             <div className="rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm flex gap-2">
               <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />

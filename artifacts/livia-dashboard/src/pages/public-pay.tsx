@@ -3,10 +3,13 @@ import { useSearch } from "wouter";
 import { useGuestBookTokenRoute } from "@/lib/use-guest-book-slug";
 import { applyVerticalTheme } from "@/lib/vertical-theme";
 import { applyExperienceTheme, clearExperienceTheme } from "@/lib/experience-theme";
-import { formatCurrency, formatDateTime } from "@/lib/format";
+import { formatDateTime } from "@/lib/format";
+import { parsePublicApiError } from "@/lib/public-booking-helpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { GuestMoneyBreakdown } from "@/components/public-booking/guest-money-breakdown";
 import { Button } from "@/components/ui/button";
 import { CreditCard, Loader2, CheckCircle2, Shield } from "lucide-react";
+import { formatCurrency } from "@/lib/format";
 import {
   PublicSurfaceFooter,
   PublicSurfaceLoading,
@@ -112,7 +115,7 @@ export default function PublicPayPage() {
       }
       throw new Error("Unexpected checkout response");
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Try again");
+      setErr(parsePublicApiError(e, "Try again"));
     } finally {
       setPayBusy(false);
     }
@@ -161,39 +164,15 @@ export default function PublicPayPage() {
             {data.staffDisplayName ? (
               <p className="text-muted-foreground">With {data.staffDisplayName}</p>
             ) : null}
-            <div className="border-t pt-3 space-y-1">
-              <div className="flex justify-between">
-                <span>Service total</span>
-                <span>{formatCurrency(data.priceMinor, data.currency)}</span>
-              </div>
-              {data.depositRequired ? (
-                <>
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Deposit ({data.depositPercent}%)</span>
-                    <span>
-                      {formatCurrency(
-                        Math.round((data.priceMinor * data.depositPercent) / 100),
-                        data.currency,
-                      )}
-                    </span>
-                  </div>
-                  {data.depositPaidMinor > 0 ? (
-                    <div className="flex justify-between text-primary">
-                      <span>Paid</span>
-                      <span>{formatCurrency(data.depositPaidMinor, data.currency)}</span>
-                    </div>
-                  ) : null}
-                  <div className="flex justify-between font-medium text-lg pt-1">
-                    <span>Due now</span>
-                    <span data-testid="guest-pay-due">
-                      {formatCurrency(data.depositDueMinor, data.currency)}
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <p className="text-muted-foreground">No deposit required for this booking.</p>
-              )}
-            </div>
+            <GuestMoneyBreakdown
+              priceMinor={data.priceMinor}
+              currency={data.currency}
+              depositPercent={data.depositPercent}
+              depositDueMinor={data.depositDueMinor}
+              depositPaidMinor={data.depositPaidMinor}
+              depositRequired={data.depositRequired}
+              dueLabel="Pay by card to hold your appointment time."
+            />
           </CardContent>
         </Card>
 

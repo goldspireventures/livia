@@ -9,6 +9,29 @@ const LIV_TOOL_RESCHEDULE_BOOKING = "reschedule_booking";
 const LIV_TOOL_SEND_MESSAGE = "send_message";
 import { createLivProposalIfNeeded } from "./liv-mandate.service";
 
+const LIV_TOOL_PATCH_OPERATIONAL_POLICY = "patch_operational_policy";
+const LIV_TOOL_PROPOSE_POLICY_PATCH = "propose_policy_patch";
+const LIV_TOOL_PATCH_LIV_PERSONA = "patch_liv_persona";
+const LIV_TOOL_APPLY_PRESENTATION_PRESET = "apply_presentation_preset";
+const LIV_TOOL_PATCH_BRAND_ASSETS = "patch_brand_assets";
+const LIV_TOOL_PATCH_BUSINESS_HOURS = "patch_business_hours";
+
+/** Era 1 — Liv never auto-applies policy or setup mutations; owner approves first. */
+const ERA1_SETUP_MUTATION_TOOLS = new Set([
+  LIV_TOOL_PATCH_OPERATIONAL_POLICY,
+  LIV_TOOL_PROPOSE_POLICY_PATCH,
+  LIV_TOOL_PATCH_LIV_PERSONA,
+  LIV_TOOL_APPLY_PRESENTATION_PRESET,
+  LIV_TOOL_PATCH_BRAND_ASSETS,
+  LIV_TOOL_PATCH_BUSINESS_HOURS,
+]);
+
+function setupMutationConfirmed(toolInput: Record<string, unknown>): boolean {
+  return (
+    toolInput.confirm === true || String(toolInput.confirm ?? "").toLowerCase() === "true"
+  );
+}
+
 const TOOL_TO_MANDATE: Partial<Record<string, LivMandateAction>> = {
   [LIV_TOOL_CANCEL_BOOKING]: "cancel_booking",
   [LIV_TOOL_CREATE_BOOKING]: "book_slot",
@@ -49,6 +72,48 @@ export async function executeMandateGatedTool(args: {
   };
 
   const mandateAction = TOOL_TO_MANDATE[args.toolName];
+
+  if (ERA1_SETUP_MUTATION_TOOLS.has(args.toolName) && setupMutationConfirmed(args.toolInput)) {
+    const gate = await createLivProposalIfNeeded({
+      businessId: args.businessId,
+      action: "process_refund",
+      valueMinor: 999_999,
+      resourceKind: "business",
+      resourceId: args.businessId,
+      metadata: {
+        conversationId: args.conversationId,
+        toolName: args.toolName,
+        toolInput: args.toolInput,
+        era1PolicyLock: true,
+      },
+    });
+    if (!gate) {
+      return executeLivTool(args);
+    }
+    if (gate.decision.outcome === "refuse") {
+      return {
+        result: {
+          ok: false,
+          error: "MANDATE_REFUSED",
+          message: gate.decision.reason,
+        },
+        mandate: "refused",
+      };
+    }
+    if (gate.decision.outcome === "propose") {
+      return {
+        result: {
+          ok: false,
+          error: "PENDING_APPROVAL",
+          message: gate.decision.preview ?? gate.decision.reason,
+          proposalId: gate.proposal?.id ?? null,
+        },
+        mandate: "propose",
+        proposalId: gate.proposal?.id,
+      };
+    }
+  }
+
   if (!mandateAction) {
     const out = await executeLivTool(args);
     void appendAudit({

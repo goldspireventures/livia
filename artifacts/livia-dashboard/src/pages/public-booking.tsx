@@ -60,7 +60,6 @@ import {
   Calendar,
   CalendarPlus,
   Loader2,
-  CreditCard,
 } from "lucide-react";
 const ChatWidget = lazy(() => import("@/components/chat-widget"));
 import {
@@ -77,6 +76,7 @@ import { PublicBookLivBar } from "@/components/public-booking/public-book-liv-ba
 import { PublicBookPolicyFooter } from "@/components/public-booking/public-book-policy-footer";
 import { PublicBookingStickySummary } from "@/components/public-booking/public-booking-sticky-summary";
 import { PublicBookingSummaryCard } from "@/components/public-booking/public-booking-summary-card";
+import { GuestMoneyBreakdown } from "@/components/public-booking/guest-money-breakdown";
 import { PublicBookingTrustStrip } from "@/components/public-booking/public-booking-trust-strip";
 import { PublicBookServicesStep } from "@/components/public-booking/public-book-services-step";
 import {
@@ -1727,32 +1727,29 @@ export default function PublicBookingPage() {
                     #{confirmation.bookingId.slice(-8)}
                   </span>
                 </div>
-              </CardContent>
-            </Card>
-
-            {confirmation.depositPayUrl && (confirmation.depositDueMinor ?? 0) > 0 ? (
-              <Card className="text-left border-amber-500/40 bg-amber-500/10">
-                <CardContent className="pt-4 space-y-3">
-                  <p className="text-sm font-medium flex items-center gap-2">
-                    <CreditCard className="h-4 w-4" />
-                    Deposit required to hold your slot
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {pendingReasonLabel(confirmation.pendingReason, b?.vertical, b?.category)}
-                  </p>
-                  <p className="text-lg font-semibold tabular-nums">
-                    {formatCurrency(
-                      confirmation.depositDueMinor ?? 0,
-                      confirmation.currency ?? selectedService?.currency ?? "EUR",
-                    )}{" "}
-                    due now
-                  </p>
-                  <Button asChild className="w-full" data-testid="public-pay-deposit">
+                {(confirmation.depositDueMinor ?? 0) > 0 ||
+                (b?.policyTrust?.depositRequired && selectedService) ? (
+                  <GuestMoneyBreakdown
+                    priceMinor={selectedService?.priceMinor ?? 0}
+                    currency={confirmation.currency ?? selectedService?.currency ?? "EUR"}
+                    depositPercent={b?.policyTrust?.depositPercent ?? 0}
+                    depositDueMinor={confirmation.depositDueMinor ?? 0}
+                    depositPaidMinor={0}
+                    depositRequired={(confirmation.depositDueMinor ?? 0) > 0}
+                    dueLabel={
+                      confirmation.depositPayUrl
+                        ? pendingReasonLabel(confirmation.pendingReason, b?.vertical, b?.category)
+                        : undefined
+                    }
+                  />
+                ) : null}
+                {confirmation.depositPayUrl && (confirmation.depositDueMinor ?? 0) > 0 ? (
+                  <Button asChild className="w-full mt-2" data-testid="public-pay-deposit">
                     <a href={confirmation.depositPayUrl}>Pay deposit</a>
                   </Button>
-                </CardContent>
-              </Card>
-            ) : null}
+                ) : null}
+              </CardContent>
+            </Card>
 
             {confirmation.visitPath || confirmation.myLiviaPath ? (
               <Link href={confirmation.visitPath ?? confirmation.myLiviaPath ?? "/my"}>
@@ -1769,7 +1766,9 @@ export default function PublicBookingPage() {
                 className="text-xs text-muted-foreground text-center max-w-sm mx-auto leading-relaxed"
                 data-testid="public-pwa-hint"
               >
-                Tip: add {b.name} to your home screen for quick access to My Livia.
+                {hubAuthenticated || confirmation.savedToMyLivia
+                  ? `Tip: add ${b.name} to your home screen for one-tap rebooking.`
+                  : `Tip: add ${b.name} to your home screen for quick access to My Livia.`}
               </p>
             ) : null}
 

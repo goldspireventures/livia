@@ -265,6 +265,9 @@ export async function getGuestVisitManage(hubToken: string, slug: string, bookin
   const { session, booking } = await assertGuestBookingAccess(hubToken, slug, bookingId);
   const visitToken = await ensureBookingGuestAccess(booking.businessId, booking.bookingId);
   let depositPayUrl: string | null = null;
+  let depositPercent = 0;
+  let depositRequired = false;
+  let depositDueMinor = 0;
   const [biz] = await db
     .select()
     .from(businessesTable)
@@ -272,13 +275,15 @@ export async function getGuestVisitManage(hubToken: string, slug: string, bookin
     .limit(1);
   if (biz) {
     const op = policiesFromBusiness(biz).operational;
-    const due = computeDepositDueMinor({
+    depositPercent = op.depositPercent ?? 0;
+    depositRequired = op.depositRequired;
+    depositDueMinor = computeDepositDueMinor({
       priceMinor: booking.priceMinor,
-      depositPercent: op.depositPercent ?? 0,
-      depositRequired: op.depositRequired,
+      depositPercent,
+      depositRequired,
       depositPaidMinor: booking.depositPaidEurCents ?? 0,
     });
-    if (booking.status === "PENDING" && due > 0) {
+    if (booking.status === "PENDING" && depositDueMinor > 0) {
       depositPayUrl = resolveGuestTokenUrl(slug, "pay", visitToken);
     }
   }
@@ -349,6 +354,9 @@ export async function getGuestVisitManage(hubToken: string, slug: string, bookin
       currency: booking.currency,
       depositPaidEurCents: booking.depositPaidEurCents,
       pendingReason: booking.pendingReason,
+      depositPercent,
+      depositRequired,
+      depositDueMinor,
       depositLine: guestVisitDepositLine({
         vertical: booking.vertical,
         status: booking.status,

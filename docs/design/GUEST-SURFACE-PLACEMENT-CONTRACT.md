@@ -134,10 +134,10 @@ Systematic pass — **one surface per session**, screenshot + sign-off. Order: g
 | Phase | Surface | Route / component | Owner | Status |
 |-------|---------|-------------------|-------|--------|
 | **P0a** | Public book wizard | `/book/{slug}` · `public-booking.tsx` | — | **2026-06-15** — deposit in summary; hub silent; patch-test gate |
-| **P0b** | Book confirm + pay | confirm step · `public-pay.tsx` | — | Queued |
-| **P0c** | My Livia home | `/my` · `my-livia.tsx` | — | Queued |
-| **P0d** | Shop relationship | `/my/{slug}` | — | Queued |
-| **P0e** | Visit manage | `/my/{slug}/visit/{id}` | — | Queued |
+| **P0b** | Book confirm + pay | confirm step · `public-pay.tsx` | — | **2026-06-15** — shared `GuestMoneyBreakdown`; deposit in confirm card |
+| **P0c** | My Livia home | `/my` · `my-livia.tsx` | — | **2026-06-15** — one CTA per shop row (manage or book) |
+| **P0d** | Shop relationship | `/my/{slug}` | — | **2026-06-15** — slim memory line; Liv in sidebar; single primary CTA |
+| **P0e** | Visit manage | `/my/{slug}/visit/{id}` | — | **2026-06-15** — `GuestVisitSummaryCard`; hero time-only |
 | **P1a** | Public storefront `/b` | `public-shop.tsx` | — | Queued |
 | **P1b** | Public enquire / consult-first | event-vendor surfaces | — | Queued |
 | **P2** | Gateway G1–G3 | demo launcher | — | Queued |

@@ -10,7 +10,7 @@ import { GUEST_HUB_COPY } from "@workspace/policy";
 import { GuestMyVaultModules } from "@/components/guest/guest-my-vault-modules";
 import { GuestMyArtifactPanels } from "@/components/guest/guest-my-artifact-panels";
 import { GuestStudioEngagementPanel } from "@/components/guest/guest-studio-engagement-panel";
-import { ArrowLeft, CalendarCheck, Heart, MessageSquare, Sparkles } from "lucide-react";
+import { ArrowLeft, CalendarCheck, Heart, MessageSquare } from "lucide-react";
 
 const HUB_TOKEN_KEY = "livia_guest_hub_token";
 
@@ -164,22 +164,12 @@ export default function MyLiviaShopPage() {
         )}
       </GuestHubPageHeader>
 
-      <GuestHubLivChat hubToken={hubToken} variant="panel" />
-
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6 min-w-0">
           {data.relationship?.memoryHighlight ? (
-            <Card className="border-primary/20 bg-primary/5">
-              <CardContent className="py-4 text-sm flex gap-3">
-                <Sparkles className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-mono">
-                    {GUEST_HUB_COPY.memoryTitle}
-                  </p>
-                  <p className="mt-1 text-base">{data.relationship.memoryHighlight}</p>
-                </div>
-              </CardContent>
-            </Card>
+            <p className="text-sm text-muted-foreground border-l-2 border-primary/40 pl-3">
+              {data.relationship.memoryHighlight}
+            </p>
           ) : null}
 
           {next ? (
@@ -253,16 +243,17 @@ export default function MyLiviaShopPage() {
               <Button asChild className="w-full gap-2 min-h-[44px]">
                 <Link href={next.manageUrl}>
                   <MessageSquare className="h-4 w-4" />
-                  Message or update visit
+                  Manage visit
                 </Link>
               </Button>
-            ) : null}
-            <Button asChild variant="secondary" className="w-full gap-2 min-h-[44px]">
-              <a href={data.bookUrl}>
-                <CalendarCheck className="h-4 w-4" />
-                {GUEST_HUB_COPY.bookAgainCta}
-              </a>
-            </Button>
+            ) : (
+              <Button asChild variant="secondary" className="w-full gap-2 min-h-[44px]">
+                <a href={data.bookUrl}>
+                  <CalendarCheck className="h-4 w-4" />
+                  {GUEST_HUB_COPY.bookAgainCta}
+                </a>
+              </Button>
+            )}
             <Button asChild variant="ghost" className="w-full text-muted-foreground gap-2">
               <Link href="/my">
                 <Heart className="h-4 w-4" />
@@ -270,6 +261,8 @@ export default function MyLiviaShopPage() {
               </Link>
             </Button>
           </div>
+
+          <GuestHubLivChat hubToken={hubToken} variant="inline" />
         </aside>
       </div>
     </GuestHubShell>

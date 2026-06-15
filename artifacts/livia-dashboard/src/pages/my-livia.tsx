@@ -465,12 +465,15 @@ function ShopSection({
               </Button>
               {shop.manageVisitUrl ? (
                 <Button size="sm" variant="default" asChild className="shrink-0">
-                  <Link href={shop.manageVisitUrl}>{GUEST_HUB_COPY.manageVisitCta.replace(" →", "")}</Link>
+                  <Link href={shop.manageVisitUrl}>
+                    {GUEST_HUB_COPY.manageVisitCta.replace(" →", "")}
+                  </Link>
                 </Button>
-              ) : null}
-              <Button size="sm" variant="secondary" asChild className="shrink-0">
-                <Link href={shop.bookUrl}>{GUEST_HUB_COPY.bookStudioCta}</Link>
-              </Button>
+              ) : (
+                <Button size="sm" variant="secondary" asChild className="shrink-0">
+                  <Link href={shop.bookUrl}>{GUEST_HUB_COPY.bookStudioCta}</Link>
+                </Button>
+              )}
             </CardContent>
           </Card>
         );
