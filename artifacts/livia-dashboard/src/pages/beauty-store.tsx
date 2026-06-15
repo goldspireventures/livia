@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, majorFromMinor, minorFromMajor } from "@/lib/format";
 import {
   TENANT_RETAIL_PROGRAM,
-  buildTenantPostSessionInboxDraft,
+  buildPostSessionLivPreview,
   defaultTenantRetailStoreSettings,
   formatRetailInventoryLabel,
   isTenantRetailVisibleOnPublicBook,
@@ -22,13 +22,10 @@ import {
 } from "@workspace/policy";
 import { FeatureUnlockGate } from "@/components/billing/feature-unlock-panel";
 import { useOperationalChrome } from "@/lib/operational-chrome";
-import {
-  beautyPrimaryButton,
-  stashBeautyPostSessionDraft,
-} from "@/lib/beauty-operational-ui";
+import { beautyPrimaryButton } from "@/lib/beauty-operational-ui";
 import { cn } from "@/lib/utils";
-import { Link, useLocation } from "wouter";
-import { Copy, Package, Pencil, RefreshCw, Sparkles } from "lucide-react";
+import { Link } from "wouter";
+import { Package, Pencil, Sparkles } from "lucide-react";
 import { RetailProductImageField } from "@/components/beauty/retail-product-image-field";
 import {
   BeautyRetailProductEditor,
@@ -48,7 +45,6 @@ function apiErrorMessage(err: unknown, fallback: string): string {
 export default function TenantStorePage() {
   const { business } = useBusiness();
   const { toast } = useToast();
-  const [, navigate] = useLocation();
   const bid = business?.id ?? "";
   const vertical = (business as { vertical?: string; subverticalProfileId?: string | null } | null)?.vertical;
   const subverticalProfileId = (business as { subverticalProfileId?: string | null } | null)?.subverticalProfileId;
@@ -59,7 +55,6 @@ export default function TenantStorePage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [inboxDraftBody, setInboxDraftBody] = useState("");
   const [draft, setDraft] = useState({
     name: "",
     description: "",
@@ -71,18 +66,22 @@ export default function TenantStorePage() {
   });
   const [editingProduct, setEditingProduct] = useState<RetailProductRow | null>(null);
 
-  const featuredProduct = useMemo(
-    () => products.find((p) => p.isActive !== false),
-    [products],
-  );
-
-  const templateDraft = useMemo(
+  const livPreview = useMemo(
     () =>
-      buildTenantPostSessionInboxDraft(vertical, {
-        guestFirstName: "Alex",
-        productName: featuredProduct?.name,
+      buildPostSessionLivPreview({
+        vertical,
+        businessName: business?.name ?? "Your studio",
+        serviceName: vertical === "beauty" ? "Lash fill" : "Today's session",
+        serviceCategory: vertical === "beauty" ? "Lashes" : undefined,
+        products: products.map((p) => ({
+          id: p.id,
+          name: p.name,
+          category: p.category,
+          linkedServiceCategory: (p as { linkedServiceCategory?: string | null }).linkedServiceCategory,
+          isActive: p.isActive,
+        })),
       }),
-    [featuredProduct?.name, vertical],
+    [business?.name, products, vertical],
   );
 
   const load = useCallback(async () => {
@@ -110,10 +109,6 @@ export default function TenantStorePage() {
   useEffect(() => {
     void load();
   }, [load]);
-
-  useEffect(() => {
-    setInboxDraftBody(templateDraft.body);
-  }, [templateDraft.body]);
 
   async function patchSettings(patch: Partial<TenantRetailStoreSettings>) {
     if (!bid || !settings) return;
@@ -244,20 +239,6 @@ export default function TenantStorePage() {
     }
   }
 
-  function openInboxWithDraft() {
-    stashBeautyPostSessionDraft(inboxDraftBody);
-    navigate("/inbox?flow=post_session");
-  }
-
-  async function copyDraft() {
-    try {
-      await navigator.clipboard.writeText(inboxDraftBody);
-      toast({ title: "Draft copied" });
-    } catch {
-      toast({ title: "Could not copy draft", variant: "destructive" });
-    }
-  }
-
   const settingsReady = settings ?? defaultTenantRetailStoreSettings(vertical);
   const activeProductCount = products.filter((p) => p.isActive !== false).length;
   const visibleOnPublicBook = isTenantRetailVisibleOnPublicBook(settingsReady, activeProductCount);
@@ -344,7 +325,7 @@ export default function TenantStorePage() {
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="text-sm font-medium">Suggest after sessions</p>
-                  <p className="text-xs text-muted-foreground">Staff can send pay links from booking detail</p>
+                  <p className="text-xs text-muted-foreground">Staff can copy pay links from booking detail when on</p>
                 </div>
                 <Switch
                   checked={settingsReady.postSessionSuggest}
@@ -553,42 +534,30 @@ export default function TenantStorePage() {
         </CardContent>
       </Card>
 
-      <Card data-testid="beauty-store-continuity">
+      <Card data-testid="beauty-store-liv-preview">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">After session — Liv thread draft</CardTitle>
-          <CardDescription>Edit the message, then open Inbox or copy it into a guest thread.</CardDescription>
+          <CardTitle className="text-base">How Liv follows up after sessions</CardTitle>
+          <CardDescription>
+            You control gates in Settings → Guest care (auto-send vs draft). Liv writes from the real
+            treatment — this is an example only.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
-          <ol className="list-decimal pl-5 space-y-1 text-xs text-muted-foreground">
-            {templateDraft.steps.map((step) => (
-              <li key={step}>{step}</li>
-            ))}
-          </ol>
-          <Textarea
-            value={inboxDraftBody}
-            rows={6}
-            className="text-xs leading-relaxed"
-            onChange={(e) => setInboxDraftBody(e.target.value)}
-            data-testid="beauty-store-inbox-draft"
-          />
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" size="sm" onClick={() => void openInboxWithDraft()}>
-              Open inbox with draft
-            </Button>
-            <Button type="button" size="sm" variant="outline" onClick={() => void copyDraft()}>
-              <Copy className="h-3.5 w-3.5 mr-1" aria-hidden />
-              Copy draft
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              onClick={() => setInboxDraftBody(templateDraft.body)}
-            >
-              <RefreshCw className="h-3.5 w-3.5 mr-1" aria-hidden />
-              Reset from template
-            </Button>
-          </div>
+          <p className="text-xs text-muted-foreground">{livPreview.caption}</p>
+          {livPreview.matchedProduct ? (
+            <p className="text-xs text-primary">
+              Matched SKU for this example: {livPreview.matchedProduct}
+            </p>
+          ) : null}
+          <pre
+            className="whitespace-pre-wrap rounded-lg border border-border/80 bg-muted/30 p-3 text-xs leading-relaxed font-sans"
+            data-testid="beauty-store-liv-preview-body"
+          >
+            {livPreview.body}
+          </pre>
+          <Button type="button" size="sm" variant="outline" asChild>
+            <Link href="/settings?tab=policy">Guest care settings</Link>
+          </Button>
         </CardContent>
       </Card>
     </OperationalPageShell>

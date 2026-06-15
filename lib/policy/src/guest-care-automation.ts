@@ -1,6 +1,9 @@
 /**
  * Guest care automation — aftercare, retail usage, channel preference.
  * Cascade: policy → API workflows → inbox/thread + SMS.
+ *
+ * Owner vs Liv: see owner-liv-ownership.ts — owners set gates (on/off, auto vs draft);
+ * Liv writes treatment-aware copy and optional retail nudge; platform holds vertical aftercare knowledge.
  */
 import { z } from "zod/v4";
 import type { BusinessVertical } from "./types";
@@ -49,7 +52,7 @@ export const DEFAULT_GUEST_CARE: GuestCareAutomation = guestCareAutomationSchema
 const VERTICAL_AFTERCARE_DEFAULTS: Partial<
   Record<BusinessVertical, Partial<GuestCareAutomation>>
 > = {
-  beauty: { aftercareMode: "auto", aftercareDelay: "2h" },
+  beauty: { aftercareMode: "liv_draft", aftercareDelay: "2h" },
   hair: { aftercareMode: "auto", aftercareDelay: "same_evening" },
   wellness: { aftercareMode: "auto", aftercareDelay: "2h" },
   "body-art": {
@@ -148,12 +151,16 @@ export function resolveAftercareMessageBody(args: ResolveAftercareArgs): string 
   }
 
   if (args.vertical === "beauty") {
-    return beautyAftercareSmsBody({
+    let body = beautyAftercareSmsBody({
       businessName: args.businessName,
       serviceName: args.serviceName,
       category: args.serviceCategory ?? null,
       visitUrl: args.visitUrl ?? null,
     });
+    if (args.retailProductName) {
+      body += `\n\nWe also have ${args.retailProductName} at reception if you'd like to keep your results fresh — reply for a pay link.`;
+    }
+    return body;
   }
 
   const tip = VERTICAL_AFTERCARE_BODY[args.vertical] ?? "Follow the care your team shared — reply here with questions.";

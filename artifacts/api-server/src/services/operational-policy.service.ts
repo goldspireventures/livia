@@ -2,7 +2,13 @@ import {
   buildGuestPolicyTemplates,
   mergeOperationalPolicy,
   parseOperationalPolicy,
+  recordAutomationToggleSignals,
+  automationToggleUpdatesFromGuestCare,
+  automationToggleUpdatesFromRetail,
   type OperationalPolicy,
+  type AutomationToggleSignals,
+  type BusinessVertical,
+  resolveGuestCareAutomation,
 } from "@workspace/policy";
 import { getBusinessById, updateBusiness } from "./businesses.service";
 import { policiesFromBusiness } from "./policies.service";
@@ -29,6 +35,22 @@ export async function getOperationalPolicyForBusiness(businessId: string) {
   };
 }
 
+function mergePolicyWithToggleSignals(
+  partial: Partial<OperationalPolicy>,
+  current: OperationalPolicy,
+  toggleUpdates?: Partial<Record<string, boolean | string>>,
+): OperationalPolicy {
+  const merged = mergeOperationalPolicy(partial, current);
+  if (!toggleUpdates || Object.keys(toggleUpdates).length === 0) {
+    return merged;
+  }
+  const signals = recordAutomationToggleSignals(
+    current.automationToggleSignals as AutomationToggleSignals | undefined,
+    toggleUpdates,
+  );
+  return mergeOperationalPolicy({ automationToggleSignals: signals }, merged);
+}
+
 export async function patchOperationalPolicy(
   businessId: string,
   partial: Partial<OperationalPolicy>,
@@ -36,10 +58,38 @@ export async function patchOperationalPolicy(
   const biz = await getBusinessById(businessId);
   if (!biz) return null;
   const current = parseOperationalPolicy(biz.operationalPolicy);
-  const merged = mergeOperationalPolicy(partial, current);
+  let toggleUpdates: Partial<Record<string, boolean | string>> | undefined;
+  if (partial.guestCare) {
+    const mergedPreview = mergeOperationalPolicy(partial, current);
+    const resolved = resolveGuestCareAutomation({
+      vertical: biz.vertical as BusinessVertical,
+      operationalPolicy: mergedPreview,
+    });
+    toggleUpdates = automationToggleUpdatesFromGuestCare(resolved);
+  }
+  const withSignals = mergePolicyWithToggleSignals(partial, current, toggleUpdates);
   const updated = await updateBusiness(businessId, {
-    operationalPolicy: merged as unknown as Record<string, unknown>,
+    operationalPolicy: withSignals as unknown as Record<string, unknown>,
   });
   if (!updated) return null;
   return getOperationalPolicyForBusiness(businessId);
+}
+
+export async function recordRetailAutomationToggleSignals(
+  businessId: string,
+  settings: { enabled: boolean; postSessionSuggest: boolean },
+) {
+  const biz = await getBusinessById(businessId);
+  if (!biz) return;
+  const current = parseOperationalPolicy(biz.operationalPolicy);
+  const signals = recordAutomationToggleSignals(
+    current.automationToggleSignals as AutomationToggleSignals | undefined,
+    automationToggleUpdatesFromRetail(settings),
+  );
+  await updateBusiness(businessId, {
+    operationalPolicy: mergeOperationalPolicy(
+      { automationToggleSignals: signals },
+      current,
+    ) as unknown as Record<string, unknown>,
+  });
 }

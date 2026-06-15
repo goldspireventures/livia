@@ -17,6 +17,7 @@ import { eq, and, desc } from "drizzle-orm";
 import {
   resolveAftercareMessageBody,
   resolveGuestCareAutomation,
+  resolveRetailProductForService,
   resolveOutboundChannel,
   aftercareDelayMs,
   type BusinessVertical,
@@ -68,6 +69,35 @@ export async function buildAftercareBodyForBooking(
     if (product) {
       retailProductName = product.name;
       retailUsageText = product.aftercareUsageText ?? null;
+    }
+  }
+
+  if (care.retailAftercareEnabled && !retailProductName && svc) {
+    const catalog = await db
+      .select({
+        id: retailProductsTable.id,
+        name: retailProductsTable.name,
+        category: retailProductsTable.category,
+        linkedServiceCategory: retailProductsTable.linkedServiceCategory,
+        aftercareUsageText: retailProductsTable.aftercareUsageText,
+        isActive: retailProductsTable.isActive,
+      })
+      .from(retailProductsTable)
+      .where(
+        and(
+          eq(retailProductsTable.businessId, businessId),
+          eq(retailProductsTable.isActive, true),
+        ),
+      );
+    const matched = resolveRetailProductForService({
+      products: catalog,
+      serviceCategory: svc.category,
+      linkedProductId: svc.linkedRetailProductId,
+    });
+    if (matched) {
+      const row = catalog.find((p) => p.id === matched.id);
+      retailProductName = matched.name;
+      retailUsageText = row?.aftercareUsageText ?? null;
     }
   }
 

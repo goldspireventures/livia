@@ -1,9 +1,12 @@
 /**
  * Tenant mini-store — vertical retail packs for /b guest bag + owner catalogue.
  * Not full POS; curated SKUs, Stripe pay links, Liv post-session attach.
+ *
+ * Owner configures catalog facts; Liv matches SKUs to completed treatments (see resolveRetailProductForService).
  */
 import type { BusinessVertical } from "./types";
 import { getSubverticalProfile } from "./subvertical-profiles";
+import { resolveAftercareMessageBody } from "./guest-care-automation";
 
 export type TenantRetailStoreSettings = {
   enabled: boolean;
@@ -18,8 +21,18 @@ export type TenantRetailProductTemplate = {
   currency: string;
   sku?: string;
   category: string;
+  /** Treatment category Liv matches after session (e.g. Lashes → lash cleanser). */
+  linkedServiceCategory?: string;
   sortOrder?: number;
   imageUrl?: string | null;
+};
+
+export type RetailProductMatchInput = {
+  id?: string;
+  name: string;
+  category?: string | null;
+  linkedServiceCategory?: string | null;
+  isActive?: boolean;
 };
 
 export type TenantRetailPack = {
@@ -192,6 +205,7 @@ const BEAUTY_TEMPLATES: TenantRetailProductTemplate[] = [
     currency: "EUR",
     sku: "BB-LASH-CLEAN",
     category: "Aftercare",
+    linkedServiceCategory: "Lashes",
     sortOrder: 1,
   },
   {
@@ -201,6 +215,7 @@ const BEAUTY_TEMPLATES: TenantRetailProductTemplate[] = [
     currency: "EUR",
     sku: "BB-CUT-OIL",
     category: "Nails",
+    linkedServiceCategory: "Nails",
     sortOrder: 2,
   },
   {
@@ -210,6 +225,7 @@ const BEAUTY_TEMPLATES: TenantRetailProductTemplate[] = [
     currency: "EUR",
     sku: "BB-BROW-SERUM",
     category: "Brows",
+    linkedServiceCategory: "Brows",
     sortOrder: 3,
   },
   {
@@ -228,6 +244,7 @@ const BEAUTY_TEMPLATES: TenantRetailProductTemplate[] = [
     currency: "EUR",
     sku: "BB-LASH-SEAL",
     category: "Lashes",
+    linkedServiceCategory: "Lashes",
     sortOrder: 5,
   },
   {
@@ -237,6 +254,7 @@ const BEAUTY_TEMPLATES: TenantRetailProductTemplate[] = [
     currency: "EUR",
     sku: "BB-BROW-KIT",
     category: "Brows",
+    linkedServiceCategory: "Brows",
     sortOrder: 6,
   },
 ];
@@ -688,6 +706,72 @@ export function buildTenantRetailPaySms(args: {
 }): string {
   const hi = args.guestFirstName?.trim() ? `Hi ${args.guestFirstName.trim()}, ` : "";
   return `${hi}${args.businessName}: take ${args.productName} home — pay in two taps: ${args.payUrl}`;
+}
+
+function normalizeServiceCategory(value?: string | null): string {
+  return (value ?? "").trim().toLowerCase();
+}
+
+/** Liv/platform matcher — owner stocks SKUs; Liv picks one relevant product for the visit. */
+export function resolveRetailProductForService(args: {
+  products: RetailProductMatchInput[];
+  serviceCategory?: string | null;
+  linkedProductId?: string | null;
+}): RetailProductMatchInput | null {
+  const active = args.products.filter((p) => p.isActive !== false);
+  if (active.length === 0) return null;
+
+  if (args.linkedProductId) {
+    const linked = active.find((p) => p.id === args.linkedProductId);
+    if (linked) return linked;
+  }
+
+  const cat = normalizeServiceCategory(args.serviceCategory);
+  if (!cat) return null;
+
+  const byLink = active.find((p) => normalizeServiceCategory(p.linkedServiceCategory) === cat);
+  if (byLink) return byLink;
+
+  const byCategory = active.find((p) => normalizeServiceCategory(p.category) === cat);
+  if (byCategory) return byCategory;
+
+  if (cat.includes("lash")) {
+    return active.find((p) => /lash/i.test(p.name)) ?? null;
+  }
+  if (cat.includes("brow")) {
+    return active.find((p) => /brow/i.test(p.name)) ?? null;
+  }
+  if (cat.includes("nail")) {
+    return active.find((p) => /cuticle|nail/i.test(p.name)) ?? null;
+  }
+
+  return null;
+}
+
+/** Example draft for owner UI — not the live message (Liv builds from real booking context). */
+export function buildPostSessionLivPreview(args: {
+  vertical: BusinessVertical | string | null | undefined;
+  businessName: string;
+  serviceName: string;
+  serviceCategory?: string | null;
+  products?: RetailProductMatchInput[];
+}): { body: string; matchedProduct: string | null; caption: string } {
+  const matched = resolveRetailProductForService({
+    products: args.products ?? [],
+    serviceCategory: args.serviceCategory,
+  });
+  const body = resolveAftercareMessageBody({
+    vertical: (args.vertical ?? "beauty") as BusinessVertical,
+    businessName: args.businessName,
+    serviceName: args.serviceName,
+    serviceCategory: args.serviceCategory,
+    retailProductName: matched?.name ?? null,
+  });
+  return {
+    body,
+    matchedProduct: matched?.name ?? null,
+    caption: `Example after ${args.serviceName} — Liv adapts to each guest and your send mode in Settings.`,
+  };
 }
 
 export function buildTenantPostSessionInboxDraft(

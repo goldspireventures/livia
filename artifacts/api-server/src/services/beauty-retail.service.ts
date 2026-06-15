@@ -72,6 +72,11 @@ export async function updateRetailStoreSettings(
     .set({ retailStore: next, updatedAt: new Date() })
     .where(eq(businessesTable.id, businessId))
     .returning({ retailStore: businessesTable.retailStore });
+  const { recordRetailAutomationToggleSignals } = await import("./operational-policy.service");
+  await recordRetailAutomationToggleSignals(businessId, {
+    enabled: next.enabled,
+    postSessionSuggest: next.postSessionSuggest,
+  });
   return parseTenantRetailStoreSettings(row?.retailStore);
 }
 
@@ -87,6 +92,7 @@ export async function createRetailProduct(
     sortOrder?: number;
     category?: string;
     stockQuantity?: number | null;
+    linkedServiceCategory?: string;
   },
 ) {
   const biz = await getBusinessById(businessId);
@@ -104,6 +110,7 @@ export async function createRetailProduct(
       imageUrl: data.imageUrl,
       sortOrder: data.sortOrder ?? 0,
       category: data.category,
+      linkedServiceCategory: data.linkedServiceCategory ?? null,
       stockQuantity,
       soldQuantity: 0,
       isActive: true,
@@ -255,6 +262,7 @@ export async function seedRetailTemplatesForBusiness(
       imageUrl: t.imageUrl ?? inferPublicServiceImageFromName(t.name),
       sortOrder: t.sortOrder ?? 0,
       category: t.category,
+      linkedServiceCategory: t.linkedServiceCategory,
     });
   }
 

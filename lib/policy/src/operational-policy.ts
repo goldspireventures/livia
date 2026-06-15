@@ -2,6 +2,7 @@ import { z } from "zod/v4";
 import type { BusinessVertical } from "./types";
 import { getCountryOverlay } from "./country-overlays";
 import { guestCareAutomationSchema } from "./guest-care-automation";
+import { automationToggleSignalSchema } from "./automation-toggle-signals";
 
 /** Tenant-editable operational rules (stored on business.operational_policy jsonb). */
 export const operationalPolicySchema = z.object({
@@ -24,6 +25,10 @@ export const operationalPolicySchema = z.object({
   houseRulesCustom: z.string().max(8000).optional(),
   /** Post-session aftercare — see guest-care-automation.ts */
   guestCare: guestCareAutomationSchema.partial().optional(),
+  /** Owner automation gate adoption — toggles persistently left off (product signal). */
+  automationToggleSignals: z
+    .record(z.string(), automationToggleSignalSchema)
+    .optional(),
 });
 
 export type OperationalPolicy = z.infer<typeof operationalPolicySchema>;
