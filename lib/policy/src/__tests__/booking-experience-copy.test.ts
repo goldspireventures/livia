@@ -40,7 +40,7 @@ assert.ok(
 );
 assert.equal(
   pendingReasonLabel(PENDING_REASON_CODES.AWAITING_CONTINUITY, "hair"),
-  "Waiting for guest reply (photos or confirmation)",
+  "Waiting for client to confirm in messages",
 );
 
 const wellnessDetail = bookingExperienceCopy("wellness");
@@ -48,11 +48,18 @@ assert.equal(wellnessDetail.detailPageTitle, "Session detail");
 assert.equal(wellnessDetail.partyCardTitle, "Guest & session");
 assert.equal(wellnessDetail.statusActions.NO_SHOW, "Did not arrive");
 
+const hairDetail = bookingExperienceCopy("hair");
+assert.equal(hairDetail.detailPageTitle, "Appointment detail");
+assert.equal(hairDetail.continuityPanelTitle, "Client messages");
+
 assert.ok(
   publicAwaitingContinuityHoldLines("wellness")[1].includes("health"),
 );
 assert.ok(
-  publicAwaitingContinuityHoldLines("hair")[2].includes("salon"),
+  publicAwaitingContinuityHoldLines("hair")[1].includes("style notes"),
+);
+assert.ok(
+  !publicAwaitingContinuityHoldLines("hair")[1].toLowerCase().includes("photo"),
 );
 
 assert.match(
@@ -63,6 +70,11 @@ assert.match(
 assert.match(
   livPendingAutoConfirmBlocker(PENDING_REASON_CODES.AWAITING_DEPOSIT, "beauty") ?? "",
   /deposit/i,
+);
+assert.ok(
+  !(
+    livPendingAutoConfirmBlocker(PENDING_REASON_CODES.AWAITING_CONTINUITY, "hair") ?? ""
+  ).includes("continuity thread"),
 );
 
 console.log("booking-experience-copy.test.ts ok");

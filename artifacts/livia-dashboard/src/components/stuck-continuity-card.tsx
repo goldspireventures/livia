@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
+import { stuckContinuityCardCopy } from "@workspace/policy";
 import { useBusiness } from "@/lib/business-context";
+import { useTenantExperience } from "@/lib/tenant-experience-api";
 import { apiFetch } from "@/lib/api-fetch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +19,10 @@ type StuckRow = {
 export function StuckContinuityCard() {
   const { business } = useBusiness();
   const bid = business?.id ?? "";
+  const { data: tenantXp } = useTenantExperience(bid || undefined);
+  const tenantVertical =
+    (tenantXp as { vertical?: string } | undefined)?.vertical ?? business?.category ?? null;
+  const stuckCopy = stuckContinuityCardCopy(tenantVertical, business?.category);
   const [rows, setRows] = useState<StuckRow[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -36,11 +42,9 @@ export function StuckContinuityCard() {
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
           <MessageCircleWarning className="h-4 w-4 text-amber-600" />
-          Bookings waiting on reply
+          {stuckCopy.title}
         </CardTitle>
-        <CardDescription>
-          Web bookings where the client has not replied in the continuity thread (24h+).
-        </CardDescription>
+        <CardDescription>{stuckCopy.description}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">
         {loading ? (

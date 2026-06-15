@@ -69,14 +69,76 @@ export function resolvePendingReasonCode(args: {
   return PENDING_REASON_CODES.AWAITING_STAFF_CONFIRM;
 }
 
-const DEFAULT_PENDING_LABELS: Record<string, string> = {
-  [PENDING_REASON_CODES.AWAITING_STAFF_CONFIRM]: "Waiting for staff to confirm",
-  [PENDING_REASON_CODES.AWAITING_DEPOSIT]: "Waiting for deposit",
-  [PENDING_REASON_CODES.AWAITING_POLICY_REVIEW]: "Policy review required",
-  [PENDING_REASON_CODES.CREATED_BY_LIV]: "Liv created — confirm to finalize",
-  [PENDING_REASON_CODES.OWNER_MANUAL]: "Manual booking — confirm when ready",
-  [PENDING_REASON_CODES.AWAITING_CONTINUITY]:
-    "Waiting for guest reply (photos or confirmation)",
+type VerticalPendingPack = {
+  labels: Record<string, string>;
+  guidance: Record<string, string>;
+  /** Why Liv did not auto-confirm for awaiting_continuity — plain language, no internal jargon. */
+  livContinuityBlocker: string;
+  defaultPendingLabel: string;
+  defaultGuidance: string;
+};
+
+const HAIR_PENDING_PACK: VerticalPendingPack = {
+  labels: {
+    [PENDING_REASON_CODES.AWAITING_STAFF_CONFIRM]:
+      "Stylist or front desk needs to confirm this appointment",
+    [PENDING_REASON_CODES.AWAITING_DEPOSIT]: "Deposit due before confirming",
+    [PENDING_REASON_CODES.AWAITING_POLICY_REVIEW]:
+      "Review cancellation policy before confirming",
+    [PENDING_REASON_CODES.CREATED_BY_LIV]: "Liv proposed this slot — confirm to hold the chair",
+    [PENDING_REASON_CODES.OWNER_MANUAL]: "Walk-in or manual hold — confirm when the chair is ready",
+    [PENDING_REASON_CODES.AWAITING_CONTINUITY]: "Waiting for client to confirm in messages",
+  },
+  guidance: {
+    [PENDING_REASON_CODES.AWAITING_STAFF_CONFIRM]:
+      "Assign the stylist, then confirm — the client gets a confirmation once locked.",
+    [PENDING_REASON_CODES.AWAITING_DEPOSIT]:
+      "Send the deposit link or mark paid, then confirm the slot.",
+    [PENDING_REASON_CODES.AWAITING_CONTINUITY]:
+      "They may need to reply with style notes or a quick yes — follow up in inbox or confirm when ready.",
+    [PENDING_REASON_CODES.AWAITING_POLICY_REVIEW]:
+      "Check your no-show and reschedule policy, then confirm.",
+    [PENDING_REASON_CODES.CREATED_BY_LIV]:
+      "Liv matched chair availability — confirm if service and duration look right.",
+    [PENDING_REASON_CODES.OWNER_MANUAL]: "Confirm service, stylist, and time, then approve.",
+  },
+  livContinuityBlocker:
+    "Liv won't auto-confirm until the client replies in their booking messages.",
+  defaultPendingLabel: "Appointment pending — confirm to hold the chair",
+  defaultGuidance:
+    "Confirm, reschedule, or follow up when a deposit or chair rule needs you.",
+};
+
+const BODY_ART_PENDING_PACK: VerticalPendingPack = {
+  labels: {
+    [PENDING_REASON_CODES.AWAITING_STAFF_CONFIRM]:
+      "Artist or front desk needs to confirm this session",
+    [PENDING_REASON_CODES.AWAITING_DEPOSIT]: "Deposit due before confirming",
+    [PENDING_REASON_CODES.AWAITING_POLICY_REVIEW]:
+      "Review studio policy before confirming",
+    [PENDING_REASON_CODES.CREATED_BY_LIV]: "Liv proposed this slot — confirm to hold the session",
+    [PENDING_REASON_CODES.OWNER_MANUAL]: "Manual hold — confirm when the station is ready",
+    [PENDING_REASON_CODES.AWAITING_CONTINUITY]:
+      "Waiting for client reply (design reference or placement notes)",
+  },
+  guidance: {
+    [PENDING_REASON_CODES.AWAITING_STAFF_CONFIRM]:
+      "Assign the artist, then confirm — the client gets a confirmation once locked.",
+    [PENDING_REASON_CODES.AWAITING_DEPOSIT]:
+      "Send the deposit link or mark paid, then confirm the session.",
+    [PENDING_REASON_CODES.AWAITING_CONTINUITY]:
+      "Design reference or placement notes still outstanding — follow up or confirm when ready.",
+    [PENDING_REASON_CODES.AWAITING_POLICY_REVIEW]:
+      "Check consult and deposit policy, then confirm.",
+    [PENDING_REASON_CODES.CREATED_BY_LIV]:
+      "Liv matched studio availability — confirm if session length and artist look right.",
+    [PENDING_REASON_CODES.OWNER_MANUAL]: "Confirm session, artist, and time, then approve.",
+  },
+  livContinuityBlocker:
+    "Liv won't auto-confirm until the client replies with design details in messages.",
+  defaultPendingLabel: "Session pending — confirm to hold the slot",
+  defaultGuidance:
+    "Confirm, reschedule, or follow up when a deposit or design step needs you.",
 };
 
 const WELLNESS_PENDING_LABELS: Record<string, string> = {
@@ -91,21 +153,6 @@ const WELLNESS_PENDING_LABELS: Record<string, string> = {
     "Walk-in or manual hold — confirm when the room is ready",
   [PENDING_REASON_CODES.AWAITING_CONTINUITY]:
     "Waiting for guest reply (health notes or arrival confirmation)",
-};
-
-const DEFAULT_PENDING_GUIDANCE: Record<string, string> = {
-  [PENDING_REASON_CODES.AWAITING_STAFF_CONFIRM]:
-    "Assign or confirm the provider, then approve — the client gets a confirmation once you approve.",
-  [PENDING_REASON_CODES.AWAITING_DEPOSIT]:
-    "Send the deposit link or mark paid, then approve so the slot stays held.",
-  [PENDING_REASON_CODES.AWAITING_CONTINUITY]:
-    "Guest hasn't confirmed photos or details yet — follow up in inbox or approve if you're satisfied.",
-  [PENDING_REASON_CODES.AWAITING_POLICY_REVIEW]:
-    "Review against your shop policy. Adjust time or service if needed, then approve.",
-  [PENDING_REASON_CODES.CREATED_BY_LIV]:
-    "Liv matched availability to the request — approve if time and service look right.",
-  [PENDING_REASON_CODES.OWNER_MANUAL]:
-    "Confirm time, service, and client, then approve.",
 };
 
 const WELLNESS_PENDING_GUIDANCE: Record<string, string> = {
@@ -123,16 +170,212 @@ const WELLNESS_PENDING_GUIDANCE: Record<string, string> = {
     "Confirm room, session, and guest, then approve.",
 };
 
-function pendingLabelMap(vertical: BusinessVertical): Record<string, string> {
-  if (vertical === "wellness") return WELLNESS_PENDING_LABELS;
-  if (vertical === "beauty") return BEAUTY_PENDING_LABELS;
-  return DEFAULT_PENDING_LABELS;
-}
+const WELLNESS_PENDING_PACK: VerticalPendingPack = {
+  labels: WELLNESS_PENDING_LABELS,
+  guidance: WELLNESS_PENDING_GUIDANCE,
+  livContinuityBlocker:
+    "Liv won't auto-confirm until the guest replies with intake or arrival notes in messages.",
+  defaultPendingLabel: "Session pending — confirm to hold the room",
+  defaultGuidance:
+    "Confirm, reschedule, or follow up when a room hold or intake rule needs you.",
+};
 
-function pendingGuidanceMap(vertical: BusinessVertical): Record<string, string> {
-  if (vertical === "wellness") return WELLNESS_PENDING_GUIDANCE;
-  if (vertical === "beauty") return BEAUTY_PENDING_GUIDANCE;
-  return DEFAULT_PENDING_GUIDANCE;
+const FITNESS_PENDING_PACK: VerticalPendingPack = {
+  labels: {
+    [PENDING_REASON_CODES.AWAITING_STAFF_CONFIRM]:
+      "Coach or front desk needs to confirm this session",
+    [PENDING_REASON_CODES.AWAITING_DEPOSIT]: "Session deposit due before confirming",
+    [PENDING_REASON_CODES.AWAITING_POLICY_REVIEW]: "Review cancellation policy before confirming",
+    [PENDING_REASON_CODES.CREATED_BY_LIV]: "Liv scheduled this session — confirm to hold the slot",
+    [PENDING_REASON_CODES.OWNER_MANUAL]: "Manual hold — confirm when the slot is ready",
+    [PENDING_REASON_CODES.AWAITING_CONTINUITY]:
+      "Waiting for member reply (session notes or confirmation)",
+  },
+  guidance: {
+    [PENDING_REASON_CODES.AWAITING_STAFF_CONFIRM]:
+      "Assign the coach, then confirm — the member gets a confirmation once locked.",
+    [PENDING_REASON_CODES.AWAITING_DEPOSIT]:
+      "Collect the deposit, then confirm so the slot stays held.",
+    [PENDING_REASON_CODES.AWAITING_CONTINUITY]:
+      "PAR-Q or session details still outstanding — follow up or confirm when ready.",
+    [PENDING_REASON_CODES.AWAITING_POLICY_REVIEW]: "Check your cancel window, then confirm.",
+    [PENDING_REASON_CODES.CREATED_BY_LIV]:
+      "Liv matched coach availability — confirm if session type and length look right.",
+    [PENDING_REASON_CODES.OWNER_MANUAL]: "Confirm session, coach, and time, then approve.",
+  },
+  livContinuityBlocker:
+    "Liv won't auto-confirm until the member replies in their booking messages.",
+  defaultPendingLabel: "Session pending — confirm to hold the slot",
+  defaultGuidance: "Confirm, reschedule, or follow up when a session rule needs you.",
+};
+
+const CLINICAL_PENDING_PACK: VerticalPendingPack = {
+  labels: {
+    [PENDING_REASON_CODES.AWAITING_STAFF_CONFIRM]:
+      "Practitioner or reception needs to confirm this appointment",
+    [PENDING_REASON_CODES.AWAITING_DEPOSIT]: "Deposit due before confirming",
+    [PENDING_REASON_CODES.AWAITING_POLICY_REVIEW]: "Consent or policy review required",
+    [PENDING_REASON_CODES.CREATED_BY_LIV]: "Liv proposed this slot — confirm to hold it",
+    [PENDING_REASON_CODES.OWNER_MANUAL]: "Manual hold — confirm when ready",
+    [PENDING_REASON_CODES.AWAITING_CONTINUITY]:
+      "Waiting for patient reply (intake or confirmation)",
+  },
+  guidance: {
+    [PENDING_REASON_CODES.AWAITING_STAFF_CONFIRM]:
+      "Assign the practitioner, then confirm — the patient gets a confirmation once locked.",
+    [PENDING_REASON_CODES.AWAITING_DEPOSIT]:
+      "Collect the deposit, then confirm so the slot stays held.",
+    [PENDING_REASON_CODES.AWAITING_CONTINUITY]:
+      "Pre-treatment intake or consent still outstanding — follow up or confirm when ready.",
+    [PENDING_REASON_CODES.AWAITING_POLICY_REVIEW]:
+      "Review consent and cancellation policy, then confirm.",
+    [PENDING_REASON_CODES.CREATED_BY_LIV]:
+      "Liv matched availability — confirm if treatment and practitioner look right.",
+    [PENDING_REASON_CODES.OWNER_MANUAL]: "Confirm treatment, practitioner, and time, then approve.",
+  },
+  livContinuityBlocker:
+    "Liv won't auto-confirm until the patient replies with intake details in messages.",
+  defaultPendingLabel: "Appointment pending — confirm to hold the slot",
+  defaultGuidance: "Confirm, reschedule, or follow up when intake or consent needs you.",
+};
+
+const PET_PENDING_PACK: VerticalPendingPack = {
+  labels: {
+    [PENDING_REASON_CODES.AWAITING_STAFF_CONFIRM]:
+      "Groomer or front desk needs to confirm this groom",
+    [PENDING_REASON_CODES.AWAITING_DEPOSIT]: "Deposit due before confirming",
+    [PENDING_REASON_CODES.AWAITING_POLICY_REVIEW]: "Review cancellation policy before confirming",
+    [PENDING_REASON_CODES.CREATED_BY_LIV]: "Liv proposed this slot — confirm to hold it",
+    [PENDING_REASON_CODES.OWNER_MANUAL]: "Manual hold — confirm when the slot is ready",
+    [PENDING_REASON_CODES.AWAITING_CONTINUITY]:
+      "Waiting for pet parent reply (pet details or confirmation)",
+  },
+  guidance: {
+    [PENDING_REASON_CODES.AWAITING_STAFF_CONFIRM]:
+      "Assign the groomer, then confirm — the pet parent gets a confirmation once locked.",
+    [PENDING_REASON_CODES.AWAITING_DEPOSIT]:
+      "Send the deposit link or mark paid, then confirm the groom.",
+    [PENDING_REASON_CODES.AWAITING_CONTINUITY]:
+      "Pet details or temperament notes still outstanding — follow up or confirm when ready.",
+    [PENDING_REASON_CODES.AWAITING_POLICY_REVIEW]: "Check your cancel window, then confirm.",
+    [PENDING_REASON_CODES.CREATED_BY_LIV]:
+      "Liv matched groomer availability — confirm if breed and service look right.",
+    [PENDING_REASON_CODES.OWNER_MANUAL]: "Confirm groom, pet details, and time, then approve.",
+  },
+  livContinuityBlocker:
+    "Liv won't auto-confirm until the pet parent replies with pet details in messages.",
+  defaultPendingLabel: "Groom pending — confirm to hold the slot",
+  defaultGuidance: "Confirm, reschedule, or follow up when pet details need you.",
+};
+
+const DETAILING_PENDING_PACK: VerticalPendingPack = {
+  labels: {
+    [PENDING_REASON_CODES.AWAITING_STAFF_CONFIRM]:
+      "Team needs to confirm this detail booking",
+    [PENDING_REASON_CODES.AWAITING_DEPOSIT]: "Deposit due before confirming",
+    [PENDING_REASON_CODES.AWAITING_POLICY_REVIEW]: "Review cancellation policy before confirming",
+    [PENDING_REASON_CODES.CREATED_BY_LIV]: "Liv proposed this bay slot — confirm to hold it",
+    [PENDING_REASON_CODES.OWNER_MANUAL]: "Manual hold — confirm when the bay is ready",
+    [PENDING_REASON_CODES.AWAITING_CONTINUITY]:
+      "Waiting for client reply (vehicle details or confirmation)",
+  },
+  guidance: {
+    [PENDING_REASON_CODES.AWAITING_STAFF_CONFIRM]:
+      "Assign the bay, then confirm — the client gets a confirmation once locked.",
+    [PENDING_REASON_CODES.AWAITING_DEPOSIT]:
+      "Collect the deposit, then confirm so the bay stays held.",
+    [PENDING_REASON_CODES.AWAITING_CONTINUITY]:
+      "Vehicle make, model, or access notes still outstanding — follow up or confirm when ready.",
+    [PENDING_REASON_CODES.AWAITING_POLICY_REVIEW]: "Check your cancel window, then confirm.",
+    [PENDING_REASON_CODES.CREATED_BY_LIV]:
+      "Liv matched bay availability — confirm if detail package and duration look right.",
+    [PENDING_REASON_CODES.OWNER_MANUAL]: "Confirm detail, vehicle, and time, then approve.",
+  },
+  livContinuityBlocker:
+    "Liv won't auto-confirm until the client replies with vehicle details in messages.",
+  defaultPendingLabel: "Booking pending — confirm to hold the bay",
+  defaultGuidance: "Confirm, reschedule, or follow up when vehicle details need you.",
+};
+
+const EVENT_PENDING_PACK: VerticalPendingPack = {
+  labels: {
+    [PENDING_REASON_CODES.AWAITING_STAFF_CONFIRM]: "Team needs to confirm this event booking",
+    [PENDING_REASON_CODES.AWAITING_DEPOSIT]: "Deposit due before confirming",
+    [PENDING_REASON_CODES.AWAITING_POLICY_REVIEW]: "Review contract terms before confirming",
+    [PENDING_REASON_CODES.CREATED_BY_LIV]: "Liv captured this enquiry — confirm to proceed",
+    [PENDING_REASON_CODES.OWNER_MANUAL]: "Manual hold — confirm when ready",
+    [PENDING_REASON_CODES.AWAITING_CONTINUITY]:
+      "Waiting for client reply (event details or confirmation)",
+  },
+  guidance: {
+    [PENDING_REASON_CODES.AWAITING_STAFF_CONFIRM]:
+      "Review the brief, then confirm — the client gets a confirmation once locked.",
+    [PENDING_REASON_CODES.AWAITING_DEPOSIT]:
+      "Collect the deposit, then confirm so the date stays held.",
+    [PENDING_REASON_CODES.AWAITING_CONTINUITY]:
+      "Event date, guest count, or theme still outstanding — follow up or confirm when ready.",
+    [PENDING_REASON_CODES.AWAITING_POLICY_REVIEW]: "Check contract and cancel terms, then confirm.",
+    [PENDING_REASON_CODES.CREATED_BY_LIV]:
+      "Liv matched the enquiry — confirm if date and scope look right.",
+    [PENDING_REASON_CODES.OWNER_MANUAL]: "Confirm event details, scope, and date, then approve.",
+  },
+  livContinuityBlocker:
+    "Liv won't auto-confirm until the client replies with event details in messages.",
+  defaultPendingLabel: "Enquiry pending — confirm to hold the date",
+  defaultGuidance: "Confirm, quote, or follow up when event details need you.",
+};
+
+const BEAUTY_PENDING_LABELS: Record<string, string> = {
+  [PENDING_REASON_CODES.AWAITING_STAFF_CONFIRM]:
+    "Artist or front desk needs to confirm this appointment",
+  [PENDING_REASON_CODES.AWAITING_DEPOSIT]: "Deposit due before confirming",
+  [PENDING_REASON_CODES.AWAITING_POLICY_REVIEW]: "Review cancellation policy before confirming",
+  [PENDING_REASON_CODES.CREATED_BY_LIV]: "Liv proposed this slot — confirm to hold it",
+  [PENDING_REASON_CODES.OWNER_MANUAL]: "Manual hold — confirm when the station is ready",
+  [PENDING_REASON_CODES.AWAITING_CONTINUITY]:
+    "Waiting for client reply (patch test or style reference)",
+};
+
+const BEAUTY_PENDING_GUIDANCE: Record<string, string> = {
+  [PENDING_REASON_CODES.AWAITING_STAFF_CONFIRM]:
+    "Assign the artist, then confirm — the client gets a confirmation once locked.",
+  [PENDING_REASON_CODES.AWAITING_DEPOSIT]:
+    "Send the deposit link or mark paid, then confirm the slot.",
+  [PENDING_REASON_CODES.AWAITING_CONTINUITY]:
+    "Patch test or style reference still outstanding — follow up or confirm when ready.",
+  [PENDING_REASON_CODES.AWAITING_POLICY_REVIEW]:
+    "Check fill vs full-set policy and cancel window, then confirm.",
+  [PENDING_REASON_CODES.CREATED_BY_LIV]:
+    "Liv matched availability from the enquiry — confirm if treatment and duration look right.",
+  [PENDING_REASON_CODES.OWNER_MANUAL]:
+    "Confirm treatment, artist, and time, then approve.",
+};
+
+const BEAUTY_PENDING_PACK: VerticalPendingPack = {
+  labels: BEAUTY_PENDING_LABELS,
+  guidance: BEAUTY_PENDING_GUIDANCE,
+  livContinuityBlocker:
+    "Liv won't auto-confirm until the client replies with patch-test or style details in messages.",
+  defaultPendingLabel: "Appointment pending — confirm to hold the slot",
+  defaultGuidance:
+    "Confirm, reschedule, or follow up when a deposit, fill, or patch-test rule needs you.",
+};
+
+const PENDING_PACKS: Record<BusinessVertical, VerticalPendingPack> = {
+  hair: HAIR_PENDING_PACK,
+  beauty: BEAUTY_PENDING_PACK,
+  "body-art": BODY_ART_PENDING_PACK,
+  wellness: WELLNESS_PENDING_PACK,
+  fitness: FITNESS_PENDING_PACK,
+  medspa: CLINICAL_PENDING_PACK,
+  "allied-health": CLINICAL_PENDING_PACK,
+  "pet-grooming": PET_PENDING_PACK,
+  "automotive-detailing": DETAILING_PENDING_PACK,
+  "event-vendors": EVENT_PENDING_PACK,
+};
+
+function pendingPack(vertical: BusinessVertical): VerticalPendingPack {
+  return PENDING_PACKS[vertical];
 }
 
 /** Owner-facing label for API `pendingReason` — vertical-aware. */
@@ -142,12 +385,10 @@ export function pendingReasonLabel(
   category?: string | null,
 ): string {
   const key = resolveVerticalKey(vertical, category);
-  const map = pendingLabelMap(key);
-  if (reason && map[reason]) return map[reason];
+  const pack = pendingPack(key);
+  if (reason && pack.labels[reason]) return pack.labels[reason];
   if (reason?.trim()) return reason.replace(/_/g, " ");
-  if (key === "wellness") return "Session pending — confirm to hold the room";
-  if (key === "beauty") return "Appointment pending — confirm to hold the slot";
-  return "Pending — needs your confirmation";
+  return pack.defaultPendingLabel;
 }
 
 /** Mobile / approvals — what happened and what to do next. */
@@ -157,15 +398,9 @@ export function pendingApprovalGuidance(
   category?: string | null,
 ): string {
   const key = resolveVerticalKey(vertical, category);
-  const map = pendingGuidanceMap(key);
-  if (reason && map[reason]) return map[reason];
-  if (key === "wellness") {
-    return "Confirm, reschedule, or follow up when a room hold or intake rule needs you.";
-  }
-  if (key === "beauty") {
-    return "Confirm, reschedule, or follow up when a deposit, fill, or patch-test rule needs you.";
-  }
-  return "Approve, edit, or follow up when a booking rule needs a human.";
+  const pack = pendingPack(key);
+  if (reason && pack.guidance[reason]) return pack.guidance[reason];
+  return pack.defaultGuidance;
 }
 
 /** Why Liv did not auto-confirm — policy-driven, shown on owner surfaces. */
@@ -176,12 +411,14 @@ export function livPendingAutoConfirmBlocker(
 ): string | null {
   if (!reason?.trim()) return null;
   const key = resolveVerticalKey(vertical, category);
-  const slot = key === "wellness" ? "session" : "appointment";
+  const pack = pendingPack(key);
+  const slot =
+    key === "wellness" || key === "fitness" || key === "body-art" ? "session" : "appointment";
   switch (reason) {
     case PENDING_REASON_CODES.AWAITING_DEPOSIT:
       return `Liv can't auto-confirm — your policy requires a deposit before this ${slot} locks.`;
     case PENDING_REASON_CODES.AWAITING_CONTINUITY:
-      return "Liv is waiting for the client to reply in the continuity thread before confirming.";
+      return pack.livContinuityBlocker;
     case PENDING_REASON_CODES.AWAITING_STAFF_CONFIRM:
       return `Liv won't auto-confirm — staff must approve this ${slot} per your booking rules.`;
     case PENDING_REASON_CODES.AWAITING_POLICY_REVIEW:
@@ -193,6 +430,33 @@ export function livPendingAutoConfirmBlocker(
     default:
       return null;
   }
+}
+
+/** Owner dashboard — stuck continuity card (24h+ no reply). */
+export function stuckContinuityCardCopy(
+  vertical?: string | null,
+  category?: string | null,
+): { title: string; description: string } {
+  const key = resolveVerticalKey(vertical, category);
+  const client = businessVocabulary(vertical, category).clientNoun.toLowerCase();
+  const descriptions: Record<BusinessVertical, string> = {
+    hair: `Online bookings where the ${client} has not replied in messages (24h+).`,
+    beauty: `Appointments where the ${client} has not replied in messages (24h+).`,
+    "body-art": `Sessions where the ${client} has not sent design details in messages (24h+).`,
+    wellness: "Sessions where the guest has not replied to intake or arrival messages (24h+).",
+    fitness: "Sessions where the member has not replied in messages (24h+).",
+    medspa: "Appointments where the patient has not completed intake in messages (24h+).",
+    "allied-health":
+      "Appointments where the patient has not completed intake in messages (24h+).",
+    "pet-grooming": "Grooms where the pet parent has not sent pet details in messages (24h+).",
+    "automotive-detailing":
+      "Bookings where the client has not sent vehicle details in messages (24h+).",
+    "event-vendors": "Enquiries where the client has not sent event details in messages (24h+).",
+  };
+  return {
+    title: "Bookings waiting on reply",
+    description: descriptions[key],
+  };
 }
 
 export type BookingExperienceCopy = {
@@ -232,8 +496,8 @@ const DEFAULT_EXPERIENCE: BookingExperienceCopy = {
   partyCardTitle: "Client & service",
   clientFieldLabel: "Customer",
   serviceFieldLabel: "Service",
-  mediaCardTitle: "Reference photos",
-  continuityPanelTitle: "Booking continuity",
+  mediaCardTitle: "Attachments",
+  continuityPanelTitle: "Client messages",
   continuityOpenThread: "Open thread",
   noGuestLabel: "No customer",
   noServiceLabel: "No service",
@@ -252,6 +516,36 @@ const DEFAULT_EXPERIENCE: BookingExperienceCopy = {
     COMPLETED: "Mark Complete",
     CANCELLED: "Cancel",
     NO_SHOW: "No Show",
+  },
+};
+
+const HAIR_EXPERIENCE: BookingExperienceCopy = {
+  detailPageTitle: "Appointment detail",
+  detailPageSubtitle: "Service, client notes, and confirm or reschedule",
+  backToListAria: "Back to schedule",
+  partyCardTitle: "Client & service",
+  clientFieldLabel: "Client",
+  serviceFieldLabel: "Service",
+  mediaCardTitle: "Style references",
+  continuityPanelTitle: "Client messages",
+  continuityOpenThread: "Open thread",
+  noGuestLabel: "No client on file",
+  noServiceLabel: "No service selected",
+  statusSectionTitle: "Status",
+  notesDisclosureTitle: "Chair notes",
+  notesDisclosureDescription: "Colour formula, allergies, preferences — internal only",
+  listGuidedBookingTitle: "Guided booking",
+  listGuidedBookingDescription: "Pick service, stylist, and time with Liv",
+  listQuickAddLabel: "Quick book",
+  listEmptyTitle: "No appointments in this view",
+  listEmptyPendingCta: "New appointment",
+  statusFilterNoShow: "No-show",
+  toastStatusUpdated: (status) => `Appointment ${status.toLowerCase()}`,
+  statusActions: {
+    CONFIRMED: "Confirm",
+    COMPLETED: "Complete",
+    CANCELLED: "Cancel",
+    NO_SHOW: "No-show",
   },
 };
 
@@ -283,32 +577,6 @@ const BEAUTY_EXPERIENCE: BookingExperienceCopy = {
     CANCELLED: "Cancel",
     NO_SHOW: "No-show",
   },
-};
-
-const BEAUTY_PENDING_LABELS: Record<string, string> = {
-  [PENDING_REASON_CODES.AWAITING_STAFF_CONFIRM]:
-    "Artist or front desk needs to confirm this appointment",
-  [PENDING_REASON_CODES.AWAITING_DEPOSIT]: "Deposit due before confirming",
-  [PENDING_REASON_CODES.AWAITING_POLICY_REVIEW]: "Review cancellation policy before confirming",
-  [PENDING_REASON_CODES.CREATED_BY_LIV]: "Liv proposed this slot — confirm to hold it",
-  [PENDING_REASON_CODES.OWNER_MANUAL]: "Manual hold — confirm when the station is ready",
-  [PENDING_REASON_CODES.AWAITING_CONTINUITY]:
-    "Waiting for client reply (patch test or style reference)",
-};
-
-const BEAUTY_PENDING_GUIDANCE: Record<string, string> = {
-  [PENDING_REASON_CODES.AWAITING_STAFF_CONFIRM]:
-    "Assign the artist, then confirm — the client gets a confirmation once locked.",
-  [PENDING_REASON_CODES.AWAITING_DEPOSIT]:
-    "Send the deposit link or mark paid, then confirm the slot.",
-  [PENDING_REASON_CODES.AWAITING_CONTINUITY]:
-    "Patch test or style reference still outstanding — follow up or confirm when ready.",
-  [PENDING_REASON_CODES.AWAITING_POLICY_REVIEW]:
-    "Check fill vs full-set policy and cancel window, then confirm.",
-  [PENDING_REASON_CODES.CREATED_BY_LIV]:
-    "Liv matched availability from the enquiry — confirm if treatment and duration look right.",
-  [PENDING_REASON_CODES.OWNER_MANUAL]:
-    "Confirm treatment, artist, and time, then approve.",
 };
 
 const WELLNESS_EXPERIENCE: BookingExperienceCopy = {
@@ -350,12 +618,14 @@ export function bookingExperienceCopy(
   const key = resolveVerticalKey(vertical, category);
   if (key === "wellness") return WELLNESS_EXPERIENCE;
   if (key === "beauty") return BEAUTY_EXPERIENCE;
+  if (key === "hair") return HAIR_EXPERIENCE;
   const v = businessVocabulary(vertical, category);
   return {
     ...DEFAULT_EXPERIENCE,
     partyCardTitle: `${v.clientNoun} & ${v.serviceNoun.toLowerCase()}`,
     clientFieldLabel: v.clientNoun,
     serviceFieldLabel: v.serviceNoun,
+    continuityPanelTitle: "Client messages",
     listEmptyTitle: `No ${v.serviceNoun.toLowerCase()}s found`,
   };
 }
@@ -374,11 +644,36 @@ export function publicAwaitingContinuityHoldLines(
       "Add the session to your calendar below.",
     ];
   }
+  if (key === "hair") {
+    return [
+      "Almost there — we've sent a message to the phone or email you provided.",
+      "Reply with style notes or a quick confirmation when you're ready.",
+      "Your appointment is held until the shop confirms (usually within a few hours).",
+      "Add the appointment to your calendar below.",
+    ];
+  }
+  if (key === "beauty") {
+    return [
+      "Almost there — we've sent a message to the phone or email you provided.",
+      "Reply with patch-test or style details if your studio asked for them, or to confirm you're all set.",
+      "Your appointment is held until the studio confirms (usually within a few hours).",
+      "Add the appointment to your calendar below.",
+    ];
+  }
+  if (key === "body-art") {
+    return [
+      "Almost there — we've sent a message to the phone or email you provided.",
+      "Reply with design references or placement notes if your artist asked for them.",
+      "Your session slot is held until the studio confirms (usually within a few hours).",
+      "Add the session to your calendar below.",
+    ];
+  }
+  const v = businessVocabulary(vertical, category);
   return [
     "Almost there — we've sent a message to the phone or email you provided.",
-    "Reply once with any photos or notes your team asked for, or to confirm you're all set.",
-    "Your appointment is held until the salon confirms (usually within a few hours).",
-    "Add the appointment to your calendar below.",
+    `Reply with any details your ${v.teamNoun.toLowerCase()} asked for, or to confirm you're all set.`,
+    `Your ${v.serviceNoun.toLowerCase()} is held until ${v.locationNoun.toLowerCase()} confirms (usually within a few hours).`,
+    `Add the ${v.serviceNoun.toLowerCase()} to your calendar below.`,
   ];
 }
 

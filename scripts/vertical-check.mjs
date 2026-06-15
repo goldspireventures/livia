@@ -63,6 +63,18 @@ run("Body-art design proof program", [
   "../../lib/policy/src/__tests__/body-art-design-proof-program.test.ts",
 ]);
 
+run("Vertical pending copy coverage", [
+  "--import",
+  "tsx/esm",
+  "../../lib/policy/src/__tests__/vertical-pending-copy-coverage.test.ts",
+]);
+
+run("Booking experience copy", [
+  "--import",
+  "tsx/esm",
+  "../../lib/policy/src/__tests__/booking-experience-copy.test.ts",
+]);
+
 run("Vertical doc propagation", [
   "--import",
   "tsx/esm",
