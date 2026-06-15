@@ -18,6 +18,7 @@ export function GuestVisitSummaryCard({
   depositLineLabel,
   depositPayUrl,
   timezone,
+  compact = false,
 }: {
   serviceName: string;
   startAt: string;
@@ -32,6 +33,8 @@ export function GuestVisitSummaryCard({
   depositLineLabel?: string | null;
   depositPayUrl?: string | null;
   timezone?: string;
+  /** Hero already shows treatment / time / staff — sidebar is status + money only. */
+  compact?: boolean;
 }) {
   const showMoney =
     typeof priceMinor === "number" &&
@@ -41,22 +44,26 @@ export function GuestVisitSummaryCard({
   return (
     <Card className="bg-muted/40" data-testid="guest-visit-summary-card">
       <CardContent className="pt-4 space-y-2 text-sm">
-        <div className="flex justify-between gap-2">
-          <span className="text-muted-foreground">Treatment</span>
-          <span className="font-medium text-right">{serviceName}</span>
-        </div>
-        <div className="flex justify-between gap-2">
-          <span className="text-muted-foreground">Date & time</span>
-          <span className="font-medium text-right tabular-nums">
-            {formatDate(startAt, timezone ? { timeZone: timezone } : undefined)}{" "}
-            {formatTime(startAt, timezone ? { timeZone: timezone } : undefined)}
-          </span>
-        </div>
-        {staffDisplayName ? (
-          <div className="flex justify-between gap-2">
-            <span className="text-muted-foreground">With</span>
-            <span className="font-medium text-right">{staffDisplayName}</span>
-          </div>
+        {!compact ? (
+          <>
+            <div className="flex justify-between gap-2">
+              <span className="text-muted-foreground">Treatment</span>
+              <span className="font-medium text-right">{serviceName}</span>
+            </div>
+            <div className="flex justify-between gap-2">
+              <span className="text-muted-foreground">Date & time</span>
+              <span className="font-medium text-right tabular-nums">
+                {formatDate(startAt, timezone ? { timeZone: timezone } : undefined)}{" "}
+                {formatTime(startAt, timezone ? { timeZone: timezone } : undefined)}
+              </span>
+            </div>
+            {staffDisplayName ? (
+              <div className="flex justify-between gap-2">
+                <span className="text-muted-foreground">With</span>
+                <span className="font-medium text-right">{staffDisplayName}</span>
+              </div>
+            ) : null}
+          </>
         ) : null}
         <div className="flex justify-between gap-2 text-xs uppercase tracking-wide text-muted-foreground">
           <span>Status</span>

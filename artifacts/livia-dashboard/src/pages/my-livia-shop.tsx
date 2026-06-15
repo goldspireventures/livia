@@ -7,10 +7,8 @@ import { GuestHubPageHeader, GuestHubShell } from "@/components/guest/guest-hub-
 import { GuestHubLivChat } from "@/components/guest/guest-hub-liv-chat";
 import { formatDateTime } from "@/lib/format";
 import { GUEST_HUB_COPY } from "@workspace/policy";
-import { GuestMyVaultModules } from "@/components/guest/guest-my-vault-modules";
 import { GuestMyArtifactPanels } from "@/components/guest/guest-my-artifact-panels";
-import { GuestStudioEngagementPanel } from "@/components/guest/guest-studio-engagement-panel";
-import { ArrowLeft, CalendarCheck, Heart, MessageSquare } from "lucide-react";
+import { ArrowLeft, CalendarCheck, Heart } from "lucide-react";
 
 const HUB_TOKEN_KEY = "livia_guest_hub_token";
 
@@ -200,25 +198,6 @@ export default function MyLiviaShopPage() {
               shopSlug={slug}
             />
           ) : null}
-
-          <GuestStudioEngagementPanel
-            vertical={data.shop.vertical}
-            bookUrl={data.bookUrl}
-            proofs={
-              data.shop.vertical === "body-art" ? [] : data.verticalArtifacts?.proofs
-            }
-            hubToken={hubToken}
-            shopSlug={slug}
-            onMessage={() => {
-              if (next) window.location.href = next.manageUrl;
-            }}
-          />
-
-          <GuestMyVaultModules
-            vertical={data.shop.vertical}
-            displayOnly={false}
-            bookUrl={data.bookUrl}
-          />
         </div>
 
         <aside className="space-y-6 min-w-0">
@@ -239,21 +218,14 @@ export default function MyLiviaShopPage() {
           ) : null}
 
           <div className="flex flex-col gap-2 sticky top-20">
-            {next ? (
-              <Button asChild className="w-full gap-2 min-h-[44px]">
-                <Link href={next.manageUrl}>
-                  <MessageSquare className="h-4 w-4" />
-                  Manage visit
-                </Link>
-              </Button>
-            ) : (
+            {!next ? (
               <Button asChild variant="secondary" className="w-full gap-2 min-h-[44px]">
                 <a href={data.bookUrl}>
                   <CalendarCheck className="h-4 w-4" />
                   {GUEST_HUB_COPY.bookAgainCta}
                 </a>
               </Button>
-            )}
+            ) : null}
             <Button asChild variant="ghost" className="w-full text-muted-foreground gap-2">
               <Link href="/my">
                 <Heart className="h-4 w-4" />

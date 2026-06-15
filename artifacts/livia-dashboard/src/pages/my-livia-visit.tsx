@@ -9,9 +9,7 @@ import { GuestHubLivChat } from "@/components/guest/guest-hub-liv-chat";
 import { GuestVisitSummaryCard } from "@/components/guest/guest-visit-summary-card";
 import { formatVisitHeroTime } from "@/lib/format";
 import { GUEST_HUB_COPY, guestMyQuickActions } from "@workspace/policy";
-import { GuestMyVaultModules } from "@/components/guest/guest-my-vault-modules";
 import { GuestMyArtifactPanels } from "@/components/guest/guest-my-artifact-panels";
-import { GuestStudioEngagementPanel } from "@/components/guest/guest-studio-engagement-panel";
 import {
   ArrowLeft,
   CalendarCheck,
@@ -226,19 +224,6 @@ export default function MyLiviaVisitPage() {
             ) : null}
           </section>
 
-          <GuestStudioEngagementPanel
-            vertical={b.vertical}
-            bookUrl={data.bookUrl}
-            proofs={data.verticalArtifacts?.proofs}
-            hubToken={hubToken}
-            shopSlug={slug}
-            onMessage={() =>
-              document
-                .getElementById("guest-hub-visit-message")
-                ?.scrollIntoView({ behavior: "smooth", block: "start" })
-            }
-          />
-
           {data.relationship?.memoryHighlight ? (
             <p
               className="text-sm text-muted-foreground border-l-2 border-primary/40 pl-3"
@@ -268,10 +253,9 @@ export default function MyLiviaVisitPage() {
               artifacts={data.verticalArtifacts}
               vertical={b.vertical}
               hideProofs
+              hideWellnessPrep={data.prepNotes.length > 0}
             />
           ) : null}
-
-          <GuestMyVaultModules vertical={b.vertical} displayOnly={false} bookUrl={data.bookUrl} />
         </div>
 
         <aside className="lg:col-span-2 space-y-6 min-w-0">
@@ -289,6 +273,7 @@ export default function MyLiviaVisitPage() {
             depositLineLabel={b.depositLine?.label}
             depositPayUrl={data.depositPayUrl}
             timezone={b.timezone}
+            compact
           />
 
           {message ? (

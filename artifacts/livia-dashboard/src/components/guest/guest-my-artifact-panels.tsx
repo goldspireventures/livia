@@ -69,6 +69,7 @@ export function GuestMyArtifactPanels({
   artifacts,
   vertical,
   hideProofs = false,
+  hideWellnessPrep = false,
   hubToken,
   shopSlug,
 }: {
@@ -76,6 +77,8 @@ export function GuestMyArtifactPanels({
   vertical?: string | null;
   /** Visit page renders proofs in the engagement strip — avoid duplicate cards. */
   hideProofs?: boolean;
+  /** Prep list already shown in visit manage — skip duplicate wellness card. */
+  hideWellnessPrep?: boolean;
   hubToken?: string | null;
   shopSlug?: string | null;
 }) {
@@ -86,7 +89,7 @@ export function GuestMyArtifactPanels({
   const hasVehicle = Boolean(artifacts.vehicleHighlight);
   const hasConsent = consentItems.length > 0;
   const hasCarePlan = Boolean(artifacts.carePlan);
-  const hasWellnessPrep = wellnessPrep.length > 0;
+  const hasWellnessPrep = !hideWellnessPrep && wellnessPrep.length > 0;
   const hasStylist = Boolean(artifacts.preferredStylist);
   const hasBeautyMemory = Boolean(
     artifacts.beautyMemory?.fillDueHint || artifacts.beautyMemory?.patchTestValid === false,
