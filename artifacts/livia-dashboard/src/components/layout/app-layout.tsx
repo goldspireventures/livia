@@ -14,9 +14,12 @@ import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { LiviaLogoLink } from "@/components/brand/livia-logo-link";
 import {
-  applyTenantPresentationSurface,
   resolvePresentationColorMode,
 } from "@/lib/experience-theme";
+import {
+  applyTenantPresentationSkin,
+  warmTenantPresentationSkin,
+} from "@/lib/tenant-presentation-sync";
 import {
   applyAppearancePreviewFromSearch,
   isAppearanceEmbed,
@@ -180,8 +183,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
   useLayoutEffect(() => {
     if (!bid) return;
+    const biz = business as { vertical?: string; category?: string; country?: string } | null;
+    warmTenantPresentationSkin(queryClient, bid, biz, persona);
     applyTenantShellFromCache(queryClient, bid);
-  }, [bid, queryClient]);
+  }, [bid, business, persona, queryClient]);
 
   useLayoutEffect(() => {
     return () => {
@@ -210,15 +215,18 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
     const p = tenantExperience?.presentation;
     const colorMode = p?.tokens?.colorMode;
-    applyTenantPresentationSurface({
-      vertical: biz?.vertical ?? teVertical ?? null,
-      category: biz?.category ?? null,
-      country: biz?.country ?? null,
+    applyTenantPresentationSkin(
+      {
+        businessId: bid,
+        vertical: biz?.vertical ?? teVertical ?? null,
+        category: biz?.category ?? null,
+        country: biz?.country ?? null,
+        cssPreset: p?.cssPreset ?? "platform-default",
+        brandAccentHex: p?.brandAccentHex,
+        colorMode: colorMode === "light" || colorMode === "dark" ? colorMode : null,
+      },
       persona,
-      cssPreset: p?.cssPreset ?? "platform-default",
-      brandAccentHex: p?.brandAccentHex,
-      colorMode: colorMode === "light" || colorMode === "dark" ? colorMode : null,
-    });
+    );
     if (colorMode === "light" || colorMode === "dark") {
       setTheme(colorMode);
     }

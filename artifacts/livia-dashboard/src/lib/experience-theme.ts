@@ -314,6 +314,10 @@ export function clearPresentationTheme(root?: HTMLElement | null) {
  * Single hub for W4/W5 tenant skin — vertical + presentation preset + color mode.
  * Settings preview, dashboard shell, and public /b must all use this so policy/CSS
  * presets propagate without per-surface drift.
+ *
+ * Authenticated tenant surfaces: always pass `cssPreset` (default platform-default).
+ * Vertical inline `--primary` is skipped whenever a preset is active — public /b
+ * still uses full vertical colors via `includeVerticalColorTokens`.
  */
 export function applyTenantPresentationSurface(args: {
   vertical?: string | null;

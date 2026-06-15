@@ -4,7 +4,11 @@ import {
   getGetDashboardSummaryQueryOptions,
   getGetMyBusinessesQueryOptions,
 } from "@workspace/api-client-react";
-import { applyTenantPresentationSurface, resolvePresentationColorMode } from "@/lib/experience-theme";
+import { resolvePresentationColorMode } from "@/lib/experience-theme";
+import {
+  applyTenantPresentationSkin,
+  type TenantPresentationSkin,
+} from "@/lib/tenant-presentation-sync";
 import {
   fetchTenantExperience,
   type TenantExperienceResponse,
@@ -45,11 +49,13 @@ export function applyTenantShellFromCache(
     p?.tokens?.colorMode === "light" || p?.tokens?.colorMode === "dark"
       ? p.tokens.colorMode
       : resolvePresentationColorMode(p?.cssPreset);
-  applyTenantPresentationSurface({
+  const skin: TenantPresentationSkin = {
+    businessId,
     vertical: te.vertical,
     cssPreset: p?.cssPreset ?? "platform-default",
     brandAccentHex: p?.brandAccentHex,
     colorMode: colorMode ?? null,
-  });
+  };
+  applyTenantPresentationSkin(skin);
   return true;
 }

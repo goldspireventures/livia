@@ -1,6 +1,11 @@
 import { createContext, useContext, ReactNode, useState, useEffect, useMemo, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Business } from "@workspace/api-client-react";
+import {
+  prefetchTenantDashboardShell,
+  applyTenantShellFromCache,
+} from "@/lib/prefetch-tenant-dashboard";
+import { warmTenantPresentationSkin } from "@/lib/tenant-presentation-sync";
 
 const STORAGE_KEY = "livia.currentBusinessId";
 const LEGACY_KEYS = ["livia_current_business_id"];
@@ -111,6 +116,12 @@ export function BusinessProvider({
         window.localStorage.removeItem("livia.viewingAsStaffId");
       } catch {
         // ignore
+      }
+      if (b?.id) {
+        warmTenantPresentationSkin(qc, b.id, b as Business);
+        void prefetchTenantDashboardShell(qc, b.id).then(() => {
+          applyTenantShellFromCache(qc, b.id);
+        });
       }
       // Invalidate all per-business queries so the UI repaints with the new tenant.
       qc.invalidateQueries();

@@ -14,7 +14,14 @@ import { isDemoAccountEmail, isDemoTenantSlug } from "@/lib/demo-tenant";
 import { FOUNDER_DEMO_LAUNCHER_PATH } from "@/lib/demo-routes";
 import { isOnboardingAppUnlocked, type OnboardingState } from "@workspace/policy";
 import { PlatformExecHandoff } from "@/components/platform-exec-handoff";
-import { prefetchTenantDashboardShell, applyTenantShellFromCache } from "@/lib/prefetch-tenant-dashboard";
+import {
+  applyTenantPresentationSkin,
+  warmTenantPresentationSkin,
+} from "@/lib/tenant-presentation-sync";
+import {
+  prefetchTenantDashboardShell,
+  applyTenantShellFromCache,
+} from "@/lib/prefetch-tenant-dashboard";
 
 // On first authenticated load, sweep up any pending Clerk invitations
 // and turn them into business_memberships rows. Idempotent + cheap, so
@@ -132,10 +139,11 @@ function BusinessDataLoader({
   useEffect(() => {
     const businessId = initialBusiness?.id;
     if (!businessId) return;
+    warmTenantPresentationSkin(queryClient, businessId, initialBusiness, "owner");
     void prefetchTenantDashboardShell(queryClient, businessId).then(() => {
       applyTenantShellFromCache(queryClient, businessId);
     });
-  }, [initialBusiness?.id, queryClient]);
+  }, [initialBusiness, queryClient]);
 
   if (isLoading) {
     return (
