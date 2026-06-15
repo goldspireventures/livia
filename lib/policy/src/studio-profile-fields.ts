@@ -26,7 +26,7 @@ const FIELD: Record<StudioProfileFieldId, Omit<StudioProfileFieldDef, "id">> = {
   name: { label: "Business name", required: true, section: "primary" },
   slug: {
     label: "Booking link slug",
-    hint: "Your public URL: /b/{slug}",
+    hint: "Your guest book URL: {slug}.livia-hq.com (or /book/{slug} in dev)",
     required: true,
     section: "primary",
   },

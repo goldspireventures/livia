@@ -28,7 +28,7 @@ import { fetchTenantExperience } from "@/lib/tenant-experience";
 import { verticalAccentHex } from "@/lib/vertical-theme";
 import { verticalPackUi } from "@/lib/vertical-pack-ui";
 import { getDashboardBaseUrl } from "@/lib/dashboard-url";
-import { getPublicBookingUrl } from "@/lib/public-booking-url";
+import { getPublicBookingUrl, getPublicBookingLabel } from "@/lib/public-booking-url";
 import {
   blockingOnboardingPercent,
   isOnboardingAppUnlocked,
@@ -361,7 +361,7 @@ export default function OnboardingSetupScreen() {
           {currentAct === "a8_public_link" ? (
             <View style={{ gap: 10 }}>
               <Text style={{ color: colors.mutedForeground, fontSize: 14, lineHeight: 20 }}>
-                Your booking page is live{slug ? ` at /b/${slug}` : ""}. Open it to test, then continue.
+                Your booking page is live{slug ? ` at ${getPublicBookingLabel(slug)}` : ""}. Open it to test, then continue.
               </Text>
               {publicUrl ? (
                 <Pressable

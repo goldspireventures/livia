@@ -9,6 +9,7 @@ assert.equal(DEMO_END_CLIENTS.length, 3);
 assert.equal(DEMO_END_CLIENTS[0]?.id, "mary");
 assert.equal(DEMO_END_CLIENTS[1]?.phoneE164, "+353871000002");
 assert.ok(DEMO_END_CLIENTS[0]!.linkedSlugs.length >= 9);
+assert.ok(DEMO_END_CLIENTS[0]!.packageCreditSlugs?.includes("peak-fitness-dublin"));
 assert.ok(DEMO_END_CLIENTS[1]!.linkedSlugs.includes("stoneybatter-cuts"));
 assert.ok(DEMO_END_CLIENTS[2]!.packageCreditSlugs?.includes("dundrum-serenity-spa"));
 

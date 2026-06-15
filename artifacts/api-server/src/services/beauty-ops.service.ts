@@ -17,6 +17,7 @@ import {
 } from "@workspace/policy";
 import { getAvailableSlots } from "./slots.service";
 import { listServices } from "./services.service";
+import { resolveGuestManageVisitUrl } from "../lib/guest-public-urls";
 
 function addMinutes(d: Date, m: number): Date {
   return new Date(d.getTime() + m * 60_000);
@@ -230,7 +231,7 @@ export async function getBeautyWalletPassMeta(
 
   if (!row) return null;
 
-  const visitUrl = `${baseUrl.replace(/\/$/, "")}/visit/${bookingId}`;
+  const visitUrl = resolveGuestManageVisitUrl(row.slug, bookingId);
   return {
     visitUrl,
     serviceName: row.serviceName,

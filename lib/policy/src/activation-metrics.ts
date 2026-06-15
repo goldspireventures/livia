@@ -37,6 +37,16 @@ export function formatActivationDuration(ms: number): string {
   return `${days} day${days === 1 ? "" : "s"}`;
 }
 
+/** Owner lifecycle funnel — sacred metric + setup progress copy. */
+export const ACTIVATION_FUNNEL_COPY = {
+  title: "Activation checklist",
+  sacredMetricLabel: "First booking received",
+  sacredMetricMet: "Activated — your first booking is on the books.",
+  sacredMetricPending: "Sacred metric — get your first booking to activate Livia for real.",
+  timeToFirstBooking: "Time to first booking",
+  stepsComplete: "Setup steps complete",
+} as const;
+
 export function resolveActivationStatus(args: {
   sacredMetricMet: boolean;
   activationStepsComplete: number;

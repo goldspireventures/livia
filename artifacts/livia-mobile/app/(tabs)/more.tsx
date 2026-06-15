@@ -183,7 +183,7 @@ export default function MoreScreen() {
                 </Text>
                 {biz.slug && (
                   <Text style={[styles.bizSlug, { color: colors.mutedForeground }]}>
-                    /b/{biz.slug}
+                    {getPublicBookingLabel(biz.slug)}
                   </Text>
                 )}
               </View>

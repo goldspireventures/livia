@@ -54,7 +54,7 @@ const ACCOUNTS = [
 
 const SPOTLIGHT_SLUGS = [
   { slug: "aurora-studio", label: "Aurora Studio", note: "IE chain flagship · Liv moments + inbox" },
-  { slug: "london-rose-spa", label: "Rose Spa London", note: "GB market · public /b/" },
+  { slug: "london-rose-spa", label: "Rose Spa London", note: "GB market · guest book" },
   { slug: "berlin-studio-neun", label: "Studio Neun Berlin", note: "DE market" },
   { slug: "paris-belle-vue", label: "Belle Vue Paris", note: "FR market" },
   { slug: "clarity-medspa-dublin", label: "Clarity Medspa", note: "Medspa consent on book" },

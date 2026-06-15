@@ -1,6 +1,7 @@
 import type { Business } from "@workspace/db";
 import type { LivSlot, LivToolDeps } from "@workspace/liv-runtime";
 import { recordEvalTraceForTool } from "./eval-traces";
+import { resolveGuestBookPath } from "./guest-public-urls";
 import { createBookingViaLiv } from "../services/liv-booking.service";
 import { getAvailableSlots } from "../services/slots.service";
 import { sendStaffMessage } from "../services/conversations.service";
@@ -448,7 +449,7 @@ export function buildLivToolDeps(args: {
           cssPreset: preset.cssPreset,
           currentPresetId: current.presetId,
           dashboardPreviewPath: `/dashboard?appearanceEmbed=1&${presetQs}${accentQs}`,
-          publicPreviewUrl: business.slug ? `/book/${business.slug}` : null,
+          publicPreviewUrl: business.slug ? resolveGuestBookPath(business.slug) : null,
           note: "Show preview to owner, then call apply_presentation_preset with confirm: true.",
         };
       } catch {
@@ -654,7 +655,7 @@ export function buildLivToolDeps(args: {
       }
       return {
         ok: true,
-        publicPath: `/book/${business.slug}`,
+        publicPath: resolveGuestBookPath(business.slug),
         slug: business.slug,
         onboardingAct: "a8_public_link",
         percentComplete: onboarding.state.percentComplete,

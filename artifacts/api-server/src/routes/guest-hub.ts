@@ -205,6 +205,31 @@ router.post(
   },
 );
 
+router.get(
+  "/public/guest-hub/shops/:slug/visits/:bookingId/messages",
+  async (req, res): Promise<void> => {
+    const token = typeof req.headers["x-guest-hub-token"] === "string" ? req.headers["x-guest-hub-token"] : "";
+    const slug = Array.isArray(req.params.slug) ? req.params.slug[0] : req.params.slug;
+    const bookingId = Array.isArray(req.params.bookingId)
+      ? req.params.bookingId[0]
+      : req.params.bookingId;
+    if (!token) {
+      sendError(res, req, 401, "Guest hub token required");
+      return;
+    }
+    try {
+      const { listGuestVisitMessages } = await import("../services/guest-hub-visit.service");
+      res.json(await listGuestVisitMessages(token, slug ?? "", bookingId ?? ""));
+    } catch (e) {
+      if (e instanceof Error && (e.message === "NOT_FOUND" || e.message === "UNAUTHORIZED")) {
+        sendError(res, req, 404, "Visit not found");
+        return;
+      }
+      throw e;
+    }
+  },
+);
+
 router.post(
   "/public/guest-hub/shops/:slug/visits/:bookingId/message",
   async (req, res): Promise<void> => {

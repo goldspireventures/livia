@@ -10,6 +10,7 @@ import { GuestVisitSummaryCard } from "@/components/guest/guest-visit-summary-ca
 import { formatVisitHeroTime } from "@/lib/format";
 import { GUEST_HUB_COPY, guestMyQuickActions, formatBookingStatusLabel } from "@workspace/policy";
 import { GuestMyArtifactPanels } from "@/components/guest/guest-my-artifact-panels";
+import { GuestMyVaultModules } from "@/components/guest/guest-my-vault-modules";
 import {
   ArrowLeft,
   CalendarCheck,
@@ -18,6 +19,13 @@ import {
   MessageSquare,
 } from "lucide-react";
 const HUB_TOKEN_KEY = "livia_guest_hub_token";
+
+type ThreadMessage = {
+  id: string;
+  role: string;
+  content: string;
+  createdAt: string;
+};
 
 type VisitPayload = {
   booking: {
@@ -90,6 +98,7 @@ export default function MyLiviaVisitPage() {
     typeof window !== "undefined" ? localStorage.getItem(HUB_TOKEN_KEY) : null,
   );
   const [data, setData] = useState<VisitPayload | null>(null);
+  const [thread, setThread] = useState<ThreadMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [replyDraft, setReplyDraft] = useState("");
@@ -102,15 +111,28 @@ export default function MyLiviaVisitPage() {
       return;
     }
     setLoading(true);
-    fetch(`/api/public/guest-hub/shops/${encodeURIComponent(slug)}/visits/${encodeURIComponent(bookingId)}`, {
-      headers: { "X-Guest-Hub-Token": hubToken },
-    })
-      .then(async (r) => {
+    Promise.all([
+      fetch(`/api/public/guest-hub/shops/${encodeURIComponent(slug)}/visits/${encodeURIComponent(bookingId)}`, {
+        headers: { "X-Guest-Hub-Token": hubToken },
+      }).then(async (r) => {
         if (!r.ok) throw new Error("not found");
         return r.json() as Promise<VisitPayload>;
+      }),
+      fetch(
+        `/api/public/guest-hub/shops/${encodeURIComponent(slug)}/visits/${encodeURIComponent(bookingId)}/messages`,
+        { headers: { "X-Guest-Hub-Token": hubToken } },
+      )
+        .then(async (r) => (r.ok ? r.json() : { messages: [] }))
+        .then((payload: { messages?: ThreadMessage[] }) => payload.messages ?? []),
+    ])
+      .then(([visit, messages]) => {
+        setData(visit);
+        setThread(messages);
       })
-      .then(setData)
-      .catch(() => setData(null))
+      .catch(() => {
+        setData(null);
+        setThread([]);
+      })
       .finally(() => setLoading(false));
   }, [hubToken, slug, bookingId]);
 
@@ -158,6 +180,14 @@ export default function MyLiviaVisitPage() {
       if (!r.ok) throw new Error("failed");
       setReplyDraft("");
       setMessage(GUEST_HUB_COPY.messageSent);
+      const refreshed = await fetch(
+        `/api/public/guest-hub/shops/${encodeURIComponent(slug)}/visits/${encodeURIComponent(bookingId)}/messages`,
+        { headers: { "X-Guest-Hub-Token": hubToken } },
+      );
+      if (refreshed.ok) {
+        const payload = (await refreshed.json()) as { messages?: ThreadMessage[] };
+        setThread(payload.messages ?? []);
+      }
     } catch {
       setErr(GUEST_HUB_COPY.actionFailed);
     } finally {
@@ -247,6 +277,12 @@ export default function MyLiviaVisitPage() {
               </ul>
             </section>
           ) : null}
+
+          <GuestMyVaultModules
+            vertical={b.vertical}
+            displayOnly={false}
+            bookUrl={data.bookUrl}
+          />
 
           {data.verticalArtifacts ? (
             <GuestMyArtifactPanels
@@ -338,6 +374,33 @@ export default function MyLiviaVisitPage() {
               {GUEST_HUB_COPY.messageStudioTitle}
             </h2>
             <p className="text-xs text-muted-foreground">{GUEST_HUB_COPY.messageStudioBody}</p>
+            {thread.length > 0 ? (
+              <div
+                className="rounded-lg border border-border/60 bg-muted/30 p-3 space-y-2 max-h-48 overflow-y-auto"
+                data-testid="guest-hub-visit-thread"
+              >
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">
+                  {GUEST_HUB_COPY.threadHistoryTitle}
+                </p>
+                {thread.map((m) => (
+                  <div
+                    key={m.id}
+                    className={
+                      m.role === "USER"
+                        ? "text-sm rounded-md bg-background border border-border/50 px-3 py-2"
+                        : "text-sm rounded-md bg-primary/5 border border-primary/20 px-3 py-2"
+                    }
+                  >
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
+                      {m.role === "USER" ? "You" : "Studio"}
+                    </p>
+                    <p>{m.content}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">{GUEST_HUB_COPY.threadHistoryEmpty}</p>
+            )}
             <Textarea
               placeholder={GUEST_HUB_COPY.messagePlaceholder}
               value={replyDraft}

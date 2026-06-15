@@ -4,6 +4,7 @@ import { BookOpen, KeyRound } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LifecycleNudges } from "@/components/lifecycle/lifecycle-nudges";
+import { ActivationFunnelPanel } from "@/components/lifecycle/activation-funnel-panel";
 import { fetchUserLifecycle, type GraduationSuggestion } from "@/lib/lifecycle-api";
 import { useMembership } from "@/lib/membership-context";
 import { useBusiness } from "@/lib/business-context";
@@ -54,6 +55,8 @@ export default function LifecyclePage() {
       </div>
 
       {role === "OWNER" ? <LifecycleNudges /> : null}
+
+      {role === "OWNER" ? <ActivationFunnelPanel /> : null}
 
       {suggestions.length > 0 ? (
         <Card>

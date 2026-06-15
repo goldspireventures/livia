@@ -158,8 +158,8 @@ export default function PortalPage() {
             <CardDescription>Customer POV — no login</CardDescription>
           </CardHeader>
           <CardContent>
-            <Link href="/b/aurora-studio">
-              <span className="text-sm text-primary font-medium">/b/aurora-studio →</span>
+            <Link href="/book/aurora-studio">
+              <span className="text-sm text-primary font-medium">Guest book →</span>
             </Link>
           </CardContent>
         </Card>

@@ -95,7 +95,7 @@ export const DEMO_END_CLIENTS: DemoEndClient[] = [
       "Multi-vertical regular — colour, lash, spa, tattoo consult, physio plan. Tests `/my` vault breadth.",
     linkedSlugs: DEMO_GUEST_SHOWCASE_SLUGS,
     upcomingDaysBySlug: MARY_GUEST_HUB_UPCOMING_DAYS,
-    packageCreditSlugs: ["harbour-wellness-cork"],
+    packageCreditSlugs: ["harbour-wellness-cork", "peak-fitness-dublin"],
   },
   {
     id: "sean",

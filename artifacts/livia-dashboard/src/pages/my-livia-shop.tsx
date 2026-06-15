@@ -8,6 +8,7 @@ import { GuestHubLivChat } from "@/components/guest/guest-hub-liv-chat";
 import { formatDateTime } from "@/lib/format";
 import { GUEST_HUB_COPY } from "@workspace/policy";
 import { GuestMyArtifactPanels } from "@/components/guest/guest-my-artifact-panels";
+import { GuestMyVaultModules } from "@/components/guest/guest-my-vault-modules";
 import { ArrowLeft, CalendarCheck, Heart } from "lucide-react";
 
 const HUB_TOKEN_KEY = "livia_guest_hub_token";
@@ -169,6 +170,12 @@ export default function MyLiviaShopPage() {
               {data.relationship.memoryHighlight}
             </p>
           ) : null}
+
+          <GuestMyVaultModules
+            vertical={data.shop.vertical}
+            displayOnly={false}
+            bookUrl={data.bookUrl}
+          />
 
           {next ? (
             <Link href={next.manageUrl}>

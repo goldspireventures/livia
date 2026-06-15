@@ -84,6 +84,15 @@ export const EVENT_CATALOG: EventCatalogEntry[] = [
     domainBusKey: "booking.completed",
   },
   {
+    name: "BookingRescheduled",
+    category: "scheduling",
+    owner: "bookings-domain",
+    importance: "high",
+    analyticsType: "BOOKING_RESCHEDULED",
+    domainBusKey: "booking.rescheduled",
+    v1Required: true,
+  },
+  {
     name: "CustomerCreated",
     category: "people",
     owner: "people-domain",

@@ -1,6 +1,6 @@
 # Livia — top-level status
 
-**Updated:** 2026-06-15 (production readiness rubric + guest UX hardening)  
+**Updated:** 2026-06-15 (Era 1 D0–D4 engineering wave)  
 **Readiness scores:** `pnpm readiness:score` · [`REPO-VS-BLUEPRINT-GAP-MATRIX.md`](product/REPO-VS-BLUEPRINT-GAP-MATRIX.md)  
 **Read this first** for “are we finished?” — execution sequencing: [`product/LIVIA-MASTER-EXECUTION-PLAN-V3.md`](product/LIVIA-MASTER-EXECUTION-PLAN-V3.md).  
 **GTM + vertical parity:** [`product/GTM-VERTICAL-DEPTH-PROGRAM.md`](product/GTM-VERTICAL-DEPTH-PROGRAM.md).  
@@ -68,18 +68,20 @@
 
 | Wave | Focus | Status |
 |------|-------|--------|
-| **D0** (wk 1–4) | Wildcard subdomain book; subvertical profiles; `/my` visit shell v1; owner book-link parity | **In progress** |
-| **D1** (wk 5–10) | `/my/{slug}` vertical morph; guest thread API; retire `/b` redirects | Queued |
-| **D2–D4** | Relationship entity, pack/credit surfaces, innovation P1 | Queued |
+| **D0** (wk 1–4) | Wildcard subdomain book; subvertical profiles; `/my` visit shell v1; owner book-link parity | **Done (engineering)** — staging DNS flag pending |
+| **D1** (wk 5–10) | `/my/{slug}` vertical morph; guest thread read API; vault module grid | **Done (engineering)** |
+| **D2–D4** | Mary demo artifacts; pack/credit on `/my`; `BookingRescheduled`; activation funnel | **Done (engineering)** — D2 relationship table still derived |
 
 | Item | Notes |
 |------|-------|
-| **Guest book URLs (D0)** | Owner surfaces use `publicBookingUrl` / policy helpers — not hardcoded `/book/` |
-| **Sub-segment onboarding** | `subverticalProfileId` at create — wizard step live; starter packs per profile |
-| **Guest surfaces** | Retire user-facing `/b` → **`{slug}.livia-hq.com`** when `VITE_GUEST_SUBDOMAIN_LIVE` |
-| **Activation tracking** | Sacred metric wired; `pnpm test:e2e:guest-care-aftercare` for complete → draft → send |
-| **Your UAT** | Nine-slug showcase + guest hub — [`FOUNDER-UAT-CHECKLIST.md`](operations/FOUNDER-UAT-CHECKLIST.md) |
-| Staging | **`livia-stg`** only — [`VERCEL-DEPLOY-ENVIRONMENTS.md`](operations/VERCEL-DEPLOY-ENVIRONMENTS.md) |
+| **Guest book URLs (D0)** | Policy helpers end-to-end; legacy `/b` redirects remain for bookmarks |
+| **Guest thread (D1)** | `GET …/visits/:id/messages` + thread history on `/my` visit |
+| **`/my` vault modules** | `GuestMyVaultModules` wired on shop + visit with scroll targets |
+| **Mary demo breadth (D3)** | `seedDemoGuestHub` + `ensureMaryGuestHubArtifacts` — pets, vehicle, beauty, medspa, physio plan, fitness class |
+| **Fitness pack (D3)** | `peak-fitness-dublin` in Mary's `packageCreditSlugs` |
+| **BookingRescheduled (Q3)** | `EVENT_CATALOG` + domain bus + analytics emit on reschedule |
+| **Activation funnel (Q4)** | Owner `/lifecycle` sacred-metric checklist panel |
+| **Subdomain live** | Enable `VITE_GUEST_SUBDOMAIN_LIVE` + API `GUEST_BOOK_HOST_SUFFIX` when DNS ready |
 
 ---
 
@@ -135,6 +137,7 @@ Detail logs: `docs/operations/R1-BUILD-STATUS.md`, `PROGRAM-ENGINEERING-EXIT.md`
 
 | Date | Change |
 |------|--------|
+| 2026-06-15 | Era 1 D0–D4 engineering wave — guest thread GET, vault modules, Mary artifacts, BookingRescheduled, activation funnel |
 | 2026-06-15 | Era 1 Q1 kickoff — D0 owner book-link parity; readiness rubric; Bucket C 80% |
 | 2026-06-15 | Guest placement contract + Liv Era 1 doc (§16); `/book` deposit in summary, silent hub autofill, universal deposits |
 | 2026-06-05 | GTM Wave 1 lock — nine verticals, one bar; subdomain + `/my`; innovation program; retire `/b` UX |

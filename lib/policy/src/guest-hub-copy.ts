@@ -48,6 +48,8 @@ export const GUEST_HUB_COPY = {
   messageStudioBody: "Goes to their inbox — the team will reply on your thread.",
   messagePlaceholder: "Running late, change request, or a question…",
   messageSent: "Message sent — the studio will reply on your thread.",
+  threadHistoryTitle: "Your thread",
+  threadHistoryEmpty: "No messages yet — say hello if you need anything before your visit.",
   runningLateConfirmed: "We've let the team know you're on your way.",
   actionFailed: "Something went wrong — try again.",
   signInRequired: "Sign in to manage this visit.",

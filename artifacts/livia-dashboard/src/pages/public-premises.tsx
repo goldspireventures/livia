@@ -108,7 +108,7 @@ export default function PublicPremisesPage() {
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  navigate(`/b/${t.slug}`);
+                  navigate(`/book/${t.slug}`);
                 }
               }}
             >

@@ -9,6 +9,7 @@ import {
 import { and, eq, sql } from "drizzle-orm";
 import { db, staffTable } from "@workspace/db";
 import { getBusinessById } from "./businesses.service";
+import { resolveGuestBookPath } from "../lib/guest-public-urls";
 import {
   buildTenantExperienceFingerprint,
   getCachedTenantExperience,
@@ -74,7 +75,7 @@ async function buildTenantExperience(biz: NonNullable<Awaited<ReturnType<typeof 
     },
     publicAppearance: {
       slug: biz.slug,
-      publicPreviewUrl: `/book/${biz.slug}`,
+      publicPreviewUrl: resolveGuestBookPath(biz.slug),
       logoUrl: biz.logoUrl ?? null,
       coverImageUrl: biz.coverImageUrl ?? null,
       brandAccentHex: biz.brandAccentHex ?? null,

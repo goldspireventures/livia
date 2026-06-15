@@ -33,6 +33,12 @@ export const eventRegistry = {
     reason: z.string().nullable(),
   }),
   "booking.completed": z.object({ businessId: z.string(), bookingId: z.string() }),
+  "booking.rescheduled": z.object({
+    businessId: z.string(),
+    bookingId: z.string(),
+    previousStartAt: z.string().datetime(),
+    newStartAt: z.string().datetime(),
+  }),
   "booking.no-show": z.object({ businessId: z.string(), bookingId: z.string() }),
 
   // Conversations / inbox

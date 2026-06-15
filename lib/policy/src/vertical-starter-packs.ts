@@ -123,49 +123,49 @@ const STARTER_OFFERS: Record<BusinessVertical, Omit<VerticalStarterPackOffer, "s
   hair: {
     label: "Start with template menu + shop",
     description:
-      "Cuts, colour, and styling plus take-home bundles on your /b page — edit or remove anything after.",
-    extraLine: `Up to ${TENANT_RETAIL_PROGRAM.maxActiveProducts} retail SKUs on your /b page.`,
+      "Cuts, colour, and styling plus take-home bundles on your guest book page — edit or remove anything after.",
+    extraLine: `Up to ${TENANT_RETAIL_PROGRAM.maxActiveProducts} retail SKUs on your guest book page.`,
   },
   beauty: {
     label: "Start with template menu + mini store",
     description:
-      "Lash, nail, and brow treatments plus take-home products on your /b page — edit or remove anything after.",
-    extraLine: `${TENANT_RETAIL_PROGRAM.maxActiveProducts} aftercare products on your /b page.`,
+      "Lash, nail, and brow treatments plus take-home products on your guest book page — edit or remove anything after.",
+    extraLine: `${TENANT_RETAIL_PROGRAM.maxActiveProducts} aftercare products on your guest book page.`,
   },
   "body-art": {
     label: "Start with template menu + aftercare shop",
     description: "Consult, sessions, piercing, and aftercare retail — ready to customise.",
-    extraLine: "Aftercare products on your /b page.",
+    extraLine: "Aftercare products on your guest book page.",
   },
   wellness: {
     label: "Start with template session menu + ritual retail",
-    description: "Massage lengths and take-home oils on your /b page — tune for your rooms.",
-    extraLine: "Post-session retail on your /b page.",
+    description: "Massage lengths and take-home oils on your guest book page — tune for your rooms.",
+    extraLine: "Post-session retail on your guest book page.",
   },
   fitness: {
     label: "Start with template session menu + studio shop",
-    description: "PT, classes, and merch on your /b page — adjust for your studio model.",
-    extraLine: "Studio shop on your /b page.",
+    description: "PT, classes, and merch on your guest book page — adjust for your studio model.",
+    extraLine: "Studio shop on your guest book page.",
   },
   medspa: {
     label: "Start with template procedure menu + skincare retail",
     description: "Consult, injectables, and home-care SKUs — align with your consent flow.",
-    extraLine: "Retail skincare on your /b page.",
+    extraLine: "Retail skincare on your guest book page.",
   },
   "allied-health": {
     label: "Start with template session menu + support products",
     description: "Assessment sessions and home support SKUs — set your clinical durations.",
-    extraLine: "Support products on your /b page.",
+    extraLine: "Support products on your guest book page.",
   },
   "pet-grooming": {
     label: "Start with template groom menu + pet retail",
     description: "Full grooms, bath & tidy, and take-home treats — edit for your salon.",
-    extraLine: "Pet retail on your /b page.",
+    extraLine: "Pet retail on your guest book page.",
   },
   "automotive-detailing": {
     label: "Start with template service menu + care products",
-    description: "Wash through full detail plus maintenance kits on your /b page.",
-    extraLine: "Care products on your /b page.",
+    description: "Wash through full detail plus maintenance kits on your guest book page.",
+    extraLine: "Care products on your guest book page.",
   },
   "event-vendors": {
     label: "Start with a decor catalogue",

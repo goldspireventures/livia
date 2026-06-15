@@ -5,12 +5,18 @@ import {
   businessesTable,
   customersTable,
   guestIdentitiesTable,
+  medspaConsentRecordsTable,
   packageCreditLedgerTable,
+  petsTable,
   servicesTable,
   staffTable,
+  classSessionsTable,
+  classEnrollmentsTable,
 } from "@workspace/db";
 import {
   DEMO_END_CLIENTS,
+  MEDSPA_PROCEDURES,
+  getDemoEndClient,
   guestHubDemoBookingNote,
   normalizePhoneE164,
   type DemoEndClient,
@@ -300,6 +306,156 @@ async function seedEndClient(client: DemoEndClient): Promise<{
   return { guestId, shopsLinked, upcomingEnsured };
 }
 
+/** Mary-specific vertical artifacts so `/my` morph panels are populated across all 9 showcase shops. */
+async function ensureMaryGuestHubArtifacts(): Promise<{ shopsTouched: number }> {
+  const mary = getDemoEndClient("mary");
+  let shopsTouched = 0;
+
+  for (const slug of mary.linkedSlugs) {
+    const [biz] = await db
+      .select({ id: businessesTable.id, vertical: businessesTable.vertical })
+      .from(businessesTable)
+      .where(eq(businessesTable.slug, slug))
+      .limit(1);
+    if (!biz) continue;
+
+    const customerId = await ensureGuestCustomer(biz.id, mary);
+    shopsTouched += 1;
+
+    if (slug === "paws-parlour-dublin") {
+      const [existingPet] = await db
+        .select({ id: petsTable.id })
+        .from(petsTable)
+        .where(and(eq(petsTable.businessId, biz.id), eq(petsTable.customerId, customerId)))
+        .limit(1);
+      if (!existingPet) {
+        const { createPet } = await import("./pets.service");
+        await createPet(biz.id, customerId, {
+          name: "Baxter",
+          species: "dog",
+          breed: "Cockapoo",
+          behaviourNotes: "Nervous with dryers — prefers quiet corner.",
+          allergyNotes: "Chicken-free treats only.",
+        });
+      }
+    }
+
+    if (slug === "shine-studio-belfast") {
+      const { appendLivMemory } = await import("./liv-memory.service");
+      await appendLivMemory({
+        businessId: biz.id,
+        entityType: "customer",
+        entityId: customerId,
+        kind: "preference",
+        content: "2021 Audi A4 · ceramic coat due spring · prefers Saturday morning slots.",
+        createdBy: "liv",
+        ttlDays: 365,
+      });
+    }
+
+    if (slug === "bloom-beauty-dublin") {
+      const patchDate = new Date();
+      patchDate.setMonth(patchDate.getMonth() - 2);
+      await db
+        .update(customersTable)
+        .set({
+          beautyPreferences: {
+            lashCurl: "CC",
+            lashLength: "12mm",
+            lashStyle: "Classic",
+            nailShape: "almond",
+            adhesiveSensitivity: false,
+            formulaNotes: "Prefers warm brown balayage · quiet chair.",
+          },
+          patchTestCompletedAt: patchDate,
+        })
+        .where(eq(customersTable.id, customerId));
+    }
+
+    if (slug === "clarity-medspa-dublin") {
+      const procedure =
+        MEDSPA_PROCEDURES.find((p) => p.code === "botox-consult") ?? MEDSPA_PROCEDURES[0]!;
+      const [existingConsent] = await db
+        .select({ id: medspaConsentRecordsTable.id })
+        .from(medspaConsentRecordsTable)
+        .where(
+          and(
+            eq(medspaConsentRecordsTable.businessId, biz.id),
+            eq(medspaConsentRecordsTable.customerId, customerId),
+            eq(medspaConsentRecordsTable.status, "pending"),
+          ),
+        )
+        .limit(1);
+      if (!existingConsent) {
+        await db.insert(medspaConsentRecordsTable).values({
+          id: generateId(),
+          businessId: biz.id,
+          customerId,
+          procedureCode: procedure.code,
+          procedureLabel: procedure.label,
+          consentVersion: procedure.consentVersion,
+          status: "pending",
+          marketCode: "IE",
+          metadata: { demo: true, guestHubMary: true },
+        });
+      }
+    }
+
+    if (slug === "motion-physio-cork") {
+      const { listCareSeries, createCareSeries } = await import("./care-series.service");
+      const existing = await listCareSeries(biz.id, customerId);
+      if (!existing.some((s) => s.status === "active")) {
+        const [service] = await db
+          .select({ id: servicesTable.id })
+          .from(servicesTable)
+          .where(eq(servicesTable.businessId, biz.id))
+          .limit(1);
+        if (service) {
+          await createCareSeries(biz.id, {
+            customerId,
+            name: "Post-op knee rehab — 6 sessions",
+            serviceId: service.id,
+            sessionsTotal: 6,
+            cadenceDays: 7,
+          });
+        }
+      }
+    }
+
+    if (slug === "peak-fitness-dublin") {
+      const now = new Date();
+      const [session] = await db
+        .select({ id: classSessionsTable.id })
+        .from(classSessionsTable)
+        .where(
+          and(
+            eq(classSessionsTable.businessId, biz.id),
+            gte(classSessionsTable.startsAt, now),
+          ),
+        )
+        .limit(1);
+      if (session) {
+        const [enrolled] = await db
+          .select({ id: classEnrollmentsTable.id })
+          .from(classEnrollmentsTable)
+          .where(
+            and(
+              eq(classEnrollmentsTable.sessionId, session.id),
+              eq(classEnrollmentsTable.customerId, customerId),
+            ),
+          )
+          .limit(1);
+        if (!enrolled) {
+          const { enrollInClass } = await import("./class-sessions.service");
+          await enrollInClass(biz.id, session.id, customerId);
+        }
+      }
+    }
+  }
+
+  return { shopsTouched };
+}
+
 /**
  * Link three demo end clients to their real-life shop graph + curated upcoming visits.
  * Idempotent — reconciles operator live-day noise so `/my` stays realistic.
@@ -311,11 +467,13 @@ export async function seedDemoGuestHub(): Promise<{
     shopsLinked: number;
     upcomingEnsured: number;
   }>;
+  maryArtifacts: { shopsTouched: number };
 }> {
   const clients = [];
   for (const client of DEMO_END_CLIENTS) {
     const row = await seedEndClient(client);
     clients.push({ id: client.id, ...row });
   }
-  return { clients };
+  const maryArtifacts = await ensureMaryGuestHubArtifacts();
+  return { clients, maryArtifacts };
 }

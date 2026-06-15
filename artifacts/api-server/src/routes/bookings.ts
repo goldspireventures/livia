@@ -349,11 +349,40 @@ router.post(
     }
 
     try {
+      const existing = await getBookingById(businessId, bookingId);
+      const previousStartAt = existing?.startAt;
       const updated = await rescheduleBooking(businessId, bookingId, startAt);
       await appendHumanAudit(businessId, userId, "human.booking.reschedule", "booking", bookingId, {
         startAt,
         status: updated.status,
       });
+      if (existing && previousStartAt) {
+        const { emitBookingRescheduled } = await import("../lib/booking-events");
+        const { logEvent } = await import("../services/events.service");
+        void emitBookingRescheduled(
+          {
+            id: updated.id,
+            businessId: updated.businessId,
+            customerId: updated.customerId,
+            serviceId: updated.serviceId,
+            staffId: updated.staffId,
+            startAt: new Date(updated.startAt),
+            status: updated.status,
+          },
+          new Date(previousStartAt),
+          new Date(updated.startAt),
+        ).catch(() => undefined);
+        void logEvent({
+          type: "BOOKING_RESCHEDULED",
+          businessId,
+          entityType: "booking",
+          entityId: bookingId,
+          context: {
+            previousStartAt: new Date(previousStartAt).toISOString(),
+            newStartAt: updated.startAt,
+          },
+        }).catch(() => undefined);
+      }
       res.json(updated);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "";

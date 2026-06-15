@@ -14,9 +14,9 @@
 
 | Idea | Business | Guest | Wave |
 |------|----------|-------|------|
-| **Subdomain book** | `bloom.livia-hq.com` on cards — no Livia path | Brand trust | D0 P0 |
-| **`/my` relationship shell** | Fewer phone calls; thread context preserved | Manage visit without hunting SMS | D1 P0 |
-| **Vertical memory on profile** | Chair-ready notes | “They know my lash map / pet / car” | D1 P0 |
+| **Subdomain book** | `bloom.livia-hq.com` on cards — no Livia path | Brand trust | D0 P0 · **shipped** (path fallback until DNS) |
+| **`/my` relationship shell** | Fewer phone calls; thread context preserved | Manage visit without hunting SMS | D1 P0 · **shipped** |
+| **Vertical memory on profile** | Chair-ready notes | “They know my lash map / pet / car” | D1 P0 · **shipped** (Mary demo seed) |
 | **Liv cross-channel reply** | One inbox | Answers on SMS/DM where they asked | live P0 |
 | **Deposit truth line** | No chair arguments | Visit page shows paid/hold status | live P0 |
 | **Post-visit rebook nudge** | Fill cycle / plan cadence revenue | One-tap from `/my` | D1 P1 |

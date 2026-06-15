@@ -8,7 +8,7 @@ import {
   conversationsTable,
   conversationMessagesTable,
 } from "@workspace/db";
-import { and, desc, eq, gte, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray } from "drizzle-orm";
 import {
   guestManageVisitPath,
   guestShopRelationshipPath,
@@ -467,4 +467,58 @@ export async function postGuestVisitMessage(
   );
 
   return { ok: true as const, conversationId, messageId };
+}
+
+export async function listGuestVisitMessages(
+  hubToken: string,
+  slug: string,
+  bookingId: string,
+) {
+  const { booking } = await assertGuestBookingAccess(hubToken, slug, bookingId);
+
+  const [existing] = await db
+    .select({ id: conversationsTable.id })
+    .from(conversationsTable)
+    .where(
+      and(
+        eq(conversationsTable.businessId, booking.businessId),
+        eq(conversationsTable.customerId, booking.customerId),
+        inArray(conversationsTable.status, ["OPEN", "HANDED_OFF", "CLOSED"]),
+      ),
+    )
+    .orderBy(desc(conversationsTable.updatedAt))
+    .limit(1);
+
+  if (!existing?.id) {
+    return { messages: [] as Array<{
+      id: string;
+      role: string;
+      content: string;
+      createdAt: string;
+      bookingId: string | null;
+    }> };
+  }
+
+  const rows = await db
+    .select({
+      id: conversationMessagesTable.id,
+      role: conversationMessagesTable.role,
+      content: conversationMessagesTable.content,
+      createdAt: conversationMessagesTable.createdAt,
+      bookingId: conversationMessagesTable.bookingId,
+    })
+    .from(conversationMessagesTable)
+    .where(eq(conversationMessagesTable.conversationId, existing.id))
+    .orderBy(asc(conversationMessagesTable.createdAt))
+    .limit(50);
+
+  return {
+    messages: rows.map((m) => ({
+      id: m.id,
+      role: m.role,
+      content: m.content,
+      createdAt: m.createdAt.toISOString(),
+      bookingId: m.bookingId,
+    })),
+  };
 }

@@ -18,6 +18,7 @@ assert.equal(booking?.domainBusKey, "booking.created");
 const v1 = listV1RequiredEvents();
 assert.ok(v1.some((e) => e.name === "BusinessActivated"));
 assert.ok(v1.some((e) => e.name === "BookingCreated"));
+assert.ok(v1.some((e) => e.name === "BookingRescheduled"));
 
 const review = getEventCatalogEntryByName("ReviewReceived");
 assert.equal(review?.analyticsType, "REVIEW_RECEIVED");

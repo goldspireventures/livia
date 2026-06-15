@@ -80,6 +80,7 @@ import {
   seedDemoBusinessRosters,
 } from "./demo-business-roster.seed";
 import { getDashboardUrl, getInternalUrl, getMarketingUrl } from "../lib/public-urls";
+import { resolveEventVendorSiteUrl, resolveGuestBookUrl } from "../lib/guest-public-urls";
 
 function resolvePartnerTrackEnterEmail(loginKind: DemoPartnerLoginKind, slug: string): string {
   switch (loginKind) {
@@ -1219,8 +1220,8 @@ export async function getDemoPortalStatus(): Promise<{
           ownerPersonaId: chainHq ? ("org_admin" as const) : null,
           publicBookingUrl:
             r.vertical === "event-vendors"
-              ? `${dashboardBase}/e/${r.slug}`
-              : `${dashboardBase}/b/${r.slug}`,
+              ? resolveEventVendorSiteUrl(r.slug)
+              : resolveGuestBookUrl(r.slug),
           roster: rosterEntriesForSlug(
             r.slug,
             r.name,
@@ -1251,7 +1252,7 @@ export function getDemoCatalog() {
     partnerTracks: listDemoPartnerTracks().map((t) => ({
       ...t,
       enterEmail: resolvePartnerTrackEnterEmail(t.loginKind, t.slug),
-      guestPath: t.guestPathKind === "public-event" ? `/e/${t.slug}/enquire` : `/b/${t.slug}`,
+      guestPath: t.guestPathKind === "public-event" ? `/e/${t.slug}/enquire` : resolveGuestBookUrl(t.slug),
       wedgeHref: t.wedgeVertical ? `/demo/wedge/${t.wedgeVertical}` : null,
     })),
     scenarios: demoScenarioSpotlights(),
@@ -1265,7 +1266,7 @@ export function getDemoCatalog() {
       requiresClerk: p.requiresClerk,
       publicBookingUrl:
         p.id === "customer"
-          ? `${getDashboardUrl()}/b/aurora-studio`
+          ? resolveGuestBookUrl("aurora-studio")
           : null,
     })),
     scenarioAccounts: DEMO_SCENARIO_ACCOUNTS.map((p) => ({

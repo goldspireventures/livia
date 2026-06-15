@@ -105,3 +105,21 @@ export async function emitBookingStatusChange(
       break;
   }
 }
+
+export async function emitBookingRescheduled(
+  booking: BookingRow,
+  previousStartAt: Date,
+  newStartAt: Date,
+): Promise<void> {
+  const base = `${booking.businessId}:${booking.id}`;
+  await publishDomainEvent(
+    "booking.rescheduled",
+    {
+      businessId: booking.businessId,
+      bookingId: booking.id,
+      previousStartAt: previousStartAt.toISOString(),
+      newStartAt: newStartAt.toISOString(),
+    },
+    `${base}:rescheduled:${newStartAt.toISOString()}`,
+  );
+}

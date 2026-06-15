@@ -23,6 +23,7 @@ import {
   normalizeGuestHubPhone,
 } from "@workspace/policy";
 import { generateId } from "../lib/id";
+import { resolveGuestBookUrl } from "../lib/guest-public-urls";
 import { getStagingRelaxations } from "../lib/staging-relaxations";
 const OTP_TTL_MS = 10 * 60 * 1000;
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
@@ -275,8 +276,8 @@ export async function getGuestHubView(hubToken: string) {
     shops: shops.map((s) => {
       const last = lastByBusiness.get(s.businessId);
       const bookUrl = last
-        ? guestBookPath(s.slug, `service=${encodeURIComponent(last.serviceId)}&hub=1`)
-        : guestBookPath(s.slug, "hub=1");
+        ? resolveGuestBookUrl(s.slug, `service=${encodeURIComponent(last.serviceId)}&hub=1`)
+        : resolveGuestBookUrl(s.slug, "hub=1");
       return {
         ...s,
         firstBookingAt: s.firstBookingAt?.toISOString() ?? null,
