@@ -66,8 +66,6 @@ export function resolveBusinessPolicies(
       depositPercent: op.depositPercent,
       serviceBufferMinutes: op.serviceBufferMinutes,
       cancelWindowHours: cancelHours,
-      noShowStrikeThreshold: op.noShowStrikeThreshold,
-      requireDepositAfterStrikes: op.requireDepositAfterStrikes,
       lateGraceMinutes: op.lateGraceMinutes,
       autoConfirmWhenNoDeposit: op.autoConfirmWhenNoDeposit,
       bookingContinuityEnabled: op.bookingContinuityEnabled,

@@ -15,6 +15,19 @@ assert(
   derivePendingReason({
     ...base,
     source: "web",
+    depositRequired: true,
+    depositPaidEurCents: 0,
+    customerTrusted: false,
+    bookingContinuityEnabled: true,
+    customerHasPhone: true,
+  }) === PENDING_REASONS.AWAITING_DEPOSIT,
+  "deposits on for all → awaiting_deposit before continuity",
+);
+
+assert(
+  derivePendingReason({
+    ...base,
+    source: "web",
     bookingContinuityEnabled: true,
     customerHasPhone: true,
   }) === PENDING_REASONS.AWAITING_CONTINUITY,

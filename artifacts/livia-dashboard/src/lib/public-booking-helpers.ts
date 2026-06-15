@@ -100,6 +100,7 @@ export type PublicPolicyTrust = {
   cancelWindowHours: number;
   lateGraceMinutes: number;
   depositRequired: boolean;
+  depositPercent?: number;
 };
 
 /** Fresha-style barber/salon vs Acuity-style beauty catalog. */

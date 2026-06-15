@@ -25,6 +25,9 @@ import {
   resolveResourceTurnoverMinutes,
 } from "./booking-resources.service";
 import { bookingResourcesTable } from "@workspace/db";
+import {
+  customerExemptFromDeposit,
+} from "@workspace/policy";
 
 export async function listBookings(
   businessId: string,
@@ -72,10 +75,9 @@ export async function listBookings(
 type PendingResolveCtx = {
   aiCanBookDirectly: boolean;
   depositRequired: boolean;
+  depositPercent: number;
   autoConfirmWhenNoDeposit: boolean;
   bookingContinuityEnabled: boolean;
-  requireDepositAfterStrikes: boolean;
-  noShowStrikeThreshold: number;
 };
 
 async function pendingResolveCtxForBusiness(
@@ -87,22 +89,19 @@ async function pendingResolveCtxForBusiness(
   return {
     aiCanBookDirectly: (cached.business.aiCanBookDirectly ?? "true") === "true",
     depositRequired: op.depositRequired,
+    depositPercent: op.depositPercent ?? 0,
     autoConfirmWhenNoDeposit: op.autoConfirmWhenNoDeposit,
     bookingContinuityEnabled: op.bookingContinuityEnabled,
-    requireDepositAfterStrikes: op.requireDepositAfterStrikes,
-    noShowStrikeThreshold: op.noShowStrikeThreshold,
   };
 }
 
-function customerTrustedForDeposit(
-  ctx: PendingResolveCtx,
-  cust: {
-    trustedClient?: boolean | null;
-    strikeCount?: number | null;
-  } | null | undefined,
-): boolean {
-  if (!ctx.depositRequired || !ctx.requireDepositAfterStrikes || !cust) return false;
-  return !!cust.trustedClient || (cust.strikeCount ?? 0) < ctx.noShowStrikeThreshold;
+function customerTrustedForDeposit(ctx: PendingResolveCtx): boolean {
+  return customerExemptFromDeposit({
+    operational: {
+      depositRequired: ctx.depositRequired,
+      depositPercent: ctx.depositPercent,
+    },
+  });
 }
 
 /** Batched enrichment — one query per related table instead of 3×N. */
@@ -150,7 +149,7 @@ export async function enrichBookingsBatch(
     const customer = customerMap.get(b.customerId) ?? null;
     let pendingReason = b.pendingReason;
     if (b.status === "PENDING" && pendingCtx) {
-      const trusted = customerTrustedForDeposit(pendingCtx, customer);
+      const trusted = customerTrustedForDeposit(pendingCtx);
       pendingReason =
         resolvePendingReasonForBooking(
           {
@@ -215,7 +214,7 @@ export async function enrichBooking(
   if (opts?.resolvePending !== false && booking.status === "PENDING") {
     const pendingCtx = await pendingResolveCtxForBusiness(booking.businessId);
     if (pendingCtx) {
-      const trusted = customerTrustedForDeposit(pendingCtx, customer);
+      const trusted = customerTrustedForDeposit(pendingCtx);
       pendingReason =
         resolvePendingReasonForBooking(
           {
@@ -321,12 +320,7 @@ export async function createBooking(
     data.resourceId,
   );
 
-  let customerTrusted = false;
-  if (depositRequired && op.requireDepositAfterStrikes && custRow) {
-    customerTrusted =
-      !!custRow.trustedClient ||
-      (custRow.strikeCount ?? 0) < op.noShowStrikeThreshold;
-  }
+  const customerTrusted = customerExemptFromDeposit({ operational: op });
 
   const pendingReason = derivePendingReason({
     source,

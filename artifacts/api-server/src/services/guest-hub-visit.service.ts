@@ -29,9 +29,14 @@ import { getRelationshipSummary } from "./relationship.service";
 import { listGuestPackageCreditsForGuest } from "./package-credits.service";
 import { loadGuestVerticalArtifacts } from "./guest-hub-vertical-artifacts.service";
 import { fanOutSideEffect } from "../lib/side-effect-emitter";
+import { policiesFromBusiness } from "./policies.service";
+import { computeDepositDueMinor } from "./guest-deposit-pay.service";
 
 function guestBookUrlForSlug(slug: string, query = ""): string {
-  return resolveGuestBookUrl(slug, query);
+  const params = new URLSearchParams(query.startsWith("?") ? query.slice(1) : query);
+  params.set("hub", "1");
+  const q = params.toString();
+  return resolveGuestBookUrl(slug, q);
 }
 
 async function assertGuestBookingAccess(
@@ -126,6 +131,9 @@ export async function getGuestShopRelationship(hubToken: string, slug: string) {
     .select({
       id: customersTable.id,
       firstName: customersTable.firstName,
+      lastName: customersTable.lastName,
+      email: customersTable.email,
+      phone: customersTable.phone,
       beautyPreferences: customersTable.beautyPreferences,
       patchTestCompletedAt: customersTable.patchTestCompletedAt,
     })
@@ -212,13 +220,27 @@ export async function getGuestShopRelationship(hubToken: string, slug: string) {
     customer: customer
       ? {
           firstName: customer.firstName,
+          lastName: customer.lastName,
+          email: customer.email,
+          phone: customer.phone ?? session.phoneE164,
+          hubAuthenticated: true,
           patchTestLabel:
             shop.vertical === "beauty"
               ? beautyClientPatchTestLabel(customer.patchTestCompletedAt)
               : null,
           beautyPreferences: beautyPrefs,
         }
-      : null,
+      : session.phoneE164
+        ? {
+            firstName: null,
+            lastName: null,
+            email: null,
+            phone: session.phoneE164,
+            hubAuthenticated: true,
+            patchTestLabel: null,
+            beautyPreferences: null,
+          }
+        : null,
     relationship: rel
       ? {
           headline: rel.headline,
@@ -243,11 +265,22 @@ export async function getGuestVisitManage(hubToken: string, slug: string, bookin
   const { session, booking } = await assertGuestBookingAccess(hubToken, slug, bookingId);
   const visitToken = await ensureBookingGuestAccess(booking.businessId, booking.bookingId);
   let depositPayUrl: string | null = null;
-  if (
-    booking.status === "PENDING" &&
-    (booking.pendingReason === "awaiting_deposit" || booking.depositPaidEurCents <= 0)
-  ) {
-    depositPayUrl = resolveGuestTokenUrl(slug, "pay", visitToken);
+  const [biz] = await db
+    .select()
+    .from(businessesTable)
+    .where(eq(businessesTable.id, booking.businessId))
+    .limit(1);
+  if (biz) {
+    const op = policiesFromBusiness(biz).operational;
+    const due = computeDepositDueMinor({
+      priceMinor: booking.priceMinor,
+      depositPercent: op.depositPercent ?? 0,
+      depositRequired: op.depositRequired,
+      depositPaidMinor: booking.depositPaidEurCents ?? 0,
+    });
+    if (booking.status === "PENDING" && due > 0) {
+      depositPayUrl = resolveGuestTokenUrl(slug, "pay", visitToken);
+    }
   }
 
   const rel = await getRelationshipSummary(booking.businessId, booking.customerId).catch(

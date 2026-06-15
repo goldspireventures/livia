@@ -48,6 +48,10 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import {
+  fetchGuestHubBookProfile,
+  isMyLiviaRebookFlow,
+} from "@/lib/guest-hub-session";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -312,11 +316,13 @@ export default function PublicBookingPage() {
   const [fulfillmentDetail, setFulfillmentDetail] = useState("");
   const dateInputRef = useRef<HTMLInputElement>(null);
   const [consentAgreed, setConsentAgreed] = useState(false);
+  const [hubAuthenticated, setHubAuthenticated] = useState(false);
   const [chatMount, setChatMount] = useState(false);
   const [chatOpenRequest, setChatOpenRequest] = useState(0);
   const [pastHero, setPastHero] = useState(false);
   const heroSentinelRef = useRef<HTMLDivElement>(null);
   const servicePrefApplied = useRef(false);
+  const hubProfileApplied = useRef(false);
 
   const sl = slug ?? "";
 
@@ -407,6 +413,26 @@ export default function PublicBookingPage() {
       setStep("slots");
     }
   }, [b?.services]);
+
+  useEffect(() => {
+    if (!sl || hubProfileApplied.current || !isMyLiviaRebookFlow()) return;
+    hubProfileApplied.current = true;
+    void fetchGuestHubBookProfile(sl).then((profile) => {
+      if (!profile) return;
+      setHubAuthenticated(true);
+      if (profile.firstName) setFirstName(profile.firstName);
+      if (profile.lastName) setLastName(profile.lastName);
+      if (profile.email) setEmail(profile.email);
+      if (profile.phone) setPhone(profile.phone);
+    });
+  }, [sl]);
+
+  const depositDuePreviewMinor = useMemo(() => {
+    if (!b?.policyTrust?.depositRequired || !selectedService) return 0;
+    const pct = b.policyTrust.depositPercent ?? 0;
+    if (pct <= 0) return 0;
+    return Math.round((selectedService.priceMinor * pct) / 100);
+  }, [b?.policyTrust, selectedService]);
 
   const aiOn = (b?.aiEnabled ?? "true") === "true";
 
@@ -1149,6 +1175,33 @@ export default function PublicBookingPage() {
                 </p>
               </div>
             </div>
+
+            {hubAuthenticated ? (
+              <Card className="border-primary/20 bg-primary/5" data-testid="public-book-hub-autofill">
+                <CardContent className="pt-4 text-sm text-muted-foreground">
+                  Signed in with My Livia — your details are filled in. You can still edit them if
+                  something changed.
+                </CardContent>
+              </Card>
+            ) : null}
+
+            {depositDuePreviewMinor > 0 ? (
+              <Card className="border-amber-500/30 bg-amber-500/5" data-testid="public-book-deposit-notice">
+                <CardContent className="pt-4 space-y-1 text-sm">
+                  <p className="font-medium flex items-center gap-2">
+                    <CreditCard className="h-4 w-4" />
+                    Deposit required to hold this slot
+                  </p>
+                  <p className="text-muted-foreground">
+                    {b.depositPolicySummary?.trim() ||
+                      `${b.policyTrust?.depositPercent ?? 0}% deposit due after you confirm — pay by card to lock your time.`}
+                  </p>
+                  <p className="font-semibold tabular-nums">
+                    {formatCurrency(depositDuePreviewMinor, selectedService.currency)}
+                  </p>
+                </CardContent>
+              </Card>
+            ) : null}
 
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

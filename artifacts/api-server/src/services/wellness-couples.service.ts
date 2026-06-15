@@ -2,6 +2,7 @@ import { db, bookingsTable, businessesTable, customersTable } from "@workspace/d
 import { and, eq } from "drizzle-orm";
 import { generateId } from "../lib/id";
 import { derivePendingReason } from "../lib/booking-pending";
+import { customerExemptFromDeposit } from "@workspace/policy";
 import { policiesFromBusiness } from "./policies.service";
 import { getPoliciesForBusinessId } from "./policies.service";
 
@@ -71,12 +72,12 @@ export async function createCouplesBookingPair(
     .where(eq(customersTable.id, input.primary.customerId))
     .limit(1);
   const aiCanBookDirectly = (biz?.aiCanBookDirectly ?? "true") === "true";
-  let customerTrusted = false;
-  if (op?.depositRequired && op.requireDepositAfterStrikes && primaryCust) {
-    customerTrusted =
-      !!primaryCust.trustedClient ||
-      (primaryCust.strikeCount ?? 0) < (op.noShowStrikeThreshold ?? 3);
-  }
+  const customerTrusted = customerExemptFromDeposit({
+    operational: {
+      depositRequired: Boolean(op?.depositRequired),
+      depositPercent: op?.depositPercent ?? 0,
+    },
+  });
   const pendingReason = derivePendingReason({
     source: "web",
     aiCanBookDirectly,

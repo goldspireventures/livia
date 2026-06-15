@@ -103,8 +103,6 @@ export interface OperationalPolicySnapshot {
   depositPercent: number;
   serviceBufferMinutes: number;
   cancelWindowHours: number;
-  noShowStrikeThreshold: number;
-  requireDepositAfterStrikes: boolean;
   lateGraceMinutes: number;
   autoConfirmWhenNoDeposit: boolean;
   bookingContinuityEnabled: boolean;

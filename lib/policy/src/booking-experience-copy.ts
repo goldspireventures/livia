@@ -333,7 +333,7 @@ const BEAUTY_PENDING_LABELS: Record<string, string> = {
   [PENDING_REASON_CODES.CREATED_BY_LIV]: "Liv proposed this slot — confirm to hold it",
   [PENDING_REASON_CODES.OWNER_MANUAL]: "Manual hold — confirm when the station is ready",
   [PENDING_REASON_CODES.AWAITING_CONTINUITY]:
-    "Waiting for client reply (patch test or style reference)",
+    "Waiting for client reply in messages",
 };
 
 const BEAUTY_PENDING_GUIDANCE: Record<string, string> = {
@@ -342,7 +342,7 @@ const BEAUTY_PENDING_GUIDANCE: Record<string, string> = {
   [PENDING_REASON_CODES.AWAITING_DEPOSIT]:
     "Send the deposit link or mark paid, then confirm the slot.",
   [PENDING_REASON_CODES.AWAITING_CONTINUITY]:
-    "Patch test or style reference still outstanding — follow up or confirm when ready.",
+    "Client has not replied in messages yet — follow up or confirm when ready.",
   [PENDING_REASON_CODES.AWAITING_POLICY_REVIEW]:
     "Check fill vs full-set policy and cancel window, then confirm.",
   [PENDING_REASON_CODES.CREATED_BY_LIV]:
@@ -355,10 +355,10 @@ const BEAUTY_PENDING_PACK: VerticalPendingPack = {
   labels: BEAUTY_PENDING_LABELS,
   guidance: BEAUTY_PENDING_GUIDANCE,
   livContinuityBlocker:
-    "Liv won't auto-confirm until the client replies with patch-test or style details in messages.",
+    "Liv won't auto-confirm until the client replies in their booking messages.",
   defaultPendingLabel: "Appointment pending — confirm to hold the slot",
   defaultGuidance:
-    "Confirm, reschedule, or follow up when a deposit, fill, or patch-test rule needs you.",
+    "Confirm, reschedule, or follow up when a deposit or intake rule needs you.",
 };
 
 const PENDING_PACKS: Record<BusinessVertical, VerticalPendingPack> = {
@@ -764,7 +764,7 @@ export function publicAwaitingContinuityHoldLines(
   if (key === "beauty") {
     return [
       "Almost there — we've sent a message to the phone or email you provided.",
-      "Reply with patch-test or style details if your studio asked for them, or to confirm you're all set.",
+      "Reply with style notes or a quick confirmation when you're ready.",
       "Your appointment is held until the studio confirms (usually within a few hours).",
       "Add the appointment to your calendar below.",
     ];

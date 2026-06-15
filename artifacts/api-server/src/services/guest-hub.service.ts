@@ -275,8 +275,8 @@ export async function getGuestHubView(hubToken: string) {
     shops: shops.map((s) => {
       const last = lastByBusiness.get(s.businessId);
       const bookUrl = last
-        ? guestBookPath(s.slug, `service=${encodeURIComponent(last.serviceId)}`)
-        : guestBookPath(s.slug);
+        ? guestBookPath(s.slug, `service=${encodeURIComponent(last.serviceId)}&hub=1`)
+        : guestBookPath(s.slug, "hub=1");
       return {
         ...s,
         firstBookingAt: s.firstBookingAt?.toISOString() ?? null,

@@ -235,6 +235,7 @@ async function getPublicBusinessProfile(req: Request, res: Response): Promise<vo
       cancelWindowHours: policies.operational.cancelWindowHours,
       lateGraceMinutes: policies.operational.lateGraceMinutes,
       depositRequired: policies.operational.depositRequired,
+      depositPercent: policies.operational.depositPercent ?? 0,
     },
     services: services
       .map((row) => toPublicServiceDto(row, biz.vertical as BusinessVertical))
@@ -919,11 +920,13 @@ router.post("/public/b/:slug/book", async (req, res): Promise<void> => {
     const opPolicies = policiesFromBusiness(biz).operational;
     const servicePriceMinor = booking.service?.priceMinor ?? 0;
     const depositDueMinor =
-      booking.pendingReason === "awaiting_deposit"
+      booking.status === "PENDING" &&
+      opPolicies.depositRequired &&
+      (booking.depositPaidEurCents ?? 0) === 0
         ? computeDepositDueMinor({
             priceMinor: servicePriceMinor,
             depositPercent: opPolicies.depositPercent ?? 0,
-            depositRequired: opPolicies.depositRequired,
+            depositRequired: true,
             depositPaidMinor: booking.depositPaidEurCents ?? 0,
           })
         : 0;

@@ -56,7 +56,7 @@ assert.ok(
   pendingReasonLabel(PENDING_REASON_CODES.AWAITING_CONTINUITY, "body-art").includes("design"),
 );
 assert.ok(
-  pendingReasonLabel(PENDING_REASON_CODES.AWAITING_CONTINUITY, "beauty").includes("patch test"),
+  !pendingReasonLabel(PENDING_REASON_CODES.AWAITING_CONTINUITY, "beauty").toLowerCase().includes("patch test"),
 );
 assert.ok(
   !pendingReasonLabel(PENDING_REASON_CODES.AWAITING_CONTINUITY, "wellness").toLowerCase().includes("photo"),

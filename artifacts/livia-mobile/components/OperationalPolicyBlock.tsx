@@ -13,8 +13,6 @@ type OperationalPolicyPayload = {
     depositPercent: number;
     serviceBufferMinutes: number;
     cancelWindowHours?: number;
-    noShowStrikeThreshold: number;
-    requireDepositAfterStrikes: boolean;
     lateGraceMinutes: number;
     autoConfirmWhenNoDeposit: boolean;
   };
@@ -76,9 +74,6 @@ export function OperationalPolicyBlock({
           </Text>
           <Text style={[styles.rowMeta, { color: colors.mutedForeground }]}>
             Buffer between appointments · {p.serviceBufferMinutes} min
-          </Text>
-          <Text style={[styles.rowMeta, { color: colors.mutedForeground }]}>
-            No-show strikes before deposit · {p.noShowStrikeThreshold}
           </Text>
           <Text style={[styles.rowMeta, { color: colors.mutedForeground }]}>
             Late grace · {p.lateGraceMinutes} min

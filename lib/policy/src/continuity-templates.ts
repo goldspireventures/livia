@@ -116,7 +116,6 @@ const BEAUTY: ContinuityTemplate = {
     a.visitUrl
       ? `Watch for a message from ${a.businessName} — reply in the same thread (ref ${a.bookingRef}).`
       : `Watch for a message from ${a.businessName} — reply in the same thread (ref ${a.bookingRef}).`,
-    "Patch tests may be required before certain colour or lash services — your studio will confirm.",
     "Add the appointment to your calendar below.",
   ],
   igDeepLinkHint: (a) =>

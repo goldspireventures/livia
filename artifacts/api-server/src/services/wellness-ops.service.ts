@@ -12,6 +12,7 @@ import { WELLNESS_ROOM_TURNOVER_MINUTES } from "@workspace/policy";
 import { getAvailableSlots } from "./slots.service";
 import { getCachedTenantRuntime } from "../lib/tenant-runtime-pool";
 import { derivePendingReason } from "../lib/booking-pending";
+import { customerExemptFromDeposit } from "@workspace/policy";
 import { policiesFromBusiness } from "./policies.service";
 
 function addMinutes(d: Date, m: number): Date {
@@ -291,14 +292,15 @@ export async function confirmBookingAfterStripePayment(businessId: string, booki
     .where(eq(customersTable.id, booking.customerId))
     .limit(1);
 
+  const exempt = customerExemptFromDeposit({ operational: op });
+
   const pendingReason = derivePendingReason({
     source: booking.source ?? "web",
     aiCanBookDirectly: (cached.business.aiCanBookDirectly ?? "true") === "true",
-    depositRequired: op.depositRequired,
+    depositRequired: op.depositRequired && !exempt,
     depositPaidEurCents: booking.depositPaidEurCents ?? 0,
     autoConfirmWhenNoDeposit: op.autoConfirmWhenNoDeposit,
-    customerTrusted:
-      !!cust?.trustedClient || (cust?.strikeCount ?? 0) < op.noShowStrikeThreshold,
+    customerTrusted: exempt,
     bookingContinuityEnabled: op.bookingContinuityEnabled,
     customerHasPhone: !!cust?.phone?.trim(),
     customerHasEmail: !!cust?.email?.trim(),

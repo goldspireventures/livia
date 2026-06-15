@@ -9,8 +9,6 @@ export const operationalPolicySchema = z.object({
   depositPercent: z.number().int().min(0).max(100).default(0),
   serviceBufferMinutes: z.number().int().min(0).max(120).default(0),
   cancelWindowHours: z.number().int().min(0).max(168).optional(),
-  noShowStrikeThreshold: z.number().int().min(1).max(20).default(2),
-  requireDepositAfterStrikes: z.boolean().default(true),
   lateGraceMinutes: z.number().int().min(0).max(60).default(10),
   autoConfirmWhenNoDeposit: z.boolean().default(true),
   /** After web booking, open SMS/WA thread for pics and confirm (v3 continuity). */
@@ -68,6 +66,18 @@ export function mergeOperationalPolicy(
   return operationalPolicySchema.parse(next);
 }
 
+/**
+ * Whether a customer may skip the deposit on a new booking.
+ * V1: no client-level exemptions — Liv tracks visit/no-show patterns in the background
+ * for future trust signals; shops always collect when deposits are on.
+ */
+export function customerExemptFromDeposit(args: {
+  operational: Pick<OperationalPolicy, "depositRequired" | "depositPercent">;
+}): boolean {
+  const { operational: op } = args;
+  return !op.depositRequired || op.depositPercent <= 0;
+}
+
 /** Owner-facing plain-language summary for Liv setup copilot. */
 export function explainOperationalPolicySummary(args: {
   operational: OperationalPolicy;
@@ -79,9 +89,7 @@ export function explainOperationalPolicySummary(args: {
     depositPolicySummary,
     `Free cancellation window: ${cancelWindowHours} hours before the appointment.`,
     `Late grace: ${op.lateGraceMinutes} minutes.`,
-    op.noShowStrikeThreshold > 0
-      ? `After ${op.noShowStrikeThreshold} no-shows, deposits may be required for new clients.`
-      : "No-show strike policy is off.",
+    "Liv tracks no-shows and visit patterns on each client — deposit trust rules will evolve from that signal.",
     op.bookingContinuityEnabled
       ? `Booking continuity: ${op.bookingContinuityMode.replace(/_/g, " ")}.`
       : "Booking continuity follow-up is off.",
@@ -116,7 +124,7 @@ export function diffOperationalPolicy(
 
 /**
  * Recommended initial operational policy defaults for a newly created tenant.
- * This does not override explicit tenant choices; it’s used for seeding only.
+ * This does not override explicit tenant choices; it's used for seeding only.
  */
 export function recommendedOperationalPolicyDefaults(args: {
   countryIso: string | null | undefined;

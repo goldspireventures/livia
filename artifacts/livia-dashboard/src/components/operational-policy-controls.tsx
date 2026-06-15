@@ -20,8 +20,6 @@ type OperationalPolicyPayload = {
     depositPercent: number;
     serviceBufferMinutes: number;
     cancelWindowHours?: number;
-    noShowStrikeThreshold: number;
-    requireDepositAfterStrikes: boolean;
     lateGraceMinutes: number;
     autoConfirmWhenNoDeposit: boolean;
     bookingContinuityEnabled?: boolean;
@@ -215,25 +213,6 @@ export default function OperationalPolicyControls() {
             />
           </div>
           <div>
-            <Label htmlFor="strikes">No-show strikes before deposit</Label>
-            <Input
-              id="strikes"
-              type="number"
-              min={1}
-              max={20}
-              value={p.noShowStrikeThreshold}
-              onChange={(e) =>
-                setState({
-                  ...state,
-                  policy: {
-                    ...p,
-                    noShowStrikeThreshold: parseInt(e.target.value, 10) || 2,
-                  },
-                })
-              }
-            />
-          </div>
-          <div>
             <Label htmlFor="grace">Late grace (minutes)</Label>
             <Input
               id="grace"
@@ -262,16 +241,6 @@ export default function OperationalPolicyControls() {
             checked={p.bookingContinuityEnabled !== false}
             onCheckedChange={(v) =>
               setState({ ...state, policy: { ...p, bookingContinuityEnabled: v } })
-            }
-          />
-        </div>
-
-        <div className="flex items-center justify-between gap-4">
-          <Label>Require deposit after strike threshold</Label>
-          <Switch
-            checked={p.requireDepositAfterStrikes}
-            onCheckedChange={(v) =>
-              setState({ ...state, policy: { ...p, requireDepositAfterStrikes: v } })
             }
           />
         </div>

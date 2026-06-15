@@ -25,9 +25,7 @@ export function computeBookingTermsBlock(args: {
     jurisdiction.bookingTermsIntro,
     depositSummary,
     `Free cancellation up to ${cancelHours} hours before your appointment unless otherwise stated.`,
-    op.noShowStrikeThreshold > 0
-      ? `Repeated no-shows may require a deposit for future bookings.`
-      : "",
+    `Repeated no-shows are tracked on your client profile.`,
   ]
     .filter(Boolean)
     .join(" ");
