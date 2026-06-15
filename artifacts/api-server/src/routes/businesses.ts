@@ -28,6 +28,7 @@ import {
   patchNotificationPreferences,
 } from "../services/notification-preferences.service";
 import { EventType } from "@workspace/db";
+import { onBusinessCreated } from "../platform/lifecycle";
 import {
   businessTierSchema,
   businessVerticalSchema,
@@ -172,18 +173,31 @@ router.post("/businesses", requireAuth, async (req, res): Promise<void> => {
     throw err;
   }
 
-  if (starterPack === true && biz.vertical) {
-    const { seedVerticalStarterPack } = await import("../services/vertical-starter-pack.service");
-    await seedVerticalStarterPack(biz.id);
-  } else if (seedDefaults === true) {
-    await seedBusinessFromOnboardingPack(biz.id, {
-      name: biz.name,
-      country: biz.country,
-      category: biz.category,
+  const { receipt } = await onBusinessCreated(
+    {
+      businessId: biz.id,
+      ownerId: userId,
       vertical: biz.vertical as import("@workspace/policy").BusinessVertical,
-      tier: biz.tier,
-    });
-  }
+      slug: biz.slug,
+      name: biz.name,
+    },
+    { starterPack: starterPack === true, seedDefaults: seedDefaults === true },
+    {
+      seedStarterPack: async (businessId) => {
+        const { seedVerticalStarterPack } = await import("../services/vertical-starter-pack.service");
+        await seedVerticalStarterPack(businessId);
+      },
+      seedOnboardingPack: async (businessId) => {
+        await seedBusinessFromOnboardingPack(businessId, {
+          name: biz.name,
+          country: biz.country,
+          category: biz.category,
+          vertical: biz.vertical as import("@workspace/policy").BusinessVertical,
+          tier: biz.tier,
+        });
+      },
+    },
+  );
 
   await logEvent({
     type: EventType.BUSINESS_CREATED,
@@ -191,7 +205,7 @@ router.post("/businesses", requireAuth, async (req, res): Promise<void> => {
     userId,
     entityType: "business",
     entityId: biz.id,
-    context: { name, slug },
+    context: { name, slug, propagation: receipt },
   });
 
   res.status(201).json(biz);

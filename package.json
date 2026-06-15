@@ -19,6 +19,8 @@
     "solidify:verify:e2e": "node scripts/solidify-verify.mjs --e2e",
     "platform:truth-audit": "node scripts/platform-truth-audit.mjs",
     "vertical:check": "node scripts/vertical-check.mjs",
+    "propagation:check": "node scripts/propagation-check.mjs",
+    "propagation:impact": "node scripts/propagation-impact.mjs",
     "capability:check": "node scripts/capability-check.mjs",
     "policy:name-check": "node scripts/policy-name-check.mjs",
     "policy:name-check:baseline": "node scripts/policy-name-check-baseline.mjs",

@@ -68,24 +68,23 @@ See [`VERTICAL-STARTER-PACK.md`](./VERTICAL-STARTER-PACK.md).
 
 ---
 
-## 3. Target module layout (R3)
+## 3. Target module layout (R3) — shipped 2026-06-14
 
 ```text
 artifacts/api-server/src/platform/
   lifecycle/
-    register-vertical.ts      # dev/admin only — triggers pack validation
-    on-business-created.ts    # post-create fan-out
-    handlers/
-      seed-demo-shop.ts
-      notify-support-registry.ts
-      ensure-live-day.ts
+    on-business-created.ts    # tenant birth + mutation fan-out
+    index.ts
 lib/policy/src/
-  vertical-pack-factory.ts   # defineVerticalPack({ ... }) — R3
+  propagation/                # manifest compiler, routing, clearance
+  vertical-pack-factory.ts    # defineVerticalPack()
 scripts/
-  vertical-check.mjs         # R2 precursor — registry vs demo vs E2E
+  propagation-check.mjs         # border control CI
+  propagation-impact.mjs        # change-impact router
+  vertical-check.mjs            # includes propagation-check
 ```
 
-**Not before R2 Wave 2** unless spike is scheduled in wide build plan §6.
+Authority: [`PROPAGATION-PROGRAM.md`](./PROPAGATION-PROGRAM.md).
 
 ---
 

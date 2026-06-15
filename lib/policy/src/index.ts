@@ -3,6 +3,7 @@ export * from "./jurisdictions";
 export * from "./verticals";
 export * from "./vertical-pack-factory";
 export * from "./vertical-copy-program";
+export * from "./propagation";
 export * from "./channels";
 export * from "./messaging-channels";
 export * from "./resolve";

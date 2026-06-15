@@ -27,6 +27,12 @@ function run(label, args, { cwd = apiServerCwd } = {}) {
 
 console.log("\n══ Vertical check (R3) ══\n");
 
+run("Propagation program", [
+  "--import",
+  "tsx/esm",
+  "../../lib/policy/src/__tests__/propagation-program.test.ts",
+]);
+
 run("Policy vertical registry", [
   "--import",
   "tsx/esm",

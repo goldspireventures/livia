@@ -146,6 +146,7 @@ router.get("/me/tenant-experience", requireAuth, async (req, res): Promise<void>
     sendError(res, req, 404, "Business not found");
     return;
   }
+  res.setHeader("Cache-Control", "private, max-age=30");
   res.json(experience);
 });
 

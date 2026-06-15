@@ -20,6 +20,8 @@ import {
 import { loadVerticalPack } from "@workspace/liv-runtime";
 import { generateId } from "../lib/id";
 import { validateOnboardingGoLive } from "../lib/onboarding-go-live-gate";
+import { onTenantMutation } from "../platform/lifecycle";
+import { invalidateTenantExperienceCache } from "./tenant-experience-cache";
 
 export async function getBusinessById(id: string) {
   const [biz] = await db.select().from(businessesTable).where(eq(businessesTable.id, id));
@@ -212,12 +214,30 @@ export function parseOnboardingStatePatch(
 }
 
 export async function updateBusiness(id: string, data: Partial<typeof businessesTable.$inferInsert>) {
+  const before = await getBusinessById(id);
   const [updated] = await db
     .update(businessesTable)
     .set({ ...data, updatedAt: new Date() })
     .where(eq(businessesTable.id, id))
     .returning();
-  return updated ?? null;
+  if (!updated) return null;
+
+  if (before) {
+    await onTenantMutation(
+      {
+        businessId: id,
+        verticalBefore: (before.vertical as BusinessVertical | null) ?? null,
+        verticalAfter: (updated.vertical as BusinessVertical | null) ?? null,
+        presetBefore: before.presentationPresetId ?? null,
+        presetAfter: updated.presentationPresetId ?? null,
+      },
+      { invalidateTenantExperienceCache },
+    );
+  } else {
+    invalidateTenantExperienceCache(id);
+  }
+
+  return updated;
 }
 
 export async function userHasAccessToBusiness(userId: string, businessId: string): Promise<boolean> {

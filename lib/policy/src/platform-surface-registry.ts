@@ -115,6 +115,14 @@ export const P0_PLATFORM_SURFACES: PlatformSurfaceDef[] = [
     openapiPaths: ["/businesses/{businessId}/bookings"],
   },
   {
+    surfaceId: "tenant.booking.detail",
+    screenCardId: "w4.ops.bookings.detail.web",
+    world: "W4",
+    routes: ["/bookings/:id"],
+    app: "dashboard",
+    openapiPaths: ["/businesses/{businessId}/bookings/{bookingId}"],
+  },
+  {
     surfaceId: "tenant.design-proofs",
     screenCardId: "w4.ops.design-proofs.web",
     world: "W4",
