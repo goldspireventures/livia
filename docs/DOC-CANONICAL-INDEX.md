@@ -106,6 +106,7 @@
 | **W3b Support** | [`product/INTERNAL-SUPPORT-PLATFORM-SPEC.md`](./product/INTERNAL-SUPPORT-PLATFORM-SPEC.md) | `northstar/i4-thread-web.png` | I4-A locked |
 | **W4 Tenant** | [`product/TENANT-EXPERIENCE-CONTRACT.md`](./product/TENANT-EXPERIENCE-CONTRACT.md) | tenant inbox / today evolution PNGs | Track D presets |
 | **W5 Public `/b`** | [`product/PUBLIC-B-SURFACE-SPEC.md`](./product/PUBLIC-B-SURFACE-SPEC.md) | `public-book` + `guest-proof` PNGs | Track G |
+| **W5–W6 Guest placement** | [`design/GUEST-SURFACE-PLACEMENT-CONTRACT.md`](./design/GUEST-SURFACE-PLACEMENT-CONTRACT.md) | `/book` + `/my` audit registry §6 | Era 1 P0–P3 |
 | **W6 Guest hub** | [`product/GUEST-CONTINUITY-HUB-SPEC.md`](./product/GUEST-CONTINUITY-HUB-SPEC.md) | (R2 — `my.livia-hq.com`) | R2 Track G+ |
 | **Brand / visuals** | [`design/VISUAL-INHERITANCE-AND-BRAND-LOCKS.md`](./design/VISUAL-INHERITANCE-AND-BRAND-LOCKS.md) | Aurum logo locked | Gallery dev routes |
 | **Evolution tiers** | [`design/LIVIA-EVOLUTION-SCREENS.md`](./design/LIVIA-EVOLUTION-SCREENS.md) | northstar / now / v3 folders | Release program |
@@ -129,7 +130,7 @@
 | Vertical registry (master) | `product/VERTICAL-REGISTRY-MASTER.md` | `verticals.ts`, coverage registry |
 | Personas | `personas.md` | `product/PERSONA-UX.md`, journeys/ |
 | Verticals | `verticals.md` | `lib/policy` |
-| Liv OS | `product/LIV-RUNTIME-SPEC.md` | `LIV-OPERATING-SYSTEM.md`, `LIV-OS-ALPHABET.md` |
+| Liv OS | `product/LIV-RUNTIME-SPEC.md` | `LIV-OPERATING-SYSTEM.md` (§16 Era 1), `LIV-OS-ALPHABET.md` |
 | Liv setup copilot | `product/LIV-SETUP-COPILOT.md` | LIV-OPERATING-SYSTEM §6.5, PLATFORM-EVOLUTION Track I |
 | Business rules | `product/BUSINESS-RULES-REGISTRY.md` | — |
 | Scope / gates | `product/SCOPE-MORATORIUM.md` | `launch-plan.md`, `TARGET-STATE-VS-SHIP-SCOPE.md` |

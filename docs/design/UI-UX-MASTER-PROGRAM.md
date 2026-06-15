@@ -32,6 +32,7 @@
 | **Brand-forward (W5)** | Business logo > Livia mark | P7 never confused which shop |
 | **Accessible** | WCAG 2.2 AA target; reduced motion; 44px targets | axe on `/b` + dashboard |
 | **Honest** | UI density doesn’t imply unshipped features | Tier badges on demos |
+| **Placement-aware** | Each element earns one home — no duplicate money/identity CTAs | [`GUEST-SURFACE-PLACEMENT-CONTRACT.md`](./GUEST-SURFACE-PLACEMENT-CONTRACT.md) |
 
 ---
 
@@ -273,5 +274,6 @@ Every route in [`LIVIA-FULL-SURFACE-MAP.md`](../product/LIVIA-FULL-SURFACE-MAP.m
 
 | Date | Change |
 |------|--------|
+| 2026-06-15 | Placement-aware quality + guest placement contract cross-link |
 | 2026-05-31 | §3.5 premium motion layer; PREMIUM-MOTION-LAYER cross-link |
 | 2026-05-31 | Initial UI/UX master program — motion, vertical tone, screen card target |

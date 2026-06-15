@@ -3,6 +3,18 @@
 Running record of **what we captured**, **what we saw in screenshots**, **what we changed**, and **whether we re-verified**.  
 Captures live under `e2e/visual-captures/` (gitignored). Re-run: `pnpm e2e:visual-audit:all:web` · native: `pnpm maestro:visual-capture`.
 
+**Guest placement registry:** [`design/GUEST-SURFACE-PLACEMENT-CONTRACT.md`](../design/GUEST-SURFACE-PLACEMENT-CONTRACT.md) §6.
+
+---
+
+## 2026-06-15 — Guest book P0a (staging founder pass)
+
+| Surface | Route | Finding | Fix | Status |
+|---------|-------|---------|-----|--------|
+| Public book details | `/book/{slug}` | Hub autofill banner + top deposit card cluttered wizard; “Save to My Livia” shown when already signed in; raw `HTTP 422` on patch-test gate | Silent hub prefills; deposit breakdown in summary card; hub-only hides save CTA; `parsePublicApiError`; patch-test hint on services step | **Engineering done** — founder re-verify on staging after deploy |
+
+**Next in queue:** P0b confirm/pay · P0c `/my` home · P0d shop relationship · P0e visit manage.
+
 ---
 
 ## 2026-05-26 — Full web pass (~368 PNGs)

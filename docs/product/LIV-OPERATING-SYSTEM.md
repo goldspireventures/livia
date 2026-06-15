@@ -396,18 +396,6 @@ UI must show **`pendingReason`** — not a generic yellow badge.
 
 ---
 
-## 14. Documentation map (keep in sync)
-
-| When you change… | Update… |
-|------------------|---------|
-| New tool | This doc §4, `LIV-CAPABILITY-MATRIX.md`, OpenAPI if HTTP mirror, `BUSINESS-RULES-REGISTRY.md` |
-| New policy type | `lib/policy`, `BUSINESS-RULES-REGISTRY.md`, vertical pack YAML |
-| New event | `event-bus` registry, workflow doc, §7 table here |
-| New actor permissions | `access-control.md`, ADR 0009 |
-| Internal ops | `artifacts/livia-internal/README.md`, ADR internal |
-
----
-
 ## 15. Design principles (review checklist)
 
 1. **Would this be a new `if` in the chat route?** → Stop; add policy + tool.  
@@ -416,6 +404,63 @@ UI must show **`pendingReason`** — not a generic yellow badge.
 4. **Does customer see hard-fail on LLM down?** → Forbidden (ADR 0012).  
 5. **Does founder see another shop’s PII without switching tenant?** → Forbidden.  
 6. **Is behaviour different per vertical without forking code?** → Pack manifest only.
+
+---
+
+## 16. Era 1 reality — Liv today vs JARVIS target (2026-06-15)
+
+**Decision:** Become JARVIS-shaped **incrementally**. Era 1 ships **policy OS + bounded agent**; learning informs suggestions only — it does not auto-change deposit gates, waive fees, or operational policy without owner-visible mandate.
+
+### 16.1 What Liv is today (honest)
+
+| Layer | Shipped | Notes |
+|-------|---------|-------|
+| **Policy resolver** | Yes | Deposits, pending reasons, vertical copy — `lib/policy` |
+| **Tools** | 2 | `find_slots`, `create_booking` in `lib/liv-runtime` |
+| **Chat** | Yes | Public `/book` widget + guest hub chat — reactive |
+| **Mandate ladder** | Policy types | `liv-mandate.ts` — `resolveLivDecision()`; default **R1–R2** per vertical |
+| **Memory** | Minimal | Conversation rows; customer `strikeCount` / `trustedClient` tracked — **not** deposit exemptions in Era 1 |
+| **Proactive** | Workflows | Reminders, metering — not Liv-initiated policy changes |
+| **Internal JARVIS** | Partial | Internal portal read tools; no full cross-tenant agent |
+
+Liv is **not** learning deposit rules from behaviour in production. Background signals may be stored for future suggest-only trust tiers.
+
+### 16.2 JARVIS target (phased)
+
+| Rung | Guest-facing | Owner-facing |
+|------|--------------|--------------|
+| **R0–R1** (Era 1 default) | Answer, draft, propose | Approvals queue; no auto money moves |
+| **R2** | Reminders auto | Inbox drafts auto-send with guardrails |
+| **R3** | Book/reschedule with cap | Waitlist offers |
+| **R4** | Collect deposit within cap | Running-late broadcast |
+
+**Hard Era 1 locks:**
+
+- `waive_deposit` — never auto (`RUNG_AUTO_ACTIONS` excludes it at all rungs).
+- Deposit % / require-deposit — **owner settings + policy only**; Liv may explain, not mutate.
+- Strike / VIP — tracked; **no** online deposit skip without future mandate + owner confirm.
+
+### 16.3 Next build slices (after guest placement P0)
+
+1. **Mandate enforcement in runtime** — tool executor calls `resolveLivDecision` before every non-read tool (audit on `propose`).
+2. **Approvals queue UI** — surface `preview` from mandate decisions on dashboard.
+3. **Procedural memory suggest-only** — “Offer Lara for colour” requires owner tap once.
+4. **Event → Liv reaction matrix** — briefing lines from domain events (§7), not duplicate workflows.
+
+**Guest UX authority:** [`GUEST-SURFACE-PLACEMENT-CONTRACT.md`](../design/GUEST-SURFACE-PLACEMENT-CONTRACT.md).
+
+---
+
+## 17. Documentation map (keep in sync)
+
+| When you change… | Update… |
+|------------------|---------|
+| New tool | This doc §4, `LIV-CAPABILITY-MATRIX.md`, OpenAPI if HTTP mirror, `BUSINESS-RULES-REGISTRY.md` |
+| New policy type | `lib/policy`, `BUSINESS-RULES-REGISTRY.md`, vertical pack YAML |
+| New event | `event-bus` registry, workflow doc, §7 table here |
+| New actor permissions | `access-control.md`, ADR 0009 |
+| Internal ops | `artifacts/livia-internal/README.md`, ADR internal |
+| Guest placement / `/book` UX | `GUEST-SURFACE-PLACEMENT-CONTRACT.md` |
 
 ---
 

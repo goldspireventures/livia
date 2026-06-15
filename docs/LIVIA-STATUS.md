@@ -1,8 +1,10 @@
 # Livia — top-level status
 
-**Updated:** 2026-06-05 (GTM vertical depth lock)  
+**Updated:** 2026-06-15 (guest placement + Liv Era 1 lock)  
 **Read this first** for “are we finished?” — execution sequencing: [`product/LIVIA-MASTER-EXECUTION-PLAN-V3.md`](product/LIVIA-MASTER-EXECUTION-PLAN-V3.md).  
-**GTM + vertical parity:** [`product/GTM-VERTICAL-DEPTH-PROGRAM.md`](product/GTM-VERTICAL-DEPTH-PROGRAM.md).
+**GTM + vertical parity:** [`product/GTM-VERTICAL-DEPTH-PROGRAM.md`](product/GTM-VERTICAL-DEPTH-PROGRAM.md).  
+**Liv today → JARVIS:** [`product/LIV-OPERATING-SYSTEM.md`](product/LIV-OPERATING-SYSTEM.md) §16.  
+**Guest placement rules:** [`design/GUEST-SURFACE-PLACEMENT-CONTRACT.md`](design/GUEST-SURFACE-PLACEMENT-CONTRACT.md).
 
 ---
 
@@ -63,6 +65,8 @@
 
 | Item | Notes |
 |------|-------|
+| **Guest placement P0** | `/book` hotfix shipped — registry sweep [`GUEST-SURFACE-PLACEMENT-CONTRACT.md`](design/GUEST-SURFACE-PLACEMENT-CONTRACT.md) §6 (P0b–P3 queued) |
+| **Liv Era 1** | Policy OS + bounded agent; mandate ladder locked — no auto deposit waive — [`LIV-OPERATING-SYSTEM.md`](product/LIV-OPERATING-SYSTEM.md) §16 |
 | **GTM Wave 1 (founder lock)** | **All 9 code verticals** at one creative parity bar — [`GTM-VERTICAL-DEPTH-PROGRAM.md`](product/GTM-VERTICAL-DEPTH-PROGRAM.md) · innovation [`VERTICAL-INNOVATION-PROGRAM.md`](product/VERTICAL-INNOVATION-PROGRAM.md) |
 | **Guest surfaces** | Retire user-facing `/b` → **`{slug}.livia-hq.com`** book + **`/my`** relationship (vertical morph) |
 | **Sub-segment onboarding** | Org shape + category profile at create — full beauty aisle + all vertical sub-segments |
@@ -117,6 +121,7 @@ Detail logs: `docs/operations/R1-BUILD-STATUS.md`, `PROGRAM-ENGINEERING-EXIT.md`
 
 | Date | Change |
 |------|--------|
+| 2026-06-15 | Guest placement contract + Liv Era 1 doc (§16); `/book` deposit in summary, silent hub autofill, universal deposits |
 | 2026-06-05 | GTM Wave 1 lock — nine verticals, one bar; subdomain + `/my`; innovation program; retire `/b` UX |
 | 2026-06-05 | Master Blueprint Volumes 0–H; V3 execution plan; Era 1 focus replaces open-ended wellness wave 7 |
 | 2026-06-02 | R∞: Liv setup copilot spec + Track I in evolution program |
