@@ -8,6 +8,7 @@ export function PublicBookingStickySummary({
   startAt,
   priceMinor,
   currency,
+  depositDueMinor = 0,
   ctaLabel,
   onCta,
   disabled,
@@ -17,6 +18,7 @@ export function PublicBookingStickySummary({
   startAt: string;
   priceMinor: number;
   currency: string;
+  depositDueMinor?: number;
   ctaLabel: string;
   onCta: () => void;
   disabled?: boolean;
@@ -33,7 +35,9 @@ export function PublicBookingStickySummary({
           <p className="text-xs text-muted-foreground">
             {formatDate(startAt)} · {formatTime(startAt)} ·{" "}
             <span className="text-primary font-semibold">
-              {formatCurrency(priceMinor, currency)}
+              {depositDueMinor > 0
+                ? `${formatCurrency(depositDueMinor, currency)} deposit`
+                : formatCurrency(priceMinor, currency)}
             </span>
           </p>
         </div>

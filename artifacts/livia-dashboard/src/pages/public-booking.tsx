@@ -94,6 +94,7 @@ import {
   dedupePublicSlotsByStartAt,
   guardSectionTitle,
   guessMedspaProcedureCode,
+  parsePublicApiError,
   publicBookingLayout,
   verticalHeroCta,
   type PublicPolicyTrust,
@@ -420,6 +421,7 @@ export default function PublicBookingPage() {
     void fetchGuestHubBookProfile(sl).then((profile) => {
       if (!profile) return;
       setHubAuthenticated(true);
+      setSaveToMyLivia(false);
       if (profile.firstName) setFirstName(profile.firstName);
       if (profile.lastName) setLastName(profile.lastName);
       if (profile.email) setEmail(profile.email);
@@ -433,6 +435,24 @@ export default function PublicBookingPage() {
     if (pct <= 0) return 0;
     return Math.round((selectedService.priceMinor * pct) / 100);
   }, [b?.policyTrust, selectedService]);
+
+  const depositPercentPreview = b?.policyTrust?.depositPercent ?? 0;
+
+  const friendlyValidationErr = validationErr ? parsePublicApiError(validationErr) : null;
+  const isPatchTestErr = friendlyValidationErr?.toLowerCase().includes("patch test") ?? false;
+  const patchTestService = useMemo(
+    () =>
+      b?.services?.find(
+        (s) => s.serviceKind === "patch_test" || /patch\s*test/i.test(s.name ?? ""),
+      ),
+    [b?.services],
+  );
+
+  function stepValidationMessage(forStep: Step): string | null {
+    if (!friendlyValidationErr) return null;
+    if (isPatchTestErr && forStep !== "services" && forStep !== "details") return null;
+    return friendlyValidationErr;
+  }
 
   const aiOn = (b?.aiEnabled ?? "true") === "true";
 
@@ -665,11 +685,7 @@ export default function PublicBookingPage() {
           playCelebrationChime();
         },
         onError: (err: unknown) => {
-          const msg =
-            (err as { response?: { data?: { error?: string } }; message?: string })?.response?.data
-              ?.error ??
-            (err as { message?: string })?.message ??
-            "Slot no longer available";
+          const msg = parsePublicApiError(err, "Slot no longer available");
           setValidationErr(msg);
           if (msg.toLowerCase().includes("patch test")) {
             setStep("services");
@@ -923,7 +939,29 @@ export default function PublicBookingPage() {
         ) : null}
 
         {step === "services" ? (
-          <PublicBookServicesStep
+          <>
+            {isPatchTestErr && friendlyValidationErr ? (
+              <div
+                className="text-sm border-l-2 border-primary pl-3 py-1 space-y-2 mb-4"
+                data-testid="public-patch-test-gate"
+              >
+                <p className="text-muted-foreground">{friendlyValidationErr}</p>
+                {patchTestService ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setValidationErr(null);
+                      selectPublicService(patchTestService as PublicService);
+                    }}
+                  >
+                    Book patch test
+                  </Button>
+                ) : null}
+              </div>
+            ) : null}
+            <PublicBookServicesStep
             staffForward={staffForward}
             staff={b.staff}
             selectedStaff={selectedStaff}
@@ -969,6 +1007,7 @@ export default function PublicBookingPage() {
               document.getElementById("public-service-menu")?.scrollIntoView({ behavior: "smooth" });
             }}
           />
+          </>
         ) : null}
 
         {/* Step: Slots */}
@@ -1115,7 +1154,7 @@ export default function PublicBookingPage() {
                           })
                           .catch((e: unknown) => {
                             setValidationErr(
-                              e instanceof Error ? e.message : "Could not join waitlist",
+                              parsePublicApiError(e, "Could not join waitlist"),
                             );
                           })
                           .finally(() => setWaitlistBusy(false));
@@ -1175,33 +1214,6 @@ export default function PublicBookingPage() {
                 </p>
               </div>
             </div>
-
-            {hubAuthenticated ? (
-              <Card className="border-primary/20 bg-primary/5" data-testid="public-book-hub-autofill">
-                <CardContent className="pt-4 text-sm text-muted-foreground">
-                  Signed in with My Livia — your details are filled in. You can still edit them if
-                  something changed.
-                </CardContent>
-              </Card>
-            ) : null}
-
-            {depositDuePreviewMinor > 0 ? (
-              <Card className="border-amber-500/30 bg-amber-500/5" data-testid="public-book-deposit-notice">
-                <CardContent className="pt-4 space-y-1 text-sm">
-                  <p className="font-medium flex items-center gap-2">
-                    <CreditCard className="h-4 w-4" />
-                    Deposit required to hold this slot
-                  </p>
-                  <p className="text-muted-foreground">
-                    {b.depositPolicySummary?.trim() ||
-                      `${b.policyTrust?.depositPercent ?? 0}% deposit due after you confirm — pay by card to lock your time.`}
-                  </p>
-                  <p className="font-semibold tabular-nums">
-                    {formatCurrency(depositDuePreviewMinor, selectedService.currency)}
-                  </p>
-                </CardContent>
-              </Card>
-            ) : null}
 
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1276,7 +1288,7 @@ export default function PublicBookingPage() {
                   ) : null}
                 </p>
               ) : null}
-              {phone.trim() ? (
+              {phone.trim() && !hubAuthenticated ? (
                 <label className="flex items-start gap-3 rounded-lg border border-border/60 p-3 cursor-pointer">
                   <Checkbox
                     checked={saveToMyLivia}
@@ -1475,20 +1487,23 @@ export default function PublicBookingPage() {
                 />
               </div>
 
-              {validationErr && (
+              {stepValidationMessage("details") && (
                 <div className="text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-md px-3 py-2">
-                  {validationErr}
+                  {stepValidationMessage("details")}
                 </div>
               )}
 
               <PublicBookingSummaryCard
-                className="hidden md:block bg-muted/50"
+                className="bg-muted/50"
                 serviceName={selectedService.name}
                 startAt={selectedSlot}
                 durationMinutes={selectedService.durationMinutes}
                 priceMinor={selectedService.priceMinor}
                 currency={selectedService.currency}
                 serviceNoun={vocab.serviceNoun}
+                depositDueMinor={depositDuePreviewMinor}
+                depositPercent={depositPercentPreview}
+                depositPolicySummary={b.depositPolicySummary}
               />
 
               {b.bookingTermsBlock ? (
@@ -1602,19 +1617,22 @@ export default function PublicBookingPage() {
                 data-testid="input-consent-signature"
               />
             </div>
-            {validationErr && (
+            {stepValidationMessage("consent") && (
               <div className="text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-md px-3 py-2">
-                {validationErr}
+                {stepValidationMessage("consent")}
               </div>
             )}
             <PublicBookingSummaryCard
-              className="hidden md:block bg-muted/40"
+              className="bg-muted/40"
               serviceName={selectedService.name}
               startAt={selectedSlot}
               durationMinutes={selectedService.durationMinutes}
               priceMinor={selectedService.priceMinor}
               currency={selectedService.currency}
               serviceNoun={vocab.serviceNoun}
+              depositDueMinor={depositDuePreviewMinor}
+              depositPercent={depositPercentPreview}
+              depositPolicySummary={b.depositPolicySummary}
             />
 
             <Button
@@ -1874,6 +1892,7 @@ export default function PublicBookingPage() {
           startAt={selectedSlot}
           priceMinor={selectedService.priceMinor}
           currency={selectedService.currency}
+          depositDueMinor={depositDuePreviewMinor}
           ctaLabel={
             step === "consent"
               ? confirmLabel
