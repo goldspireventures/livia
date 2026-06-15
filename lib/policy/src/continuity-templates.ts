@@ -107,16 +107,16 @@ const BEAUTY: ContinuityTemplate = {
   smsBody: (a) =>
     BASE_SMS(
       a,
-      "Reply with lash map notes or aftercare questions — we'll nudge you when your fill cycle is due.",
+      "Reply with treatment questions, allergies, or style notes — we'll confirm in this thread.",
     ),
   emailSubject: (a) => `Your appointment at ${a.businessName}`,
   emailBody: (a) =>
-    `${BASE_SMS(a, "Reply with lash map notes, allergies, or inspiration photos.")}`,
+    `${BASE_SMS(a, "Reply with allergies, inspiration photos, or questions for your artist.")}`,
   publicNextSteps: (a) => [
     a.visitUrl
-      ? `Watch for a message from ${a.businessName} — reply with photos or questions (ref ${a.bookingRef}).`
+      ? `Watch for a message from ${a.businessName} — reply in the same thread (ref ${a.bookingRef}).`
       : `Watch for a message from ${a.businessName} — reply in the same thread (ref ${a.bookingRef}).`,
-    "Patch tests may be required before colour or lash services — your studio will confirm.",
+    "Patch tests may be required before certain colour or lash services — your studio will confirm.",
     "Add the appointment to your calendar below.",
   ],
   igDeepLinkHint: (a) =>
@@ -144,9 +144,16 @@ export const CONTINUITY_TEMPLATES: Record<BusinessVertical, ContinuityTemplate> 
   },
   wellness: WELLNESS,
   fitness: {
-    ...HAIR,
-    smsBody: (a) => BASE_SMS(a, "Reply if you need to change session type or share PAR-Q updates."),
-    publicNextSteps: () => ["Your studio may confirm session details by message."],
+    smsBody: (a) =>
+      BASE_SMS(a, "Reply if you need to change session type or share health updates."),
+    emailSubject: (a) => `Your session at ${a.businessName}`,
+    emailBody: (a) =>
+      `${BASE_SMS(a, "Reply with session questions or health updates for your coach.")}`,
+    publicNextSteps: (a) => [
+      `Watch for a message from ${a.businessName} — reply with session notes (ref ${a.bookingRef}).`,
+      "Your coach may confirm session details by message.",
+      "Add the session to your calendar below.",
+    ],
   },
   medspa: MEDSPA_CALM,
   "allied-health": MEDSPA_CALM,

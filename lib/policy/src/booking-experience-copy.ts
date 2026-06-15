@@ -491,7 +491,7 @@ export type BookingExperienceCopy = {
 
 const DEFAULT_EXPERIENCE: BookingExperienceCopy = {
   detailPageTitle: "Booking detail",
-  detailPageSubtitle: "Status, continuity, and next actions",
+  detailPageSubtitle: "Status, messages, and next actions",
   backToListAria: "Back to bookings",
   partyCardTitle: "Client & service",
   clientFieldLabel: "Customer",
@@ -610,24 +610,133 @@ const WELLNESS_EXPERIENCE: BookingExperienceCopy = {
   },
 };
 
+function experienceFromVocabulary(
+  vertical: BusinessVertical,
+  patch: Partial<BookingExperienceCopy>,
+): BookingExperienceCopy {
+  const v = businessVocabulary(vertical, null);
+  const svc = v.serviceNoun.toLowerCase();
+  const plural = svc.endsWith("s") ? svc : `${svc}s`;
+  return {
+    ...DEFAULT_EXPERIENCE,
+    detailPageTitle: `${v.serviceNoun} detail`,
+    detailPageSubtitle: `${v.serviceNoun}, ${v.clientNoun.toLowerCase()} notes, and confirm or reschedule`,
+    backToListAria: "Back to schedule",
+    partyCardTitle: `${v.clientNoun} & ${svc}`,
+    clientFieldLabel: v.clientNoun,
+    serviceFieldLabel: v.serviceNoun,
+    noGuestLabel: `No ${v.clientNoun.toLowerCase()} on file`,
+    noServiceLabel: `No ${svc} selected`,
+    listEmptyTitle: `No ${plural} in this view`,
+    listEmptyPendingCta: `New ${svc}`,
+    toastStatusUpdated: (status) => `${v.serviceNoun} ${status.toLowerCase()}`,
+    ...patch,
+  };
+}
+
+const BODY_ART_EXPERIENCE = experienceFromVocabulary("body-art", {
+  detailPageTitle: "Session detail",
+  mediaCardTitle: "Design references",
+  notesDisclosureTitle: "Studio notes",
+  notesDisclosureDescription: "Placement, sizing, and consent — internal only",
+  listGuidedBookingDescription: "Pick session, artist, and time with Liv",
+  listQuickAddLabel: "Quick book",
+  listEmptyPendingCta: "New session",
+  statusActions: {
+    CONFIRMED: "Confirm session",
+    COMPLETED: "Session complete",
+    CANCELLED: "Cancel",
+    NO_SHOW: "No-show",
+  },
+});
+
+const FITNESS_EXPERIENCE = experienceFromVocabulary("fitness", {
+  detailPageTitle: "Session detail",
+  clientFieldLabel: "Member",
+  partyCardTitle: "Member & session",
+  notesDisclosureDescription: "Goals and health notes — internal only",
+  listGuidedBookingDescription: "Pick session, coach, and time with Liv",
+  statusActions: {
+    CONFIRMED: "Confirm session",
+    COMPLETED: "Session complete",
+    CANCELLED: "Cancel",
+    NO_SHOW: "No-show",
+  },
+});
+
+const MEDSPA_EXPERIENCE = experienceFromVocabulary("medspa", {
+  detailPageTitle: "Appointment detail",
+  clientFieldLabel: "Patient",
+  partyCardTitle: "Patient & treatment",
+  serviceFieldLabel: "Treatment",
+  mediaCardTitle: "Intake attachments",
+  notesDisclosureDescription: "Consent and clinical notes — internal only",
+  listGuidedBookingDescription: "Pick treatment, practitioner, and time with Liv",
+});
+
+const ALLIED_HEALTH_EXPERIENCE = experienceFromVocabulary("allied-health", {
+  detailPageTitle: "Appointment detail",
+  clientFieldLabel: "Patient",
+  partyCardTitle: "Patient & appointment",
+  serviceFieldLabel: "Appointment",
+  mediaCardTitle: "Referral attachments",
+  notesDisclosureDescription: "Clinical notes — internal only",
+  listGuidedBookingDescription: "Pick appointment, clinician, and time with Liv",
+});
+
+const PET_EXPERIENCE = experienceFromVocabulary("pet-grooming", {
+  detailPageTitle: "Groom detail",
+  clientFieldLabel: "Pet parent",
+  partyCardTitle: "Pet parent & groom",
+  serviceFieldLabel: "Groom",
+  mediaCardTitle: "Pet photos",
+  notesDisclosureDescription: "Breed, temperament, and handling — internal only",
+  listGuidedBookingDescription: "Pick groom, groomer, and time with Liv",
+  listEmptyPendingCta: "New groom",
+});
+
+const DETAILING_EXPERIENCE = experienceFromVocabulary("automotive-detailing", {
+  detailPageTitle: "Booking detail",
+  mediaCardTitle: "Vehicle photos",
+  notesDisclosureDescription: "Make, model, and paint notes — internal only",
+  listGuidedBookingDescription: "Pick detail package, bay, and time with Liv",
+  listEmptyPendingCta: "New booking",
+});
+
+const EVENT_EXPERIENCE = experienceFromVocabulary("event-vendors", {
+  detailPageTitle: "Event detail",
+  partyCardTitle: "Client & service",
+  notesDisclosureDescription: "Theme, guest count, and setup — internal only",
+  listGuidedBookingDescription: "Capture event details and quote with Liv",
+  listEmptyPendingCta: "New enquiry",
+  statusActions: {
+    CONFIRMED: "Confirm event",
+    COMPLETED: "Event complete",
+    CANCELLED: "Cancel",
+    NO_SHOW: "No-show",
+  },
+});
+
+const BOOKING_EXPERIENCE_BY_VERTICAL: Record<BusinessVertical, BookingExperienceCopy> = {
+  hair: HAIR_EXPERIENCE,
+  beauty: BEAUTY_EXPERIENCE,
+  wellness: WELLNESS_EXPERIENCE,
+  "body-art": BODY_ART_EXPERIENCE,
+  fitness: FITNESS_EXPERIENCE,
+  medspa: MEDSPA_EXPERIENCE,
+  "allied-health": ALLIED_HEALTH_EXPERIENCE,
+  "pet-grooming": PET_EXPERIENCE,
+  "automotive-detailing": DETAILING_EXPERIENCE,
+  "event-vendors": EVENT_EXPERIENCE,
+};
+
 /** W4 booking list + detail + continuity — operator copy. */
 export function bookingExperienceCopy(
   vertical?: string | null,
   category?: string | null,
 ): BookingExperienceCopy {
   const key = resolveVerticalKey(vertical, category);
-  if (key === "wellness") return WELLNESS_EXPERIENCE;
-  if (key === "beauty") return BEAUTY_EXPERIENCE;
-  if (key === "hair") return HAIR_EXPERIENCE;
-  const v = businessVocabulary(vertical, category);
-  return {
-    ...DEFAULT_EXPERIENCE,
-    partyCardTitle: `${v.clientNoun} & ${v.serviceNoun.toLowerCase()}`,
-    clientFieldLabel: v.clientNoun,
-    serviceFieldLabel: v.serviceNoun,
-    continuityPanelTitle: "Client messages",
-    listEmptyTitle: `No ${v.serviceNoun.toLowerCase()}s found`,
-  };
+  return BOOKING_EXPERIENCE_BY_VERTICAL[key];
 }
 
 /** Guest-facing hold copy while PENDING + awaiting_continuity (public confirm page). */

@@ -69,6 +69,12 @@ run("Vertical pending copy coverage", [
   "../../lib/policy/src/__tests__/vertical-pending-copy-coverage.test.ts",
 ]);
 
+run("Vertical copy program", [
+  "--import",
+  "tsx/esm",
+  "../../lib/policy/src/__tests__/vertical-copy-program.test.ts",
+]);
+
 run("Booking experience copy", [
   "--import",
   "tsx/esm",

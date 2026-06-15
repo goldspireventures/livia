@@ -54,9 +54,30 @@ If Livia is **programmatic**, adding vertical #10 should feel like **blocks shuf
 | `wedge-demo-stories.ts` | G1-A interstitial beats | ⚠️ file may not exist yet |
 | `guest-surfaces.ts` | P7 surface types | ⚠️ Track G |
 | `guest-public-experience.ts` | W5 `/b` + visit copy | ✅ |
+| `booking-experience-copy.ts` | pending + operator booking copy | ✅ |
+| `vertical-copy-program.ts` | CI bleed guards (`defineVerticalPack` gate) | ✅ |
 | `vertical-announcement.ts` | announce + welcome handshake | ✅ |
 
 **Action:** `pnpm run typecheck` — fix every error in `lib/policy` before touching UI.
+
+**Copy gate:** `pnpm vertical:check` runs `vertical-copy-program.test.ts` — every vertical must pass pending labels, operator booking copy, continuity templates, and cross-vertical bleed rules. Keep in sync with `defineVerticalPack()` presentation handshake.
+
+### 2.1b Vertical copy — what the system enforces
+
+When you add enum value `foo`, these surfaces must resolve **without** salon defaults or wrong-vertical nouns:
+
+| Surface | Module | Consumed by |
+|---------|--------|-------------|
+| Vocabulary | `vocabulary.ts` | Today title, running late, `/bookings` nav |
+| Pending labels | `booking-experience-copy.ts` | Today, room board, approvals, mobile |
+| Operator booking detail | `booking-experience-copy.ts` | `/bookings/:id`, continuity panel |
+| Stuck reply card | `booking-experience-copy.ts` | Owner dashboard |
+| Continuity SMS/email | `continuity-templates.ts` | Post-book guest thread |
+| Guest `/b` | `guest-public-experience.ts` | Public book + visit prep |
+
+**Do not** add vertical `if` chains in `artifacts/*` for copy — extend the policy hub; surfaces call `tenant-experience` + policy helpers.
+
+**CI:** `vertical-copy-program.ts` + `vertical-pending-copy-coverage.test.ts` — fails if any vertical leaks forbidden phrases (e.g. hair showing "patch test" or "photos or confirmation").
 
 ### 2.2 Registry — announce platform-wide
 

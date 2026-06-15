@@ -27,6 +27,7 @@ import { beautyShellNavItems } from "./beauty-operator-shell";
 import { wellnessShellNavItems } from "./wellness-operator-shell";
 import { VERTICAL_COVERAGE_REGISTRY } from "./vertical-coverage";
 import { showBookingResourcesSettings, isDashboardRouteAllowedForTenant } from "./wedge-gate";
+import { validateVerticalCopyProgram } from "./vertical-copy-program";
 
 /** Maturity — platform knows how to treat each capability without parsing vertical-specific UI. */
 export type VerticalCapabilityMaturity = "platform-default" | "R1" | "R1.1" | "R2" | "R3";
@@ -51,6 +52,7 @@ export const PLATFORM_DEFAULT_VERTICAL_ATTRIBUTES = [
   "bookingExperience.copy",
   "coverage.registry",
   "guest.publicExperience",
+  "verticalCopy.program",
 ] as const;
 
 export type PlatformDefaultVerticalAttribute =
@@ -252,6 +254,7 @@ function collectSatisfiedDefaults(vertical: BusinessVertical): PlatformDefaultVe
   if (verticalOperationalCopy(vertical, null)) satisfied.push("bookingExperience.copy");
   if (registryRowFor(vertical)) satisfied.push("coverage.registry");
   if (guestPublicExperience(vertical, null).heroTitle) satisfied.push("guest.publicExperience");
+  if (validateVerticalCopyProgram(vertical).ok) satisfied.push("verticalCopy.program");
   satisfied.push("pack.registered");
   const handshake = validateVerticalPresentationPack(vertical);
   if (handshake.ok) satisfied.push("presentation.handshake");

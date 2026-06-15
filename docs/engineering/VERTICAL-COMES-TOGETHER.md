@@ -28,6 +28,7 @@ These are `PLATFORM_DEFAULT_VERTICAL_ATTRIBUTES` in `lib/policy/src/vertical-ann
 | 6 | Continuity | `continuity-templates.ts` | SMS/email/public next steps — not hair clone |
 | 7 | Guest surfaces | `guest-surfaces.ts` | storefront + visit (+ vertical extras) |
 | 8 | Booking experience | `booking-experience-copy.ts`, `verticalOperationalCopy` | pending labels, session detail copy |
+| 8b | Copy program CI | `vertical-copy-program.ts` | bleed guards; `pnpm vertical:check` |
 | 9 | Guest public W5 | `guest-public-experience.ts` | `/b` hero, grid/list, care notes, visit prep |
 | 10 | Coverage registry | `vertical-coverage.ts` | demo slug, tier, doc id |
 
