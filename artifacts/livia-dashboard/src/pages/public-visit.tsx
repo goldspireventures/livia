@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { Link } from "wouter";
 import { useGuestBookTokenRoute } from "@/lib/use-guest-book-slug";
 import { clientGuestBookHref } from "@/lib/guest-book-url";
 import {
-  applyPublicGuestSurfaceTheme,
+  warmPublicGuestSurfaceTheme,
   clearPublicGuestSurfaceTheme,
   type PublicGuestExperienceSkin,
 } from "@/lib/apply-public-guest-theme";
@@ -58,6 +58,12 @@ export default function PublicVisitPage() {
 
   usePublicGuestPwa(slug);
 
+  useLayoutEffect(() => {
+    if (!slug) return;
+    void warmPublicGuestSurfaceTheme({ slug });
+    return () => clearPublicGuestSurfaceTheme();
+  }, [slug]);
+
   useEffect(() => {
     if (!slug || !token) return;
     setLoading(true);
@@ -68,14 +74,14 @@ export default function PublicVisitPage() {
       })
       .then((d) => {
         setData(d);
-        applyPublicGuestSurfaceTheme({
+        void warmPublicGuestSurfaceTheme({
+          slug: d.slug ?? slug,
           vertical: d.vertical,
           experienceSkin: d.experienceSkin,
         });
       })
       .catch(() => setData(null))
       .finally(() => setLoading(false));
-    return () => clearPublicGuestSurfaceTheme();
   }, [slug, token]);
 
   async function sendRunningLate(minutes: number) {

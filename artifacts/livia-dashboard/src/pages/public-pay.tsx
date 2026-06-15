@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { useSearch } from "wouter";
 import { useGuestBookTokenRoute } from "@/lib/use-guest-book-slug";
 import {
-  applyPublicGuestSurfaceTheme,
+  warmPublicGuestSurfaceTheme,
   clearPublicGuestSurfaceTheme,
   type PublicGuestExperienceSkin,
 } from "@/lib/apply-public-guest-theme";
@@ -54,6 +54,12 @@ export default function PublicPayPage() {
 
   usePublicGuestPwa(slug);
 
+  useLayoutEffect(() => {
+    if (!slug) return;
+    void warmPublicGuestSurfaceTheme({ slug });
+    return () => clearPublicGuestSurfaceTheme();
+  }, [slug]);
+
   const load = useCallback(async () => {
     if (!slug || !token) return;
     setLoading(true);
@@ -63,7 +69,8 @@ export default function PublicPayPage() {
       if (!r.ok) throw new Error("not found");
       const d = (await r.json()) as PayPayload;
       setData(d);
-      applyPublicGuestSurfaceTheme({
+      await warmPublicGuestSurfaceTheme({
+        slug: d.slug ?? slug,
         vertical: d.vertical,
         experienceSkin: d.experienceSkin,
       });
@@ -76,7 +83,6 @@ export default function PublicPayPage() {
 
   useEffect(() => {
     void load();
-    return () => clearPublicGuestSurfaceTheme();
   }, [load]);
 
   useEffect(() => {

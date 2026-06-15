@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { useGuestBookTokenRoute } from "@/lib/use-guest-book-slug";
 import {
-  applyPublicGuestSurfaceTheme,
+  warmPublicGuestSurfaceTheme,
   clearPublicGuestSurfaceTheme,
   type PublicGuestExperienceSkin,
 } from "@/lib/apply-public-guest-theme";
@@ -52,6 +52,12 @@ export default function PublicWaitlistPage() {
 
   usePublicGuestPwa(slug);
 
+  useLayoutEffect(() => {
+    if (!slug) return;
+    void warmPublicGuestSurfaceTheme({ slug });
+    return () => clearPublicGuestSurfaceTheme();
+  }, [slug]);
+
   useEffect(() => {
     if (!slug || !token) return;
     setLoading(true);
@@ -62,7 +68,8 @@ export default function PublicWaitlistPage() {
       })
       .then((d) => {
         setData(d);
-        applyPublicGuestSurfaceTheme({
+        void warmPublicGuestSurfaceTheme({
+          slug: d.slug ?? slug,
           vertical: d.vertical,
           experienceSkin: d.experienceSkin,
         });
@@ -70,7 +77,6 @@ export default function PublicWaitlistPage() {
       })
       .catch(() => setData(null))
       .finally(() => setLoading(false));
-    return () => clearPublicGuestSurfaceTheme();
   }, [slug, token]);
 
   useEffect(() => {

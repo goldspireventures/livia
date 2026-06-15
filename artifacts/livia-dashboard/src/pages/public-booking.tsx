@@ -1,6 +1,6 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
-  applyPublicGuestSurfaceTheme,
+  warmPublicGuestSurfaceTheme,
   clearPublicGuestSurfaceTheme,
 } from "@/lib/apply-public-guest-theme";
 import {
@@ -356,7 +356,14 @@ export default function PublicBookingPage() {
   const b = bizData as PublicBusiness | undefined;
   const slots = (slotsData as { slots?: PublicSlot[] } | undefined)?.slots ?? [];
 
+  useLayoutEffect(() => {
+    if (!slug) return;
+    void warmPublicGuestSurfaceTheme({ slug });
+    return () => clearPublicGuestSurfaceTheme();
+  }, [slug]);
+
   useEffect(() => {
+    if (!slug) return;
     if (!b?.vertical && !b?.category && !b?.country && !b?.experienceSkin) return;
 
     if (
@@ -369,7 +376,8 @@ export default function PublicBookingPage() {
       return;
     }
 
-    applyPublicGuestSurfaceTheme({
+    void warmPublicGuestSurfaceTheme({
+      slug,
       vertical: b?.vertical,
       category: b?.category,
       country: b?.country,
@@ -377,9 +385,7 @@ export default function PublicBookingPage() {
         | { presentation?: string; presentationColorMode?: string; brandAccentHex?: string | null }
         | undefined,
     });
-
-    return () => clearPublicGuestSurfaceTheme();
-  }, [b?.experienceSkin, b?.vertical, b?.category, b?.country]);
+  }, [slug, b?.experienceSkin, b?.vertical, b?.category, b?.country]);
 
   useEffect(() => {
     if (!b?.services?.length || servicePrefApplied.current) return;
