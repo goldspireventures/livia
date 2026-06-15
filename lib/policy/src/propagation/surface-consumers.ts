@@ -34,7 +34,7 @@ const SURFACE_CONSUMER_EXTENSIONS: Record<
   },
   "tenant.bookings.list": {
     consumesCapabilities: ["bookings-list", "inbox-continuity"],
-    policyModules: ["booking-experience-copy.ts", "vocabulary.ts"],
+    policyModules: ["booking-experience-copy.ts", "vocabulary.ts", "presentation-surface.ts"],
   },
   "tenant.booking.new": {
     consumesCapabilities: ["bookings-list"],

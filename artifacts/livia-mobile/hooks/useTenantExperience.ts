@@ -8,5 +8,6 @@ export function useTenantExperience(businessId: string | undefined) {
     queryKey: ["tenant-experience", businessId],
     enabled: !!businessId,
     queryFn: () => fetchTenantExperience(businessId!, getToken),
+    staleTime: 60_000,
   });
 }

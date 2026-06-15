@@ -304,6 +304,8 @@ export default function BookingsScreen() {
           completedCount={completedCount}
           total={bookings.length}
           accent={colors.primary}
+          vertical={bizVertical}
+          category={currentBusiness?.category}
         />
       ) : null}
       {useMorphList && nativeMorph ? (

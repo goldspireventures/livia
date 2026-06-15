@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import {
+  bookingsMorphBandLine,
   resolvePresentationLayoutMorph,
   validateVerticalPresentationPack,
 } from "../presentation-surface";
@@ -35,5 +36,9 @@ assert.ok(eventVendors.ok, eventVendors.errors.join("; "));
 assert.equal(resolvePresentationLayoutMorph("event-vendors", "event-atelier"), "atrium");
 assert.equal(resolvePresentationLayoutMorph("event-vendors", "wedding-ledger"), "pipeline");
 assert.equal(resolvePresentationLayoutMorph("event-vendors", "party-pop"), "menu-card");
+
+assert.match(bookingsMorphBandLine("split-inbox", "hair", null)!, /chair queue/i);
+assert.doesNotMatch(bookingsMorphBandLine("split-inbox", "wellness", null)!, /chair/i);
+assert.match(bookingsMorphBandLine("ledger", "wellness", null)!, /prepaid sessions/i);
 
 console.log("presentation-surface.test.ts: ok");

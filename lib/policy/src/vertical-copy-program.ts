@@ -20,6 +20,7 @@ import {
 } from "./booking-experience-copy";
 import { getContinuityTemplate } from "./continuity-templates";
 import { guestPublicExperience } from "./guest-public-experience";
+import { bookingsMorphBandLine } from "./presentation-surface";
 import { businessVocabulary } from "./vocabulary";
 
 /** Surfaces that must resolve per vertical — expand when new copy hubs ship. */
@@ -29,6 +30,7 @@ export const VERTICAL_COPY_SURFACES = [
   "booking.operatorExperience",
   "booking.publicHold",
   "booking.stuckContinuity",
+  "booking.morphBand",
   "continuity.template",
   "guest.publicExperience",
 ] as const;
@@ -49,15 +51,15 @@ export const OWNER_COPY_FORBIDDEN_GLOBAL = [
  */
 export const VERTICAL_COPY_BLEED_FORBID: Record<BusinessVertical, readonly string[]> = {
   hair: ["patch test", "design reference", "placement notes", "lash map", "therapist", "health notes", "pet parent", "vehicle make"],
-  beauty: ["design reference", "placement notes", "therapist", "pet parent", "vehicle make"],
-  "body-art": ["patch test", "lash map", "therapist", "pet parent", "vehicle make"],
-  wellness: ["patch test", "lash map", "design reference", "chair notes", "pet parent", "vehicle make"],
-  fitness: ["patch test", "lash map", "design reference", "therapist", "pet parent", "vehicle make"],
-  medspa: ["patch test", "lash map", "design reference", "chair notes", "pet parent"],
-  "allied-health": ["patch test", "lash map", "design reference", "chair notes", "pet parent"],
-  "pet-grooming": ["patch test", "lash map", "design reference", "therapist", "vehicle make"],
-  "automotive-detailing": ["patch test", "lash map", "design reference", "therapist", "pet parent"],
-  "event-vendors": ["patch test", "lash map", "design reference", "therapist", "pet parent", "vehicle make"],
+  beauty: ["design reference", "placement notes", "therapist", "chair queue", "pet parent", "vehicle make"],
+  "body-art": ["patch test", "lash map", "therapist", "chair queue", "pet parent", "vehicle make"],
+  wellness: ["patch test", "lash map", "design reference", "chair notes", "chair queue", "pet parent", "vehicle make"],
+  fitness: ["patch test", "lash map", "design reference", "therapist", "chair queue", "pet parent", "vehicle make"],
+  medspa: ["patch test", "lash map", "design reference", "chair notes", "chair queue", "pet parent"],
+  "allied-health": ["patch test", "lash map", "design reference", "chair notes", "chair queue", "pet parent"],
+  "pet-grooming": ["patch test", "lash map", "design reference", "therapist", "chair queue", "vehicle make"],
+  "automotive-detailing": ["patch test", "lash map", "design reference", "therapist", "chair queue", "pet parent"],
+  "event-vendors": ["patch test", "lash map", "design reference", "therapist", "chair queue", "pet parent", "vehicle make"],
 };
 
 export type VerticalCopyValidation = {
@@ -140,6 +142,11 @@ export function validateVerticalCopyProgram(vertical: BusinessVertical): Vertica
 
   const stuck = stuckContinuityCardCopy(vertical, null);
   scanOwnerCopy(vertical, stuck.description, "stuck continuity card", errors);
+
+  for (const morph of ["split-inbox", "ledger"] as const) {
+    const band = bookingsMorphBandLine(morph, vertical, null);
+    if (band) scanOwnerCopy(vertical, band, `bookings morph band (${morph})`, errors);
+  }
 
   const continuity = getContinuityTemplate(vertical);
   const sms = continuity.smsBody(CONTINUITY_FIXTURE);

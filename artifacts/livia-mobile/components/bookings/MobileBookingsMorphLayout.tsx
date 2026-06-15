@@ -1,5 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import type { PresentationLayoutMorph } from "@workspace/policy";
+import { bookingsMorphBandLine, presentationLayoutMorphLabel } from "@workspace/policy";
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
@@ -7,7 +8,6 @@ import { BookingCard } from "@/components/BookingCard";
 import type { BookingDetail } from "@workspace/api-client-react";
 import { fonts } from "@/constants/typography";
 import { useColors } from "@/hooks/useColors";
-import { layoutMorphLabel } from "@/lib/presentation-morph-label";
 
 type BookingRow = BookingDetail;
 
@@ -39,20 +39,26 @@ export function MobileBookingsMorphHeader({
   completedCount,
   total,
   accent,
+  vertical,
+  category,
 }: {
   morph: PresentationLayoutMorph | null;
   pendingCount: number;
   completedCount: number;
   total: number;
   accent: string;
+  vertical?: string | null;
+  category?: string | null;
 }) {
   const colors = useColors();
   if (!morph) return null;
 
+  const morphBand = bookingsMorphBandLine(morph, vertical, category);
+
   return (
     <Animated.View entering={FadeInDown.duration(320)} style={styles.headerWrap}>
       <Text style={[styles.eyebrow, { color: accent }]}>
-        {layoutMorphLabel(morph)} · calendar structure
+        {presentationLayoutMorphLabel(morph)} · calendar structure
       </Text>
 
       {morph === "cockpit" ? (
@@ -73,27 +79,17 @@ export function MobileBookingsMorphHeader({
         </View>
       ) : null}
 
-      {morph === "ledger" ? (
+      {morphBand ? (
         <View
           style={[styles.band, { borderColor: accent + "33", backgroundColor: accent + "08" }]}
-          testID="bookings-morph-ledger-band"
+          testID={`bookings-morph-${morph}-band`}
         >
-          <Feather name="book-open" size={14} color={accent} />
-          <Text style={[styles.bandText, { color: colors.foreground }]}>
-            Prepaid sessions & settlements — confirm redemptions before close
-          </Text>
-        </View>
-      ) : null}
-
-      {morph === "split-inbox" ? (
-        <View
-          style={[styles.band, { borderColor: accent + "33", backgroundColor: accent + "08" }]}
-          testID="bookings-morph-split-band"
-        >
-          <Feather name="layers" size={14} color={accent} />
-          <Text style={[styles.bandText, { color: colors.foreground }]}>
-            Chair queue below · pending confirmations pinned first
-          </Text>
+          <Feather
+            name={morph === "ledger" ? "book-open" : "layers"}
+            size={14}
+            color={accent}
+          />
+          <Text style={[styles.bandText, { color: colors.foreground }]}>{morphBand}</Text>
         </View>
       ) : null}
     </Animated.View>

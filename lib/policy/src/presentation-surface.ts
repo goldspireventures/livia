@@ -4,6 +4,7 @@
  * @see docs/engineering/COMPOSABLE-EVOLUTION.md
  */
 import type { BusinessVertical } from "./types";
+import { businessVerticalSchema } from "./types";
 import {
   PRESENTATION_PRESETS,
   PLATFORM_DEFAULT_PRESET_ID,
@@ -201,5 +202,91 @@ export function listPresentationPresetsForOwnerPicker(
 export function auditAllVerticalPresentationPacks(): VerticalPresentationHandshake[] {
   return (Object.keys(PRESENTATION_PRESETS) as BusinessVertical[]).map((vertical) =>
     validateVerticalPresentationPack(vertical),
+  );
+}
+
+/** Owner-facing morph label — web + mobile bookings headers. */
+export function presentationLayoutMorphLabel(morph: PresentationLayoutMorph | null): string {
+  switch (morph) {
+    case "atrium":
+      return "Room swimlanes";
+    case "timeline-rail":
+      return "Session timeline";
+    case "ledger":
+      return "Voucher ledger";
+    case "constellation":
+      return "Constellation";
+    case "pipeline":
+      return "Pipeline";
+    case "split-inbox":
+      return "Split inbox";
+    case "menu-card":
+      return "Treatment menu";
+    case "cockpit":
+      return "Floor cockpit";
+    default:
+      return "Standard";
+  }
+}
+
+const BOOKINGS_MORPH_BAND_FALLBACK: Partial<Record<PresentationLayoutMorph, string>> = {
+  "split-inbox": "Schedule below · pending confirmations pinned first",
+  ledger: "Prepaid balance — confirm before close",
+};
+
+/** Per-vertical morph band lines on bookings list — no salon defaults on wrong verticals. */
+const BOOKINGS_MORPH_BAND_BY_VERTICAL: Record<
+  BusinessVertical,
+  Partial<Record<PresentationLayoutMorph, string>>
+> = {
+  hair: {
+    "split-inbox": "Chair queue below · pending confirmations pinned first",
+  },
+  beauty: {
+    "split-inbox": "Treatment queue below · confirm bookings first",
+  },
+  "body-art": {
+    "split-inbox": "Studio queue below · pending confirmations pinned first",
+  },
+  wellness: {
+    ledger: "Prepaid sessions & settlements — confirm redemptions before close",
+    "split-inbox": "Session schedule below · pending pinned first",
+  },
+  fitness: {
+    "split-inbox": "Class roster below · pending confirmations pinned first",
+  },
+  medspa: {
+    "split-inbox": "Appointment queue below · pending pinned first",
+  },
+  "allied-health": {
+    "split-inbox": "Session queue below · pending pinned first",
+  },
+  "pet-grooming": {
+    "split-inbox": "Grooming queue below · pending pinned first",
+  },
+  "automotive-detailing": {
+    "split-inbox": "Bay queue below · pending pinned first",
+  },
+  "event-vendors": {
+    "split-inbox": "Enquiry queue below · pending quotes pinned first",
+    pipeline: "Quote pipeline below · follow-ups pinned first",
+  },
+};
+
+/** Bookings morph context band — null when morph has no band line. */
+export function bookingsMorphBandLine(
+  morph: PresentationLayoutMorph | null,
+  vertical?: string | null,
+  _category?: string | null,
+): string | null {
+  if (!morph) return null;
+  const key =
+    vertical && businessVerticalSchema.options.includes(vertical as BusinessVertical)
+      ? (vertical as BusinessVertical)
+      : "hair";
+  return (
+    BOOKINGS_MORPH_BAND_BY_VERTICAL[key]?.[morph] ??
+    BOOKINGS_MORPH_BAND_FALLBACK[morph] ??
+    null
   );
 }
