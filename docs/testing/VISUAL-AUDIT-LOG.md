@@ -13,7 +13,22 @@ Captures live under `e2e/visual-captures/` (gitignored). Re-run: `pnpm e2e:visua
 |---------|-------|---------|-----|--------|
 | Public book details | `/book/{slug}` | Hub autofill banner + top deposit card cluttered wizard; “Save to My Livia” shown when already signed in; raw `HTTP 422` on patch-test gate | Silent hub prefills; deposit breakdown in summary card; hub-only hides save CTA; `parsePublicApiError`; patch-test hint on services step | **Engineering done** — founder re-verify on staging after deploy |
 
-**Next in queue:** P0b confirm/pay · P0c `/my` home · P0d shop relationship · P0e visit manage.
+**Next in queue:** P1a `/b` storefront · P1b consult-first · P2 gateway.
+
+---
+
+## 2026-06-15 — Guest hub P0b–P0e + Liv policy lock
+
+| Surface | Change |
+|---------|--------|
+| `public-pay.tsx` | Shared money breakdown; human API errors |
+| Book confirm | Deposit + pay CTA inside confirmation card (no amber slab) |
+| `/my` shop rows | Manage **or** book — not both |
+| `/my/{slug}` | Memory as border line; Liv in sidebar; single primary CTA |
+| Visit manage | Summary card holds status + money + pay; hero is time only |
+| `mandate-gated-tool` | Era 1 blocks auto policy/setup mutations without approval |
+
+**Founder re-verify on staging after deploy.**
 
 ---
 
