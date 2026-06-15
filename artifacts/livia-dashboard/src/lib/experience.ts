@@ -1,4 +1,5 @@
 import type { PersonaKind } from "./persona";
+import { publicBookingUrl } from "./surface-urls";
 
 const BUSINESS_KEY = "livia.currentBusinessId";
 const VIEW_AS_KEY = "livia.viewingAsStaffId";
@@ -24,8 +25,8 @@ export function persistExperienceContext(input: EnterExperienceInput): void {
   void input.persona;
 }
 
-export function openPublicBooking(dashboardBase: string, slug: string): void {
-  window.open(`${dashboardBase.replace(/\/+$/, "")}/book/${slug}`, "_blank", "noopener,noreferrer");
+export function openPublicBooking(_dashboardBase: string, slug: string): void {
+  window.open(publicBookingUrl(slug), "_blank", "noopener,noreferrer");
 }
 
 export function openExternal(url: string): void {

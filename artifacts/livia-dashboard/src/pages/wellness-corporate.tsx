@@ -7,6 +7,7 @@ import {
   WELLNESS_TRUST_COPY,
 } from "@workspace/policy";
 import { useBusiness } from "@/lib/business-context";
+import { clientGuestBookAbsoluteUrl } from "@/lib/guest-book-url";
 import { apiFetch } from "@/lib/api-fetch";
 import { OperationalPageShell } from "@/components/layout/operational-page-shell";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,7 +39,7 @@ export default function WellnessCorporatePage() {
       actions={
         slug ? (
           <Button asChild size="sm" variant="outline" className="h-8 text-xs gap-1">
-            <a href={`/book/${slug}`} target="_blank" rel="noreferrer">
+            <a href={clientGuestBookAbsoluteUrl(slug)} target="_blank" rel="noreferrer">
               Employee book preview
               <ExternalLink className="h-3.5 w-3.5" aria-hidden />
             </a>

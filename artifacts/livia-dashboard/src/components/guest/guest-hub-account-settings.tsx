@@ -1,4 +1,3 @@
-import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import {
@@ -10,6 +9,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { formatDateTime } from "@/lib/format";
+import { clientGuestBookAbsoluteUrl } from "@/lib/guest-book-url";
 import {
   GUEST_HUB_COPY,
   GUEST_PREFERRED_MODALITY_LABELS,
@@ -127,12 +127,14 @@ export function GuestHubAccountSettings({
                     </p>
                   ) : null}
                   {p.slug ? (
-                    <Link
-                      href={`/book/${p.slug}`}
+                    <a
+                      href={clientGuestBookAbsoluteUrl(p.slug)}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="text-primary text-xs mt-2 inline-block font-medium"
                     >
                       Book a session →
-                    </Link>
+                    </a>
                   ) : null}
                 </div>
               ))

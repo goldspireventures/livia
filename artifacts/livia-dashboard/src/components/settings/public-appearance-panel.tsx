@@ -14,6 +14,8 @@ import { resolvePresentationColorMode } from "@/lib/experience-theme";
 import { accentMeetsWcagAa } from "@/lib/brand-contrast";
 import { cn } from "@/lib/utils";
 import { useTenantExperience } from "@/lib/tenant-experience-api";
+import { clientGuestBookAbsoluteUrl, clientGuestBookHref } from "@/lib/guest-book-url";
+import { publicEventVendorSiteUrl } from "@/lib/surface-urls";
 import {
   resolvePresentationLayoutMorph,
   resolvePresetPickerMeta,
@@ -102,7 +104,16 @@ export function PublicAppearancePanel({
   const bodyArtAppearance = isBodyArtVertical(tenantVertical);
   const wellnessAppearance = isWellnessVertical(tenantVertical);
 
-  const previewUrl = slug ? (isEventVendor ? `/e/${slug}` : `/book/${slug}`) : "";
+  const previewPath = slug
+    ? isEventVendor
+      ? `/e/${slug}`
+      : clientGuestBookHref(slug)
+    : "";
+  const publicBookUrl = slug
+    ? isEventVendor
+      ? publicEventVendorSiteUrl(slug)
+      : clientGuestBookAbsoluteUrl(slug)
+    : "";
 
   useEffect(() => {
     if (!bid || !presentationPresetsUiEnabled()) return;
@@ -210,7 +221,7 @@ export function PublicAppearancePanel({
   }, [draftPresetMeta?.cssPreset]);
 
   const previewIframeSrc =
-    appearanceTabActive && previewUrl ? `${previewUrl}?${publicPreviewQuery}` : "";
+    appearanceTabActive && previewPath ? `${previewPath}?${publicPreviewQuery}` : "";
   const dashboardPreviewIframeSrc = useMemo(
     () => (appearanceTabActive && bid ? appearancePreviewDashboardPath(previewQuery) : ""),
     [appearanceTabActive, bid, previewQuery],
@@ -275,9 +286,8 @@ export function PublicAppearancePanel({
   }
 
   function copyLink() {
-    if (!previewUrl) return;
-    const full = `${window.location.origin}${previewUrl}`;
-    void navigator.clipboard.writeText(full);
+    if (!publicBookUrl) return;
+    void navigator.clipboard.writeText(publicBookUrl);
     toast({ title: isEventVendor ? "Website link copied" : "Booking link copied" });
   }
 
@@ -287,7 +297,7 @@ export function PublicAppearancePanel({
         <CardHeader>
           <CardTitle className="text-base">Store appearance</CardTitle>
           <CardDescription>
-            Preset picker rolls out with presentation presets promotion. Your `/b` page uses your vertical template today.
+            Preset picker rolls out with presentation presets promotion. Your guest book page uses your vertical template today.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -352,13 +362,13 @@ export function PublicAppearancePanel({
           ) : null}
           <div className="flex items-center gap-2">
             <div className="flex-1 min-w-0 bg-muted rounded-md px-3 py-2 text-sm font-mono truncate">
-              {previewUrl || "—"}
+              {publicBookUrl || "—"}
             </div>
             <Button type="button" variant="outline" size="icon" aria-label="Copy link" onClick={copyLink}>
               <Copy className="h-4 w-4" />
             </Button>
-            {previewUrl ? (
-              <a href={previewUrl} target="_blank" rel="noopener noreferrer">
+            {publicBookUrl ? (
+              <a href={publicBookUrl} target="_blank" rel="noopener noreferrer">
                 <Button type="button" variant="outline" size="icon" aria-label="Open public page">
                   <ExternalLink className="h-4 w-4" />
                 </Button>

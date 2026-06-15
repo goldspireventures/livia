@@ -12,6 +12,7 @@ import { LivMomentsStrip } from "@/components/ritual/liv-moments-strip";
 import { OwnerLivOpsPanel } from "@/components/liv/owner-liv-ops-panel";
 import { OwnerIntelligenceStack } from "@/components/dashboard/owner-intelligence-stack";
 import { ActivityFeedPanel } from "@/components/dashboard/activity-feed-panel";
+import { clientGuestBookAbsoluteUrl } from "@/lib/guest-book-url";
 
 /**
  * Liv as the visible centre of the owner/org-admin day — briefing, inbox, toolkit, public preview.
@@ -42,7 +43,7 @@ export function LivCommandHub({
     }
   }
 
-  const publicUrl = slug ? `/book/${slug}` : null;
+  const publicUrl = slug ? clientGuestBookAbsoluteUrl(slug) : null;
 
   return (
     <Card

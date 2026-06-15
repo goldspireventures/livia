@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { navigateSettingsHref } from "@/lib/commerce-fix-navigation";
 import { CommerceSettingsLink } from "@/components/billing/commerce-settings-link";
+import { clientGuestBookAbsoluteUrl } from "@/lib/guest-book-url";
 import { Check, ExternalLink } from "lucide-react";
 
 type OperationalPolicySnapshot = {
@@ -75,7 +76,7 @@ export function CommerceFixPanel() {
 
   if (allDone) return null;
 
-  const publicBookUrl = slug ? `/book/${slug}` : null;
+  const publicBookUrl = slug ? clientGuestBookAbsoluteUrl(slug) : null;
   const topSignal = intel?.commerce.topSignal;
 
   return (

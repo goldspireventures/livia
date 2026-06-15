@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { clientGuestBookAbsoluteUrl } from "@/lib/guest-book-url";
 import { formatCurrency, majorFromMinor, minorFromMajor } from "@/lib/format";
 import {
   TENANT_RETAIL_PROGRAM,
@@ -340,19 +341,19 @@ export default function TenantStorePage() {
                 <p className="text-xs text-muted-foreground">
                   Preview on{" "}
                   <a
-                    href={`/book/${business.slug}`}
+                    href={clientGuestBookAbsoluteUrl(business.slug)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary hover:underline"
                   >
-                    /book/{business.slug}
+                    {clientGuestBookAbsoluteUrl(business.slug).replace(/^https?:\/\//, "")}
                   </a>
                   <span className="text-muted-foreground/80"> (opens in new tab)</span>
                 </p>
               ) : null}
               {vertical === "body-art" ? (
                 <p className="text-xs text-muted-foreground">
-                  Approved proofs appear on /b under flash & custom work. Manage artwork in{" "}
+                  Approved proofs appear on your guest book page under flash & custom work. Manage artwork in{" "}
                   <Link href="/design-proofs" className="text-primary hover:underline">
                     Design proofs
                   </Link>

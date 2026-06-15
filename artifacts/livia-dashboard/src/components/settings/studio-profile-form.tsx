@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { SettingsDisclosure } from "@/components/ui/settings-disclosure";
 import { SETTINGS_SHOP_SECONDARY_DEFAULT_OPEN } from "@workspace/policy";
 import { EU_TIMEZONES } from "@/lib/eu-timezones";
+import { publicBookingSlugPrefix, publicBookingSlugSuffix } from "@/lib/surface-urls";
 import {
   Select,
   SelectContent,
@@ -80,13 +81,18 @@ function FieldInput({
         <Label>{def.label}</Label>
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground whitespace-nowrap">
-            {import.meta.env.DEV ? "/book/" : ""}
+            {publicBookingSlugPrefix() || "https://"}
           </span>
           <Input
             {...form.register("slug", { required: true })}
             disabled={disabled}
             data-testid="input-slug"
           />
+          {publicBookingSlugSuffix() ? (
+            <span className="text-sm text-muted-foreground whitespace-nowrap">
+              {publicBookingSlugSuffix()}
+            </span>
+          ) : null}
         </div>
         {def.hint ? <p className="text-xs text-muted-foreground">{def.hint}</p> : null}
       </div>

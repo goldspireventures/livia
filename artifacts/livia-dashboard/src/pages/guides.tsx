@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { PageFrame } from "@/components/ui/page-frame";
 import { useBusiness } from "@/lib/business-context";
+import { clientGuestBookAbsoluteUrl } from "@/lib/guest-book-url";
 
 const TRACKS = [
   {
@@ -12,7 +13,7 @@ const TRACKS = [
     icon: Globe,
     summary: "What customers see without signing in.",
     steps: [
-      "Share your /b link from Settings → Studio.",
+      "Share your book link from Settings → Studio (your branded subdomain when live).",
       "Guests pick a service, time, and contact details.",
       "Liv answers guest questions on your booking page when enabled.",
       "Booking terms and privacy copy come from Settings → Legal & trust.",
@@ -114,7 +115,7 @@ export default function GuidesPage() {
             <CardDescription>Preview the guest booking experience.</CardDescription>
           </CardHeader>
           <CardContent>
-            <a href={`/book/${slug}`} target="_blank" rel="noopener noreferrer">
+            <a href={clientGuestBookAbsoluteUrl(slug)} target="_blank" rel="noopener noreferrer">
               <Button size="sm">Open book page</Button>
             </a>
           </CardContent>

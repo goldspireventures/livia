@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { useBusiness } from "@/lib/business-context";
+import { clientGuestBookAbsoluteUrl } from "@/lib/guest-book-url";
 import { customFetch } from "@workspace/api-client-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -255,11 +256,11 @@ export default function PremisesPage() {
                       </div>
                       <p className="text-xs text-muted-foreground mt-1 truncate">{t.name}</p>
                     </div>
-                    <Link href={`/book/${t.slug}`}>
+                    <a href={clientGuestBookAbsoluteUrl(t.slug)} target="_blank" rel="noopener noreferrer">
                       <Button variant="outline" size="sm" className="w-full sm:w-auto">
                         Booking page
                       </Button>
-                    </Link>
+                    </a>
                   </li>
                 ))}
               </ul>

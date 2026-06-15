@@ -62,21 +62,34 @@
 
 ---
 
-## Active work (now)
+## Active work (now) — **Era 1 Q1** (Activation Year)
+
+**Hat:** `cpo` + `cto` · **Spine:** GTM Wave 1 depth waves **D0–D4** · [`LIVIA-MASTER-EXECUTION-PLAN-V3.md`](product/LIVIA-MASTER-EXECUTION-PLAN-V3.md) § Era 1
+
+| Wave | Focus | Status |
+|------|-------|--------|
+| **D0** (wk 1–4) | Wildcard subdomain book; subvertical profiles; `/my` visit shell v1; owner book-link parity | **In progress** |
+| **D1** (wk 5–10) | `/my/{slug}` vertical morph; guest thread API; retire `/b` redirects | Queued |
+| **D2–D4** | Relationship entity, pack/credit surfaces, innovation P1 | Queued |
 
 | Item | Notes |
 |------|-------|
-| **Guest placement P0** | `/book` hotfix shipped — registry sweep [`GUEST-SURFACE-PLACEMENT-CONTRACT.md`](design/GUEST-SURFACE-PLACEMENT-CONTRACT.md) §6 (P0b–P3 queued) |
-| **Liv Era 1** | Policy OS + bounded agent; mandate ladder locked — no auto deposit waive — [`LIV-OPERATING-SYSTEM.md`](product/LIV-OPERATING-SYSTEM.md) §16 |
-| **GTM Wave 1 (founder lock)** | **All 9 code verticals** at one creative parity bar — [`GTM-VERTICAL-DEPTH-PROGRAM.md`](product/GTM-VERTICAL-DEPTH-PROGRAM.md) · innovation [`VERTICAL-INNOVATION-PROGRAM.md`](product/VERTICAL-INNOVATION-PROGRAM.md) |
-| **Guest surfaces** | Retire user-facing `/b` → **`{slug}.livia-hq.com`** book + **`/my`** relationship (vertical morph) |
-| **Sub-segment onboarding** | Org shape + category profile at create — full beauty aisle + all vertical sub-segments |
-| **Vertical programs (all 9)** | [`VERTICAL-PROGRAMS-INDEX.md`](product/VERTICAL-PROGRAMS-INDEX.md) · build [`LIVIA-VERTICALS-BUILD-PLAN.md`](product/LIVIA-VERTICALS-BUILD-PLAN.md) |
-| **Execution focus** | Era 1 **depth waves D0–D4** (subdomain, `/my`, relationship, demo seed) in parallel with capability instances |
+| **Guest book URLs (D0)** | Owner surfaces use `publicBookingUrl` / policy helpers — not hardcoded `/book/` |
+| **Sub-segment onboarding** | `subverticalProfileId` at create — wizard step live; starter packs per profile |
+| **Guest surfaces** | Retire user-facing `/b` → **`{slug}.livia-hq.com`** when `VITE_GUEST_SUBDOMAIN_LIVE` |
+| **Activation tracking** | Sacred metric wired; founder funnel dashboard + Gate 2 field proof open |
 | **Your UAT** | Nine-slug showcase + guest hub — [`FOUNDER-UAT-CHECKLIST.md`](operations/FOUNDER-UAT-CHECKLIST.md) |
-| **Ring 2 — event vendors (V12)** | Program + consult-first spec complete — [`EVENT-VENDORS-VERTICAL-PROGRAM.md`](product/EVENT-VENDORS-VERTICAL-PROGRAM.md); design-partner decor operator queued for P1 build |
 | Staging | **`livia-stg`** only — [`VERCEL-DEPLOY-ENVIRONMENTS.md`](operations/VERCEL-DEPLOY-ENVIRONMENTS.md) |
-| Local automation | `pnpm founder:uat-preflight` then `test:founder-uat` |
+
+---
+
+## Prior active work (closed or absorbed into Era 1)
+
+| Item | Notes |
+|------|-------|
+| **Guest placement P0–P3** | Shipped 2026-06-15 — [`GUEST-SURFACE-PLACEMENT-CONTRACT.md`](design/GUEST-SURFACE-PLACEMENT-CONTRACT.md) |
+| **Liv Era 1 mandate** | Policy OS + bounded agent — [`LIV-OPERATING-SYSTEM.md`](product/LIV-OPERATING-SYSTEM.md) §16 |
+| **Production readiness rubric** | `pnpm readiness:score` — evidence-backed gap matrix figures |
 
 ---
 
@@ -122,7 +135,7 @@ Detail logs: `docs/operations/R1-BUILD-STATUS.md`, `PROGRAM-ENGINEERING-EXIT.md`
 
 | Date | Change |
 |------|--------|
-| 2026-06-15 | Production readiness rubric; Bucket C 80%; guest hub UX hardening on staging |
+| 2026-06-15 | Era 1 Q1 kickoff — D0 owner book-link parity; readiness rubric; Bucket C 80% |
 | 2026-06-15 | Guest placement contract + Liv Era 1 doc (§16); `/book` deposit in summary, silent hub autofill, universal deposits |
 | 2026-06-05 | GTM Wave 1 lock — nine verticals, one bar; subdomain + `/my`; innovation program; retire `/b` UX |
 | 2026-06-05 | Master Blueprint Volumes 0–H; V3 execution plan; Era 1 focus replaces open-ended wellness wave 7 |

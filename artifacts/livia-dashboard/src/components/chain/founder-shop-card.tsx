@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { MOTION } from "@/lib/motion";
+import { clientGuestBookAbsoluteUrl } from "@/lib/guest-book-url";
 import type { ChainPulseStatus, ChainShopRollup } from "./founder-chain-types";
 
 function PulseBadge({ status }: { status: ChainPulseStatus }) {
@@ -161,7 +162,7 @@ export function FounderShopCard({
 
       <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/60">
         <a
-          href={`/book/${shop.slug}`}
+          href={clientGuestBookAbsoluteUrl(shop.slug)}
           target="_blank"
           rel="noreferrer"
           className="text-[11px] text-primary hover:underline"
