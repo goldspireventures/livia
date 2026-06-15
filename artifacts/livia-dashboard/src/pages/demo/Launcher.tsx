@@ -904,7 +904,6 @@ export default function DemoLauncher() {
   return (
     <GatewayDemoLauncherShell advanced={advancedPanel}>
       <GatewayG1Hero />
-      <DemoFreshFounderShortcut />
       <GatewayG1SignInHint devPassword={devPassword} />
       <DemoWorldReadinessStrip
         provisioned={provisioned}
@@ -915,20 +914,32 @@ export default function DemoLauncher() {
         onSetup={() => void handleSync()}
         onRetry={() => void refresh()}
       />
-      <DemoPartnerTracks
-        tracks={partnerTracks}
-        provisioned={provisioned}
-        devPassword={devPassword}
-        busy={busy}
-        onEnter={(email, busyKey) => void quickEnterEmail(email, busyKey)}
-      />
-      <DemoGuestClientShortcut openHref={demoOpenPersonaUrl({ persona: "customer" })} />
-      <div className="mb-2">
-        <p className="text-[10px] font-mono uppercase tracking-widest text-white/35 text-center lg:text-left">
-          Or explore by industry
-        </p>
-      </div>
       <DemoWedgeGrid />
+      <details className="mb-6 group">
+        <summary className="cursor-pointer text-xs text-white/45 hover:text-white/65 list-none">
+          Try as a guest (My Livia)
+        </summary>
+        <div className="mt-3">
+          <DemoGuestClientShortcut openHref={demoOpenPersonaUrl({ persona: "customer" })} />
+        </div>
+      </details>
+      <details className="mb-6 group">
+        <summary className="cursor-pointer text-xs text-white/45 hover:text-white/65 list-none">
+          Start fresh — sign up &amp; onboard
+        </summary>
+        <div className="mt-3">
+          <DemoFreshFounderShortcut />
+        </div>
+      </details>
+      {partnerTracks.length > 0 ? (
+        <DemoPartnerTracks
+          tracks={partnerTracks}
+          provisioned={provisioned}
+          devPassword={devPassword}
+          busy={busy}
+          onEnter={(email, busyKey) => void quickEnterEmail(email, busyKey)}
+        />
+      ) : null}
     </GatewayDemoLauncherShell>
   );
 }

@@ -16,7 +16,6 @@ import {
   getMarketingDemoConciergeUrl,
   hasMarketingDemoGateKey,
 } from "@/lib/marketing-demo-gate";
-import { Button } from "@/components/ui/button";
 import { SignInTenantPreview } from "@/components/sign-in-tenant-preview";
 import {
   useDebouncedClerkIdentifierEmail,
@@ -110,34 +109,24 @@ export default function SignInPage() {
             ) : null}
 
             {isDemoLoginEnabled ? (
-              <div className="mb-8 text-center sm:text-left">
-                <h1 className="font-serif text-3xl font-normal leading-[1.08] tracking-tight sm:text-4xl">
-                  Real beta account
-                </h1>
-                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                  For internal staging demos, use the{" "}
-                  <Link href={FOUNDER_DEMO_LAUNCHER_PATH} className="text-primary underline underline-offset-2">
-                    demo launcher
-                  </Link>{" "}
-                  — one-click logins for every role. This page is for real Clerk beta accounts only.
-                </p>
-              </div>
-            ) : null}
-
-            {isDemoLoginEnabled ? (
-              <div className="mb-6 rounded-xl border border-primary/30 bg-primary/5 p-4">
-                <p className="mb-3 text-sm text-foreground">
-                  {invitedDemo ? "Staging team? Use the internal G1 launcher." : "Staging team? Skip this form."}
-                </p>
-                <Button asChild className="w-full" variant={invitedDemo ? "outline" : "default"}>
-                  <Link href={FOUNDER_DEMO_LAUNCHER_PATH}>Open internal demo launcher (G1)</Link>
-                </Button>
+              <p className="mb-6 text-sm text-muted-foreground">
                 {invitedDemo ? (
-                  <Button asChild className="w-full mt-2">
-                    <a href={invitedDemoUrl}>Return to invited guest demo</a>
-                  </Button>
-                ) : null}
-              </div>
+                  <>
+                    Staging team?{" "}
+                    <Link href={FOUNDER_DEMO_LAUNCHER_PATH} className="text-primary underline underline-offset-2">
+                      Open internal demo launcher (G1)
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    For one-click demo roles, use the{" "}
+                    <Link href={FOUNDER_DEMO_LAUNCHER_PATH} className="text-primary underline underline-offset-2">
+                      demo launcher
+                    </Link>{" "}
+                    — this form is for real beta accounts only.
+                  </>
+                )}
+              </p>
             ) : null}
 
             <SignInTenantPreview hint={appearanceHint} loading={appearanceLoading}>

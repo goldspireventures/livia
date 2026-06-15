@@ -79,35 +79,26 @@ export default function DemoWedgeStoryPage() {
 
   return (
     <DemoFlowShell>
-      {enterMode ? (
-        <p className="mb-5 text-center font-serif text-lg tracking-tight text-[#e6d0a5]/90 sm:text-xl">
-          Walk in as your role
-        </p>
-      ) : null}
-
       {!provisioned && !statusLoading ? (
-        <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm">
-          <p className="font-medium text-amber-100">Demo world not ready yet</p>
-          <p className="mt-1 text-amber-200/80">
-            <Link href={`${FOUNDER_DEMO_LAUNCHER_PATH}#demo-setup`} className="underline underline-offset-2">
-              Open founder launcher
-            </Link>{" "}
-            and run <strong>Set up demo world</strong> once (~30–60s). Then return here — Enter live demo
-            will sign you in as owner.
-          </p>
+        <p className="mb-6 text-sm text-muted-foreground" data-testid="gateway-demo-setup-hint">
+          Demo world not seeded yet.{" "}
+          <Link href={`${FOUNDER_DEMO_LAUNCHER_PATH}#demo-setup`} className="text-primary underline underline-offset-2">
+            Set up once
+          </Link>{" "}
+          in the founder launcher (~30–60s), then return here.
           {statusError ? (
-            <p className="mt-2 text-xs text-amber-200/70">
-              Status check: {statusError}.{" "}
+            <>
+              {" "}
               <button
                 type="button"
                 onClick={() => void refresh()}
-                className="underline underline-offset-2"
+                className="text-primary underline underline-offset-2"
               >
-                Retry
+                Retry status
               </button>
-            </p>
+            </>
           ) : null}
-        </div>
+        </p>
       ) : null}
 
       {enterMode ? (
@@ -117,7 +108,6 @@ export default function DemoWedgeStoryPage() {
           roster={roster}
           disabled={!provisioned}
           backHref={demoWorldsBackUrl()}
-          backLabel="← Worlds"
           guestOpenHref={guestOpenHref}
           guestShortcut={consultFirst ? "public-enquire" : "my-livia"}
           onBack={() => setSlide("story")}

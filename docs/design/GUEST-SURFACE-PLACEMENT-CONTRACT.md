@@ -80,6 +80,22 @@ Use `parsePublicApiError()` in dashboard guest flows; never surface raw client e
 
 Guest book wizard steps target **one focal column** (`max-w-xl`). No more than **one** informational callout per step (excluding field-level labels). If you need two callouts, merge or move one to policy footer.
 
+### 2.6 Gateway (G1–G3 + sign-in) — prospect audience
+
+| Surface | Who | One home for… |
+|---------|-----|----------------|
+| **G1** `/demo` | Prospect / founder | **Wedge grid** — primary path. Guest sign-up and My Livia are `<details>` or G3 only. |
+| **G2** `/demo/wedge/:vertical` | Prospect | **Story beats + one Continue CTA** — no settings, billing, or product tour. |
+| **G3** enter slide | Prospect | **Role grid** (tap → Clerk tab). Guest path is one compact row above roles. Back = brief, not worlds. |
+| **Sign-in** | Beta prospect | **Clerk form** — demo launcher is a text link, not a second hero CTA slab. |
+
+| Rule | Wrong | Right |
+|------|-------|-------|
+| Ready state | Emerald “live demo ready” banner on G1 | Quiet status line when seeded |
+| G3 navigation | “← Worlds” skips the brief; duplicate back buttons | “← Brief” + subtle “All worlds” link |
+| G1 density | Guest + founder + partner + grid all competing | Grid first; secondary paths collapsed |
+| Setup blocker | Amber card on G2 | One inline sentence with setup link |
+
 ---
 
 ## 3. Implementation hooks (repo)
@@ -138,10 +154,11 @@ Systematic pass — **one surface per session**, screenshot + sign-off. Order: g
 | **P0c** | My Livia home | `/my` · `my-livia.tsx` | — | **2026-06-15** — one CTA per shop row (manage or book) |
 | **P0d** | Shop relationship | `/my/{slug}` | — | **2026-06-15** — slim memory line; Liv in sidebar; single primary CTA |
 | **P0e** | Visit manage | `/my/{slug}/visit/{id}` | — | **2026-06-15** — `GuestVisitSummaryCard`; hero time-only |
-| **P1a** | Public storefront `/b` | `public-shop.tsx` | — | Queued |
-| **P1b** | Public enquire / consult-first | event-vendor surfaces | — | Queued |
-| **P2** | Gateway G1–G3 | demo launcher | — | Queued |
-| **P3** | Owner guest callouts | dashboard customer panels | — | Queued |
+| **P1a** | Public retail shop link | `/shop/{token}` · `public-shop.tsx` | — | **2026-06-15** — total in card; sticky pay CTA; `parsePublicApiError` |
+| **P1b** | Event quote + enquire | `public-event-vendor-quote.tsx` · `public-event-vendor-enquire.tsx` | — | **2026-06-15** — one money card + schedule; sticky accept/pay; human errors |
+| **P1c** | Anonymous visit token | `/visit/{token}` · `public-visit.tsx` | — | **2026-06-15** — `GuestVisitSummaryCard`; deposit API parity |
+| **P2** | Gateway G1–G3 + sign-in | `Launcher.tsx` · `WedgeStory.tsx` · `sign-in.tsx` | — | **2026-06-15** — grid-first G1; slim G3 nav; quiet ready state |
+| **P3** | Owner guest callouts | `guest-vault-owner-callout` · `guest-relationship-panel` | — | **2026-06-15** — slim owner copy; memory as border-l line |
 
 **Sign-off:** Founder marks **Pass** / **Fail + note** in [`testing/VISUAL-AUDIT-LOG.md`](../testing/VISUAL-AUDIT-LOG.md). Failures become targeted fixes — not blanket sweeps.
 

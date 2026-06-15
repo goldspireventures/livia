@@ -18,7 +18,6 @@ import {
   CheckCircle2,
   Clock,
   MessageSquare,
-  Sparkles,
 } from "lucide-react";
 const HUB_TOKEN_KEY = "livia_guest_hub_token";
 
@@ -241,17 +240,12 @@ export default function MyLiviaVisitPage() {
           />
 
           {data.relationship?.memoryHighlight ? (
-            <Card className="border-primary/20 bg-primary/5" id="guest-hub-memory">
-              <CardContent className="py-4 text-sm flex gap-3">
-                <Sparkles className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-mono">
-                    {GUEST_HUB_COPY.memoryTitle}
-                  </p>
-                  <p className="mt-1">{data.relationship.memoryHighlight}</p>
-                </div>
-              </CardContent>
-            </Card>
+            <p
+              className="text-sm text-muted-foreground border-l-2 border-primary/40 pl-3"
+              id="guest-hub-memory"
+            >
+              {data.relationship.memoryHighlight}
+            </p>
           ) : null}
 
           {data.beautyPrefs?.patchTestLabel ? (

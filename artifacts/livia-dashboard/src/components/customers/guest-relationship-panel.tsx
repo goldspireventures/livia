@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { useGetCustomerRelationship } from "@workspace/api-client-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Heart, MessageCircle, Sparkles } from "lucide-react";
+import { Heart, MessageCircle } from "lucide-react";
 import { formatDateTime } from "@/lib/format";
 
 const STAGE_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
@@ -85,15 +85,9 @@ export function GuestRelationshipPanel({
         ) : null}
 
         {rel.memoryHighlight ? (
-          <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm flex gap-2">
-            <Sparkles className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-mono">
-                Liv remembers
-              </p>
-              <p className="mt-0.5">{rel.memoryHighlight}</p>
-            </div>
-          </div>
+          <p className="text-sm text-muted-foreground border-l-2 border-primary/40 pl-3">
+            {rel.memoryHighlight}
+          </p>
         ) : null}
 
         <dl className="grid grid-cols-2 gap-2 text-xs">

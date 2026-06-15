@@ -67,7 +67,7 @@ import {
   acceptGuestWaitlistOfferByToken,
   getGuestWaitlistOfferByToken,
 } from "../services/waitlist-guest-access.service";
-import { db, visitFeedbackTable, bookingsTable, customersTable } from "@workspace/db";
+import { db, visitFeedbackTable, bookingsTable, customersTable, businessesTable } from "@workspace/db";
 import { and, eq, sql } from "drizzle-orm";
 import { socialProofForVertical } from "../lib/public-social-proof";
 import { inferDemoServiceImageUrl, publicExperienceSkin } from "../lib/experience-skin";
@@ -976,12 +976,39 @@ router.get("/public/b/:slug/visit/:token", async (req, res): Promise<void> => {
 
   const { customerId: _cid, ...publicView } = view;
   const { guestVisitDepositLine } = await import("@workspace/policy");
+  let depositPercent = 0;
+  let depositRequired = false;
+  let depositDueMinor = 0;
+  let depositPayUrl: string | null = null;
+  const [biz] = await db
+    .select()
+    .from(businessesTable)
+    .where(eq(businessesTable.id, view.businessId))
+    .limit(1);
+  if (biz) {
+    const op = policiesFromBusiness(biz).operational;
+    depositPercent = op.depositPercent ?? 0;
+    depositRequired = op.depositRequired;
+    depositDueMinor = computeDepositDueMinor({
+      priceMinor: view.priceMinor,
+      depositPercent,
+      depositRequired,
+      depositPaidMinor: view.depositPaidEurCents ?? 0,
+    });
+    if (view.status === "PENDING" && depositDueMinor > 0) {
+      depositPayUrl = resolveGuestTokenUrl(slug, "pay", token);
+    }
+  }
   res.json({
     ...publicView,
     startAt: view.startAt.toISOString(),
     endAt: view.endAt.toISOString(),
     feedbackSubmitted: !!existing,
     feedbackScore: existing?.score ?? null,
+    depositPercent,
+    depositRequired,
+    depositDueMinor,
+    depositPayUrl,
     depositLine: guestVisitDepositLine({
       vertical: view.vertical,
       status: view.status,

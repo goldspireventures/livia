@@ -99,7 +99,6 @@ export function GatewayDemoEnterStage({
   roster,
   disabled,
   backHref = "/demo",
-  backLabel = "← Worlds",
   guestOpenHref,
   guestShortcut = "my-livia",
   onBack,
@@ -110,18 +109,19 @@ export function GatewayDemoEnterStage({
       data-testid="gateway-demo-card-stage"
     >
       <div className="rounded-[1.35rem] border border-primary/25 bg-[#0a0c12]/90 p-3 sm:p-4">
-        <GatewayBackLink
-          href={backHref}
+        <button
+          type="button"
+          onClick={onBack}
           className="inline-flex min-h-[44px] items-center rounded-full border border-[#d9b97a]/35 bg-[#d9b97a]/10 px-3.5 text-sm text-[#e6d0a5] transition hover:border-[#d9b97a]/55"
-          data-testid="gateway-demo-back-worlds"
+          data-testid="gateway-demo-back-brief"
         >
-          {backLabel}
-        </GatewayBackLink>
+          ← Brief
+        </button>
         <div className="mt-4 space-y-1">
           <p className="font-serif text-base text-[#e6d0a5]/95">{tradeLabel}</p>
           <p className="text-sm font-medium text-foreground">{businessName}</p>
           <p className="text-xs text-muted-foreground">
-            Each role opens in its own tab — keep this screen to try more.
+            Tap a staff role — each opens in its own tab.
           </p>
         </div>
 
@@ -169,13 +169,15 @@ export function GatewayDemoEnterStage({
           </div>
         </div>
 
-        <button
-          type="button"
-          className="mx-auto mt-4 block text-sm text-muted-foreground hover:text-foreground"
-          onClick={onBack}
-        >
-          ← Back to brief
-        </button>
+        <p className="mt-4 text-center">
+          <GatewayBackLink
+            href={backHref}
+            className="text-xs text-muted-foreground hover:text-foreground"
+            data-testid="gateway-demo-back-worlds"
+          >
+            All worlds
+          </GatewayBackLink>
+        </p>
       </div>
     </article>
   );

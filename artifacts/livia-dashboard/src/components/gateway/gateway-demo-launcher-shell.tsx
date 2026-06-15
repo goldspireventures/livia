@@ -140,8 +140,8 @@ export function GatewayG1Hero() {
         Pick <span className="text-primary italic">your</span> world
       </h1>
       <p className="mt-4 text-sm leading-relaxed text-white/65 sm:text-base">
-        Choose a trade to explore as a studio owner, or open My Livia below to try the guest
-        experience.
+        Choose a trade to walk through as studio staff. Guest paths sit on each wedge&apos;s enter
+        screen.
       </p>
     </div>
   );

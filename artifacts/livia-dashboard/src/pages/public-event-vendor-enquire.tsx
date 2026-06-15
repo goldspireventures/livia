@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { CheckCircle2, Loader2 } from "lucide-react";
+import { parsePublicApiError } from "@/lib/public-booking-helpers";
 import { EventVendorPageShell } from "@/components/event-vendor/event-vendor-page-shell";
 import { EventVendorReveal } from "@/components/event-vendor/event-vendor-reveal";
 import { eventVendorPublicHref } from "@/lib/event-vendor-public-path";
@@ -69,13 +70,13 @@ export default function PublicEventVendorEnquirePage() {
               body: JSON.stringify(body),
             });
             if (!r.ok) {
-              if (r.status === 404) throw new Error("That date may be unavailable — try another date.");
-              throw new Error("Could not submit enquiry");
+              const j = (await r.json().catch(() => ({}))) as { error?: string };
+              throw new Error(j.error ?? "Could not submit enquiry");
             }
             setDone(true);
             window.scrollTo({ top: 0, behavior: "smooth" });
           } catch (ex) {
-            setErr(ex instanceof Error ? ex.message : "Something went wrong");
+            setErr(parsePublicApiError(ex, "Something went wrong"));
           } finally {
             setSubmitting(false);
           }

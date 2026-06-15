@@ -4,6 +4,7 @@ import { useGuestBookTokenRoute } from "@/lib/use-guest-book-slug";
 import { applyVerticalTheme } from "@/lib/vertical-theme";
 import { applyExperienceTheme, clearExperienceTheme } from "@/lib/experience-theme";
 import { formatCurrency } from "@/lib/format";
+import { parsePublicApiError } from "@/lib/public-booking-helpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CreditCard, Loader2, CheckCircle2 } from "lucide-react";
@@ -67,6 +68,7 @@ export default function PublicShopPage() {
   const [loading, setLoading] = useState(true);
   const [payBusy, setPayBusy] = useState(false);
   const [flash, setFlash] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
 
   usePublicGuestPwa(slug);
 
@@ -111,9 +113,12 @@ export default function PublicShopPage() {
   async function checkout() {
     if (!slug || !token) return;
     setPayBusy(true);
+    setErr(null);
+    setFlash(null);
     try {
       const r = await fetch(`/api/public/b/${slug}/shop/${token}/checkout`, { method: "POST" });
-      const body = (await r.json()) as { checkoutUrl?: string; mode?: string; message?: string };
+      const body = (await r.json()) as { checkoutUrl?: string; mode?: string; message?: string; error?: string };
+      if (!r.ok) throw new Error(body.error ?? "Could not start checkout");
       if (body.checkoutUrl) {
         window.location.href = body.checkoutUrl;
         return;
@@ -124,8 +129,8 @@ export default function PublicShopPage() {
         return;
       }
       setFlash(body.message ?? "Checkout unavailable");
-    } catch {
-      setFlash("Could not start checkout");
+    } catch (e) {
+      setErr(parsePublicApiError(e, "Could not start checkout"));
     } finally {
       setPayBusy(false);
     }
@@ -143,10 +148,14 @@ export default function PublicShopPage() {
 
   const paid = data.status === "PAID" || statusHint === "success";
   const lines = data.lines?.length ? data.lines : null;
+  const showStickyPay = !paid && data.checkoutAvailable;
 
   return (
-    <div className="min-h-dvh flex flex-col bg-background" data-testid="public-shop-page">
-      <main className="flex-1 px-4 py-8 max-w-md mx-auto w-full">
+    <div
+      className={`min-h-dvh flex flex-col bg-background ${showStickyPay ? "has-sticky-cta" : ""}`}
+      data-testid="public-shop-page"
+    >
+      <main className="flex-1 px-4 py-8 max-w-md mx-auto w-full pb-28">
         {data.logoUrl ? (
           <img src={data.logoUrl} alt="" className="h-10 w-auto mb-6 object-contain" />
         ) : null}
@@ -195,9 +204,9 @@ export default function PublicShopPage() {
                 </div>
               </>
             )}
-            <div className="flex items-center justify-between border-t border-border/60 pt-3">
-              <span className="text-sm text-muted-foreground">Total</span>
-              <span className="text-lg font-semibold text-primary tabular-nums">
+            <div className="flex items-center justify-between border-t border-border/60 pt-3 font-semibold">
+              <span className="text-sm text-muted-foreground">Total due</span>
+              <span className="text-lg text-primary tabular-nums">
                 {formatCurrency(data.amountMinor, data.currency)}
               </span>
             </div>
@@ -207,23 +216,34 @@ export default function PublicShopPage() {
                 {data.fulfillmentDetail?.trim() ? ` · ${data.fulfillmentDetail.trim()}` : null}
               </p>
             ) : null}
-            {flash ? <p className="text-sm text-muted-foreground">{flash}</p> : null}
+            {flash ? <p className="text-sm text-primary">{flash}</p> : null}
+            {err ? <p className="text-sm text-destructive">{err}</p> : null}
             {paid ? (
               <div className="flex items-center gap-2 text-sm text-[hsl(var(--chart-3))]">
                 <CheckCircle2 className="h-4 w-4" aria-hidden />
                 Paid — pick up at reception or await shipping note from the studio.
               </div>
-            ) : data.checkoutAvailable ? (
-              <Button type="button" className="w-full gap-2" disabled={payBusy} onClick={() => void checkout()}>
-                {payBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
-                Pay now
-              </Button>
-            ) : (
+            ) : !data.checkoutAvailable ? (
               <p className="text-sm text-muted-foreground">Checkout is not available right now.</p>
-            )}
+            ) : null}
           </CardContent>
         </Card>
       </main>
+
+      {showStickyPay ? (
+        <div
+          className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/80 bg-background/95 backdrop-blur-md px-4 py-3"
+          data-testid="public-shop-sticky-cta"
+        >
+          <div className="max-w-md mx-auto">
+            <Button type="button" className="w-full min-h-[48px] gap-2" disabled={payBusy} onClick={() => void checkout()}>
+              {payBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+              Pay {formatCurrency(data.amountMinor, data.currency)}
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
       <PublicSurfaceFooter />
     </div>
   );

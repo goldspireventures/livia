@@ -26,7 +26,7 @@ test.describe("Beauty demo gateway", () => {
     await expect(page.getByTestId("gateway-demo-beat-inbox")).toBeVisible();
     await page.getByTestId("gateway-demo-continue").click();
     await expect(page.getByTestId("gateway-demo-enter-roles")).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByRole("button", { name: /owner/i }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /owner/i }).first()).toBeVisible();
   });
 
   test("marketing beauty vertical links book-demo with vertical", async ({ page }) => {

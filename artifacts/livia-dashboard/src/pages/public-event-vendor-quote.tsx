@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useSearch } from "wouter";
 import { useGuestQuoteRoute } from "@/lib/use-guest-book-slug";
 import { formatCurrency } from "@/lib/format";
+import { parsePublicApiError } from "@/lib/public-booking-helpers";
 import { resolveQuoteMilestonePayment, formatEventTypeLabel } from "@workspace/policy";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -118,8 +119,8 @@ export default function PublicEventVendorQuotePage() {
       if (!r.ok) throw new Error("Could not decline");
       setFlash("Quote declined — thank you for letting us know.");
       await load();
-    } catch {
-      setErr("Could not update quote.");
+    } catch (ex) {
+      setErr(parsePublicApiError(ex, "Could not update quote."));
     } finally {
       setAcceptBusy(false);
     }
@@ -159,7 +160,7 @@ export default function PublicEventVendorQuotePage() {
     try {
       await executeCheckout();
     } catch (ex) {
-      setErr(ex instanceof Error ? ex.message : "Payment failed");
+      setErr(parsePublicApiError(ex, "Payment failed"));
     } finally {
       setPayBusy(false);
     }
@@ -178,15 +179,16 @@ export default function PublicEventVendorQuotePage() {
         await executeCheckout();
       } catch (ex) {
         setErr(
-          ex instanceof Error
-            ? ex.message
-            : "Quote accepted — pay your deposit below to secure your date.",
+          parsePublicApiError(
+            ex,
+            "Quote accepted — pay your deposit below to secure your date.",
+          ),
         );
       } finally {
         setPayBusy(false);
       }
-    } catch {
-      setErr("Could not accept quote — it may have expired.");
+    } catch (ex) {
+      setErr(parsePublicApiError(ex, "Could not accept quote — it may have expired."));
     } finally {
       setAcceptBusy(false);
     }
@@ -240,11 +242,18 @@ export default function PublicEventVendorQuotePage() {
         };
       })();
   const depositDue = pay?.depositDueMinor ?? paymentState.nextDueMinor;
+  const showStickyAccept = quote.status === "sent";
+  const showStickyPay =
+    quote.status === "accepted" && depositDue > 0 && pay?.checkoutAvailable !== false;
+  const showStickyCta = showStickyAccept || showStickyPay;
 
   return (
     <EventVendorPageShell>
       {() => (
-      <section className="ev-section max-w-lg mx-auto w-full space-y-6 ev-quote-invoice">
+      <>
+      <section
+        className={`ev-section max-w-lg mx-auto w-full space-y-6 ev-quote-invoice${showStickyCta ? " pb-28" : ""}`}
+      >
         <header className="space-y-2 text-center border-b border-amber-900/10 pb-4">
           <p className="text-sm text-muted-foreground uppercase tracking-widest">{business.name}</p>
           <h1 className="font-serif text-2xl md:text-3xl">Event quote</h1>
@@ -332,39 +341,36 @@ export default function PublicEventVendorQuotePage() {
               <span>Balance on event day</span>
               <span>{formatCurrency(quote.balanceDueMinor, currency)}</span>
             </div>
+            {(quote.milestoneDeposits ?? []).length > 0 ? (
+              <div className="border-t pt-3 space-y-2" data-testid="guest-quote-payment-schedule">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Payment schedule
+                </p>
+                {paymentState.milestones.map((m) => (
+                  <div key={m.label} className="ev-quote-row text-sm">
+                    <span className="flex items-center gap-2 min-w-0">
+                      {m.status === "paid" ? (
+                        <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
+                      ) : null}
+                      <span>
+                        {m.label} ({m.percent}%)
+                        {m.dueDate ? ` — due ${m.dueDate}` : ""}
+                        {m.status === "upcoming" ? " · not due yet" : ""}
+                      </span>
+                    </span>
+                    <span className={m.status === "paid" ? "text-primary font-medium" : ""}>
+                      {m.status === "paid"
+                        ? "Paid"
+                        : m.status === "due" && m.paidMinor > 0
+                          ? `${formatCurrency(m.paidMinor, currency)} / ${formatCurrency(m.amountMinor, currency)}`
+                          : formatCurrency(m.amountMinor, currency)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </CardContent>
         </Card>
-
-        {(quote.milestoneDeposits ?? []).length > 0 ? (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Payment schedule</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {paymentState.milestones.map((m) => (
-                <div key={m.label} className="ev-quote-row">
-                  <span className="flex items-center gap-2 min-w-0">
-                    {m.status === "paid" ? (
-                      <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
-                    ) : null}
-                    <span>
-                      {m.label} ({m.percent}%)
-                      {m.dueDate ? ` — due ${m.dueDate}` : ""}
-                      {m.status === "upcoming" ? " · not due yet" : ""}
-                    </span>
-                  </span>
-                  <span className={m.status === "paid" ? "text-primary font-medium" : ""}>
-                    {m.status === "paid"
-                      ? "Paid"
-                      : m.status === "due" && m.paidMinor > 0
-                        ? `${formatCurrency(m.paidMinor, currency)} / ${formatCurrency(m.amountMinor, currency)}`
-                        : formatCurrency(m.amountMinor, currency)}
-                  </span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        ) : null}
 
         {(quote.status === "accepted" || quote.depositPaidMinor > 0) &&
         quote.eventDaySheet?.setupChecklist?.length ? (
@@ -392,68 +398,36 @@ export default function PublicEventVendorQuotePage() {
           <p className="text-xs text-muted-foreground">{quote.termsSnapshot}</p>
         ) : null}
 
-        <div className="ev-quote-actions">
-          {quote.status === "sent" ? (
-            <>
-              <button
-                type="button"
-                onClick={() => void acceptQuote()}
-                disabled={acceptBusy || payBusy}
-                className="ev-btn ev-btn--primary"
-                data-testid="guest-quote-accept"
-              >
-                {acceptBusy || payBusy ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  "Accept quote & pay deposit"
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={() => void declineQuote()}
-                disabled={acceptBusy}
-                className="ev-quote-actions__decline"
-              >
-                Decline quote
-              </button>
-            </>
-          ) : null}
+        {quote.status === "sent" ? (
+          <p className="text-center">
+            <button
+              type="button"
+              onClick={() => void declineQuote()}
+              disabled={acceptBusy || payBusy}
+              className="ev-quote-actions__decline"
+              data-testid="guest-quote-decline"
+            >
+              Decline quote
+            </button>
+          </p>
+        ) : null}
 
-          {quote.status === "accepted" && depositDue > 0 ? (
-            <>
-              <button
-                type="button"
-                className="ev-btn ev-btn--primary"
-                onClick={() => void startCheckout()}
-                disabled={payBusy || acceptBusy || pay?.checkoutAvailable === false}
-                data-testid="guest-quote-pay-checkout"
-              >
-                {payBusy ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <>
-                    <CreditCard className="h-4 w-4" />
-                    Pay {paymentState.nextLabel.toLowerCase()} {formatCurrency(depositDue, currency)}
-                  </>
-                )}
-              </button>
-              {pay?.checkoutAvailable === false ? (
-                <p className="text-xs text-center text-muted-foreground max-w-sm">
-                  Card checkout isn&apos;t available yet — contact {business.name} to pay your deposit.
-                </p>
-              ) : null}
-            </>
-          ) : null}
+        {quote.status === "accepted" && depositDue > 0 && pay?.checkoutAvailable === false ? (
+          <p className="text-xs text-center text-muted-foreground max-w-sm mx-auto">
+            Card checkout isn&apos;t available yet — contact {business.name} to pay your deposit.
+          </p>
+        ) : null}
 
-          {paymentState.scheduleFullyPaid && quote.status === "accepted" ? (
-            <p className="text-center text-sm text-primary font-medium">Fully paid — you&apos;re booked!</p>
-          ) : paymentState.dateSecured && depositDue <= 0 && quote.status === "accepted" ? (
-            <p className="text-center text-sm text-primary font-medium">
-              Date secured
-              {pay?.nextPaymentDueDate ? ` — balance due ${pay.nextPaymentDueDate}` : " — balance due before your event"}.
-            </p>
-          ) : null}
+        {paymentState.scheduleFullyPaid && quote.status === "accepted" ? (
+          <p className="text-center text-sm text-primary font-medium">Fully paid — you&apos;re booked!</p>
+        ) : paymentState.dateSecured && depositDue <= 0 && quote.status === "accepted" ? (
+          <p className="text-center text-sm text-primary font-medium">
+            Date secured
+            {pay?.nextPaymentDueDate ? ` — balance due ${pay.nextPaymentDueDate}` : " — balance due before your event"}.
+          </p>
+        ) : null}
 
+        <div className="text-center">
           <a
             href={`/api/public/${slug}/q/${token}/html`}
             target="_blank"
@@ -467,6 +441,49 @@ export default function PublicEventVendorQuotePage() {
 
         <EventVendorPoweredBy compact />
       </section>
+
+      {showStickyCta ? (
+        <div
+          className="fixed bottom-0 left-0 right-0 z-40 border-t border-amber-900/15 bg-[hsl(var(--background))]/95 backdrop-blur-md px-4 py-3"
+          data-testid="guest-quote-sticky-cta"
+        >
+          <div className="max-w-lg mx-auto">
+            {showStickyAccept ? (
+              <button
+                type="button"
+                onClick={() => void acceptQuote()}
+                disabled={acceptBusy || payBusy}
+                className="ev-btn ev-btn--primary w-full"
+                data-testid="guest-quote-accept"
+              >
+                {acceptBusy || payBusy ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Accept quote & pay deposit"
+                )}
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="ev-btn ev-btn--primary w-full"
+                onClick={() => void startCheckout()}
+                disabled={payBusy || acceptBusy}
+                data-testid="guest-quote-pay-checkout"
+              >
+                {payBusy ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <CreditCard className="h-4 w-4" />
+                    Pay {paymentState.nextLabel.toLowerCase()} {formatCurrency(depositDue, currency)}
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        </div>
+      ) : null}
+      </>
       )}
     </EventVendorPageShell>
   );

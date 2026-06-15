@@ -13,11 +13,45 @@ Captures live under `e2e/visual-captures/` (gitignored). Re-run: `pnpm e2e:visua
 |---------|-------|---------|-----|--------|
 | Public book details | `/book/{slug}` | Hub autofill banner + top deposit card cluttered wizard; “Save to My Livia” shown when already signed in; raw `HTTP 422` on patch-test gate | Silent hub prefills; deposit breakdown in summary card; hub-only hides save CTA; `parsePublicApiError`; patch-test hint on services step | **Engineering done** — founder re-verify on staging after deploy |
 
-**Next in queue:** P1a `/b` storefront · P1b consult-first · P2 gateway.
+**Next in queue:** Founder staging pass on P1 retail/quote/visit · P2 gateway verify.
 
 ---
 
-## 2026-06-15 — Guest hub P0b–P0e + Liv policy lock
+## 2026-06-15 — Gateway P2 (G1–G3 + sign-in)
+
+| Surface | Change |
+|---------|--------|
+| `Launcher.tsx` | Wedge grid first; guest + founder paths in `<details>` |
+| `demo-world-readiness-strip.tsx` | Quiet line when ready; neutral setup row when not |
+| `demo-guest-client-shortcut.tsx` | Slim neutral card (G1/G3) |
+| `demo-consult-first-guest-shortcut.tsx` | Same — consult-first guest row |
+| `gateway-demo-card-stage.tsx` | G3: `← Brief` + role grid; `All worlds` link only |
+| `WedgeStory.tsx` | Inline setup hint (no amber slab); drop redundant enter header |
+| `gateway-demo-launcher-shell.tsx` | Hero copy — guest path on wedge enter screen |
+| `sign-in.tsx` | Single launcher text link; removed duplicate CTA card |
+
+**Status:** Engineering done — founder verify G1 grid → G2 continue → G3 roles · sign-in has one Clerk home.
+
+**Next in queue:** Founder re-verify P1 surfaces on staging.
+
+---
+
+| Surface | Change |
+|---------|--------|
+| `public-shop.tsx` | Total in summary card; sticky bottom pay; `parsePublicApiError` |
+| `public-visit.tsx` | `GuestVisitSummaryCard`; hero time-only; deposit fields from API |
+| `public-event-vendor-quote.tsx` | Line items + payment schedule in one card; sticky accept/pay; human errors |
+| `public-event-vendor-enquire.tsx` | `parsePublicApiError` on submit failures |
+| `guest-vault-owner-callout.tsx` | Slim owner note — My Livia for returning guests |
+| `guest-relationship-panel.tsx` | Memory as border-l line (matches guest `/my`) |
+| `my-livia-visit.tsx` | Memory line parity with shop page |
+| `public.ts` | Deposit breakdown on anonymous `/visit/{token}` |
+
+**Status:** Engineering done — founder re-verify retail shop link, event quote pay, anonymous visit token.
+
+**Next in queue:** P2 gateway G1–G3.
+
+---
 
 | Surface | Change |
 |---------|--------|

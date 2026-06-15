@@ -8,10 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Clock, Star, CheckCircle2, Loader2, MapPin } from "lucide-react";
 import { formatVisitHeroTime, visitDateChip } from "@/lib/format";
-import { guestPublicExperience, guestPublicVisitPrep } from "@workspace/policy";
+import { parsePublicApiError } from "@/lib/public-booking-helpers";
+import { guestPublicVisitPrep } from "@workspace/policy";
 import { PublicSurfaceNotFound } from "@/components/public/public-surface-chrome";
 import { PublicVisitLoading } from "@/components/public/public-visit-loading";
 import { usePublicGuestPwa } from "@/lib/public-guest-pwa";
+import { GuestVisitSummaryCard } from "@/components/guest/guest-visit-summary-card";
 
 type VisitPayload = {
   bookingId: string;
@@ -31,6 +33,10 @@ type VisitPayload = {
   feedbackSubmitted: boolean;
   feedbackScore: number | null;
   depositPaidEurCents?: number;
+  depositPercent?: number;
+  depositRequired?: boolean;
+  depositDueMinor?: number;
+  depositPayUrl?: string | null;
   depositLine?: { label: string; tone: "paid" | "due" | "hold" | "none" } | null;
 };
 
@@ -85,7 +91,7 @@ export default function PublicVisitPage() {
       }
       setMessage("We've let the team know you're on your way. Thank you.");
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Try again");
+      setErr(parsePublicApiError(e, "Try again"));
     } finally {
       setBusy(false);
     }
@@ -108,7 +114,7 @@ export default function PublicVisitPage() {
       setMessage("Thank you — your feedback helps the team improve.");
       setData((d) => (d ? { ...d, feedbackSubmitted: true, feedbackScore: score } : d));
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Try again");
+      setErr(parsePublicApiError(e, "Try again"));
     } finally {
       setBusy(false);
     }
@@ -131,7 +137,6 @@ export default function PublicVisitPage() {
   const canRunLate = data.status === "CONFIRMED" || data.status === "PENDING";
   const canFeedback = data.status === "COMPLETED" && !data.feedbackSubmitted;
   const isCancelled = data.status === "CANCELLED";
-  const guestPublic = guestPublicExperience(data.vertical, null);
   const prepNotes = guestPublicVisitPrep(data.vertical, null);
   const bookUrl = clientGuestBookHref(data.slug);
 
@@ -187,25 +192,28 @@ export default function PublicVisitPage() {
               <MapPin className="h-4 w-4 shrink-0 mt-0.5" aria-hidden />
               See you at the studio
             </p>
-            <p className="text-xs text-muted-foreground mt-3">
-              {guestPublic.visitGreeting(data.customerFirstName)}
-            </p>
-            {data.depositLine ? (
-              <p
-                className={`text-xs mt-3 rounded-lg px-3 py-2 ${
-                  data.depositLine.tone === "paid"
-                    ? "bg-emerald-500/10 text-emerald-800 dark:text-emerald-200"
-                    : data.depositLine.tone === "due"
-                      ? "bg-amber-500/10 text-amber-900 dark:text-amber-100"
-                      : "bg-muted text-muted-foreground"
-                }`}
-                data-testid="guest-visit-deposit-line"
-              >
-                {data.depositLine.label}
-              </p>
-            ) : null}
           </section>
         )}
+
+        {!isCancelled ? (
+          <div className="mt-4">
+            <GuestVisitSummaryCard
+              serviceName={data.serviceName}
+              startAt={data.startAt}
+              staffDisplayName={data.staffDisplayName}
+              status={data.status}
+              currency={data.currency}
+              priceMinor={data.priceMinor}
+              depositPercent={data.depositPercent}
+              depositDueMinor={data.depositDueMinor}
+              depositPaidMinor={data.depositPaidEurCents}
+              depositRequired={data.depositRequired}
+              depositLineLabel={data.depositLine?.label}
+              depositPayUrl={data.depositPayUrl}
+              timezone={data.timezone}
+            />
+          </div>
+        ) : null}
 
         {!isCancelled && prepNotes.length > 0 ? (
           <section className="mt-8" data-testid="guest-visit-prep">

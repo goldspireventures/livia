@@ -1364,7 +1364,7 @@ export default function PublicBookingPage() {
 
               {guestContext?.recognized && (guestContext.pets?.length ?? 0) > 0 ? (
                 <div
-                  className="space-y-2 rounded-lg border border-amber-500/25 bg-amber-500/5 p-4"
+                  className="space-y-2 rounded-lg border border-border/60 p-4"
                   data-testid="public-booking-pet-picker"
                 >
                   <p className="text-sm font-medium">Which pet is this visit for?</p>
