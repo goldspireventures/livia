@@ -81,6 +81,9 @@ export function emergentTrustSettingsCopy(args: {
   };
 }
 
-export function trustedClientToggleGuidance(_emergentTrustEnabled?: boolean): string {
-  return "Trusted clients skip the online deposit requirement. First-time guests still follow your deposit rules.";
+export function trustedClientToggleGuidance(emergentTrustEnabled: boolean): string {
+  if (emergentTrustEnabled) {
+    return "Trusted clients skip the online deposit. First-time guests still follow your deposit rules.";
+  }
+  return "Accept the trusted-client proposal on your home screen first — then you can mark regulars here.";
 }

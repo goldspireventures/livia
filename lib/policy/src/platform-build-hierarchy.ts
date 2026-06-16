@@ -22,13 +22,13 @@ export const PLATFORM_BUILD_ROOTS: BuildHierarchyNode[] = [
     id: "commitment-gate",
     title: "Commitment Gate",
     summary: "What must be true before a scarce human minute locks.",
-    status: "in_progress",
+    status: "shipped",
     surfaces: ["policy", "api", "guest /b", "guest /my", "dashboard"],
     children: [
       {
         id: "commitment-percent-deposit",
         title: "Percent deposit rail",
-        summary: "Tenant % on service price → Stripe → Liv auto-confirms.",
+        summary: "Tenant % on service price → Stripe → auto-confirm.",
         status: "shipped",
         children: [
           {
@@ -56,16 +56,22 @@ export const PLATFORM_BUILD_ROOTS: BuildHierarchyNode[] = [
             status: "shipped",
           },
           {
-        id: "commitment-guest-truth-line",
-        title: "Guest deposit truth on /my",
-        summary: "Accurate due/paid copy with vertical tone.",
-        status: "shipped",
-      },
-      {
-        id: "commitment-balance-at-visit",
-        title: "Balance at visit",
-        summary: "Chair/bay balance due — post-commitment settlement.",
-        status: "shipped",
+            id: "commitment-guest-truth-line",
+            title: "Guest deposit truth on /my",
+            summary: "Accurate due/paid copy with vertical tone.",
+            status: "shipped",
+          },
+          {
+            id: "commitment-balance-at-visit",
+            title: "Balance at visit",
+            summary: "Chair/bay balance due — post-commitment settlement.",
+            status: "shipped",
+          },
+          {
+            id: "commitment-card-on-file",
+            title: "Card on file",
+            summary: "SetupIntent saved PM — off-session balance/rebook.",
+            status: "planned",
           },
         ],
       },
@@ -107,14 +113,14 @@ export const PLATFORM_BUILD_ROOTS: BuildHierarchyNode[] = [
   {
     id: "owner-operating-ritual",
     title: "Owner Operating Ritual",
-    summary: "Today = what Liv handled, what needs you, what guests must finish.",
+    summary: "Today = what needs you, what guests must finish, what is handled.",
     status: "shipped",
     surfaces: ["policy", "dashboard", "mobile"],
     children: [
       {
         id: "ritual-operating-pulse",
         title: "Operating pulse",
-        summary: "Liv handling · Needs you · Guest completing counts.",
+        summary: "Handling · Needs you · Guest completing counts.",
         status: "shipped",
       },
       {
@@ -141,7 +147,7 @@ export const PLATFORM_BUILD_ROOTS: BuildHierarchyNode[] = [
     id: "guest-continuity",
     title: "Guest Continuity",
     summary: "/b book → pay/commit → /my visit → thread → rebook.",
-    status: "in_progress",
+    status: "shipped",
     children: [
       {
         id: "continuity-book-pay",
@@ -157,8 +163,8 @@ export const PLATFORM_BUILD_ROOTS: BuildHierarchyNode[] = [
       },
       {
         id: "continuity-thread-read",
-        title: "Visit thread read",
-        summary: "Guest reads Liv/staff messages on visit page.",
+        title: "Visit thread read/write",
+        summary: "Guest reads and sends messages on visit page.",
         status: "shipped",
       },
       {
@@ -167,31 +173,37 @@ export const PLATFORM_BUILD_ROOTS: BuildHierarchyNode[] = [
         summary: "Beauty prefs, patch test, wellness prep.",
         status: "shipped",
       },
+      {
+        id: "continuity-passwordless-hub",
+        title: "Email-only guest hub",
+        summary: "Passwordless /my without phone OTP.",
+        status: "planned",
+      },
     ],
   },
   {
     id: "emergent-trust",
     title: "Emergent Trust Programs",
-    summary: "VIP-style service proposed from data — never default-on.",
-    status: "in_progress",
+    summary: "Trusted regulars proposed from data — owner accepts, never default-on.",
+    status: "shipped",
     surfaces: ["policy", "twin", "dashboard"],
     children: [
       {
         id: "trust-signal-collection",
         title: "Signal collection",
-        summary: "Show rate, rebook, strikes, LTV — year-one data.",
-        status: "in_progress",
+        summary: "Show rate, rebook, strikes — quality registry on owner home.",
+        status: "shipped",
       },
       {
         id: "trust-twin-proposal",
         title: "Twin proposal card",
-        summary: "Liv suggests trusted-client tier when metrics qualify.",
-        status: "in_progress",
+        summary: "Accept on owner home; demo showcase surfaces proposal.",
+        status: "shipped",
       },
       {
         id: "trust-policy-patch",
         title: "Accept → policy patch",
-        summary: "Owner accepts; audit trail; per-tenant only.",
+        summary: "Owner accepts; per-customer Trusted toggle unlocks.",
         status: "shipped",
       },
     ],
@@ -200,7 +212,7 @@ export const PLATFORM_BUILD_ROOTS: BuildHierarchyNode[] = [
     id: "operating-twin",
     title: "Operating Twin",
     summary: "Business mirror — risks, opportunities, policy evolution.",
-    status: "in_progress",
+    status: "shipped",
     children: [
       {
         id: "twin-observations",
@@ -217,8 +229,41 @@ export const PLATFORM_BUILD_ROOTS: BuildHierarchyNode[] = [
       {
         id: "twin-policy-patch-ui",
         title: "Policy patch accept UI",
-        summary: "One-tap accept from Twin card.",
+        summary: "One-tap accept from owner home card.",
         status: "shipped",
+      },
+      {
+        id: "twin-mandate-preview",
+        title: "Mandate preview before promote",
+        summary: "Show autonomy impact before Liv promotion accept.",
+        status: "planned",
+      },
+    ],
+  },
+  {
+    id: "cross-surface-parity",
+    title: "Cross-surface parity",
+    summary: "Web ↔ mobile ↔ internal ops ↔ OpenAPI contract.",
+    status: "in_progress",
+    surfaces: ["mobile", "internal", "openapi"],
+    children: [
+      {
+        id: "cross-openapi-contract",
+        title: "OpenAPI + codegen",
+        summary: "Public pay/balance, policy-evolution, dashboard pulse fields.",
+        status: "shipped",
+      },
+      {
+        id: "cross-mobile-deep-ops",
+        title: "Mobile deep ops parity",
+        summary: "Billing, quotes editor, rota — web-first until Era 2.",
+        status: "planned",
+      },
+      {
+        id: "cross-internal-ops",
+        title: "Internal ops portal",
+        summary: "Flags, impersonation, incidents vs spec.",
+        status: "planned",
       },
     ],
   },

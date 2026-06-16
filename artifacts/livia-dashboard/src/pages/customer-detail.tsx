@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { usePathId } from "@/lib/detail-route-params";
 import { useBusiness } from "@/lib/business-context";
@@ -20,6 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Mail, Phone, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { customFetch } from "@workspace/api-client-react";
 import { trustedClientToggleGuidance } from "@workspace/policy";
 import { GuestRelationshipPanel } from "@/components/customers/guest-relationship-panel";
 import { ClientConsultPipelinePanel } from "@/components/event-vendor/client-consult-pipeline-panel";
@@ -57,6 +58,7 @@ export default function CustomerDetailPage() {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
+  const [emergentTrustEnabled, setEmergentTrustEnabled] = useState(false);
 
   const bid = business?.id ?? "";
   const cid = customerId ?? "";
@@ -74,6 +76,17 @@ export default function CustomerDetailPage() {
 
   const updateCustomer = useUpdateCustomer();
   const { register, handleSubmit, reset } = useForm<CustomerForm>();
+
+  useEffect(() => {
+    if (!bid) return;
+    void customFetch<{ resolved?: { emergentTrustProgram?: { enabled?: boolean } } }>(
+      `/api/businesses/${bid}/operational-policy`,
+    )
+      .then((payload) =>
+        setEmergentTrustEnabled(Boolean(payload.resolved?.emergentTrustProgram?.enabled)),
+      )
+      .catch(() => setEmergentTrustEnabled(false));
+  }, [bid]);
 
   const c = customer as {
     id?: string;
@@ -342,12 +355,12 @@ export default function CustomerDetailPage() {
                   <div>
                     <p className="text-sm font-medium">Trusted client</p>
                     <p className="text-xs text-muted-foreground mt-1 max-w-md">
-                      {trustedClientToggleGuidance()}
+                      {trustedClientToggleGuidance(emergentTrustEnabled)}
                     </p>
                   </div>
                   <Switch
                     checked={Boolean(c.trustedClient)}
-                    disabled={updateCustomer.isPending}
+                    disabled={updateCustomer.isPending || !emergentTrustEnabled}
                     onCheckedChange={() => toggleTrustedClient()}
                     aria-label="Trusted client"
                   />

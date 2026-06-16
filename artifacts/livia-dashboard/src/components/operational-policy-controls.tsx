@@ -247,6 +247,12 @@ export default function OperationalPolicyControls() {
           />
         </div>
 
+        {state.resolved.emergentTrustProgram?.enabled ? (
+          <p className="text-xs text-muted-foreground border-t pt-4" data-testid="emergent-trust-active">
+            Trusted-client tier is active — mark regulars on their customer profile to skip deposits.
+          </p>
+        ) : null}
+
         <Button onClick={() => void save()} disabled={saving}>
           {saving ? "Saving…" : "Save policy"}
         </Button>

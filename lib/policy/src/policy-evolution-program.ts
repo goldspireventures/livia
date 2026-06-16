@@ -58,7 +58,7 @@ export function resolvePolicyEvolutionProposals(
         projectedBenefit: proposal.projectedBenefit,
         confidence: input.emergentTrust.monthsActive >= 12 ? "high" : "medium",
         acceptLabel: "Enable trusted-client tier",
-        href: "/settings?tab=booking-rules#emergent-trust",
+        href: "/customers",
         operationalPatch: {
           emergentTrustProgram: {
             enabled: true,
@@ -82,7 +82,7 @@ export function resolvePolicyEvolutionProposals(
         id: "raise_deposit_capture",
         title: "Raise deposit % to improve capture",
         body: `Capture rate is ${input.captureRatePercent}% — a higher securing deposit often reduces no-shows without more staff work.`,
-        projectedBenefit: "Liv still auto-confirms when paid — you only change the gate height.",
+        projectedBenefit: "Auto-confirm still applies when paid — you only change the gate height.",
         confidence: input.captureRatePercent < 50 ? "high" : "medium",
         acceptLabel: `Set deposit to ${nextPercent}%`,
         href: "/settings?tab=booking-rules",
@@ -99,11 +99,17 @@ export function resolvePolicyEvolutionProposals(
     out.push({
       id: "retail_attach_program",
       title: "Turn on post-session retail prompts",
-      body: `Retail attach is around ${input.retailAttachRatePercent}% — Liv can nudge after full sets and long appointments.`,
+      body: `Retail attach is around ${input.retailAttachRatePercent}% — gentle product prompts after full sets and long appointments.`,
       projectedBenefit: "Incremental revenue without another system.",
       confidence: "medium",
-      acceptLabel: "Review retail settings",
+      acceptLabel: "Turn on retail prompts",
       href: "/store",
+      operationalPatch: {
+        guestCare: {
+          retailAftercareEnabled: true,
+          aftercareEnabled: true,
+        },
+      },
     });
   }
 
@@ -228,12 +234,12 @@ export const DEMO_POLICY_EVOLUTION_SHOWCASE_SLUGS: ReadonlySet<string> = new Set
 export function demoPolicyEvolutionProposalForShowcase(): PolicyEvolutionProposal {
   return {
     id: "emergent_trust_tier",
-    title: "Trusted client tier — demo preview",
-    body: "Showcase tenant — accept to enable Trusted tier for deposit waivers on regulars.",
-    projectedBenefit: "Founder UAT: accept → policy patch without waiting 10 months.",
+    title: "Trusted regulars — skip deposit",
+    body: "Enable deposit waivers for clients you mark as trusted. New guests keep your standard deposit rules.",
+    projectedBenefit: "Less friction for regulars without weakening first-booking protection.",
     confidence: "medium",
-    acceptLabel: "Enable trusted-client tier (demo)",
-    href: "/settings?tab=booking-rules#emergent-trust",
+    acceptLabel: "Enable trusted-client tier",
+    href: "/customers",
     operationalPatch: {
       emergentTrustProgram: {
         enabled: true,

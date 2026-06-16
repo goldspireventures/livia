@@ -99,6 +99,6 @@ export function emergentTrustTwinObservation(
         label: `${input.repeatClientSharePercent ?? "—"}% repeat revenue`,
       },
     ],
-    href: "/settings?tab=booking-rules#emergent-trust",
+    href: "/customers",
   };
 }

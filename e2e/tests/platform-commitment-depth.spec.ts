@@ -28,7 +28,7 @@ test.describe("Platform commitment depth", () => {
     await ensureDemoProvisioned(request);
   });
 
-  test("policy evolution API returns quality registry", async ({ page, request }) => {
+  test("policy evolution exposes trusted tier on showcase slug", async ({ page, request }) => {
     if (!(await demoCanSignIn(request, SLUG))) {
       test.skip(true, "Demo sign-in unavailable");
     }
@@ -45,7 +45,10 @@ test.describe("Platform commitment depth", () => {
       qualityRegistry?: unknown[];
     };
     expect(Array.isArray(body.proposals)).toBeTruthy();
-    expect(body.proposals?.some((p) => p.id === "emergent_trust_tier")).toBeFalsy();
+    expect(
+      body.proposals?.some((p) => p.id === "emergent_trust_tier"),
+      "Demo showcase should surface trusted-client proposal",
+    ).toBeTruthy();
     expect(Array.isArray(body.qualityRegistry)).toBeTruthy();
   });
 

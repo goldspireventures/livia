@@ -24,15 +24,8 @@ export function PolicyEvolutionPanel({
 
   if (!proposals?.length) return null;
 
-  const visible = proposals.filter((p) => p.id !== "emergent_trust_tier");
-  if (!visible.length) return null;
-
   async function accept(proposal: PolicyEvolutionProposal) {
     if (!bid) return;
-    if (proposal.id === "retail_attach_program" && proposal.href) {
-      window.location.href = proposal.href;
-      return;
-    }
     setBusyId(proposal.id);
     try {
       const r = await apiFetch<{ ok: boolean; reason?: string }>(
@@ -64,7 +57,7 @@ export function PolicyEvolutionPanel({
         Suggested policy updates
       </p>
       <ul className="space-y-2">
-        {visible.slice(0, 3).map((p) => (
+        {proposals.slice(0, 3).map((p) => (
           <li
             key={p.id}
             className="rounded-lg border border-primary/15 bg-primary/5 p-3 text-sm space-y-2"

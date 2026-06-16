@@ -136,7 +136,7 @@ export function depositAppliesForBookingContext(args: {
   customerTrusted?: boolean;
 }): boolean {
   if (args.packageCreditApplied) return false;
-  if (args.customerTrusted) {
+  if (args.customerTrusted && args.operational.emergentTrustProgram?.enabled) {
     return false;
   }
   if (!depositAppliesForBooking(args.operational)) return false;

@@ -89,15 +89,15 @@ Use each program doc § **L8 — Completion** for slug + owner login. Index: [`V
 | # | Path / flow | Pass? | Notes |
 |---|-------------|-------|-------|
 | 1 | Owner home → **Operating pulse** | | Three buckets; tap **Needs you** / **Guest completing** → filtered `/bookings?lens=` |
-| 2 | Owner home → **Suggested policy updates** (when shown) | | Retail attach or other proposals — not trusted-client tier |
-| 3 | `/settings?tab=booking-rules` | | Deposits, buffers, continuity — no dev-only cards |
+| 2 | Owner home → **Suggested policy updates** → accept trusted-client tier | | On `luxe-salon-spa`, `bloom-beauty-dublin`, or `harbour-wellness-cork` |
+| 3 | `/settings?tab=booking-rules` | | Deposits, buffers, continuity — trusted tier shows active line after accept |
 | 4 | `/bookings?status=PENDING&lens=needs_you` | | Only staff/policy holds — not guest deposit waits |
 | 5 | Booking detail → **Copy balance link** / **Mark balance paid** | | After deposit on confirmed booking with balance due |
 | 6 | Guest `/book/:slug/balance/:token` (or subdomain `/balance/:token`) | | Stripe or dev simulate pays remainder |
 | 7 | My Livia visit → **Pay balance** CTA | | When balance due after deposit |
 | 8 | Pack purchase → return → book with credit | | Guest name/phone restored from session |
 | 9 | Event vendor: accepted quote deposit → first `/bookings` create | | Deposit credited; booking may auto-confirm |
-| 10 | Customer profile → **Trusted** toggle | | Skips online deposit for that client |
+| 10 | Customer profile → **Trusted** toggle | | Enabled after trusted-client tier accepted on home |
 
 ---
 

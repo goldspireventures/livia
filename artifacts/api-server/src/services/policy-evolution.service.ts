@@ -4,9 +4,12 @@ import {
   resolvePolicyEvolutionProposals,
   applyPolicyEvolutionProposal,
   buildQualityRegistryEntries,
+  DEMO_POLICY_EVOLUTION_SHOWCASE_SLUGS,
+  demoPolicyEvolutionProposalForShowcase,
   type PolicyEvolutionProposal,
   type PolicyEvolutionProposalId,
 } from "@workspace/policy";
+import { isDemoPortalEnabled } from "../lib/demo-portal-config";
 import { getBusinessActivationSnapshot } from "./activation-metrics.service";
 import { patchOperationalPolicy } from "./operational-policy.service";
 import { getLivMandateForBusiness, patchLivMandateForBusiness } from "./liv-mandate.service";
@@ -128,7 +131,17 @@ export async function getPolicyEvolutionProposals(
     completedBookings: trustMetrics.completedBookings,
   });
 
-  return proposals.filter((p) => p.id !== "emergent_trust_tier");
+  if (
+    isDemoPortalEnabled() &&
+    biz.slug &&
+    DEMO_POLICY_EVOLUTION_SHOWCASE_SLUGS.has(biz.slug) &&
+    !policies.operational.emergentTrustProgram?.enabled &&
+    !proposals.some((p) => p.id === "emergent_trust_tier")
+  ) {
+    proposals = [demoPolicyEvolutionProposalForShowcase(), ...proposals];
+  }
+
+  return proposals;
 }
 
 export async function getQualityRegistryForBusiness(businessId: string) {
@@ -155,6 +168,13 @@ export async function acceptPolicyEvolutionProposal(
   if (!patch) return { ok: false, reason: "PROPOSAL_NOT_FOUND" };
 
   if (proposalId === "retail_attach_program") {
+    const patch = applyPolicyEvolutionProposal(proposalId, proposals);
+    if (patch?.operationalPatch && Object.keys(patch.operationalPatch).length > 0) {
+      await patchOperationalPolicy(businessId, patch.operationalPatch);
+      const { invalidateOwnerIntelligenceCache } = await import("./owner-intelligence-cache");
+      invalidateOwnerIntelligenceCache(businessId);
+      return { ok: true, proposalId };
+    }
     return { ok: false, reason: "NAVIGATE_ONLY" };
   }
 
