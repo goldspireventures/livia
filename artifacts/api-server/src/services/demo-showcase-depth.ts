@@ -26,7 +26,12 @@ import { applyDemoPublicBranding } from "../lib/demo-public-assets";
 import { mergeOperationalPolicy, parseOperationalPolicy, recommendedDepositPolicyForVertical } from "@workspace/policy";
 import { backfillDemoServiceImages } from "../lib/demo-service-images";
 import { inferDemoServiceImageUrl } from "../lib/experience-skin";
-import { consultFirstDemoCustomerCap, isConsultFirstVertical, type BusinessVertical } from "@workspace/policy";
+import {
+  computeBalanceDueFromBooking,
+  consultFirstDemoCustomerCap,
+  isConsultFirstVertical,
+  type BusinessVertical,
+} from "@workspace/policy";
 import { ensureDefaultLivOutboundOverrides } from "./liv-outbound.service";
 
 type StaffDef = {
@@ -425,6 +430,103 @@ export async function getDemoGuestIntakeToken(slug: string): Promise<string | nu
 
   const { ensureMedicalIntakeGuestAccess } = await import("./medical-intake-guest-access.service");
   return ensureMedicalIntakeGuestAccess(biz.id, draft.id);
+}
+
+async function findDemoGuestBalanceBookingId(businessId: string): Promise<string | null> {
+  const rows = await db
+    .select({
+      id: bookingsTable.id,
+      depositPaidEurCents: bookingsTable.depositPaidEurCents,
+      totalPaidEurCents: bookingsTable.totalPaidEurCents,
+      priceMinor: servicesTable.priceMinor,
+      status: bookingsTable.status,
+    })
+    .from(bookingsTable)
+    .innerJoin(servicesTable, eq(bookingsTable.serviceId, servicesTable.id))
+    .where(
+      and(
+        eq(bookingsTable.businessId, businessId),
+        inArray(bookingsTable.status, ["CONFIRMED", "PENDING"]),
+        sql`${bookingsTable.depositPaidEurCents} > 0`,
+      ),
+    )
+    .orderBy(desc(bookingsTable.startAt));
+
+  for (const row of rows) {
+    const balanceDueMinor = computeBalanceDueFromBooking({
+      priceMinor: row.priceMinor,
+      depositPaidEurCents: row.depositPaidEurCents,
+      totalPaidEurCents: row.totalPaidEurCents,
+    });
+    if (balanceDueMinor > 0) return row.id;
+  }
+  return null;
+}
+
+/** Backfill a balance-due booking for demos seeded before balance_due key existed. */
+export async function ensureDemoGuestBalanceBooking(businessId: string): Promise<string | null> {
+  const existingId = await findDemoGuestBalanceBookingId(businessId);
+  if (existingId) return existingId;
+
+  const [customer] = await db
+    .select({ id: customersTable.id })
+    .from(customersTable)
+    .where(eq(customersTable.businessId, businessId))
+    .limit(1);
+  const [service] = await db
+    .select({ id: servicesTable.id, priceMinor: servicesTable.priceMinor })
+    .from(servicesTable)
+    .where(eq(servicesTable.businessId, businessId))
+    .orderBy(desc(servicesTable.priceMinor))
+    .limit(1);
+  const [staff] = await db
+    .select({ id: staffTable.id })
+    .from(staffTable)
+    .where(eq(staffTable.businessId, businessId))
+    .limit(1);
+  if (!customer || !service || !staff) return null;
+
+  const depositMinor = Math.min(6000, Math.max(2000, Math.round(service.priceMinor * 0.5)));
+  const start = new Date();
+  start.setHours(15, 0, 0, 0);
+  const end = new Date(start.getTime() + 90 * 60_000);
+
+  const { generateId } = await import("../lib/id");
+  const bookingId = generateId();
+  await db.insert(bookingsTable).values({
+    id: bookingId,
+    businessId,
+    customerId: customer.id,
+    staffId: staff.id,
+    serviceId: service.id,
+    status: "CONFIRMED",
+    startAt: start,
+    endAt: end,
+    notes: "Balance due at visit — demo backfill",
+    channelType: "WEB",
+    depositPaidEurCents: depositMinor,
+    totalPaidEurCents: depositMinor,
+  });
+  return bookingId;
+}
+
+/** Confirmed booking with remainder due — for guest balance E2E. */
+export async function getDemoGuestBalanceToken(slug: string): Promise<string | null> {
+  const [biz] = await db
+    .select({ id: businessesTable.id })
+    .from(businessesTable)
+    .where(eq(businessesTable.slug, slug))
+    .limit(1);
+  if (!biz) return null;
+
+  let bookingId = await findDemoGuestBalanceBookingId(biz.id);
+  if (!bookingId) {
+    bookingId = await ensureDemoGuestBalanceBooking(biz.id);
+  }
+  if (!bookingId) return null;
+
+  const { ensureBookingGuestAccess } = await import("./booking-guest-access.service");
+  return ensureBookingGuestAccess(biz.id, bookingId);
 }
 
 /** Pending booking with deposit due — for guest pay E2E. */

@@ -1453,6 +1453,70 @@ export interface FeatureFlag {
   updatedAt: string;
 }
 
+export type GuestDepositPayViewExperienceSkin = { [key: string]: unknown };
+
+export interface GuestDepositPayView {
+  bookingId: string;
+  businessName: string;
+  slug: string;
+  /** @nullable */
+  vertical?: string | null;
+  status: string;
+  startAt: string;
+  serviceName: string;
+  /** @nullable */
+  staffDisplayName?: string | null;
+  /** @nullable */
+  customerFirstName?: string | null;
+  currency: string;
+  priceMinor: number;
+  depositPaidMinor?: number;
+  depositDueMinor: number;
+  depositPercent?: number;
+  depositRequired?: boolean;
+  /** @nullable */
+  logoUrl?: string | null;
+  checkoutAvailable: boolean;
+  experienceSkin?: GuestDepositPayViewExperienceSkin;
+}
+
+export type GuestBalancePayViewExperienceSkin = { [key: string]: unknown };
+
+export interface GuestBalancePayView {
+  bookingId: string;
+  businessName: string;
+  slug: string;
+  /** @nullable */
+  vertical?: string | null;
+  status: string;
+  startAt: string;
+  serviceName: string;
+  /** @nullable */
+  staffDisplayName?: string | null;
+  currency: string;
+  priceMinor: number;
+  totalPaidMinor: number;
+  balanceDueMinor: number;
+  checkoutAvailable: boolean;
+  /** @nullable */
+  logoUrl?: string | null;
+  experienceSkin?: GuestBalancePayViewExperienceSkin;
+}
+
+export type GuestPaymentCheckoutResult =
+  | {
+      mode: "stripe";
+      checkoutUrl: string;
+    }
+  | {
+      mode: "dev";
+      message: string;
+    }
+  | {
+      mode: "error";
+      message: string;
+    };
+
 export interface PublicBusiness {
   id: string;
   name: string;
@@ -2008,6 +2072,18 @@ export const ListConversationsStatus = {
 export type SendConversationMessageBody = {
   content: string;
 };
+
+export type ConfirmGuestDepositCheckoutBody = {
+  sessionId?: string;
+};
+
+export type ConfirmGuestDepositCheckout200 = { [key: string]: unknown };
+
+export type ConfirmGuestBalanceCheckoutBody = {
+  sessionId?: string;
+};
+
+export type ConfirmGuestBalanceCheckout200 = { [key: string]: unknown };
 
 export type RequestGuestHubOtpBody = {
   phone?: string;

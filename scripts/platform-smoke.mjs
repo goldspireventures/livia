@@ -97,6 +97,33 @@ try {
   fail("demo channels", e instanceof Error ? e.message : String(e));
 }
 
+try {
+  const balance = await fetch(`${base}/api/demo/guest-surfaces/luxe-salon-spa/balance`);
+  if (balance.ok) {
+    const b = await balance.json();
+    const view = await fetch(`${base}/api/public/b/luxe-salon-spa/balance/${b.token}`);
+    if (view.ok) {
+      const payload = await view.json();
+      if ((payload.balanceDueMinor ?? 0) > 0) {
+        pass(`guest balance token (due €${((payload.balanceDueMinor ?? 0) / 100).toFixed(2)})`);
+      } else fail("guest balance due", "balanceDueMinor is 0");
+    } else fail("guest balance view", String(view.status));
+  } else if (balance.status === 404) {
+    fail("guest balance token", "404 — re-run pnpm demo:provision");
+  } else fail("guest balance token", String(balance.status));
+} catch (e) {
+  fail("guest balance token", e instanceof Error ? e.message : String(e));
+}
+
+try {
+  const pay = await fetch(`${base}/api/demo/guest-surfaces/luxe-salon-spa/pay`);
+  if (pay.ok) pass("guest deposit pay token");
+  else if (pay.status === 404) fail("guest deposit pay token", "404 — re-run pnpm demo:provision");
+  else fail("guest deposit pay token", String(pay.status));
+} catch (e) {
+  fail("guest deposit pay token", e instanceof Error ? e.message : String(e));
+}
+
 const opsSecret = process.env.INTERNAL_OPS_SECRET ?? "";
 if (opsSecret) {
   try {

@@ -27,7 +27,7 @@ const router: IRouter = Router();
 
 function demoGuestSurfacePayload(
   slug: string,
-  surface: "proof" | "pay" | "intake" | "waitlist" | "quote",
+  surface: "proof" | "pay" | "balance" | "intake" | "waitlist" | "quote",
   token: string,
 ) {
   const path =
@@ -293,6 +293,22 @@ router.get("/demo/guest-surfaces/:slug/pay", async (req, res): Promise<void> => 
     return;
   }
   res.json(demoGuestSurfacePayload(slug, "pay", token));
+});
+
+/** Demo-only: guest balance token for visit settlement E2E. */
+router.get("/demo/guest-surfaces/:slug/balance", async (req, res): Promise<void> => {
+  const slug = String(req.params.slug ?? "").trim();
+  if (!slug) {
+    sendError(res, req, 400, "slug is required");
+    return;
+  }
+  const { getDemoGuestBalanceToken } = await import("../services/demo-showcase-depth");
+  const token = await getDemoGuestBalanceToken(slug);
+  if (!token) {
+    sendError(res, req, 404, "No balance-due booking for this demo shop");
+    return;
+  }
+  res.json(demoGuestSurfacePayload(slug, "balance", token));
 });
 
 router.get("/demo/guest-surfaces/:slug/intake", async (req, res): Promise<void> => {

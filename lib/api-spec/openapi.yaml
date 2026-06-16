@@ -2020,6 +2020,174 @@ paths:
         "409":
           $ref: "#/components/responses/Conflict"
 
+  /public/b/{slug}/pay/{token}:
+    get:
+      operationId: getGuestDepositPayView
+      tags: [public]
+      summary: Guest deposit pay view (token link)
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+        - name: token
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Deposit checkout context
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GuestDepositPayView"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /public/b/{slug}/pay/{token}/checkout:
+    post:
+      operationId: createGuestDepositCheckout
+      tags: [public]
+      summary: Start guest deposit checkout (Stripe or dev simulate)
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+        - name: token
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Checkout session or dev settlement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GuestPaymentCheckoutResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /public/b/{slug}/pay/{token}/confirm:
+    post:
+      operationId: confirmGuestDepositCheckout
+      tags: [public]
+      summary: Confirm guest deposit after Stripe redirect
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+        - name: token
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sessionId: { type: string }
+      responses:
+        "200":
+          description: Deposit captured
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /public/b/{slug}/balance/{token}:
+    get:
+      operationId: getGuestBalancePayView
+      tags: [public]
+      summary: Guest balance-at-visit pay view (token link)
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+        - name: token
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Balance checkout context
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GuestBalancePayView"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /public/b/{slug}/balance/{token}/checkout:
+    post:
+      operationId: createGuestBalanceCheckout
+      tags: [public]
+      summary: Start guest balance checkout (Stripe or dev simulate)
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+        - name: token
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Checkout session or dev settlement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GuestPaymentCheckoutResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /public/b/{slug}/balance/{token}/confirm:
+    post:
+      operationId: confirmGuestBalanceCheckout
+      tags: [public]
+      summary: Confirm guest balance after Stripe redirect
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+        - name: token
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sessionId: { type: string }
+      responses:
+        "200":
+          description: Balance captured
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
   # ─── Guest hub (W6) ───────────────────────────────────────────────────────
   /public/guest-hub/otp/request:
     post:
@@ -4647,6 +4815,73 @@ components:
       required: [id, key, isEnabled, createdAt, updatedAt]
 
     # ── Public ──
+    GuestDepositPayView:
+      type: object
+      properties:
+        bookingId: { type: string }
+        businessName: { type: string }
+        slug: { type: string }
+        vertical: { type: ["string", "null"] }
+        status: { type: string }
+        startAt: { type: string, format: date-time }
+        serviceName: { type: string }
+        staffDisplayName: { type: ["string", "null"] }
+        customerFirstName: { type: ["string", "null"] }
+        currency: { type: string }
+        priceMinor: { type: integer }
+        depositPaidMinor: { type: integer }
+        depositDueMinor: { type: integer }
+        depositPercent: { type: integer }
+        depositRequired: { type: boolean }
+        logoUrl: { type: ["string", "null"] }
+        checkoutAvailable: { type: boolean }
+        experienceSkin:
+          type: object
+          additionalProperties: true
+      required:
+        [bookingId, businessName, slug, status, startAt, serviceName, currency, priceMinor, depositDueMinor, checkoutAvailable]
+
+    GuestBalancePayView:
+      type: object
+      properties:
+        bookingId: { type: string }
+        businessName: { type: string }
+        slug: { type: string }
+        vertical: { type: ["string", "null"] }
+        status: { type: string }
+        startAt: { type: string, format: date-time }
+        serviceName: { type: string }
+        staffDisplayName: { type: ["string", "null"] }
+        currency: { type: string }
+        priceMinor: { type: integer }
+        totalPaidMinor: { type: integer }
+        balanceDueMinor: { type: integer }
+        checkoutAvailable: { type: boolean }
+        logoUrl: { type: ["string", "null"] }
+        experienceSkin:
+          type: object
+          additionalProperties: true
+      required:
+        [bookingId, businessName, slug, status, startAt, serviceName, currency, priceMinor, totalPaidMinor, balanceDueMinor, checkoutAvailable]
+
+    GuestPaymentCheckoutResult:
+      oneOf:
+        - type: object
+          properties:
+            mode: { type: string, enum: [stripe] }
+            checkoutUrl: { type: string }
+          required: [mode, checkoutUrl]
+        - type: object
+          properties:
+            mode: { type: string, enum: [dev] }
+            message: { type: string }
+          required: [mode, message]
+        - type: object
+          properties:
+            mode: { type: string, enum: [error] }
+            message: { type: string }
+          required: [mode, message]
+
     PublicBusiness:
       type: object
       properties:

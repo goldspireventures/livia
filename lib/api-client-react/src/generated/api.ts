@@ -32,6 +32,10 @@ import type {
   ClearDevWorkspace200,
   CommerceSignalsBundle,
   CommerceSnapshot,
+  ConfirmGuestBalanceCheckout200,
+  ConfirmGuestBalanceCheckoutBody,
+  ConfirmGuestDepositCheckout200,
+  ConfirmGuestDepositCheckoutBody,
   ConflictResponse,
   ConversationDetail,
   ConversationListItem,
@@ -67,6 +71,9 @@ import type {
   GetPublicSlotsParams,
   GetVoiceStatus200,
   GetWellnessGuestVaultParams,
+  GuestBalancePayView,
+  GuestDepositPayView,
+  GuestPaymentCheckoutResult,
   HealthStatus,
   InAppNotificationList,
   InternalSupportContext,
@@ -8042,6 +8049,630 @@ export const useCreatePublicBooking = <
   TContext
 > => {
   return useMutation(getCreatePublicBookingMutationOptions(options));
+};
+
+/**
+ * @summary Guest deposit pay view (token link)
+ */
+export const getGetGuestDepositPayViewUrl = (slug: string, token: string) => {
+  return `/api/public/b/${slug}/pay/${token}`;
+};
+
+export const getGuestDepositPayView = async (
+  slug: string,
+  token: string,
+  options?: RequestInit,
+): Promise<GuestDepositPayView> => {
+  return customFetch<GuestDepositPayView>(
+    getGetGuestDepositPayViewUrl(slug, token),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetGuestDepositPayViewQueryKey = (
+  slug: string,
+  token: string,
+) => {
+  return [`/api/public/b/${slug}/pay/${token}`] as const;
+};
+
+export const getGetGuestDepositPayViewQueryOptions = <
+  TData = Awaited<ReturnType<typeof getGuestDepositPayView>>,
+  TError = ErrorType<NotFoundResponse>,
+>(
+  slug: string,
+  token: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getGuestDepositPayView>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetGuestDepositPayViewQueryKey(slug, token);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getGuestDepositPayView>>
+  > = ({ signal }) =>
+    getGuestDepositPayView(slug, token, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!(slug && token),
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getGuestDepositPayView>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetGuestDepositPayViewQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getGuestDepositPayView>>
+>;
+export type GetGuestDepositPayViewQueryError = ErrorType<NotFoundResponse>;
+
+/**
+ * @summary Guest deposit pay view (token link)
+ */
+
+export function useGetGuestDepositPayView<
+  TData = Awaited<ReturnType<typeof getGuestDepositPayView>>,
+  TError = ErrorType<NotFoundResponse>,
+>(
+  slug: string,
+  token: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getGuestDepositPayView>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetGuestDepositPayViewQueryOptions(
+    slug,
+    token,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Start guest deposit checkout (Stripe or dev simulate)
+ */
+export const getCreateGuestDepositCheckoutUrl = (
+  slug: string,
+  token: string,
+) => {
+  return `/api/public/b/${slug}/pay/${token}/checkout`;
+};
+
+export const createGuestDepositCheckout = async (
+  slug: string,
+  token: string,
+  options?: RequestInit,
+): Promise<GuestPaymentCheckoutResult> => {
+  return customFetch<GuestPaymentCheckoutResult>(
+    getCreateGuestDepositCheckoutUrl(slug, token),
+    {
+      ...options,
+      method: "POST",
+    },
+  );
+};
+
+export const getCreateGuestDepositCheckoutMutationOptions = <
+  TError = ErrorType<BadRequestResponse | NotFoundResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createGuestDepositCheckout>>,
+    TError,
+    { slug: string; token: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createGuestDepositCheckout>>,
+  TError,
+  { slug: string; token: string },
+  TContext
+> => {
+  const mutationKey = ["createGuestDepositCheckout"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createGuestDepositCheckout>>,
+    { slug: string; token: string }
+  > = (props) => {
+    const { slug, token } = props ?? {};
+
+    return createGuestDepositCheckout(slug, token, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateGuestDepositCheckoutMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createGuestDepositCheckout>>
+>;
+
+export type CreateGuestDepositCheckoutMutationError = ErrorType<
+  BadRequestResponse | NotFoundResponse
+>;
+
+/**
+ * @summary Start guest deposit checkout (Stripe or dev simulate)
+ */
+export const useCreateGuestDepositCheckout = <
+  TError = ErrorType<BadRequestResponse | NotFoundResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createGuestDepositCheckout>>,
+    TError,
+    { slug: string; token: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createGuestDepositCheckout>>,
+  TError,
+  { slug: string; token: string },
+  TContext
+> => {
+  return useMutation(getCreateGuestDepositCheckoutMutationOptions(options));
+};
+
+/**
+ * @summary Confirm guest deposit after Stripe redirect
+ */
+export const getConfirmGuestDepositCheckoutUrl = (
+  slug: string,
+  token: string,
+) => {
+  return `/api/public/b/${slug}/pay/${token}/confirm`;
+};
+
+export const confirmGuestDepositCheckout = async (
+  slug: string,
+  token: string,
+  confirmGuestDepositCheckoutBody: ConfirmGuestDepositCheckoutBody,
+  options?: RequestInit,
+): Promise<ConfirmGuestDepositCheckout200> => {
+  return customFetch<ConfirmGuestDepositCheckout200>(
+    getConfirmGuestDepositCheckoutUrl(slug, token),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(confirmGuestDepositCheckoutBody),
+    },
+  );
+};
+
+export const getConfirmGuestDepositCheckoutMutationOptions = <
+  TError = ErrorType<BadRequestResponse | NotFoundResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof confirmGuestDepositCheckout>>,
+    TError,
+    {
+      slug: string;
+      token: string;
+      data: BodyType<ConfirmGuestDepositCheckoutBody>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof confirmGuestDepositCheckout>>,
+  TError,
+  {
+    slug: string;
+    token: string;
+    data: BodyType<ConfirmGuestDepositCheckoutBody>;
+  },
+  TContext
+> => {
+  const mutationKey = ["confirmGuestDepositCheckout"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof confirmGuestDepositCheckout>>,
+    {
+      slug: string;
+      token: string;
+      data: BodyType<ConfirmGuestDepositCheckoutBody>;
+    }
+  > = (props) => {
+    const { slug, token, data } = props ?? {};
+
+    return confirmGuestDepositCheckout(slug, token, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ConfirmGuestDepositCheckoutMutationResult = NonNullable<
+  Awaited<ReturnType<typeof confirmGuestDepositCheckout>>
+>;
+export type ConfirmGuestDepositCheckoutMutationBody =
+  BodyType<ConfirmGuestDepositCheckoutBody>;
+export type ConfirmGuestDepositCheckoutMutationError = ErrorType<
+  BadRequestResponse | NotFoundResponse
+>;
+
+/**
+ * @summary Confirm guest deposit after Stripe redirect
+ */
+export const useConfirmGuestDepositCheckout = <
+  TError = ErrorType<BadRequestResponse | NotFoundResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof confirmGuestDepositCheckout>>,
+    TError,
+    {
+      slug: string;
+      token: string;
+      data: BodyType<ConfirmGuestDepositCheckoutBody>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof confirmGuestDepositCheckout>>,
+  TError,
+  {
+    slug: string;
+    token: string;
+    data: BodyType<ConfirmGuestDepositCheckoutBody>;
+  },
+  TContext
+> => {
+  return useMutation(getConfirmGuestDepositCheckoutMutationOptions(options));
+};
+
+/**
+ * @summary Guest balance-at-visit pay view (token link)
+ */
+export const getGetGuestBalancePayViewUrl = (slug: string, token: string) => {
+  return `/api/public/b/${slug}/balance/${token}`;
+};
+
+export const getGuestBalancePayView = async (
+  slug: string,
+  token: string,
+  options?: RequestInit,
+): Promise<GuestBalancePayView> => {
+  return customFetch<GuestBalancePayView>(
+    getGetGuestBalancePayViewUrl(slug, token),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetGuestBalancePayViewQueryKey = (
+  slug: string,
+  token: string,
+) => {
+  return [`/api/public/b/${slug}/balance/${token}`] as const;
+};
+
+export const getGetGuestBalancePayViewQueryOptions = <
+  TData = Awaited<ReturnType<typeof getGuestBalancePayView>>,
+  TError = ErrorType<NotFoundResponse>,
+>(
+  slug: string,
+  token: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getGuestBalancePayView>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetGuestBalancePayViewQueryKey(slug, token);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getGuestBalancePayView>>
+  > = ({ signal }) =>
+    getGuestBalancePayView(slug, token, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!(slug && token),
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getGuestBalancePayView>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetGuestBalancePayViewQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getGuestBalancePayView>>
+>;
+export type GetGuestBalancePayViewQueryError = ErrorType<NotFoundResponse>;
+
+/**
+ * @summary Guest balance-at-visit pay view (token link)
+ */
+
+export function useGetGuestBalancePayView<
+  TData = Awaited<ReturnType<typeof getGuestBalancePayView>>,
+  TError = ErrorType<NotFoundResponse>,
+>(
+  slug: string,
+  token: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getGuestBalancePayView>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetGuestBalancePayViewQueryOptions(
+    slug,
+    token,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Start guest balance checkout (Stripe or dev simulate)
+ */
+export const getCreateGuestBalanceCheckoutUrl = (
+  slug: string,
+  token: string,
+) => {
+  return `/api/public/b/${slug}/balance/${token}/checkout`;
+};
+
+export const createGuestBalanceCheckout = async (
+  slug: string,
+  token: string,
+  options?: RequestInit,
+): Promise<GuestPaymentCheckoutResult> => {
+  return customFetch<GuestPaymentCheckoutResult>(
+    getCreateGuestBalanceCheckoutUrl(slug, token),
+    {
+      ...options,
+      method: "POST",
+    },
+  );
+};
+
+export const getCreateGuestBalanceCheckoutMutationOptions = <
+  TError = ErrorType<BadRequestResponse | NotFoundResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createGuestBalanceCheckout>>,
+    TError,
+    { slug: string; token: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createGuestBalanceCheckout>>,
+  TError,
+  { slug: string; token: string },
+  TContext
+> => {
+  const mutationKey = ["createGuestBalanceCheckout"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createGuestBalanceCheckout>>,
+    { slug: string; token: string }
+  > = (props) => {
+    const { slug, token } = props ?? {};
+
+    return createGuestBalanceCheckout(slug, token, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateGuestBalanceCheckoutMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createGuestBalanceCheckout>>
+>;
+
+export type CreateGuestBalanceCheckoutMutationError = ErrorType<
+  BadRequestResponse | NotFoundResponse
+>;
+
+/**
+ * @summary Start guest balance checkout (Stripe or dev simulate)
+ */
+export const useCreateGuestBalanceCheckout = <
+  TError = ErrorType<BadRequestResponse | NotFoundResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createGuestBalanceCheckout>>,
+    TError,
+    { slug: string; token: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createGuestBalanceCheckout>>,
+  TError,
+  { slug: string; token: string },
+  TContext
+> => {
+  return useMutation(getCreateGuestBalanceCheckoutMutationOptions(options));
+};
+
+/**
+ * @summary Confirm guest balance after Stripe redirect
+ */
+export const getConfirmGuestBalanceCheckoutUrl = (
+  slug: string,
+  token: string,
+) => {
+  return `/api/public/b/${slug}/balance/${token}/confirm`;
+};
+
+export const confirmGuestBalanceCheckout = async (
+  slug: string,
+  token: string,
+  confirmGuestBalanceCheckoutBody: ConfirmGuestBalanceCheckoutBody,
+  options?: RequestInit,
+): Promise<ConfirmGuestBalanceCheckout200> => {
+  return customFetch<ConfirmGuestBalanceCheckout200>(
+    getConfirmGuestBalanceCheckoutUrl(slug, token),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(confirmGuestBalanceCheckoutBody),
+    },
+  );
+};
+
+export const getConfirmGuestBalanceCheckoutMutationOptions = <
+  TError = ErrorType<BadRequestResponse | NotFoundResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof confirmGuestBalanceCheckout>>,
+    TError,
+    {
+      slug: string;
+      token: string;
+      data: BodyType<ConfirmGuestBalanceCheckoutBody>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof confirmGuestBalanceCheckout>>,
+  TError,
+  {
+    slug: string;
+    token: string;
+    data: BodyType<ConfirmGuestBalanceCheckoutBody>;
+  },
+  TContext
+> => {
+  const mutationKey = ["confirmGuestBalanceCheckout"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof confirmGuestBalanceCheckout>>,
+    {
+      slug: string;
+      token: string;
+      data: BodyType<ConfirmGuestBalanceCheckoutBody>;
+    }
+  > = (props) => {
+    const { slug, token, data } = props ?? {};
+
+    return confirmGuestBalanceCheckout(slug, token, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ConfirmGuestBalanceCheckoutMutationResult = NonNullable<
+  Awaited<ReturnType<typeof confirmGuestBalanceCheckout>>
+>;
+export type ConfirmGuestBalanceCheckoutMutationBody =
+  BodyType<ConfirmGuestBalanceCheckoutBody>;
+export type ConfirmGuestBalanceCheckoutMutationError = ErrorType<
+  BadRequestResponse | NotFoundResponse
+>;
+
+/**
+ * @summary Confirm guest balance after Stripe redirect
+ */
+export const useConfirmGuestBalanceCheckout = <
+  TError = ErrorType<BadRequestResponse | NotFoundResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof confirmGuestBalanceCheckout>>,
+    TError,
+    {
+      slug: string;
+      token: string;
+      data: BodyType<ConfirmGuestBalanceCheckoutBody>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof confirmGuestBalanceCheckout>>,
+  TError,
+  {
+    slug: string;
+    token: string;
+    data: BodyType<ConfirmGuestBalanceCheckoutBody>;
+  },
+  TContext
+> => {
+  return useMutation(getConfirmGuestBalanceCheckoutMutationOptions(options));
 };
 
 /**

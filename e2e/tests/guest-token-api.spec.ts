@@ -10,6 +10,7 @@ const SURFACES = [
   { kind: "proof", slug: "ink-anchor-galway" },
   { kind: "intake", slug: "clarity-medspa-dublin" },
   { kind: "pay", slug: process.env.E2E_DEPOSIT_SLUG ?? "luxe-salon-spa" },
+  { kind: "balance", slug: process.env.E2E_BALANCE_SLUG ?? "luxe-salon-spa" },
   { kind: "waitlist", slug: "peak-fitness-dublin" },
 ] as const;
 
@@ -39,13 +40,18 @@ test.describe("Guest token API suite (R2-E7)", () => {
       if (kind === "pay" && !res.ok()) {
         test.skip(true, "No deposit booking in demo seed for pay slug");
       }
+      if (kind === "balance" && !res.ok()) {
+        test.skip(true, "No balance-due booking in demo seed for balance slug");
+      }
       if (kind === "waitlist" && !res.ok()) {
         test.skip(true, `No waitlist offer for ${slug} in this environment`);
       }
       expect(res.ok(), `${kind} ${slug}: ${await res.text()}`).toBeTruthy();
       const body = (await res.json()) as { token?: string; path?: string };
       expect(body.token?.length).toBeGreaterThan(8);
-      expect(body.path).toContain(`/book/${slug}/${kind === "pay" ? "pay" : kind}/`);
+      expect(body.path).toContain(
+        `/book/${slug}/${kind === "pay" ? "pay" : kind === "balance" ? "balance" : kind}/`,
+      );
     });
   }
 });

@@ -3420,6 +3420,141 @@ export const CreatePublicBookingBody = zod.object({
 });
 
 /**
+ * @summary Guest deposit pay view (token link)
+ */
+export const GetGuestDepositPayViewParams = zod.object({
+  slug: zod.coerce.string(),
+  token: zod.coerce.string(),
+});
+
+export const GetGuestDepositPayViewResponse = zod.object({
+  bookingId: zod.string(),
+  businessName: zod.string(),
+  slug: zod.string(),
+  vertical: zod.string().nullish(),
+  status: zod.string(),
+  startAt: zod.coerce.date(),
+  serviceName: zod.string(),
+  staffDisplayName: zod.string().nullish(),
+  customerFirstName: zod.string().nullish(),
+  currency: zod.string(),
+  priceMinor: zod.number(),
+  depositPaidMinor: zod.number().optional(),
+  depositDueMinor: zod.number(),
+  depositPercent: zod.number().optional(),
+  depositRequired: zod.boolean().optional(),
+  logoUrl: zod.string().nullish(),
+  checkoutAvailable: zod.boolean(),
+  experienceSkin: zod.record(zod.string(), zod.unknown()).optional(),
+});
+
+/**
+ * @summary Start guest deposit checkout (Stripe or dev simulate)
+ */
+export const CreateGuestDepositCheckoutParams = zod.object({
+  slug: zod.coerce.string(),
+  token: zod.coerce.string(),
+});
+
+export const CreateGuestDepositCheckoutResponse = zod.union([
+  zod.object({
+    mode: zod.enum(["stripe"]),
+    checkoutUrl: zod.string(),
+  }),
+  zod.object({
+    mode: zod.enum(["dev"]),
+    message: zod.string(),
+  }),
+  zod.object({
+    mode: zod.enum(["error"]),
+    message: zod.string(),
+  }),
+]);
+
+/**
+ * @summary Confirm guest deposit after Stripe redirect
+ */
+export const ConfirmGuestDepositCheckoutParams = zod.object({
+  slug: zod.coerce.string(),
+  token: zod.coerce.string(),
+});
+
+export const ConfirmGuestDepositCheckoutBody = zod.object({
+  sessionId: zod.string().optional(),
+});
+
+export const ConfirmGuestDepositCheckoutResponse = zod.record(
+  zod.string(),
+  zod.unknown(),
+);
+
+/**
+ * @summary Guest balance-at-visit pay view (token link)
+ */
+export const GetGuestBalancePayViewParams = zod.object({
+  slug: zod.coerce.string(),
+  token: zod.coerce.string(),
+});
+
+export const GetGuestBalancePayViewResponse = zod.object({
+  bookingId: zod.string(),
+  businessName: zod.string(),
+  slug: zod.string(),
+  vertical: zod.string().nullish(),
+  status: zod.string(),
+  startAt: zod.coerce.date(),
+  serviceName: zod.string(),
+  staffDisplayName: zod.string().nullish(),
+  currency: zod.string(),
+  priceMinor: zod.number(),
+  totalPaidMinor: zod.number(),
+  balanceDueMinor: zod.number(),
+  checkoutAvailable: zod.boolean(),
+  logoUrl: zod.string().nullish(),
+  experienceSkin: zod.record(zod.string(), zod.unknown()).optional(),
+});
+
+/**
+ * @summary Start guest balance checkout (Stripe or dev simulate)
+ */
+export const CreateGuestBalanceCheckoutParams = zod.object({
+  slug: zod.coerce.string(),
+  token: zod.coerce.string(),
+});
+
+export const CreateGuestBalanceCheckoutResponse = zod.union([
+  zod.object({
+    mode: zod.enum(["stripe"]),
+    checkoutUrl: zod.string(),
+  }),
+  zod.object({
+    mode: zod.enum(["dev"]),
+    message: zod.string(),
+  }),
+  zod.object({
+    mode: zod.enum(["error"]),
+    message: zod.string(),
+  }),
+]);
+
+/**
+ * @summary Confirm guest balance after Stripe redirect
+ */
+export const ConfirmGuestBalanceCheckoutParams = zod.object({
+  slug: zod.coerce.string(),
+  token: zod.coerce.string(),
+});
+
+export const ConfirmGuestBalanceCheckoutBody = zod.object({
+  sessionId: zod.string().optional(),
+});
+
+export const ConfirmGuestBalanceCheckoutResponse = zod.record(
+  zod.string(),
+  zod.unknown(),
+);
+
+/**
  * @summary Request OTP for guest continuity hub
  */
 export const RequestGuestHubOtpBody = zod.object({

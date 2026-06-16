@@ -364,6 +364,26 @@ export default defineConfig({
       },
     },
     {
+      name: "guest-balance",
+      testMatch: /guest-balance\.spec\.ts/,
+      timeout: 180_000,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+      },
+    },
+    {
+      name: "platform-commitment",
+      testMatch: /platform-commitment-depth\.spec\.ts/,
+      timeout: 240_000,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+      },
+    },
+    {
       name: "demo-waitlist-token",
       testMatch: /demo-waitlist-token\.spec\.ts/,
       timeout: 180_000,

@@ -169,6 +169,16 @@ export async function seedExpandedBookings(
       notes: "Deposit €60 — Sean requested late cancel",
     },
     {
+      key: "balance_due",
+      ci: 4,
+      si: 1,
+      vi: 1,
+      status: "CONFIRMED",
+      start: makeDt(0, 14),
+      end: new Date(makeDt(0, 14).getTime() + 120 * 60_000),
+      notes: "Balance due at visit — demo E2E",
+    },
+    {
       key: "mary_balayage",
       ci: 0,
       si: 0,
@@ -202,7 +212,10 @@ export async function seedExpandedBookings(
         endAt: b.end,
         notes: b.notes ?? null,
         channelType: "WEB" as const,
-        depositPaidEurCents: b.key === "sean_today" ? 6000 : 0,
+        depositPaidEurCents:
+          b.key === "sean_today" || b.key === "balance_due" ? 6000 : 0,
+        totalPaidEurCents:
+          b.key === "sean_today" || b.key === "balance_due" ? 6000 : 0,
       };
     }),
   );
