@@ -21,7 +21,7 @@ export function QualityRegistryPanel({
     <div className={className} data-testid="quality-registry-panel">
       <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5 mb-2">
         <Activity className="h-3.5 w-3.5" />
-        Quality registry — year-one signals
+        Quality signals
       </p>
       <ul className="grid gap-2 sm:grid-cols-3">
         {entries.map((entry) => (

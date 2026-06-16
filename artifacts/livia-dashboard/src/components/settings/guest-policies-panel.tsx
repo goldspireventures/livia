@@ -31,7 +31,7 @@ const DOC_META: Record<
 > = {
   bookingTermsCustom: {
     title: "Booking terms",
-    description: "Shown at checkout on your public booking page and read by Liv when confirming.",
+    description: "Shown at checkout on your public booking page.",
     templateKey: "bookingTerms",
   },
   privacyNoticeCustom: {
@@ -40,8 +40,8 @@ const DOC_META: Record<
     templateKey: "privacyNotice",
   },
   houseRulesCustom: {
-    title: "House rules for Liv",
-    description: "Operational notes Liv must follow — parking, walk-ins, treatment prep, and quirks.",
+    title: "House rules",
+    description: "Parking, walk-ins, treatment prep, and other day-to-day notes for your team.",
     templateKey: "houseRules",
   },
 };
@@ -81,9 +81,40 @@ export function GuestPoliciesPanel({ editable = true }: { editable?: boolean }) 
     });
   }
 
-  function resetField(key: DocKey) {
-    if (!state) return;
-    setCustomField(key, "");
+  async function applyTemplate(key: DocKey) {
+    if (!bid || !state) return;
+    const meta = DOC_META[key];
+    const templateText = state.guestPolicyTemplates[meta.templateKey];
+    setSaving(true);
+    try {
+      const nextPolicy = { ...state.policy, [key]: templateText };
+      const data = await customFetch<GuestPolicyPayload>(
+        `/api/businesses/${bid}/operational-policy`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({
+            policy: {
+              bookingTermsCustom: nextPolicy.bookingTermsCustom,
+              privacyNoticeCustom: nextPolicy.privacyNoticeCustom,
+              houseRulesCustom: nextPolicy.houseRulesCustom,
+            },
+          }),
+        },
+      );
+      setState(data);
+      toast({
+        title: `${meta.title} updated`,
+        description: "Template applied — edit the text anytime.",
+      });
+    } catch (e) {
+      toast({
+        title: "Could not apply template",
+        description: e instanceof Error ? e.message : undefined,
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function save() {
@@ -104,7 +135,7 @@ export function GuestPoliciesPanel({ editable = true }: { editable?: boolean }) 
         },
       );
       setState(data);
-      toast({ title: "Policies saved", description: "Liv and your storefront use these now." });
+      toast({ title: "Policies saved", description: "Your storefront and booking flow use these now." });
     } catch (e) {
       toast({
         title: "Could not save policies",
@@ -163,7 +194,8 @@ export function GuestPoliciesPanel({ editable = true }: { editable?: boolean }) 
                     size="sm"
                     variant="ghost"
                     className="h-8 shrink-0"
-                    onClick={() => resetField(key)}
+                    onClick={() => void applyTemplate(key)}
+                    disabled={saving}
                   >
                     <RotateCcw className="h-3.5 w-3.5 mr-1" />
                     Use template

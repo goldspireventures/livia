@@ -55,7 +55,7 @@ assert.equal(
     customerTrusted: true,
   }),
   false,
-  "emergent trust + trusted client waives deposit",
+  "trusted client waives deposit",
 );
 
 console.log("booking-commitment-program.test.ts: ok");

@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { customFetch } from "@workspace/api-client-react";
-import { normalizeDepositPercent, emergentTrustSettingsCopy, CARD_ON_FILE_RAIL_COPY } from "@workspace/policy";
+import { normalizeDepositPercent } from "@workspace/policy";
 import { invalidateCommerceIntelligence } from "@/lib/commerce-intelligence-cache";
 import { invalidateOperationalState } from "@/lib/operational-cache";
 import { Shield } from "lucide-react";
@@ -109,8 +109,7 @@ export default function OperationalPolicyControls() {
           Operational policy
         </CardTitle>
         <CardDescription>
-          Deposits, buffers, cancellation window, and no-show rules — used by Liv and booking
-          status (not free-text AI knowledge).
+          Deposits, buffers, cancellation window, and no-show rules for online bookings.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -118,7 +117,7 @@ export default function OperationalPolicyControls() {
           <div>
             <Label>Require deposit for online bookings</Label>
             <p className="text-xs text-muted-foreground mt-1">
-              When off, Liv may auto-confirm if other rules allow.
+              When off, bookings can confirm automatically if other rules allow.
             </p>
           </div>
           <Switch
@@ -163,8 +162,7 @@ export default function OperationalPolicyControls() {
           <div>
             <Label>Auto-confirm when no deposit required</Label>
             <p className="text-xs text-muted-foreground mt-1">
-              V1 uses deposits as the confirmation gate — Liv confirms automatically once paid.
-              This toggle only applies if deposits are turned off.
+              Deposits are the default confirmation gate. This only applies when deposits are off.
             </p>
           </div>
           <Switch
@@ -238,7 +236,7 @@ export default function OperationalPolicyControls() {
           <div>
             <Label>Post-booking continuity (SMS/thread)</Label>
             <p className="text-xs text-muted-foreground mt-1">
-              After web bookings, Liv opens a thread for style pics and confirm — replaces “DM us on Instagram”.
+              After web bookings, guests get a follow-up thread for photos and confirmation.
             </p>
           </div>
           <Switch
@@ -247,40 +245,6 @@ export default function OperationalPolicyControls() {
               setState({ ...state, policy: { ...p, bookingContinuityEnabled: v } })
             }
           />
-        </div>
-
-        <div
-          id="emergent-trust"
-          className="rounded-lg border border-border/60 p-4 space-y-2 scroll-mt-24"
-          data-testid="emergent-trust-settings"
-        >
-          {(() => {
-            const trust = state.resolved.emergentTrustProgram;
-            const copy = emergentTrustSettingsCopy({
-              enabled: Boolean(trust?.enabled),
-              acceptedAt: trust?.acceptedAt ?? null,
-            });
-            return (
-              <>
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-medium">{copy.headline}</p>
-                  <span className="text-xs text-muted-foreground">{copy.statusLabel}</span>
-                </div>
-                <p className="text-xs text-muted-foreground">{copy.body}</p>
-                {!trust?.enabled ? (
-                  <p className="text-xs text-muted-foreground">
-                    Accept the proposal on your owner home when Liv surfaces it — or use the demo
-                    showcase accept card on luxe-salon-spa.
-                  </p>
-                ) : null}
-              </>
-            );
-          })()}
-        </div>
-
-        <div className="rounded-lg border border-dashed border-border/60 p-4 space-y-1">
-          <p className="text-sm font-medium">{CARD_ON_FILE_RAIL_COPY.title}</p>
-          <p className="text-xs text-muted-foreground">{CARD_ON_FILE_RAIL_COPY.body}</p>
         </div>
 
         <Button onClick={() => void save()} disabled={saving}>

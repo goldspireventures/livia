@@ -24,6 +24,9 @@ export function PolicyEvolutionPanel({
 
   if (!proposals?.length) return null;
 
+  const visible = proposals.filter((p) => p.id !== "emergent_trust_tier");
+  if (!visible.length) return null;
+
   async function accept(proposal: PolicyEvolutionProposal) {
     if (!bid) return;
     if (proposal.id === "retail_attach_program" && proposal.href) {
@@ -58,10 +61,10 @@ export function PolicyEvolutionPanel({
     <div className={className} data-testid="policy-evolution-panel">
       <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5 mb-2">
         <Wand2 className="h-3.5 w-3.5" />
-        Policy evolution — Liv proposes, you accept
+        Suggested policy updates
       </p>
       <ul className="space-y-2">
-        {proposals.slice(0, 3).map((p) => (
+        {visible.slice(0, 3).map((p) => (
           <li
             key={p.id}
             className="rounded-lg border border-primary/15 bg-primary/5 p-3 text-sm space-y-2"

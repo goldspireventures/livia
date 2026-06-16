@@ -28,7 +28,7 @@ test.describe("Platform commitment depth", () => {
     await ensureDemoProvisioned(request);
   });
 
-  test("policy evolution exposes emergent trust twin on showcase slug", async ({ page, request }) => {
+  test("policy evolution API returns quality registry", async ({ page, request }) => {
     if (!(await demoCanSignIn(request, SLUG))) {
       test.skip(true, "Demo sign-in unavailable");
     }
@@ -41,14 +41,11 @@ test.describe("Platform commitment depth", () => {
     const res = await authedApiGet(page, `/api/businesses/${businessId}/policy-evolution`);
     expect(res.ok(), await res.text()).toBeTruthy();
     const body = (await res.json()) as {
-      proposals?: Array<{ id?: string; title?: string }>;
+      proposals?: Array<{ id?: string }>;
       qualityRegistry?: unknown[];
     };
     expect(Array.isArray(body.proposals)).toBeTruthy();
-    expect(
-      body.proposals?.some((p) => p.id === "emergent_trust_tier"),
-      "Demo twin proposal should be seeded for showcase slugs",
-    ).toBeTruthy();
+    expect(body.proposals?.some((p) => p.id === "emergent_trust_tier")).toBeFalsy();
     expect(Array.isArray(body.qualityRegistry)).toBeTruthy();
   });
 

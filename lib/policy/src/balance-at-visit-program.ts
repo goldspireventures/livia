@@ -81,9 +81,6 @@ export function emergentTrustSettingsCopy(args: {
   };
 }
 
-export function trustedClientToggleGuidance(emergentTrustEnabled: boolean): string {
-  if (emergentTrustEnabled) {
-    return "Trusted guests skip the online deposit — same protection for first-timers.";
-  }
-  return "Enable the trusted-client tier in booking rules first — then Trusted skips deposits.";
+export function trustedClientToggleGuidance(_emergentTrustEnabled?: boolean): string {
+  return "Trusted clients skip the online deposit requirement. First-time guests still follow your deposit rules.";
 }
