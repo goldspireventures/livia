@@ -75,7 +75,8 @@ test.describe("Dual entry — guest web /my", () => {
     await page.evaluate((t) => localStorage.setItem("livia_guest_hub_token", t), hubToken);
     await page.reload({ waitUntil: "domcontentloaded" });
     await expect(page.getByTestId("guest-hub-home")).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByTestId("guest-preferred-channel-card")).toBeVisible();
+    await expect(page.getByTestId("guest-hub-account-settings")).toBeVisible();
+    await expect(page.getByTestId("guest-channel-select")).toBeVisible();
     await page.getByTestId("guest-channel-select").click();
     await page.getByRole("option", { name: /text message/i }).click();
     await page.getByTestId("guest-channel-save").click();
@@ -139,9 +140,13 @@ test.describe("Dual entry — operator Clerk path", () => {
     await page.goto("/dashboard", { waitUntil: "domcontentloaded", timeout: 45_000 });
     await dismissPlatformTour(page);
     await assertHealthyPage(page, "/dashboard");
-    await expect(page.getByTestId("wellness-morph-today-atrium")).toBeVisible({ timeout: 25_000 });
+    const wellnessSurface = page.locator(
+      "[data-testid='wellness-morph-today-atrium'], [data-testid='wellness-morph-today-timeline'], [data-testid='wellness-morph-today-ledger'], [data-testid='owner-home-ritual']",
+    );
+    await expect(wellnessSurface.first()).toBeVisible({ timeout: 25_000 });
     const body = await page.locator("body").innerText();
     expect(body.toLowerCase()).not.toMatch(/\bsalon\b/);
+    expect(body.toLowerCase()).toMatch(/wellness|spa|treatment|session|harbour/i);
   });
 
   test("owner inbox loads — Liv continuity surface", async ({ page, request }) => {
