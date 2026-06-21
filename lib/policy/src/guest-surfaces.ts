@@ -59,7 +59,7 @@ export const GUEST_SURFACE_CATALOG: GuestSurfaceDef[] = [
     routePattern: "/intake/:token",
     tokenRequired: true,
     defaultTtlHours: 168,
-    verticals: ["medspa", "allied-health"],
+    verticals: ["medspa", "allied-health", "beauty", "body-art"],
     description: "Consent / intake signature",
   },
   {

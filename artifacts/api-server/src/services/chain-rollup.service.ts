@@ -6,6 +6,7 @@ import {
   timeOffRequestsTable,
   staffTable,
   businessMembershipsTable,
+  servicesTable,
 } from "@workspace/db";
 import { synthesizeOrgAdminPortfolioLine } from "./liv-morning-narrative";
 import {
@@ -189,6 +190,32 @@ export async function getChainRollupForOwner(ownerId: string): Promise<ChainRoll
         ),
       );
 
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60_000);
+    const [revenueRow] = await db
+      .select({
+        total: sql<number>`coalesce(sum(${servicesTable.priceMinor}), 0)::int`,
+      })
+      .from(bookingsTable)
+      .innerJoin(servicesTable, eq(bookingsTable.serviceId, servicesTable.id))
+      .where(
+        and(
+          eq(bookingsTable.businessId, shop.id),
+          eq(bookingsTable.status, "COMPLETED"),
+          gte(bookingsTable.startAt, thirtyDaysAgo),
+        ),
+      );
+
+    const [statusCounts] = await db
+      .select({
+        completed: sql<number>`count(*) filter (where ${bookingsTable.status} = 'COMPLETED')::int`,
+        noShow: sql<number>`count(*) filter (where ${bookingsTable.status} = 'NO_SHOW')::int`,
+        total: sql<number>`count(*)::int`,
+      })
+      .from(bookingsTable)
+      .where(
+        and(eq(bookingsTable.businessId, shop.id), gte(bookingsTable.startAt, thirtyDaysAgo)),
+      );
+
     const w = weekRow?.count ?? 0;
     const c = completedRow?.count ?? 0;
     const today = todayRow?.count ?? 0;
@@ -196,6 +223,14 @@ export async function getChainRollupForOwner(ownerId: string): Promise<ChainRoll
     const open = openConv?.count ?? 0;
     const handed = handedOff?.count ?? 0;
     const timeOff = pendingTimeOff?.count ?? 0;
+
+    const noShow30 = statusCounts?.noShow ?? 0;
+    const total30 = statusCounts?.total ?? 0;
+    const noShowRate =
+      total30 > 0 ? Math.round((noShow30 / total30) * 100) : null;
+    const fillRate =
+      w > 0 ? Math.min(100, Math.round((c / Math.max(w, 1)) * 100)) : null;
+    const revenue30dMinor = revenueRow?.total ?? 0;
 
     bookingsThisWeek += w;
     completedThisWeek += c;
@@ -228,6 +263,9 @@ export async function getChainRollupForOwner(ownerId: string): Promise<ChainRoll
       pendingTimeOff: timeOff,
       pulseStatus: pulse.status,
       pulseReason: pulse.reason,
+      revenue30dMinor,
+      fillRatePercent: fillRate,
+      noShowRate30dPercent: noShowRate,
     });
   }
 
@@ -343,6 +381,8 @@ export async function getOrgShapeSignalsForOwner(ownerId: string) {
 
   const brandEntityCount = shops.filter((s) => s.structureKind === "brand_entity").length;
   const primary = shops[0];
+  const { countActiveHostRentersForOwner } = await import("./chair-rental.service");
+  const hostRenterCount = await countActiveHostRentersForOwner(ownerId);
 
   return {
     shopCount: shops.length,
@@ -351,7 +391,7 @@ export async function getOrgShapeSignalsForOwner(ownerId: string) {
     hasSeniorWithAdmin: false,
     tier: primary?.tier ?? "solo",
     structureKind: primary?.structureKind ?? "standalone",
-    hostRenterCount: 0,
+    hostRenterCount,
     brandEntityCount,
   };
 }

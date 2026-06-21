@@ -27,6 +27,7 @@ const PROFILES: SubverticalProfile[] = [
   { id: "beauty.tan", vertical: "beauty", label: "Spray tan", description: "Seasonal tan booth", defaultOrgShape: "solo" },
   { id: "beauty.pmu_light", vertical: "beauty", label: "PMU / lip blush", description: "Light permanent makeup", defaultOrgShape: "solo" },
   { id: "beauty.mobile", vertical: "beauty", label: "Mobile beauty", description: "Travel to client", defaultOrgShape: "solo" },
+  { id: "beauty.chair_rental", vertical: "beauty", label: "Chair rental host (beauty)", description: "Lash/brow renters on one floor", defaultOrgShape: "chair_rental" },
   { id: "beauty.multi", vertical: "beauty", label: "Multi-service studio", description: "Lash, nail, brow under one roof", defaultOrgShape: "owner_plus_staff" },
   // Hair
   { id: "hair.salon", vertical: "hair", label: "Hair salon", description: "Cut, colour, style", defaultOrgShape: "owner_plus_staff" },
@@ -40,6 +41,7 @@ const PROFILES: SubverticalProfile[] = [
   { id: "wellness.float", vertical: "wellness", label: "Float centre", description: "Tank sessions", defaultOrgShape: "solo" },
   { id: "wellness.holistic", vertical: "wellness", label: "Holistic practice", description: "Reiki, holistic", defaultOrgShape: "solo" },
   { id: "wellness.couples", vertical: "wellness", label: "Couples spa", description: "Dual-room bookings", defaultOrgShape: "owner_plus_staff" },
+  { id: "wellness.multi_site", vertical: "wellness", label: "Multi-location spa group", description: "Chain rollup across sites", defaultOrgShape: "multi_site" },
   // Body art
   { id: "body_art.custom", vertical: "body-art", label: "Custom tattoo studio", description: "Consult → proof → session", defaultOrgShape: "owner_plus_staff" },
   { id: "body_art.flash", vertical: "body-art", label: "Walk-in / flash", description: "Numbered flash days", defaultOrgShape: "solo" },

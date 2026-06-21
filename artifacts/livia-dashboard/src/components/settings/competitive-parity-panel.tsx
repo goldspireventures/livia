@@ -11,11 +11,19 @@ type Gap = {
   status: "shipped" | "partial" | "planned";
 };
 
+type PainPoint = {
+  id: string;
+  incumbent: string;
+  pain: string;
+  liviaAnswer: string;
+};
+
 type ParityPayload = {
   vertical: string;
   scorePercent: number;
   gaps: Gap[];
   incumbentCategories: string[];
+  painPoints?: PainPoint[];
 };
 
 type Props = {
@@ -92,6 +100,21 @@ export function CompetitiveParityPanel({ businessId }: Props) {
                 </li>
               ))}
             </ul>
+            {data.painPoints && data.painPoints.length > 0 ? (
+              <div className="space-y-2 pt-2 border-t border-border/60">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Pain points Livia beats incumbents on
+                </p>
+                <ul className="space-y-2 text-sm">
+                  {data.painPoints.map((p) => (
+                    <li key={p.id} className="rounded-md bg-muted/40 px-3 py-2">
+                      <p className="text-muted-foreground text-xs">{p.pain}</p>
+                      <p className="mt-1">{p.liviaAnswer}</p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
           </>
         ) : (
           <p className="text-sm text-muted-foreground">Could not load parity score.</p>

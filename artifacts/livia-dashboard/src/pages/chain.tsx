@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { customFetch } from "@workspace/api-client-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { PageFrame } from "@/components/ui/page-frame";
 import { AlertTriangle, Download } from "lucide-react";
@@ -233,6 +234,106 @@ export default function ChainPage() {
           </Button>
         </div>
       ) : null}
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Staff borrow</CardTitle>
+          <CardDescription>
+            Cover a shift at another location — Liv blocks the calendar and notifies managers.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <StaffBorrowPanel businesses={businesses} />
+        </CardContent>
+      </Card>
     </PageFrame>
+  );
+}
+
+function StaffBorrowPanel({
+  businesses,
+}: {
+  businesses: Array<{ id: string; name: string }>;
+}) {
+  const { toast } = useToast();
+  const [hostId, setHostId] = useState(businesses[0]?.id ?? "");
+  const [targetId, setTargetId] = useState(businesses[1]?.id ?? "");
+  const [staffId, setStaffId] = useState("");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  if (businesses.length < 2) return null;
+
+  async function submit() {
+    if (!hostId || !targetId || !staffId || !from || !to) return;
+    setBusy(true);
+    try {
+      await customFetch("/api/me/staff-borrow-request", {
+        method: "POST",
+        body: JSON.stringify({
+          hostBusinessId: hostId,
+          targetBusinessId: targetId,
+          staffId,
+          from: new Date(from).toISOString(),
+          to: new Date(to).toISOString(),
+        }),
+      });
+      toast({ title: "Borrow request recorded" });
+    } catch {
+      toast({ title: "Request failed", variant: "destructive" });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="grid gap-3 sm:grid-cols-2">
+      <div className="space-y-1">
+        <label className="text-xs text-muted-foreground">From shop</label>
+        <select
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          value={hostId}
+          onChange={(e) => setHostId(e.target.value)}
+        >
+          {businesses.map((b) => (
+            <option key={b.id} value={b.id}>
+              {b.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="space-y-1">
+        <label className="text-xs text-muted-foreground">Cover at</label>
+        <select
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          value={targetId}
+          onChange={(e) => setTargetId(e.target.value)}
+        >
+          {businesses.map((b) => (
+            <option key={b.id} value={b.id}>
+              {b.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="space-y-1 sm:col-span-2">
+        <label className="text-xs text-muted-foreground">Staff id</label>
+        <Input value={staffId} onChange={(e) => setStaffId(e.target.value)} placeholder="Staff row id" />
+      </div>
+      <div className="space-y-1">
+        <label className="text-xs text-muted-foreground">From</label>
+        <Input type="datetime-local" value={from} onChange={(e) => setFrom(e.target.value)} />
+      </div>
+      <div className="space-y-1">
+        <label className="text-xs text-muted-foreground">To</label>
+        <Input type="datetime-local" value={to} onChange={(e) => setTo(e.target.value)} />
+      </div>
+      <div className="sm:col-span-2">
+        <Button type="button" size="sm" disabled={busy} onClick={() => void submit()}>
+          Request staff borrow
+        </Button>
+      </div>
+    </div>
   );
 }

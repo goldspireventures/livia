@@ -1,30 +1,19 @@
 import { inngest } from "../lib/inngest";
-import { logger } from "../lib/logger";
+import { recordStaffBorrowRequest } from "../services/staff-borrow.service";
 
-/**
- * Cross-shop staff borrow (C7 chains) — event-driven scaffold.
- * Emit `livia/staff-borrow.requested` from dashboard when implemented.
- */
+/** Cross-shop staff borrow (C7 chains) — records shadow block + notifies operators. */
 export const staffBorrowWorkflow = inngest.createFunction(
   { id: "staff-borrow", retries: 2 },
   { event: "livia/staff-borrow.requested" },
   async ({ event, step }) => {
-    const { hostBusinessId, staffId, targetBusinessId, from, to } = event.data as {
+    const data = event.data as {
       hostBusinessId: string;
       staffId: string;
       targetBusinessId: string;
       from: string;
       to: string;
     };
-
-    await step.run("log-borrow", async () => {
-      logger.info(
-        { hostBusinessId, staffId, targetBusinessId, from, to },
-        "staff-borrow requested (approval + calendar sync v1.5+)",
-      );
-      return { status: "logged" };
-    });
-
+    await step.run("record-borrow", () => recordStaffBorrowRequest(data));
     return { ok: true };
   },
 );

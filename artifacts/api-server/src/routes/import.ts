@@ -120,14 +120,20 @@ router.get(
       sendError(res, req, 400, "Unknown vertical");
       return;
     }
-    const { parityGapsForVertical, parityScorePercent, incumbentCategoriesForVertical } =
+    const { parityGapsForVertical, parityScorePercent, incumbentCategoriesForVertical, incumbentPainPointsForVertical, incumbentPainPointsForSubvertical } =
       await import("@workspace/policy");
     const gaps = parityGapsForVertical(vertical.data, "owner_plus_staff", biz.tier ?? undefined);
+    const subverticalId = (biz as { subverticalProfileId?: string | null }).subverticalProfileId ?? null;
+    const painPoints =
+      subverticalId != null
+        ? incumbentPainPointsForSubvertical(vertical.data, subverticalId)
+        : incumbentPainPointsForVertical(vertical.data);
     res.json({
       vertical: vertical.data,
       scorePercent: parityScorePercent(gaps),
       gaps,
       incumbentCategories: incumbentCategoriesForVertical(vertical.data),
+      painPoints,
     });
   },
 );

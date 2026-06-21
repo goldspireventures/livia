@@ -1,5 +1,5 @@
 import { db, businessesTable, hostRenterLinksTable, customersTable, bookingsTable } from "@workspace/db";
-import { eq, and, isNull, sql } from "drizzle-orm";
+import { eq, and, isNull, sql, inArray } from "drizzle-orm";
 import { generateId } from "../lib/id";
 import { getBusinessById } from "./businesses.service";
 
@@ -89,6 +89,50 @@ export async function updateHostRenterRentStatus(
     )
     .returning();
   return row ?? null;
+}
+
+export async function linkHostRenterBySlug(
+  hostBusinessId: string,
+  input: {
+    renterSlug: string;
+    chairLabel: string;
+    weeklyRentMinor?: number;
+    currency?: string;
+  },
+) {
+  const slug = input.renterSlug.trim().toLowerCase();
+  const [renter] = await db
+    .select({ id: businessesTable.id })
+    .from(businessesTable)
+    .where(eq(businessesTable.slug, slug))
+    .limit(1);
+  if (!renter) return null;
+  return linkHostRenter(hostBusinessId, {
+    renterBusinessId: renter.id,
+    chairLabel: input.chairLabel,
+    weeklyRentMinor: input.weeklyRentMinor,
+    currency: input.currency,
+  });
+}
+
+export async function countActiveHostRentersForOwner(ownerId: string): Promise<number> {
+  const hosts = await db
+    .select({ id: businessesTable.id })
+    .from(businessesTable)
+    .where(eq(businessesTable.ownerId, ownerId));
+  if (hosts.length === 0) return 0;
+  const hostIds = hosts.map((h) => h.id);
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(hostRenterLinksTable)
+    .where(
+      and(
+        inArray(hostRenterLinksTable.hostBusinessId, hostIds),
+        isNull(hostRenterLinksTable.endedAt),
+        eq(hostRenterLinksTable.isActive, true),
+      ),
+    );
+  return row?.count ?? 0;
 }
 
 export async function getHostDashboardSummary(hostBusinessId: string) {

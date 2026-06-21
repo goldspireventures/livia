@@ -99,6 +99,7 @@ export function isDashboardRouteAllowedForTenant(
 
 /** API path feature keys → allowed business verticals (mirrors dashboard ROUTE_VERTICALS). */
 export const API_FEATURE_VERTICALS: Record<string, readonly string[]> = {
+  intake_forms: ["beauty", "body-art", "medspa", "allied-health"],
   medspa: ["medspa"],
   "class-sessions": ["fitness"],
   "design-proofs": ["body-art"],

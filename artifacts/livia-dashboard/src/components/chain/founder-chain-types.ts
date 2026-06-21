@@ -14,6 +14,9 @@ export type ChainShopRollup = {
   pendingTimeOff: number;
   pulseStatus: ChainPulseStatus;
   pulseReason: string | null;
+  revenue30dMinor?: number;
+  fillRatePercent?: number | null;
+  noShowRate30dPercent?: number | null;
 };
 
 export type ChainAlert = {

@@ -164,6 +164,8 @@ export * from "./subvertical-profiles";
 export * from "./import-formats";
 export * from "./integration-catalog";
 export * from "./competitive-parity";
+export * from "./intake-program";
+export * from "./vertical-incumbent-pain";
 export * from "./customer-consent-policy";
 export * from "./twin-domain-trajectory";
 export * from "./twin-observations";

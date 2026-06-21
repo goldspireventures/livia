@@ -570,6 +570,17 @@ export async function createBooking(
     );
   }
 
+  if (inserted.customerId) {
+    void import("./intake-on-book.service").then((m) =>
+      m.followUpIntakeAfterBooking({
+        businessId,
+        customerId: inserted.customerId!,
+        bookingId: inserted.id,
+        channelType: data.channelType ?? null,
+      }),
+    );
+  }
+
   return result;
 }
 

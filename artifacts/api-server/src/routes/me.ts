@@ -364,7 +364,15 @@ router.post("/me/staff-borrow-request", requireAuth, async (req, res): Promise<v
     return;
   }
   if (!isInngestWorkflowsEnabled()) {
-    sendError(res, req, 503, "Workflows disabled");
+    const { recordStaffBorrowRequest } = await import("../services/staff-borrow.service");
+    await recordStaffBorrowRequest({
+      hostBusinessId,
+      staffId,
+      targetBusinessId,
+      from,
+      to,
+    });
+    res.status(202).json({ ok: true, mode: "sync" });
     return;
   }
   await inngest.send({

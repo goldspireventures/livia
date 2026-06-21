@@ -23,6 +23,7 @@ import { mergeChannelIdentity } from "../services/channel-identities.service";
 import { appendHumanAudit } from "../lib/audit";
 
 import { sendError } from "../lib/http-errors";
+import { requireChairRentalCustomerAccess } from "../lib/chair-rental-firewall-middleware";
 
 const router: IRouter = Router();
 const getBizId = (param: string | string[]) => Array.isArray(param) ? param[0] : param;
@@ -34,6 +35,7 @@ router.get(
   "/businesses/:businessId/customers",
   requireAuth,
   requireRole("STAFF"),
+  requireChairRentalCustomerAccess(),
   async (req, res): Promise<void> => {
     const businessId = getBizId(req.params.businessId);
     const ctx = getRoleContext(req);
@@ -101,6 +103,7 @@ router.get(
   "/businesses/:businessId/customers/:customerId",
   requireAuth,
   requireRole("STAFF"),
+  requireChairRentalCustomerAccess(),
   async (req, res): Promise<void> => {
     const businessId = getBizId(req.params.businessId);
     const customerId = getBizId(req.params.customerId);

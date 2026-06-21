@@ -140,7 +140,8 @@ export type InAppNotificationKind =
   | "quote.deposit_paid"
   | "quote.client_withdrew"
   | "twin.risk"
-  | "twin.opportunity";
+  | "twin.opportunity"
+  | "host.rent_due";
 
 export type NotificationPersonaHint =
   | "org_admin"
@@ -282,6 +283,8 @@ export function buildNotificationDeepLinks(args: {
     case "twin.risk":
     case "twin.opportunity":
       return { href: "/dashboard", mobileHref: "/(tabs)/index" };
+    case "host.rent_due":
+      return { href: "/host", mobileHref: "/host" };
     default:
       return { href: "/dashboard", mobileHref: "/(tabs)" };
   }

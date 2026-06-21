@@ -1,5 +1,5 @@
 /**
- * WhatsApp DM inbound → Liv conversation (demo simulate path).
+ * WhatsApp DM booking pipeline — simulated inbound creates a real booking when AI is off.
  */
 import { test, expect } from "@playwright/test";
 import { apiBase, demoCanSignIn, ensureDemoProvisioned, signInBusiness } from "../helpers/demo-auth";
@@ -9,7 +9,7 @@ test.describe("DM booking pipeline", () => {
     await ensureDemoProvisioned(request);
   });
 
-  test("simulated WhatsApp inbound opens a conversation thread", async ({ page, request }) => {
+  test("simulated WhatsApp inbound books or opens thread", async ({ page, request }) => {
     const slug = "luxe-salon-spa";
     if (!(await demoCanSignIn(request, slug))) {
       test.skip(true, "Clerk unavailable");
@@ -35,7 +35,13 @@ test.describe("DM booking pipeline", () => {
       test.skip(true, "Restart API after pull");
     }
     expect(inbound.ok(), await inbound.text()).toBeTruthy();
-    const result = (await inbound.json()) as { conversationId?: string; handled?: boolean };
+    const result = (await inbound.json()) as {
+      conversationId?: string;
+      handled?: boolean;
+      bookingId?: string;
+      aiReplyQueued?: boolean;
+    };
     expect(result.conversationId ?? result.handled).toBeTruthy();
+    expect(result.bookingId ?? result.aiReplyQueued ?? result.handled).toBeTruthy();
   });
 });

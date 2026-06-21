@@ -130,6 +130,17 @@ export function FounderShopCard({
         </div>
       ) : null}
 
+      {typeof shop.revenue30dMinor === "number" && shop.revenue30dMinor > 0 ? (
+        <p className="text-xs text-muted-foreground mt-2 tabular-nums">
+          30d completed revenue {(shop.revenue30dMinor / 100).toLocaleString(undefined, {
+            style: "currency",
+            currency: "EUR",
+          })}
+          {shop.fillRatePercent != null ? ` · ${shop.fillRatePercent}% week fill` : ""}
+          {shop.noShowRate30dPercent != null ? ` · ${shop.noShowRate30dPercent}% no-show` : ""}
+        </p>
+      ) : null}
+
       <div className="grid grid-cols-3 gap-2 mt-4">
         <div className="rounded-lg border border-border/60 bg-muted/30 px-2 py-2 text-center">
           <div className="flex items-center justify-center gap-1 text-muted-foreground mb-0.5">

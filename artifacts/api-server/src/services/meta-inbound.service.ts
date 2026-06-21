@@ -31,6 +31,7 @@ export async function processInboundMetaMessage(msg: InboundMetaMessage): Promis
   handled: boolean;
   businessId?: string;
   conversationId?: string;
+  bookingId?: string;
   aiReplySkipped?: boolean;
   aiReplySkipReason?: string;
   aiReplyQueued?: boolean;
@@ -133,6 +134,42 @@ export async function processInboundMetaMessage(msg: InboundMetaMessage): Promis
   }
 
   if (!isAnthropicConfigured()) {
+    const deterministic = await import("./dm-booking-assist.service").then((m) =>
+      m.tryDeterministicWhatsAppBook({
+        businessId: business.id,
+        businessSlug: business.slug,
+        businessName: business.name,
+        conversationId: conversation.id,
+        customerId,
+        customerPhone: msg.externalParticipantId,
+        customerName: msg.displayName,
+        messageText: msg.text,
+      }),
+    ).catch(() => null);
+
+    if (deterministic) {
+      if (channel === "WHATSAPP") {
+        const ch = await import("./messaging-channels.service").then((m) =>
+          m.getMessagingChannels(business.id),
+        );
+        if (ch.whatsapp?.phoneNumberId) {
+          await import("./ai-outbound.service").then(({ sendDirectWhatsapp }) =>
+            sendDirectWhatsapp({
+              phoneNumberId: ch.whatsapp!.phoneNumberId,
+              to: msg.externalParticipantId,
+              body: deterministic.reply,
+            }),
+          ).catch(() => undefined);
+        }
+      }
+      return {
+        handled: true,
+        businessId: business.id,
+        conversationId: conversation.id,
+        bookingId: deterministic.bookingId,
+      };
+    }
+
     logger.warn(
       { businessId: business.id, channel },
       "Meta inbound: AI reply skipped — Anthropic not configured",

@@ -34,6 +34,7 @@ export default function HostPage() {
   const [data, setData] = useState<HostDashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [renterId, setRenterId] = useState("");
+  const [renterSlug, setRenterSlug] = useState("");
   const [chairLabel, setChairLabel] = useState("");
   const [weeklyRent, setWeeklyRent] = useState("");
   const [linking, setLinking] = useState(false);
@@ -54,6 +55,34 @@ export default function HostPage() {
   useEffect(() => {
     void load();
   }, [bid]);
+
+  async function linkRenterBySlug() {
+    if (!bid || !renterSlug.trim() || !chairLabel.trim()) return;
+    setLinking(true);
+    try {
+      await customFetch(`/api/businesses/${bid}/host/renters/invite`, {
+        method: "POST",
+        body: JSON.stringify({
+          renterSlug: renterSlug.trim(),
+          chairLabel: chairLabel.trim(),
+          weeklyRentMinor: weeklyRent ? Math.round(parseFloat(weeklyRent) * 100) : 0,
+        }),
+      });
+      toast({ title: "Renter linked by slug" });
+      setRenterSlug("");
+      setChairLabel("");
+      setWeeklyRent("");
+      void load();
+    } catch (e) {
+      toast({
+        title: "Could not link",
+        description: e instanceof Error ? e.message : undefined,
+        variant: "destructive",
+      });
+    } finally {
+      setLinking(false);
+    }
+  }
 
   async function linkRenter() {
     if (!bid || !renterId.trim() || !chairLabel.trim()) return;
@@ -141,12 +170,20 @@ export default function HostPage() {
                 Link a renter business
               </CardTitle>
               <CardDescription>
-                Each renter is their own Livia business. Paste their business id after they sign up.
+                Link by book slug (easiest) or paste business id after the renter signs up.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="space-y-2">
-                <Label>Renter business id</Label>
+                <Label>Renter book slug</Label>
+                <Input
+                  placeholder="janes-lash-studio"
+                  value={renterSlug}
+                  onChange={(e) => setRenterSlug(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Renter business id (advanced)</Label>
                 <Input value={renterId} onChange={(e) => setRenterId(e.target.value)} />
               </div>
               <div className="grid sm:grid-cols-2 gap-3">
@@ -168,9 +205,14 @@ export default function HostPage() {
                   />
                 </div>
               </div>
-              <Button onClick={() => void linkRenter()} disabled={linking}>
-                Link renter
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={() => void linkRenterBySlug()} disabled={linking || !renterSlug.trim()}>
+                  Link by slug
+                </Button>
+                <Button variant="outline" onClick={() => void linkRenter()} disabled={linking || !renterId.trim()}>
+                  Link by id
+                </Button>
+              </div>
             </CardContent>
           </Card>
 

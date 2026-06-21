@@ -34,6 +34,7 @@ import { validateBeautyPatchTestGate } from "@workspace/policy";
 import type { BeautyServiceKind } from "@workspace/policy";
 
 import { sendError } from "../lib/http-errors";
+import { requireChairRentalCustomerAccess } from "../lib/chair-rental-firewall-middleware";
 const router: IRouter = Router();
 const getBizId = (param: string | string[]) => Array.isArray(param) ? param[0] : param;
 
@@ -49,6 +50,7 @@ router.get(
   "/businesses/:businessId/bookings",
   requireAuth,
   requireRole("STAFF"),
+  requireChairRentalCustomerAccess(),
   async (req, res): Promise<void> => {
     const businessId = getBizId(req.params.businessId);
     const ctx = getRoleContext(req);

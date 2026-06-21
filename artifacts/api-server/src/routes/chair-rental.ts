@@ -3,6 +3,7 @@ import { requireAuth, requireRole, getUserId } from "../lib/auth";
 import {
   getHostDashboardSummary,
   linkHostRenter,
+  linkHostRenterBySlug,
   listHostRenters,
   updateHostRenterRentStatus,
   endHostRenterLink,
@@ -29,6 +30,40 @@ router.get(
   requireRole("ADMIN"),
   async (req, res): Promise<void> => {
     res.json(await listHostRenters(bizId(req.params.businessId)));
+  },
+);
+
+router.post(
+  "/businesses/:businessId/host/renters/invite",
+  requireAuth,
+  requireRole("OWNER"),
+  async (req, res): Promise<void> => {
+    const userId = getUserId(req);
+    const hostBusinessId = bizId(req.params.businessId);
+    const { renterSlug, chairLabel, weeklyRentMinor, currency } = req.body ?? {};
+    if (!renterSlug || !chairLabel) {
+      sendError(res, req, 400, "renterSlug and chairLabel required");
+      return;
+    }
+    const row = await linkHostRenterBySlug(hostBusinessId, {
+      renterSlug: String(renterSlug),
+      chairLabel: String(chairLabel),
+      weeklyRentMinor: typeof weeklyRentMinor === "number" ? weeklyRentMinor : undefined,
+      currency: typeof currency === "string" ? currency : undefined,
+    });
+    if (!row) {
+      sendError(res, req, 400, "Could not link renter — check slug exists and is not the host shop");
+      return;
+    }
+    await appendHumanAudit(
+      hostBusinessId,
+      userId,
+      "host.renter.invited",
+      "host_renter_link",
+      row.id,
+      { renterSlug, chairLabel },
+    );
+    res.status(201).json(row);
   },
 );
 

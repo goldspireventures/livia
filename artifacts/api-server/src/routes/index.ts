@@ -59,6 +59,7 @@ import wellnessRouter from "./wellness";
 import beautyRouter from "./beauty";
 import hairRouter from "./hair";
 import alliedHealthRouter from "./allied-health";
+import intakeRouter from "./intake";
 import calendarRouter from "./calendar";
 import consultFirstRouter from "./consult-first";
 
@@ -108,6 +109,7 @@ router.use(staffShiftsRouter);
 router.use(shiftTemplatesRouter);
 router.use(importRouter);
 router.use(calendarRouter);
+router.use(intakeRouter);
 router.use(integrationBrokersRouter);
 router.use(classSessionsRouter);
 router.use(packageCreditsRouter);

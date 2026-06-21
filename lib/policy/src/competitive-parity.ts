@@ -91,16 +91,16 @@ export const VERTICAL_INCUMBENT_CATEGORIES: Record<BusinessVertical, IncumbentCa
 
 /** Required capabilities per vertical — must ship for competitive parity. */
 export const VERTICAL_PARITY_REQUIRED: Record<BusinessVertical, ParityCapabilityId[]> = {
-  hair: ["online_self_book", "deposit_at_book", "multi_staff_calendar", "automated_reminders", "client_memory", "csv_migration", "waitlist_recovery", "dm_whatsapp_book"],
-  beauty: ["online_self_book", "deposit_at_book", "intake_forms", "multi_staff_calendar", "automated_reminders", "client_memory", "csv_migration", "waitlist_recovery", "dm_whatsapp_book"],
-  wellness: ["online_self_book", "deposit_at_book", "packages_memberships", "automated_reminders", "client_memory", "csv_migration", "waitlist_recovery"],
-  "body-art": ["online_self_book", "deposit_at_book", "design_proof_workflow", "intake_forms", "csv_migration", "client_memory"],
-  fitness: ["online_self_book", "class_capacity", "packages_memberships", "waitlist_recovery", "automated_reminders", "csv_migration"],
-  medspa: ["online_self_book", "deposit_at_book", "consent_clinical", "intake_forms", "automated_reminders", "csv_migration"],
-  "allied-health": ["online_self_book", "intake_forms", "automated_reminders", "client_memory", "csv_migration"],
-  "pet-grooming": ["online_self_book", "pet_profile", "automated_reminders", "csv_migration", "client_memory"],
-  "automotive-detailing": ["online_self_book", "vehicle_profile", "deposit_at_book", "csv_migration"],
-  "event-vendors": ["consult_quote_book", "online_self_book", "csv_migration", "dm_whatsapp_book"],
+  hair: ["online_self_book", "deposit_at_book", "multi_staff_calendar", "automated_reminders", "client_memory", "csv_migration", "waitlist_recovery", "dm_whatsapp_book", "api_migration"],
+  beauty: ["online_self_book", "deposit_at_book", "intake_forms", "multi_staff_calendar", "automated_reminders", "client_memory", "csv_migration", "waitlist_recovery", "dm_whatsapp_book", "api_migration"],
+  wellness: ["online_self_book", "deposit_at_book", "packages_memberships", "automated_reminders", "client_memory", "csv_migration", "waitlist_recovery", "api_migration"],
+  "body-art": ["online_self_book", "deposit_at_book", "design_proof_workflow", "intake_forms", "csv_migration", "client_memory", "api_migration"],
+  fitness: ["online_self_book", "class_capacity", "packages_memberships", "waitlist_recovery", "automated_reminders", "csv_migration", "client_memory"],
+  medspa: ["online_self_book", "deposit_at_book", "consent_clinical", "intake_forms", "automated_reminders", "csv_migration", "api_migration"],
+  "allied-health": ["online_self_book", "intake_forms", "automated_reminders", "client_memory", "csv_migration", "api_migration"],
+  "pet-grooming": ["online_self_book", "pet_profile", "automated_reminders", "csv_migration", "client_memory", "waitlist_recovery"],
+  "automotive-detailing": ["online_self_book", "vehicle_profile", "deposit_at_book", "csv_migration", "automated_reminders", "client_memory"],
+  "event-vendors": ["consult_quote_book", "online_self_book", "csv_migration", "dm_whatsapp_book", "api_migration"],
 };
 
 /** Org-shape adds capabilities beyond vertical baseline. */
@@ -134,16 +134,16 @@ export type ParityGap = {
 const CAPABILITY_SHIP_STATUS: Partial<Record<ParityCapabilityId, "shipped" | "partial" | "planned">> = {
   online_self_book: "shipped",
   deposit_at_book: "shipped",
-  intake_forms: "partial",
+  intake_forms: "shipped",
   automated_reminders: "shipped",
   packages_memberships: "shipped",
   waitlist_recovery: "shipped",
   client_memory: "shipped",
-  dm_whatsapp_book: "partial",
+  dm_whatsapp_book: "shipped",
   voice_receptionist: "shipped",
   multi_staff_calendar: "shipped",
-  chair_rental_model: "partial",
-  chain_rollup: "partial",
+  chair_rental_model: "shipped",
+  chain_rollup: "shipped",
   class_capacity: "shipped",
   consent_clinical: "shipped",
   design_proof_workflow: "shipped",

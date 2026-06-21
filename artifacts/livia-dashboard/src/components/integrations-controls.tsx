@@ -13,6 +13,7 @@ import { MigrationBrokersPanel } from "@/components/settings/migration-brokers-p
 import { CompetitiveParityPanel } from "@/components/settings/competitive-parity-panel";
 import { ParallelRunPanel } from "@/components/settings/parallel-run-panel";
 import { CalendarSyncPanel } from "@/components/settings/calendar-sync-panel";
+import { IntakeQueuePanel } from "@/components/settings/intake-queue-panel";
 import { UniversalImportPanel } from "@/components/settings/universal-import-panel";
 import { customFetch } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -205,6 +206,7 @@ export default function IntegrationsControls() {
       </Card>
 
       <MigrationBrokersPanel brokers={brokers} />
+      <IntakeQueuePanel businessId={bid} vertical={(business as { vertical?: string })?.vertical} />
       <CalendarSyncPanel
         businessId={bid}
         calendarConnected={brokers.some((b) => b.id === "calendar_google" && b.connected)}
