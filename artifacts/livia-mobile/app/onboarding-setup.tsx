@@ -1,6 +1,7 @@
 import {
   useGetBusiness,
   useListStaff,
+  useListServices,
   useUpdateBusiness,
   useGetLivSetupGuidedFlow,
   useGetTenantCapabilities,
@@ -32,6 +33,7 @@ import { getPublicBookingUrl, getPublicBookingLabel } from "@/lib/public-booking
 import {
   blockingOnboardingPercent,
   isOnboardingAppUnlocked,
+  menuActivationLabel,
   type OnboardingActId,
   type OnboardingState,
 } from "@workspace/policy";
@@ -46,12 +48,13 @@ import { CrossSurfaceContinueCard } from "@/components/CrossSurfaceContinueCard"
 import { SetupGuidedFlowCard } from "@/components/SetupGuidedFlowCard";
 import { useOnboardingCapabilitySync } from "@/lib/onboarding-capability-sync";
 
-const ACT_LABELS: Record<OnboardingActId, string> = {
+const ACT_LABELS: Partial<Record<OnboardingActId, string>> = {
   a2_shop_profile: "Location profile",
+  a3_service_menu: "Service menu",
   a5_hours: "Opening hours",
   a6_liv: "Liv voice & booking",
   a8_public_link: "Public booking link",
-} as Record<OnboardingActId, string>;
+};
 
 export default function OnboardingSetupScreen() {
   const colors = useColors();
@@ -68,9 +71,21 @@ export default function OnboardingSetupScreen() {
   } as never);
   const { mutateAsync: patchBusiness } = useUpdateBusiness();
   const { data: staffList } = useListStaff(bid, { query: { enabled: !!bid } } as never);
+  const { data: servicesList } = useListServices(bid, { query: { enabled: !!bid } } as never);
 
   const state = (biz as { onboardingState?: OnboardingState } | undefined)?.onboardingState;
-  const bizMeta = biz as { vertical?: string; category?: string; name?: string; phone?: string; city?: string; description?: string; aiEnabled?: string; aiTone?: string; aiGreeting?: string } | undefined;
+  const bizMeta = biz as {
+    vertical?: string;
+    category?: string;
+    name?: string;
+    phone?: string;
+    city?: string;
+    description?: string;
+    aiEnabled?: string;
+    aiTone?: string;
+    aiGreeting?: string;
+  } | undefined;
+  const vertical = bizMeta?.vertical ?? null;
   const vocab = verticalPackUi(bizMeta?.vertical, bizMeta?.category);
   const accent = verticalAccentHex(bizMeta?.vertical, bizMeta?.category);
 
@@ -95,11 +110,13 @@ export default function OnboardingSetupScreen() {
 
   const readinessHints = (guidedFlow?.readinessActHints ?? []) as OnboardingActId[];
   const currentAct = useMemo(
-    () => nextBlockingAct(state, readinessHints),
-    [state, readinessHints],
+    () => nextBlockingAct(state, readinessHints, vertical),
+    [state, readinessHints, vertical],
   );
-  const blockingPct = blockingOnboardingPercent(state?.completedActs ?? []);
-  const appUnlocked = isOnboardingAppUnlocked(state);
+  const blockingPct = blockingOnboardingPercent(state?.completedActs ?? [], vertical);
+  const appUnlocked = isOnboardingAppUnlocked(state, vertical);
+  const serviceCount = servicesList?.length ?? 0;
+  const menuActLabel = menuActivationLabel(vertical);
 
   const publicUrl = slug ? getPublicBookingUrl(slug) : null;
 
@@ -149,7 +166,7 @@ export default function OnboardingSetupScreen() {
           description: description || undefined,
         },
       });
-      await completeBlockingAct(bid, "a2_shop_profile", state);
+      await completeBlockingAct(bid, "a2_shop_profile", state, undefined, vertical);
       haptics.success();
       await refetch();
     } catch {
@@ -169,7 +186,7 @@ export default function OnboardingSetupScreen() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rules, staffId }),
       });
-      await completeBlockingAct(bid, "a5_hours", state, { hoursConfirmed: true });
+      await completeBlockingAct(bid, "a5_hours", state, { hoursConfirmed: true }, vertical);
       haptics.success();
       await refetch();
     } catch {
@@ -190,7 +207,26 @@ export default function OnboardingSetupScreen() {
           aiGreeting: aiGreeting || undefined,
         },
       });
-      await completeBlockingAct(bid, "a6_liv", state, { livEnabled: aiEnabled });
+      await completeBlockingAct(bid, "a6_liv", state, { livEnabled: aiEnabled }, vertical);
+      haptics.success();
+      await refetch();
+    } catch {
+      haptics.warning();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function confirmServiceMenu() {
+    setSaving(true);
+    try {
+      await completeBlockingAct(
+        bid,
+        "a3_service_menu",
+        state,
+        { servicesConfirmed: true },
+        vertical,
+      );
       haptics.success();
       await refetch();
     } catch {
@@ -203,7 +239,7 @@ export default function OnboardingSetupScreen() {
   async function confirmPublicLink() {
     setSaving(true);
     try {
-      await completeBlockingAct(bid, "a8_public_link", state, { publicLinkShared: true });
+      await completeBlockingAct(bid, "a8_public_link", state, { publicLinkShared: true }, vertical);
       haptics.success();
       await refetch();
     } catch {
@@ -266,7 +302,7 @@ export default function OnboardingSetupScreen() {
       ) : (
         <View style={[styles.card, { borderColor: colors.border, backgroundColor: colors.card }]}>
           <Text style={[styles.stepTitle, { color: colors.foreground }]}>
-            {ACT_LABELS[currentAct] ?? currentAct}
+            {currentAct === "a3_service_menu" ? menuActLabel : ACT_LABELS[currentAct] ?? currentAct}
           </Text>
 
           {currentAct === "a2_shop_profile" ? (
@@ -312,6 +348,29 @@ export default function OnboardingSetupScreen() {
                 onPress={() => void saveShopAndContinue()}
               >
                 <Text style={styles.btnText}>{saving ? "Saving…" : "Save & continue"}</Text>
+              </Pressable>
+            </View>
+          ) : null}
+
+          {currentAct === "a3_service_menu" ? (
+            <View style={{ gap: 10 }}>
+              <Text style={{ color: colors.mutedForeground, fontSize: 14, lineHeight: 20 }}>
+                {serviceCount > 0
+                  ? `${serviceCount} ${vocab.serviceNoun.toLowerCase()}(s) on your menu. Confirm or edit on web.`
+                  : `Add your ${vocab.serviceNoun.toLowerCase()} menu — fastest on web.`}
+              </Text>
+              <Pressable
+                style={[styles.btnOutline, { borderColor: accent }]}
+                onPress={() => void Linking.openURL(`${getDashboardBaseUrl()}/services`)}
+              >
+                <Text style={{ color: accent, fontWeight: "600" }}>Edit menu on web</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.btn, { backgroundColor: accent, opacity: saving || serviceCount === 0 ? 0.6 : 1 }]}
+                disabled={saving || serviceCount === 0}
+                onPress={() => void confirmServiceMenu()}
+              >
+                <Text style={styles.btnText}>{saving ? "Saving…" : "Menu looks good"}</Text>
               </Pressable>
             </View>
           ) : null}

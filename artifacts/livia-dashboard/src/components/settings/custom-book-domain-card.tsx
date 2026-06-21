@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { customFetch } from "@workspace/api-client-react";
+import { guestBookHostForSlug } from "@workspace/policy";
 
 type Props = {
   businessId: string;
@@ -23,13 +24,14 @@ export function CustomBookDomainCard({
   const [domain, setDomain] = useState(initialDomain ?? "");
   const [verified, setVerified] = useState(initialVerified);
   const [busy, setBusy] = useState(false);
+  const cnameTarget = guestBookHostForSlug(slug, "livia-hq.com");
 
   useEffect(() => {
     setDomain(initialDomain ?? "");
     setVerified(initialVerified);
   }, [initialDomain, initialVerified]);
 
-  async function save(verify = false) {
+  async function save() {
     setBusy(true);
     try {
       const row = await customFetch<{
@@ -39,19 +41,46 @@ export function CustomBookDomainCard({
         method: "PATCH",
         body: JSON.stringify({
           customBookDomain: domain.trim() || null,
-          customBookDomainVerified: verify ? true : verified && Boolean(domain.trim()),
+          customBookDomainVerified: verified && Boolean(domain.trim()) ? verified : false,
         }),
       });
       setDomain(row.customBookDomain ?? "");
       setVerified(Boolean(row.customBookDomainVerified));
-      toast({
-        title: verify ? "Domain marked verified" : "Custom domain saved",
-        description: verify
-          ? "Point your DNS CNAME to Livia book host before sharing publicly."
-          : undefined,
-      });
+      toast({ title: "Custom domain saved" });
     } catch {
       toast({ title: "Could not save domain", variant: "destructive" });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function verifyDns() {
+    if (!domain.trim()) return;
+    setBusy(true);
+    try {
+      await save();
+      const result = await customFetch<{
+        verified: boolean;
+        message: string;
+        target?: string;
+        customBookDomainVerified?: boolean;
+      }>(`/api/businesses/${businessId}/custom-book-domain/verify`, {
+        method: "POST",
+      });
+      setVerified(Boolean(result.verified || result.customBookDomainVerified));
+      toast({
+        title: result.verified ? "Domain verified" : "DNS not ready yet",
+        description: result.message,
+        variant: result.verified ? "default" : "destructive",
+      });
+    } catch (err: unknown) {
+      const body = err as { message?: string; verified?: boolean };
+      toast({
+        title: "Verification failed",
+        description: body.message ?? "Add the CNAME record and try again.",
+        variant: "destructive",
+      });
+      setVerified(false);
     } finally {
       setBusy(false);
     }
@@ -68,7 +97,8 @@ export function CustomBookDomainCard({
         ) : null}
       </div>
       <p className="text-xs text-muted-foreground">
-        Optional branded URL instead of <code>{slug}.livia-hq.com</code>. Add a CNAME to your book host, then verify.
+        Branded URL instead of <code>{slug}.livia-hq.com</code>. Point a CNAME at{" "}
+        <code>{cnameTarget}</code>, then verify DNS.
       </p>
       <div className="space-y-2">
         <Label className="text-xs">Domain</Label>
@@ -80,11 +110,11 @@ export function CustomBookDomainCard({
         />
       </div>
       <div className="flex flex-wrap gap-2">
-        <Button type="button" size="sm" variant="secondary" disabled={busy} onClick={() => void save(false)}>
+        <Button type="button" size="sm" variant="secondary" disabled={busy} onClick={() => void save()}>
           Save
         </Button>
-        <Button type="button" size="sm" disabled={busy || !domain.trim()} onClick={() => void save(true)}>
-          Mark verified
+        <Button type="button" size="sm" disabled={busy || !domain.trim()} onClick={() => void verifyDns()}>
+          Verify DNS
         </Button>
       </div>
     </div>

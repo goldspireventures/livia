@@ -147,7 +147,7 @@ const CAPABILITY_SHIP_STATUS: Partial<Record<ParityCapabilityId, "shipped" | "pa
   class_capacity: "shipped",
   consent_clinical: "shipped",
   design_proof_workflow: "shipped",
-  pet_profile: "partial",
+  pet_profile: "shipped",
   vehicle_profile: "partial",
   consult_quote_book: "shipped",
   csv_migration: "shipped",

@@ -40,7 +40,11 @@ export function OnboardingGate({ children }: { children: ReactNode }) {
     if (role !== "OWNER") return;
     const state = (biz as { onboardingState?: OnboardingState } | undefined)?.onboardingState ??
       (currentBusiness as { onboardingState?: OnboardingState }).onboardingState;
-    if (isOnboardingAppUnlocked(state)) return;
+    const vertical =
+      (biz as { vertical?: string } | undefined)?.vertical ??
+      (currentBusiness as { vertical?: string }).vertical ??
+      null;
+    if (isOnboardingAppUnlocked(state, vertical)) return;
     router.replace("/onboarding-setup");
   }, [
     bizLoading,

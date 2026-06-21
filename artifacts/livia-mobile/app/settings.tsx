@@ -2,6 +2,7 @@ import {
   useGetBusiness,
   useGetBusinessCommunications,
   useUpdateBusiness,
+  customFetch,
 } from "@workspace/api-client-react";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -110,6 +111,7 @@ export default function SettingsScreen() {
   const [aiOn, setAiOn] = useState<boolean | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [customDomain, setCustomDomain] = useState<string | null>(null);
+  const [domainVerifying, setDomainVerifying] = useState(false);
   const canEditShopFields = canEditShop(persona);
 
   const resolvedAi = useMemo(() => {
@@ -154,13 +156,35 @@ export default function SettingsScreen() {
     try {
       await patchBusiness({
         businessId: bid,
-        data: { customBookDomain: trimmed || null },
+        data: { customBookDomain: trimmed || null, customBookDomainVerified: false },
       });
       await refetch();
       setCustomDomain(null);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    }
+  };
+
+  const verifyCustomDomain = async () => {
+    if (!bid || !canEditShopFields || !resolvedDomain.trim()) return;
+    setDomainVerifying(true);
+    try {
+      if (customDomain !== null) await saveCustomDomain(customDomain);
+      const result = await customFetch<{ verified: boolean; message: string }>(
+        `/api/businesses/${bid}/custom-book-domain/verify`,
+        { method: "POST" },
+      );
+      await refetch();
+      Haptics.notificationAsync(
+        result.verified
+          ? Haptics.NotificationFeedbackType.Success
+          : Haptics.NotificationFeedbackType.Warning,
+      );
+    } catch {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } finally {
+      setDomainVerifying(false);
     }
   };
 
@@ -345,6 +369,21 @@ export default function SettingsScreen() {
                 {resolvedDomain || "—"}
               </Text>
             )}
+            {canEditShopFields && resolvedDomain.trim() ? (
+              <Pressable
+                onPress={() => void verifyCustomDomain()}
+                disabled={domainVerifying}
+                style={[styles.navBtn, { borderColor: colors.border, marginTop: 6 }]}
+              >
+                <Text style={[styles.navBtnText, { color: colors.primary }]}>
+                  {domainVerifying ? "Checking DNS…" : "Verify DNS"}
+                </Text>
+              </Pressable>
+            ) : null}
+            {(business as { customBookDomainVerified?: boolean })?.customBookDomainVerified &&
+            resolvedDomain ? (
+              <Text style={[styles.rowMeta, { color: colors.primary }]}>Domain verified</Text>
+            ) : null}
             <Pressable
               onPress={() => router.push(asHref("/waitlist"))}
               style={[styles.navBtn, { borderColor: colors.border, marginTop: 8 }]}

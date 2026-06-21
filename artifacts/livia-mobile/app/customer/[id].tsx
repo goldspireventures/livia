@@ -19,6 +19,7 @@ import { useColors } from "@/hooks/useColors";
 import { useMembership } from "@/hooks/useMembership";
 import { showOwnerLivMemoryPanel } from "@workspace/policy";
 import { LivMemoryCard } from "@/components/LivMemoryCard";
+import { CustomerPetsCard } from "@/components/CustomerPetsCard";
 import { OperationalScreen } from "@/components/OperationalScreen";
 import { OperatorSurfaceShell } from "@/components/shell/OperatorSurfaceShell";
 import { CollapsibleSettingsSection } from "@/components/settings/CollapsibleSettingsSection";
@@ -33,12 +34,13 @@ export default function CustomerDetailScreen() {
   const bid = currentBusiness?.id ?? "";
   const chrome = useOperationalChrome(bid);
   const vertical = (currentBusiness as { vertical?: string } | undefined)?.vertical;
-  type ClientSection = "relationship" | "memory" | "care" | "notes" | "bookings" | "packages";
+  type ClientSection = "relationship" | "memory" | "pets" | "care" | "notes" | "bookings" | "packages";
   const [openSection, setOpenSection] = useState<ClientSection | null>("bookings");
   const toggleSection = (id: ClientSection) => {
     setOpenSection((prev) => (prev === id ? null : id));
   };
   const showCareSeries = vertical === "allied-health" || vertical === "wellness";
+  const showPets = vertical === "pet-grooming";
   const [careSeries, setCareSeries] = useState<
     Array<{
       id: string;
@@ -237,7 +239,27 @@ export default function CustomerDetailScreen() {
           onToggle={() => toggleSection("memory")}
           chrome={chrome}
         >
-          <LivMemoryCard businessId={bid} customerId={id} canEdit={canEdit} />
+          <LivMemoryCard
+            businessId={bid}
+            customerId={id}
+            canEdit={canEdit}
+            vertical={vertical}
+            category={(currentBusiness as { category?: string } | undefined)?.category}
+          />
+        </CollapsibleSettingsSection>
+      ) : null}
+
+      {bid && id && showPets ? (
+        <CollapsibleSettingsSection
+          id="pets"
+          icon="heart"
+          title="Pets"
+          subtitle="Grooming profiles"
+          expanded={openSection === "pets"}
+          onToggle={() => toggleSection("pets")}
+          chrome={chrome}
+        >
+          <CustomerPetsCard businessId={bid} customerId={id} />
         </CollapsibleSettingsSection>
       ) : null}
 

@@ -60,7 +60,7 @@ export function isOnboardingAppUnlocked(
   return false;
 }
 
-function menuActivationLabel(vertical?: string | null): string {
+export function menuActivationLabel(vertical?: string | null): string {
   if (vertical === "event-vendors") return "Build your decor catalogue";
   if (vertical === "beauty") return "Build your treatment menu";
   if (vertical === "hair") return "Build your service menu";

@@ -84,6 +84,12 @@ export default function CommunicationsControls({ businessId }: { businessId: str
   );
   const [sending, setSending] = useState(false);
   const [lastResult, setLastResult] = useState<{ status: string; body: string } | null>(null);
+  const [voiceStatus, setVoiceStatus] = useState<{
+    ingressReady?: boolean;
+    message?: string;
+    outcomeShareRate?: number;
+  } | null>(null);
+  const [voiceLoading, setVoiceLoading] = useState(false);
 
   async function refresh() {
     setLoadError(null);
@@ -113,6 +119,28 @@ export default function CommunicationsControls({ businessId }: { businessId: str
     void refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [businessId]);
+
+  useEffect(() => {
+    if (!config?.channelPack?.voice) return;
+    void loadVoiceStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config?.channelPack?.voice, businessId]);
+
+  async function loadVoiceStatus() {
+    setVoiceLoading(true);
+    try {
+      const v = await api<{
+        ingressReady?: boolean;
+        message?: string;
+        outcomeShareRate?: number;
+      }>(`/businesses/${businessId}/voice/status`);
+      setVoiceStatus(v);
+    } catch {
+      setVoiceStatus(null);
+    } finally {
+      setVoiceLoading(false);
+    }
+  }
 
   async function searchNumbers() {
     setSearching(true);
@@ -373,12 +401,42 @@ export default function CommunicationsControls({ businessId }: { businessId: str
       <section className="space-y-2 rounded-md border p-4 bg-muted/30">
         <h3 className="text-sm font-semibold">Phone receptionist (UK)</h3>
         <p className="text-xs text-muted-foreground">
-          For UK shops, inbound call handling stays off until you turn it on here and we attach a UK Twilio number.
-          Online booking and Liv chat are unaffected. Callers hear the required disclosure before any recording.
+          Inbound call handling for UK shops. Online booking and Liv chat work without this.
+          Callers hear the required disclosure before any recording.
         </p>
-        <p className="text-xs">
-          Needs the <code>voice_receptionist</code> add-on on your plan — set your numbers above when you are ready to go live.
-        </p>
+        {config?.channelPack?.voice ? (
+          <div className="text-xs space-y-2">
+            {voiceLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            ) : voiceStatus ? (
+              <>
+                <p>
+                  <b>Status:</b>{" "}
+                  {voiceStatus.ingressReady ? "Platform ready — provision your shop number above" : "Awaiting platform voice config"}
+                </p>
+                {voiceStatus.message ? (
+                  <p className="text-muted-foreground">{voiceStatus.message}</p>
+                ) : null}
+                {typeof voiceStatus.outcomeShareRate === "number" ? (
+                  <p className="text-muted-foreground">
+                    Outcome share this period: {(voiceStatus.outcomeShareRate * 100).toFixed(0)}%
+                  </p>
+                ) : null}
+              </>
+            ) : (
+              <p className="text-muted-foreground">
+                Voice add-on active on your plan — provision a UK number in the SMS section above.
+              </p>
+            )}
+            <Button type="button" size="sm" variant="outline" disabled={voiceLoading} onClick={() => void loadVoiceStatus()}>
+              Refresh voice status
+            </Button>
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Needs the <code>voice_receptionist</code> add-on on your plan.
+          </p>
+        )}
       </section>
 
       <SettingsDisclosure title="Test SMS or email" description="Verify delivery before you go live.">

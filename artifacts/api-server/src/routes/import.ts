@@ -152,7 +152,7 @@ router.post(
     const brokerId = typeof req.body?.brokerId === "string" ? req.body.brokerId : "";
     const { INTEGRATION_CATALOG } = await import("@workspace/policy");
     const entry = INTEGRATION_CATALOG.find((e) => e.id === brokerId);
-    if (!entry || entry.mode !== "oauth") {
+    if (!entry || (entry.mode !== "oauth" && entry.mode !== "api_read")) {
       sendError(res, req, 400, "Unknown OAuth import broker");
       return;
     }

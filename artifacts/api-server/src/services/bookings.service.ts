@@ -671,6 +671,16 @@ export async function updateBookingStatus(
     });
   }
 
+  if (updates.status === "COMPLETED" && existing.status !== "COMPLETED" && existing.customerId) {
+    void import("./booking-liv-memory.service").then((m) =>
+      m.recordVisitMemoryForBooking({
+        businessId,
+        customerId: existing.customerId!,
+        serviceId: existing.serviceId,
+      }),
+    );
+  }
+
   return enriched;
 }
 

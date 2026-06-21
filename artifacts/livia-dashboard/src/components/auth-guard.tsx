@@ -203,9 +203,10 @@ function OnboardingGate({ children }: { children: ReactNode }) {
   if (!business || isDemoTenantSlug(business.slug)) return <>{children}</>;
   if (effectiveRole !== "OWNER") return <>{children}</>;
 
-  const onboardingState = (business as { onboardingState?: OnboardingState })
+  const onboardingState = (business as { onboardingState?: OnboardingState; vertical?: string })
     .onboardingState;
-  if (isOnboardingAppUnlocked(onboardingState)) return <>{children}</>;
+  const vertical = (business as { vertical?: string }).vertical;
+  if (isOnboardingAppUnlocked(onboardingState, vertical)) return <>{children}</>;
 
   if (ONBOARDING_EXEMPT_PREFIXES.some((p) => location === p || location.startsWith(p))) {
     return <>{children}</>;

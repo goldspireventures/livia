@@ -17,9 +17,9 @@ import { useColors } from "@/hooks/useColors";
 import { fetchTenantExperience } from "@/lib/tenant-experience";
 import { verticalAccentHex } from "@/lib/vertical-theme";
 import { verticalPackUi } from "@/lib/vertical-pack-ui";
-import { isOnboardingAppUnlocked, type OnboardingState } from "@workspace/policy";
+import { isOnboardingAppUnlocked, type OnboardingActId, type OnboardingState } from "@workspace/policy";
 import { UniversalImportPanel } from "@/components/UniversalImportPanel";
-import { persistOnboardingState } from "@/lib/onboarding-blocking";
+import { completeBlockingAct, persistOnboardingState } from "@/lib/onboarding-blocking";
 import { webOnboardingUrl } from "@/lib/cross-surface-handoff";
 import { getPublicBookingUrl } from "@/lib/public-booking-url";
 
@@ -47,8 +47,9 @@ export default function OnboardingContinueScreen() {
     void fetchTenantExperience(bid, getToken).then(setExperience);
   }, [bid, getToken]);
 
+  const vertical = bizMeta?.vertical ?? null;
   const steps = experience?.onboarding.activationSteps ?? [];
-  const appUnlocked = isOnboardingAppUnlocked(state);
+  const appUnlocked = isOnboardingAppUnlocked(state, vertical);
 
   if (!bid) {
     return (
@@ -122,11 +123,20 @@ export default function OnboardingContinueScreen() {
           <UniversalImportPanel
             businessId={bid}
             onImported={() => {
-              void persistOnboardingState(
-                bid,
-                { checklist: { migrationImported: true } },
-                state,
-              );
+              void (async () => {
+                await persistOnboardingState(
+                  bid,
+                  { checklist: { migrationImported: true } },
+                  state,
+                );
+                await completeBlockingAct(
+                  bid,
+                  "a11_migration" as OnboardingActId,
+                  state,
+                  { migrationImported: true },
+                  vertical,
+                );
+              })();
             }}
           />
         </View>

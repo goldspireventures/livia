@@ -453,6 +453,23 @@ router.patch(
   },
 );
 
+router.post(
+  "/businesses/:businessId/custom-book-domain/verify",
+  requireAuth,
+  requireRole("ADMIN"),
+  async (req, res): Promise<void> => {
+    const id = Array.isArray(req.params.businessId) ? req.params.businessId[0] : req.params.businessId;
+    const { verifyCustomBookDomain } = await import("../services/custom-book-domain.service");
+    const result = await verifyCustomBookDomain(id);
+    if (!result.verified) {
+      res.status(422).json(result);
+      return;
+    }
+    const biz = await getBusinessById(id);
+    res.json({ ...result, customBookDomain: biz?.customBookDomain, customBookDomainVerified: true });
+  },
+);
+
 router.patch(
   "/businesses/:businessId/public-featured-services",
   requireAuth,

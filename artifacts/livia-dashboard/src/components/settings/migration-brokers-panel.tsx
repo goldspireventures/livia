@@ -5,6 +5,9 @@ import { SettingsDisclosure } from "@/components/ui/settings-disclosure";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import { customFetch } from "@workspace/api-client-react";
+import { useBusiness } from "@/lib/business-context";
 import { navigateSettingsHref } from "@/lib/commerce-fix-navigation";
 import {
   type BrokerStatus,
@@ -33,9 +36,11 @@ function scrollToElement(elementId: string): void {
 function BrokerRow({
   broker,
   onAction,
+  oauthBusy,
 }: {
   broker: BrokerStatus;
   onAction: (broker: BrokerStatus) => void;
+  oauthBusy: string | null;
 }) {
   const meta = migrationBrokerMeta(broker);
   const action = meta.action;
@@ -65,8 +70,14 @@ function BrokerRow({
             {action.label}
           </Button>
         ) : (
-          <Button size="sm" variant="outline" className="shrink-0" onClick={() => onAction(broker)}>
-            {action.label}
+          <Button
+            size="sm"
+            variant="outline"
+            className="shrink-0"
+            disabled={oauthBusy === broker.id}
+            onClick={() => onAction(broker)}
+          >
+            {oauthBusy === broker.id ? "Connecting…" : action.label}
             <ArrowRight className="ml-1 h-3.5 w-3.5" />
           </Button>
         )}
@@ -80,7 +91,11 @@ function BrokerRow({
 
 export function MigrationBrokersPanel({ brokers }: Props) {
   const [, navigate] = useLocation();
+  const { toast } = useToast();
+  const { business } = useBusiness();
+  const businessId = business?.id ?? "";
   const [showAll, setShowAll] = useState(false);
+  const [oauthBusy, setOauthBusy] = useState<string | null>(null);
 
   const ownerBrokers = useMemo(() => migrationBrokersForOwner(brokers), [brokers]);
   const connectedCount = brokers.filter((b) => b.connected).length;
@@ -105,6 +120,36 @@ export function MigrationBrokersPanel({ brokers }: Props) {
     }
     if (action.type === "link") {
       navigateSettingsHref(action.href, navigate);
+      return;
+    }
+    if (action.type === "oauth" && businessId) {
+      void startOAuth(action.brokerId, action.label);
+    }
+  }
+
+  async function startOAuth(brokerId: string, label: string) {
+    setOauthBusy(brokerId);
+    try {
+      const res = await customFetch<{
+        status: string;
+        message: string;
+        authorizeUrl?: string | null;
+      }>(`/api/businesses/${businessId}/import/oauth/start`, {
+        method: "POST",
+        body: JSON.stringify({ brokerId }),
+      });
+      if (res.authorizeUrl) {
+        window.location.href = res.authorizeUrl;
+        return;
+      }
+      toast({
+        title: label,
+        description: res.message,
+      });
+    } catch {
+      toast({ title: "Connect failed", description: "Try CSV import meanwhile.", variant: "destructive" });
+    } finally {
+      setOauthBusy(null);
     }
   }
 
@@ -146,7 +191,12 @@ export function MigrationBrokersPanel({ brokers }: Props) {
               </p>
               <div className="grid gap-2">
                 {items.map((broker) => (
-                  <BrokerRow key={broker.id} broker={broker} onAction={onBrokerAction} />
+                  <BrokerRow
+                    key={broker.id}
+                    broker={broker}
+                    onAction={onBrokerAction}
+                    oauthBusy={oauthBusy}
+                  />
                 ))}
               </div>
             </div>

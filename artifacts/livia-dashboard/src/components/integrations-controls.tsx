@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SettingsDisclosure } from "@/components/ui/settings-disclosure";
 import { MigrationBrokersPanel } from "@/components/settings/migration-brokers-panel";
+import { CompetitiveParityPanel } from "@/components/settings/competitive-parity-panel";
 import { ParallelRunPanel } from "@/components/settings/parallel-run-panel";
 import { UniversalImportPanel } from "@/components/settings/universal-import-panel";
 import { customFetch } from "@workspace/api-client-react";
@@ -183,6 +184,7 @@ export default function IntegrationsControls() {
       </Card>
 
       <MigrationBrokersPanel brokers={brokers} />
+      <CompetitiveParityPanel businessId={bid} />
       <ParallelRunPanel businessId={bid} />
 
       <SettingsDisclosure

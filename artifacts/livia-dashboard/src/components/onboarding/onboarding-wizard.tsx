@@ -207,7 +207,7 @@ export function OnboardingWizard({
   const stepIndex = actIndex(currentAct);
   const tourPercent = state?.percentComplete ?? (businessId ? 8 : 0);
   const blockingPct = state
-    ? blockingOnboardingPercent((state.completedActs ?? []) as PolicyActId[])
+    ? blockingOnboardingPercent((state.completedActs ?? []) as PolicyActId[], businessVertical)
     : 0;
   const percent = Math.max(tourPercent, blockingPct);
   const appUnlocked = isOnboardingAppUnlocked(
@@ -219,6 +219,7 @@ export function OnboardingWizard({
           checklist: state.checklist,
         } as OnboardingState)
       : undefined,
+    businessVertical,
   );
 
   const persistState = async (next: OnboardingStatePayload) => {

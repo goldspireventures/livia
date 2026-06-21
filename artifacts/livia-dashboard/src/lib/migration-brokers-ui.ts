@@ -21,6 +21,7 @@ export type MigrationBrokerCategory =
 export type MigrationBrokerAction =
   | { type: "scroll"; elementId: string; label: string }
   | { type: "link"; href: string; label: string }
+  | { type: "oauth"; brokerId: string; label: string }
   | { type: "none"; label: string; hint: string };
 
 export type MigrationBrokerUiMeta = {
@@ -71,18 +72,18 @@ export const MIGRATION_BROKER_UI: Record<string, MigrationBrokerUiMeta> = {
     category: "scheduling",
     ownerSummary: "Read-only sync when your workspace API key is configured.",
     action: {
-      type: "none",
-      label: "Platform connect",
-      hint: "API migration is enabled by your workspace admin during beta.",
+      type: "oauth",
+      brokerId: "scheduling_api_read",
+      label: "Connect scheduler",
     },
   },
   salon_suite_api_read: {
     category: "scheduling",
     ownerSummary: "Import clients and appointments from a salon-suite API.",
     action: {
-      type: "none",
-      label: "Platform connect",
-      hint: "Concierge-led during beta — CSV import works today.",
+      type: "oauth",
+      brokerId: "salon_suite_api_read",
+      label: "Connect suite API",
     },
   },
   marketplace_bookings_tag: {
@@ -134,9 +135,9 @@ export const MIGRATION_BROKER_UI: Record<string, MigrationBrokerUiMeta> = {
     category: "calendar",
     ownerSummary: "Two-way calendar sync for staff availability.",
     action: {
-      type: "none",
-      label: "Coming soon",
-      hint: "Google Calendar OAuth rolls out platform-wide.",
+      type: "oauth",
+      brokerId: "calendar_google",
+      label: "Connect calendar",
     },
   },
   fitness_class_csv: {

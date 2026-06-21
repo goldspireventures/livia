@@ -1,5 +1,5 @@
 import {
-  BLOCKING_ONBOARDING_ACTS,
+  blockingOnboardingActsForVertical,
   mergePercentWithBlocking,
   nextRecommendedActWithReadiness,
   type OnboardingActId,
@@ -19,15 +19,17 @@ export const DEFAULT_WEEKDAY_HOURS: AvailRule[] = [1, 2, 3, 4, 5].map((dayOfWeek
 export function nextBlockingAct(
   state: OnboardingState | null | undefined,
   readinessActHints: OnboardingActId[] = [],
+  vertical?: string | null,
 ): OnboardingActId {
   if (readinessActHints.length > 0) {
     return nextRecommendedActWithReadiness(state, readinessActHints);
   }
+  const blocking = blockingOnboardingActsForVertical(vertical);
   const completed = new Set(state?.completedActs ?? []);
-  for (const act of BLOCKING_ONBOARDING_ACTS) {
+  for (const act of blocking) {
     if (!completed.has(act)) return act;
   }
-  return "a8_public_link";
+  return blocking[blocking.length - 1] ?? "a8_public_link";
 }
 
 type OnboardingStatePatch = Omit<Partial<OnboardingState>, "checklist"> & {
@@ -59,13 +61,12 @@ export async function completeBlockingAct(
   act: OnboardingActId,
   existing: OnboardingState | null | undefined,
   checklistPatch?: Partial<OnboardingChecklist>,
+  vertical?: string | null,
 ): Promise<OnboardingState> {
   const completed = [...new Set([...(existing?.completedActs ?? []), act])] as OnboardingActId[];
-  const idx = BLOCKING_ONBOARDING_ACTS.indexOf(act);
-  const nextAct =
-    idx >= 0 && idx < BLOCKING_ONBOARDING_ACTS.length - 1
-      ? BLOCKING_ONBOARDING_ACTS[idx + 1]!
-      : act;
+  const blocking = blockingOnboardingActsForVertical(vertical);
+  const idx = blocking.indexOf(act);
+  const nextAct = idx >= 0 && idx < blocking.length - 1 ? blocking[idx + 1]! : act;
   return persistOnboardingState(
     businessId,
     {

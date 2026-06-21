@@ -3,6 +3,7 @@ import { View, Text, TextInput, Pressable, StyleSheet, ActivityIndicator } from 
 import { Feather } from "@expo/vector-icons";
 import { useState } from "react";
 import { customFetch } from "@workspace/api-client-react";
+import { livMemoryKindOptions, livMemoryPlaceholder } from "@workspace/policy";
 import { useColors } from "@/hooks/useColors";
 import { fonts } from "@/constants/typography";
 import { aurora } from "@/constants/colors";
@@ -18,15 +19,21 @@ export function LivMemoryCard({
   businessId,
   customerId,
   canEdit,
+  vertical,
+  category,
 }: {
   businessId: string;
   customerId: string;
   canEdit: boolean;
+  vertical?: string | null;
+  category?: string | null;
 }) {
   const colors = useColors();
   const qc = useQueryClient();
   const [draft, setDraft] = useState("");
+  const [kind, setKind] = useState("note");
   const [saving, setSaving] = useState(false);
+  const kindOptions = livMemoryKindOptions(vertical, category);
 
   const { data, isLoading } = useQuery({
     queryKey: ["liv-memory", businessId, customerId],
@@ -46,7 +53,7 @@ export function LivMemoryCard({
     try {
       await customFetch(`/api/businesses/${businessId}/customers/${customerId}/liv-memory`, {
         method: "POST",
-        body: JSON.stringify({ content, kind: "note" }),
+        body: JSON.stringify({ content, kind }),
       });
       setDraft("");
       await qc.invalidateQueries({ queryKey: ["liv-memory", businessId, customerId] });
@@ -62,8 +69,7 @@ export function LivMemoryCard({
         <Text style={[styles.title, { color: colors.foreground }]}>Liv memory</Text>
       </View>
       <Text style={[styles.lede, { color: colors.mutedForeground }]}>
-        Liv builds memory in the background from bookings, messages, and your confirmations — you
-        can add a note anytime to teach her faster.
+        Liv learns from completed visits and your notes — teach her faster anytime.
       </Text>
 
       {isLoading ? (
@@ -81,6 +87,32 @@ export function LivMemoryCard({
 
       {canEdit ? (
         <>
+          {kindOptions.length > 1 ? (
+            <View style={styles.kindRow}>
+              {kindOptions.map((opt) => (
+                <Pressable
+                  key={opt.value}
+                  onPress={() => setKind(opt.value)}
+                  style={[
+                    styles.kindChip,
+                    {
+                      borderColor: kind === opt.value ? colors.primary : colors.border,
+                      backgroundColor: kind === opt.value ? `${colors.primary}22` : colors.background,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={{
+                      color: kind === opt.value ? colors.primary : colors.mutedForeground,
+                      fontSize: 11,
+                    }}
+                  >
+                    {opt.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
           <TextInput
             style={[
               styles.input,
@@ -90,7 +122,7 @@ export function LivMemoryCard({
                 backgroundColor: colors.background,
               },
             ]}
-            placeholder="e.g. Prefers Lara · patch test every 6 months"
+            placeholder={livMemoryPlaceholder(vertical, category)}
             placeholderTextColor={colors.mutedForeground}
             value={draft}
             onChangeText={setDraft}
@@ -135,6 +167,8 @@ const styles = StyleSheet.create({
   },
   kind: { fontSize: 10, textTransform: "uppercase", letterSpacing: 0.6 },
   noteText: { fontSize: 13, marginTop: 2, lineHeight: 18 },
+  kindRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 8 },
+  kindChip: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
   input: {
     borderWidth: 1,
     borderRadius: 12,
