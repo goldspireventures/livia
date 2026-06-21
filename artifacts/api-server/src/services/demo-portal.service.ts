@@ -511,7 +511,7 @@ export async function seedShopCore(
       return {
         id: generateId(),
         businessId,
-        customerId: customers[b.ci].id,
+        customerId: customers[Math.min(b.ci, customers.length - 1)]!.id,
         staffId: b.staffId,
         serviceId: b.serviceId,
         status: b.status,

@@ -201,11 +201,18 @@ export async function seedExpandedBookings(
       const serviceId =
         serviceIds[Math.min(b.vi, Math.max(0, serviceIds.length - 1))] ??
         serviceIds[0];
+      const customer = customers[Math.min(b.ci, Math.max(0, customers.length - 1))];
+      const staffId = staffIds[Math.min(b.si, Math.max(0, staffIds.length - 1))];
+      if (!customer?.id || !staffId || !serviceId) {
+        throw new Error(
+          `seedExpandedBookings missing refs (ci=${b.ci}, customers=${customers.length}, staff=${staffIds.length})`,
+        );
+      }
       return {
         id,
         businessId,
-        customerId: customers[b.ci].id,
-        staffId: staffIds[b.si],
+        customerId: customer.id,
+        staffId,
         serviceId,
         status: b.status,
         startAt: b.start,
