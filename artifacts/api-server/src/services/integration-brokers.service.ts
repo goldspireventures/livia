@@ -1,27 +1,39 @@
+import {
+  integrationCatalogStatus,
+  listIntegrationCatalog,
+  type IntegrationCatalogEntry,
+  type IntegrationCategory,
+  type IntegrationMode,
+} from "@workspace/policy";
 import { runWellnessBrokerSync } from "./wellness-broker-sync.service";
 
+/** @deprecated Use IntegrationCatalogEntry.id — kept for wellness broker sync routing. */
 export type BrokerId =
-  | "fresha"
-  | "square"
-  | "google_calendar"
-  | "xero"
-  | "quickbooks"
-  | "vagaro"
-  | "acuity"
-  | "timely"
-  | "mindbody"
-  | "stripe"
-  | "treatwell"
-  | "mailchimp"
-  | "whatsapp"
-  | "booksy";
+  | "import_clients_csv"
+  | "import_services_csv"
+  | "import_appointments_csv"
+  | "import_staff_csv"
+  | "scheduling_api_read"
+  | "salon_suite_api_read"
+  | "marketplace_bookings_tag"
+  | "payments_stripe"
+  | "payments_square"
+  | "accounting_xero"
+  | "accounting_quickbooks"
+  | "calendar_google"
+  | "fitness_class_csv"
+  | "marketing_email_events"
+  | "messaging_whatsapp";
 
 export type BrokerStatus = {
-  id: BrokerId;
+  id: string;
   label: string;
-  mode: "csv_only" | "oauth_stub" | "read_only_api";
+  category: IntegrationCategory;
+  mode: IntegrationMode;
   connected: boolean;
+  selfServe: boolean;
   note: string;
+  importKind?: IntegrationCatalogEntry["importKind"];
 };
 
 function envConfigured(key: string): boolean {
@@ -30,123 +42,55 @@ function envConfigured(key: string): boolean {
 }
 
 export function listIntegrationBrokers(_businessId: string): BrokerStatus[] {
-  return [
-    {
-      id: "fresha",
-      label: "Fresha",
-      mode: "read_only_api",
-      connected: envConfigured("FRESHA_CLIENT_ID"),
-      note: "OAuth broker stub — set FRESHA_CLIENT_ID for connect flow.",
-    },
-    {
-      id: "square",
-      label: "Square Appointments",
-      mode: "read_only_api",
-      connected: envConfigured("SQUARE_APPLICATION_ID"),
-      note: "Read-only appointment import — set SQUARE_APPLICATION_ID.",
-    },
-    {
-      id: "google_calendar",
-      label: "Google Calendar",
-      mode: "oauth_stub",
-      connected: envConfigured("GOOGLE_OAUTH_CLIENT_ID"),
-      note: "Two-way sync job lands after OAuth credentials are provisioned.",
-    },
-    {
-      id: "xero",
-      label: "Xero",
-      mode: "csv_only",
-      connected: envConfigured("XERO_CLIENT_ID"),
-      note: envConfigured("XERO_CLIENT_ID")
-        ? "OAuth configured — live sync when import job ships."
-        : "Settlement CSV export available today; set XERO_CLIENT_ID for OAuth.",
-    },
-    {
-      id: "quickbooks",
-      label: "QuickBooks",
-      mode: "csv_only",
-      connected: envConfigured("QUICKBOOKS_CLIENT_ID"),
-      note: envConfigured("QUICKBOOKS_CLIENT_ID")
-        ? "OAuth configured — live sync when import job ships."
-        : "Use weekly settlement export until QBO OAuth is configured.",
-    },
-    {
-      id: "vagaro",
-      label: "Vagaro",
-      mode: "read_only_api",
-      connected: envConfigured("VAGARO_API_KEY"),
-      note: "v2 fitness/beauty import — UK + US salon long tail.",
-    },
-    {
-      id: "acuity",
-      label: "Acuity Scheduling",
-      mode: "read_only_api",
-      connected: envConfigured("ACUITY_USER_ID"),
-      note: "Generic appointment import for wellness and solo pros.",
-    },
-    {
-      id: "timely",
-      label: "Timely",
-      mode: "read_only_api",
-      connected: envConfigured("TIMELY_API_TOKEN"),
-      note: "UK/AU/NZ salon import path.",
-    },
-    {
-      id: "mindbody",
-      label: "Mindbody",
-      mode: "csv_only",
-      connected: envConfigured("MINDBODY_API_KEY"),
-      note: envConfigured("MINDBODY_API_KEY")
-        ? "API key set — parallel run diff available."
-        : "Class + client CSV importer (v2 fitness wedge).",
-    },
-    {
-      id: "stripe",
-      label: "Stripe payments",
-      mode: "read_only_api",
-      connected: envConfigured("STRIPE_SECRET_KEY"),
-      note: "Webhook confirms bookings when deposit clears — STRIPE_SECRET_KEY required.",
-    },
-    {
-      id: "treatwell",
-      label: "Treatwell",
-      mode: "read_only_api",
-      connected: false,
-      note: "Marketplace bookings tagged on import — margin in Reports.",
-    },
-    {
-      id: "mailchimp",
-      label: "Mailchimp / Klaviyo",
-      mode: "oauth_stub",
-      connected: envConfigured("MAILCHIMP_API_KEY"),
-      note: "Package expiring + 90d no-visit events when connected.",
-    },
-    {
-      id: "whatsapp",
-      label: "WhatsApp Business",
-      mode: "read_only_api",
-      connected: envConfigured("META_WHATSAPP_TOKEN"),
-      note: "Arrival, intake, and voucher templates via channels.",
-    },
-    {
-      id: "booksy",
-      label: "Booksy",
-      mode: "csv_only",
-      connected: true,
-      note: "CSV paste import in Settings → Integrations.",
-    },
-  ];
+  return listIntegrationCatalog().map((entry) => {
+    const status = integrationCatalogStatus(entry, envConfigured);
+    return {
+      id: entry.id,
+      label: entry.label,
+      category: entry.category,
+      mode: entry.mode,
+      connected: status.connected,
+      selfServe: entry.selfServe,
+      note: status.note,
+      importKind: entry.importKind,
+    };
+  });
 }
+
+/** Map legacy sync ids for wellness parallel-run jobs. */
+const LEGACY_SYNC_MAP: Record<string, string> = {
+  fresha: "salon_suite_api_read",
+  mindbody: "fitness_class_csv",
+  booksy: "import_clients_csv",
+  acuity: "scheduling_api_read",
+  timely: "salon_suite_api_read",
+  square: "payments_square",
+  vagaro: "salon_suite_api_read",
+  treatwell: "marketplace_bookings_tag",
+  stripe: "payments_stripe",
+  xero: "accounting_xero",
+  quickbooks: "accounting_quickbooks",
+  google_calendar: "calendar_google",
+  mailchimp: "marketing_email_events",
+  whatsapp: "messaging_whatsapp",
+};
 
 export async function triggerBrokerSyncJob(
   businessId: string,
-  brokerId: BrokerId,
+  brokerId: string,
 ): Promise<{ ok: boolean; message: string; payload?: unknown }> {
   const brokers = listIntegrationBrokers(businessId);
-  const b = brokers.find((x) => x.id === brokerId);
-  if (!b) return { ok: false, message: "Unknown broker" };
-  if (!b.connected && brokerId !== "booksy" && brokerId !== "treatwell") {
+  const resolvedId = LEGACY_SYNC_MAP[brokerId] ?? brokerId;
+  const b = brokers.find((x) => x.id === resolvedId || x.id === brokerId);
+  if (!b) return { ok: false, message: "Unknown integration" };
+  if (!b.connected && !b.selfServe) {
     return { ok: false, message: b.note };
+  }
+  if (b.id.startsWith("import_")) {
+    return {
+      ok: true,
+      message: "CSV import available in Settings → Integrations or onboarding migration step.",
+    };
   }
   return runWellnessBrokerSync(businessId, brokerId);
 }

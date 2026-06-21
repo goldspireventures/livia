@@ -2,8 +2,11 @@ export type BrokerStatus = {
   id: string;
   label: string;
   mode: string;
+  category?: string;
   connected: boolean;
+  selfServe?: boolean;
   note: string;
+  importKind?: string;
 };
 
 export type MigrationBrokerCategory =
@@ -12,7 +15,8 @@ export type MigrationBrokerCategory =
   | "accounting"
   | "calendar"
   | "marketing"
-  | "fitness";
+  | "fitness"
+  | "messaging";
 
 export type MigrationBrokerAction =
   | { type: "scroll"; elementId: string; label: string }
@@ -31,152 +35,161 @@ export const MIGRATION_BROKER_CATEGORY_LABELS: Record<MigrationBrokerCategory, s
   accounting: "Accounting exports",
   calendar: "Calendar sync",
   marketing: "Guest marketing",
-  fitness: "Fitness & classes",
+  fitness: "Classes & memberships",
+  messaging: "Messaging channels",
 };
 
-/** Owner-facing copy — what each broker is for and what they can do today. */
+const CSV_IMPORT_ACTION: MigrationBrokerAction = {
+  type: "scroll",
+  elementId: "universal-import-panel",
+  label: "Import CSV",
+};
+
+/** Owner-facing copy — generic only, no third-party product names. */
 export const MIGRATION_BROKER_UI: Record<string, MigrationBrokerUiMeta> = {
-  booksy: {
+  import_clients_csv: {
     category: "scheduling",
-    ownerSummary: "Paste a client CSV export from Booksy.",
-    action: { type: "scroll", elementId: "booksy-import", label: "Import CSV" },
+    ownerSummary: "Paste a client export from your previous booking tool.",
+    action: CSV_IMPORT_ACTION,
   },
-  fresha: {
+  import_services_csv: {
     category: "scheduling",
-    ownerSummary: "Import clients and appointments from Fresha.",
+    ownerSummary: "Import your service menu with duration and price.",
+    action: CSV_IMPORT_ACTION,
+  },
+  import_appointments_csv: {
+    category: "scheduling",
+    ownerSummary: "Bring forward upcoming appointments from a spreadsheet.",
+    action: CSV_IMPORT_ACTION,
+  },
+  import_staff_csv: {
+    category: "scheduling",
+    ownerSummary: "Import team names and emails.",
+    action: CSV_IMPORT_ACTION,
+  },
+  scheduling_api_read: {
+    category: "scheduling",
+    ownerSummary: "Read-only sync when your workspace API key is configured.",
     action: {
       type: "none",
-      label: "Concierge migration",
-      hint: "Self-serve OAuth rolls out in phases — contact support to move your book.",
+      label: "Platform connect",
+      hint: "API migration is enabled by your workspace admin during beta.",
     },
   },
-  square: {
+  salon_suite_api_read: {
     category: "scheduling",
-    ownerSummary: "Read appointments from Square Appointments.",
+    ownerSummary: "Import clients and appointments from a salon-suite API.",
     action: {
       type: "none",
-      label: "Coming soon",
-      hint: "Square import is platform-configured during beta.",
+      label: "Platform connect",
+      hint: "Concierge-led during beta — CSV import works today.",
     },
   },
-  vagaro: {
+  marketplace_bookings_tag: {
     category: "scheduling",
-    ownerSummary: "Salon and spa data from Vagaro.",
-    action: {
-      type: "none",
-      label: "Coming soon",
-      hint: "UK + US import path — concierge-led for now.",
-    },
-  },
-  acuity: {
-    category: "scheduling",
-    ownerSummary: "Wellness and solo-pro appointment import.",
-    action: {
-      type: "none",
-      label: "Coming soon",
-      hint: "Acuity broker lands with wellness depth.",
-    },
-  },
-  timely: {
-    category: "scheduling",
-    ownerSummary: "UK, AU, and NZ salon appointment import.",
+    ownerSummary: "Tag marketplace-sourced bookings for margin reporting.",
     action: {
       type: "none",
       label: "Coming soon",
-      hint: "Timely import is on the v2 broker roadmap.",
+      hint: "Marketplace tags ship with reports depth.",
     },
   },
-  treatwell: {
-    category: "scheduling",
-    ownerSummary: "Tag marketplace bookings on import for margin reports.",
-    action: {
-      type: "none",
-      label: "Coming soon",
-      hint: "Treatwell tagging ships with reports depth.",
-    },
-  },
-  stripe: {
+  payments_stripe: {
     category: "payments",
-    ownerSummary: "Capture deposits and card payments on booking.",
+    ownerSummary: "Collect deposits and card payments at booking.",
     action: {
       type: "link",
       href: "/settings?tab=billing#commerce-fix",
       label: "Set up payments",
     },
   },
-  xero: {
+  payments_square: {
+    category: "payments",
+    ownerSummary: "Sync in-person payments when connected.",
+    action: {
+      type: "none",
+      label: "Platform connect",
+      hint: "Square-style payment sync is platform-configured during beta.",
+    },
+  },
+  accounting_xero: {
     category: "accounting",
-    ownerSummary: "Export settlement CSV for your accountant.",
+    ownerSummary: "Weekly settlement CSV for your accountant.",
     action: {
       type: "none",
       label: "CSV export",
-      hint: "Weekly settlement CSV is available from wellness reports when enabled.",
+      hint: "Settlement CSV is available from Reports when enabled.",
     },
   },
-  quickbooks: {
+  accounting_quickbooks: {
     category: "accounting",
-    ownerSummary: "QuickBooks settlement export.",
+    ownerSummary: "Settlement CSV for accounting handoff.",
     action: {
       type: "none",
       label: "CSV export",
-      hint: "Use settlement CSV until live QBO OAuth ships.",
+      hint: "Use settlement CSV until live accounting OAuth ships.",
     },
   },
-  google_calendar: {
+  calendar_google: {
     category: "calendar",
     ownerSummary: "Two-way calendar sync for staff availability.",
     action: {
       type: "none",
       label: "Coming soon",
-      hint: "Google OAuth connect rolls out platform-wide.",
+      hint: "Google Calendar OAuth rolls out platform-wide.",
     },
   },
-  mindbody: {
+  fitness_class_csv: {
     category: "fitness",
-    ownerSummary: "Class roster and client CSV for fitness studios.",
-    action: {
-      type: "none",
-      label: "CSV import",
-      hint: "Mindbody CSV parallel-run is concierge-led during beta.",
-    },
+    ownerSummary: "Import class clients and pack balances.",
+    action: CSV_IMPORT_ACTION,
   },
-  mailchimp: {
+  marketing_email_events: {
     category: "marketing",
     ownerSummary: "Package expiring and win-back audience events.",
     action: {
       type: "none",
       label: "Coming soon",
-      hint: "Mailchimp / Klaviyo events ship with marketing automations.",
+      hint: "Email marketing events ship with automations.",
     },
   },
-  whatsapp: {
-    category: "marketing",
-    ownerSummary: "Arrival, intake, and voucher templates.",
+  messaging_whatsapp: {
+    category: "messaging",
+    ownerSummary: "Arrival, intake, and booking templates.",
     action: { type: "link", href: "/settings?tab=comms", label: "Open channels" },
   },
 };
 
 export function migrationBrokerMeta(broker: BrokerStatus): MigrationBrokerUiMeta {
-  return (
-    MIGRATION_BROKER_UI[broker.id] ?? {
-      category: "scheduling",
-      ownerSummary: broker.note,
-      action: {
-        type: "none",
-        label: "Coming soon",
-        hint: "Contact support if you need this import path.",
-      },
-    }
-  );
+  const fromId = MIGRATION_BROKER_UI[broker.id];
+  if (fromId) return fromId;
+
+  const category = (broker.category as MigrationBrokerCategory) ?? "scheduling";
+  return {
+    category,
+    ownerSummary: broker.note,
+    action: broker.selfServe
+      ? CSV_IMPORT_ACTION
+      : {
+          type: "none",
+          label: "Platform connect",
+          hint: "Contact support if you need this import path.",
+        },
+  };
 }
 
 /** Brokers an owner should see without expanding the full roadmap. */
 export function migrationBrokersForOwner(brokers: BrokerStatus[]): BrokerStatus[] {
-  return brokers.filter((b) => b.connected || b.id === "booksy");
+  return brokers.filter((b) => b.selfServe || b.connected || b.id.startsWith("import_"));
 }
 
 export function migrationBrokerModeLabel(mode: string): string {
-  if (mode === "csv_only") return "CSV";
-  if (mode === "oauth_stub") return "OAuth";
+  if (mode === "csv_import" || mode === "csv_only") return "CSV";
+  if (mode === "oauth" || mode === "oauth_stub") return "OAuth";
+  if (mode === "webhook_out") return "Webhook";
   return "API";
+}
+
+export function brokerCategory(broker: BrokerStatus): MigrationBrokerCategory {
+  return migrationBrokerMeta(broker).category;
 }

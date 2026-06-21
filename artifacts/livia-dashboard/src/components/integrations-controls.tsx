@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SettingsDisclosure } from "@/components/ui/settings-disclosure";
 import { MigrationBrokersPanel } from "@/components/settings/migration-brokers-panel";
+import { UniversalImportPanel } from "@/components/settings/universal-import-panel";
 import { customFetch } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { invalidateOperationalState } from "@/lib/operational-cache";
@@ -54,30 +55,6 @@ export default function IntegrationsControls() {
   const [keyScopes, setKeyScopes] = useState<string[]>(["bookings:read", "services:read"]);
   const [busy, setBusy] = useState(false);
   const [brokers, setBrokers] = useState<BrokerStatus[]>([]);
-  const [booksyCsv, setBooksyCsv] = useState("");
-  const [booksyResult, setBooksyResult] = useState<{
-    imported: number;
-    skipped: number;
-    errors?: string[];
-  } | null>(null);
-
-  async function importBooksy() {
-    if (!bid || !booksyCsv.trim()) return;
-    setBusy(true);
-    try {
-      const res = await customFetch<{ imported: number; skipped: number; errors?: string[] }>(
-        `/api/businesses/${bid}/import/booksy-csv`,
-        { method: "POST", body: JSON.stringify({ csv: booksyCsv }) },
-      );
-      setBooksyResult(res);
-      toast({ title: `Imported ${res.imported} clients` });
-      invalidateOperationalState(qc, bid);
-    } catch {
-      toast({ title: "Import failed", variant: "destructive" });
-    } finally {
-      setBusy(false);
-    }
-  }
 
   async function load() {
     if (!bid) return;
@@ -188,33 +165,19 @@ export default function IntegrationsControls() {
 
   return (
     <div className="space-y-4">
-      <Card id="booksy-import" className="scroll-mt-24 border-primary/20">
+      <Card id="universal-import-panel" className="scroll-mt-24 border-primary/20">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <FileUp className="h-4 w-4" />
-            Import clients (Booksy CSV)
+            Import from your previous tool
           </CardTitle>
           <CardDescription>
-            The only self-serve import today. Export your client list from Booksy, paste below, and
-            Livia adds new guests — no OAuth setup required.
+            Paste CSV exports — clients, service menu, team, or upcoming appointments. Liv auto-detects
+            columns and completes setup steps for you.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <textarea
-            className="w-full min-h-[120px] rounded-md border bg-muted/30 p-3 text-sm font-mono"
-            placeholder="firstName,lastName,email,phone&#10;Jane,Doe,jane@example.com,+353..."
-            value={booksyCsv}
-            onChange={(e) => setBooksyCsv(e.target.value)}
-          />
-          <Button disabled={busy || !booksyCsv.trim()} onClick={() => void importBooksy()}>
-            Import clients
-          </Button>
-          {booksyResult ? (
-            <p className="text-sm text-muted-foreground">
-              Imported {booksyResult.imported}, skipped {booksyResult.skipped}
-              {booksyResult.errors?.length ? ` — ${booksyResult.errors.join("; ")}` : ""}
-            </p>
-          ) : null}
+        <CardContent>
+          <UniversalImportPanel businessId={bid} />
         </CardContent>
       </Card>
 

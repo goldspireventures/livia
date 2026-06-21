@@ -45,6 +45,8 @@ export const onboardingChecklistSchema = z.object({
   hoursConfirmed: z.boolean().default(false),
   socialChannelsStarted: z.boolean().default(false),
   presentationPresetReviewed: z.boolean().default(false),
+  /** Set when universal CSV import completes during onboarding */
+  migrationImported: z.boolean().default(false),
 });
 
 export type OnboardingChecklist = z.infer<typeof onboardingChecklistSchema>;

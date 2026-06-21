@@ -122,8 +122,8 @@ export function MigrationBrokersPanel({ brokers }: Props) {
 
   const summary =
     connectedCount > 0
-      ? `${connectedCount} workspace broker${connectedCount === 1 ? "" : "s"} configured · Booksy CSV import ready today`
-      : "Booksy CSV import ready today · most OAuth brokers are concierge-led during beta";
+      ? `${connectedCount} workspace integration${connectedCount === 1 ? "" : "s"} configured · CSV import ready`
+      : "CSV import ready today · OAuth paths roll out platform-wide during beta";
 
   return (
     <SettingsDisclosure
@@ -134,10 +134,8 @@ export function MigrationBrokersPanel({ brokers }: Props) {
     >
       <div className="space-y-4 pt-1">
         <p className="text-sm text-muted-foreground leading-relaxed">
-          This is not a connect-everything screen yet. Use{" "}
-          <strong className="font-medium text-foreground">Import clients</strong> for Booksy CSV today.
-          Fresha, Phorest, Square, and others are concierge or platform rollout — the list below shows
-          what is supported and what you can do right now.
+          Paste CSV exports from your previous booking tool. Liv detects columns and imports clients,
+          services, team, and upcoming appointments — then checks off setup steps automatically.
         </p>
 
         <div className="space-y-4">

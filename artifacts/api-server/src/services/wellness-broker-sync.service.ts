@@ -1,4 +1,3 @@
-import type { BrokerId } from "./integration-brokers.service";
 import { getParallelRunDiff } from "./wellness-parallel-run.service";
 import { buildWellnessSettlementCsv } from "./wellness-settlement.service";
 import { getCalendarPoisonAlerts } from "./wellness-ops.service";
@@ -8,12 +7,14 @@ function envConfigured(key: string): boolean {
   return typeof process.env[key] === "string" && process.env[key]!.length > 0;
 }
 
+/** Legacy sync router — accepts old broker slugs and new integration catalog ids. */
 export async function runWellnessBrokerSync(
   businessId: string,
-  brokerId: BrokerId,
+  brokerId: string,
 ): Promise<{ ok: boolean; message: string; payload?: unknown }> {
   switch (brokerId) {
-    case "google_calendar": {
+    case "google_calendar":
+    case "calendar_google": {
       const alerts = await getCalendarPoisonAlerts(businessId);
       return {
         ok: true,
@@ -24,48 +25,62 @@ export async function runWellnessBrokerSync(
       };
     }
     case "stripe":
+    case "payments_stripe":
       return {
         ok: envConfigured("STRIPE_SECRET_KEY"),
         message: envConfigured("STRIPE_WEBHOOK_SECRET")
-          ? "Stripe webhooks active — paid bookings auto-confirm."
+          ? "Payment webhooks active — paid bookings auto-confirm."
           : "Set STRIPE_WEBHOOK_SECRET for live confirm path.",
       };
     case "xero":
-    case "quickbooks": {
+    case "accounting_xero":
+    case "quickbooks":
+    case "accounting_quickbooks": {
       const csv = await buildWellnessSettlementCsv(businessId);
       const rows = csv.split("\n").length - 1;
       return {
         ok: true,
-        message: `${brokerId === "xero" ? "Xero" : "QuickBooks"} settlement export ready (${rows} rows).`,
+        message: `Accounting settlement export ready (${rows} rows).`,
         payload: { rowCount: rows },
       };
     }
     case "fresha":
-    case "mindbody": {
-      const ext = brokerId === "fresha" ? "fresha" : "mindbody";
-      const diff = await getParallelRunDiff(businessId, ext);
+    case "salon_suite_api_read": {
+      const diff = await getParallelRunDiff(businessId, "fresha");
       return {
         ok: true,
-        message: `${brokerId} parallel run diff generated.`,
+        message: "Salon-suite parallel run diff generated.",
         payload: diff,
       };
     }
-    case "mailchimp": {
+    case "mindbody":
+    case "fitness_class_csv": {
+      const diff = await getParallelRunDiff(businessId, "mindbody");
+      return {
+        ok: true,
+        message: "Fitness class parallel run diff generated.",
+        payload: diff,
+      };
+    }
+    case "mailchimp":
+    case "marketing_email_events": {
       const expiring = await listPackageCreditsExpiring(businessId, 30);
       return {
         ok: envConfigured("MAILCHIMP_API_KEY"),
         message: envConfigured("MAILCHIMP_API_KEY")
-          ? `Queued ${expiring.length} expiring-package event(s) for Mailchimp.`
+          ? `Queued ${expiring.length} expiring-package event(s) for email marketing.`
           : "Set MAILCHIMP_API_KEY — expiring package list prepared locally.",
         payload: { expiringCount: expiring.length },
       };
     }
     case "treatwell":
+    case "marketplace_bookings_tag":
       return {
         ok: true,
-        message: "Treatwell-tagged bookings counted in Reports → marketing by source.",
+        message: "Marketplace-tagged bookings counted in Reports → marketing by source.",
       };
     case "whatsapp":
+    case "messaging_whatsapp":
       return {
         ok: envConfigured("META_WHATSAPP_TOKEN"),
         message: envConfigured("META_WHATSAPP_TOKEN")
@@ -73,7 +88,8 @@ export async function runWellnessBrokerSync(
           : "Set META_WHATSAPP_TOKEN for live WhatsApp sends.",
       };
     case "booksy":
-      return { ok: true, message: "Booksy CSV import available in Settings → Integrations." };
+    case "import_clients_csv":
+      return { ok: true, message: "Client CSV import available in Settings → Integrations." };
     default:
       return { ok: true, message: `${brokerId} sync completed.` };
   }

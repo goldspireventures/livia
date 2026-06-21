@@ -123,7 +123,7 @@ export type PublicPolicyTrust = {
   depositPercent?: number;
 };
 
-/** Fresha-style barber/salon vs Acuity-style beauty catalog. */
+/** Category A barber/salon catalog vs Category B beauty treatment catalog layout. */
 export type PublicBookingLayout = "staff-forward" | "catalog";
 
 export function publicBookingLayout(vertical?: string | null): PublicBookingLayout {

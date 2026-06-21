@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Check } from "lucide-react";
 import { ChannelSetupWizard } from "@/components/channel-setup-wizard";
+import { UniversalImportPanel } from "@/components/settings/universal-import-panel";
 import { OnboardingLivReplyStep } from "@/components/onboarding/onboarding-liv-reply-step";
 import type { OnboardingActId } from "@/lib/onboarding-acts";
 import type { OnboardingStatePayload } from "./onboarding-wizard";
@@ -341,6 +342,21 @@ export function OnboardingActForms({
                 }
               })
               .catch(() => {});
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (act === "a11_migration") {
+    return (
+      <div data-testid="onboarding-migration-step">
+        <UniversalImportPanel
+          businessId={businessId}
+          compact
+          onImported={() => {
+            onChecklistChange({ ...checklist, migrationImported: true });
+            onSaved?.();
           }}
         />
       </div>

@@ -62,6 +62,11 @@ export const VERTICAL_DEMO_SHOPS: VerticalShop[] = [
     vertical: "automotive-detailing",
     exclusiveRoutes: [],
   },
+  {
+    slug: "atelier-decor-dublin",
+    vertical: "event-vendors",
+    exclusiveRoutes: ["/event-site"],
+  },
 ];
 
 /** Core tenant routes every vertical must render without error copy */
@@ -81,4 +86,5 @@ export const GATED_ROUTE_SAMPLES = [
   { path: "/classes", allowedVertical: "fitness" },
   { path: "/design-proofs", allowedVertical: "body-art" },
   { path: "/day-packages", allowedVertical: "allied-health" },
+  { path: "/event-site", allowedVertical: "event-vendors" },
 ] as const;

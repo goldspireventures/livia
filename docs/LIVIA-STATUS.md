@@ -3,7 +3,7 @@
 **Updated:** 2026-06-15 (Era 1 D0–D4 engineering wave)  
 **Readiness scores:** `pnpm readiness:score` · [`REPO-VS-BLUEPRINT-GAP-MATRIX.md`](product/REPO-VS-BLUEPRINT-GAP-MATRIX.md)  
 **Read this first** for “are we finished?” — execution sequencing: [`product/LIVIA-MASTER-EXECUTION-PLAN-V3.md`](product/LIVIA-MASTER-EXECUTION-PLAN-V3.md).  
-**GTM + vertical parity:** [`product/GTM-VERTICAL-DEPTH-PROGRAM.md`](product/GTM-VERTICAL-DEPTH-PROGRAM.md).  
+**GTM + vertical parity:** [`product/GTM-VERTICAL-DEPTH-PROGRAM.md`](product/GTM-VERTICAL-DEPTH-PROGRAM.md) · [`product/COMPETITIVE-PARITY-PROGRAM.md`](product/COMPETITIVE-PARITY-PROGRAM.md)  
 **Liv today → JARVIS:** [`product/LIV-OPERATING-SYSTEM.md`](product/LIV-OPERATING-SYSTEM.md) §16.  
 **Guest placement rules:** [`design/GUEST-SURFACE-PLACEMENT-CONTRACT.md`](design/GUEST-SURFACE-PLACEMENT-CONTRACT.md).
 
