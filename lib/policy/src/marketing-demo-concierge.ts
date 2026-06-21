@@ -43,37 +43,20 @@ export type MarketingDemoConciergeEntry = {
   label: string;
   title: string;
   description: string;
-  /** Path under marketing public, or null → gradient placeholder */
+  /** Path under marketing public (`/demo/portal-*.jpg`), or null → placeholder */
   imagePath: string | null;
-  /** G1 trade-card filename stem on app host (`/w2-gateway/cards/{key}.jpg`) when set */
-  g1CardKey: string | null;
   unlocked: boolean;
 };
 
-/** Shared G1 card crops — same assets as W2 gateway (`g1-wedge-web.target.png`). */
-export const MARKETING_CONCIERGE_G1_CARD_KEY: Partial<Record<BusinessVertical, string>> = {
-  beauty: "beauty",
-  wellness: "wellness",
-  hair: "barber",
-  "body-art": "tattoo",
-  medspa: "medspa",
-  "event-vendors": "events",
-};
-
-/** Resolve concierge thumb — prefer app G1 card when dashboard origin known. */
+/** Concierge card thumb — always served from marketing public assets (no G1 mock crops). */
 export function resolveMarketingConciergeThumbUrl(
   vertical: BusinessVertical,
-  opts: { dashboardOrigin?: string; marketingPublicBase?: string },
+  marketingPublicBase: string,
 ): string | null {
   const copy = CONCIERGE_COPY[vertical];
-  const g1Key = MARKETING_CONCIERGE_G1_CARD_KEY[vertical];
-  const dash = opts.dashboardOrigin?.replace(/\/+$/, "");
-  if (g1Key && dash) {
-    return `${dash}/w2-gateway/cards/${g1Key}.jpg`;
-  }
   const path = copy?.imagePath;
   if (!path) return null;
-  const base = opts.marketingPublicBase?.replace(/\/+$/, "") ?? "";
+  const base = marketingPublicBase.replace(/\/+$/, "");
   return `${base}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
@@ -151,7 +134,6 @@ export function listMarketingDemoConciergeEntries(): MarketingDemoConciergeEntry
       title: copy?.title ?? row?.label ?? vertical,
       description: copy?.description ?? row?.revenueNote ?? "",
       imagePath: copy?.imagePath ?? null,
-      g1CardKey: MARKETING_CONCIERGE_G1_CARD_KEY[vertical] ?? null,
       unlocked,
     };
   });

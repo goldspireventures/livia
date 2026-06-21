@@ -4,7 +4,6 @@ import { MarketingLayout } from "@/components/marketing-layout";
 import { ConstellationPageHeader } from "@/components/constellation/constellation-page-header";
 import { ConstellationPageFooter } from "@/components/constellation/constellation-inner-page";
 import { MARKETING_VERTICAL_LINKS } from "@/lib/marketing-verticals";
-import { marketingDemoPath } from "@/lib/marketing-links";
 
 export default function VerticalsIndexPage() {
   return (
@@ -17,7 +16,7 @@ export default function VerticalsIndexPage() {
               Every <em>vertical</em>
             </>
           }
-          subtitle="One platform — set up for your trade with language, booking rules, and flows that match how you work. Request a demo for yours."
+          subtitle="Longer trade stories and pain points — when you want detail before you pick a demo card."
         />
 
         <ul className="cst-verticals__grid">
@@ -36,8 +35,8 @@ export default function VerticalsIndexPage() {
         </ul>
 
         <ConstellationPageFooter>
-          <p>Every trade shares the same basics — your calendar, client history, booking rules, and messages in one place.</p>
-          <Link href={marketingDemoPath} className="cst-page-link" data-testid="marketing-demo-link">
+          <p>Each page explains how Livia fits that trade. When you are ready, book once and walk a live studio.</p>
+          <Link href="/book-demo" className="cst-page-link" data-testid="marketing-demo-link">
             Book a demo →
           </Link>
           <Link href="/" className="cst-page-link cst-page-link--muted">

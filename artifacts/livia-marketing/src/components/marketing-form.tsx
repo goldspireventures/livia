@@ -16,7 +16,8 @@ import {
 } from "@/components/ui/select";
 import { editorialCopy, type MarketingLocale } from "@/lib/marketing-editorial-i18n";
 import { MARKETING_VERTICAL_LINKS } from "@/lib/marketing-verticals";
-import { demoConciergeUrlWithKey, persistDemoGateKey } from "@/lib/marketing-demo-gate-client";
+import { persistDemoGateKey } from "@/lib/marketing-demo-gate-client";
+import { marketingDemoHandoffUrl } from "@/lib/marketing-demo-handoff";
 
 const COUNTRY_OPTIONS = [
   { value: "IE", label: "Ireland" },
@@ -103,7 +104,12 @@ export function MarketingForm({
           });
           if (isDemo && data.demoAccessToken) {
             persistDemoGateKey(data.demoAccessToken);
-            window.location.assign(demoConciergeUrlWithKey(data.demoAccessToken));
+            window.location.assign(
+              marketingDemoHandoffUrl({
+                vertical: values.vertical,
+                gateKey: data.demoAccessToken,
+              }),
+            );
             return;
           }
           setSubmitted(true);

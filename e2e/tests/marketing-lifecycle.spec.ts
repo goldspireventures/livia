@@ -30,7 +30,7 @@ test.describe("Marketing lifecycle", () => {
     await cta.click();
     await page.waitForURL(/\/book-demo/, { timeout: 15_000 });
     await expect(page.getByTestId("waitlist-email")).toBeVisible();
-    await expect(page.getByTestId("waitlist-submit")).toContainText(/request demo/i);
+    await expect(page.getByTestId("waitlist-submit")).toContainText(/demo room/i);
   });
 
   test("wedge continues to demo launcher", async ({ page }) => {

@@ -5,7 +5,7 @@ import { ConstellationPageHeader } from "@/components/constellation/constellatio
 import { ConstellationInnerPage, ConstellationPainList } from "@/components/constellation/constellation-inner-page";
 import { ConstellationGlassCard } from "@/components/constellation/constellation-spine";
 import { MarketingForm } from "@/components/marketing-form";
-import { marketingBookDemoUrl } from "@/lib/marketing-links";
+import { MarketingDemoEntryLink } from "@/components/marketing-demo-entry-link";
 
 const VERTICALS: Record<
   string,
@@ -96,6 +96,8 @@ export default function VerticalPage() {
   const slug = params?.slug ?? "hair";
   const v = VERTICALS[slug] ?? VERTICALS.hair;
 
+  const demoVertical = slug === "tattoo" ? "body-art" : slug === "barber" ? "hair" : slug;
+
   return (
     <MarketingLayout active="Verticals">
       <ConstellationInnerPage narrow>
@@ -118,13 +120,13 @@ export default function VerticalPage() {
         </ConstellationGlassCard>
 
         <p className="mb-12">
-          <Link
-            href={marketingBookDemoUrl(slug === "tattoo" ? "body-art" : slug)}
+          <MarketingDemoEntryLink
+            vertical={demoVertical}
             className="cst-page-link"
-            data-testid="marketing-demo-link"
+            testId="marketing-demo-link"
           >
-            Book a demo for this vertical →
-          </Link>
+            Walk the {v.title.toLowerCase()} demo →
+          </MarketingDemoEntryLink>
         </p>
 
         <section className="cst-page-section pt-8">
