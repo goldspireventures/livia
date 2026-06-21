@@ -251,6 +251,12 @@ router.get("/import/oauth/callback", async (req, res): Promise<void> => {
     expiresAt: tokens.expiresAt,
   });
 
+  if (parsed.brokerId === "calendar_google") {
+    void import("../services/google-calendar-sync.service").then((m) =>
+      m.runGoogleCalendarSync(parsed.businessId),
+    );
+  }
+
   res.redirect(`${dashboardBase}/settings?tab=integrations&oauth=connected&broker=${parsed.brokerId}`);
 });
 

@@ -1,6 +1,5 @@
 import { getParallelRunDiff } from "./wellness-parallel-run.service";
 import { buildWellnessSettlementCsv } from "./wellness-settlement.service";
-import { getCalendarPoisonAlerts } from "./wellness-ops.service";
 import { listPackageCreditsExpiring } from "./wellness-reports.service";
 
 function envConfigured(key: string): boolean {
@@ -15,13 +14,12 @@ export async function runWellnessBrokerSync(
   switch (brokerId) {
     case "google_calendar":
     case "calendar_google": {
-      const alerts = await getCalendarPoisonAlerts(businessId);
+      const { runGoogleCalendarSync } = await import("./google-calendar-sync.service");
+      const result = await runGoogleCalendarSync(businessId);
       return {
-        ok: true,
-        message: envConfigured("GOOGLE_OAUTH_CLIENT_ID")
-          ? `Calendar poll complete — ${alerts.alerts?.length ?? 0} poison alert(s).`
-          : "Set GOOGLE_OAUTH_CLIENT_ID — poison alert stub ran against room holds.",
-        payload: alerts,
+        ok: result.ok,
+        message: result.message,
+        payload: result,
       };
     }
     case "stripe":

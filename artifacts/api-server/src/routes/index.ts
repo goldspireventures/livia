@@ -59,6 +59,7 @@ import wellnessRouter from "./wellness";
 import beautyRouter from "./beauty";
 import hairRouter from "./hair";
 import alliedHealthRouter from "./allied-health";
+import calendarRouter from "./calendar";
 import consultFirstRouter from "./consult-first";
 
 const router: IRouter = Router();
@@ -106,6 +107,7 @@ router.use(payrollRouter);
 router.use(staffShiftsRouter);
 router.use(shiftTemplatesRouter);
 router.use(importRouter);
+router.use(calendarRouter);
 router.use(integrationBrokersRouter);
 router.use(classSessionsRouter);
 router.use(packageCreditsRouter);

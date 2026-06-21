@@ -564,6 +564,12 @@ export async function createBooking(
     booking: result as Parameters<typeof sendBookingConfirmationEmail>[0]["booking"],
   });
 
+  if (inserted.status === "CONFIRMED" || inserted.status === "PENDING") {
+    void import("./google-calendar-sync.service").then((m) =>
+      m.pushBookingToGoogleCalendar(businessId, inserted.id),
+    );
+  }
+
   return result;
 }
 
@@ -678,6 +684,15 @@ export async function updateBookingStatus(
         customerId: existing.customerId!,
         serviceId: existing.serviceId,
       }),
+    );
+  }
+
+  if (
+    (updates.status === "CONFIRMED" && existing.status !== "CONFIRMED") ||
+    (updates.status === "PENDING" && existing.status !== "PENDING")
+  ) {
+    void import("./google-calendar-sync.service").then((m) =>
+      m.pushBookingToGoogleCalendar(businessId, existing.id),
     );
   }
 

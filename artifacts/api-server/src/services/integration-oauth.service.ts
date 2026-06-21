@@ -25,7 +25,7 @@ export const OAUTH_BROKER_CONFIGS: Record<string, OAuthBrokerConfig> = {
   calendar_google: {
     authUrl: "https://accounts.google.com/o/oauth2/v2/auth",
     tokenUrl: "https://oauth2.googleapis.com/token",
-    scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
+    scopes: ["https://www.googleapis.com/auth/calendar"],
     clientIdEnv: "GOOGLE_OAUTH_CLIENT_ID",
     clientSecretEnv: "GOOGLE_OAUTH_CLIENT_SECRET",
     extraAuthParams: { access_type: "offline", prompt: "consent" },

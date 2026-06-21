@@ -482,6 +482,15 @@ export default function SettingsScreen() {
               chrome={chrome}
             >
               <CommsChannelsBlock businessId={bid} comms={comms} loading={commsLoading} />
+              <Pressable
+                onPress={() => void Linking.openURL(dashboardSettingsUrl("integrations", bid))}
+                style={[styles.navBtn, { borderColor: colors.border, marginTop: 8 }]}
+              >
+                <Text style={[styles.navBtnText, { color: colors.primary }]}>
+                  Calendar sync & migrations
+                </Text>
+                <Feather name="external-link" size={18} color={colors.primary} />
+              </Pressable>
             </CollapsibleSettingsSection>
           ) : null}
 

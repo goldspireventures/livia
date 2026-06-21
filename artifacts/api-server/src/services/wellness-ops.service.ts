@@ -218,22 +218,11 @@ export async function getTodayRunSheet(businessId: string) {
 }
 
 export async function getCalendarPoisonAlerts(businessId: string) {
-  const brokers = await import("./integration-brokers.service").then((m) =>
-    m.listIntegrationBrokers(businessId),
-  );
-  const gcal = brokers.find((b) => b.id === "google_calendar");
-  if (gcal?.connected) {
-    return { alerts: [], note: "Google Calendar sync job queued — conflicts surface after first sync." };
-  }
+  const { detectCalendarConflicts } = await import("./google-calendar-sync.service");
+  const alerts = await detectCalendarConflicts(businessId);
   return {
-    alerts: [
-      {
-        severity: "info" as const,
-        message:
-          "Google Calendar not connected. Personal therapist calendars may disagree with the room board.",
-      },
-    ],
-    note: "Connect GOOGLE_OAUTH_CLIENT_ID to enable poison alerts.",
+    alerts,
+    note: alerts.length === 0 ? "Calendar in sync — no conflicts detected." : undefined,
   };
 }
 
