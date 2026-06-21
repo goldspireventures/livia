@@ -7,6 +7,7 @@
 import { test } from "@playwright/test";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { signInBusiness } from "../helpers/demo-auth";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = path.join(__dirname, "..", "visual-captures", "mobile-web");
@@ -22,17 +23,6 @@ const OWNER_ROUTES = [
   "/settings",
   "/settings?tab=comms",
 ];
-
-async function signInOwner(page: import("@playwright/test").Page) {
-  const res = await page.request.post(`${apiBase}/api/demo/sign-in`, { data: { persona: "owner" } });
-  if (!res.ok()) throw new Error(`sign-in failed ${res.status()}`);
-  const { token } = (await res.json()) as { token?: string };
-  if (!token) throw new Error("no token");
-  await page.goto(`/sign-in?__clerk_ticket=${encodeURIComponent(token)}`, {
-    waitUntil: "networkidle",
-  });
-  await page.waitForURL(/\/(dashboard|inbox)/, { timeout: 45_000 });
-}
 
 // Chromium mobile emulation (no WebKit install required on Windows).
 test.use({
@@ -74,7 +64,7 @@ test.describe("Mobile viewport (web responsive)", () => {
   }
 
   test("owner tenant mobile routes", async ({ page }) => {
-    await signInOwner(page);
+    await signInBusiness(page, demoSlug);
     for (const route of OWNER_ROUTES) {
       await page.goto(route, { waitUntil: "networkidle" });
       await page.waitForTimeout(600);

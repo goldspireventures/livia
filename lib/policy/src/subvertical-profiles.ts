@@ -65,6 +65,11 @@ const PROFILES: SubverticalProfile[] = [
   { id: "event.wedding", vertical: "event-vendors", label: "Wedding vendor", description: "Date-bound quotes and milestones", defaultOrgShape: "solo" },
 ];
 
+/** All onboarding profiles — one roster row per id in demo world. */
+export function listAllSubverticalProfiles(): SubverticalProfile[] {
+  return [...PROFILES];
+}
+
 export function listSubverticalProfiles(vertical: BusinessVertical): SubverticalProfile[] {
   return PROFILES.filter((p) => p.vertical === vertical);
 }

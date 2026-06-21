@@ -306,7 +306,7 @@ async function seedEndClient(client: DemoEndClient): Promise<{
   return { guestId, shopsLinked, upcomingEnsured };
 }
 
-/** Mary-specific vertical artifacts so `/my` morph panels are populated across all 9 showcase shops. */
+/** Mary-specific vertical artifacts so `/my` morph panels are populated across all showcase shops. */
 async function ensureMaryGuestHubArtifacts(): Promise<{ shopsTouched: number }> {
   const mary = getDemoEndClient("mary");
   let shopsTouched = 0;

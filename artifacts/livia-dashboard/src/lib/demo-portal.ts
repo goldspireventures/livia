@@ -37,10 +37,22 @@ export type DemoBusinessTenant = {
   name: string;
   vertical?: string | null;
   country?: string | null;
+  subverticalProfileId?: string | null;
   ownerEmail: string;
   ownerPersonaId?: DemoPersonaId | null;
   publicBookingUrl: string;
   roster?: DemoRosterEntry[];
+};
+
+export type DemoSubverticalShowcase = {
+  subverticalProfileId: string;
+  label: string;
+  description: string;
+  vertical: string | null;
+  slug: string;
+  name: string;
+  city: string;
+  guestPath: string;
 };
 
 export type DemoRosterEntry = {
@@ -115,6 +127,7 @@ export async function fetchDemoCatalog() {
     passwordHint?: string;
     sharedPassword?: string;
     devPassword?: string;
+    subverticalShowcase?: DemoSubverticalShowcase[];
   }>("/demo/catalog");
 }
 

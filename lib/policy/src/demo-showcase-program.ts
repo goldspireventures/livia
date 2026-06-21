@@ -3,6 +3,12 @@
  * API seed/repair reads here; never fork slug→profile maps in services.
  */
 import { DEMO_OPERATOR_EXPERIENCE } from "./demo-guest-world";
+import {
+  DEMO_WORLD_SCENARIO_SLUGS,
+  listDemoSubverticalRoster,
+  listDemoWorldSlugs,
+  rosterEntryForSlug,
+} from "./demo-subvertical-roster";
 import { VERTICAL_COVERAGE_REGISTRY } from "./vertical-coverage";
 import {
   defaultSubverticalProfile,
@@ -18,77 +24,57 @@ export type DemoShowcaseBusinessSpec = {
   tier?: BusinessTier;
 };
 
-/** Chain + scenario slugs not carried on VERTICAL_COVERAGE_REGISTRY rows alone. */
-const EXTRA_DEMO_SHOWCASE: Array<{ slug: string; vertical: BusinessVertical }> = [
-  { slug: "aurora-studio", vertical: "hair" },
-  { slug: "aurora-mews", vertical: "hair" },
-  { slug: "aurora-galway", vertical: "hair" },
-  { slug: "conors-cut-co", vertical: "hair" },
-  { slug: "stoneybatter-cuts", vertical: "hair" },
-  { slug: "dublin-barber-collective", vertical: "hair" },
-  { slug: "dundrum-hair-studio", vertical: "hair" },
-  { slug: "dundrum-serenity-spa", vertical: "wellness" },
-];
-
-/**
- * Narrative subvertical per slug — overrides defaultSubverticalProfile(vertical).
- * Operator archetypes (DEMO_OPERATOR_EXPERIENCE) win when present.
- */
-const SUBVERTICAL_BY_SLUG: Partial<Record<string, SubverticalProfileId>> = {
-  "luxe-salon-spa": "hair.salon",
-  "conors-cut-co": "hair.barber",
+/** Narrative slugs — partner tracks and locale shops (may duplicate a profile showcase). */
+const SCENARIO_SUBVERTICAL_BY_SLUG: Partial<Record<string, SubverticalProfileId>> = {
   "aurora-studio": "hair.salon",
   "aurora-mews": "hair.salon",
   "aurora-galway": "hair.salon",
+  "stoneybatter-cuts": "hair.barber",
+  "dublin-barber-collective": "hair.barber",
   "dundrum-hair-studio": "hair.salon",
-  "bloom-beauty-dublin": "beauty.lash",
-  "harbour-wellness-cork": "wellness.massage",
-  "copenhagen-havn-wellness": "wellness.spa",
   "dundrum-serenity-spa": "wellness.massage",
-  "ink-anchor-galway": "body_art.custom",
-  "peak-fitness-dublin": "fitness.pt",
-  "clarity-medspa-dublin": "medspa.injectables",
-  "motion-physio-cork": "allied.physio",
-  "paws-parlour-dublin": "pet.salon",
-  "shine-studio-belfast": "auto.detail",
-  "atelier-decor-dublin": "event.decor",
+  "london-rose-spa": "hair.salon",
+  "berlin-studio-neun": "hair.barber",
+  "paris-belle-vue": "beauty.multi",
 };
 
-const TIER_BY_SLUG: Partial<Record<string, BusinessTier>> = {
-  "conors-cut-co": "solo",
-  "stoneybatter-cuts": "solo",
-  "dundrum-serenity-spa": "solo",
-  "atelier-decor-dublin": "solo",
-  "dublin-barber-collective": "studio",
-  "dundrum-hair-studio": "studio",
-  "aurora-studio": "studio",
-  "aurora-mews": "studio",
-  "aurora-galway": "studio",
-  "luxe-salon-spa": "studio",
-  "bloom-beauty-dublin": "studio",
-  "harbour-wellness-cork": "studio",
-  "copenhagen-havn-wellness": "studio",
-  "ink-anchor-galway": "studio",
-  "clarity-medspa-dublin": "studio",
-  "motion-physio-cork": "studio",
-  "peak-fitness-dublin": "studio",
-  "paws-parlour-dublin": "studio",
-  "shine-studio-belfast": "studio",
-};
+function rosterMaps() {
+  const subverticalBySlug: Partial<Record<string, SubverticalProfileId>> = {
+    ...SCENARIO_SUBVERTICAL_BY_SLUG,
+  };
+  const tierBySlug: Partial<Record<string, BusinessTier>> = {};
+  for (const row of listDemoSubverticalRoster()) {
+    subverticalBySlug[row.slug] = row.subverticalProfileId;
+    if (row.tier) tierBySlug[row.slug] = row.tier;
+    if (row.childLocation) {
+      subverticalBySlug[row.childLocation.slug] = row.subverticalProfileId;
+      if (row.tier) tierBySlug[row.childLocation.slug] = row.tier;
+    }
+  }
+  return { subverticalBySlug, tierBySlug };
+}
+
+const { subverticalBySlug: SUBVERTICAL_BY_SLUG, tierBySlug: TIER_BY_SLUG } = rosterMaps();
 
 function operatorSpecForSlug(slug: string) {
   return Object.values(DEMO_OPERATOR_EXPERIENCE).find((o) => o.slug === slug) ?? null;
 }
 
 function verticalForSlug(slug: string): BusinessVertical | null {
+  const roster = rosterEntryForSlug(slug);
+  if (roster) {
+    return getSubverticalProfile(roster.subverticalProfileId)?.vertical ?? null;
+  }
   const registry = VERTICAL_COVERAGE_REGISTRY.find((r) => r.demoSlug === slug);
   if (registry?.codeVertical) return registry.codeVertical;
-  const extra = EXTRA_DEMO_SHOWCASE.find((e) => e.slug === slug);
-  if (extra) return extra.vertical;
   const op = operatorSpecForSlug(slug);
   if (op) {
     const profile = getSubverticalProfile(op.subverticalProfileId);
     return profile?.vertical ?? null;
+  }
+  if ((DEMO_WORLD_SCENARIO_SLUGS as readonly string[]).includes(slug)) {
+    const profileId = SCENARIO_SUBVERTICAL_BY_SLUG[slug];
+    if (profileId) return getSubverticalProfile(profileId)?.vertical ?? null;
   }
   return null;
 }
@@ -125,16 +111,11 @@ export function isKnownDemoShowcaseSlug(slug: string): boolean {
   return resolveDemoShowcaseBusinessSpec(slug) != null;
 }
 
-/** All policy-known demo showcase slugs (registry + extras + operator tracks). */
+/** All policy-known demo showcase slugs (roster + scenario extras). */
 export function listDemoShowcaseBusinessSpecs(): DemoShowcaseBusinessSpec[] {
-  const slugs = new Set<string>();
-  for (const row of VERTICAL_COVERAGE_REGISTRY) {
-    if (row.demoSlug) slugs.add(row.demoSlug);
-  }
-  for (const extra of EXTRA_DEMO_SHOWCASE) slugs.add(extra.slug);
-  for (const op of Object.values(DEMO_OPERATOR_EXPERIENCE)) slugs.add(op.slug);
-  return [...slugs]
+  return listDemoWorldSlugs()
     .map((slug) => resolveDemoShowcaseBusinessSpec(slug))
-    .filter((s): s is DemoShowcaseBusinessSpec => s != null)
-    .sort((a, b) => a.slug.localeCompare(b.slug));
+    .filter((s): s is DemoShowcaseBusinessSpec => s != null);
 }
+
+export { listDemoWorldSlugs, listDemoSubverticalRoster } from "./demo-subvertical-roster";

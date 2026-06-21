@@ -34,6 +34,7 @@ import {
   type DemoScenarioSpotlight,
   type DemoPartnerTrack,
   type DemoSignInResult,
+  type DemoSubverticalShowcase,
 } from "@/lib/demo-portal";
 import { useToast } from "@/hooks/use-toast";
 import { completeDemoPortalSignIn } from "@/lib/demo/complete-demo-portal-sign-in";
@@ -69,6 +70,7 @@ const VERTICAL_LABELS: Record<string, string> = {
   "allied-health": "Allied health",
   fitness: "Fitness",
   "event-vendors": "Event vendors",
+  "automotive-detailing": "Auto detailing",
   general: "Multi-market",
 };
 
@@ -112,6 +114,7 @@ export default function DemoLauncher() {
   const [catalog, setCatalog] = useState<DemoCatalogPersona[]>([]);
   const [scenarios, setScenarios] = useState<DemoScenarioSpotlight[]>([]);
   const [partnerTracks, setPartnerTracks] = useState<DemoPartnerTrack[]>([]);
+  const [subverticalShowcase, setSubverticalShowcase] = useState<DemoSubverticalShowcase[]>([]);
   const [tenants, setTenants] = useState<DemoBusinessTenant[]>([]);
   const [provisioned, setProvisioned] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
@@ -139,6 +142,7 @@ export default function DemoLauncher() {
         sharedPassword: undefined,
         scenarios: [],
         partnerTracks: [],
+        subverticalShowcase: [],
       })),
       fetchDemoStatus().catch((e: unknown) => {
         const msg = e instanceof Error ? e.message : "Demo status unreachable";
@@ -149,6 +153,7 @@ export default function DemoLauncher() {
     setCatalog(cat.personas);
     setScenarios(cat.scenarios ?? []);
     setPartnerTracks(cat.partnerTracks ?? []);
+    setSubverticalShowcase(cat.subverticalShowcase ?? []);
     // Only show a password if the API explicitly returns one.
     // Never fall back to a hardcoded shared password on the client.
     setDevPassword(cat.sharedPassword ?? cat.devPassword ?? undefined);
@@ -378,6 +383,27 @@ export default function DemoLauncher() {
 
   const filterPending = tenantFilter !== deferredFilter;
 
+  const tenantBySlug = useMemo(() => new Map(tenants.map((t) => [t.slug, t])), [tenants]);
+
+  const subverticalByVertical = useMemo(
+    () =>
+      subverticalShowcase.reduce<Record<string, DemoSubverticalShowcase[]>>((acc, row) => {
+        const key = verticalGroupKey(row.vertical);
+        (acc[key] ??= []).push(row);
+        return acc;
+      }, {}),
+    [subverticalShowcase],
+  );
+
+  const subverticalSections = useMemo(
+    () =>
+      Object.keys(subverticalByVertical).sort((a, b) => {
+        const order = Object.keys(VERTICAL_LABELS);
+        return order.indexOf(a) - order.indexOf(b);
+      }),
+    [subverticalByVertical],
+  );
+
   async function enterPersona(personaId: DemoPersonaId) {
     if (!provisioned && personaId !== "customer") {
       toast({
@@ -579,6 +605,78 @@ export default function DemoLauncher() {
                 </>
               ) : null}
             </>
+          )}
+        </section>
+
+        <section
+          className={`mb-10 ${!provisioned ? "opacity-60" : ""}`}
+          data-testid="demo-subvertical-catalog"
+        >
+          <h2 className="text-xs font-mono uppercase tracking-widest text-white/40 mb-2">
+            Every business type · {subverticalShowcase.length || "…"} onboarding profiles
+          </h2>
+          <p className="text-sm text-white/50 mb-4 max-w-2xl">
+            One live demo tenant per sub-vertical — the same menu and flows you get when you onboard.
+            Sign in as owner or open public booking without picking a scenario first.
+          </p>
+          {!provisioned ? (
+            <p className="text-sm text-amber-200/80">Run setup on step 1 — then all profiles appear here.</p>
+          ) : subverticalShowcase.length === 0 ? (
+            <p className="text-sm text-white/45">Catalog loading…</p>
+          ) : (
+            <div className="space-y-5 max-h-[min(520px,60vh)] overflow-y-auto pr-1">
+              {subverticalSections.map((vKey) => (
+                <div key={vKey}>
+                  <h3 className="text-[10px] font-mono uppercase tracking-wider text-[#a78bfa]/90 mb-2 sticky top-0 bg-[#09090b]/95 py-1 z-10">
+                    {VERTICAL_LABELS[vKey] ?? vKey}
+                  </h3>
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    {(subverticalByVertical[vKey] ?? [])
+                      .sort((a, b) => a.label.localeCompare(b.label))
+                      .map((row) => {
+                        const tenant = tenantBySlug.get(row.slug);
+                        const ownerEmail =
+                          tenant?.roster?.find((r) => r.role === "owner")?.email ?? tenant?.ownerEmail;
+                        const ownerBusy = ownerEmail ? busy === `${row.slug}:${ownerEmail}` : false;
+                        const guestUrl = tenant?.publicBookingUrl ?? row.guestPath;
+                        return (
+                          <div
+                            key={row.subverticalProfileId}
+                            className="rounded-xl border border-white/10 bg-white/[0.03] p-3 flex flex-col gap-2"
+                            data-testid={`demo-subvertical-${row.subverticalProfileId}`}
+                          >
+                            <div>
+                              <p className="text-sm font-medium text-white">{row.label}</p>
+                              <p className="text-[11px] text-white/45 mt-0.5">{row.name}</p>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5 mt-auto">
+                              {ownerEmail ? (
+                                <button
+                                  type="button"
+                                  disabled={!!busy}
+                                  onClick={() => void quickEnterEmail(ownerEmail, `${row.slug}:${ownerEmail}`)}
+                                  className="rounded-md border border-white/15 px-2 py-1 text-[10px] text-white/85 hover:bg-white/5 disabled:opacity-60"
+                                >
+                                  {ownerBusy ? "Signing in…" : "Owner"}
+                                </button>
+                              ) : null}
+                              <a
+                                href={guestUrl.startsWith("http") ? guestUrl : `${window.location.origin}${guestUrl}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 rounded-md border border-white/15 px-2 py-1 text-[10px] text-white/70 hover:bg-white/5"
+                              >
+                                Guest book
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </section>
 

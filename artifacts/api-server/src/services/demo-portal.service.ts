@@ -21,8 +21,10 @@ import {
   ONBOARDING_ACT_IDS,
   onboardingChecklistSchema,
   listDemoPartnerTracks,
+  listDemoSubverticalRoster,
   resolveDemoShowcaseBusinessSpec,
   resolveDemoShowcaseTier,
+  getSubverticalProfile,
   type DemoPartnerLoginKind,
 } from "@workspace/policy";
 import { DEMO_ROLE_EMAILS } from "@workspace/demo-logins";
@@ -64,6 +66,7 @@ import { seedDemoInbox, seedExpandedBookings } from "./demo-inbox.seed";
 import { seedDemoAuditTrail } from "./demo-audit.seed";
 import { seedRealWorldScenarios, REAL_WORLD_PREMISES_SLUG } from "./demo-real-world-scenarios.seed";
 import { seedVerticalShowcaseShops } from "./demo-vertical-shops.seed";
+import { seedSubverticalShowcaseShops } from "./demo-subvertical-shops.seed";
 import { seedMarketShowcaseShops } from "./demo-market-shops.seed";
 import { seedDemoLivSignalsForBusinesses } from "./demo-liv-signals.seed";
 import { ensureLiveDayForBusiness, refreshDemoLiveDaysForSlugs } from "./demo-live-day.service";
@@ -185,7 +188,15 @@ async function ensureClerkUser(
     await syncDemoClerkUser(clerk, created.id, { email: def.email, password });
     return created.id;
   } catch (err) {
-    throw formatClerkDemoError(err);
+    const formatted = formatClerkDemoError(err) as Error & { status?: number };
+    if (
+      formatted.status === 429 ||
+      /too many requests/i.test(formatted.message ?? "")
+    ) {
+      logger.warn({ email: def.email }, "demo.clerk.rate_limited_skip_create");
+      return null;
+    }
+    throw formatted;
   }
 }
 
@@ -837,6 +848,7 @@ export async function provisionDemoWorld(opts?: {
   });
 
   const verticalShowcase = await seedVerticalShowcaseShops(orgAdminId);
+  const subverticalShowcase = await seedSubverticalShowcaseShops(orgAdminId);
   await ensureDemoOperationalCases(auroraStudio.id, auroraStudio.slug, {});
   await seedVerticalDemoExtras();
   const marketShowcase = await seedMarketShowcaseShops(orgAdminId);
@@ -853,6 +865,7 @@ export async function provisionDemoWorld(opts?: {
     { id: auroraStudio.id, core: studioSeed },
     { id: conorsCut.id, core: conorsSeed },
     ...verticalShowcase.map((v) => ({ id: v.id, core: null as typeof studioSeed | null })),
+    ...subverticalShowcase.map((v) => ({ id: v.id, core: null as typeof studioSeed | null })),
   ]) {
     if (!shop.core) {
       await ensureLiveDayForBusiness(shop.id, { force: true });
@@ -872,6 +885,7 @@ export async function provisionDemoWorld(opts?: {
     auroraGalway.id,
     conorsCut.id,
     ...verticalShowcase.map((v) => v.id),
+    ...subverticalShowcase.map((v) => v.id),
     ...marketShowcase.map((m) => m.id),
     ...realWorld.businesses.map((b) => b.id),
   ];
@@ -1092,6 +1106,18 @@ export async function syncDemoWorld(): Promise<{
     logger.warn({ err }, "demo.guest_hub.sync_failed");
   }
 
+  try {
+    const orgAdminDef = DEMO_PERSONAS.find((p) => p.id === "org_admin");
+    if (orgAdminDef) {
+      const orgAdminId = await ensureClerkUser(orgAdminDef, { create: false });
+      if (orgAdminId) {
+        await seedRealWorldScenarios(orgAdminId);
+      }
+    }
+  } catch (err) {
+    logger.warn({ err }, "demo.real_world.sync_failed");
+  }
+
   const refreshed = await getDemoPortalStatus();
   return {
     mode: "sync",
@@ -1196,6 +1222,7 @@ export async function getDemoPortalStatus(): Promise<{
       vertical: businessesTable.vertical,
       country: businessesTable.country,
       tier: businessesTable.tier,
+      subverticalProfileId: businessesTable.subverticalProfileId,
       parentBusinessId: businessesTable.parentBusinessId,
     })
     .from(businessesTable)
@@ -1203,10 +1230,12 @@ export async function getDemoPortalStatus(): Promise<{
   const dashboardBase = getDashboardUrl();
   const internalBase = getInternalUrl();
   const marketingBase = getMarketingUrl();
+  const rosterSlugs = new Set(listDemoSubverticalRoster().map((r) => r.slug));
+  const rowSlugs = new Set(rows.map((r) => r.slug));
   return {
     provisioned:
       rows.some((r) => r.slug === "aurora-studio") &&
-      rows.length >= DEMO_WORLD_SLUGS.length - 2,
+      [...rosterSlugs].every((slug) => rowSlugs.has(slug)),
     businesses: rows
       .map((r) => {
         const chainHq = isDemoChainHqSlug(r.slug);
@@ -1216,6 +1245,10 @@ export async function getDemoPortalStatus(): Promise<{
           name: r.name,
           vertical: r.vertical,
           country: r.country,
+          subverticalProfileId:
+            r.subverticalProfileId ??
+            resolveDemoShowcaseBusinessSpec(r.slug)?.subverticalProfileId ??
+            null,
           ownerEmail: resolveRosterOwnerEmail(r.slug, chainHq),
           ownerPersonaId: chainHq ? ("org_admin" as const) : null,
           publicBookingUrl:
@@ -1286,6 +1319,22 @@ export function getDemoCatalog() {
       otpHint: "000000 in dev/staging",
     })),
     operatorExperience: DEMO_OPERATOR_EXPERIENCE,
+    subverticalShowcase: listDemoSubverticalRoster().map((row) => {
+      const profile = getSubverticalProfile(row.subverticalProfileId);
+      return {
+        subverticalProfileId: row.subverticalProfileId,
+        label: profile?.label ?? row.subverticalProfileId,
+        description: profile?.description ?? "",
+        vertical: profile?.vertical ?? null,
+        slug: row.slug,
+        name: row.name,
+        city: row.city,
+        guestPath:
+          profile?.vertical === "event-vendors"
+            ? `/e/${row.slug}/enquire`
+            : resolveGuestBookUrl(row.slug),
+      };
+    }),
     /** @deprecated use sharedPassword */
     devPassword: demoResponsesMayIncludeSecrets() ? getDemoPassword() : undefined,
   };
@@ -1311,14 +1360,19 @@ export async function syncVerticalShowcaseForDemo(): Promise<{
     });
   }
   const status = await getDemoPortalStatus();
-  if (!status.provisioned) {
-    throw Object.assign(new Error("Demo not provisioned"), { status: 409 });
+  if (!status.businesses.some((b) => b.slug === "aurora-studio")) {
+    throw Object.assign(new Error("Demo not provisioned — run POST /api/demo/provision first"), {
+      status: 409,
+    });
   }
   const before = new Set(status.businesses.map((b) => b.slug));
   const businesses = await seedVerticalShowcaseShops(orgAdminId);
+  const subvertical = await seedSubverticalShowcaseShops(orgAdminId);
   await seedVerticalDemoExtras();
-  await seedMarketShowcaseShops(orgAdminId);
-  for (const b of businesses) {
+  const marketShowcase = await seedMarketShowcaseShops(orgAdminId);
+  const realWorld = await seedRealWorldScenarios(orgAdminId);
+  await seedCountryDepthOnMarketShops();
+  for (const b of [...businesses, ...subvertical, ...marketShowcase, ...realWorld.businesses]) {
     if (!before.has(b.slug)) {
       await ensureLiveDayForBusiness(b.id, { force: true });
     }
@@ -1327,20 +1381,25 @@ export async function syncVerticalShowcaseForDemo(): Promise<{
       await ensureDemoOperationalCases(b.id, b.slug, {});
     }
   }
-  const addedNew = businesses.some((b) => !before.has(b.slug));
+  const merged = [...businesses, ...subvertical, ...marketShowcase, ...realWorld.businesses];
+  const addedNew = merged.some((b) => !before.has(b.slug));
   if (addedNew) {
     try {
+      await seedDemoBusinessRosters();
       await syncAllDemoClerkUsers();
     } catch (e) {
       logger.warn({ err: e }, "Clerk sync skipped after vertical showcase sync (rate limit or offline)");
     }
   }
+  const { syncAllDemoShowcaseMetaAndRetail } = await import("./demo-showcase-sync.service");
+  await syncAllDemoShowcaseMetaAndRetail();
+  const refreshed = await getDemoPortalStatus();
   return {
-    businesses: businesses.map((b) => ({
+    businesses: refreshed.businesses.map((b) => ({
       slug: b.slug,
       id: b.id,
       name: b.name,
-      vertical: b.vertical,
+      vertical: b.vertical ?? "",
     })),
   };
 }

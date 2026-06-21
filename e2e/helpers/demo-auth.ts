@@ -52,7 +52,17 @@ export async function ensureDemoProvisioned(request: APIRequestContext) {
       .post(`${apiBase}/api/demo/sync-twin-intel`, { timeout: 60_000 })
       .catch(() => undefined);
     await request.post(`${apiBase}/api/demo/sync-clerk`, { timeout: 180_000 }).catch(() => undefined);
+    await request
+      .post(`${apiBase}/api/demo/sync-vertical-showcase`, { timeout: 180_000 })
+      .catch(() => undefined);
     return;
+  }
+
+  const rosterMin = 36;
+  const businessCount = (body as { businesses?: unknown[] }).businesses?.length ?? 0;
+  if (businessCount < rosterMin) {
+    await request.post(`${apiBase}/api/demo/sync-vertical-showcase`, { timeout: 180_000 }).catch(() => undefined);
+    await request.post(`${apiBase}/api/demo/sync-clerk`, { timeout: 180_000 }).catch(() => undefined);
   }
 
   if (process.env.E2E_DEMO_FULL_SYNC === "1") {

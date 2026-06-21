@@ -37,6 +37,10 @@ const VERTICAL_ARTIFACT_EXPECT: Record<
   fitness: (a) => Boolean(a?.fitnessStatus),
   "pet-grooming": (a) => Array.isArray(a?.pets) && (a.pets as unknown[]).length > 0,
   "automotive-detailing": (a) => typeof a?.vehicleHighlight === "string" && a.vehicleHighlight.length > 3,
+  "event-vendors": (a) =>
+    Array.isArray(a?.consentItems) ||
+    Boolean(a?.carePlan) ||
+    Boolean(a?.preferredStylist),
 };
 
 test.describe("Innovation P0 — cross-platform", () => {

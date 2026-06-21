@@ -33,6 +33,7 @@ export const DEMO_GUEST_SHOWCASE_SLUGS = [
   "peak-fitness-dublin",
   "paws-parlour-dublin",
   "shine-studio-belfast",
+  "atelier-decor-dublin",
 ] as const;
 
 /** Operator archetypes for manual + automated Liv checks */
@@ -81,6 +82,7 @@ export const MARY_GUEST_HUB_UPCOMING_DAYS: Record<string, number> = {
   "peak-fitness-dublin": 11,
   "paws-parlour-dublin": 12,
   "shine-studio-belfast": 16,
+  "atelier-decor-dublin": 19,
 };
 
 export const DEMO_END_CLIENTS: DemoEndClient[] = [
@@ -92,7 +94,7 @@ export const DEMO_END_CLIENTS: DemoEndClient[] = [
     displayName: "Mary McNamara",
     email: "mary.m@email.ie",
     story:
-      "Multi-vertical regular — colour, lash, spa, tattoo consult, physio plan. Tests `/my` vault breadth.",
+      "Multi-vertical regular — colour, lash, spa, tattoo consult, physio plan, event decor quote. Tests `/my` vault breadth.",
     linkedSlugs: DEMO_GUEST_SHOWCASE_SLUGS,
     upcomingDaysBySlug: MARY_GUEST_HUB_UPCOMING_DAYS,
     packageCreditSlugs: ["harbour-wellness-cork", "peak-fitness-dublin"],

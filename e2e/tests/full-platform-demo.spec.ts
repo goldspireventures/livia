@@ -4,21 +4,16 @@
  *   pnpm --filter @workspace/e2e exec playwright test tests/full-platform-demo.spec.ts
  */
 import { test, expect } from "@playwright/test";
+import { listDemoSubverticalRoster } from "@workspace/policy";
 
 const apiBase = process.env.E2E_API_BASE ?? "http://127.0.0.1:3000";
 
-const REQUIRED_SLUGS = [
+const ROSTER_SLUGS = listDemoSubverticalRoster().map((r) => r.slug);
+
+const SCENARIO_SLUGS = [
   "aurora-studio",
   "aurora-mews",
   "aurora-galway",
-  "conors-cut-co",
-  "bloom-beauty-dublin",
-  "harbour-wellness-cork",
-  "ink-anchor-galway",
-  "paws-parlour-dublin",
-  "clarity-medspa-dublin",
-  "motion-physio-cork",
-  "peak-fitness-dublin",
   "stoneybatter-cuts",
   "dublin-barber-collective",
   "dundrum-hair-studio",
@@ -33,13 +28,23 @@ test.describe("Full platform demo — API", () => {
     const status = await request.get(`${apiBase}/api/demo/status`);
     const body = status.ok() ? await status.json() : { provisioned: false };
     if (!body.provisioned) {
-      const prov = await request.post(`${apiBase}/api/demo/provision`);
+      const prov = await request.post(`${apiBase}/api/demo/provision`, { timeout: 180_000 });
       expect(prov.ok(), await prov.text()).toBeTruthy();
     }
   });
 
-  test("core demo shops resolve on public API", async ({ request }) => {
-    for (const slug of REQUIRED_SLUGS) {
+  test("every subvertical roster shop resolves on public API", async ({ request }) => {
+    for (const slug of ROSTER_SLUGS) {
+      const res = await request.get(`${apiBase}/api/public/b/${slug}`);
+      expect(res.ok(), `missing or unreachable: ${slug}`).toBe(true);
+      const body = await res.json();
+      expect(body.name).toBeTruthy();
+      expect(body.slug).toBe(slug);
+    }
+  });
+
+  test("scenario + market shops resolve on public API", async ({ request }) => {
+    for (const slug of SCENARIO_SLUGS) {
       const res = await request.get(`${apiBase}/api/public/b/${slug}`);
       expect(res.ok(), `missing or unreachable: ${slug}`).toBe(true);
     }
@@ -67,12 +72,15 @@ test.describe("Full platform demo — API", () => {
     }
   });
 
-  test("demo status lists at least 18 businesses", async ({ request }) => {
+  test("demo status lists full subvertical roster", async ({ request }) => {
     const res = await request.get(`${apiBase}/api/demo/status`);
     expect(res.ok()).toBeTruthy();
     const body = await res.json();
     expect(body.provisioned).toBe(true);
-    expect((body.businesses?.length ?? 0) >= 18).toBe(true);
+    const slugs = new Set((body.businesses ?? []).map((b: { slug: string }) => b.slug));
+    for (const slug of ROSTER_SLUGS) {
+      expect(slugs.has(slug), `roster slug missing from demo status: ${slug}`).toBe(true);
+    }
   });
 
   test("market shops expose country on public profile", async ({ request }) => {

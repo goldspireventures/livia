@@ -156,6 +156,7 @@ export * from "./owner-liv-inbox-suggestions";
 export * from "./owner-ops-suggestions";
 export * from "./operator-experience-policy";
 export * from "./demo-showcase-program";
+export * from "./demo-subvertical-roster";
 export * from "./demo-guest-world";
 export * from "./owner-presence-intel";
 export * from "./public-book-layout";

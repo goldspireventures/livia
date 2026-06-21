@@ -12,6 +12,7 @@ import {
   slugFromOwnerDemoEmail,
   type DemoTenantRole,
 } from "@workspace/demo-logins";
+import { listDemoWorldSlugs } from "@workspace/policy";
 
 export type { DemoTenantRole };
 
@@ -30,30 +31,7 @@ export type DemoPersonaId =
   | "receptionist"
   | "customer";
 
-export const DEMO_WORLD_SLUGS = [
-  "aurora-studio",
-  "aurora-mews",
-  "aurora-galway",
-  "conors-cut-co",
-  "bloom-beauty-dublin",
-  "harbour-wellness-cork",
-  "ink-anchor-galway",
-  "paws-parlour-dublin",
-  "clarity-medspa-dublin",
-  "motion-physio-cork",
-  "peak-fitness-dublin",
-  "shine-studio-belfast",
-  "luxe-salon-spa",
-  "stoneybatter-cuts",
-  "dublin-barber-collective",
-  "dundrum-hair-studio",
-  "dundrum-serenity-spa",
-  "london-rose-spa",
-  "berlin-studio-neun",
-  "paris-belle-vue",
-  "copenhagen-havn-wellness",
-  "atelier-decor-dublin",
-] as const;
+export const DEMO_WORLD_SLUGS = listDemoWorldSlugs() as readonly string[];
 
 export type DemoPersonaDef = {
   id: DemoPersonaId;

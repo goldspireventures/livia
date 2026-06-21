@@ -94,7 +94,7 @@ test.describe("Guest retail cart", () => {
     await page.waitForURL(new RegExp(`/shop/[a-f0-9]+`), { timeout: 30_000 });
     await expect(page.getByTestId("public-shop-page")).toBeVisible({ timeout: 20_000 });
     await expect(page.getByTestId("public-shop-lines")).toBeVisible();
-    await expect(page.getByRole("button", { name: /pay now/i })).toBeVisible();
+    await expect(page.getByTestId("public-shop-sticky-cta").getByRole("button", { name: /^pay /i })).toBeVisible();
 
     const orderRes = await request.post(`${apiBase}/api/public/b/${slug}/retail/order`, {
       data: {

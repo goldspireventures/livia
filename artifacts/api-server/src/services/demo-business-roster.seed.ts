@@ -84,18 +84,27 @@ async function ensureClerkForDef(def: DemoPersonaDef): Promise<string | null> {
     userId = existing.data[0].id;
     await syncDemoClerkUser(clerk, userId, { email: clerkDef.email, password });
   } else {
-    const created = await withClerkRetry(() =>
-      clerk.users.createUser({
-        emailAddress: [clerkDef.email],
-        firstName: clerkDef.firstName,
-        lastName: clerkDef.lastName,
-        password,
-        skipPasswordChecks: true,
-        skipPasswordRequirement: true,
-      }),
-    );
-    userId = created.id;
-    await syncDemoClerkUser(clerk, userId, { email: clerkDef.email, password });
+    try {
+      const created = await withClerkRetry(() =>
+        clerk.users.createUser({
+          emailAddress: [clerkDef.email],
+          firstName: clerkDef.firstName,
+          lastName: clerkDef.lastName,
+          password,
+          skipPasswordChecks: true,
+          skipPasswordRequirement: true,
+        }),
+      );
+      userId = created.id;
+      await syncDemoClerkUser(clerk, userId, { email: clerkDef.email, password });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (/too many requests/i.test(msg)) {
+        logger.warn({ email: clerkDef.email }, "demo.roster.clerk_rate_limited");
+        return null;
+      }
+      throw err;
+    }
   }
   await ensureDemoPlatformLegal(userId, clerkDef.email, clerkDef.displayName);
   return userId;
