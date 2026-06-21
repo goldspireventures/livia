@@ -10,12 +10,16 @@ export default function DemoPage() {
       <DemoGateShell>
         <div className="cst-demo-concierge">
           <p className="cst-demo-concierge__eyebrow text-center text-[10px] font-mono uppercase tracking-widest text-[#d9c39a]/70 mb-3">
-            Invited guests
+            Your demo room
           </p>
           <h1 className="cst-demo-concierge__headline">
             <span className="cst-demo-concierge__headline-line">Walk a real business</span>
             <span className="cst-demo-concierge__headline-accent">in 90 seconds</span>
           </h1>
+          <p className="mx-auto mb-8 max-w-lg text-center text-sm leading-relaxed text-white/55">
+            Pick the trade closest to yours. Each card opens a seeded studio — guest book, owner sign-in,
+            and the same flows you get after onboarding.
+          </p>
 
           <DemoConciergeGrid />
 

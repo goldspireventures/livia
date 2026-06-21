@@ -1,11 +1,13 @@
 import { Link } from "wouter";
 import { ArrowRight, Lock } from "lucide-react";
-import { listMarketingDemoConciergeEntries } from "@workspace/policy";
-import { dashboardWedgeUrl } from "@/lib/marketing-links";
+import { listMarketingDemoConciergeEntries, resolveMarketingConciergeThumbUrl } from "@workspace/policy";
+import { dashboardWedgeUrl, marketingOrigin } from "@/lib/marketing-links";
 import { readDemoGateKeyFromLocation } from "@/lib/marketing-demo-gate-client";
 import { cn } from "@/lib/utils";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const dashboardOrigin =
+  (import.meta.env.VITE_DASHBOARD_URL as string | undefined)?.replace(/\/+$/, "") ?? "";
 
 export function DemoConciergeGrid() {
   const entries = listMarketingDemoConciergeEntries();
@@ -14,7 +16,10 @@ export function DemoConciergeGrid() {
   return (
     <ul className="cst-demo-concierge__portals">
       {entries.map((entry) => {
-        const thumbSrc = entry.imagePath ? `${base}${entry.imagePath}` : null;
+        const thumbSrc = resolveMarketingConciergeThumbUrl(entry.vertical, {
+          dashboardOrigin: dashboardOrigin || undefined,
+          marketingPublicBase: base || marketingOrigin,
+        });
         const href = entry.unlocked ? dashboardWedgeUrl(entry.vertical, gateKey) : undefined;
 
         const inner = (

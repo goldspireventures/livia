@@ -391,19 +391,19 @@ const EN: EditorialCopy = {
     titleLead: "Book a",
     titleAccent: "demo",
     subtitle:
-      "Plug-and-play for your floor — but we walk you in first. Tell us your trade and market; we reply with a live demo link or a short call.",
+      "One form opens your personal demo room. Pick your trade, walk a real seeded studio, then sign up when you're ready.",
     steps: [
-      "You share email, trade, and country.",
-      "We qualify fit and invite in batches.",
-      "Your personal link opens /demo with a secure key — valid seven days.",
+      "Share your email, trade, and country.",
+      "We open your demo room straight away — access lasts seven days.",
+      "Pick a trade card, explore as guest or owner, then create your studio.",
     ],
     invitedPrompt: "Already invited?",
-    invitedLink: "Open the personal link we emailed you — it contains your demo key.",
+    invitedLink: "Use the link from your email — it skips this form and opens your demo room.",
   },
   formDemo: {
-    submit: "Request demo",
-    pending: "Sending…",
-    success: "Request received. We'll email you a demo link or next steps within a few days.",
+    submit: "Enter demo room",
+    pending: "Opening…",
+    success: "Request received. Check your email for next steps.",
   },
 };
 
@@ -634,19 +634,19 @@ const DE: EditorialCopy = {
     titleLead: "Demo",
     titleAccent: "buchen",
     subtitle:
-      "Plug-and-play für Ihren Floor — aber wir führen Sie zuerst ein. Branche und Markt nennen; wir antworten mit Demo-Link oder kurzem Call.",
+      "Ein Formular öffnet Ihren persönlichen Demo-Raum. Branche wählen, echtes Studio durchgehen, dann anmelden.",
     steps: [
       "E-Mail, Branche und Land senden.",
-      "Wir prüfen Passung und laden in Wellen ein.",
-      "Persönlicher Link zur Live-Demo — für Ihre Branche vorbereitet.",
+      "Ihr Demo-Raum öffnet sich sofort — sieben Tage Zugang.",
+      "Branche wählen, als Gast oder Inhaber erkunden, dann Studio anlegen.",
     ],
     invitedPrompt: "Bereits eingeladen?",
-    invitedLink: "Nutzen Sie den persönlichen Link aus Ihrer E-Mail — er enthält Ihren Demo-Schlüssel.",
+    invitedLink: "Link aus Ihrer E-Mail nutzen — er überspringt dieses Formular.",
   },
   formDemo: {
-    submit: "Demo anfragen",
-    pending: "Wird gesendet…",
-    success: "Anfrage erhalten. Demo-Link oder nächste Schritte per E-Mail in wenigen Tagen.",
+    submit: "Demo-Raum öffnen",
+    pending: "Wird geöffnet…",
+    success: "Anfrage erhalten. Nächste Schritte per E-Mail.",
   },
   deContact: {
     title: "DACH-Pilot",
