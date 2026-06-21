@@ -5,7 +5,9 @@ import { g1TaglineForWorld, g1TitleForWorld, type G1WedgeWorld } from "@/lib/g1-
 import type { BusinessVertical } from "@workspace/policy";
 import {
   filterWedgeChapters,
+  resolveWedgeArc,
   resolveWedgeBeatVisual,
+  resolveWedgeChapterLabel,
   resolveWedgeLivIntro,
   resolveWedgeThreadBridge,
 } from "@/lib/wedge-beat-visuals";
@@ -24,12 +26,6 @@ type Props = {
   onContinue: () => void;
 };
 
-const CHAPTER_LABEL: Record<string, string> = {
-  inbox: "Bookings",
-  "public-book": "/b",
-  today: "Today",
-};
-
 function ThreadChapter({
   vertical,
   beat,
@@ -44,7 +40,7 @@ function ThreadChapter({
   const meta = WEDGE_BEAT_CROP_META[beat.cropHint] ?? WEDGE_BEAT_CROP_META.inbox;
   const visual = resolveWedgeBeatVisual(vertical, beat);
   const bridge = resolveWedgeThreadBridge(vertical, beat);
-  const label = CHAPTER_LABEL[beat.cropHint] ?? meta.label;
+  const label = resolveWedgeChapterLabel(vertical, beat.cropHint) || meta.label;
 
   return (
     <section
@@ -110,11 +106,11 @@ export function WedgeBeautyThread({
   backLabel = "← Worlds",
   onContinue,
 }: Props) {
-  const chapters = filterWedgeChapters(beats);
+  const chapters = filterWedgeChapters(beats, vertical);
   const g1Title = g1TitleForWorld(world ?? null) ?? tradeLabel;
   const g1Tagline = g1TaglineForWorld(world ?? null);
   const livIntro = resolveWedgeLivIntro(vertical);
-  const arc = vertical === "wellness" ? "From message to room" : "From DM to chair";
+  const arc = resolveWedgeArc(vertical);
 
   return (
     <div className="wedge-thread" data-testid="gateway-demo-beats-grid">

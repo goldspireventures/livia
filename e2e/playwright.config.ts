@@ -176,8 +176,8 @@ export default defineConfig({
     },
     {
       name: "asset-capture",
-      testMatch: /capture-(platform-default-wedge-book|event-vendor-wedge-beats)\.spec\.ts/,
-      timeout: 120_000,
+      testMatch: /capture-(platform-default-wedge-book|event-vendor-wedge-beats|vertical-wedge-beats)\.spec\.ts/,
+      timeout: 600_000,
       use: {
         ...devices["Desktop Chrome"],
         baseURL: dashboardBase,

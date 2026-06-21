@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { LiviaWordmark } from "@/components/brand/LiviaMark";
+import { prospectDemoEntryUrl } from "@/lib/demo-routes";
 import { getMarketingOrigin } from "@/lib/surface-urls";
 import { cn } from "@/lib/utils";
 
@@ -17,7 +18,7 @@ type Props = {
 function resolveHref(home: LogoHome, href?: string): string {
   if (href) return href;
   if (home === "dashboard") return "/dashboard";
-  if (home === "demo") return "/demo/founder";
+  if (home === "demo") return prospectDemoEntryUrl();
   return getMarketingOrigin();
 }
 

@@ -190,7 +190,7 @@ export default function ExperiencePage() {
               <CardDescription>Seven persona rituals — visual only, no live data</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="secondary" size="sm" onClick={() => navigate("/demo/founder")}>
+              <Button variant="secondary" size="sm" onClick={() => navigate("/demo")}>
                 Open /demo gallery
               </Button>
             </CardContent>

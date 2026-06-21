@@ -1,4 +1,9 @@
 import type { BusinessVertical, WedgeDemoBeat } from "@workspace/policy";
+import {
+  getWedgeVerticalPack,
+  listWedgeProductThreadVerticals,
+  resolveWedgeBeatAssetBase,
+} from "@workspace/policy";
 
 export type WedgeBeatVisual = {
   src: string;
@@ -23,112 +28,42 @@ export const EVENT_VENDOR_CHAPTER_ORDER: WedgeDemoBeat["cropHint"][] = [
   "milestone-pay",
 ];
 
+const CROP_FILE: Partial<Record<WedgeDemoBeat["cropHint"], string>> = {
+  inbox: "inbox.png",
+  "public-book": "book-mobile.png",
+  today: "today.png",
+  "quote-gen": "quote-gen.png",
+  catalogue: "catalogue.png",
+  "milestone-pay": "milestone-pay.png",
+};
+
+const CROP_ASPECT: Partial<Record<WedgeDemoBeat["cropHint"], WedgeBeatVisual["aspect"]>> = {
+  inbox: "wide",
+  "public-book": "phone",
+  today: "wide",
+  "quote-gen": "wide",
+  catalogue: "wide",
+  "milestone-pay": "phone",
+};
+
+const CROP_OBJECT_POSITION: Partial<Record<WedgeDemoBeat["cropHint"], string>> = {
+  inbox: "left top",
+  "public-book": "center top",
+  today: "left top",
+  "quote-gen": "left top",
+  catalogue: "center top",
+  "milestone-pay": "center top",
+};
+
 export function wedgeChapterOrder(vertical?: BusinessVertical): WedgeDemoBeat["cropHint"][] {
   if (vertical === "event-vendors") return EVENT_VENDOR_CHAPTER_ORDER;
   return WEDGE_CHAPTER_ORDER;
 }
 
-const BEAUTY_PLATFORM_DEFAULT_VISUALS: Partial<Record<WedgeDemoBeat["cropHint"], WedgeBeatVisual>> = {
-  inbox: {
-    src: "/w2-gateway/platform-default/inbox.png",
-    alt: "Bloom Beauty Dublin — bookings list with pending visits",
-    objectPosition: "center top",
-    aspect: "wide",
-  },
-  "public-book": {
-    src: "/w2-gateway/platform-default/book-mobile.png",
-    alt: "Bloom Beauty Dublin — guest booking page on /b",
-    objectPosition: "center top",
-    aspect: "phone",
-  },
-  today: {
-    src: "/w2-gateway/platform-default/today.png",
-    alt: "Bloom Beauty Dublin — owner Today with Liv briefing",
-    objectPosition: "left top",
-    aspect: "wide",
-  },
-};
-
-/** Wellness G2 — Harbour demo preset (vertical default). */
-const WELLNESS_HARBOUR_VISUALS: Partial<Record<WedgeDemoBeat["cropHint"], WedgeBeatVisual>> = {
-  inbox: {
-    src: "/w2-gateway/beats/wellness/harbour-light/inbox.png",
-    alt: "Harbour Wellness Cork — concierge priority inbox",
-    objectPosition: "left top",
-    aspect: "wide",
-  },
-  "public-book": {
-    src: "/w2-gateway/beats/wellness/harbour-light/book-mobile.png",
-    alt: "Harbour Wellness Cork — gift-ready treatment grid on /b",
-    objectPosition: "center top",
-    aspect: "phone",
-  },
-  today: {
-    src: "/w2-gateway/beats/wellness/harbour-light/today.png",
-    alt: "Harbour Wellness Cork — room swimlanes Today",
-    objectPosition: "left top",
-    aspect: "wide",
-  },
-};
-
-const BEAUTY_THREAD_BRIDGES: Partial<Record<WedgeDemoBeat["cropHint"], string>> = {
-  inbox: "Pending visits line up — confirm or guide without leaving the list.",
-  "public-book": "Same guest, same brand. They book from your link without an account.",
-  today: "You open Today — the chair plan, revenue, and what Liv already handled.",
-};
-
-const WELLNESS_THREAD_BRIDGES: Partial<Record<WedgeDemoBeat["cropHint"], string>> = {
-  inbox: "Gift vouchers and calm SMS land in concierge — Liv holds the room fit.",
-  "public-book": "Guests pick treatments on a spa-native /b — gift-ready, not salon chrome.",
-  today: "Room swimlanes show turnover, vouchers, and who's in Serenity next.",
-};
-
-const BEAUTY_LIV_INTRO =
-  "Three surfaces, one thread — bookings, your /b link, and Today at Bloom Beauty Dublin.";
-
-const WELLNESS_LIV_INTRO =
-  "Three surfaces, one thread — concierge, your /b link, and the room board at Harbour Wellness Cork.";
-
-const EVENT_VENDOR_THREAD_BRIDGES: Partial<Record<WedgeDemoBeat["cropHint"], string>> = {
-  inbox: "Sarah's birthday enquiry lands from WhatsApp — review and reply in inbox.",
-  "quote-gen": "One tap: birthday template + guest count → line items, deposit %, PDF-ready quote.",
-  catalogue: "Per-table centrepieces and per-guest sashes — quantities scale from the enquiry brief.",
-};
-
-const EVENT_VENDOR_LIV_INTRO =
-  "The three things no decor studio has in one place — every lead, quotes that write themselves, and a catalogue that thinks in events.";
-
-const EVENT_VENDOR_ATELIER_VISUALS: Partial<Record<WedgeDemoBeat["cropHint"], WedgeBeatVisual>> = {
-  inbox: {
-    src: "/w2-gateway/beats/event-vendors/atelier/inbox.png",
-    alt: "Atelier Decor Dublin — unified consult inbox with Sarah Murphy lead",
-    objectPosition: "left top",
-    aspect: "wide",
-  },
-  "quote-gen": {
-    src: "/w2-gateway/beats/event-vendors/atelier/quote-gen.png",
-    alt: "Atelier Decor Dublin — line-item quote generator with deposit",
-    objectPosition: "left top",
-    aspect: "wide",
-  },
-  catalogue: {
-    src: "/w2-gateway/beats/event-vendors/atelier/catalogue.png",
-    alt: "Atelier Decor Dublin — public services catalogue with hanging price tags",
-    objectPosition: "center top",
-    aspect: "wide",
-  },
-  "milestone-pay": {
-    src: "/w2-gateway/beats/event-vendors/atelier/milestone-pay.png",
-    alt: "Atelier Decor Dublin — guest quote accept and milestone deposit",
-    objectPosition: "center top",
-    aspect: "phone",
-  },
-};
-
-const WEDGE_THREAD_VERTICALS = new Set<BusinessVertical>(["beauty", "wellness", "event-vendors"]);
+const PRODUCT_THREAD_VERTICALS = new Set<BusinessVertical>(listWedgeProductThreadVerticals());
 
 export function isPresetWedgeThread(vertical: BusinessVertical): boolean {
-  return WEDGE_THREAD_VERTICALS.has(vertical);
+  return PRODUCT_THREAD_VERTICALS.has(vertical);
 }
 
 /** @deprecated use isPresetWedgeThread */
@@ -150,37 +85,79 @@ export function filterBeautyWedgeChapters(beats: WedgeDemoBeat[]): WedgeDemoBeat
   return filterWedgeChapters(beats);
 }
 
+function cropAlt(packLabel: string, cropHint: WedgeDemoBeat["cropHint"]): string {
+  switch (cropHint) {
+    case "inbox":
+      return `${packLabel} — bookings and inquiries ready to confirm`;
+    case "public-book":
+      return `${packLabel} — guest booking page`;
+    case "today":
+      return `${packLabel} — owner Today with Liv briefing`;
+    case "quote-gen":
+      return `${packLabel} — line-item quote generator with deposit`;
+    case "catalogue":
+      return `${packLabel} — public services catalogue`;
+    case "milestone-pay":
+      return `${packLabel} — guest quote accept and milestone deposit`;
+    default:
+      return packLabel;
+  }
+}
+
 export function resolveWedgeBeatVisual(
   vertical: BusinessVertical,
   beat: WedgeDemoBeat,
 ): WedgeBeatVisual | null {
-  if (vertical === "beauty") {
-    return BEAUTY_PLATFORM_DEFAULT_VISUALS[beat.cropHint] ?? null;
-  }
-  if (vertical === "wellness") {
-    return WELLNESS_HARBOUR_VISUALS[beat.cropHint] ?? null;
-  }
-  if (vertical === "event-vendors") {
-    return EVENT_VENDOR_ATELIER_VISUALS[beat.cropHint] ?? null;
-  }
-  return null;
+  const pack = getWedgeVerticalPack(vertical);
+  const base = resolveWedgeBeatAssetBase(vertical);
+  const file = CROP_FILE[beat.cropHint];
+  if (!pack || !base || !file) return null;
+
+  return {
+    src: `${base}/${file}`,
+    alt: cropAlt(pack.businessLabel, beat.cropHint),
+    objectPosition: CROP_OBJECT_POSITION[beat.cropHint],
+    aspect: CROP_ASPECT[beat.cropHint],
+  };
 }
 
 export function resolveWedgeThreadBridge(
   vertical: BusinessVertical,
   beat: WedgeDemoBeat,
 ): string | null {
-  if (vertical === "beauty") return BEAUTY_THREAD_BRIDGES[beat.cropHint] ?? null;
-  if (vertical === "wellness") return WELLNESS_THREAD_BRIDGES[beat.cropHint] ?? null;
-  if (vertical === "event-vendors") return EVENT_VENDOR_THREAD_BRIDGES[beat.cropHint] ?? null;
-  return null;
+  return getWedgeVerticalPack(vertical)?.bridges[beat.cropHint] ?? null;
 }
 
 export function resolveWedgeLivIntro(vertical: BusinessVertical): string {
-  if (vertical === "beauty") return BEAUTY_LIV_INTRO;
-  if (vertical === "wellness") return WELLNESS_LIV_INTRO;
-  if (vertical === "event-vendors") return EVENT_VENDOR_LIV_INTRO;
-  return "Inbox, booking, and Today — then walk into the live demo.";
+  return (
+    getWedgeVerticalPack(vertical)?.livIntro ??
+    "Inbox, booking, and Today — then walk into the live demo."
+  );
+}
+
+export function resolveWedgeArc(vertical: BusinessVertical): string {
+  return getWedgeVerticalPack(vertical)?.arc ?? "From inquiry to done";
+}
+
+export function resolveWedgeChapterLabel(
+  vertical: BusinessVertical,
+  cropHint: WedgeDemoBeat["cropHint"],
+): string {
+  if (vertical === "event-vendors") {
+    const labels: Partial<Record<WedgeDemoBeat["cropHint"], string>> = {
+      inbox: "Inbox",
+      "quote-gen": "Quote generator",
+      catalogue: "Catalogue",
+      "milestone-pay": "Accept & pay",
+    };
+    return labels[cropHint] ?? cropHint;
+  }
+  const labels: Partial<Record<WedgeDemoBeat["cropHint"], string>> = {
+    inbox: vertical === "wellness" ? "Concierge" : "Bookings",
+    "public-book": "Book online",
+    today: "Today",
+  };
+  return labels[cropHint] ?? cropHint;
 }
 
 /** @deprecated beauty thread uses resolveWedgeThreadBridge */

@@ -4,6 +4,7 @@ import { useSignIn, useClerk } from "@clerk/clerk-react";
 import { useLocation } from "wouter";
 import { Link } from "wouter";
 import { getMarketingDemoConciergeUrl, hasMarketingDemoGateKey } from "@/lib/marketing-demo-gate";
+import { marketingBookDemoUrl } from "@/lib/demo-routes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -103,9 +104,9 @@ export function DemoPasswordSignIn({
               invited guest demo
             </a>
           ) : (
-            <Link href="/demo/founder" className="text-primary underline underline-offset-2">
-              demo launcher
-            </Link>
+            <a href={marketingBookDemoUrl()} className="text-primary underline underline-offset-2">
+              book a demo
+            </a>
           )}
           .
         </p>

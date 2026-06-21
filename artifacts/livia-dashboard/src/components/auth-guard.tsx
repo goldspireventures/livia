@@ -11,7 +11,8 @@ import { apiFetch } from "@/lib/api-fetch";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PlatformLegalGate } from "@/components/platform-legal-gate";
 import { isDemoAccountEmail, isDemoTenantSlug } from "@/lib/demo-tenant";
-import { FOUNDER_DEMO_LAUNCHER_PATH } from "@/lib/demo-routes";
+import { prospectDemoEntryUrl } from "@/lib/demo-routes";
+import { ProspectDemoRedirect } from "@/components/prospect-demo-redirect";
 import { isOnboardingAppUnlocked, type OnboardingState } from "@workspace/policy";
 import { PlatformExecHandoff } from "@/components/platform-exec-handoff";
 import {
@@ -94,7 +95,10 @@ export function AuthGuard({ children }: { children: ReactNode }) {
       const params = new URLSearchParams({ beta: "1", redirect_url: location });
       return <Redirect to={`/sign-in?${params.toString()}`} />;
     }
-    const gate = isDemoLoginEnabled ? FOUNDER_DEMO_LAUNCHER_PATH : "/sign-in";
+    const gate = isDemoLoginEnabled ? prospectDemoEntryUrl() : "/sign-in";
+    if (isDemoLoginEnabled && gate.startsWith("http")) {
+      return <ProspectDemoRedirect />;
+    }
     return <Redirect to={`${gate}?redirect_url=${encodeURIComponent(location)}`} />;
   }
 
@@ -159,10 +163,9 @@ function BusinessDataLoader({
     // Demo roster accounts need provisioned world + membership — send to launcher, not self-serve onboarding.
     if (
       demoEmail &&
-      location !== FOUNDER_DEMO_LAUNCHER_PATH &&
       !location.startsWith("/demo/")
     ) {
-      return <Redirect to={`${FOUNDER_DEMO_LAUNCHER_PATH}?reason=no-membership`} />;
+      return <ProspectDemoRedirect />;
     }
     return <Redirect to="/onboarding" />;
   }

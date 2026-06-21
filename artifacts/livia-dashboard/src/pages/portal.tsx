@@ -17,6 +17,7 @@ import {
   fetchDemoStatus,
   provisionDemoWorld,
 } from "@/lib/demo-portal";
+import { marketingBookDemoUrl } from "@/lib/demo-routes";
 
 export default function PortalPage() {
   const { toast } = useToast();
@@ -95,7 +96,7 @@ export default function PortalPage() {
       </Card>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Card className="cursor-pointer hover:border-primary/40 transition-colors" onClick={() => navigate("/demo/founder")}>
+        <Card className="cursor-pointer hover:border-primary/40 transition-colors" onClick={() => { window.location.href = marketingBookDemoUrl(); }}>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <Users className="h-4 w-4" />

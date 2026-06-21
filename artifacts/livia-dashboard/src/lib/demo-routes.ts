@@ -6,7 +6,11 @@ export function marketingDemoGateUrl(): string {
   return `${getMarketingOrigin()}/demo`;
 }
 
-/** Founder / QA G1 launcher on app host only — never on marketing. */
+export function marketingBookDemoUrl(): string {
+  return `${getMarketingOrigin()}/book-demo`;
+}
+
+/** @deprecated Founder G1 launcher retired — prospects use marketing concierge. Kept for path checks only. */
 export const FOUNDER_DEMO_LAUNCHER_PATH = "/demo/founder";
 
 export function isFounderDemoLauncherPath(path: string): boolean {
@@ -20,12 +24,19 @@ export function shouldRedirectAppDemoToMarketing(path: string): boolean {
   const p = path.split("?")[0]?.replace(/\/+$/, "") || "/";
   if (p !== "/demo") return false;
   const params = new URLSearchParams(path.includes("?") ? path.split("?")[1] : "");
-  // Deep links from marketing concierge use /demo/wedge/* — not bare /demo
   return !params.has("founder");
 }
 
-/** Wedge G2 back — marketing concierge when invited, else founder G1. */
+/** Retired founder launcher — always send to marketing concierge (or book-demo if no invite key). */
+export function shouldRedirectFounderLauncherToMarketing(path: string): boolean {
+  return isFounderDemoLauncherPath(path);
+}
+
+export function prospectDemoEntryUrl(): string {
+  return readStoredMarketingDemoGateKey() ? getMarketingDemoConciergeUrl() : marketingBookDemoUrl();
+}
+
+/** Wedge G2 back — marketing concierge when invited, else book-demo. */
 export function demoWorldsBackUrl(): string {
-  if (readStoredMarketingDemoGateKey()) return getMarketingDemoConciergeUrl();
-  return FOUNDER_DEMO_LAUNCHER_PATH;
+  return prospectDemoEntryUrl();
 }

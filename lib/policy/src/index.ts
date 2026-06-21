@@ -68,6 +68,7 @@ export * from "./consult-first-payment";
 export * from "./demo-roster-policy";
 export * from "./demo-experience-program";
 export * from "./wedge-demo-stories";
+export * from "./wedge-vertical-packs";
 export * from "./marketing-demo-concierge";
 export * from "./marketing-demo-gate";
 export * from "./guest-surfaces";

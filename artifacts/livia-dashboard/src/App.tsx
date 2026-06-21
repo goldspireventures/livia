@@ -101,10 +101,11 @@ import PublicEventVendorQuotePage from "@/pages/public-event-vendor-quote";
 import PublicEventVendorMoodPage from "@/pages/public-event-vendor-mood";
 import PublicEventVendorPlannerPage from "@/pages/public-event-vendor-planner";
 import {
-  FOUNDER_DEMO_LAUNCHER_PATH,
   marketingDemoGateUrl,
   shouldRedirectAppDemoToMarketing,
+  shouldRedirectFounderLauncherToMarketing,
 } from "@/lib/demo-routes";
+import { getMarketingDemoConciergeUrl } from "@/lib/marketing-demo-gate";
 import DemoLauncher from "@/pages/demo/Launcher";
 import DemoOpenPersonaPage from "@/pages/demo/OpenPersona";
 import DemoWedgeStoryPage from "@/pages/demo/WedgeStory";
@@ -385,9 +386,14 @@ function AppRouter() {
     return <Redirect to={quoteCanonical} />;
   }
 
-  // App bare /demo → marketing W1 gate (matches staging.livia-hq.com/demo). Founder: /demo/founder
+  // App bare /demo → marketing W1 gate (matches staging.livia-hq.com/demo).
   if (typeof window !== "undefined" && shouldRedirectAppDemoToMarketing(location)) {
     window.location.replace(marketingDemoGateUrl());
+    return null;
+  }
+
+  if (typeof window !== "undefined" && shouldRedirectFounderLauncherToMarketing(location)) {
+    window.location.replace(getMarketingDemoConciergeUrl());
     return null;
   }
 
@@ -446,7 +452,6 @@ function AppRouter() {
           <Route path="/demo/open" component={DemoOpenPersonaPage} />
           <Route path="/demo/wedge/:vertical" component={DemoWedgeStoryPage} />
           <Route path="/demo" component={DemoLauncher} />
-          <Route path={FOUNDER_DEMO_LAUNCHER_PATH} component={DemoLauncher} />
           <Route path="/demo/:persona">{() => <LazyRoute page={LazyDemoShowcase} />}</Route>
         </>
       ) : (

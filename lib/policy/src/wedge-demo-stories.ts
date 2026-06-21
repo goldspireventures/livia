@@ -29,16 +29,38 @@ export type WedgeDemoStory = {
 
 const WEDGE_BEATS: Record<BusinessVertical, WedgeDemoBeat[]> = {
   "body-art": [
-    { headline: "Consult lands in your Inbox", detail: "Every DM becomes a thread Liv can act on.", cropHint: "inbox" },
-    { headline: "Design proof — one link", detail: "Guest approves on their phone. No WhatsApp photo tennis.", cropHint: "proof" },
-    { headline: "Deposit holds the session", detail: "Serious bookings only. Policy you set.", cropHint: "public-book" },
-    { headline: "Today — who's in the chair", detail: "Artists see the day, not a spreadsheet.", cropHint: "today" },
+    {
+      headline: "Consult lands in your Inbox",
+      detail: "Every DM becomes a thread Liv can act on — deposit policy stays attached.",
+      cropHint: "inbox",
+    },
+    {
+      headline: "Guest books online",
+      detail: "Consults and sessions from your link — deposit holds the slot.",
+      cropHint: "public-book",
+    },
+    {
+      headline: "Today — who's in the chair",
+      detail: "Artists see the day, proof status, and what's next.",
+      cropHint: "today",
+    },
   ],
   hair: [
-    { headline: "Instagram DM → Inbox", detail: "Liv catches the inquiry before you put down the scissors.", cropHint: "inbox" },
-    { headline: "Client books from your link", detail: "Professional `/b` page — your brand, not a generic widget.", cropHint: "public-book" },
-    { headline: "Reminder before the visit", detail: "SMS with one tap — no account needed.", cropHint: "sms" },
-    { headline: "Today — who's next", detail: "The whole shop on one calm screen.", cropHint: "today" },
+    {
+      headline: "Instagram DM → Bookings",
+      detail: "Liv catches the inquiry before you put down the scissors.",
+      cropHint: "inbox",
+    },
+    {
+      headline: "Client books from your link",
+      detail: "Professional booking page — your brand, not a generic widget.",
+      cropHint: "public-book",
+    },
+    {
+      headline: "Today — who's next",
+      detail: "The whole shop on one calm screen.",
+      cropHint: "today",
+    },
   ],
   beauty: [
     {
@@ -47,7 +69,7 @@ const WEDGE_BEATS: Record<BusinessVertical, WedgeDemoBeat[]> = {
       cropHint: "inbox",
     },
     {
-      headline: "Guest books on `/b`",
+      headline: "Guest books online",
       detail: "Your menu, durations, and intake guards on a link-in-bio page — no account required.",
       cropHint: "public-book",
     },
@@ -58,10 +80,21 @@ const WEDGE_BEATS: Record<BusinessVertical, WedgeDemoBeat[]> = {
     },
   ],
   medspa: [
-    { headline: "Consult request captured", detail: "Liv triages before clinical time is spent.", cropHint: "inbox" },
-    { headline: "Consent on book", detail: "Guest signs on `/b` — audit trail for you.", cropHint: "consent" },
-    { headline: "Reminder + prep note", detail: "Honest EU disclosure every time.", cropHint: "sms" },
-    { headline: "Today — treatment flow", detail: "Sessions, consent status, one glance.", cropHint: "today" },
+    {
+      headline: "Consult request captured",
+      detail: "Liv triages before clinical time is spent.",
+      cropHint: "inbox",
+    },
+    {
+      headline: "Consent on book",
+      detail: "Guest signs consent when they book online — audit trail for you.",
+      cropHint: "public-book",
+    },
+    {
+      headline: "Today — treatment flow",
+      detail: "Sessions, consent status, one glance.",
+      cropHint: "today",
+    },
   ],
   wellness: [
     {
@@ -70,7 +103,7 @@ const WEDGE_BEATS: Record<BusinessVertical, WedgeDemoBeat[]> = {
       cropHint: "inbox",
     },
     {
-      headline: "Guest books on `/b`",
+      headline: "Guest books online",
       detail: "Treatment grid, gift-ready copy, and session lengths — spa-native storefront.",
       cropHint: "public-book",
     },
@@ -81,28 +114,72 @@ const WEDGE_BEATS: Record<BusinessVertical, WedgeDemoBeat[]> = {
     },
   ],
   fitness: [
-    { headline: "Class inquiry", detail: "Waitlist and packages in one thread.", cropHint: "inbox" },
-    { headline: "Book or join waitlist", detail: "Capacity-aware `/b` flow.", cropHint: "public-book" },
-    { headline: "Reminder before class", detail: "One link — reschedule without login.", cropHint: "sms" },
-    { headline: "Today — floor & PT", detail: "Who's checked in, who's due.", cropHint: "today" },
+    {
+      headline: "Class inquiry",
+      detail: "Waitlist and packages in one thread.",
+      cropHint: "inbox",
+    },
+    {
+      headline: "Book or join waitlist",
+      detail: "Capacity-aware online booking flow.",
+      cropHint: "public-book",
+    },
+    {
+      headline: "Today — floor & PT",
+      detail: "Who's checked in, who's due.",
+      cropHint: "today",
+    },
   ],
   "allied-health": [
-    { headline: "Intake message", detail: "Lite clinic flow — not an EHR.", cropHint: "inbox" },
-    { headline: "Book appointment", detail: "Prep notes and jurisdiction copy on `/b`.", cropHint: "public-book" },
-    { headline: "Reminder + prep", detail: "What to bring — in the SMS.", cropHint: "sms" },
-    { headline: "Today — practitioners", detail: "Day list with context, not codes.", cropHint: "today" },
+    {
+      headline: "Intake message",
+      detail: "Lite clinic flow — not an EHR.",
+      cropHint: "inbox",
+    },
+    {
+      headline: "Book appointment",
+      detail: "Prep notes and jurisdiction copy on your booking page.",
+      cropHint: "public-book",
+    },
+    {
+      headline: "Today — practitioners",
+      detail: "Day list with context, not codes.",
+      cropHint: "today",
+    },
   ],
   "pet-grooming": [
-    { headline: "Pet parent inquiry", detail: "Breed, behaviour — Liv keeps context.", cropHint: "inbox" },
-    { headline: "Book + pet profile", detail: "Parent books; pet record follows.", cropHint: "public-book" },
-    { headline: "Reminder SMS", detail: "Day-of link to visit page.", cropHint: "sms" },
-    { headline: "Today — who's on the table", detail: "Groomers see pets, not just names.", cropHint: "today" },
+    {
+      headline: "Pet parent inquiry",
+      detail: "Breed, behaviour — Liv keeps context.",
+      cropHint: "inbox",
+    },
+    {
+      headline: "Book + pet profile",
+      detail: "Parent books; pet record follows.",
+      cropHint: "public-book",
+    },
+    {
+      headline: "Today — who's on the table",
+      detail: "Groomers see pets, not just names.",
+      cropHint: "today",
+    },
   ],
   "automotive-detailing": [
-    { headline: "Vehicle / slot inquiry", detail: "Valeting requests land in Inbox.", cropHint: "inbox" },
-    { headline: "Book detail session", detail: "Slot + service on `/b`.", cropHint: "public-book" },
-    { headline: "Reminder", detail: "Customer confirms from SMS.", cropHint: "sms" },
-    { headline: "Today — bay schedule", detail: "What's in, what's next.", cropHint: "today" },
+    {
+      headline: "Vehicle / slot inquiry",
+      detail: "Valeting requests land in Inbox.",
+      cropHint: "inbox",
+    },
+    {
+      headline: "Book detail session",
+      detail: "Slot + service on your booking page.",
+      cropHint: "public-book",
+    },
+    {
+      headline: "Today — bay schedule",
+      detail: "What's in, what's next.",
+      cropHint: "today",
+    },
   ],
   "event-vendors": [
     {

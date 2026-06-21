@@ -13,6 +13,7 @@ import { isDemoLoginEnabled } from "@/lib/persona";
 import { afterBusinessCreatedState } from "@workspace/policy";
 import { OnboardingExperienceShell } from "@/components/onboarding/onboarding-experience-shell";
 import { OnboardingWelcomePanel } from "@/components/onboarding-welcome-panel";
+import { marketingBookDemoUrl } from "@/lib/demo-routes";
 import { isOnboardingPortalExperienceEnabled } from "@/lib/onboarding-portal-enabled";
 
 type BusinessRow = {
@@ -86,7 +87,7 @@ export default function OnboardingPage() {
         title: "Full Livia demo ready",
         description: "Opening demo gateway…",
       });
-      window.location.href = "/demo/founder";
+      window.location.href = marketingBookDemoUrl();
     } catch (err: unknown) {
       toast({
         title: "Could not load demo data",
@@ -122,16 +123,16 @@ export default function OnboardingPage() {
             </CardTitle>
             <CardDescription>
               <code className="text-xs">{user?.primaryEmailAddress?.emailAddress}</code> is signed in, but
-              this environment has no Bloom membership yet. Use the demo launcher (recommended) or load
+              this environment has no Bloom membership yet. Book a demo to enter through the concierge, or load
               the full demo world here.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-2 sm:flex-row">
-            <Link href="/demo/founder" className="flex-1">
+            <a href={marketingBookDemoUrl()} className="flex-1">
               <Button type="button" variant="default" className="w-full">
-                Open demo launcher
+                Book a demo
               </Button>
-            </Link>
+            </a>
             {isDemoLoginEnabled ? (
               <Button
                 type="button"

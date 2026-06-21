@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link, useLocation, useParams } from "wouter";
+import { Link, useParams } from "wouter";
 import { GatewayDemoEnterStage, GatewaySlideDots } from "@/components/gateway/gateway-demo-card-stage";
 import { WedgeBeautyThread } from "@/components/gateway/wedge-beauty-thread";
 import { WedgeConsultFirstThread } from "@/components/gateway/wedge-consult-first-thread";
@@ -15,16 +15,12 @@ import { publicEventVendorEnquireUrl } from "@/lib/surface-urls";
 import { demoOpenPersonaUrl, type DemoRosterEntry } from "@/lib/demo-portal";
 import { useDemoWorldStatus } from "@/lib/demo/demo-world-status";
 import { resolveG1WedgeWorld } from "@/lib/g1-wedge-worlds";
-import {
-  FOUNDER_DEMO_LAUNCHER_PATH,
-  demoWorldsBackUrl,
-} from "@/lib/demo-routes";
+import { demoWorldsBackUrl, marketingBookDemoUrl } from "@/lib/demo-routes";
 
 type WedgeSlide = "story" | "enter";
 
 export default function DemoWedgeStoryPage() {
   const { vertical = "" } = useParams<{ vertical: string }>();
-  const [, navigate] = useLocation();
   const worldKey =
     typeof window !== "undefined"
       ? new URLSearchParams(window.location.search).get("world")
@@ -82,10 +78,13 @@ export default function DemoWedgeStoryPage() {
       {!provisioned && !statusLoading ? (
         <p className="mb-6 text-sm text-muted-foreground" data-testid="gateway-demo-setup-hint">
           Demo world not seeded yet.{" "}
-          <Link href={`${FOUNDER_DEMO_LAUNCHER_PATH}#demo-setup`} className="text-primary underline underline-offset-2">
-            Set up once
-          </Link>{" "}
-          in the founder launcher (~30–60s), then return here.
+          <a
+            href={marketingBookDemoUrl()}
+            className="text-primary underline underline-offset-2"
+          >
+            Book a demo
+          </a>{" "}
+          to enter through the concierge, then return here.
           {statusError ? (
             <>
               {" "}
@@ -124,7 +123,7 @@ export default function DemoWedgeStoryPage() {
           backLabel="← Worlds"
           onContinue={() => {
             if (!provisioned) {
-              navigate(`${FOUNDER_DEMO_LAUNCHER_PATH}#demo-setup`);
+              window.location.href = marketingBookDemoUrl();
               return;
             }
             setSlide("enter");
@@ -143,7 +142,7 @@ export default function DemoWedgeStoryPage() {
           backLabel="← Worlds"
           onContinue={() => {
             if (!provisioned) {
-              navigate(`${FOUNDER_DEMO_LAUNCHER_PATH}#demo-setup`);
+              window.location.href = marketingBookDemoUrl();
               return;
             }
             setSlide("enter");
@@ -160,7 +159,7 @@ export default function DemoWedgeStoryPage() {
           backLabel="← Worlds"
           onContinue={() => {
             if (!provisioned) {
-              navigate(`${FOUNDER_DEMO_LAUNCHER_PATH}#demo-setup`);
+              window.location.href = marketingBookDemoUrl();
               return;
             }
             setSlide("enter");

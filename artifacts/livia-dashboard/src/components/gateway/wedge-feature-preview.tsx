@@ -63,7 +63,7 @@ function previewBody(hint: WedgeDemoBeat["cropHint"]) {
               </span>
             ))}
           </div>
-          <p className="text-[9px] text-white/40">Guest books on /b — intake saved</p>
+          <p className="text-[9px] text-white/40">Guest books online — intake saved</p>
         </div>
       );
     case "sms":

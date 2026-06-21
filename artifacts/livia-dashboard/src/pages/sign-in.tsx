@@ -10,12 +10,13 @@ import { fetchDemoCatalog } from "@/lib/demo-portal";
 import { isDemoLoginEnabled } from "@/lib/persona";
 import { isSignedOutLanding } from "@/lib/auth-routes";
 import { clerkGatewayAppearance } from "@/lib/clerk-gateway-appearance";
-import { FOUNDER_DEMO_LAUNCHER_PATH } from "@/lib/demo-routes";
-import { getMarketingOrigin } from "@/lib/surface-urls";
+import { marketingBookDemoUrl } from "@/lib/demo-routes";
+import { ProspectDemoRedirect } from "@/components/prospect-demo-redirect";
 import {
   getMarketingDemoConciergeUrl,
   hasMarketingDemoGateKey,
 } from "@/lib/marketing-demo-gate";
+import { getMarketingOrigin } from "@/lib/surface-urls";
 import { SignInTenantPreview } from "@/components/sign-in-tenant-preview";
 import {
   useDebouncedClerkIdentifierEmail,
@@ -46,7 +47,7 @@ export default function SignInPage() {
   }, []);
 
   if (isDemoLoginEnabled && !betaMode && !isSignedOutLanding()) {
-    return <Redirect to={FOUNDER_DEMO_LAUNCHER_PATH} />;
+    return <ProspectDemoRedirect />;
   }
 
   const showProductionStory = !isDemoLoginEnabled;
@@ -72,12 +73,13 @@ export default function SignInPage() {
               <ArrowRight className="h-3.5 w-3.5" />
             </a>
           ) : (
-            <Link href={FOUNDER_DEMO_LAUNCHER_PATH}>
-              <span className="inline-flex min-h-[44px] items-center gap-1 text-xs text-primary transition-colors hover:text-primary/80">
-                Demo launcher
-                <ArrowRight className="h-3.5 w-3.5" />
-              </span>
-            </Link>
+            <a
+              href={marketingBookDemoUrl()}
+              className="inline-flex min-h-[44px] items-center gap-1 text-xs text-primary transition-colors hover:text-primary/80"
+            >
+              Book a demo
+              <ArrowRight className="h-3.5 w-3.5" />
+            </a>
           )
         ) : (
           <a
@@ -112,18 +114,18 @@ export default function SignInPage() {
               <p className="mb-6 text-sm text-muted-foreground">
                 {invitedDemo ? (
                   <>
-                    Staging team?{" "}
-                    <Link href={FOUNDER_DEMO_LAUNCHER_PATH} className="text-primary underline underline-offset-2">
-                      Open internal demo launcher (G1)
-                    </Link>
+                    Need a fresh invite?{" "}
+                    <a href={marketingBookDemoUrl()} className="text-primary underline underline-offset-2">
+                      Book a demo
+                    </a>
                   </>
                 ) : (
                   <>
-                    For one-click demo roles, use the{" "}
-                    <Link href={FOUNDER_DEMO_LAUNCHER_PATH} className="text-primary underline underline-offset-2">
-                      demo launcher
-                    </Link>{" "}
-                    — this form is for real beta accounts only.
+                    Prospects start at{" "}
+                    <a href={marketingBookDemoUrl()} className="text-primary underline underline-offset-2">
+                      book a demo
+                    </a>
+                    {" "}— this form is for real beta accounts only.
                   </>
                 )}
               </p>
