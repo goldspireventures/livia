@@ -48,6 +48,9 @@ import {
   inboxReplyDeliveredOnChannel,
   inboxReplyPlaceholder,
   inboxSiblingThreadsBanner,
+  inboxUnifiedGuestChannelsLabel,
+  inboxUnifiedReplyHint,
+  groupInboxThreadsByCustomer,
 } from "@workspace/policy";
 
 function roleLabel(role: ConversationMessage["role"]): string {
@@ -143,8 +146,18 @@ export default function ConversationScreen() {
 
   const convStatus = detail?.conversation?.status ?? summary?.status;
   const aiHandled = detail?.conversation?.aiHandled ?? summary?.aiHandled ?? true;
-  const messages: ConversationMessage[] = detail?.messages ?? [];
+  const messages: (ConversationMessage & { channel?: string })[] = detail?.messages ?? [];
+  const isUnifiedView = detail?.isUnifiedView ?? false;
+  const replyConversationId = detail?.replyConversationId ?? conversationId;
+  const replyChannel = detail?.replyChannel ?? summary?.channel;
+  const guestGroups = useMemo(() => groupInboxThreadsByCustomer(threads), [threads]);
+  const unifiedChannelsLabel = useMemo(() => {
+    if (!isUnifiedView || !customerId) return null;
+    const group = guestGroups.find((g) => g.customerId === customerId);
+    return group ? inboxUnifiedGuestChannelsLabel(group.channels) : null;
+  }, [isUnifiedView, customerId, guestGroups]);
   const siblingThreads = useMemo(() => {
+    if (isUnifiedView) return [];
     if (detail?.siblingThreads?.length) return detail.siblingThreads;
     if (!customerId) return [];
     return threads
@@ -160,8 +173,8 @@ export default function ConversationScreen() {
         status: t.status,
         lastMessage: t.lastMessage ?? null,
       }));
-  }, [detail?.siblingThreads, customerId, conversationId, threads]);
-  const siblingBanner = inboxSiblingThreadsBanner(siblingThreads);
+  }, [isUnifiedView, detail?.siblingThreads, customerId, conversationId, threads]);
+  const siblingBanner = isUnifiedView ? null : inboxSiblingThreadsBanner(siblingThreads);
   const businessVertical = (currentBusiness as { vertical?: string } | null)?.vertical;
   const livSuggestionChips = useMemo(
     () =>
@@ -203,13 +216,13 @@ export default function ConversationScreen() {
   };
 
   const sendReply = async () => {
-    if (!businessId || !conversationId || !replyDraft.trim()) return;
+    if (!businessId || !replyConversationId || !replyDraft.trim()) return;
     const releaseAfterSend = convStatus === "HANDED_OFF";
     setSending(true);
     try {
       const token = await getToken();
       const res = await fetch(
-        `${getApiBaseUrl()}/api/businesses/${businessId}/conversations/${conversationId}/messages`,
+        `${getApiBaseUrl()}/api/businesses/${businessId}/conversations/${replyConversationId}/messages`,
         {
           method: "POST",
           headers: {
@@ -278,11 +291,15 @@ export default function ConversationScreen() {
           <StatusPill aiHandled={aiHandled} status={convStatus} accent={accent} colors={colors} />
         </View>
         <Text style={[styles.sub, { color: colors.mutedForeground }]} numberOfLines={1}>
-          {inboxChannelLabel(summary?.channel)}
+          {isUnifiedView && unifiedChannelsLabel
+            ? `Liv active on ${unifiedChannelsLabel}`
+            : inboxChannelLabel(summary?.channel)}
           {customerId ? " · tap for profile" : ""}
         </Text>
         <Text style={[styles.channelHint, { color: colors.mutedForeground }]}>
-          {inboxReplyDeliveredOnChannel(summary?.channel)}
+          {isUnifiedView
+            ? inboxUnifiedReplyHint(replyChannel)
+            : inboxReplyDeliveredOnChannel(summary?.channel)}
         </Text>
         {relationship?.headline ? (
           <Text style={[styles.relHeadline, { color: accent }]} numberOfLines={2}>
@@ -401,7 +418,10 @@ export default function ConversationScreen() {
                 style={[styles.bubble, bubbleStyle(m.role)]}
               >
                 <Text style={[styles.msgMeta, { color: colors.mutedForeground }]}>
-                  {roleLabel(m.role)} · {formatTimeInZone(m.createdAt, businessTz)}
+                  {roleLabel(m.role)}
+                  {isUnifiedView && m.channel ? ` · ${inboxChannelLabel(m.channel)}` : ""}
+                  {" · "}
+                  {formatTimeInZone(m.createdAt, businessTz)}
                 </Text>
                 <Text style={[styles.msg, { color: colors.foreground }]}>{m.content}</Text>
               </Animated.View>

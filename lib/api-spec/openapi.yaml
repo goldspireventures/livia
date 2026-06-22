@@ -5398,6 +5398,9 @@ components:
         authorUserId:
           type: ["string", "null"]
           description: Clerk user id when sent by staff from dashboard
+        channel:
+          type: string
+          description: Delivery channel when unified guest view merges multiple threads
         createdAt:
           type: string
           format: date-time
@@ -5430,6 +5433,15 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ConversationSiblingThread"
+        isUnifiedView:
+          type: boolean
+          description: Guest has multiple active channel threads — merged timeline
+        replyConversationId:
+          type: string
+          description: Thread id staff replies route to (last inbound channel)
+        replyChannel:
+          type: string
+          description: Channel label for reply routing in unified view
         messages:
           type: array
           items:

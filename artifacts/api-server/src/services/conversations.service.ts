@@ -146,6 +146,79 @@ export async function listMessagesForConversation(
     .orderBy(asc(conversationMessagesTable.createdAt));
 }
 
+export type UnifiedGuestMessage = {
+  id: string;
+  conversationId: string;
+  role: ConversationMessage["role"];
+  content: string;
+  toolName: string | null;
+  bookingId: string | null;
+  authorUserId: string | null;
+  createdAt: Date;
+  channel: ConversationChannel;
+};
+
+/** Active guest threads (OPEN + HANDED_OFF) with messages for merged inbox timeline. */
+export async function listUnifiedMessagesForGuest(
+  businessId: string,
+  customerId: string,
+): Promise<UnifiedGuestMessage[]> {
+  const rows = await db
+    .select({
+      id: conversationMessagesTable.id,
+      conversationId: conversationMessagesTable.conversationId,
+      role: conversationMessagesTable.role,
+      content: conversationMessagesTable.content,
+      toolName: conversationMessagesTable.toolName,
+      bookingId: conversationMessagesTable.bookingId,
+      authorUserId: conversationMessagesTable.authorUserId,
+      createdAt: conversationMessagesTable.createdAt,
+      channel: conversationsTable.channel,
+    })
+    .from(conversationMessagesTable)
+    .innerJoin(
+      conversationsTable,
+      eq(conversationMessagesTable.conversationId, conversationsTable.id),
+    )
+    .where(
+      and(
+        eq(conversationsTable.businessId, businessId),
+        eq(conversationsTable.customerId, customerId),
+        sql`${conversationsTable.status} IN ('OPEN', 'HANDED_OFF')`,
+      ),
+    )
+    .orderBy(asc(conversationMessagesTable.createdAt));
+
+  return rows.map((row) => ({
+    id: row.id,
+    conversationId: row.conversationId,
+    role: row.role as ConversationMessage["role"],
+    content: row.content,
+    toolName: row.toolName,
+    bookingId: row.bookingId,
+    authorUserId: row.authorUserId,
+    createdAt: row.createdAt,
+    channel: row.channel as ConversationChannel,
+  }));
+}
+
+export async function countGuestActiveThreads(
+  businessId: string,
+  customerId: string,
+): Promise<number> {
+  const rows = await db
+    .select({ id: conversationsTable.id })
+    .from(conversationsTable)
+    .where(
+      and(
+        eq(conversationsTable.businessId, businessId),
+        eq(conversationsTable.customerId, customerId),
+        sql`${conversationsTable.status} IN ('OPEN', 'HANDED_OFF')`,
+      ),
+    );
+  return rows.length;
+}
+
 export async function appendMessage(input: {
   conversationId: string;
   role: ConversationMessageRole;

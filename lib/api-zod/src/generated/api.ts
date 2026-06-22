@@ -3656,6 +3656,18 @@ export const GetConversationResponse = zod.object({
       lastMessageAt: zod.coerce.date(),
     }),
   ),
+  isUnifiedView: zod
+    .boolean()
+    .optional()
+    .describe("Guest has multiple active channel threads — merged timeline"),
+  replyConversationId: zod
+    .string()
+    .optional()
+    .describe("Thread id staff replies route to (last inbound channel)"),
+  replyChannel: zod
+    .string()
+    .optional()
+    .describe("Channel label for reply routing in unified view"),
   messages: zod.array(
     zod.object({
       id: zod.string(),
@@ -3668,6 +3680,12 @@ export const GetConversationResponse = zod.object({
         .string()
         .nullish()
         .describe("Clerk user id when sent by staff from dashboard"),
+      channel: zod
+        .string()
+        .optional()
+        .describe(
+          "Delivery channel when unified guest view merges multiple threads",
+        ),
       createdAt: zod.coerce.date(),
     }),
   ),

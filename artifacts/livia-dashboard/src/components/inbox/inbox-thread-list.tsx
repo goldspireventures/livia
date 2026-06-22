@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 export type InboxThreadRow = {
   id: string;
   channel: string;
+  channels?: string[];
   status: string;
   customerName: string | null;
   customerId?: string | null;
@@ -148,10 +149,12 @@ export function InboxThreadList({
                     (c.aiHandled ? "Liv is handling this thread" : "(no messages yet)")}
                 </p>
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <Badge variant="outline" className="h-5 px-1.5 text-[10px] gap-1 font-normal">
-                    {channelIcon(c.channel)}
-                    {c.channel}
-                  </Badge>
+                  {(c.channels?.length ? c.channels : [c.channel]).map((ch) => (
+                    <Badge key={ch} variant="outline" className="h-5 px-1.5 text-[10px] gap-1 font-normal">
+                      {channelIcon(ch)}
+                      {ch}
+                    </Badge>
+                  ))}
                   {c.status === "HANDED_OFF" ? (
                     <Badge
                       data-inbox-badge="handoff"

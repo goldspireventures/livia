@@ -1,12 +1,14 @@
 import { useListConversations, type ConversationListItem } from "@workspace/api-client-react";
 import {
-  countByInboxQueueLens,
+  countUnifiedInboxQueueLens,
   defaultInboxQueueLens,
+  groupInboxThreadsByCustomer,
   inboxScreenTitle,
   INBOX_QUEUE_LENS_LABELS,
-  isUnifiedConsultInboxVertical,
-  matchesInboxQueueLens,
   inboxMultiChannelListHint,
+  inboxUnifiedListRowToThreadRow,
+  isUnifiedConsultInboxVertical,
+  matchesUnifiedInboxQueueLens,
   type InboxQueueLens,
 } from "@workspace/policy";
 import EventVendorEnquiriesScreen from "../enquiries";
@@ -101,20 +103,30 @@ function MessagingInboxScreen() {
   );
 
   const threads: ConversationListItem[] = Array.isArray(data) ? data : [];
-  const queueCounts = useMemo(() => countByInboxQueueLens(threads), [threads]);
+  const guestGroups = useMemo(() => groupInboxThreadsByCustomer(threads), [threads]);
+  const queueCounts = useMemo(() => countUnifiedInboxQueueLens(guestGroups), [guestGroups]);
   const filtered = useMemo(() => {
     if (!showQueue) return threads;
-    return threads.filter((t) => matchesInboxQueueLens(t, queueLens));
-  }, [threads, queueLens, showQueue]);
+    return guestGroups
+      .filter((g) => matchesUnifiedInboxQueueLens(g, queueLens))
+      .map((g) => {
+        const aggregate = inboxUnifiedListRowToThreadRow(g);
+        const primaryFull = threads.find((t) => t.id === g.primaryConversationId);
+        return (primaryFull
+          ? { ...primaryFull, ...aggregate, id: g.primaryConversationId }
+          : aggregate) as ConversationListItem;
+      });
+  }, [threads, guestGroups, queueLens, showQueue]);
 
   const activeChannelCountByCustomer = useMemo(() => {
     const counts = new Map<string, number>();
-    for (const t of threads) {
-      if (t.status === "CLOSED" || !t.customerId) continue;
-      counts.set(t.customerId, (counts.get(t.customerId) ?? 0) + 1);
+    for (const g of guestGroups) {
+      if (g.customerId && g.channels.length > 1) {
+        counts.set(g.customerId, g.channels.length);
+      }
     }
     return counts;
-  }, [threads]);
+  }, [guestGroups]);
 
   useEffect(() => {
     const cid = params.conversationId;

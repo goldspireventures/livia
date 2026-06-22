@@ -6,7 +6,7 @@ import { livPendingBookingAssistCopy } from "./liv-platform-program";
 export type DemoInboxThreadSpec = {
   customerIdx?: number;
   anonymous?: boolean;
-  channel: "WEB" | "SMS" | "EMAIL" | "VOICE";
+  channel: "WEB" | "SMS" | "EMAIL" | "VOICE" | "WHATSAPP" | "INSTAGRAM" | "MESSENGER";
   status: "OPEN" | "HANDED_OFF" | "CLOSED";
   aiHandled: boolean;
   name: string;
@@ -39,6 +39,42 @@ const SALON_THREADS: DemoInboxThreadSpec[] = [
         minsAgo: 40,
       },
       { role: "USER", content: "Tuesday 2 is perfect, thanks!", minsAgo: 8 },
+    ],
+  },
+  {
+    customerIdx: 0,
+    channel: "WHATSAPP",
+    status: "OPEN",
+    aiHandled: true,
+    name: "Mary McNamara",
+    phone: "+353 87 100 0001",
+    email: "mary.m@email.ie",
+    summary: "WhatsApp — friend watching during colour.",
+    messages: [
+      { role: "USER", content: "Can my friend wait in the back while I'm getting colour?", minsAgo: 18 },
+      {
+        role: "ASSISTANT",
+        content: "Absolutely — we have seating at the back. I'll note it on your booking.",
+        minsAgo: 16,
+      },
+    ],
+  },
+  {
+    customerIdx: 0,
+    channel: "INSTAGRAM",
+    status: "OPEN",
+    aiHandled: true,
+    name: "Mary McNamara",
+    phone: "+353 87 100 0001",
+    email: "mary.m@email.ie",
+    summary: "Instagram DM — same colourist as last visit.",
+    messages: [
+      { role: "USER", content: "Love the tone you got last time — same stylist as my balayage?", minsAgo: 52 },
+      {
+        role: "ASSISTANT",
+        content: "That's Lara — she's free Tuesday when you're moving the appointment. I'll keep everything on one thread.",
+        minsAgo: 48,
+      },
     ],
   },
   {

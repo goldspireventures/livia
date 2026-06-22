@@ -34,13 +34,16 @@ import { usePersona } from "@/lib/persona";
 import { useUser } from "@clerk/clerk-react";
 import { timeGreeting } from "@/lib/persona-rituals";
 import {
-  countByInboxQueueLens,
+  countUnifiedInboxQueueLens,
   sortInboxThreadsByAttention,
   inboxThreadNeedsAttention,
   defaultInboxQueueLens,
   inboxScreenTitle,
   INBOX_QUEUE_LENS_LABELS,
-  matchesInboxQueueLens,
+  matchesUnifiedInboxQueueLens,
+  groupInboxThreadsByCustomer,
+  inboxUnifiedListRowToThreadRow,
+  unifiedInboxGuestNeedsAttention,
   shouldShowInboxContextRail,
   buildTenantPostSessionInboxDraft,
   tenantRetailPostSessionInboxBanner,
@@ -49,13 +52,15 @@ import {
   inboxFloorGuidance,
   inboxChannelLabel,
   inboxCrossChannelOperatorNote,
-  inboxReplyDeliveredOnChannel,
+  inboxUnifiedReplyHint,
+  inboxUnifiedGuestChannelsLabel,
   inboxReplyPlaceholder,
+  inboxReplyDeliveredOnChannel,
   inboxSiblingThreadsBanner,
   inboxNeedsOwnerReply,
   type InboxQueueLens,
 } from "@workspace/policy";
-import { InboxThreadList } from "@/components/inbox/inbox-thread-list";
+import { InboxThreadList, type InboxThreadRow } from "@/components/inbox/inbox-thread-list";
 import { InboxContextRail } from "@/components/inbox/inbox-context-rail";
 import { invalidateOperationalState, OPERATIONAL_REFETCH_MS } from "@/lib/operational-cache";
 import { apiFetch } from "@/lib/api-fetch";
@@ -252,30 +257,35 @@ export default function InboxPage() {
   const updateConversation = useUpdateConversation();
 
   const conversations = (convos ?? []) as unknown as ConversationListItem[];
-  const queueCounts = useMemo(() => countByInboxQueueLens(conversations), [conversations]);
+  const guestGroups = useMemo(() => groupInboxThreadsByCustomer(conversations), [conversations]);
+  const queueCounts = useMemo(() => countUnifiedInboxQueueLens(guestGroups), [guestGroups]);
   const filteredConversations = useMemo(() => {
-    const base = !showRitual
-      ? conversations
-      : conversations.filter((c) => {
-          if (queueLens === "all") return c.status !== "CLOSED";
-          return matchesInboxQueueLens(c, queueLens);
+    const groups = !showRitual
+      ? guestGroups
+      : guestGroups.filter((g) => {
+          if (queueLens === "all") return g.threads.some((t) => t.status !== "CLOSED");
+          return matchesUnifiedInboxQueueLens(g, queueLens);
         });
-    return sortInboxThreadsByAttention(base);
-  }, [conversations, queueLens, showRitual]);
-
-  useEffect(() => {
-    if (!showRitual || conversations.length === 0) return;
-    const attention =
-      (queueCounts.needs_you ?? 0) + (queueCounts.taken_over ?? 0);
-    if (attention > 0 && queueLens === "liv_handling") {
-      setQueueLens("all");
-    }
-  }, [showRitual, conversations.length, queueCounts.needs_you, queueCounts.taken_over, queueLens]);
+    const rows: InboxThreadRow[] = groups.map((g) => {
+      const aggregate = inboxUnifiedListRowToThreadRow(g);
+      return {
+        ...aggregate,
+        channels: g.channels,
+        customerName: g.customerName ?? null,
+        lastMessage: aggregate.lastMessage ?? null,
+        bookingCount: aggregate.bookingCount ?? 0,
+      };
+    });
+    return sortInboxThreadsByAttention(rows);
+  }, [guestGroups, queueLens, showRitual]);
 
   const detailData = detail as
     | {
         conversation: ConversationListItem;
-        messages: ConversationMessageItem[];
+        messages: (ConversationMessageItem & { channel?: string })[];
+        isUnifiedView?: boolean;
+        replyConversationId?: string;
+        replyChannel?: string;
         siblingThreads?: Array<{
           id: string;
           channel: string;
@@ -288,12 +298,13 @@ export default function InboxPage() {
 
   const activeChannelCountByCustomer = useMemo(() => {
     const counts = new Map<string, number>();
-    for (const c of conversations) {
-      if (c.status === "CLOSED" || !c.customerId) continue;
-      counts.set(c.customerId, (counts.get(c.customerId) ?? 0) + 1);
+    for (const g of guestGroups) {
+      if (g.customerId && g.channels.length > 1) {
+        counts.set(g.customerId, g.channels.length);
+      }
     }
     return counts;
-  }, [conversations]);
+  }, [guestGroups]);
 
   const selectedConversation = useMemo(() => {
     if (!selectedId) return null;
@@ -302,7 +313,21 @@ export default function InboxPage() {
     );
   }, [selectedId, detailData, conversations]);
 
+  const replyConversationId = detailData?.replyConversationId ?? selectedId;
+  const isUnifiedView = detailData?.isUnifiedView ?? false;
+  const replyChannel = detailData?.replyChannel ?? selectedConversation?.channel;
+
+  const replyConversation = useMemo(() => {
+    if (!replyConversationId) return selectedConversation;
+    return (
+      conversations.find((c) => c.id === replyConversationId) ??
+      detailData?.conversation ??
+      selectedConversation
+    );
+  }, [replyConversationId, conversations, detailData?.conversation, selectedConversation]);
+
   const siblingThreads = useMemo(() => {
+    if (isUnifiedView) return [];
     if (detailData?.siblingThreads?.length) return detailData.siblingThreads;
     const customerId = selectedConversation?.customerId;
     if (!customerId || !selectedId) return [];
@@ -320,8 +345,24 @@ export default function InboxPage() {
         lastMessage: c.lastMessage ?? null,
         lastMessageAt: c.lastMessageAt,
       }));
-  }, [detailData?.siblingThreads, selectedConversation?.customerId, selectedId, conversations]);
-  const siblingBanner = inboxSiblingThreadsBanner(siblingThreads);
+  }, [isUnifiedView, detailData?.siblingThreads, selectedConversation?.customerId, selectedId, conversations]);
+
+  const unifiedChannelsLabel = useMemo(() => {
+    if (!isUnifiedView || !selectedConversation?.customerId) return null;
+    const group = guestGroups.find((g) => g.customerId === selectedConversation.customerId);
+    return group ? inboxUnifiedGuestChannelsLabel(group.channels) : null;
+  }, [isUnifiedView, selectedConversation?.customerId, guestGroups]);
+
+  const ownerCanReply = useMemo(() => {
+    if (!selectedConversation) return false;
+    if (isUnifiedView && selectedConversation.customerId) {
+      const group = guestGroups.find((g) => g.customerId === selectedConversation.customerId);
+      return group?.threads.some((t) => inboxNeedsOwnerReply(t)) ?? false;
+    }
+    return inboxNeedsOwnerReply(replyConversation ?? selectedConversation);
+  }, [selectedConversation, isUnifiedView, guestGroups, replyConversation]);
+
+  const siblingBanner = isUnifiedView ? null : inboxSiblingThreadsBanner(siblingThreads);
 
   const [resolving, setResolving] = useState(false);
   const [resolveDialog, setResolveDialog] = useState<{
@@ -395,10 +436,11 @@ export default function InboxPage() {
   }
 
   async function sendOwnerReply(releaseAfterSend: boolean) {
-    if (!businessId || !selectedId || !replyDraft.trim()) return;
+    const targetId = replyConversationId ?? selectedId;
+    if (!businessId || !targetId || !replyDraft.trim()) return;
     setSending(true);
     try {
-      await apiFetch(`/businesses/${businessId}/conversations/${selectedId}/messages`, {
+      await apiFetch(`/businesses/${businessId}/conversations/${targetId}/messages`, {
         method: "POST",
         body: JSON.stringify({ content: replyDraft.trim() }),
       });
@@ -406,7 +448,7 @@ export default function InboxPage() {
       if (releaseAfterSend) {
         await new Promise<void>((resolve, reject) => {
           updateConversation.mutate(
-            { businessId, conversationId: selectedId, data: { status: "OPEN" } },
+            { businessId, conversationId: targetId, data: { status: "OPEN" } },
             {
               onSuccess: () => resolve(),
               onError: () => reject(new Error("release failed")),
@@ -415,9 +457,11 @@ export default function InboxPage() {
         });
       }
       invalidateOperationalState(qc, businessId);
-      await qc.invalidateQueries({
-        queryKey: getGetConversationQueryKey(businessId, selectedId),
-      });
+      if (selectedId) {
+        await qc.invalidateQueries({
+          queryKey: getGetConversationQueryKey(businessId, selectedId),
+        });
+      }
       await qc.invalidateQueries({
         queryKey: getListConversationsQueryKey(businessId),
       });
@@ -707,8 +751,15 @@ export default function InboxPage() {
                       className="text-[11px] text-muted-foreground mt-0.5"
                       data-testid="inbox-thread-channel-hint"
                     >
-                      {inboxReplyDeliveredOnChannel(selectedConversation.channel)}
+                      {isUnifiedView
+                        ? inboxUnifiedReplyHint(replyChannel)
+                        : `Replies send on ${inboxChannelLabel(selectedConversation.channel)}`}
                     </p>
+                    {unifiedChannelsLabel ? (
+                      <p className="text-[10px] text-muted-foreground mt-0.5" data-testid="inbox-unified-channels">
+                        Liv active on {unifiedChannelsLabel}
+                      </p>
+                    ) : null}
                     {selectedConversation.customerId && businessId ? (
                       <InboxRelationshipChip
                         businessId={businessId}
@@ -877,7 +928,7 @@ export default function InboxPage() {
                 )}
                 style={{
                   minHeight: inboxMessagesMinHeight(threadMessageCount, {
-                    ownerComposing: inboxNeedsOwnerReply(selectedConversation),
+                    ownerComposing: ownerCanReply,
                   }),
                 }}
                 data-testid="inbox-messages-scroll"
@@ -943,6 +994,11 @@ export default function InboxPage() {
                                     : "bg-muted rounded-bl-sm",
                           )}
                         >
+                          {isUnifiedView && m.channel ? (
+                            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
+                              {inboxChannelLabel(m.channel)}
+                            </p>
+                          ) : null}
                           {isStaff ? (
                             <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
                               Team
@@ -973,7 +1029,7 @@ export default function InboxPage() {
                 )}
               </div>
 
-              {selectedId && inboxNeedsOwnerReply(selectedConversation) ? (
+              {selectedId && ownerCanReply ? (
                 <div
                   className={cn(
                     "shrink-0 border-t backdrop-blur-sm z-10 constellation-inbox-footer",
@@ -1001,7 +1057,7 @@ export default function InboxPage() {
                       <span>
                         <span className="font-medium text-foreground">You&apos;re replying.</span>{" "}
                         Send when ready — Liv resumes this thread after your message.{" "}
-                        {inboxReplyDeliveredOnChannel(selectedConversation?.channel)}.
+                        {inboxUnifiedReplyHint(replyChannel)}.
                       </span>
                     </div>
                   ) : (
@@ -1014,7 +1070,7 @@ export default function InboxPage() {
                   </p>
                   <div className="relative">
                     <Textarea
-                      placeholder={inboxReplyPlaceholder(selectedConversation?.channel)}
+                      placeholder={inboxReplyPlaceholder(replyChannel ?? selectedConversation?.channel)}
                       value={replyDraft}
                       onChange={(e) => setReplyDraft(e.target.value)}
                       rows={

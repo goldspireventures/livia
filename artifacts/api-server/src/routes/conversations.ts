@@ -12,11 +12,14 @@ import {
   getConversation,
   listMessagesForConversation,
   listSiblingOpenThreads,
+  listUnifiedMessagesForGuest,
+  countGuestActiveThreads,
   updateConversationStatus,
   acknowledgeConversationView,
   sendStaffMessage,
   type ConversationStatus,
 } from "../services/conversations.service";
+import { resolveUnifiedReplyTarget } from "@workspace/policy";
 import { resolveConversationCase, type CaseOutcome } from "../services/conversation-case.service";
 
 import { sendError } from "../lib/http-errors";
@@ -62,25 +65,56 @@ router.get(
         ? await listSiblingOpenThreads(businessId, conversationId, conv.customerId)
         : [];
 
+    const activeGuestThreads =
+      conv.customerId != null
+        ? await countGuestActiveThreads(businessId, conv.customerId)
+        : 0;
+    const isUnifiedView = activeGuestThreads > 1;
+
+    const unifiedMessages = isUnifiedView && conv.customerId
+      ? await listUnifiedMessagesForGuest(businessId, conv.customerId)
+      : null;
+
+    const replyTarget = unifiedMessages?.length
+      ? resolveUnifiedReplyTarget(
+          unifiedMessages.map((m) => ({
+            id: m.id,
+            conversationId: m.conversationId,
+            channel: m.channel,
+            role: m.role,
+            content: m.content,
+            createdAt: m.createdAt.toISOString(),
+          })),
+        )
+      : null;
+
+    const payloadMessages = (unifiedMessages ?? messages).map((m) => ({
+      id: m.id,
+      conversationId: m.conversationId,
+      role: m.role,
+      content: m.content,
+      toolName: m.toolName,
+      bookingId: m.bookingId,
+      authorUserId: m.authorUserId,
+      createdAt: m.createdAt instanceof Date ? m.createdAt.toISOString() : m.createdAt,
+      channel: "channel" in m ? m.channel : conv.channel,
+    }));
+
     res.json({
       conversation: { ...conv, lastMessage, messageCount, bookingCount },
-      siblingThreads: siblingThreads.map((s) => ({
-        id: s.id,
-        channel: s.channel,
-        status: s.status,
-        lastMessage: s.lastMessage,
-        lastMessageAt: s.lastMessageAt.toISOString(),
-      })),
-      messages: messages.map((m) => ({
-        id: m.id,
-        conversationId: m.conversationId,
-        role: m.role,
-        content: m.content,
-        toolName: m.toolName,
-        bookingId: m.bookingId,
-        authorUserId: m.authorUserId,
-        createdAt: m.createdAt,
-      })),
+      siblingThreads: isUnifiedView
+        ? []
+        : siblingThreads.map((s) => ({
+            id: s.id,
+            channel: s.channel,
+            status: s.status,
+            lastMessage: s.lastMessage,
+            lastMessageAt: s.lastMessageAt.toISOString(),
+          })),
+      isUnifiedView,
+      replyConversationId: replyTarget?.conversationId ?? conversationId,
+      replyChannel: replyTarget?.channel ?? conv.channel,
+      messages: payloadMessages,
     });
   },
 );

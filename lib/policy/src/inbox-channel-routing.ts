@@ -57,9 +57,12 @@ export function inboxReplyDeliveredOnChannel(channel: string | null | undefined)
   return `Replies send on ${label}`;
 }
 
-/** Operator education when the same guest uses multiple channels. */
+/**
+ * Operator education when the same guest uses multiple channels.
+ * @deprecated unified inbox — use inboxUnifiedReplyHint when merged timeline is shown.
+ */
 export function inboxCrossChannelOperatorNote(): string {
-  return "If a guest later messages on another channel, that opens a separate thread. Reply in the thread where they wrote — we don't auto-switch channels.";
+  return "Liv handles each channel separately. When you reply, we send on the channel they last used.";
 }
 
 /** Compose placeholder tuned to channel. */

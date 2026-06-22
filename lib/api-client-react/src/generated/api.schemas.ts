@@ -1759,6 +1759,8 @@ export interface ConversationMessage {
    * @nullable
    */
   authorUserId?: string | null;
+  /** Delivery channel when unified guest view merges multiple threads */
+  channel?: string;
   createdAt: string;
 }
 
@@ -1796,6 +1798,12 @@ export interface ConversationSiblingThread {
 export interface ConversationDetail {
   conversation: ConversationListItem;
   siblingThreads: ConversationSiblingThread[];
+  /** Guest has multiple active channel threads — merged timeline */
+  isUnifiedView?: boolean;
+  /** Thread id staff replies route to (last inbound channel) */
+  replyConversationId?: string;
+  /** Channel label for reply routing in unified view */
+  replyChannel?: string;
   messages: ConversationMessage[];
 }
 

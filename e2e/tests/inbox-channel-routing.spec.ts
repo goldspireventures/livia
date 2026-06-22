@@ -33,7 +33,7 @@ test.describe("Inbox channel routing", () => {
     await expect(page.getByTestId("inbox-thread-channel-hint")).toContainText(/Replies send on/i);
   });
 
-  test("cross-channel guest shows sibling thread banner", async ({ page }) => {
+  test("cross-channel guest shows unified thread view", async ({ page }) => {
     await openInboxReady(page);
 
     const multiChannelRow = page
@@ -43,8 +43,8 @@ test.describe("Inbox channel routing", () => {
     await expect(multiChannelRow).toBeVisible({ timeout: 15_000 });
     await multiChannelRow.click();
 
-    await expect(page.getByTestId("inbox-sibling-threads-banner")).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByTestId("inbox-sibling-threads-banner")).toContainText(/also has open threads/i);
-    await expect(page.locator("[data-testid^='inbox-sibling-thread-']").first()).toBeVisible();
+    await expect(page.getByTestId("inbox-unified-channels")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId("inbox-unified-channels")).toContainText(/Liv active on/i);
+    await expect(page.getByTestId("inbox-sibling-threads-banner")).toHaveCount(0);
   });
 });

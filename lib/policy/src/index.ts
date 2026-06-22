@@ -60,6 +60,7 @@ export * from "./persona-reports";
 export * from "./public-holidays";
 export * from "./country-locale-pack";
 export * from "./inbox-queue";
+export * from "./inbox-unified-thread";
 export * from "./wedge-gate";
 export * from "./client-profile-policy";
 export * from "./operator-ui-copy";
