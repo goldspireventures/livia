@@ -7,6 +7,7 @@ import {
   useListConversations,
   useUpdateBooking,
 } from "@workspace/api-client-react";
+import { goLiveRibbonFromActivation, type OnboardingState } from "@workspace/policy";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import * as Linking from "expo-linking";
@@ -33,6 +34,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ActivationWelcome } from "@/components/ActivationWelcome";
 import { ActivationMilestone } from "@/components/ActivationMilestone";
+import { SetupGuidedFlowCard } from "@/components/SetupGuidedFlowCard";
 import { BookingCard } from "@/components/BookingCard";
 import { AuroraHalo } from "@/components/brand/AuroraHalo";
 import { Shimmer } from "@/components/brand/Shimmer";
@@ -259,6 +261,15 @@ export default function DashboardScreen() {
   const isOwnerHome = role === "OWNER" || role === "ADMIN";
 
   const vertical = (currentBusiness as { vertical?: string } | undefined)?.vertical;
+  const showGoLiveRibbon =
+    isOwnerHome &&
+    !!currentBusiness &&
+    goLiveRibbonFromActivation({
+      activation: summary?.activation,
+      onboardingState: (bizDetail as { onboardingState?: OnboardingState } | undefined)?.onboardingState,
+      vertical,
+      slug: currentBusiness.slug,
+    });
   const consultFirst = isConsultFirstVertical(vertical);
   const pack = verticalPackUi(vertical, (bizDetail as { category?: string } | undefined)?.category);
   const [consultDash, setConsultDash] = useState<ConsultDashboard | null>(null);
@@ -485,7 +496,17 @@ export default function DashboardScreen() {
         ) : null}
       </Animated.View>
 
-      {!useConstellationToday && !useMorphToday ? <ActivationMilestone /> : null}
+      {showGoLiveRibbon && currentBusiness ? (
+        <SetupGuidedFlowCard
+          businessId={currentBusiness.id}
+          onboardingState={(bizDetail as { onboardingState?: OnboardingState } | undefined)?.onboardingState}
+          vertical={vertical}
+          slug={currentBusiness.slug}
+          sacredMetricMet={summary?.activation?.sacredMetricMet === true}
+        />
+      ) : !useConstellationToday && !useMorphToday ? (
+        <ActivationMilestone />
+      ) : null}
       {showRitualHeader ? <ActivationWelcome /> : null}
 
       {isOwnerHome && isFirstRun ? <SoloOperatorFirstRun pack={operatorXp} /> : null}

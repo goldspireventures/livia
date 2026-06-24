@@ -31,6 +31,19 @@ const publishReady = buildSetupGuidedFlow({
 assert.equal(publishReady.currentPhaseId, "publish");
 assert.equal(publishReady.publicPath, "/book/bloom");
 
+const awaitFirstBook = buildSetupGuidedFlow({
+  onboardingState: stateWithActs(
+    "a2_shop_profile",
+    "a5_hours",
+    "a6_liv",
+    "a3_service_menu",
+    "a8_public_link",
+  ),
+  slug: "bloom",
+  sacredMetricMet: false,
+});
+assert.equal(awaitFirstBook.currentPhaseId, "first_booking");
+
 const activated = buildSetupGuidedFlow({
   onboardingState: stateWithActs(
     "a2_shop_profile",

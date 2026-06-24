@@ -6,6 +6,7 @@ import {
 } from "@workspace/api-client-react";
 import {
   buildSetupGuidedFlow as buildSetupGuidedFlowPolicy,
+  GO_LIVE_RIBBON_COPY,
   type OnboardingState,
   type SetupGuidedFlowPhase,
 } from "@workspace/policy";
@@ -67,7 +68,7 @@ export function SetupGuidedFlowCard({
     >
       <View style={styles.head}>
         <Feather name="zap" size={14} color={colors.primary} />
-        <Text style={[styles.eyebrow, { color: colors.primary }]}>Guided setup</Text>
+        <Text style={[styles.eyebrow, { color: colors.primary }]}>{GO_LIVE_RIBBON_COPY.eyebrow}</Text>
         <Text style={[styles.meta, { color: colors.mutedForeground }]}>
           Step {stepIndex}/{flow.phases.length}
           {serverFlow?.percentComplete != null ? ` · ${serverFlow.percentComplete}%` : ""}

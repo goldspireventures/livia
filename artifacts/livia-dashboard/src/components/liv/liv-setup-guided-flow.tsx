@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Check, Circle, ExternalLink, Layers, Sparkles } from "lucide-react";
+import { Check, Circle, Copy, ExternalLink, Layers, Sparkles } from "lucide-react";
 import {
   useGetLivSetupGuidedFlow,
   type LivSetupGuidedFlow as LivSetupGuidedFlowData,
@@ -7,6 +7,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { publicBookingUrl } from "@/lib/surface-urls";
+import { GO_LIVE_RIBBON_COPY } from "@workspace/policy";
+import { useToast } from "@/hooks/use-toast";
 
 type Props = {
   businessId: string;
@@ -16,6 +19,7 @@ type Props = {
 };
 
 export function LivSetupGuidedFlow({ businessId, compact, onAskLiv, className }: Props) {
+  const { toast } = useToast();
   const { data, isLoading, refetch } = useGetLivSetupGuidedFlow(businessId, {
     query: { enabled: !!businessId } as never,
   });
@@ -35,9 +39,21 @@ export function LivSetupGuidedFlow({ businessId, compact, onAskLiv, className }:
   if (data.complete && !blockersOnly) return null;
 
   const publicUrl =
-    data.publicPath && typeof window !== "undefined"
-      ? `${window.location.origin}${data.publicPath}`
-      : data.publicPath;
+    data.publicPath?.match(/^\/book\/([^/?]+)/)?.[1] != null
+      ? publicBookingUrl(data.publicPath.match(/^\/book\/([^/?]+)/)![1]!)
+      : data.publicPath && typeof window !== "undefined"
+        ? `${window.location.origin}${data.publicPath}`
+        : data.publicPath;
+
+  async function copyPublicLink() {
+    if (!publicUrl || typeof publicUrl !== "string") return;
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      toast({ title: GO_LIVE_RIBBON_COPY.copied });
+    } catch {
+      toast({ title: "Could not copy link", variant: "destructive" });
+    }
+  }
 
   return (
     <div
@@ -141,12 +157,18 @@ export function LivSetupGuidedFlow({ businessId, compact, onAskLiv, className }:
         </div>
       ) : null}
 
-      {data.publicPath && data.currentPhaseId === "publish" ? (
+      {(data.publicPath && (data.currentPhaseId === "publish" || data.currentPhaseId === "first_booking")) ? (
         <div className="flex flex-wrap items-center gap-2 text-xs">
-          <code className="rounded bg-muted px-2 py-1 font-mono">{publicUrl ?? data.publicPath}</code>
+          <code className="rounded bg-muted px-2 py-1 font-mono truncate max-w-[min(100%,280px)]">
+            {publicUrl ?? data.publicPath}
+          </code>
+          <Button type="button" variant="secondary" size="sm" onClick={() => void copyPublicLink()}>
+            <Copy className="ml-0 mr-1 h-3 w-3" />
+            {GO_LIVE_RIBBON_COPY.copyLink}
+          </Button>
           <Button variant="outline" size="sm" asChild>
             <a href={data.publicPath} target="_blank" rel="noopener noreferrer">
-              Preview
+              {GO_LIVE_RIBBON_COPY.preview}
               <ExternalLink className="ml-1 h-3 w-3" />
             </a>
           </Button>

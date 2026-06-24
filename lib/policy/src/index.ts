@@ -147,6 +147,7 @@ export * from "./commerce-act-playbooks";
 export * from "./commerce-briefing";
 export * from "./commerce-entitlements-program";
 export * from "./platform-gating-program";
+export * from "./go-live-program";
 export * from "./commerce-addon-program";
 export * from "./commerce-signals";
 export * from "./event-vendor-quote-program";

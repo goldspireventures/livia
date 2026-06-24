@@ -80,7 +80,7 @@ import {
 } from "@/components/ui/select";
 
 import { KeysChangedRitual } from "@/components/lifecycle/keys-changed-ritual";
-import { OnboardingProgressBanner } from "@/components/onboarding-progress-banner";
+import { GoLiveRibbon } from "@/components/dashboard/go-live-ribbon";
 import { OperatorMaturityBanner } from "@/components/operator-maturity-banner";
 import { PlatformTour } from "@/components/platform-tour";
 import { NotificationCenter } from "@/components/notification-center";
@@ -535,7 +535,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             showBeautyFlower && isBeautyPresentationPreset() && "beauty-skin-surface",
           )}
         >
-          {!appearanceEmbed ? <OnboardingProgressBanner /> : null}
+          {!appearanceEmbed ? <GoLiveRibbon /> : null}
           {!appearanceEmbed && !wellnessNativeMorph ? <OperatorMaturityBanner /> : null}
           {!appearanceEmbed ? <PlatformTour /> : null}
           <ErrorBoundary key={location}>{children}</ErrorBoundary>

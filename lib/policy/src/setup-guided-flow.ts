@@ -98,8 +98,8 @@ export function buildSetupGuidedFlow(args: {
   let currentPhaseId: SetupGuidedFlowPhaseId = "first_booking";
   if (!setupDone) currentPhaseId = "setup";
   else if (!publishPhaseDone) currentPhaseId = "publish";
-  else if (!billingPhaseDone) currentPhaseId = "billing";
   else if (!firstBookingDone) currentPhaseId = "first_booking";
+  else if (!billingPhaseDone) currentPhaseId = "billing";
 
   const setupHeadline = setupDone
     ? "Shop essentials are in place."
@@ -133,7 +133,7 @@ export function buildSetupGuidedFlow(args: {
       label: "Billing",
       headline: billingPhaseDone
         ? "Plan selected or beta noted."
-        : "Closed beta is free — lock pricing before launch.",
+        : "Closed beta is free — pick a plan when you're ready.",
       done: billingPhaseDone,
       current: currentPhaseId === "billing",
       href: "/settings?tab=billing",
