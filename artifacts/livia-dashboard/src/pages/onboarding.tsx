@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Loader2, Sparkles } from "lucide-react";
 import { OnboardingWizard, type OnboardingStatePayload } from "@/components/onboarding/onboarding-wizard";
 import { isDemoLoginEnabled } from "@/lib/persona";
-import { afterBusinessCreatedState } from "@workspace/policy";
+import { afterBusinessCreatedState, pickPrimarySessionBusiness } from "@workspace/policy";
 import { OnboardingExperienceShell } from "@/components/onboarding/onboarding-experience-shell";
 import { OnboardingWelcomePanel } from "@/components/onboarding-welcome-panel";
 import { marketingBookDemoUrl } from "@/lib/demo-routes";
@@ -19,6 +19,8 @@ import { isOnboardingPortalExperienceEnabled } from "@/lib/onboarding-portal-ena
 type BusinessRow = {
   id: string;
   slug: string;
+  ownerId?: string;
+  vertical?: string | null;
   onboardingState?: OnboardingStatePayload | null;
 };
 
@@ -50,12 +52,18 @@ export default function OnboardingPage() {
       return;
     }
     apiFetch<BusinessRow[]>("/me/businesses")
-      .then((businesses) => {
-        const latest = businesses[0];
+      .then((rows) => {
+        const clerkUserId = user?.id ?? "";
+        const email = user?.primaryEmailAddress?.emailAddress ?? null;
+        const latest = pickPrimarySessionBusiness(
+          rows as Parameters<typeof pickPrimarySessionBusiness>[0],
+          clerkUserId,
+          email,
+        );
         if (latest) {
           setBusinessId(latest.id);
           setBusinessSlug(latest.slug);
-          const v = (latest as { vertical?: string }).vertical;
+          const v = latest.vertical;
           if (v) setPreviewVertical(v);
           const raw = latest.onboardingState;
           if (raw && typeof raw === "object" && "currentAct" in raw) {
@@ -77,7 +85,7 @@ export default function OnboardingPage() {
         });
       })
       .finally(() => setLoading(false));
-  }, [intent.secondShop, toast]);
+  }, [intent.secondShop, toast, user?.id, user?.primaryEmailAddress?.emailAddress]);
 
   const loadDemoData = async () => {
     setSeedLoading(true);

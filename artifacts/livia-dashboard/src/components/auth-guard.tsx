@@ -15,6 +15,17 @@ import { prospectDemoEntryUrl } from "@/lib/demo-routes";
 import { localDevSignInPath, isLocalDashboardDev } from "@/lib/local-dashboard-auth";
 import { ProspectDemoRedirect } from "@/components/prospect-demo-redirect";
 import { isOnboardingAppUnlocked, type OnboardingState } from "@workspace/policy";
+import {
+  filterSessionBusinesses,
+  pickPrimarySessionBusiness,
+  shouldSkipLegalToDashboard,
+  type SessionBusinessLike,
+} from "@workspace/policy";
+import { useAuthSessionReset } from "@/hooks/use-auth-session-reset";
+import {
+  pruneStalePersistedBusinessId,
+  readPersistedBusinessId,
+} from "@/lib/tenant-session-storage";
 import { PlatformExecHandoff } from "@/components/platform-exec-handoff";
 import {
   applyTenantPresentationSkin,
@@ -108,15 +119,22 @@ export function AuthGuard({ children }: { children: ReactNode }) {
 
   return (
     <PlatformExecHandoff>
-      {location === "/legal-acceptance" ? (
-        <BusinessDataLoader skipLegalGate>{children}</BusinessDataLoader>
-      ) : (
-        <PlatformLegalGate>
-          <BusinessDataLoader>{children}</BusinessDataLoader>
-        </PlatformLegalGate>
-      )}
+      <AuthSessionBoundary>
+        {location === "/legal-acceptance" ? (
+          <BusinessDataLoader skipLegalGate>{children}</BusinessDataLoader>
+        ) : (
+          <PlatformLegalGate>
+            <BusinessDataLoader>{children}</BusinessDataLoader>
+          </PlatformLegalGate>
+        )}
+      </AuthSessionBoundary>
     </PlatformExecHandoff>
   );
+}
+
+function AuthSessionBoundary({ children }: { children: ReactNode }) {
+  useAuthSessionReset();
+  return <>{children}</>;
 }
 
 function BusinessDataLoader({
@@ -127,22 +145,32 @@ function BusinessDataLoader({
   skipLegalGate?: boolean;
 }) {
   const queryClient = useQueryClient();
-  const { data: businesses, isLoading } = useGetMyBusinesses();
+  const { data: businesses, isLoading } = useGetMyBusinesses({
+    query: { staleTime: 0, refetchOnMount: "always" } as never,
+  });
   const [location] = useLocation();
   const { user } = useUser();
   const demoEmail = isDemoAccountEmail(user?.primaryEmailAddress?.emailAddress);
+  const clerkUserId = user?.id ?? "";
+  const email = user?.primaryEmailAddress?.emailAddress ?? null;
 
-  const list = normalizeBusinessList(businesses);
-  const initialBusiness = useMemo(() => {
-    if (list.length === 0) return null;
-    const persisted =
-      typeof window !== "undefined" ? window.localStorage.getItem("livia.currentBusinessId") : null;
-    if (persisted) {
-      const found = list.find((b) => b.id === persisted);
-      if (found) return found;
-    }
-    return list[0] ?? null;
+  const list = useMemo(() => {
+    const raw = normalizeBusinessList(businesses);
+    return filterSessionBusinesses(raw, email);
+  }, [businesses, email]);
+
+  useEffect(() => {
+    pruneStalePersistedBusinessId(new Set(list.map((b) => b.id)));
   }, [list]);
+
+  const initialBusiness = useMemo(() => {
+    return pickPrimarySessionBusiness(
+      list as SessionBusinessLike[],
+      clerkUserId,
+      email,
+      readPersistedBusinessId(),
+    );
+  }, [list, clerkUserId, email]);
 
   useEffect(() => {
     const businessId = initialBusiness?.id;
@@ -179,14 +207,24 @@ function BusinessDataLoader({
 
   if (
     !skipLegalGate &&
-    hasAny &&
-    location === "/legal-acceptance"
+    location === "/legal-acceptance" &&
+    shouldSkipLegalToDashboard({
+      businesses: list as SessionBusinessLike[],
+      clerkUserId,
+      email,
+    })
   ) {
     return <Redirect to="/dashboard" />;
   }
 
   return (
-    <BusinessProvider businesses={list} isLoading={isLoading}>
+    <BusinessProvider
+      businesses={list}
+      isLoading={isLoading}
+      clerkUserId={clerkUserId}
+      sessionEmail={email}
+      initialBusinessId={initialBusiness?.id ?? null}
+    >
       <MembershipProvider>
         <OnboardingGate>
           <RoleGate>{children}</RoleGate>

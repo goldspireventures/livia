@@ -6,6 +6,7 @@ import { requireAuth, getUserId, resolveMembership, getStaffIdForUser } from "..
 import { getOrCreateUser, getUserById, updateUser } from "../services/users.service";
 import { getDemoPersonaByEmail, isDemoEmail } from "../lib/demo-portal-config";
 import { DEMO_SCENARIO_ACCOUNTS } from "../lib/demo-scenario-config";
+import { filterSessionBusinesses, isDemoSessionEmail } from "@workspace/policy";
 import {
   buildPlatformLegalAcceptance,
   hasCurrentPlatformLegal,
@@ -160,14 +161,17 @@ router.get("/me/businesses", requireAuth, async (req, res): Promise<void> => {
   const userId = getUserId(req);
   let businesses = await getBusinessesForUser(userId);
   const user = await getUserById(userId);
-  if (user?.email && isDemoEmail(user.email)) {
+  const email = user?.email ?? null;
+  if (email && isDemoSessionEmail(email)) {
     const def =
-      getDemoPersonaByEmail(user.email) ??
-      DEMO_SCENARIO_ACCOUNTS.find((p) => p.email.toLowerCase() === user.email!.toLowerCase());
+      getDemoPersonaByEmail(email) ??
+      DEMO_SCENARIO_ACCOUNTS.find((p) => p.email.toLowerCase() === email.toLowerCase());
     if (def?.businessSlugs?.length) {
       const allowed = new Set(def.businessSlugs);
       businesses = businesses.filter((b) => b.slug && allowed.has(b.slug));
     }
+  } else {
+    businesses = filterSessionBusinesses(businesses, email);
   }
   res.json(businesses);
 });

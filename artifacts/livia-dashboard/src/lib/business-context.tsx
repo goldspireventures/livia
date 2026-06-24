@@ -7,8 +7,10 @@ import {
 } from "@/lib/prefetch-tenant-dashboard";
 import { warmTenantPresentationSkin } from "@/lib/tenant-presentation-sync";
 
+import { pickPrimarySessionBusiness, type SessionBusinessLike } from "@workspace/policy";
+import { readPersistedBusinessId } from "@/lib/tenant-session-storage";
+
 const STORAGE_KEY = "livia.currentBusinessId";
-const LEGACY_KEYS = ["livia_current_business_id"];
 
 interface BusinessContextType {
   business: Business | null;
@@ -32,54 +34,44 @@ export function normalizeBusinessList(input: unknown): Business[] {
   return [];
 }
 
-/**
- * Resolve the active business from a list of memberships.
- * Order: persisted-id-if-still-member > first OWNER membership > businesses[0].
- * Per ADR 0010 (multi-tenant + persona model) — the Tenant axis is first-class
- * and persisted client-side; we don't put the businessId in the URL.
- */
-function readPersistedBusinessId(): string | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const current = window.localStorage.getItem(STORAGE_KEY);
-    if (current) return current;
-    for (const key of LEGACY_KEYS) {
-      const legacy = window.localStorage.getItem(key);
-      if (legacy) {
-        window.localStorage.setItem(STORAGE_KEY, legacy);
-        window.localStorage.removeItem(key);
-        return legacy;
-      }
-    }
-    for (const key of LEGACY_KEYS) {
-      window.localStorage.removeItem(key);
-    }
-  } catch {
-    return null;
-  }
-  return null;
-}
-
-function resolveInitialBusiness(businesses: Business[]): Business | null {
+function resolveInitialBusiness(
+  businesses: Business[],
+  clerkUserId?: string,
+  sessionEmail?: string | null,
+  preferredId?: string | null,
+): Business | null {
   if (businesses.length === 0) return null;
-  const persisted = readPersistedBusinessId();
+  if (clerkUserId) {
+    const picked = pickPrimarySessionBusiness(
+      businesses as SessionBusinessLike[],
+      clerkUserId,
+      sessionEmail,
+      preferredId ?? readPersistedBusinessId(),
+    );
+    if (picked) return picked as Business;
+  }
+  const persisted = preferredId ?? readPersistedBusinessId();
   if (persisted) {
     const found = businesses.find((b) => b.id === persisted);
     if (found) return found;
   }
-  // Prefer the first business where the user is OWNER, if role info ever lands
-  // on the Business object. For now, just return the first.
-  return businesses[0];
+  return businesses[0] ?? null;
 }
 
 export function BusinessProvider({
   children,
   businesses: businessesInput = [],
   isLoading,
+  clerkUserId,
+  sessionEmail,
+  initialBusinessId,
 }: {
   children: ReactNode;
   businesses?: Business[] | unknown;
   isLoading?: boolean;
+  clerkUserId?: string;
+  sessionEmail?: string | null;
+  initialBusinessId?: string | null;
 }) {
   const qc = useQueryClient();
   const businesses = useMemo(
@@ -87,16 +79,16 @@ export function BusinessProvider({
     [businessesInput],
   );
   const [business, setBusinessState] = useState<Business | null>(() =>
-    resolveInitialBusiness(businesses)
+    resolveInitialBusiness(businesses, clerkUserId, sessionEmail, initialBusinessId),
   );
 
   // Re-resolve whenever the membership list changes (e.g. after invite accept).
   useEffect(() => {
     setBusinessState((prev) => {
       if (prev && businesses.find((b) => b.id === prev.id)) return prev;
-      return resolveInitialBusiness(businesses);
+      return resolveInitialBusiness(businesses, clerkUserId, sessionEmail, initialBusinessId);
     });
-  }, [businesses]);
+  }, [businesses, clerkUserId, sessionEmail, initialBusinessId]);
 
   const persist = useCallback((b: Business | null) => {
     try {

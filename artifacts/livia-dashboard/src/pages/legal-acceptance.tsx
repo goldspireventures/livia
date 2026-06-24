@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useUser } from "@clerk/clerk-react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -9,23 +10,29 @@ import { apiFetch } from "@/lib/api-fetch";
 import { legalUrl } from "@/lib/surface-urls";
 import { Loader2 } from "lucide-react";
 import {
+  resolvePostLegalDestination,
+  platformLegalAcceptanceBullets,
   platformLegalAcceptanceDescription,
   platformLegalAcceptanceTitle,
+  type OnboardingState,
 } from "@workspace/policy";
 
 const TOS_URL = legalUrl("tos");
 const PRIVACY_URL = legalUrl("privacy");
 const DPA_URL = legalUrl("dpa");
 
-type MeLegal = {
-  platformLegalAccepted?: boolean;
+type BusinessRow = {
+  id: string;
+  slug: string;
+  ownerId?: string;
+  vertical?: string | null;
+  onboardingState?: OnboardingState | null;
 };
-
-type BusinessRow = { id: string };
 
 export default function LegalAcceptancePage() {
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
+  const { user } = useUser();
   const [agreed, setAgreed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,15 +47,21 @@ export default function LegalAcceptancePage() {
         body: JSON.stringify({ accept: true }),
       });
       await queryClient.invalidateQueries({ queryKey: ["me-legal"] });
+      await queryClient.invalidateQueries({ queryKey: ["/me/businesses"] });
 
-      let destination = "/onboarding";
+      const clerkUserId = user?.id ?? "";
+      const email = user?.primaryEmailAddress?.emailAddress ?? null;
+
+      let destination: "/onboarding" | "/dashboard" = "/onboarding";
       try {
         const businesses = await apiFetch<BusinessRow[]>("/me/businesses");
-        if (businesses.length > 0) {
-          destination = "/dashboard";
-        }
+        destination = resolvePostLegalDestination({
+          businesses,
+          clerkUserId,
+          email,
+        });
       } catch {
-        // Fall back to onboarding if businesses list is unavailable
+        destination = "/onboarding";
       }
 
       navigate(destination);
@@ -76,19 +89,9 @@ export default function LegalAcceptancePage() {
           </CardHeader>
           <CardContent className="space-y-6">
             <ul className="text-sm text-muted-foreground space-y-2 list-disc pl-5">
-              <li>
-                <strong className="text-foreground font-medium">No KYB in closed beta</strong> — we do not
-                verify Companies Registration, VAT, or licences in-product yet. You attest that you operate a
-                legitimate business when you create your shop.
-              </li>
-              <li>
-                You remain responsible for your own client-facing policies, insurance, and sector rules (e.g.
-                medspa, tattoo, financial promotions).
-              </li>
-              <li>
-                Legal pages are beta scaffolds — counsel review before public launch is tracked in{" "}
-                <code className="text-xs">docs/legal/</code>.
-              </li>
+              {platformLegalAcceptanceBullets().map((bullet) => (
+                <li key={bullet}>{bullet}</li>
+              ))}
             </ul>
 
             <div className="flex flex-wrap gap-3 text-sm">
@@ -97,13 +100,14 @@ export default function LegalAcceptancePage() {
               </a>
               <a
                 href={PRIVACY_URL}
-                target="_blank" rel="noopener noreferrer"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-primary hover:underline"
               >
                 Privacy policy
               </a>
               <a href={DPA_URL} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                DPA (processor)
+                Data processing (DPA)
               </a>
             </div>
 
@@ -118,12 +122,12 @@ export default function LegalAcceptancePage() {
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
             <Button className="w-full" disabled={!agreed || saving} onClick={() => void submit()}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continue to setup"}
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continue to shop setup"}
             </Button>
 
             <p className="text-center text-xs text-muted-foreground">
-              Opening a demo shop? Use <strong className="text-foreground">Continue to setup</strong> above — you
-              will land on your dashboard if that business is already provisioned.
+              New here? You&apos;ll name your shop on the next screen — we won&apos;t drop you into a demo
+              business.
             </p>
           </CardContent>
         </Card>
