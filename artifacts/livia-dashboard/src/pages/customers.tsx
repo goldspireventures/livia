@@ -233,7 +233,7 @@ export default function CustomersPage() {
       {!isConsultFirst ? <BeautyFillCycleCard id="fill-cycle" /> : null}
 
       {total !== undefined ? (
-        <div className="grid grid-cols-2 gap-3 max-w-md">
+        <div className="max-w-xs">
           <Card className={cn(beautyPanel(beautyChrome), op.wellness && op.panel())}>
             <CardContent className="py-4">
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Total {clientNounPlural}</p>
@@ -246,22 +246,10 @@ export default function CustomersPage() {
               >
                 {total}
               </p>
-            </CardContent>
-          </Card>
-          <Card className={cn(beautyPanel(beautyChrome), op.wellness && op.panel())}>
-            <CardContent className="py-4">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">In directory</p>
-              <p
-                className={cn(
-                  "text-2xl font-semibold tabular-nums",
-                  beautyChrome && "font-serif tracking-tight",
-                )}
-                style={beautyChrome ? { fontFamily: "var(--app-font-serif)" } : undefined}
-              >
-                {accumulated.length}
-              </p>
               {hasMore ? (
-                <p className="text-[10px] text-muted-foreground mt-1">Load more below the list</p>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Showing {accumulated.length} — load more below
+                </p>
               ) : null}
             </CardContent>
           </Card>

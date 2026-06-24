@@ -16,6 +16,7 @@ import {
   wellnessRow,
 } from "@/lib/wellness-operational-ui";
 import { cn } from "@/lib/utils";
+import { bookingsListScrollViewportClass } from "@/lib/bookings-list-layout";
 
 /** Beauty, wellness native, or Platform Default constellation — company-wide presentation. */
 export function useOperationalChrome(vertical?: string | null) {
@@ -49,7 +50,7 @@ export function useOperationalChrome(vertical?: string | null) {
       cn(
         beauty ? beautyListScroll(extra) : "",
         wellness ? wellnessListScroll(extra) : "",
-        constellation && cn("divide-y divide-border/60 overscroll-contain", extra),
+        constellation && cn("divide-y divide-border/60", bookingsListScrollViewportClass, extra),
         !beauty && !wellness && !constellation && "divide-y divide-border/70 overscroll-contain",
       ),
     row: (attention?: boolean, extra?: string) =>
@@ -58,7 +59,8 @@ export function useOperationalChrome(vertical?: string | null) {
         wellnessRow(wellness, attention, extra),
         constellation &&
           cn(
-            "border-border/60 hover:bg-muted/30 transition-colors",
+            "flex items-center gap-2.5 px-3 py-2 transition-colors cursor-pointer",
+            "border-border/60 hover:bg-muted/30",
             attention && "bg-primary/5 border-l-2 border-l-primary",
             extra,
           ),

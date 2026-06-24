@@ -169,14 +169,14 @@ export default function BillingControls({ showRemediationStrip = true }: { showR
         toast({
           title: "Billing not fully configured",
           description: data?.priceEnv
-            ? `API is missing ${data.priceEnv}. In local dev, remove STRIPE_SECRET_KEY or add price IDs to .env.`
+            ? "Card payments are not fully set up for this environment. Contact support if checkout fails."
             : detail,
           variant: "destructive",
         });
       } else if (code === "STRIPE_NOT_CONFIGURED") {
         toast({
           title: "Billing unavailable",
-          description: "Stripe is not configured on the API server for this environment.",
+          description: "Card payments are not available yet. Contact support to enable billing.",
           variant: "destructive",
         });
       } else {

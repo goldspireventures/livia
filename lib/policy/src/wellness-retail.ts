@@ -14,11 +14,11 @@ export type WellnessRetailSku = {
 export const WELLNESS_RETAIL_PROGRAM = {
   title: "Post-session retail",
   subtitle:
-    "Hydration, body oils, and gift sets — on your /b page and as a calm inbox thread after checkout.",
+    "Hydration, body oils, and gift sets — on your booking page and as a calm inbox thread after checkout.",
   defaultPublicTitle: "Take the ritual home",
   inboxActionLabel: "Draft post-session thread in Inbox",
   continuityVariant: "post_session" as const,
-  note: "Guest bag + pay link on /b; reception can still hand off at the desk.",
+  note: "Guest bag + pay link on your booking page; reception can still hand off at the desk.",
   inboxFlowHint:
     "Opens Inbox with a draft loaded — pick the guest's thread from today's session, review, and send.",
 } as const;

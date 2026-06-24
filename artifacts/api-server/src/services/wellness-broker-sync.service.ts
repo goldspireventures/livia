@@ -22,6 +22,23 @@ export async function runWellnessBrokerSync(
         payload: result,
       };
     }
+    case "migration_acuity":
+    case "acuity": {
+      const { runMigrationOAuthPull } = await import("./migration-oauth-import.service");
+      const pull = await runMigrationOAuthPull(businessId, { brokerId: "migration_acuity" });
+      return { ok: pull.ok, message: pull.message, payload: pull };
+    }
+    case "migration_square":
+    case "square_appointments": {
+      const { runMigrationOAuthPull } = await import("./migration-oauth-import.service");
+      const pull = await runMigrationOAuthPull(businessId, { brokerId: "migration_square" });
+      return { ok: pull.ok, message: pull.message, payload: pull };
+    }
+    case "migration_fresha": {
+      const { runMigrationOAuthPull } = await import("./migration-oauth-import.service");
+      const pull = await runMigrationOAuthPull(businessId, { brokerId: "migration_fresha" });
+      return { ok: pull.ok, message: pull.message, payload: pull };
+    }
     case "stripe":
     case "payments_stripe":
       return {

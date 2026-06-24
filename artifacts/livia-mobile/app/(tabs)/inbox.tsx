@@ -121,8 +121,8 @@ function MessagingInboxScreen() {
   const activeChannelCountByCustomer = useMemo(() => {
     const counts = new Map<string, number>();
     for (const g of guestGroups) {
-      if (g.customerId && g.channels.length > 1) {
-        counts.set(g.customerId, g.channels.length);
+      if (g.customerId && g.activeChannels.length > 1) {
+        counts.set(g.customerId, g.activeChannels.length);
       }
     }
     return counts;

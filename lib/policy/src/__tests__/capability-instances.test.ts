@@ -4,6 +4,7 @@ import {
   reconcileCapabilityInstances,
   onboardingActsFromCapabilityBlockers,
   capabilityBlockerHref,
+  SETTINGS_CHANNELS_SETUP_HREF,
   applyManualCapabilityInstanceState,
   summarizeCapabilityHealth,
   deriveOnboardingAdvancesFromReadiness,
@@ -62,7 +63,10 @@ assert.ok(acts.includes("a3_service_menu"));
 assert.ok(acts.includes("a7_channels"));
 assert.equal(acts[0], "a3_service_menu");
 
-assert.equal(capabilityBlockerHref("messaging", "Configure SMS or channels"), "/settings?tab=comms");
+assert.equal(
+  capabilityBlockerHref("messaging", "Configure SMS or channels"),
+  SETTINGS_CHANNELS_SETUP_HREF,
+);
 
 const health = summarizeCapabilityHealth(first.mergedCapabilities);
 assert.ok(health.total >= 3);

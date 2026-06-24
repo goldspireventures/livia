@@ -15,6 +15,7 @@ import { ParallelRunPanel } from "@/components/settings/parallel-run-panel";
 import { CalendarSyncPanel } from "@/components/settings/calendar-sync-panel";
 import { IntakeQueuePanel } from "@/components/settings/intake-queue-panel";
 import { UniversalImportPanel } from "@/components/settings/universal-import-panel";
+import { MagicSetupPanel } from "@/components/settings/magic-setup-panel";
 import { customFetch } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { invalidateOperationalState } from "@/lib/operational-cache";
@@ -200,8 +201,12 @@ export default function IntegrationsControls() {
             columns and completes setup steps for you.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
           <UniversalImportPanel businessId={bid} />
+          <div className="border-t border-border/60 pt-4">
+            <p className="text-sm font-medium mb-3">Magic setup — multiple files at once</p>
+            <MagicSetupPanel businessId={bid} compact />
+          </div>
         </CardContent>
       </Card>
 

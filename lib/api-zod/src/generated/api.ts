@@ -2642,6 +2642,18 @@ export const GetDashboardSummaryResponse = zod.object({
   todayBookings: zod.number(),
   weekBookings: zod.number(),
   pendingCount: zod.number(),
+  studioPendingCount: zod
+    .number()
+    .optional()
+    .describe(
+      "PENDING bookings where the studio must confirm or review (excludes guest deposit waits)",
+    ),
+  guestActionPendingCount: zod
+    .number()
+    .optional()
+    .describe(
+      "PENDING bookings waiting on guest deposit, continuity, or reply",
+    ),
   confirmedCount: zod.number(),
   completedTodayCount: zod.number(),
   noShowTodayCount: zod.number(),
@@ -2836,6 +2848,12 @@ export const GetDashboardSummaryResponse = zod.object({
     .optional()
     .describe(
       "Owner operating pulse — Liv handling \/ guest completing \/ needs you",
+    ),
+  activeWaitlistCount: zod
+    .number()
+    .optional()
+    .describe(
+      "Active slot waitlist entries — Liv nudges on Today when count reaches threshold",
     ),
 });
 

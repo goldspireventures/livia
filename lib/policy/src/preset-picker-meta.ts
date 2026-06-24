@@ -26,7 +26,7 @@ const META: Record<string, PresetPickerMeta> = {
     morph: "constellation",
     morphLabel: "Constellation",
     operatorIntent: "Classic Livia Today — briefing, inbox, and bookings on the constellation shell.",
-    guestIntent: "Vertical default `/b` until you pick a studio skin.",
+    guestIntent: "Vertical default booking page until you pick a studio skin.",
     whenToPick: "Start here, then choose a native preset for your studio mood.",
   },
   /* —— Hair —— */
@@ -47,7 +47,7 @@ const META: Record<string, PresetPickerMeta> = {
     morph: "timeline-rail",
     morphLabel: "Timeline",
     operatorIntent: "Modern timeline Today — airy spacing, fast scan down the day.",
-    guestIntent: "Minimal `/b` — clean slots, no visual noise.",
+    guestIntent: "Minimal booking page — clean slots, no visual noise.",
     whenToPick: "Contemporary salons and blow-dry bars prioritising clarity.",
   },
   "hair-barber-bold": {
@@ -68,7 +68,7 @@ const META: Record<string, PresetPickerMeta> = {
     morph: "pipeline",
     morphLabel: "Consult → proof → session",
     operatorIntent: "Pipeline Today — consults, proof review, and session-ready rows in one desk.",
-    guestIntent: "Moody `/b` — artist roster, sessions, aftercare shop, approved flash gallery.",
+    guestIntent: "Moody booking page — artist roster, sessions, aftercare shop, approved flash gallery.",
     whenToPick: "Traditional tattoo studios and custom work shops.",
   },
   "body-art-flash-light": {
@@ -78,7 +78,7 @@ const META: Record<string, PresetPickerMeta> = {
     morph: "pipeline",
     morphLabel: "Flash desk",
     operatorIntent: "Bright proof desk — artwork on paper-white cards, pipeline sidebar.",
-    guestIntent: "Flash-sheet `/b` — swipe gallery, walk-in friendly book flow.",
+    guestIntent: "Flash-sheet booking page — swipe gallery, walk-in friendly book flow.",
     whenToPick: "Walk-in flash days and artists who live on light desk aesthetics.",
   },
   "body-art-minimal-mono": {
@@ -88,7 +88,7 @@ const META: Record<string, PresetPickerMeta> = {
     morph: "standard",
     morphLabel: "Minimal list",
     operatorIntent: "Compact mono shell — proof queue as a tight list, no chrome fuss.",
-    guestIntent: "Typography-led `/b` — proof page with square mats and uppercase labels.",
+    guestIntent: "Typography-led booking page — proof page with square mats and uppercase labels.",
     whenToPick: "Solo artists who want software to disappear.",
   },
   /* —— Wellness —— */
@@ -99,7 +99,7 @@ const META: Record<string, PresetPickerMeta> = {
     morph: "atrium",
     morphLabel: "Room atrium",
     operatorIntent: "Atrium Today — lanes per room, concierge inbox, gift-ready retail.",
-    guestIntent: "Calm spa `/b` — ritual copy, couples packages, take-home retail.",
+    guestIntent: "Calm spa booking page — ritual copy, couples packages, take-home retail.",
     whenToPick: "Day spas and multi-room wellness studios.",
   },
   "wellness-session-rail": {
@@ -109,7 +109,7 @@ const META: Record<string, PresetPickerMeta> = {
     morph: "timeline-rail",
     morphLabel: "Time rail",
     operatorIntent: "Vertical time rail — one therapist's day in a single scroll.",
-    guestIntent: "Slot list `/b` — pick a time, minimal marketing chrome.",
+    guestIntent: "Slot list booking page — pick a time, minimal marketing chrome.",
     whenToPick: "Solo therapists and small teams living by the clock.",
   },
   "wellness-evening-ledger": {
@@ -119,7 +119,7 @@ const META: Record<string, PresetPickerMeta> = {
     morph: "ledger",
     morphLabel: "Evening ledger",
     operatorIntent: "Ledger Today — vouchers, packages, and evening retreat check-ins.",
-    guestIntent: "Retreat `/b` — gift vouchers and ritual booking path.",
+    guestIntent: "Retreat booking page — gift vouchers and ritual booking path.",
     whenToPick: "Retreat venues and evening-only spas.",
   },
   /* —— Fitness —— */
@@ -130,7 +130,7 @@ const META: Record<string, PresetPickerMeta> = {
     morph: "timeline-rail",
     morphLabel: "Class roster",
     operatorIntent: "High-energy dark shell — classes and PT blocks on a bold timeline.",
-    guestIntent: "Class-first `/b` — roster visible, strong CTA to book.",
+    guestIntent: "Class-first booking page — roster visible, strong CTA to book.",
     whenToPick: "Gyms and HIIT studios with class-heavy ops.",
   },
   "fitness-studio-clean": {
@@ -140,7 +140,7 @@ const META: Record<string, PresetPickerMeta> = {
     morph: "standard",
     morphLabel: "Studio cards",
     operatorIntent: "Bright Pilates/yoga Today — capacity and waitlist forward.",
-    guestIntent: "Airy `/b` — class tiles with spots remaining.",
+    guestIntent: "Airy booking page — class tiles with spots remaining.",
     whenToPick: "Boutique movement studios and reformer rooms.",
   },
   "fitness-coach-compact": {
@@ -161,7 +161,7 @@ const META: Record<string, PresetPickerMeta> = {
     morph: "standard",
     morphLabel: "Clinical cards",
     operatorIntent: "Consent-forward Today — procedures, intakes, and audit trail visible.",
-    guestIntent: "Clinical `/b` — consent step in book flow, restrained palette.",
+    guestIntent: "Clinical booking page — consent step in book flow, restrained palette.",
     whenToPick: "Medspas and aesthetic clinics with compliance-first ops.",
   },
   "medspa-luxury-serif": {
@@ -171,7 +171,7 @@ const META: Record<string, PresetPickerMeta> = {
     morph: "standard",
     morphLabel: "Luxury list",
     operatorIntent: "Premium dark cockpit — serif headers, wide margins on Today.",
-    guestIntent: "High-end `/b` — editorial spacing, premium tone.",
+    guestIntent: "High-end booking page — editorial spacing, premium tone.",
     whenToPick: "Luxury aesthetics clinics and celebrity-facing practices.",
   },
   "medspa-minimal-consent": {
@@ -181,7 +181,7 @@ const META: Record<string, PresetPickerMeta> = {
     morph: "standard",
     morphLabel: "Form-first",
     operatorIntent: "Form-dense shell — intakes and mandates dominate the layout.",
-    guestIntent: "Procedure + consent steps lead the `/b` wizard.",
+    guestIntent: "Procedure + consent steps lead the booking page wizard.",
     whenToPick: "Clinics where compliance screens outrank marketing.",
   },
   /* —— Allied health —— */
@@ -192,7 +192,7 @@ const META: Record<string, PresetPickerMeta> = {
     morph: "timeline-rail",
     morphLabel: "Care timeline",
     operatorIntent: "Physio/chiro timeline — follow-ups and care plans visible.",
-    guestIntent: "Professional `/b` — short slots, clinical trust copy.",
+    guestIntent: "Professional booking page — short slots, clinical trust copy.",
     whenToPick: "Physio, chiro, and standard outpatient clinics.",
   },
   "allied-practice-warm": {
@@ -202,7 +202,7 @@ const META: Record<string, PresetPickerMeta> = {
     morph: "standard",
     morphLabel: "Warm cards",
     operatorIntent: "Approachable Today — softer tone, patient-friendly density.",
-    guestIntent: "Welcoming `/b` — less clinical, more neighbourhood practice.",
+    guestIntent: "Welcoming booking page — less clinical, more neighbourhood practice.",
     whenToPick: "Family practices and community clinics.",
   },
   "allied-compact-desk": {
@@ -223,7 +223,7 @@ const META: Record<string, PresetPickerMeta> = {
     morph: "standard",
     morphLabel: "Playful cards",
     operatorIntent: "Friendly groomer Today — pet profiles and pickup SMS forward.",
-    guestIntent: "Playful `/b` — pet details in book flow, warm colours.",
+    guestIntent: "Playful booking page — pet details in book flow, warm colours.",
     whenToPick: "Neighbourhood groomers and daycare-style salons.",
   },
   "pet-clean-groom": {
@@ -233,7 +233,7 @@ const META: Record<string, PresetPickerMeta> = {
     morph: "timeline-rail",
     morphLabel: "Salon timeline",
     operatorIntent: "Professional salon timeline — tidy day board, SMS pickup.",
-    guestIntent: "Clean `/b` — breed/size guards, professional tone.",
+    guestIntent: "Clean booking page — breed/size guards, professional tone.",
     whenToPick: "Premium grooming salons and multi-staff shops.",
   },
   "pet-mobile-van": {
@@ -243,7 +243,7 @@ const META: Record<string, PresetPickerMeta> = {
     morph: "standard",
     morphLabel: "Route list",
     operatorIntent: "Mobile route list — compact day, van-friendly density.",
-    guestIntent: "Simple `/b` — address-first booking for mobile groomers.",
+    guestIntent: "Simple booking page — address-first booking for mobile groomers.",
     whenToPick: "Mobile groomers and van routes.",
   },
   /* —— Automotive —— */
@@ -254,7 +254,7 @@ const META: Record<string, PresetPickerMeta> = {
     morph: "atrium",
     morphLabel: "Bay floor",
     operatorIntent: "Bay timeline — vehicle-aware packages and floor overview.",
-    guestIntent: "Industrial `/b` — package cards, valet comms tone.",
+    guestIntent: "Industrial booking page — package cards, valet comms tone.",
     whenToPick: "Detail shops and multi-bay studios.",
   },
   "auto-showroom-light": {
@@ -264,7 +264,7 @@ const META: Record<string, PresetPickerMeta> = {
     morph: "standard",
     morphLabel: "Showroom",
     operatorIntent: "Premium detail Today — package upsell and valet handoffs.",
-    guestIntent: "Showroom `/b` — package-first book path.",
+    guestIntent: "Showroom booking page — package-first book path.",
     whenToPick: "Premium detail and concierge valet services.",
   },
   "auto-compact-mobile": {
@@ -274,7 +274,7 @@ const META: Record<string, PresetPickerMeta> = {
     morph: "standard",
     morphLabel: "Mobile list",
     operatorIntent: "Mobile detailer list — one-thumb day, late broadcast ready.",
-    guestIntent: "Minimal `/b` — location and slot, fast confirm.",
+    guestIntent: "Minimal booking page — location and slot, fast confirm.",
     whenToPick: "Mobile detailers and solo operators.",
   },
   /* —— Event vendors —— */

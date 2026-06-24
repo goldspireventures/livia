@@ -55,6 +55,8 @@ export async function getGuestBookingByToken(
   slug: string,
   token: string,
 ): Promise<GuestBookingView | null> {
+  const normalizedToken = token.trim();
+  if (!normalizedToken) return null;
   const [row] = await db
     .select({
       bookingId: bookingsTable.id,
@@ -84,7 +86,7 @@ export async function getGuestBookingByToken(
     .innerJoin(customersTable, eq(bookingsTable.customerId, customersTable.id))
     .leftJoin(staffTable, eq(bookingsTable.staffId, staffTable.id))
     .where(
-      and(eq(bookingGuestAccessTable.token, token), eq(businessesTable.slug, slug)),
+      and(eq(bookingGuestAccessTable.token, normalizedToken), eq(businessesTable.slug, slug)),
     )
     .limit(1);
 

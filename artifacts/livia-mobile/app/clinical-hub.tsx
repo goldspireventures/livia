@@ -26,12 +26,11 @@ import {
   submitMedspaIntake,
   type MedspaConsentRow,
   type MedspaIntakeRow,
-  type WaitlistRow,
 } from "@/lib/medspa-api";
 import { verticalAccentHex } from "@/lib/vertical-theme";
 import { fonts, type } from "@/constants/typography";
 
-type Tab = "consents" | "intakes" | "waitlist";
+type Tab = "consents" | "intakes";
 
 export default function ClinicalHubScreen() {
   const colors = useColors();
@@ -49,7 +48,6 @@ export default function ClinicalHubScreen() {
   const [loading, setLoading] = useState(true);
   const [consents, setConsents] = useState<MedspaConsentRow[]>([]);
   const [intakes, setIntakes] = useState<MedspaIntakeRow[]>([]);
-  const [waitlist, setWaitlist] = useState<WaitlistRow[]>([]);
   const [signTarget, setSignTarget] = useState<MedspaConsentRow | null>(null);
   const [signature, setSignature] = useState("");
   const [signing, setSigning] = useState(false);
@@ -72,11 +70,9 @@ export default function ClinicalHubScreen() {
       const data = await fetchClinicalHub(bid);
       setConsents(data.consents);
       setIntakes(data.intakes);
-      setWaitlist(data.waitlist);
     } catch {
       setConsents([]);
       setIntakes([]);
-      setWaitlist([]);
     } finally {
       setLoading(false);
     }
@@ -154,14 +150,13 @@ export default function ClinicalHubScreen() {
   const tabs: { id: Tab; label: string; count?: number }[] = [
     { id: "consents", label: "Consents", count: consents.length },
     { id: "intakes", label: "Intakes", count: intakes.length },
-    { id: "waitlist", label: "Waitlist", count: waitlist.length },
   ];
 
   return (
     <OperationalScreen
       eyebrow="Medspa"
       title="Clinical hub"
-      subtitle="Consent queue, medical intake review, and slot waitlist — separate from booking approvals."
+      subtitle="Consent queue and medical intake review — separate from booking approvals. Slot waitlist is on Today via Liv."
       refreshing={loading}
       onRefresh={() => void load()}
       actions={
@@ -304,39 +299,7 @@ export default function ClinicalHubScreen() {
           ))
         )}
         </>
-      ) : waitlist.length === 0 ? (
-        <EmptyState
-          icon="clock"
-          title="Waitlist empty"
-          subtitle="When a slot opens, Liv can offer it to waitlisted clients automatically."
-        />
-      ) : (
-        waitlist.map((row) => (
-          <View
-            key={row.id}
-            style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
-          >
-            <Text style={[styles.cardTitle, { color: colors.foreground }]}>
-              {row.phone ?? row.email ?? "Contact on file"}
-            </Text>
-            <Text style={[styles.cardMeta, { color: colors.mutedForeground }]}>
-              Joined {new Date(row.createdAt).toLocaleString()}
-            </Text>
-            {row.offeredBookingId ? (
-              <Pressable
-                onPress={() => router.push(`/booking/${row.offeredBookingId}` as never)}
-                style={{ marginTop: 8 }}
-              >
-                <Text style={{ color: accent, fontFamily: fonts.bodySemi }}>View offered booking</Text>
-              </Pressable>
-            ) : (
-              <Text style={[styles.cardMeta, { color: colors.mutedForeground, marginTop: 4 }]}>
-                Active — waiting for a slot
-              </Text>
-            )}
-          </View>
-        ))
-      )}
+      ) : null}
 
       <Text style={[styles.footnote, { color: colors.mutedForeground }]}>
         Booking confirmations that need a yes still live under Approvals. This hub is clinical compliance only.

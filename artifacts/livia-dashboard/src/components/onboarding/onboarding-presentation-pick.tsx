@@ -112,7 +112,7 @@ export function OnboardingPresentationPick({ businessId, onReviewed }: Props) {
         <Label className="text-sm font-medium">How customers see your booking page</Label>
       </div>
       <p className="text-xs text-muted-foreground">
-        Each preset changes layout and colours for your app and `/b` link — pick what fits your studio.
+        Each preset changes layout and colours for your app and booking link — pick what fits your studio.
         Change anytime under Settings → Appearance.
       </p>
       <div

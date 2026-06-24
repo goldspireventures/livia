@@ -149,7 +149,7 @@ export function CommerceFixPanel() {
                 type="button"
                 onClick={() => navigateSettingsHref("/onboarding", navigate)}
               >
-                Publish /b link first
+                Publish your booking link first
               </Button>
             )
           }

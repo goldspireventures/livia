@@ -140,7 +140,7 @@
 | Notifications (staff) | `product/NOTIFICATIONS.md` | workflows/ |
 | Notifications (customer P7) | `product/CUSTOMER-NOTIFICATIONS-SPEC.md` | CUSTOMER-NOTIFICATIONS |
 | Global search | `product/GLOBAL-SEARCH-SPEC.md` | — |
-| Import / migration | `product/IMPORT-MIGRATION-SPEC.md` | booksy-import-runbook |
+| Import / migration | `product/INCUMBENT-MIGRATION-ATLAS.md` · `product/IMPORT-MIGRATION-SPEC.md` | booksy-import-runbook |
 | Feature flags | `product/FEATURE-FLAGS-SPEC.md` | internal /flags |
 | Performance budgets | `product/PERFORMANCE-BUDGETS.md` | MULTI-HAT-GAP-REVIEW |
 | Resource inventory | `product/RESOURCE-INVENTORY-SPEC.md` | booking-guards, medspa |

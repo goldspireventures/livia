@@ -102,7 +102,7 @@ function addonOnboardingBlurb(id: CommerceAddonId): string {
     return "Optional — seed product templates now; unlock to publish on your book page and send post-session pay links.";
   }
   if (id === "event_operator_pack") {
-    return "Quote-led workflow — enquiries, itemised quotes, milestone deposits, and optional full /e/ website. Public booking (/b) is on your base plan.";
+    return "Quote-led workflow — enquiries, itemised quotes, milestone deposits, and optional full /e/ website. Public booking page is on your base plan.";
   }
   return COMMERCE_ADDON_REGISTRY[id].name;
 }

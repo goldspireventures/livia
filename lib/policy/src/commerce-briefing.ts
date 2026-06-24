@@ -78,31 +78,33 @@ export function resolveCommerceOwnerBriefingCta(signals: CommerceBriefingInput):
 /** Up to three Liv nudges for owner home / mobile today tab. */
 export function ownerHomeLivSuggestions(signals: {
   pendingCount: number;
+  studioPendingCount?: number;
   handedOffCount: number;
+  inboxAttentionCount?: number;
   atRiskCount?: number;
   lowFeedbackCount?: number;
   commerce?: CommerceBriefingInput;
 }): OwnerLivSuggestion[] {
   const out: OwnerLivSuggestion[] = [];
-  const p = Math.max(0, signals.pendingCount);
-  const h = Math.max(0, signals.handedOffCount);
+  const studioPending = Math.max(0, signals.studioPendingCount ?? signals.pendingCount);
+  const inbox = Math.max(0, signals.inboxAttentionCount ?? signals.handedOffCount);
   const atRisk = Math.max(0, signals.atRiskCount ?? 0);
   const low = Math.max(0, signals.lowFeedbackCount ?? 0);
   const c = signals.commerce ?? {};
 
-  if (p > 0) {
+  if (studioPending > 0) {
     out.push({
       id: "pending",
-      label: p === 1 ? "Confirm 1 pending" : `Confirm ${p} pending`,
-      href: "/bookings?status=PENDING",
+      label: studioPending === 1 ? "Confirm 1 pending" : `Confirm ${studioPending} pending`,
+      href: "/bookings?status=PENDING&lens=needs_you",
       priority: 1,
     });
   }
-  if (h > 0) {
+  if (inbox > 0) {
     out.push({
       id: "handoff",
-      label: h === 1 ? "Review 1 handoff" : `Review ${h} handoffs`,
-      href: "/inbox?lens=taken_over",
+      label: inbox === 1 ? "Review 1 inbox thread" : `Review ${inbox} inbox threads`,
+      href: "/inbox?lens=needs_you",
       priority: 2,
     });
   }
@@ -124,7 +126,7 @@ export function ownerHomeLivSuggestions(signals: {
   }
   const commerceCta = resolveCommerceOwnerBriefingCta({
     ...c,
-    demandBookings: c.demandBookings ?? p + Math.max(0, (signals as { confirmedCount?: number }).confirmedCount ?? 0),
+    demandBookings: c.demandBookings ?? studioPending + Math.max(0, (signals as { confirmedCount?: number }).confirmedCount ?? 0),
   });
   if (commerceCta) {
     out.push({

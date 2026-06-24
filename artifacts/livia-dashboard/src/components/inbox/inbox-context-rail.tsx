@@ -9,7 +9,14 @@ import { CalendarCheck, ExternalLink, Sparkles, User } from "lucide-react";
 import { OPERATIONAL_REFETCH_MS } from "@/lib/operational-cache";
 import { beautyOutlineButton } from "@/lib/beauty-operational-ui";
 import { cn } from "@/lib/utils";
-import { unknownGuestInboxHint, unknownGuestInboxLabel } from "@workspace/policy";
+import {
+  unknownGuestInboxHint,
+  unknownGuestInboxLabel,
+  inboxContextBookingSectionTitle,
+  inboxContextBookingStatusLabel,
+  inboxContextBookingSummary,
+  isUpcomingBookingStatus,
+} from "@workspace/policy";
 
 type LinkedBooking = {
   id: string;
@@ -107,10 +114,23 @@ export function InboxContextRail({
           : `${unknownGuestInboxLabel()} — ${unknownGuestInboxHint()}`;
 
   const nextBookingSummary = booking
-    ? `${booking.service?.name ?? "Appointment"} · ${formatBookingWhen(booking.startAt)}`
+    ? inboxContextBookingSummary(
+        booking.service?.name,
+        booking.startAt,
+        booking.status,
+        formatBookingWhen,
+      )
     : bookingId && isLoading
       ? "Loading…"
       : "Nothing linked on this thread";
+
+  const bookingSectionTitle = booking
+    ? inboxContextBookingSectionTitle(booking.status)
+    : "Booking";
+
+  const showRelationshipNextVisit =
+    !!rel?.nextBookingAt &&
+    (!booking || !isUpcomingBookingStatus(booking.status));
 
   return (
     <aside
@@ -121,27 +141,12 @@ export function InboxContextRail({
       data-testid="inbox-context-rail"
     >
       <div className="px-4 py-3 border-b border-border/60">
-        <h2 className="text-xs uppercase tracking-widest text-muted-foreground font-medium">Guest</h2>
+        <h2 className="text-xs uppercase tracking-widest text-muted-foreground font-medium">
+          Thread context
+        </h2>
+        <p className="text-xs text-muted-foreground mt-1">Since {threadSince}</p>
       </div>
       <div className="p-4 space-y-4 flex-1 overflow-y-auto">
-        <div>
-          {customerId ? (
-            <Link
-              href={profileHref}
-              className="text-sm font-semibold truncate block hover:text-primary transition-colors"
-              data-testid="inbox-context-customer-link"
-            >
-              {conversation.customerName ?? "Guest"}
-            </Link>
-          ) : (
-            <p className="text-sm font-semibold truncate">{conversation.customerName ?? "Guest"}</p>
-          )}
-          <p className="text-xs text-muted-foreground mt-0.5 truncate">
-            {conversation.customerEmail ?? conversation.customerPhone ?? "No contact on file"}
-          </p>
-          <p className="text-xs text-muted-foreground mt-2">Thread since {threadSince}</p>
-        </div>
-
         {hasMemory ? (
           <div
             className={cn(
@@ -206,9 +211,9 @@ export function InboxContextRail({
         ) : null}
 
         <SettingsDisclosure
-          title="Next booking"
+          title={bookingSectionTitle}
           description={nextBookingSummary}
-          defaultOpen={Boolean(booking)}
+          defaultOpen={Boolean(booking && isUpcomingBookingStatus(booking.status))}
           className="[&_summary]:py-2 [&>div]:pb-2"
           data-testid="inbox-context-booking-section"
         >
@@ -228,10 +233,15 @@ export function InboxContextRail({
                 {booking.service?.name ?? "Appointment"}
               </div>
               <p className="text-xs text-muted-foreground pl-5">{formatBookingWhen(booking.startAt)}</p>
-              <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground pl-5">
-                {booking.status}
+              <p className="text-[10px] font-medium tracking-wide text-muted-foreground pl-5">
+                {inboxContextBookingStatusLabel(booking.status)}
               </p>
             </div>
+          ) : null}
+          {showRelationshipNextVisit && rel?.nextBookingAt ? (
+            <p className="text-xs text-muted-foreground pt-1">
+              Next visit · {formatBookingWhen(rel.nextBookingAt)}
+            </p>
           ) : null}
         </SettingsDisclosure>
 

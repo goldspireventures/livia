@@ -26,7 +26,10 @@ export type OwnerHomeModuleLayout =
   | { mode: "dual" };
 
 export type OwnerHomeSignals = {
+  /** All PENDING bookings — includes guest deposit waits. */
   pendingCount: number;
+  /** PENDING bookings where the studio must act (confirm / policy / manual). */
+  studioPendingCount?: number;
   openInboxCount: number;
   livNeedsAttention?: boolean;
   mandateRung?: string;
@@ -60,7 +63,9 @@ export function resolveOwnerHomeKpiChips(
   signals: {
     todayBookings: number;
     pendingCount: number;
+    studioPendingCount?: number;
     handedOffCount: number;
+    inboxAttentionCount?: number;
     atRiskCount?: number;
     lowFeedbackCount?: number;
     capturedMinor30d?: number;
@@ -79,16 +84,17 @@ export function resolveOwnerHomeKpiChips(
   if (isConsultFirstVertical(vertical)) {
     const chips: OwnerHomeKpiId[] = ["newEnquiries", "quotedEnquiries"];
     if (Math.max(0, signals.staleQuotes ?? 0) > 0) chips.push("staleQuotes");
-    if (Math.max(0, signals.handedOffCount) > 0) chips.push("inboxHandoffs");
+    if (Math.max(0, signals.inboxAttentionCount ?? signals.handedOffCount) > 0) chips.push("inboxHandoffs");
     return chips;
   }
 
   const chips: OwnerHomeKpiId[] = ["todayBookings"];
+  const studioPending = Math.max(0, signals.studioPendingCount ?? signals.pendingCount);
   if (Math.max(0, signals.colourDayBlocks ?? 0) > 0) chips.push("colourDayBlocks");
   if (Math.max(0, signals.medspaConsentQueueCount ?? 0) > 0) chips.push("medspaConsentQueue");
   if (Math.max(0, signals.fillsDueCount ?? 0) > 0) chips.push("fillsDue");
-  if (Math.max(0, signals.handedOffCount) > 0) chips.push("inboxHandoffs");
-  if (Math.max(0, signals.pendingCount) > 0) chips.push("toConfirm");
+  if (Math.max(0, signals.inboxAttentionCount ?? signals.handedOffCount) > 0) chips.push("inboxHandoffs");
+  if (studioPending > 0) chips.push("toConfirm");
   if (Math.max(0, signals.lowFeedbackCount ?? 0) > 0) chips.push("lowFeedback");
   if (Math.max(0, signals.atRiskCount ?? 0) > 0) chips.push("atRiskGuests");
   if (
@@ -106,10 +112,40 @@ export function resolveOwnerHomeKpiChips(
   return chips;
 }
 
+/** Drop queue KPIs when operating pulse already surfaces inbox / pending counts. */
+export function filterOwnerHomeKpiWhenOperatingPulseVisible(
+  chips: OwnerHomeKpiId[],
+  pulse?: { needsYou: number; guestAction: number } | null,
+): OwnerHomeKpiId[] {
+  if (!pulse) return chips;
+  if (pulse.needsYou <= 0 && pulse.guestAction <= 0) return chips;
+  return chips.filter((id) => id !== "inboxHandoffs" && id !== "toConfirm");
+}
+
+/** Briefing CTA duplicates operating pulse + queue panels when both are visible. */
+export function shouldShowOwnerHomeBriefingCta(signals: {
+  consultFirst?: boolean;
+  operatingPulseActive?: boolean;
+  moduleShowsQueueDetail?: boolean;
+}): boolean {
+  if (signals.consultFirst) return true;
+  if (signals.operatingPulseActive && signals.moduleShowsQueueDetail) return false;
+  return true;
+}
+
+/** Operating pulse header action duplicates inbox / pending preview panels. */
+export function shouldShowOwnerOperatingPulsePrimaryAction(
+  moduleLayout: OwnerHomeModuleLayout,
+): boolean {
+  return moduleLayout.mode === "all_clear";
+}
+
 /** Owner briefing primary CTA — ops queue first, then relationship/trust nudges. */
 export function ownerHomeNeedsBriefingAction(signals: {
   pendingCount: number;
+  studioPendingCount?: number;
   handedOffCount: number;
+  inboxAttentionCount?: number;
   atRiskCount?: number;
   lowFeedbackCount?: number;
   captureRatePercent?: number | null;
@@ -117,9 +153,11 @@ export function ownerHomeNeedsBriefingAction(signals: {
   confirmedCount?: number;
   weekBookings?: number;
 }): boolean {
+  const studioPending = Math.max(0, signals.studioPendingCount ?? signals.pendingCount);
+  const inbox = Math.max(0, signals.inboxAttentionCount ?? signals.handedOffCount);
   return (
-    Math.max(0, signals.pendingCount) > 0 ||
-    Math.max(0, signals.handedOffCount) > 0 ||
+    studioPending > 0 ||
+    inbox > 0 ||
     Math.max(0, signals.lowFeedbackCount ?? 0) > 0 ||
     Math.max(0, signals.atRiskCount ?? 0) > 0 ||
     ownerHomeCommerceNeedsAttention(signals) ||
@@ -134,7 +172,9 @@ export function ownerHomeNeedsBriefingAction(signals: {
 /** Owner briefing primary CTA — ops queue first, then relationship/trust nudges. */
 export function resolveOwnerHomeBriefingCta(signals: {
   pendingCount: number;
+  studioPendingCount?: number;
   handedOffCount: number;
+  inboxAttentionCount?: number;
   atRiskCount?: number;
   lowFeedbackCount?: number;
   captureRatePercent?: number | null;
@@ -144,20 +184,20 @@ export function resolveOwnerHomeBriefingCta(signals: {
   fallbackHref: string;
   fallbackLabel: string;
 }): { href: string; label: string } {
-  const p = Math.max(0, signals.pendingCount);
-  const h = Math.max(0, signals.handedOffCount);
+  const studioPending = Math.max(0, signals.studioPendingCount ?? signals.pendingCount);
+  const inbox = Math.max(0, signals.inboxAttentionCount ?? signals.handedOffCount);
   const low = Math.max(0, signals.lowFeedbackCount ?? 0);
   const atRisk = Math.max(0, signals.atRiskCount ?? 0);
-  if (p > 0) {
+  if (studioPending > 0) {
     return {
-      href: "/bookings?status=PENDING", // keep in sync with pending-booking-flow.PENDING_BOOKINGS_LIST_HREF
-      label: p === 1 ? "Confirm 1 pending" : `Confirm ${p} pending`,
+      href: "/bookings?status=PENDING&lens=needs_you",
+      label: studioPending === 1 ? "Confirm 1 pending" : `Confirm ${studioPending} pending`,
     };
   }
-  if (h > 0) {
+  if (inbox > 0) {
     return {
-      href: "/inbox?lens=taken_over",
-      label: h === 1 ? "Review 1 handoff" : `Review ${h} handoffs`,
+      href: "/inbox?lens=needs_you",
+      label: inbox === 1 ? "Review 1 inbox thread" : `Review ${inbox} inbox threads`,
     };
   }
   if (low > 0) {
@@ -175,7 +215,7 @@ export function resolveOwnerHomeBriefingCta(signals: {
   const commerceCta = resolveCommerceOwnerBriefingCta({
     captureRatePercent: signals.captureRatePercent,
     paymentCount30d: signals.paymentCount30d,
-    demandBookings: p + Math.max(0, signals.confirmedCount ?? 0),
+    demandBookings: studioPending + Math.max(0, signals.confirmedCount ?? 0),
     weekBookings: signals.weekBookings,
   });
   if (commerceCta) return commerceCta;
@@ -184,8 +224,11 @@ export function resolveOwnerHomeBriefingCta(signals: {
 
 /** Which inbox/pending panels to render — avoids two empty min-height cards. */
 export function resolveOwnerHomeModuleLayout(signals: {
-  /** Global pending (briefing / nav badges). */
+  /** Global pending (all buckets). */
   pendingCount: number;
+  /** Studio-actionable pending — defaults to pendingCount when omitted. */
+  studioPendingCount?: number;
+  /** Inbox threads needing studio reply (not Liv-on / guest waits). */
   openInboxCount: number;
   /** Pending rows surfaced on Today home — defaults to pendingCount when omitted. */
   homePendingCount?: number;
@@ -206,7 +249,7 @@ export function resolveOwnerHomeModuleLayout(signals: {
     return { mode: "single", focus: "inbox" };
   }
 
-  const homePending = Math.max(0, signals.homePendingCount ?? signals.pendingCount);
+  const homePending = Math.max(0, signals.homePendingCount ?? signals.studioPendingCount ?? signals.pendingCount);
   const showHomePending = homePending > 0 && !signals.pendingSurfacedElsewhere;
   const i = Math.max(0, signals.openInboxCount);
   if (!showHomePending && i === 0) return { mode: "all_clear" };
@@ -389,17 +432,15 @@ export function shouldShowInboxContextRail(hasSelectedThread: boolean): boolean 
   return hasSelectedThread;
 }
 
-export type MedspaHubTab = "consents" | "intakes" | "waitlist";
+export type MedspaHubTab = "consents" | "intakes";
 
-/** Open the medspa hub tab with the most signal first. */
+/** Open the medspa hub tab with the most signal first. Slot waitlist is Liv-managed on Today. */
 export function resolveMedspaHubDefaultTab(counts: {
   consents: number;
   intakes: number;
-  waitlist: number;
 }): MedspaHubTab {
   if (counts.consents > 0) return "consents";
-  if (counts.intakes > 0) return "intakes";
-  return "waitlist";
+  return "intakes";
 }
 
 /** Chain glance — collapsed shop grid before expanding all locations. */

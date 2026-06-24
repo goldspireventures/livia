@@ -8,7 +8,13 @@ import { platform } from "node:os";
 const port = process.argv[2] ?? "3000";
 
 function killWindows() {
-  const out = execSync(`netstat -ano | findstr ":${port}"`, { encoding: "utf8" });
+  let out = "";
+  try {
+    out = execSync(`netstat -ano | findstr ":${port}"`, { encoding: "utf8" });
+  } catch {
+    console.log(`No listener on port ${port}`);
+    return;
+  }
   const pids = new Set();
   for (const line of out.split("\n")) {
     if (!line.includes("LISTENING")) continue;

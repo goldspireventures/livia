@@ -18,11 +18,14 @@ export type InboxListThread = InboxQueueConversation & {
   id: string;
   customerId?: string | null;
   customerName?: string | null;
+  customerEmail?: string | null;
+  customerPhone?: string | null;
   channel: string;
   lastMessageAt: string;
   lastMessage?: string | null;
   summary?: string | null;
   bookingCount?: number;
+  linkedBookingId?: string | null;
 };
 
 export type UnifiedInboxGuestThread = {
@@ -31,7 +34,10 @@ export type UnifiedInboxGuestThread = {
   customerId: string | null;
   customerName: string | null;
   threads: InboxListThread[];
+  /** All channels ever used (includes closed threads). */
   channels: string[];
+  /** Open / handed-off channels — use for list badges. */
+  activeChannels: string[];
   lastMessageAt: string;
   lastMessage: string | null;
   /** Aggregate queue state for lenses and badges. */
@@ -68,6 +74,7 @@ export function groupInboxThreadsByCustomer(threads: InboxListThread[]): Unified
         customerName: t.customerName ?? null,
         threads: [t],
         channels: [t.channel],
+        activeChannels: t.status !== "CLOSED" ? [t.channel] : [],
         lastMessageAt: t.lastMessageAt,
         lastMessage: t.lastMessage ?? t.summary ?? null,
         queueState: resolveUnifiedQueueState([t]),
@@ -85,12 +92,16 @@ export function groupInboxThreadsByCustomer(threads: InboxListThread[]): Unified
     const sorted = [...bucket].sort((a, b) => threadSortKey(b) - threadSortKey(a));
     const primary = sorted[0]!;
     const channels = [...new Set(sorted.map((t) => t.channel))];
+    const activeChannels = [
+      ...new Set(sorted.filter((t) => t.status !== "CLOSED").map((t) => t.channel)),
+    ];
     unified.push({
       primaryConversationId: primary.id,
       customerId: primary.customerId ?? null,
       customerName: primary.customerName ?? null,
       threads: sorted,
       channels,
+      activeChannels,
       lastMessageAt: primary.lastMessageAt,
       lastMessage: primary.lastMessage ?? primary.summary ?? null,
       queueState: resolveUnifiedQueueState(sorted),
@@ -179,14 +190,36 @@ export function inboxUnifiedGuestChannelsLabel(channels: string[]): string | nul
   return labels.join(" · ");
 }
 
+function resolveUnifiedGuestContact(threads: InboxListThread[]): {
+  customerEmail: string | null;
+  customerPhone: string | null;
+} {
+  for (const t of threads) {
+    if (t.customerEmail?.trim()) return { customerEmail: t.customerEmail.trim(), customerPhone: t.customerPhone ?? null };
+  }
+  for (const t of threads) {
+    if (t.customerPhone?.trim()) return { customerEmail: null, customerPhone: t.customerPhone.trim() };
+  }
+  return { customerEmail: null, customerPhone: null };
+}
+
+function resolveUnifiedLinkedBookingId(threads: InboxListThread[]): string | null {
+  const withLink = threads.find((t) => t.linkedBookingId);
+  return withLink?.linkedBookingId ?? null;
+}
+
 export function inboxUnifiedListRowToThreadRow(group: UnifiedInboxGuestThread): InboxListThread {
   const primary = group.threads[0]!;
   const open = group.threads.filter((t) => t.status !== "CLOSED");
+  const contact = resolveUnifiedGuestContact(group.threads);
   const aggregate: InboxListThread = {
     ...primary,
     id: group.primaryConversationId,
     customerId: group.customerId,
     customerName: group.customerName,
+    customerEmail: contact.customerEmail ?? primary.customerEmail ?? null,
+    customerPhone: contact.customerPhone ?? primary.customerPhone ?? null,
+    linkedBookingId: resolveUnifiedLinkedBookingId(group.threads) ?? primary.linkedBookingId ?? null,
     lastMessageAt: group.lastMessageAt,
     lastMessage: group.lastMessage,
     channel: group.channels[0] ?? primary.channel,
@@ -201,4 +234,97 @@ export function inboxUnifiedListRowToThreadRow(group: UnifiedInboxGuestThread): 
     bookingCount: group.threads.reduce((n, t) => n + (t.bookingCount ?? 0), 0),
   };
   return aggregate;
+}
+
+/** Open / handed-off delivery pipes for one guest — shared by web + mobile. */
+export type InboxGuestChannelContext = {
+  channels: string[];
+  multi: boolean;
+  threadByChannel: ReadonlyMap<string, string>;
+};
+
+export function buildInboxGuestChannelContext(
+  customerId: string | null | undefined,
+  guestGroups: UnifiedInboxGuestThread[],
+): InboxGuestChannelContext {
+  if (!customerId) {
+    return { channels: [], multi: false, threadByChannel: new Map() };
+  }
+  const group = guestGroups.find((g) => g.customerId === customerId);
+  const channels = group?.activeChannels ?? [];
+  const threadByChannel = new Map<string, string>();
+  for (const t of group?.threads ?? []) {
+    if (t.status !== "CLOSED") threadByChannel.set(t.channel, t.id);
+  }
+  return { channels, multi: channels.length > 1, threadByChannel };
+}
+
+export function resolveInboxMessageChannel(
+  message: { channel?: string | null; conversationId?: string | null },
+  threads: InboxListThread[],
+  fallbackChannel?: string | null,
+): string | null | undefined {
+  return (
+    message.channel ??
+    (message.conversationId
+      ? threads.find((t) => t.id === message.conversationId)?.channel
+      : undefined) ??
+    fallbackChannel
+  );
+}
+
+/** Map a timeline message to the conversation + channel staff should reply on. */
+export function resolveInboxMessageReplyRoute(
+  message: { channel?: string | null; conversationId?: string | null },
+  ctx: InboxGuestChannelContext,
+  selectedConversationId: string,
+  threads: InboxListThread[],
+  fallbackChannel?: string | null,
+): { conversationId: string; channel: string } | null {
+  const channel = resolveInboxMessageChannel(message, threads, fallbackChannel);
+  if (!channel) return null;
+  const conversationId =
+    message.conversationId ??
+    ctx.threadByChannel.get(channel) ??
+    selectedConversationId;
+  if (!conversationId) return null;
+  return { conversationId, channel };
+}
+
+export function toggleInboxReplyChannelPick(
+  current: { conversationId: string; channel: string } | null | undefined,
+  next: { conversationId: string; channel: string },
+): { conversationId: string; channel: string } | null {
+  if (current?.channel === next.channel && current.conversationId === next.conversationId) {
+    return null;
+  }
+  return next;
+}
+
+export function isInboxReplyChannelSelected(
+  pick: { conversationId: string; channel: string } | null | undefined,
+  message: { channel?: string | null; conversationId?: string | null },
+  ctx: InboxGuestChannelContext,
+  selectedConversationId: string,
+  threads: InboxListThread[],
+  fallbackChannel?: string | null,
+): boolean {
+  if (!pick || !ctx.multi) return false;
+  const route = resolveInboxMessageReplyRoute(
+    message,
+    ctx,
+    selectedConversationId,
+    threads,
+    fallbackChannel,
+  );
+  if (!route) return false;
+  return pick.channel === route.channel && pick.conversationId === route.conversationId;
+}
+
+export function resolveInboxEffectiveReplyConversationId(
+  pick: { conversationId: string } | null | undefined,
+  apiDefault: string | null | undefined,
+  selectedConversationId: string | null | undefined,
+): string | null | undefined {
+  return pick?.conversationId ?? apiDefault ?? selectedConversationId ?? undefined;
 }

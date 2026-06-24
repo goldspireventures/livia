@@ -7,6 +7,9 @@ import type { CapabilityState, ResolvedPlatformCapability, CapabilityReadinessFa
 import type { OnboardingActId, OnboardingChecklist, OnboardingState } from "./onboarding-state";
 import { COMMERCE_BILLING_FIX_HREF } from "./commerce-signals";
 
+/** Settings → Channels → SMS / WhatsApp / Instagram setup (not message templates). */
+export const SETTINGS_CHANNELS_SETUP_HREF = "/settings?tab=comms#channels-setup";
+
 export const capabilityStateSchema = z.enum([
   "defined",
   "installed",
@@ -161,7 +164,7 @@ export const ONBOARDING_ACT_HREF: Partial<Record<OnboardingActId, string>> = {
   a4_team: "/staff",
   a5_hours: "/onboarding",
   a6_liv: "/settings?tab=liv",
-  a7_channels: "/settings?tab=comms",
+  a7_channels: SETTINGS_CHANNELS_SETUP_HREF,
   a8_public_link: "/onboarding",
   a9_billing: "/settings?tab=billing",
   a10_invite_team: "/staff",
@@ -175,12 +178,12 @@ export function capabilityBlockerHref(capabilityId: string, blocker: string): st
   if (text.includes("team member") || text.includes("staff")) return "/staff";
   if (text.includes("availability")) return "/onboarding";
   if (text.includes("stripe") || text.includes("connect")) return COMMERCE_BILLING_FIX_HREF;
-  if (text.includes("sms") || text.includes("channel")) return "/settings?tab=comms";
+  if (text.includes("sms") || text.includes("channel")) return SETTINGS_CHANNELS_SETUP_HREF;
   switch (capabilityId) {
     case "bookings":
       return "/services";
     case "messaging":
-      return "/settings?tab=comms";
+      return SETTINGS_CHANNELS_SETUP_HREF;
     case "payments":
       return COMMERCE_BILLING_FIX_HREF;
     case "memberships":

@@ -71,6 +71,48 @@ export function inboxReplyPlaceholder(channel: string | null | undefined): strin
   return `Reply on ${label}…`;
 }
 
+/** Operator-selected or default reply channel (pick → API last-inbound → thread channel). */
+export function resolveInboxEffectiveReplyChannel(
+  pick: { channel: string } | null | undefined,
+  apiDefault: string | null | undefined,
+  fallbackChannel: string | null | undefined,
+): string | null | undefined {
+  return pick?.channel ?? apiDefault ?? fallbackChannel;
+}
+
+/**
+ * Compose channel for unified guests — never guess from primary thread while detail is loading.
+ * Surfaces pass `detailReady` when GET conversation has resolved replyChannel.
+ */
+export function resolveInboxComposeReplyChannel(args: {
+  pick?: { channel: string } | null;
+  apiReplyChannel?: string | null;
+  threadChannel?: string | null;
+  multiChannel: boolean;
+  detailReady: boolean;
+}): string | null | undefined {
+  if (args.pick?.channel) return args.pick.channel;
+  if (args.apiReplyChannel) return args.apiReplyChannel;
+  if (args.multiChannel && !args.detailReady) return null;
+  return args.threadChannel ?? null;
+}
+
+/** Placeholder for compose — generic until API default is known on multi-channel threads. */
+export function inboxReplyPlaceholderForCompose(
+  channel: string | null | undefined,
+  multiChannel: boolean,
+  detailReady: boolean,
+): string {
+  if (channel) return inboxReplyPlaceholder(channel);
+  if (multiChannel && !detailReady) return "Reply…";
+  return inboxReplyPlaceholder(channel);
+}
+
+/** Accessible label for per-message channel pick controls. */
+export function inboxReplyOnChannelLabel(channel: string | null | undefined): string {
+  return `Reply on ${inboxChannelLabel(channel)}`;
+}
+
 export function isLastInboundChannelFresh(
   lastInboundAt: Date | string | null | undefined,
   nowMs: number = Date.now(),

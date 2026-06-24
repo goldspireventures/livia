@@ -81,9 +81,9 @@ export async function listConversationsForBusiness(
       customerId: conversationsTable.customerId,
       channel: conversationsTable.channel,
       status: conversationsTable.status,
-      customerName: conversationsTable.customerName,
-      customerEmail: conversationsTable.customerEmail,
-      customerPhone: conversationsTable.customerPhone,
+      customerName: sql<string | null>`coalesce(${customersTable.displayName}, ${conversationsTable.customerName})`,
+      customerEmail: sql<string | null>`coalesce(${customersTable.email}, ${conversationsTable.customerEmail})`,
+      customerPhone: sql<string | null>`coalesce(${customersTable.phone}, ${conversationsTable.customerPhone})`,
       aiHandled: conversationsTable.aiHandled,
       summary: conversationsTable.summary,
       linkedBookingId: conversationsTable.linkedBookingId,
@@ -108,6 +108,7 @@ export async function listConversationsForBusiness(
       )`,
     })
     .from(conversationsTable)
+    .leftJoin(customersTable, eq(customersTable.id, conversationsTable.customerId))
     .where(and(...conditions))
     .orderBy(desc(conversationsTable.lastMessageAt))
     .limit(limit);

@@ -18,7 +18,7 @@ import { fetchTenantExperience } from "@/lib/tenant-experience";
 import { verticalAccentHex } from "@/lib/vertical-theme";
 import { verticalPackUi } from "@/lib/vertical-pack-ui";
 import { isOnboardingAppUnlocked, type OnboardingActId, type OnboardingState } from "@workspace/policy";
-import { UniversalImportPanel } from "@/components/UniversalImportPanel";
+import { MigrationSwitchPanel } from "@/components/MigrationSwitchPanel";
 import { completeBlockingAct, persistOnboardingState } from "@/lib/onboarding-blocking";
 import { webOnboardingUrl } from "@/lib/cross-surface-handoff";
 import { getPublicBookingUrl } from "@/lib/public-booking-url";
@@ -116,24 +116,27 @@ export default function OnboardingContinueScreen() {
       ) : null}
 
       {bid ? (
-        <View style={[styles.card, { borderColor: colors.border, backgroundColor: colors.card, marginTop: 16 }]}>
-          <Text style={[styles.row, { color: colors.foreground, fontWeight: "600", marginBottom: 8 }]}>
-            Import from CSV (optional)
-          </Text>
-          <UniversalImportPanel
+        <View style={{ marginTop: 16 }}>
+          <MigrationSwitchPanel
             businessId={bid}
+            vertical={vertical}
             onImported={() => {
               void (async () => {
                 await persistOnboardingState(
                   bid,
-                  { checklist: { migrationImported: true } },
+                  {
+                    checklist: {
+                      migrationImported: true,
+                      migrationIntent: "switching",
+                    },
+                  },
                   state,
                 );
                 await completeBlockingAct(
                   bid,
                   "a11_migration" as OnboardingActId,
                   state,
-                  { migrationImported: true },
+                  { migrationImported: true, migrationIntent: "switching" },
                   vertical,
                 );
               })();

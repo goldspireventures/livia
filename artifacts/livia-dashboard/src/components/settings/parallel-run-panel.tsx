@@ -38,14 +38,14 @@ export function ParallelRunPanel({ businessId }: Props) {
     <div className="space-y-3 rounded-lg border border-border/70 bg-muted/10 p-3" data-testid="parallel-run-panel">
       <p className="text-sm font-medium">Parallel-run diff</p>
       <p className="text-xs text-muted-foreground">
-        Compare Livia bookings against your previous scheduler while you cut over. OAuth connect ships next — CSV import works today.
+        Compare Livia bookings against your previous scheduler while you cut over. Spreadsheet import works today — direct connect is rolling out.
       </p>
       <div className="flex flex-wrap gap-2">
         <Button size="sm" variant="outline" disabled={busy} onClick={() => void load("mindbody")}>
-          Check fitness API
+          Compare fitness bookings
         </Button>
         <Button size="sm" variant="outline" disabled={busy} onClick={() => void load("fresha")}>
-          Check salon OAuth
+          Compare salon bookings
         </Button>
       </div>
       {diff ? (

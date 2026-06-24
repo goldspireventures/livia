@@ -381,7 +381,7 @@ export function PublicAppearancePanel({
             <TabsList className="grid w-full grid-cols-2 max-w-md">
               <TabsTrigger value="public" className="gap-1.5 text-xs sm:text-sm">
                 <Smartphone className="h-3.5 w-3.5" />
-                {isEventVendor ? "Client website" : "Public /b"}
+                {isEventVendor ? "Client website" : "Public booking page"}
               </TabsTrigger>
               <TabsTrigger value="app" className="gap-1.5 text-xs sm:text-sm">
                 <LayoutDashboard className="h-3.5 w-3.5" />
@@ -539,7 +539,7 @@ export function PublicAppearancePanel({
                   </p>
                   <p className="text-muted-foreground">
                     <span className="font-semibold text-foreground/90">
-                      {isEventVendor ? "Client site:" : "Public /b:"}
+                      {isEventVendor ? "Client site:" : "Booking page:"}
                     </span>{" "}
                     {draftPickerMeta.guestIntent}
                   </p>

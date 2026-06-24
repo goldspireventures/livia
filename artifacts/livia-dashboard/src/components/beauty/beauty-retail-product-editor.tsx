@@ -98,7 +98,7 @@ export function BeautyRetailProductEditor({
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto" data-testid="beauty-retail-product-editor">
         <DialogHeader>
           <DialogTitle>Edit product</DialogTitle>
-          <DialogDescription>Changes apply on /b as soon as you save.</DialogDescription>
+          <DialogDescription>Changes apply on your booking page as soon as you save.</DialogDescription>
         </DialogHeader>
         <div className="space-y-3 py-1">
           <RetailProductImageField

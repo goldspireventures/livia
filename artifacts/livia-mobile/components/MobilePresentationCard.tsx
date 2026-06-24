@@ -218,7 +218,7 @@ export function MobilePresentationCard({ businessId, canEdit }: Props) {
         style={[styles.btn, { borderColor: colors.border }]}
       >
         <Text style={[styles.btnText, { color: colors.primary }]}>
-          Logo, cover & live `/b` preview
+          Logo, cover & live booking page preview
         </Text>
         <Feather name="external-link" size={16} color={colors.primary} />
       </Pressable>

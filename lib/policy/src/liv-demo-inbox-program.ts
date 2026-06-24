@@ -426,6 +426,57 @@ const MEDSPA_THREADS: DemoInboxThreadSpec[] = [
   },
 ];
 
+/** Demo inbox thread guests — must exist before seedDemoInbox links customerIdx / email. */
+export const DEMO_INBOX_ANCHOR_CUSTOMERS = [
+  {
+    customerIdx: 0,
+    firstName: "Mary",
+    lastName: "McNamara",
+    email: "mary.m@email.ie",
+    phone: "+353 87 100 0001",
+  },
+  {
+    customerIdx: 1,
+    firstName: "Sean",
+    lastName: "Kelly",
+    email: "sean.k@email.ie",
+    phone: "+353 87 100 0002",
+  },
+  {
+    customerIdx: 2,
+    firstName: "Orla",
+    lastName: "Murphy",
+    email: "orla.m@email.ie",
+    phone: "+353 87 100 0003",
+  },
+  {
+    customerIdx: 3,
+    firstName: "Cian",
+    lastName: "Walsh",
+    email: "cian.w@email.ie",
+    phone: "+353 87 100 0004",
+  },
+] as const;
+
+/** Map stored business vertical → inbox thread pack (hair wedge uses salon pack). */
+export function demoInboxThreadVertical(vertical?: string): string {
+  if (vertical === "event-vendors") return "event-vendors";
+  if (vertical === "allied-health") return "allied-health";
+  if (vertical === "medspa") return "medspa";
+  if (vertical === "body-art") return "body-art";
+  if (vertical === "pet-grooming") return "pet-grooming";
+  if (vertical === "fitness") return "fitness";
+  if (vertical === "hair") return "beauty";
+  return vertical ?? "beauty";
+}
+
+/** Open Mary channel threads expected for salon-style demo packs (unified inbox proof). */
+export function expectedMaryOpenInboxChannels(vertical?: string): number {
+  return getDemoInboxThreadsForVertical(demoInboxThreadVertical(vertical)).filter(
+    (t) => t.name === "Mary McNamara" && t.status !== "CLOSED",
+  ).length;
+}
+
 
 export function getDemoInboxThreadsForVertical(vertical?: string): DemoInboxThreadSpec[] {
   if (vertical === "event-vendors") return EVENT_VENDOR_THREADS;

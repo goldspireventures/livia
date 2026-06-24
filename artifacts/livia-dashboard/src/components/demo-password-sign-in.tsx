@@ -19,6 +19,7 @@ import { SignInTenantPreview } from "@/components/sign-in-tenant-preview";
 import { useSignInAppearanceHint } from "@/lib/sign-in-appearance-hint";
 import { useGatewaySkinHandoffOptional } from "@/components/gateway/gateway-skin-handoff-provider";
 import { prefetchTenantDashboardShell } from "@/lib/prefetch-tenant-dashboard";
+import { readSignInRedirectPath } from "@/lib/local-dashboard-auth";
 
 type Props = {
   defaultEmail?: string;
@@ -65,7 +66,8 @@ export function DemoPasswordSignIn({
       );
       applyDemoSessionContext(result);
       await prefetchTenantDashboardShell(queryClient, result.businessId);
-      const go = () => navigate(result.landingPath);
+      const afterSignIn = readSignInRedirectPath() ?? result.landingPath;
+      const go = () => navigate(afterSignIn);
       if (gatewayHandoff) {
         await gatewayHandoff.transitionToTenant(go, {
           businessId: result.businessId,

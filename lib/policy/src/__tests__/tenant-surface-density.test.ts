@@ -2,8 +2,11 @@ import assert from "node:assert/strict";
 import {
   ownerHomeNeedsBriefingAction,
   resolveOwnerHomeBriefingCta,
+  filterOwnerHomeKpiWhenOperatingPulseVisible,
   resolveOwnerHomeKpiChips,
   resolveOwnerHomeModuleLayout,
+  shouldShowOwnerHomeBriefingCta,
+  shouldShowOwnerOperatingPulsePrimaryAction,
   shouldShowOwnerPendingPanel,
   shouldShowActivationWelcomeCard,
   shouldShowActivationMilestoneOnHome,
@@ -121,7 +124,30 @@ assert.deepEqual(
     fallbackHref: "/bookings",
     fallbackLabel: "View calendar",
   }),
-  { href: "/bookings?status=PENDING", label: "Confirm 2 pending" },
+  { href: "/bookings?status=PENDING&lens=needs_you", label: "Confirm 2 pending" },
+);
+
+assert.deepEqual(
+  resolveOwnerHomeBriefingCta({
+    pendingCount: 4,
+    studioPendingCount: 0,
+    handedOffCount: 0,
+    inboxAttentionCount: 2,
+    fallbackHref: "/bookings",
+    fallbackLabel: "View calendar",
+  }),
+  { href: "/inbox?lens=needs_you", label: "Review 2 inbox threads" },
+);
+
+assert.deepEqual(
+  resolveOwnerHomeBriefingCta({
+    pendingCount: 4,
+    studioPendingCount: 1,
+    handedOffCount: 0,
+    fallbackHref: "/bookings",
+    fallbackLabel: "View calendar",
+  }),
+  { href: "/bookings?status=PENDING&lens=needs_you", label: "Confirm 1 pending" },
 );
 
 assert.deepEqual(
@@ -131,7 +157,7 @@ assert.deepEqual(
     fallbackHref: "/bookings",
     fallbackLabel: "View calendar",
   }),
-  { href: "/inbox?lens=taken_over", label: "Review 1 handoff" },
+  { href: "/inbox?lens=needs_you", label: "Review 1 inbox thread" },
 );
 
 assert.deepEqual(
@@ -148,7 +174,7 @@ assert.deepEqual(resolveOwnerHomeModuleLayout({ pendingCount: 0, openInboxCount:
   mode: "all_clear",
 });
 
-assert.deepEqual(resolveOwnerHomeModuleLayout({ pendingCount: 2, openInboxCount: 0 }), {
+assert.deepEqual(resolveOwnerHomeModuleLayout({ pendingCount: 2, studioPendingCount: 2, openInboxCount: 0 }), {
   mode: "single",
   focus: "pending",
 });
@@ -168,13 +194,34 @@ assert.deepEqual(
 );
 
 assert.deepEqual(
-  resolveOwnerHomeModuleLayout({ pendingCount: 4, openInboxCount: 0, homePendingCount: 0 }),
+  resolveOwnerHomeModuleLayout({ pendingCount: 4, studioPendingCount: 0, openInboxCount: 0 }),
   { mode: "all_clear" },
 );
 
 assert.deepEqual(
-  resolveOwnerHomeModuleLayout({ pendingCount: 4, openInboxCount: 2, homePendingCount: 0 }),
+  resolveOwnerHomeModuleLayout({ pendingCount: 4, studioPendingCount: 0, openInboxCount: 2, homePendingCount: 0 }),
   { mode: "single", focus: "inbox" },
+);
+
+assert.deepEqual(
+  filterOwnerHomeKpiWhenOperatingPulseVisible(
+    ["todayBookings", "inboxHandoffs", "toConfirm", "completedToday"],
+    { needsYou: 2, guestAction: 0 },
+  ),
+  ["todayBookings", "completedToday"],
+);
+
+assert.equal(
+  shouldShowOwnerHomeBriefingCta({
+    operatingPulseActive: true,
+    moduleShowsQueueDetail: true,
+  }),
+  false,
+);
+
+assert.equal(
+  shouldShowOwnerOperatingPulsePrimaryAction({ mode: "dual" }),
+  false,
 );
 
 assert.equal(shouldShowOwnerPendingPanel(0, false), false);
@@ -218,9 +265,9 @@ assert.equal(shouldShowRunningLateAffordance(4), true);
 assert.equal(shouldShowInboxContextRail(false), false);
 assert.equal(shouldShowInboxContextRail(true), true);
 
-assert.equal(resolveMedspaHubDefaultTab({ consents: 2, intakes: 1, waitlist: 5 }), "consents");
-assert.equal(resolveMedspaHubDefaultTab({ consents: 0, intakes: 1, waitlist: 5 }), "intakes");
-assert.equal(resolveMedspaHubDefaultTab({ consents: 0, intakes: 0, waitlist: 0 }), "waitlist");
+assert.equal(resolveMedspaHubDefaultTab({ consents: 2, intakes: 1 }), "consents");
+assert.equal(resolveMedspaHubDefaultTab({ consents: 0, intakes: 1 }), "intakes");
+assert.equal(resolveMedspaHubDefaultTab({ consents: 0, intakes: 0 }), "intakes");
 
 const shops = [
   { pulseStatus: "ok" as const },

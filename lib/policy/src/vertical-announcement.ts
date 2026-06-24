@@ -148,7 +148,7 @@ const BEAUTY_EXTENSIONS: VerticalCapability[] = [
   },
   {
     id: "patch-test-guard",
-    label: "Patch-test intake on /b",
+    label: "Patch-test intake on booking page",
     maturity: "R1",
     surfaces: ["/b/{slug}"],
   },
@@ -204,7 +204,7 @@ const WELLNESS_EXTENSIONS: VerticalCapability[] = [
   },
   {
     id: "gift-public-book",
-    label: "Gift voucher purchase on /b",
+    label: "Gift voucher purchase on booking page",
     maturity: "R3",
     surfaces: ["/b/{slug}"],
   },

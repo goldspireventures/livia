@@ -294,16 +294,16 @@ export default function CommunicationsControls({ businessId }: { businessId: str
       <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground space-y-1">
         {config.jurisdictionLabel ? (
           <div>
-            <b>Market:</b> {config.jurisdictionLabel} ({config.jurisdiction})
+            <b>Market:</b> {config.jurisdictionLabel}
             {pack ? (
               <span className="ml-1">
-                · channels:{" "}
+                ·{" "}
                 {[
                   pack.sms && "SMS",
                   pack.whatsapp && "WhatsApp",
                   pack.instagram && "Instagram",
                   pack.messenger && "Messenger",
-                  pack.voice && "Voice",
+                  pack.voice && "Phone",
                 ]
                   .filter(Boolean)
                   .join(", ") || "web only"}
@@ -312,22 +312,17 @@ export default function CommunicationsControls({ businessId }: { businessId: str
           </div>
         ) : null}
         <div>
-          <b>SMS provider:</b>{" "}
+          <b>Text messages:</b>{" "}
           {sms === "twilio"
-            ? "Twilio (live)"
-            : "Not configured — outbound SMS will be logged as FAILED until TWILIO_ACCOUNT_SID is set."}
+            ? "Ready to send"
+            : "Not set up yet — ask your Livia contact to enable SMS for this environment."}
         </div>
         <div>
-          <b>Email provider:</b>{" "}
+          <b>Email:</b>{" "}
           {email === "resend"
-            ? `Resend (live · default from ${config.providerStatus.emailDefaultFrom})`
-            : "Not configured — outbound email will be logged as FAILED until RESEND_API_KEY is set."}
+            ? `Ready to send${config.providerStatus.emailDefaultFrom ? ` (default: ${config.providerStatus.emailDefaultFrom})` : ""}`
+            : "Not set up yet — transactional email needs platform configuration."}
         </div>
-        {config.smsWebhookUrl && (
-          <div className="break-all">
-            <b>Inbound SMS webhook:</b> {config.smsWebhookUrl}
-          </div>
-        )}
       </div>
 
       <SocialChannelsControls businessId={businessId} comms={config} onRefresh={() => void refresh()} />
@@ -353,7 +348,7 @@ export default function CommunicationsControls({ businessId }: { businessId: str
         ) : (
           <SettingsDisclosure
             title="Get a shop SMS number"
-            description="Search Twilio inventory by country — Liv replies automatically and tells customers they're chatting with AI."
+            description="Pick a local number — Liv replies to guests and can answer calls on the same line."
           >
             <div className="space-y-3 pt-2">
               <div className="grid grid-cols-3 gap-2">
@@ -408,7 +403,7 @@ export default function CommunicationsControls({ businessId }: { businessId: str
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Format: <code>Display Name &lt;email@domain&gt;</code>. Domain must be verified in Resend.
+            Format: <code>Display Name &lt;email@domain&gt;</code>. Your domain must be verified with your email provider.
             Leave blank to use the platform default ({config.providerStatus.emailDefaultFrom ?? "not set"}).
           </p>
         </div>
@@ -417,7 +412,7 @@ export default function CommunicationsControls({ businessId }: { businessId: str
       <section className="space-y-2 rounded-md border p-4 bg-muted/30">
         <h3 className="text-sm font-semibold">Phone receptionist</h3>
         <p className="text-xs text-muted-foreground">
-          Inbound call handling for IE/UK shops. Uses the same Twilio number as SMS above.
+          Inbound calls for IE/UK shops. Uses the same shop number as SMS above.
           Callers hear the required disclosure before any recording.
         </p>
         {config?.channelPack?.voice ? (
@@ -432,7 +427,7 @@ export default function CommunicationsControls({ businessId }: { businessId: str
                     ? config.twilioPhoneNumber
                       ? "Live — calls route to Liv on your shop number"
                       : "Platform ready — provision your shop number above"
-                    : "Awaiting platform voice config"}
+                    : "Setting up — your Livia contact can enable phone receptionist"}
                 </p>
                 {voiceStatus.usage ? (
                   <p className="text-muted-foreground">
@@ -466,7 +461,7 @@ export default function CommunicationsControls({ businessId }: { businessId: str
           </div>
         ) : (
           <p className="text-xs text-muted-foreground">
-            Needs the <code>voice_receptionist</code> add-on on your plan.
+            Phone receptionist is included on Solo and Studio — upgrade your plan to turn it on.
           </p>
         )}
       </section>

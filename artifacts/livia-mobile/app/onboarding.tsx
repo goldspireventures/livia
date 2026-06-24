@@ -282,17 +282,13 @@ export default function OnboardingScreen() {
       }
       const token = await getToken();
       if (!token) {
-        throw new Error(
-          "Session expired — sign out and sign in again. If it persists, set CLERK_PUBLISHABLE_KEY in the repo-root .env (same pk as mobile) and restart pnpm run dev:api.",
-        );
+        throw new Error("Session expired — sign out and sign in again.");
       }
       await seedDevWorkspace();
       const { data: businesses } = await refetch();
       const first = businesses?.[0];
       if (!first) {
-        throw new Error(
-          "Demo seed finished but no businesses were returned. Check that pnpm run dev:api is running.",
-        );
+        throw new Error("Demo shop did not load — try again in a moment.");
       }
       setCurrentBusiness(first);
       haptics.success();
@@ -303,13 +299,12 @@ export default function OnboardingScreen() {
         const payload = err.data as { error?: string } | null;
         message = payload?.error ?? err.message;
         if (err.status === 401) {
-          message =
-            "Unauthorized — sign out and sign in again. Ensure repo-root .env has CLERK_SECRET_KEY and CLERK_PUBLISHABLE_KEY (same pk as EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY), then restart pnpm run dev:api.";
+          message = "Session expired — sign out and sign in again.";
         }
       } else if (err instanceof Error) {
         message = err.message;
         if (message === "Network request failed" || message.includes("Failed to fetch")) {
-          message = `Cannot reach the API at ${getApiBaseUrl()}. Start pnpm run dev:api and ensure phone + PC share Wi‑Fi.`;
+          message = "Cannot reach Livia right now — check your connection and try again.";
         }
       }
       setError(message);

@@ -12,7 +12,7 @@ import { useBusiness } from "@/contexts/BusinessContext";
 import { useColors } from "@/hooks/useColors";
 import { getDashboardBaseUrl } from "@/lib/dashboard-url";
 
-const DEMO_PASSWORD_HINT = "LIVIA_DEMO_PASSWORD in your .env (default LiviaDemo2026!)";
+const DEMO_PASSWORD_HINT = "Use the demo password from your invite email.";
 
 const ACCOUNTS = [
   {

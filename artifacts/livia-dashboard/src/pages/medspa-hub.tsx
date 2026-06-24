@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ClipboardCheck, FileHeart, ListOrdered } from "lucide-react";
+import { ClipboardCheck, FileHeart } from "lucide-react";
 import { Link } from "wouter";
 import { Input } from "@/components/ui/input";
 import { OperationalPageShell } from "@/components/layout/operational-page-shell";
@@ -29,14 +29,6 @@ type IntakeRow = {
   submittedAt: string | null;
 };
 
-type WaitlistRow = {
-  id: string;
-  phone: string | null;
-  email: string | null;
-  serviceId: string | null;
-  createdAt: string;
-};
-
 function EmptyTab({ message }: { message: string }) {
   return (
     <p className="text-sm text-muted-foreground text-center py-8 rounded-lg border border-dashed border-border/70 bg-muted/20">
@@ -51,7 +43,6 @@ export default function MedspaHubPage() {
   const [loading, setLoading] = useState(true);
   const [consents, setConsents] = useState<ConsentRow[]>([]);
   const [intakes, setIntakes] = useState<IntakeRow[]>([]);
-  const [waitlist, setWaitlist] = useState<WaitlistRow[]>([]);
   const [signId, setSignId] = useState<string | null>(null);
   const [signature, setSignature] = useState("");
   const [activeTab, setActiveTab] = useState<MedspaHubTab>("consents");
@@ -60,19 +51,16 @@ export default function MedspaHubPage() {
     if (!bid) return;
     setLoading(true);
     try {
-      const [c, i, w] = await Promise.all([
+      const [c, i] = await Promise.all([
         customFetch<{ data: ConsentRow[] }>(`/api/businesses/${bid}/medspa/consents/pending`),
         customFetch<{ data: IntakeRow[] }>(`/api/businesses/${bid}/medspa/intakes/review-queue`),
-        customFetch<{ data: WaitlistRow[] }>(`/api/businesses/${bid}/waitlist`),
       ]);
       setConsents(c.data);
       setIntakes(i.data);
-      setWaitlist(w.data);
       setActiveTab(
         resolveMedspaHubDefaultTab({
           consents: c.data.length,
           intakes: i.data.length,
-          waitlist: w.data.length,
         }),
       );
     } finally {
@@ -120,7 +108,7 @@ export default function MedspaHubPage() {
   return (
     <OperationalPageShell
       title="Clinical hub"
-      subtitle="Consents, intake review, and waitlist — open the tab with work waiting."
+      subtitle="Consents and intake review — open the tab with work waiting. Slot waitlist is on Today via Liv."
       width="lg"
     >
       <Tabs
@@ -144,15 +132,6 @@ export default function MedspaHubPage() {
             {intakes.length > 0 ? (
               <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
                 {intakes.length}
-              </Badge>
-            ) : null}
-          </TabsTrigger>
-          <TabsTrigger value="waitlist" className="gap-1.5 text-xs">
-            <ListOrdered className="h-3.5 w-3.5" />
-            Waitlist
-            {waitlist.length > 0 ? (
-              <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
-                {waitlist.length}
               </Badge>
             ) : null}
           </TabsTrigger>
@@ -231,31 +210,6 @@ export default function MedspaHubPage() {
                 <Button size="sm" className="h-8 shrink-0" onClick={() => void markIntakeReviewed(row.id)}>
                   Mark reviewed
                 </Button>
-              </div>
-            ))
-          )}
-        </TabsContent>
-
-        <TabsContent value="waitlist" className="mt-3 space-y-2">
-          {loading ? (
-            <Skeleton className="h-24 w-full" />
-          ) : waitlist.length === 0 ? (
-            <EmptyTab message="Waitlist empty — cancellations auto-offer via workflow." />
-          ) : (
-            waitlist.map((row) => (
-              <div
-                key={row.id}
-                className="rounded-lg border border-border/80 bg-card px-3 py-2.5 flex justify-between items-center gap-2"
-              >
-                <div className="text-sm min-w-0">
-                  <p className="truncate">{row.phone ?? row.email ?? "Contact on file"}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Joined {new Date(row.createdAt).toLocaleString()}
-                  </p>
-                </div>
-                <Badge variant="outline" className="shrink-0 text-[10px]">
-                  Active
-                </Badge>
               </div>
             ))
           )}

@@ -12,6 +12,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PlatformLegalGate } from "@/components/platform-legal-gate";
 import { isDemoAccountEmail, isDemoTenantSlug } from "@/lib/demo-tenant";
 import { prospectDemoEntryUrl } from "@/lib/demo-routes";
+import { localDevSignInPath, isLocalDashboardDev } from "@/lib/local-dashboard-auth";
 import { ProspectDemoRedirect } from "@/components/prospect-demo-redirect";
 import { isOnboardingAppUnlocked, type OnboardingState } from "@workspace/policy";
 import { PlatformExecHandoff } from "@/components/platform-exec-handoff";
@@ -90,6 +91,9 @@ export function AuthGuard({ children }: { children: ReactNode }) {
   if (!isSignedIn) {
     const isFounderOnboarding =
       location === "/onboarding" || location.startsWith("/onboarding/");
+    if (isLocalDashboardDev()) {
+      return <Redirect to={localDevSignInPath(location)} />;
+    }
     // Demo-enabled stacks must not send real founders through G1 → marketing book-demo.
     if (isFounderOnboarding && isDemoLoginEnabled) {
       const params = new URLSearchParams({ beta: "1", redirect_url: location });
@@ -165,6 +169,9 @@ function BusinessDataLoader({
       demoEmail &&
       !location.startsWith("/demo/")
     ) {
+      if (isLocalDashboardDev()) {
+        return <Redirect to="/demo" />;
+      }
       return <ProspectDemoRedirect />;
     }
     return <Redirect to="/onboarding" />;

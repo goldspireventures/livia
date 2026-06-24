@@ -47,6 +47,10 @@ export const onboardingChecklistSchema = z.object({
   presentationPresetReviewed: z.boolean().default(false),
   /** Set when universal CSV import completes during onboarding */
   migrationImported: z.boolean().default(false),
+  /** fresh = starter pack; switching = import-first fast track */
+  migrationIntent: z.enum(["fresh", "switching"]).optional(),
+  /** IncumbentMigrationSource id when switching */
+  migrationSource: z.string().optional(),
 });
 
 export type OnboardingChecklist = z.infer<typeof onboardingChecklistSchema>;

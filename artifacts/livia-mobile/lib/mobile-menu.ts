@@ -88,10 +88,6 @@ export function menuItemsForPersona(args: {
     items.push({ icon: "heart", label: "Pet clients", route: "/(tabs)/customers", section: "operations" });
   }
 
-  if (isFloorLead) {
-    items.push({ icon: "clock", label: "Waitlist", route: "/waitlist", section: "operations" });
-  }
-
   if (showDayPackages) {
     items.push({ icon: "sun", label: "Day packages", route: "/day-packages", section: "operations" });
   }

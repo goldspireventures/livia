@@ -152,7 +152,7 @@ export function SupportThreadContextPane({
               rel="noreferrer"
               style={{ fontSize: 11, color: "#fbbf24" }}
             >
-              Public /b
+              Public booking page
             </a>
             {bundle.tenantLinks.tenantDashboardUrl ? (
               <a

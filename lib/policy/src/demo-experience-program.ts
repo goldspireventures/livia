@@ -52,7 +52,7 @@ export const DEMO_PARTNER_TRACKS: DemoPartnerTrack[] = [
       "Land on Today — read Liv briefing aloud.",
       "Open Inbox — one thread with Liv draft; copy or take over.",
       "Confirm a pending booking from the action queue.",
-      "Hand them the phone: guest books on /b without signing in.",
+      "Hand them the phone: guest books on your booking page without signing in.",
     ],
     sortOrder: 1,
   },

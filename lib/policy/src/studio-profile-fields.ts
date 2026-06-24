@@ -32,9 +32,8 @@ const FIELD: Record<StudioProfileFieldId, Omit<StudioProfileFieldDef, "id">> = {
   },
   description: { label: "Short description", section: "primary" },
   logoUrl: {
-    label: "Logo image URL",
-    placeholder: "https://…",
-    hint: "HTTPS image shown on your public booking page.",
+    label: "Shop logo",
+    hint: "Shown on your public booking page and guest emails.",
     section: "primary",
   },
   phone: { label: "Phone", section: "contact" },
@@ -128,14 +127,14 @@ const VERTICAL_OVERRIDES: Partial<
       label: "Tagline",
       placeholder: "e.g. Colour specialists on Camden Street",
     },
-    logoUrl: { label: "Shop logo URL" },
+    logoUrl: { label: "Shop logo" },
   },
   beauty: {
     description: {
       label: "Studio tagline",
       placeholder: "e.g. Lashes, nails, and brows — South King Street",
     },
-    logoUrl: { label: "Studio logo URL" },
+    logoUrl: { label: "Studio logo" },
   },
   "body-art": {
     description: {
@@ -164,7 +163,7 @@ const VERTICAL_OVERRIDES: Partial<
       placeholder: "Treatments offered, consultation expectations…",
     },
     name: { label: "Clinic name" },
-    logoUrl: { label: "Clinic logo URL" },
+    logoUrl: { label: "Clinic logo" },
   },
   "allied-health": {
     description: {
@@ -180,14 +179,14 @@ const VERTICAL_OVERRIDES: Partial<
       placeholder: "Breeds, services, pickup policy…",
     },
     name: { label: "Salon name" },
-    logoUrl: { label: "Salon logo URL" },
+    logoUrl: { label: "Salon logo" },
   },
   "automotive-detailing": {
     description: {
       label: "Studio intro",
       placeholder: "Services, bay hours, vehicle notes you need upfront…",
     },
-    logoUrl: { label: "Brand logo URL" },
+    logoUrl: { label: "Brand logo" },
   },
   "event-vendors": {
     description: {
@@ -195,7 +194,7 @@ const VERTICAL_OVERRIDES: Partial<
       placeholder: "Event styling, balloons, weddings — what you specialise in…",
     },
     instagramHandle: { label: "Instagram handle" },
-    logoUrl: { label: "Logo URL" },
+    logoUrl: { label: "Logo" },
   },
 };
 

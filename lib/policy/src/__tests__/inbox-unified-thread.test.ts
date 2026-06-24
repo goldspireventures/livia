@@ -6,7 +6,16 @@ import {
   matchesUnifiedInboxQueueLens,
   resolveUnifiedQueueState,
   resolveUnifiedReplyTarget,
+  buildInboxGuestChannelContext,
+  resolveInboxMessageReplyRoute,
+  toggleInboxReplyChannelPick,
+  isInboxReplyChannelSelected,
+  resolveInboxEffectiveReplyConversationId,
 } from "../inbox-unified-thread";
+import {
+  resolveInboxComposeReplyChannel,
+  inboxReplyPlaceholderForCompose,
+} from "../inbox-channel-routing";
 
 const marySms = {
   id: "sms-1",
@@ -58,7 +67,7 @@ const maryGroup = groups.find((g) => g.customerId === "cust-mary");
 assert.ok(maryGroup);
 assert.equal(maryGroup!.threads.length, 3);
 assert.equal(maryGroup!.primaryConversationId, "wa-1");
-assert.deepEqual(new Set(maryGroup!.channels), new Set(["SMS", "WHATSAPP", "INSTAGRAM"]));
+assert.deepEqual(new Set(maryGroup!.activeChannels), new Set(["SMS", "WHATSAPP", "INSTAGRAM"]));
 
 assert.equal(resolveUnifiedQueueState(maryGroup!.threads), "liv_handling");
 assert.equal(matchesUnifiedInboxQueueLens(maryGroup!, "liv_handling"), true);
@@ -96,4 +105,76 @@ assert.deepEqual(reply, { conversationId: "wa-1", channel: "WHATSAPP" });
 assert.equal(
   inboxUnifiedGuestChannelsLabel(["SMS", "WHATSAPP", "INSTAGRAM"]),
   "SMS · WhatsApp · Instagram",
+);
+
+const ctx = buildInboxGuestChannelContext("cust-mary", groups);
+assert.equal(ctx.multi, true);
+assert.equal(ctx.threadByChannel.get("WHATSAPP"), "wa-1");
+
+const route = resolveInboxMessageReplyRoute(
+  { channel: "SMS", conversationId: "sms-1" },
+  ctx,
+  "wa-1",
+  [marySms, maryWa, maryIg],
+);
+assert.deepEqual(route, { conversationId: "sms-1", channel: "SMS" });
+
+assert.deepEqual(
+  toggleInboxReplyChannelPick(null, { conversationId: "sms-1", channel: "SMS" }),
+  { conversationId: "sms-1", channel: "SMS" },
+);
+assert.equal(
+  toggleInboxReplyChannelPick({ conversationId: "sms-1", channel: "SMS" }, {
+    conversationId: "sms-1",
+    channel: "SMS",
+  }),
+  null,
+);
+
+assert.equal(
+  isInboxReplyChannelSelected(
+    { conversationId: "sms-1", channel: "SMS" },
+    { channel: "SMS", conversationId: "sms-1" },
+    ctx,
+    "wa-1",
+    [marySms, maryWa, maryIg],
+  ),
+  true,
+);
+
+assert.equal(
+  resolveInboxEffectiveReplyConversationId(
+    { conversationId: "sms-1" },
+    "wa-1",
+    "ig-1",
+  ),
+  "sms-1",
+);
+
+assert.equal(
+  resolveInboxComposeReplyChannel({
+    pick: null,
+    apiReplyChannel: "WHATSAPP",
+    threadChannel: "INSTAGRAM",
+    multiChannel: true,
+    detailReady: true,
+  }),
+  "WHATSAPP",
+);
+
+assert.equal(
+  resolveInboxComposeReplyChannel({
+    pick: null,
+    apiReplyChannel: null,
+    threadChannel: "INSTAGRAM",
+    multiChannel: true,
+    detailReady: false,
+  }),
+  null,
+);
+
+assert.equal(inboxReplyPlaceholderForCompose(null, true, false), "Reply…");
+assert.equal(
+  inboxReplyPlaceholderForCompose("SMS", true, true),
+  "Reply on SMS…",
 );

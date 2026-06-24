@@ -58,6 +58,7 @@ import { StuckContinuityCard } from "@/components/StuckContinuityCard";
 import { VisitFeedbackCard } from "@/components/VisitFeedbackCard";
 import { OwnerIntelligenceHub } from "@/components/OwnerIntelligenceHub";
 import { OwnerOperatingPulseCard } from "@/components/OwnerOperatingPulseCard";
+import { LivWaitlistNudge } from "@/components/LivWaitlistNudge";
 import { ActNotificationBanner } from "@/components/ActNotificationBanner";
 import { OwnerLivOpsCard } from "@/components/OwnerLivOpsCard";
 import { SoloOperatorLivStrip } from "@/components/SoloOperatorLivStrip";
@@ -377,8 +378,8 @@ export default function DashboardScreen() {
           </Text>
           <Text style={[type.caption, { color: colors.mutedForeground, marginTop: 8 }]}>
             {bizError
-              ? "Could not load businesses — check the API is running and run pnpm demo:provision."
-              : "If this sticks, sign out and try again after the API has finished starting."}
+              ? "Could not load your shop — check your connection and try again."
+              : "If this sticks, sign out and sign in again."}
           </Text>
         </View>
       );
@@ -838,6 +839,12 @@ export default function DashboardScreen() {
         <OwnerOperatingPulseCard
           pulse={(summary as { operatingPulse?: import("@workspace/policy").OperatingPulseView } | undefined)
             ?.operatingPulse}
+        />
+      ) : null}
+
+      {(role === "OWNER" || role === "ADMIN") && !isLoading ? (
+        <LivWaitlistNudge
+          activeCount={(summary as { activeWaitlistCount?: number } | undefined)?.activeWaitlistCount ?? 0}
         />
       ) : null}
 

@@ -1,4 +1,5 @@
 import type { BusinessVertical } from "./types";
+import { SETTINGS_CHANNELS_SETUP_HREF } from "./capability-instances";
 import {
   filterActivationStepsForOperator,
   type OperatorNavSignals,
@@ -125,7 +126,7 @@ export function activationStepsFromState(
             id: "channels",
             label: "Connect WhatsApp or SMS",
             done: completed.has("a7_channels") || checklist.smsOrVoiceConnected === true,
-            href: "/settings?tab=comms",
+            href: SETTINGS_CHANNELS_SETUP_HREF,
           },
         ]
       : [
@@ -163,7 +164,7 @@ export function activationStepsFromState(
             id: "channels",
             label: "Connect WhatsApp or SMS",
             done: completed.has("a7_channels") || checklist.smsOrVoiceConnected === true,
-            href: "/settings?tab=comms",
+            href: SETTINGS_CHANNELS_SETUP_HREF,
           },
           {
             id: "team",

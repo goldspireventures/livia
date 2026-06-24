@@ -17,7 +17,7 @@ const PLAYBOOKS: Record<CommerceSignalId, CommerceActPlaybook> = {
   uncaptured_demand: {
     signalId: "uncaptured_demand",
     taskTitle: "Turn on deposits",
-    taskBody: "Bookings are flowing but payments are not captured — enable deposits in booking rules, then complete a test deposit on /b.",
+    taskBody: "Bookings are flowing but payments are not captured — enable deposits in booking rules, then complete a test deposit on your booking page.",
     href: COMMERCE_BILLING_FIX_HREF,
     ownerPrompt: "Walk me through turning on deposits and Stripe for this shop.",
     proposalAction: "collect_deposit",

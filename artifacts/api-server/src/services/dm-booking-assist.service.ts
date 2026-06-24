@@ -1,4 +1,10 @@
 import { db, servicesTable } from "@workspace/db";
+import {
+  guestTimeOfDayLabel,
+  parseGuestTimeOfDayPreference,
+  pickSlotForGuestPreference,
+  resolveGuestBookingDateHint,
+} from "@workspace/policy";
 import { eq, and } from "drizzle-orm";
 import { appendMessage } from "./conversations.service";
 import { createBookingViaLiv } from "./liv-booking.service";
@@ -9,15 +15,20 @@ import { followUpIntakeAfterBooking } from "./intake-on-book.service";
 const BOOK_INTENT =
   /\b(book|appointment|slot|haircut|cut|colour|color|lash|fill|massage|table|session)\b/i;
 
-function tomorrowIso(): string {
-  const d = new Date();
-  d.setDate(d.getDate() + 1);
-  return d.toISOString().slice(0, 10);
+function formatSlotTime(startAt: string, timezone: string): string {
+  return new Date(startAt).toLocaleString("en-IE", {
+    timeZone: timezone,
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 /**
  * Deterministic WhatsApp book path for dev/E2E and when Anthropic is unavailable.
- * Finds first available slot tomorrow and confirms in-thread.
+ * Respects guest day + time-of-day hints when picking a slot.
  */
 export async function tryDeterministicWhatsAppBook(args: {
   businessId: string;
@@ -28,11 +39,13 @@ export async function tryDeterministicWhatsAppBook(args: {
   customerPhone: string;
   customerName?: string | null;
   messageText: string;
-}): Promise<{ bookingId: string; reply: string } | null> {
+}): Promise<{ bookingId?: string; reply: string } | null> {
   if (!BOOK_INTENT.test(args.messageText)) return null;
 
   const biz = await getBusinessById(args.businessId);
   if (!biz) return null;
+
+  const timezone = biz.timezone ?? "Europe/Dublin";
 
   const [service] = await db
     .select({ id: servicesTable.id, name: servicesTable.name })
@@ -41,15 +54,39 @@ export async function tryDeterministicWhatsAppBook(args: {
     .limit(1);
   if (!service) return null;
 
-  const date = tomorrowIso();
+  const timePreference = parseGuestTimeOfDayPreference(args.messageText);
+  const date = resolveGuestBookingDateHint(args.messageText, { timezone });
   const slots = await getAvailableSlots({
     businessId: args.businessId,
     serviceId: service.id,
     date,
-    timezone: biz.timezone ?? "Europe/Dublin",
+    timezone,
   });
-  const slot = slots.find((s) => s.available && s.staffId);
-  if (!slot?.staffId) return null;
+  const eligible = slots.filter((s) => s.available && s.staffId);
+  const slot = pickSlotForGuestPreference(eligible, timePreference, timezone);
+
+  if (!slot?.staffId) {
+    if (timePreference && eligible.length > 0) {
+      const dateLabel = new Date(`${date}T12:00:00.000Z`).toLocaleDateString("en-IE", {
+        timeZone: timezone,
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      });
+      const alternatives = eligible
+        .slice(0, 3)
+        .map((s) => formatSlotTime(s.startAt, timezone))
+        .join(", ");
+      const reply = `No ${guestTimeOfDayLabel(timePreference)} slots on ${dateLabel}. We have ${alternatives}. Reply with a time that works.`;
+      await appendMessage({
+        conversationId: args.conversationId,
+        role: "ASSISTANT",
+        content: reply,
+      });
+      return { reply };
+    }
+    return null;
+  }
 
   const firstName = (args.customerName ?? "Guest").split(/\s+/)[0] ?? "Guest";
   const created = await createBookingViaLiv({
@@ -72,13 +109,7 @@ export async function tryDeterministicWhatsAppBook(args: {
     channelType: "WHATSAPP",
   });
 
-  const when = new Date(created.startAt).toLocaleString("en-IE", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const when = formatSlotTime(created.startAt, timezone);
   const reply = `You're booked for ${service.name} on ${when} at ${args.businessName}. Reply RESCHEDULE if you need a different time.`;
 
   await appendMessage({

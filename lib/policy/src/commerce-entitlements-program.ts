@@ -100,8 +100,8 @@ export const FEATURE_UNLOCK_COPY: Record<CommerceFeatureId, FeatureUnlockCopy> =
     priceLabel: `${eventPackPrice}/mo`,
     bullets: [
       "Deposit schedules on quotes",
-      "Guest pay link + webhook booking",
-      "Engagement notifications on payment",
+      "Guest pay link — booking confirms when paid",
+      "You get notified when a deposit lands",
     ],
     successReturnPath: "/quotes",
   },
@@ -122,13 +122,13 @@ export const FEATURE_UNLOCK_COPY: Record<CommerceFeatureId, FeatureUnlockCopy> =
     featureId: "event_public_site",
     title: "Unlock full quote website",
     description:
-      "Your /e/ enquiry site with gallery, deposit terms, and milestone defaults — public booking (/b) is included on your base plan.",
+      "Your full enquiry website with gallery, deposit terms, and milestone defaults — your public booking page stays on your base plan.",
     addonId: "event_operator_pack",
     priceLabel: `${eventPackPrice}/mo`,
     bullets: [
-      "Full /e/ website — enquiry form and gallery",
+      "Enquiry site with form and gallery",
       "Default deposit % and quote terms",
-      "Public /b booking page included on base plan",
+      "Public booking page included on base plan",
     ],
     successReturnPath: "/event-site",
   },
@@ -140,8 +140,8 @@ export const FEATURE_UNLOCK_COPY: Record<CommerceFeatureId, FeatureUnlockCopy> =
     addonId: "retail_pack",
     priceLabel: `${retailPackPrice}/mo`,
     bullets: [
-      "Curated product catalogue (up to 12 SKUs)",
-      "Guest bag on your public book page",
+      "Curated product catalogue (up to 50 SKUs)",
+      "Guest bag on your public booking page",
       "Liv pay links after appointments",
     ],
     successReturnPath: "/store",
@@ -167,5 +167,5 @@ export function eventOperatorPackMarketingBlurb(): string {
 }
 
 export function retailPackMarketingBlurb(): string {
-  return `Take-Home Retail — ${retailPackPrice}/mo add-on on Solo or Studio. Guest cart on /b, owner catalogue, and post-session attach.`;
+  return `Take-Home Retail — ${retailPackPrice}/mo add-on on Solo or Studio. Guest cart on your booking page, owner catalogue, and post-session attach.`;
 }

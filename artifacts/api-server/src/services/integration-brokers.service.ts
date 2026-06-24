@@ -66,12 +66,13 @@ export async function listIntegrationBrokers(businessId: string): Promise<Broker
 
 /** Map legacy sync ids for wellness parallel-run jobs. */
 const LEGACY_SYNC_MAP: Record<string, string> = {
-  fresha: "salon_suite_api_read",
+  fresha: "migration_fresha",
   mindbody: "fitness_class_csv",
   booksy: "import_clients_csv",
-  acuity: "scheduling_api_read",
+  acuity: "migration_acuity",
   timely: "salon_suite_api_read",
-  square: "payments_square",
+  square: "migration_square",
+  square_appointments: "migration_square",
   vagaro: "salon_suite_api_read",
   treatwell: "marketplace_bookings_tag",
   stripe: "payments_stripe",

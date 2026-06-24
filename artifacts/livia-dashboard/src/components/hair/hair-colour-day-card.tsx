@@ -61,6 +61,7 @@ export function HairColourDayCard() {
   }, [load]);
 
   if (vertical !== "hair" || !bid) return null;
+  if (!loading && blockCount === 0 && rows.length === 0) return null;
 
   return (
     <Card data-testid="hair-colour-day-card">

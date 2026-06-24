@@ -43,6 +43,38 @@ if (process.env.NODE_ENV !== "test") {
     .catch((err) => {
       logger.warn({ err }, "workforce access grants cache load failed");
     });
+
+  if (process.env.NODE_ENV === "development") {
+    void import("./lib/demo-portal-config")
+      .then(({ isDemoPortalEnabled }) => {
+        if (!isDemoPortalEnabled()) return null;
+        return import("./services/demo-portal.service").then(({ getDemoPortalStatus }) =>
+          getDemoPortalStatus(),
+        );
+      })
+      .then((status) => {
+        if (!status?.provisioned) return;
+        return import("./services/demo-inbox.seed").then(({ ensureMessagingInboxFromPolicy }) =>
+          Promise.all(
+            status.businesses.map(async (biz) => {
+              const v = biz.vertical ?? "beauty";
+              if (v !== "beauty" && v !== "wellness" && v !== "hair") return;
+              try {
+                const repaired = await ensureMessagingInboxFromPolicy(biz.id, v);
+                if (repaired) {
+                  logger.info({ businessId: biz.id, slug: biz.slug }, "demo.inbox.policy_repaired_on_boot");
+                }
+              } catch (err) {
+                logger.warn({ err, slug: biz.slug }, "demo.inbox.policy_repair_on_boot_failed");
+              }
+            }),
+          ),
+        );
+      })
+      .catch((err) => {
+        logger.warn({ err }, "demo inbox policy repair on boot skipped");
+      });
+  }
 }
 
 const rawPort = process.env["PORT"];

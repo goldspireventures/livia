@@ -20,6 +20,8 @@ export function useNavActionCounts() {
   const { unreadCount } = useInAppNotifications();
 
   const pendingCount = summary?.pendingCount ?? 0;
+  const studioPendingCount =
+    (summary as { studioPendingCount?: number } | undefined)?.studioPendingCount ?? pendingCount;
   const handedOffCount =
     (summary as { handedOffCount?: number } | undefined)?.handedOffCount ?? 0;
   const needsYouCount =
@@ -50,7 +52,8 @@ export function useNavActionCounts() {
   }, [ownerIntel]);
 
   return {
-    pendingCount,
+    pendingCount: studioPendingCount,
+    totalPendingCount: pendingCount,
     handedOffCount,
     newEnquiriesCount,
     inboxAttentionCount: consultFirst ? consultInboxAttention.count : inboxAttentionCount,

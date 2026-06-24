@@ -9,7 +9,7 @@ export function layoutMorphLabel(morph: PresentationLayoutMorph): string {
     case "ledger":
       return "Voucher ledger";
     case "constellation":
-      return "Constellation";
+      return "Schedule";
     case "split-inbox":
       return "Split inbox";
     case "menu-card":

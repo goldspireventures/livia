@@ -23,6 +23,7 @@ import { useTenantExperience } from "@/lib/tenant-experience-api";
 import { useCallback, useState } from "react";
 import { InboxPreviewPanel } from "@/components/dashboard/inbox-preview-panel";
 import { OwnerLivGuardrails } from "@/components/dashboard/owner-liv-guardrails";
+import { LivWaitlistNudge } from "@/components/dashboard/liv-waitlist-nudge";
 import { HairColourDayCard } from "@/components/hair/hair-colour-day-card";
 import { VerticalHomeModules } from "@/components/dashboard/vertical-home-modules";
 import {
@@ -34,6 +35,11 @@ import {
   resolveOwnerHomeModuleLayout,
   resolveSoloOwnerHomeFallback,
   classifyPendingBookingAttention,
+  filterOwnerHomeKpiWhenOperatingPulseVisible,
+  shouldShowOwnerHomeBriefingCta,
+  shouldShowOwnerOperatingPulsePrimaryAction,
+  studioPendingBookingCount,
+  inboxThreadStudioActionRequired,
 } from "@workspace/policy";
 import { OwnerOperatingPulse } from "@/components/dashboard/owner-operating-pulse";
 import { useQuery } from "@tanstack/react-query";
@@ -254,6 +260,7 @@ function PendingPanel({
   category,
   compact,
   title = "Needs you",
+  hideCountInHeader = false,
 }: {
   pendingBookings: PendingBooking[];
   pendingCount: number;
@@ -266,6 +273,7 @@ function PendingPanel({
   category?: string | null;
   compact?: boolean;
   title?: string;
+  hideCountInHeader?: boolean;
 }) {
   const needsYou = pendingBookings.filter(
     (b) => classifyPendingBookingAttention(b.pendingReason) === "needs_you",
@@ -282,7 +290,7 @@ function PendingPanel({
     >
       <div className="flex items-center justify-between px-3 py-2 border-b border-border/60">
         <h2 className="text-sm font-semibold">{title}</h2>
-        {displayCount > 0 ? (
+        {!hideCountInHeader && displayCount > 0 ? (
           <span className="text-[10px] font-mono text-[hsl(var(--chart-4))]">{displayCount} pending</span>
         ) : null}
       </div>
@@ -403,7 +411,10 @@ export function OwnerHomeRitual({
   );
 
   const openThreads = Array.isArray(convos) ? convos : [];
-  const previewThreads = openThreads.slice(0, 3).map((c) => ({
+  const studioInboxThreads = openThreads.filter((c) =>
+    inboxThreadStudioActionRequired({ status: c.status, aiHandled: c.aiHandled }),
+  );
+  const previewThreads = studioInboxThreads.slice(0, 3).map((c) => ({
     id: c.id,
     customerName: c.customerName ?? null,
     lastMessagePreview: c.lastMessage ?? null,
@@ -414,7 +425,14 @@ export function OwnerHomeRitual({
 
   const consultFirst = isConsultFirstVertical(tenantVertical);
   const pendingCount = consultFirst ? 0 : (summary?.pendingCount ?? 0);
-  const handoffCount = summary?.handedOffCount ?? 0;
+  const studioPendingCount = consultFirst
+    ? 0
+    : ((summary as { studioPendingCount?: number } | undefined)?.studioPendingCount ??
+      studioPendingBookingCount(pendingBookings));
+  const inboxAttentionCount =
+    (summary as { inboxAttentionCount?: number } | undefined)?.inboxAttentionCount ??
+    (summary?.handedOffCount ?? 0) + ((summary as { needsYouCount?: number } | undefined)?.needsYouCount ?? 0);
+  const handoffCount = inboxAttentionCount;
 
   const { data: consultDash, isLoading: consultDashLoading } = useQuery({
     queryKey: ["event-vendor-dashboard", bid],
@@ -452,26 +470,55 @@ export function OwnerHomeRitual({
     staleTime: 30_000,
   });
 
+  const operatingPulse = (summary as { operatingPulse?: import("@workspace/policy").OperatingPulseView } | undefined)
+    ?.operatingPulse;
+  const bookingSlices = resolveOwnerHomeBookingSlices(summary?.upcomingBookings, now);
+  const hasTodaySchedule =
+    bookingSlices.pendingToday.length + bookingSlices.confirmedToday.length > 0;
+
   const moduleLayout = resolveOwnerHomeModuleLayout({
     pendingCount,
-    openInboxCount: handoffCount,
+    studioPendingCount,
+    openInboxCount: inboxAttentionCount,
+    homePendingCount: pendingBookings.filter(
+      (b) => classifyPendingBookingAttention(b.pendingReason) === "needs_you",
+    ).length,
+    pendingSurfacedElsewhere: hasTodaySchedule && bookingSlices.pendingToday.length > 0,
     consultFirst,
     newEnquiries: consultDash?.newEnquiries,
     staleQuotes: consultDash?.staleQuotes,
     prepTasksDue: consultDash?.prepTasksDue,
   });
 
+  const queueDetailVisible = moduleLayout.mode !== "all_clear";
+  const operatingPulseActive =
+    !consultFirst &&
+    !!operatingPulse &&
+    (operatingPulse.needsYou > 0 || operatingPulse.guestAction > 0);
+  const suppressQueueDuplicates = operatingPulseActive && queueDetailVisible;
+  const showBriefingCta = shouldShowOwnerHomeBriefingCta({
+    consultFirst,
+    operatingPulseActive,
+    moduleShowsQueueDetail: queueDetailVisible,
+  });
+  const showPulsePrimaryAction = shouldShowOwnerOperatingPulsePrimaryAction(moduleLayout);
+
   const todayTotal = consultFirst ? 0 : (summary?.todayBookings ?? 0);
-  const kpiChips = resolveOwnerHomeKpiChips(
-    {
-      todayBookings: todayTotal,
-      pendingCount,
-      handedOffCount: handoffCount,
-      newEnquiries: consultDash?.newEnquiries,
-      quotedEnquiries: consultDash?.quotedEnquiries,
-      staleQuotes: consultDash?.staleQuotes,
-    },
-    tenantVertical,
+  const kpiChips = filterOwnerHomeKpiWhenOperatingPulseVisible(
+    resolveOwnerHomeKpiChips(
+      {
+        todayBookings: todayTotal,
+        pendingCount,
+        studioPendingCount,
+        handedOffCount: summary?.handedOffCount ?? 0,
+        inboxAttentionCount,
+        newEnquiries: consultDash?.newEnquiries,
+        quotedEnquiries: consultDash?.quotedEnquiries,
+        staleQuotes: consultDash?.staleQuotes,
+      },
+      tenantVertical,
+    ),
+    operatingPulseActive ? operatingPulse : null,
   );
   const kpiGridClass =
     kpiChips.length <= 1
@@ -495,14 +542,16 @@ export function OwnerHomeRitual({
       : null;
   const briefingCta = resolveOwnerHomeBriefingCta({
     pendingCount,
-    handedOffCount: handoffCount,
+    studioPendingCount,
+    handedOffCount: summary?.handedOffCount ?? 0,
+    inboxAttentionCount,
     fallbackHref: ritual.primaryAction?.href ?? "/bookings",
     fallbackLabel: ritual.primaryAction?.label ?? "View calendar",
   });
   const soloFallback =
     tenantXp?.operator && operatorXp?.soloMode && !consultFirst
       ? resolveSoloOwnerHomeFallback(tenantXp.operator, {
-          pendingCount,
+          pendingCount: studioPendingCount,
           handedOffCount: handoffCount,
           todayBookings: todayTotal,
           weekBookings: summary?.weekBookings ?? 0,
@@ -532,13 +581,13 @@ export function OwnerHomeRitual({
   const wellnessNativeMorph =
     wellnessMorph && wellnessMorph !== "constellation" ? wellnessMorph : null;
   const vocab = verticalPackUi(tenantVertical, business?.category);
-  const bookingSlices = resolveOwnerHomeBookingSlices(summary?.upcomingBookings, now);
   const heroPending = bookingSlices.pendingToday[0] ?? pendingBookings[0] ?? null;
-  const hasTodaySchedule =
-    bookingSlices.pendingToday.length + bookingSlices.confirmedToday.length > 0;
 
   const briefingNeedsAttention =
-    briefingLoading || pendingCount > 0 || handoffCount > 0 || livPulse === "act";
+    briefingLoading ||
+    studioPendingCount > 0 ||
+    inboxAttentionCount > 0 ||
+    livPulse === "act";
 
   const morphBookings = [...bookingSlices.pendingToday, ...bookingSlices.confirmedToday];
 
@@ -684,23 +733,31 @@ export function OwnerHomeRitual({
             ) : null}
           </div>
         </div>
-        <Link href={oneThingHref} className="beauty-briefing-cta shrink-0 w-full sm:w-auto">
-          <Button
-            size="sm"
-            className="gap-1.5 h-9 w-full sm:w-auto min-h-[44px] rounded-xl"
-          >
-            {oneThingLabel}
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Button>
-        </Link>
+        {showBriefingCta ? (
+          <Link href={oneThingHref} className="beauty-briefing-cta shrink-0 w-full sm:w-auto">
+            <Button
+              size="sm"
+              className="gap-1.5 h-9 w-full sm:w-auto min-h-[44px] rounded-xl"
+            >
+              {oneThingLabel}
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Button>
+          </Link>
+        ) : null}
       </section>
 
       <OwnerLivGuardrails livNeedsAttention={livPulse === "act"} />
+
+      <LivWaitlistNudge
+        activeCount={(summary as { activeWaitlistCount?: number } | undefined)?.activeWaitlistCount ?? 0}
+        loading={isLoadingSummary}
+      />
 
       {!consultFirst ? (
         <OwnerOperatingPulse
           pulse={(summary as { operatingPulse?: import("@workspace/policy").OperatingPulseView })?.operatingPulse}
           loading={isLoadingSummary}
+          showPrimaryAction={showPulsePrimaryAction}
         />
       ) : null}
 
@@ -753,7 +810,7 @@ export function OwnerHomeRitual({
             beauty={beauty}
             signalGlow
             label="To confirm"
-            value={pendingCount}
+            value={studioPendingCount}
             sub="pending"
             tone="warn"
             loading={isLoadingSummary}
@@ -878,6 +935,7 @@ export function OwnerHomeRitual({
               loading={convosLoading}
               attentionCount={handoffCount}
               compact
+              hideAttentionBadge={suppressQueueDuplicates}
             />
           )
         ) : hasTodaySchedule ? null : (
@@ -891,6 +949,7 @@ export function OwnerHomeRitual({
             onDeclineBooking={onDeclineBooking}
             vertical={tenantVertical}
             category={(business as { category?: string } | null)?.category}
+            hideCountInHeader={suppressQueueDuplicates}
           />
         )
       ) : (
@@ -900,6 +959,7 @@ export function OwnerHomeRitual({
             loading={convosLoading}
             attentionCount={handoffCount}
             compact
+            hideAttentionBadge={suppressQueueDuplicates}
           />
           {hasTodaySchedule ? null : beauty && heroPending && !isLoadingSummary ? (
             <BeautyPendingHero
@@ -923,6 +983,7 @@ export function OwnerHomeRitual({
               vertical={tenantVertical}
               category={(business as { category?: string } | null)?.category}
               compact
+              hideCountInHeader={suppressQueueDuplicates}
             />
           )}
         </div>

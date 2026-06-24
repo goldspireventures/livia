@@ -295,7 +295,7 @@ function AuthenticatedRoutes() {
               </WedgeRouteGuard>
             )}
           </Route>
-          <Route path="/waitlist">{() => <LazyRoute page={LazyWaitlistQueuePage} />}</Route>
+          <Route path="/waitlist">{() => <Redirect to="/dashboard" />}</Route>
           <Route path="/franchise">
             {() => (
               <WedgeRouteGuard path="/franchise">

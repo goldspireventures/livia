@@ -23,7 +23,7 @@ const BEAUTY_PLATFORM_DEFAULT_VISUALS: Partial<Record<WedgeDemoBeat["cropHint"],
   },
   "public-book": {
     path: "/w2-gateway/platform-default/book-mobile.png",
-    alt: "Bloom Beauty Dublin — guest booking page on /b",
+    alt: "Bloom Beauty Dublin — guest booking page",
     objectPosition: "center top",
     aspect: "phone",
   },
@@ -44,7 +44,7 @@ const WELLNESS_HARBOUR_VISUALS: Partial<Record<WedgeDemoBeat["cropHint"], Omit<W
   },
   "public-book": {
     path: "/w2-gateway/beats/wellness/harbour-light/book-mobile.png",
-    alt: "Harbour Wellness Cork — gift-ready treatment grid on /b",
+    alt: "Harbour Wellness Cork — gift-ready treatment grid on booking page",
     objectPosition: "center top",
     aspect: "phone",
   },
@@ -64,15 +64,15 @@ const BEAUTY_THREAD_BRIDGES: Partial<Record<WedgeDemoBeat["cropHint"], string>> 
 
 const WELLNESS_THREAD_BRIDGES: Partial<Record<WedgeDemoBeat["cropHint"], string>> = {
   inbox: "Gift vouchers and calm SMS land in concierge — Liv holds the room fit.",
-  "public-book": "Guests pick treatments on a spa-native /b — gift-ready, not salon chrome.",
+  "public-book": "Guests pick treatments on a spa-native booking page — gift-ready, not salon chrome.",
   today: "Room swimlanes show turnover, vouchers, and who's in Serenity next.",
 };
 
 const BEAUTY_LIV_INTRO =
-  "Three surfaces, one thread — bookings, your /b link, and Today at Bloom Beauty Dublin.";
+  "Three surfaces, one thread — bookings, your booking link, and Today at Bloom Beauty Dublin.";
 
 const WELLNESS_LIV_INTRO =
-  "Three surfaces, one thread — concierge, your /b link, and the room board at Harbour Wellness Cork.";
+  "Three surfaces, one thread — concierge, your booking link, and the room board at Harbour Wellness Cork.";
 
 const WEDGE_THREAD_VERTICALS = new Set<BusinessVertical>(["beauty", "wellness"]);
 

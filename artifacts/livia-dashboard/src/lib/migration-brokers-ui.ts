@@ -43,7 +43,7 @@ export const MIGRATION_BROKER_CATEGORY_LABELS: Record<MigrationBrokerCategory, s
 const CSV_IMPORT_ACTION: MigrationBrokerAction = {
   type: "scroll",
   elementId: "universal-import-panel",
-  label: "Import CSV",
+  label: "Import spreadsheet",
 };
 
 /** Owner-facing copy — generic only, no third-party product names. */
@@ -70,7 +70,7 @@ export const MIGRATION_BROKER_UI: Record<string, MigrationBrokerUiMeta> = {
   },
   scheduling_api_read: {
     category: "scheduling",
-    ownerSummary: "Read-only sync when your workspace API key is configured.",
+    ownerSummary: "Read-only sync when your previous tool is connected.",
     action: {
       type: "oauth",
       brokerId: "scheduling_api_read",
@@ -79,11 +79,11 @@ export const MIGRATION_BROKER_UI: Record<string, MigrationBrokerUiMeta> = {
   },
   salon_suite_api_read: {
     category: "scheduling",
-    ownerSummary: "Import clients and appointments from a salon-suite API.",
+    ownerSummary: "Import clients and appointments from your suite account.",
     action: {
       type: "oauth",
       brokerId: "salon_suite_api_read",
-      label: "Connect suite API",
+      label: "Connect suite",
     },
   },
   marketplace_bookings_tag: {
@@ -140,6 +140,33 @@ export const MIGRATION_BROKER_UI: Record<string, MigrationBrokerUiMeta> = {
       label: "Connect calendar",
     },
   },
+  migration_acuity: {
+    category: "scheduling",
+    ownerSummary: "Read-only pull of clients, services, and appointments when connected.",
+    action: {
+      type: "oauth",
+      brokerId: "migration_acuity",
+      label: "Connect scheduler",
+    },
+  },
+  migration_square: {
+    category: "scheduling",
+    ownerSummary: "Read-only pull of bookings, catalog, customers, and team when connected.",
+    action: {
+      type: "oauth",
+      brokerId: "migration_square",
+      label: "Connect scheduler",
+    },
+  },
+  migration_fresha: {
+    category: "scheduling",
+    ownerSummary: "Partner read of clients and bookings when credentials are configured.",
+    action: {
+      type: "oauth",
+      brokerId: "migration_fresha",
+      label: "Connect marketplace",
+    },
+  },
   fitness_class_csv: {
     category: "fitness",
     ownerSummary: "Import class clients and pack balances.",
@@ -185,10 +212,10 @@ export function migrationBrokersForOwner(brokers: BrokerStatus[]): BrokerStatus[
 }
 
 export function migrationBrokerModeLabel(mode: string): string {
-  if (mode === "csv_import" || mode === "csv_only") return "CSV";
-  if (mode === "oauth" || mode === "oauth_stub") return "OAuth";
-  if (mode === "webhook_out") return "Webhook";
-  return "API";
+  if (mode === "csv_import" || mode === "csv_only") return "Spreadsheet";
+  if (mode === "oauth" || mode === "oauth_stub") return "Connect";
+  if (mode === "webhook_out") return "Automatic sync";
+  return "Integration";
 }
 
 export function brokerCategory(broker: BrokerStatus): MigrationBrokerCategory {

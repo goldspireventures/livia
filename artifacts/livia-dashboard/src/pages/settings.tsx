@@ -133,7 +133,7 @@ export default function SettingsPage() {
         scrollToSettingsAnchor(
           `${window.location.pathname}${window.location.search}#${hash}`,
         );
-      }, 200);
+      }, hash === "channels-setup" ? 350 : 200);
     },
     [visibleTabs],
   );
@@ -223,6 +223,23 @@ export default function SettingsPage() {
         },
         onError: () =>
           toast({ title: "Failed to save settings", variant: "destructive" }),
+      },
+    );
+  }
+
+  function onLogoChange(url: string | null) {
+    if (!bid || !shopEditable) return;
+    generalForm.setValue("logoUrl", url ?? "", { shouldDirty: true });
+    setBrandFields((prev) => ({ ...prev, logoUrl: url ?? "" }));
+    updateBusiness.mutate(
+      { businessId: bid, data: { logoUrl: url ?? undefined } },
+      {
+        onSuccess: () => {
+          qc.invalidateQueries({ queryKey: getGetBusinessQueryKey(bid) });
+          toast({ title: url ? "Logo updated" : "Logo removed" });
+        },
+        onError: () =>
+          toast({ title: "Failed to save logo", variant: "destructive" }),
       },
     );
   }
@@ -369,12 +386,14 @@ export default function SettingsPage() {
             >
               <StudioProfileForm
                 form={generalForm}
+                businessId={bid}
                 vertical={businessVertical}
                 category={business?.category}
                 locationNoun={vocab.locationNoun}
                 shopEditable={shopEditable}
                 saving={updateBusiness.isPending}
                 onSubmit={onSubmitGeneral}
+                onLogoChange={onLogoChange}
               />
             </SettingsDisclosure>
 
@@ -440,7 +459,7 @@ export default function SettingsPage() {
                 <CardDescription>
                   {isEventVendor
                     ? "Tone and behaviour for inbox replies and operator tools."
-                    : "How Liv greets guests on `/b`, answers questions, and books when you allow it."}
+                    : "How Liv greets guests on your booking page, answers questions, and books when you allow it."}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -455,7 +474,7 @@ export default function SettingsPage() {
                         <div className="space-y-0.5">
                           <Label className="text-sm font-medium">Liv on your booking page</Label>
                           <p className="text-xs text-muted-foreground">
-                            Show Liv on `/b` so guests can ask questions and book when you allow it.
+                            Show Liv on your booking page so guests can ask questions and book when you allow it.
                           </p>
                         </div>
                         <Switch
@@ -524,7 +543,7 @@ export default function SettingsPage() {
                     description={
                       isEventVendor
                         ? "Fine-tune copy on your public site — most studios only touch the switches above."
-                        : "Fine-tune copy on `/b` — most teams only touch the switches above."
+                        : "Fine-tune copy on your booking page — most teams only touch the switches above."
                     }
                     defaultOpen={false}
                   >
@@ -618,9 +637,12 @@ export default function SettingsPage() {
                     </div>
                   </SettingsDisclosure>
                   <SettingsDisclosure
+                    id="channels-setup"
                     title="SMS, email & social"
                     description="Shop number, WhatsApp, and Instagram — Liv replies from one inbox."
                     defaultOpen={false}
+                    className="scroll-mt-24"
+                    data-testid="settings-channels-setup"
                   >
                     <CommunicationsControls businessId={bid} />
                   </SettingsDisclosure>
@@ -635,7 +657,7 @@ export default function SettingsPage() {
             <TabsContent value="legal" className="space-y-4 mt-0">
               <SettingsDisclosure
                 title="Guest-facing policies"
-                description="Terms, privacy, and care copy guests see on `/b` and `/my`."
+                description="Terms, privacy, and care copy guests see on your booking page and guest portal."
                 defaultOpen={shopEditable || livEditable}
               >
                 <GuestPoliciesPanel editable={shopEditable || livEditable} />

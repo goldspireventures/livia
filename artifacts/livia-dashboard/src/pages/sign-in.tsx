@@ -17,6 +17,7 @@ import {
   hasMarketingDemoGateKey,
 } from "@/lib/marketing-demo-gate";
 import { getMarketingOrigin } from "@/lib/surface-urls";
+import { isLocalDashboardDev, readSignInRedirectPath } from "@/lib/local-dashboard-auth";
 import { SignInTenantPreview } from "@/components/sign-in-tenant-preview";
 import {
   useDebouncedClerkIdentifierEmail,
@@ -36,6 +37,8 @@ export default function SignInPage() {
   const [devPassword, setDevPassword] = useState<string | undefined>();
   const marketing = getMarketingOrigin();
   const betaMode = useBetaSignInMode();
+  const redirectAfterSignIn = readSignInRedirectPath();
+  const localDevSignIn = isLocalDashboardDev();
   const clerkEmail = useDebouncedClerkIdentifierEmail();
   const { hint: appearanceHint, loading: appearanceLoading } = useSignInAppearanceHint(clerkEmail);
 
@@ -46,7 +49,7 @@ export default function SignInPage() {
       .catch(() => undefined);
   }, []);
 
-  if (isDemoLoginEnabled && !betaMode && !isSignedOutLanding()) {
+  if (isDemoLoginEnabled && !betaMode && !isSignedOutLanding() && !isLocalDashboardDev()) {
     return <ProspectDemoRedirect />;
   }
 
@@ -110,7 +113,18 @@ export default function SignInPage() {
               </p>
             ) : null}
 
-            {isDemoLoginEnabled ? (
+            {localDevSignIn && redirectAfterSignIn ? (
+              <p className="mb-4 rounded-xl border border-primary/25 bg-primary/5 px-4 py-3 text-sm text-muted-foreground">
+                Local dev — use demo sign-in below, then you&apos;ll land on{" "}
+                <span className="font-medium text-foreground">{redirectAfterSignIn}</span>.
+              </p>
+            ) : null}
+
+            {isDemoLoginEnabled && localDevSignIn ? (
+              <DemoPasswordSignIn devPasswordHint={devPassword} embedded />
+            ) : null}
+
+            {isDemoLoginEnabled && !localDevSignIn ? (
               <p className="mb-6 text-sm text-muted-foreground">
                 {invitedDemo ? (
                   <>
@@ -137,7 +151,7 @@ export default function SignInPage() {
                 routing="path"
                 path="/sign-in"
                 signUpUrl="/sign-up"
-                fallbackRedirectUrl="/dashboard"
+                fallbackRedirectUrl={redirectAfterSignIn ?? "/dashboard"}
               />
             </SignInTenantPreview>
 
@@ -148,7 +162,7 @@ export default function SignInPage() {
               </a>
             </p>
 
-            {isDemoLoginEnabled ? (
+            {isDemoLoginEnabled && !localDevSignIn ? (
               <details className="group mt-6 rounded-xl border border-dashed border-border/70 bg-muted/10 open:bg-muted/20 transition-colors">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden">
                   <span>Manual demo email + password</span>

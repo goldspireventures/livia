@@ -74,7 +74,7 @@ export const BEAUTY_PLATFORM_DEFAULT_PICKER: BeautyPickerMeta = {
   operatorIntent:
     "Constellation Today — ink night sky, orbital KPI glass, champagne Liv briefing. Classic Livia before you dress the studio.",
   guestIntent:
-    "Neutral premium `/b` book page — Livia constellation look, not yet dressed as a lash or brow studio.",
+    "Neutral premium booking page book page — Livia constellation look, not yet dressed as a lash or brow studio.",
   whenToPick: "New signups and owners who want the platform look first, then brand the studio in Appearance.",
 };
 
@@ -112,7 +112,7 @@ export const BEAUTY_EXPERIENCE_BY_CSS: Record<BeautyShippedCssPreset, BeautyExpe
       operatorIntent:
         "Inbox hero on Today — lash DMs, patch-test threads, and Instagram enquiries before the floor queue.",
       guestIntent:
-        "Moody evening studio booking — confident dark `/b` page suited to lashes, nails, and evening appointments.",
+        "Moody evening studio booking — confident dark booking page page suited to lashes, nails, and evening appointments.",
       whenToPick: "DM-heavy studios, lash artists, and owners who live in inbox triage after hours.",
     },
   },
@@ -149,7 +149,7 @@ export const BEAUTY_EXPERIENCE_BY_CSS: Record<BeautyShippedCssPreset, BeautyExpe
       operatorIntent:
         "Atrium Today — gentle swimlanes for chairs and walk-ins; inbox still one tap in the sidebar.",
       guestIntent:
-        "Bright, welcoming `/b` — best for brow bars, nail studios, and daytime appointment flows.",
+        "Bright, welcoming booking page — best for brow bars, nail studios, and daytime appointment flows.",
       whenToPick: "Daylight studios, brow specialists, and owners who want a calm floor overview first.",
     },
   },

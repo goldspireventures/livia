@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import type { PresentationLayoutMorph } from "@workspace/policy";
 import { cn } from "@/lib/utils";
-import { layoutMorphLabel } from "@/lib/presentation-surface";
+import { bookingsListScheduleTitle, formatBookingStatusLabel } from "@workspace/policy";
 import {
   BeautyCockpitSchedule,
   BeautyMenuCardSchedule,
@@ -16,6 +16,7 @@ import {
   type PackageCreditSummaryView,
 } from "@/components/wellness/wellness-layout-surfaces";
 import { formatDateTime } from "@/lib/format";
+import { bookingsListRowHeightClass, bookingsListScrollViewportClass } from "@/lib/bookings-list-layout";
 import { PendingWhyLine } from "@/components/booking/pending-why-line";
 
 type BookingRow = BeautyBookingRow & {
@@ -63,33 +64,42 @@ function ConstellationBookingsList({
   | "statusColors"
 >) {
   return (
-    <section className="constellation-bookings-morph space-y-4" data-testid="bookings-morph-constellation">
-      <div className="flex items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold">Orbital schedule</h2>
-        <span className="text-[10px] uppercase tracking-wider text-[#d9c39a]/90">
-          {layoutMorphLabel("constellation")}
-        </span>
+    <section
+      className="constellation-bookings-morph flex flex-col gap-3"
+      data-testid="bookings-morph-constellation"
+    >
+      <div className="flex items-center justify-between gap-2 shrink-0">
+        <h2 className="text-sm font-semibold">{bookingsListScheduleTitle()}</h2>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 shrink-0">
         {[
-          ["On books", String(bookings.length)],
+          ["Showing", String(bookings.length)],
           ["Pending", String(pendingCount)],
         ].map(([label, val]) => (
           <div
             key={label}
-            className="rounded-xl border border-[rgba(217,195,154,0.22)] bg-[rgba(42,45,58,0.45)] p-3"
+            className="rounded-xl border border-[rgba(217,195,154,0.22)] bg-[rgba(42,45,58,0.45)] px-3 py-2"
           >
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
-            <p className="text-xl font-serif text-[#d9c39a] tabular-nums mt-1">{val}</p>
+            <p className="text-lg font-serif text-[#d9c39a] tabular-nums mt-0.5">{val}</p>
           </div>
         ))}
       </div>
-      <div className="divide-y divide-border rounded-xl border border-[rgba(217,195,154,0.18)] overflow-hidden">
+      <div
+        className={cn(
+          "divide-y divide-border rounded-xl border border-[rgba(217,195,154,0.18)]",
+          bookingsListScrollViewportClass,
+        )}
+      >
         {bookings.map((booking) => (
           <Link key={booking.id} href={`/bookings/${booking.id}`}>
             <div
               data-testid={`row-booking-${booking.id}`}
-              className={cn(rowClass(booking.status === "PENDING"), "constellation-booking-row")}
+              className={cn(
+                rowClass(booking.status === "PENDING"),
+                "constellation-booking-row",
+                bookingsListRowHeightClass,
+              )}
             >
               <div className={avatarClass()}>
                 {booking.customer?.firstName?.charAt(0) ?? "?"}
@@ -98,7 +108,7 @@ function ConstellationBookingsList({
                 <p className="font-medium truncate">
                   {booking.customer?.firstName} {booking.customer?.lastName}
                 </p>
-                <p className="text-sm text-muted-foreground truncate">
+                <p className="text-xs text-muted-foreground truncate">
                   {booking.service?.name}
                   {booking.staff ? ` · ${booking.staff.displayName}` : ""}
                 </p>
@@ -107,19 +117,22 @@ function ConstellationBookingsList({
                     reason={booking.pendingReason}
                     vertical={vertical}
                     category={category}
+                    compact
                     className="mt-0.5"
                   />
                 ) : null}
               </div>
               <div className="flex flex-col items-end gap-1 shrink-0">
-                <span className="text-sm font-medium">{formatDateTime(booking.startAt ?? booking.startTime ?? "")}</span>
+                <span className="text-xs font-medium tabular-nums">
+                  {formatDateTime(booking.startAt ?? booking.startTime ?? "")}
+                </span>
                 <span
                   className={cn(
                     "text-[10px] font-semibold px-2 py-0.5 rounded-full border",
                     bookingStatusClass(booking.status, statusColors[booking.status] ?? ""),
                   )}
                 >
-                  {booking.status}
+                  {formatBookingStatusLabel(booking.status)}
                 </span>
               </div>
             </div>
@@ -275,7 +288,7 @@ export function BookingsMorphFallbackRow({
           <p className="font-medium truncate">
             {booking.customer?.firstName} {booking.customer?.lastName}
           </p>
-          <p className="text-sm text-muted-foreground truncate">
+          <p className="text-xs text-muted-foreground truncate">
             {booking.service?.name}
             {booking.staff ? ` · ${booking.staff.displayName}` : ""}
           </p>
@@ -284,19 +297,22 @@ export function BookingsMorphFallbackRow({
               reason={booking.pendingReason}
               vertical={vertical}
               category={category}
+              compact
               className="mt-0.5"
             />
           ) : null}
         </div>
         <div className="flex flex-col items-end gap-1 shrink-0">
-          <span className="text-sm font-medium">{formatDateTime(booking.startAt ?? booking.startTime ?? "")}</span>
+          <span className="text-xs font-medium tabular-nums">
+            {formatDateTime(booking.startAt ?? booking.startTime ?? "")}
+          </span>
           <span
             className={cn(
               "text-[10px] font-semibold px-2 py-0.5 rounded-full border",
               bookingStatusClass(booking.status, statusColors[booking.status] ?? ""),
             )}
           >
-            {booking.status}
+            {formatBookingStatusLabel(booking.status)}
           </span>
         </div>
       </div>

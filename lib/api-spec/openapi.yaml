@@ -4441,6 +4441,12 @@ components:
           type: integer
         pendingCount:
           type: integer
+        studioPendingCount:
+          type: integer
+          description: PENDING bookings where the studio must confirm or review (excludes guest deposit waits)
+        guestActionPendingCount:
+          type: integer
+          description: PENDING bookings waiting on guest deposit, continuity, or reply
         confirmedCount:
           type: integer
         completedTodayCount:
@@ -4492,6 +4498,9 @@ components:
           type: object
           additionalProperties: true
           description: Owner operating pulse — Liv handling / guest completing / needs you
+        activeWaitlistCount:
+          type: integer
+          description: Active slot waitlist entries — Liv nudges on Today when count reaches threshold
       required: [todayBookings, weekBookings, pendingCount, confirmedCount, completedTodayCount, noShowTodayCount, totalCustomers, upcomingBookings, voiceBookingsThisWeek, voiceRecoveredValueEurCents, voiceOutcomeShareEurCents]
 
     PackageCreditSummary:

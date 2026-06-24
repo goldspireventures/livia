@@ -78,12 +78,12 @@ async function demoFetch<T>(
       throw new Error(
         path.includes("/sync") || path.includes("/provision") || path.includes("/repair")
           ? "Demo setup timed out — keep the app open and retry. First seed can take 1–3 minutes."
-          : "Demo status timed out — check API is running and reachable from this device.",
+          : "Demo status timed out — check your connection and try again.",
       );
     }
     if (e instanceof TypeError && /network request failed/i.test(e.message)) {
       throw new Error(
-        "Cannot reach API — use pnpm dev:mobile:device on the same Wi‑Fi as this phone.",
+        "Cannot reach Livia — check your connection and try again.",
       );
     }
     throw e;

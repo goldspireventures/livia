@@ -4,6 +4,11 @@
  * Relationship: `/my/{slug}` and `/my/{slug}/visit/{bookingId}`.
  */
 
+/** Owner-facing label — never expose internal `/b` route prefix in UI copy. */
+export const GUEST_BOOK_OWNER_LABEL = "public booking page";
+export const GUEST_BOOK_OWNER_LABEL_SHORT = "booking page";
+export const GUEST_PORTAL_OWNER_LABEL = "guest portal";
+
 const RESERVED_SUBDOMAINS = new Set(["app", "www", "api", "staging", "stg", "demo", "mail"]);
 
 export type GuestBookUrlEnv = {

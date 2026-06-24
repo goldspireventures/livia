@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ShopLogoField } from "@/components/brand/shop-logo-field";
 
 export type StudioProfileFormValues = {
   name: string;
@@ -29,22 +30,28 @@ export type StudioProfileFormValues = {
 
 type Props = {
   form: UseFormReturn<StudioProfileFormValues>;
+  businessId: string;
   vertical?: string | null;
   category?: string | null;
   locationNoun: string;
   shopEditable: boolean;
   saving: boolean;
   onSubmit: (vals: StudioProfileFormValues) => void;
+  onLogoChange?: (url: string | null) => void;
 };
 
 function FieldInput({
   def,
   form,
   disabled,
+  businessId,
+  onLogoChange,
 }: {
   def: ReturnType<typeof studioProfileFieldsForVertical>[number];
   form: UseFormReturn<StudioProfileFormValues>;
   disabled: boolean;
+  businessId: string;
+  onLogoChange?: (url: string | null) => void;
 }) {
   const id = def.id;
 
@@ -99,6 +106,23 @@ function FieldInput({
     );
   }
 
+  if (id === "logoUrl") {
+    return (
+      <ShopLogoField
+        key={id}
+        businessId={businessId}
+        label={def.label}
+        hint={def.hint}
+        logoUrl={form.watch("logoUrl") || null}
+        disabled={disabled}
+        onChange={(url) => {
+          form.setValue("logoUrl", url ?? "", { shouldDirty: true });
+          onLogoChange?.(url);
+        }}
+      />
+    );
+  }
+
   const registerId = id as keyof StudioProfileFormValues;
   return (
     <div className="space-y-2" key={id}>
@@ -113,34 +137,24 @@ function FieldInput({
         data-testid={
           id === "name"
             ? "input-business-name"
-            : id === "logoUrl"
-              ? "input-logo-url"
-              : `input-${id}`
+            : `input-${id}`
         }
       />
       {def.hint ? <p className="text-xs text-muted-foreground">{def.hint}</p> : null}
-      {id === "logoUrl" && form.watch("logoUrl") ? (
-        <img
-          src={form.watch("logoUrl")}
-          alt=""
-          className="h-12 w-12 rounded-lg object-cover border"
-          onError={(e) => {
-            (e.target as HTMLImageElement).style.display = "none";
-          }}
-        />
-      ) : null}
     </div>
   );
 }
 
 export function StudioProfileForm({
   form,
+  businessId,
   vertical,
   category,
   locationNoun,
   shopEditable,
   saving,
   onSubmit,
+  onLogoChange,
 }: Props) {
   const profileFields = studioProfileFieldsForVertical(vertical, category);
   const primary = profileFields.filter((f) => f.section === "primary");
@@ -150,7 +164,14 @@ export function StudioProfileForm({
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
       <fieldset disabled={!shopEditable} className="space-y-4 disabled:opacity-80">
         {primary.map((f) => (
-          <FieldInput key={f.id} def={f} form={form} disabled={!shopEditable} />
+          <FieldInput
+            key={f.id}
+            def={f}
+            form={form}
+            disabled={!shopEditable}
+            businessId={businessId}
+            onLogoChange={onLogoChange}
+          />
         ))}
 
         {contact.length > 0 ? (
@@ -162,7 +183,14 @@ export function StudioProfileForm({
             <div className="space-y-4 pt-1">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {contact.map((f) => (
-                  <FieldInput key={f.id} def={f} form={form} disabled={!shopEditable} />
+                  <FieldInput
+                    key={f.id}
+                    def={f}
+                    form={form}
+                    disabled={!shopEditable}
+                    businessId={businessId}
+                    onLogoChange={onLogoChange}
+                  />
                 ))}
               </div>
             </div>

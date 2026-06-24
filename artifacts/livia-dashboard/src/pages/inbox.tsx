@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useListConversations,
@@ -50,17 +50,20 @@ import {
   verticalSupportsRetail,
   wellnessRetailSkuById,
   inboxFloorGuidance,
-  inboxChannelLabel,
-  inboxCrossChannelOperatorNote,
-  inboxUnifiedReplyHint,
-  inboxUnifiedGuestChannelsLabel,
-  inboxReplyPlaceholder,
+  inboxReplyPlaceholderForCompose,
   inboxReplyDeliveredOnChannel,
-  inboxSiblingThreadsBanner,
+  inboxReplyOnChannelLabel,
+  resolveInboxComposeReplyChannel,
+  resolveInboxEffectiveReplyConversationId,
+  buildInboxGuestChannelContext,
+  resolveInboxMessageReplyRoute,
+  toggleInboxReplyChannelPick,
+  isInboxReplyChannelSelected,
   inboxNeedsOwnerReply,
   type InboxQueueLens,
 } from "@workspace/policy";
 import { InboxThreadList, type InboxThreadRow } from "@/components/inbox/inbox-thread-list";
+import { InboxChannelIcon, InboxChannelIconRow } from "@/components/inbox/inbox-channel-icon";
 import { InboxContextRail } from "@/components/inbox/inbox-context-rail";
 import { invalidateOperationalState, OPERATIONAL_REFETCH_MS } from "@/lib/operational-cache";
 import { apiFetch } from "@/lib/api-fetch";
@@ -77,8 +80,6 @@ import {
   CheckCircle2,
   HandHelping,
   MessageSquare,
-  Globe,
-  Phone,
   ArrowUp,
 } from "lucide-react";
 import { Link } from "wouter";
@@ -111,6 +112,8 @@ interface ConversationDetail {
 
 interface ConversationMessageItem {
   id: string;
+  conversationId?: string;
+  channel?: string;
   role: "USER" | "ASSISTANT" | "SYSTEM" | "TOOL";
   content: string;
   toolName: string | null;
@@ -121,25 +124,6 @@ interface ConversationMessageItem {
 
 function formatTime(dateStr: string): string {
   return new Date(dateStr).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-}
-
-function channelIcon(channel: string) {
-  switch (channel) {
-    case "WEB":
-      return <Globe className="h-3 w-3" />;
-    case "WHATSAPP":
-      return <MessageSquare className="h-3 w-3 text-emerald-500" />;
-    case "INSTAGRAM":
-      return <Sparkles className="h-3 w-3 text-pink-500" />;
-    case "MESSENGER":
-      return <MessageSquare className="h-3 w-3 text-blue-500" />;
-    case "SMS":
-      return <Phone className="h-3 w-3" />;
-    case "VOICE":
-      return <MessageSquare className="h-3 w-3" />;
-    default:
-      return <MessageSquare className="h-3 w-3" />;
-  }
 }
 
 function inboxGreeting(firstName: string | null | undefined, multiShop: boolean): string {
@@ -187,6 +171,10 @@ export default function InboxPage() {
   const [queueLens, setQueueLens] = useState<InboxQueueLens>("liv_handling");
   const [replyDraft, setReplyDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const [replyChannelPick, setReplyChannelPick] = useState<{
+    conversationId: string;
+    channel: string;
+  } | null>(null);
   const [postSessionFlow, setPostSessionFlow] = useState<{
     productName?: string;
     steps: string[];
@@ -243,16 +231,17 @@ export default function InboxPage() {
     },
   );
 
-  const { data: detail, isLoading: isLoadingDetail } = useGetConversation(
-    businessId,
-    selectedId ?? "",
-    {
-      query: {
-        enabled: !!businessId && !!selectedId,
-        refetchInterval: 5_000,
-      } as any,
-    },
-  );
+  const {
+    data: detail,
+    isLoading: isLoadingDetail,
+    isError: isDetailError,
+  } = useGetConversation(businessId, selectedId ?? "", {
+    query: {
+      enabled: !!businessId && !!selectedId,
+      refetchInterval: 5_000,
+      retry: 1,
+    } as any,
+  });
 
   const updateConversation = useUpdateConversation();
 
@@ -270,7 +259,7 @@ export default function InboxPage() {
       const aggregate = inboxUnifiedListRowToThreadRow(g);
       return {
         ...aggregate,
-        channels: g.channels,
+        channels: g.activeChannels.length ? g.activeChannels : g.channels,
         customerName: g.customerName ?? null,
         lastMessage: aggregate.lastMessage ?? null,
         bookingCount: aggregate.bookingCount ?? 0,
@@ -299,8 +288,8 @@ export default function InboxPage() {
   const activeChannelCountByCustomer = useMemo(() => {
     const counts = new Map<string, number>();
     for (const g of guestGroups) {
-      if (g.customerId && g.channels.length > 1) {
-        counts.set(g.customerId, g.channels.length);
+      if (g.customerId && g.activeChannels.length > 1) {
+        counts.set(g.customerId, g.activeChannels.length);
       }
     }
     return counts;
@@ -317,52 +306,96 @@ export default function InboxPage() {
   const isUnifiedView = detailData?.isUnifiedView ?? false;
   const replyChannel = detailData?.replyChannel ?? selectedConversation?.channel;
 
+  const guestChannelContext = useMemo(
+    () => buildInboxGuestChannelContext(selectedConversation?.customerId, guestGroups),
+    [selectedConversation?.customerId, guestGroups],
+  );
+
+  const replyDetailReady = !!detailData && !isLoadingDetail;
+
+  useEffect(() => {
+    setReplyChannelPick(null);
+  }, [selectedId]);
+
+  useEffect(() => {
+    if (isLoadingConvos) return;
+    if (!selectedId) return;
+    const knownIds = new Set([
+      ...conversations.map((c) => c.id),
+      ...guestGroups.map((g) => g.primaryConversationId),
+    ]);
+    if (knownIds.has(selectedId)) return;
+    const fallbackId = filteredConversations[0]?.id ?? null;
+    setSelectedId(fallbackId);
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("conversation") || params.has("conversationId")) {
+      params.delete("conversation");
+      params.delete("conversationId");
+      const qs = params.toString();
+      window.history.replaceState(
+        null,
+        "",
+        qs ? `${window.location.pathname}?${qs}` : window.location.pathname,
+      );
+    }
+  }, [isLoadingConvos, conversations, guestGroups, selectedId, filteredConversations]);
+
+  const effectiveReplyConversationId = resolveInboxEffectiveReplyConversationId(
+    replyChannelPick,
+    replyConversationId,
+    selectedId,
+  );
+  const effectiveReplyChannel = resolveInboxComposeReplyChannel({
+    pick: replyChannelPick,
+    apiReplyChannel: replyChannel,
+    threadChannel: selectedConversation?.channel,
+    multiChannel: guestChannelContext.multi,
+    detailReady: replyDetailReady,
+  });
+
+  useEffect(() => {
+    if (!replyChannelPick) return;
+    function onPointerDown(e: PointerEvent) {
+      const el = e.target as HTMLElement | null;
+      if (el?.closest("[data-inbox-channel-pick]")) return;
+      setReplyChannelPick(null);
+    }
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [replyChannelPick]);
+
+  function selectReplyChannelForMessage(m: ConversationMessageItem & { channel?: string }) {
+    if (!guestChannelContext.multi || !selectedId) return;
+    const route = resolveInboxMessageReplyRoute(
+      m,
+      guestChannelContext,
+      selectedId,
+      conversations,
+      selectedConversation?.channel,
+    );
+    if (!route) return;
+    setReplyChannelPick(toggleInboxReplyChannelPick(replyChannelPick, route));
+  }
+
   const replyConversation = useMemo(() => {
-    if (!replyConversationId) return selectedConversation;
+    if (!effectiveReplyConversationId) return selectedConversation;
     return (
-      conversations.find((c) => c.id === replyConversationId) ??
+      conversations.find((c) => c.id === effectiveReplyConversationId) ??
       detailData?.conversation ??
       selectedConversation
     );
-  }, [replyConversationId, conversations, detailData?.conversation, selectedConversation]);
+  }, [effectiveReplyConversationId, conversations, detailData?.conversation, selectedConversation]);
 
-  const siblingThreads = useMemo(() => {
-    if (isUnifiedView) return [];
-    if (detailData?.siblingThreads?.length) return detailData.siblingThreads;
-    const customerId = selectedConversation?.customerId;
-    if (!customerId || !selectedId) return [];
-    return conversations
-      .filter(
-        (c) =>
-          c.customerId === customerId &&
-          c.id !== selectedId &&
-          c.status !== "CLOSED",
-      )
-      .map((c) => ({
-        id: c.id,
-        channel: c.channel,
-        status: c.status,
-        lastMessage: c.lastMessage ?? null,
-        lastMessageAt: c.lastMessageAt,
-      }));
-  }, [isUnifiedView, detailData?.siblingThreads, selectedConversation?.customerId, selectedId, conversations]);
-
-  const unifiedChannelsLabel = useMemo(() => {
-    if (!isUnifiedView || !selectedConversation?.customerId) return null;
-    const group = guestGroups.find((g) => g.customerId === selectedConversation.customerId);
-    return group ? inboxUnifiedGuestChannelsLabel(group.channels) : null;
-  }, [isUnifiedView, selectedConversation?.customerId, guestGroups]);
+  const showMergedTimeline = isUnifiedView || guestChannelContext.multi;
 
   const ownerCanReply = useMemo(() => {
     if (!selectedConversation) return false;
-    if (isUnifiedView && selectedConversation.customerId) {
+    if (showMergedTimeline && selectedConversation.customerId) {
       const group = guestGroups.find((g) => g.customerId === selectedConversation.customerId);
       return group?.threads.some((t) => inboxNeedsOwnerReply(t)) ?? false;
     }
     return inboxNeedsOwnerReply(replyConversation ?? selectedConversation);
-  }, [selectedConversation, isUnifiedView, guestGroups, replyConversation]);
-
-  const siblingBanner = isUnifiedView ? null : inboxSiblingThreadsBanner(siblingThreads);
+  }, [selectedConversation, showMergedTimeline, guestGroups, replyConversation]);
 
   const [resolving, setResolving] = useState(false);
   const [resolveDialog, setResolveDialog] = useState<{
@@ -436,7 +469,7 @@ export default function InboxPage() {
   }
 
   async function sendOwnerReply(releaseAfterSend: boolean) {
-    const targetId = replyConversationId ?? selectedId;
+    const targetId = effectiveReplyConversationId ?? selectedId;
     if (!businessId || !targetId || !replyDraft.trim()) return;
     setSending(true);
     try {
@@ -550,16 +583,16 @@ export default function InboxPage() {
   );
   const inboxGridMinH =
     wellnessInboxMorph || beautyInboxMorph
-      ? "h-[calc(100dvh-9.5rem)] min-h-[min(720px,calc(100dvh-9rem))] max-h-[calc(100dvh-6.5rem)]"
+      ? "h-[calc(100dvh-8rem)] min-h-[min(720px,calc(100dvh-7.5rem))] max-h-[calc(100dvh-5rem)]"
       : isConstellationInbox
-        ? "h-[min(840px,calc(100dvh-6rem))] min-h-[min(720px,calc(100dvh-6rem))]"
-        : "h-[calc(100dvh-10.5rem)] min-h-[min(640px,calc(100dvh-10rem))] max-h-[calc(100dvh-7rem)]";
+        ? "h-[calc(100dvh-5rem)] min-h-[min(720px,calc(100dvh-5rem))]"
+        : "h-[calc(100dvh-9rem)] min-h-[min(640px,calc(100dvh-8.5rem))] max-h-[calc(100dvh-5.5rem)]";
+
+  const threadMessages = detailData?.messages ?? [];
 
   const threadMessageCount = useMemo(() => {
-    return (
-      detailData?.messages.filter((m) => m.role !== "SYSTEM" && m.role !== "TOOL").length ?? 0
-    );
-  }, [detailData?.messages]);
+    return threadMessages.filter((m) => m.role !== "SYSTEM" && m.role !== "TOOL").length;
+  }, [threadMessages]);
 
   return (
     <OperationalPageShell
@@ -677,11 +710,12 @@ export default function InboxPage() {
         {/* Thread list */}
         <div
           className={cn(
-            "flex flex-col border-b lg:border-b-0 lg:border-r border-border/80",
+            "flex flex-col min-h-0 h-full border-b lg:border-b-0 lg:border-r border-border/80 overflow-hidden",
             beautyChrome && "beauty-inbox-thread-pane",
           )}
         >
-          <InboxThreadList
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <InboxThreadList
             threads={filteredConversations}
             loading={isLoadingConvos}
             selectedId={selectedId}
@@ -691,6 +725,7 @@ export default function InboxPage() {
             beautyChrome={beautyChrome}
             activeChannelCountByCustomer={activeChannelCountByCustomer}
           />
+          </div>
         </div>
 
         {/* Conversation */}
@@ -729,7 +764,7 @@ export default function InboxPage() {
                   <div className="flex items-center justify-between gap-3 flex-wrap">
                   <div className="min-w-0">
                     <div className="font-semibold truncate flex items-center gap-2">
-                      {channelIcon(selectedConversation.channel)}
+                      <InboxChannelIcon channel={selectedConversation.channel} size="md" />
                       {selectedConversation.customerId ? (
                         <Link
                           href={`/customers/${selectedConversation.customerId}`}
@@ -747,17 +782,13 @@ export default function InboxPage() {
                         selectedConversation.customerPhone ??
                         "no contact info shared"}
                     </div>
-                    <p
-                      className="text-[11px] text-muted-foreground mt-0.5"
-                      data-testid="inbox-thread-channel-hint"
-                    >
-                      {isUnifiedView
-                        ? inboxUnifiedReplyHint(replyChannel)
-                        : `Replies send on ${inboxChannelLabel(selectedConversation.channel)}`}
-                    </p>
-                    {unifiedChannelsLabel ? (
-                      <p className="text-[10px] text-muted-foreground mt-0.5" data-testid="inbox-unified-channels">
-                        Liv active on {unifiedChannelsLabel}
+                    {guestChannelContext.multi ? (
+                      <p
+                        className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1.5"
+                        data-testid="inbox-unified-channels"
+                      >
+                        <span>Liv on</span>
+                        <InboxChannelIconRow channels={guestChannelContext.channels} size="sm" />
                       </p>
                     ) : null}
                     {selectedConversation.customerId && businessId ? (
@@ -894,46 +925,32 @@ export default function InboxPage() {
                 </div>
               )}
 
-              {siblingBanner ? (
-                <div
-                  className="mx-4 mt-3 rounded-lg border border-sky-500/35 bg-sky-500/10 px-3 py-2 text-xs text-foreground space-y-2"
-                  data-testid="inbox-sibling-threads-banner"
-                >
-                  <p>{siblingBanner}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {siblingThreads.map((s) => (
-                      <Button
-                        key={s.id}
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-[11px]"
-                        data-testid={`inbox-sibling-thread-${s.id}`}
-                        onClick={() => setSelectedId(s.id)}
-                      >
-                        Open {inboxChannelLabel(s.channel)}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-
               <div
                 className={cn(
-                  "flex-1 min-h-0 overflow-y-auto p-4 space-y-3 motion-wizard-enter inbox-messages-scroll",
+                  "flex-1 min-h-[12rem] overflow-y-auto p-4 space-y-3 motion-wizard-enter inbox-messages-scroll",
                   beautyChrome ? "beauty-inbox-messages" : "bg-background/30",
                   wellnessInboxMorph && "wellness-inbox-messages-scroll",
                   beautyInboxMorph && "beauty-inbox-messages-scroll",
                   isConstellationInbox && "constellation-inbox-messages-scroll",
                 )}
-                style={{
-                  minHeight: inboxMessagesMinHeight(threadMessageCount, {
-                    ownerComposing: ownerCanReply,
-                  }),
-                }}
+                style={
+                  inboxMessagesMinHeight(threadMessageCount, { ownerComposing: ownerCanReply })
+                    ? {
+                        minHeight: inboxMessagesMinHeight(threadMessageCount, {
+                          ownerComposing: ownerCanReply,
+                        }),
+                      }
+                    : undefined
+                }
                 data-testid="inbox-messages-scroll"
               >
-                {detailData?.messages
+                {isDetailError && !detailData ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">
+                    Could not load this thread — select another conversation or refresh.
+                  </p>
+                ) : null}
+
+                {threadMessages
                   .filter((m) => m.role !== "SYSTEM")
                   .map((m) => {
                     if (m.role === "TOOL") {
@@ -952,12 +969,29 @@ export default function InboxPage() {
                     const isUser = m.role === "USER";
                     const isStaff = m.role === "ASSISTANT" && !!m.authorUserId;
                     const isLiv = m.role === "ASSISTANT" && !m.authorUserId;
+                    const msgChannel =
+                      m.channel ??
+                      (m.conversationId
+                        ? conversations.find((c) => c.id === m.conversationId)?.channel
+                        : undefined) ??
+                      selectedConversation?.channel;
+                    const isReplyTarget = isInboxReplyChannelSelected(
+                      replyChannelPick,
+                      m,
+                      guestChannelContext,
+                      selectedId ?? "",
+                      conversations,
+                      selectedConversation?.channel,
+                    );
                     return (
                       <div
                         key={m.id}
-                        className={`flex ${isUser ? "justify-end" : "justify-start"} gap-2 items-end`}
+                        className={cn(
+                          "flex gap-2 items-end",
+                          isUser ? "justify-end" : "justify-start",
+                        )}
                       >
-                        {isLiv ? (
+                        {!isUser && isLiv ? (
                           <div
                             className={cn(
                               "h-7 w-7 rounded-full flex items-center justify-center shrink-0 mb-0.5",
@@ -970,6 +1004,24 @@ export default function InboxPage() {
                           >
                             <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden />
                           </div>
+                        ) : null}
+                        {!isUser && guestChannelContext.multi && msgChannel ? (
+                          <button
+                            type="button"
+                            data-inbox-channel-pick
+                            onClick={() => selectReplyChannelForMessage(m)}
+                            className={cn(
+                              "shrink-0 mb-1 rounded-md p-1 transition-colors",
+                              isReplyTarget
+                                ? "bg-primary/20 ring-2 ring-primary/50"
+                                : "hover:bg-muted/60 opacity-80 hover:opacity-100",
+                            )}
+                            title={inboxReplyOnChannelLabel(msgChannel)}
+                            aria-label={inboxReplyOnChannelLabel(msgChannel)}
+                            data-testid={`inbox-msg-channel-${m.id}`}
+                          >
+                            <InboxChannelIcon channel={msgChannel} size="sm" />
+                          </button>
                         ) : null}
                         <div
                           data-testid={`thread-msg-${m.role.toLowerCase()}`}
@@ -994,11 +1046,6 @@ export default function InboxPage() {
                                     : "bg-muted rounded-bl-sm",
                           )}
                         >
-                          {isUnifiedView && m.channel ? (
-                            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
-                              {inboxChannelLabel(m.channel)}
-                            </p>
-                          ) : null}
                           {isStaff ? (
                             <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
                               Team
@@ -1018,11 +1065,28 @@ export default function InboxPage() {
                             {formatTime(m.createdAt)}
                           </div>
                         </div>
+                        {isUser && guestChannelContext.multi && msgChannel ? (
+                          <button
+                            type="button"
+                            data-inbox-channel-pick
+                            onClick={() => selectReplyChannelForMessage(m)}
+                            className={cn(
+                              "shrink-0 mb-1 rounded-md p-1 transition-colors",
+                              isReplyTarget
+                                ? "bg-primary/20 ring-2 ring-primary/50"
+                                : "hover:bg-muted/60 opacity-80 hover:opacity-100",
+                            )}
+                            title={inboxReplyOnChannelLabel(msgChannel)}
+                            aria-label={inboxReplyOnChannelLabel(msgChannel)}
+                          >
+                            <InboxChannelIcon channel={msgChannel} size="sm" />
+                          </button>
+                        ) : null}
                       </div>
                     );
                   })}
 
-                {detailData?.messages.length === 0 && (
+                {!isDetailError && detailData && threadMessages.length === 0 && (
                   <p className="text-sm text-muted-foreground text-center py-8">
                     No messages yet
                   </p>
@@ -1033,7 +1097,7 @@ export default function InboxPage() {
                 <div
                   className={cn(
                     "shrink-0 border-t backdrop-blur-sm z-10 constellation-inbox-footer",
-                    compactInboxCompose ? "p-2 space-y-1.5" : "sticky bottom-0 p-3 space-y-2",
+                    compactInboxCompose ? "p-2 space-y-1.5" : "p-3 space-y-2",
                     wellnessInboxMorph && "wellness-inbox-compose",
                     beautyChrome && "beauty-inbox-compose",
                     beautyInboxMorph && "beauty-inbox-compose--compact",
@@ -1041,45 +1105,19 @@ export default function InboxPage() {
                     !beautyChrome && !wellnessInboxMorph && !isConstellationInbox && "border-border bg-card/95 mt-auto",
                   )}
                 >
-                  {selectedConversation?.status === "HANDED_OFF" ? (
-                    <div
-                      className={cn(
-                        "rounded-lg border px-3 py-2 text-sm flex items-start gap-2",
-                        beautyChrome
-                          ? "beauty-inbox-handoff-banner"
-                          : isConstellationInbox
-                            ? "constellation-inbox-handoff-banner"
-                            : "border-amber-500/40 bg-amber-50 dark:bg-amber-950/40 text-amber-950 dark:text-amber-100",
-                      )}
-                      data-testid="inbox-handoff-banner"
-                    >
-                      <HandHelping className="h-4 w-4 shrink-0 mt-0.5" aria-hidden />
-                      <span>
-                        <span className="font-medium text-foreground">You&apos;re replying.</span>{" "}
-                        Send when ready — Liv resumes this thread after your message.{" "}
-                        {inboxUnifiedReplyHint(replyChannel)}.
-                      </span>
-                    </div>
-                  ) : (
-                    <p className="text-xs text-muted-foreground" data-testid="inbox-reply-channel-hint">
-                      {inboxReplyDeliveredOnChannel(selectedConversation?.channel)}
-                    </p>
-                  )}
-                  <p className="text-[11px] text-muted-foreground leading-snug">
-                    {inboxCrossChannelOperatorNote()}
+                  <p className="sr-only" data-testid="inbox-thread-channel-hint">
+                    {inboxReplyDeliveredOnChannel(effectiveReplyChannel)}
                   </p>
                   <div className="relative">
                     <Textarea
-                      placeholder={inboxReplyPlaceholder(replyChannel ?? selectedConversation?.channel)}
+                      placeholder={inboxReplyPlaceholderForCompose(
+                        effectiveReplyChannel,
+                        guestChannelContext.multi,
+                        replyDetailReady,
+                      )}
                       value={replyDraft}
                       onChange={(e) => setReplyDraft(e.target.value)}
-                      rows={
-                        selectedConversation?.status === "HANDED_OFF"
-                          ? 3
-                          : compactInboxCompose
-                            ? 2
-                            : 2
-                      }
+                      rows={2}
                       className={cn(
                         "resize-none text-sm bg-background/80 pr-12",
                         beautyChrome

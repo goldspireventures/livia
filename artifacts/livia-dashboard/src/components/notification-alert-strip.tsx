@@ -15,11 +15,16 @@ export function NotificationAlertStrip() {
     query: { enabled: !!bid, refetchInterval: 60_000 } as never,
   });
 
-  const pending = summary?.pendingCount ?? 0;
-  const handed =
-    (summary as { handedOffCount?: number } | undefined)?.handedOffCount ?? 0;
+  const studioPending =
+    (summary as { studioPendingCount?: number } | undefined)?.studioPendingCount ??
+    summary?.pendingCount ??
+    0;
+  const inboxAttention =
+    (summary as { inboxAttentionCount?: number } | undefined)?.inboxAttentionCount ??
+    ((summary as { needsYouCount?: number } | undefined)?.needsYouCount ?? 0) +
+      ((summary as { handedOffCount?: number } | undefined)?.handedOffCount ?? 0);
 
-  if (!bid || (pending === 0 && handed === 0)) return null;
+  if (!bid || (studioPending === 0 && inboxAttention === 0)) return null;
 
   return (
     <div
@@ -30,37 +35,37 @@ export function NotificationAlertStrip() {
       <div className="flex items-center gap-2 text-sm min-w-0">
         <Bell className="h-4 w-4 text-amber-600 shrink-0" />
         <span className="text-muted-foreground">
-          {pending > 0 && handed > 0 ? (
+          {studioPending > 0 && inboxAttention > 0 ? (
             <>
-              <strong className="text-foreground">{pending}</strong> to confirm ·{" "}
-              <strong className="text-foreground">{handed}</strong> inbox handoff
-              {handed === 1 ? "" : "s"}
+              <strong className="text-foreground">{studioPending}</strong> to confirm ·{" "}
+              <strong className="text-foreground">{inboxAttention}</strong> inbox thread
+              {inboxAttention === 1 ? "" : "s"}
             </>
-          ) : pending > 0 ? (
+          ) : studioPending > 0 ? (
             <>
-              <strong className="text-foreground">{pending}</strong> booking
-              {pending === 1 ? "" : "s"} need your confirmation
+              <strong className="text-foreground">{studioPending}</strong> booking
+              {studioPending === 1 ? "" : "s"} need your confirmation
             </>
           ) : (
             <>
-              <strong className="text-foreground">{handed}</strong> conversation
-              {handed === 1 ? "" : "s"} waiting for your team
+              <strong className="text-foreground">{inboxAttention}</strong> conversation
+              {inboxAttention === 1 ? "" : "s"} waiting for your team
             </>
           )}
         </span>
       </div>
       <div className="flex gap-2 sm:ml-auto shrink-0">
-        {pending > 0 ? (
+        {studioPending > 0 ? (
           <Button size="sm" variant="secondary" asChild>
-            <Link href="/bookings?status=PENDING">
+            <Link href="/bookings?status=PENDING&lens=needs_you">
               <CalendarClock className="h-3.5 w-3.5 mr-1" />
               Pending
             </Link>
           </Button>
         ) : null}
-        {handed > 0 ? (
+        {inboxAttention > 0 ? (
           <Button size="sm" variant="secondary" asChild>
-            <Link href="/inbox">
+            <Link href="/inbox?lens=needs_you">
               <Inbox className="h-3.5 w-3.5 mr-1" />
               Inbox
             </Link>

@@ -61,7 +61,9 @@ export default function PublicBalancePage() {
     setLoading(true);
     setErr(null);
     try {
-      const r = await fetch(`/api/public/b/${slug}/balance/${token}`);
+      const r = await fetch(
+        `/api/public/b/${encodeURIComponent(slug)}/balance/${encodeURIComponent(token)}`,
+      );
       if (!r.ok) throw new Error("not found");
       const d = (await r.json()) as BalancePayload;
       setData(d);
@@ -85,7 +87,9 @@ export default function PublicBalancePage() {
     const sessionId = params.get("session_id");
     if (statusHint === "success" && sessionId && slug && token) {
       setFlash("Confirming payment…");
-      void fetch(`/api/public/b/${slug}/balance/${token}/confirm`, {
+      void fetch(
+        `/api/public/b/${encodeURIComponent(slug)}/balance/${encodeURIComponent(token)}/confirm`,
+        {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId }),
@@ -113,7 +117,9 @@ export default function PublicBalancePage() {
     setErr(null);
     setFlash(null);
     try {
-      const r = await fetch(`/api/public/b/${slug}/balance/${token}/checkout`, {
+      const r = await fetch(
+        `/api/public/b/${encodeURIComponent(slug)}/balance/${encodeURIComponent(token)}/checkout`,
+        {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });

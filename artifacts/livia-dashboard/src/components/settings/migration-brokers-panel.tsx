@@ -171,8 +171,8 @@ export function MigrationBrokersPanel({ brokers }: Props) {
 
   const summary =
     connectedCount > 0
-      ? `${connectedCount} workspace integration${connectedCount === 1 ? "" : "s"} configured · CSV import ready`
-      : "CSV import ready today · OAuth paths roll out platform-wide during beta";
+      ? `${connectedCount} integration${connectedCount === 1 ? "" : "s"} connected · spreadsheet import ready`
+      : "Spreadsheet import ready today · direct connect rolls out during beta";
 
   return (
     <SettingsDisclosure
@@ -183,7 +183,7 @@ export function MigrationBrokersPanel({ brokers }: Props) {
     >
       <div className="space-y-4 pt-1">
         <p className="text-sm text-muted-foreground leading-relaxed">
-          Paste CSV exports from your previous booking tool. Liv detects columns and imports clients,
+          Paste exports from your previous booking tool. Liv detects columns and imports clients,
           services, team, and upcoming appointments — then checks off setup steps automatically.
         </p>
 

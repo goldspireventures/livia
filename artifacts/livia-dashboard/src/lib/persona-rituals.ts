@@ -183,7 +183,6 @@ const NAV_POOL: RitualNavItem[] = [
   },
   { ritualName: "Rota", href: "/rota", icon: Clock, min: "ADMIN", personas: ["org_admin", "owner", "manager"] },
   { ritualName: "Classes", href: "/classes", icon: Dumbbell, min: "ADMIN", verticals: ["fitness"] },
-  { ritualName: "Waitlist", href: "/waitlist", icon: Clock, min: "STAFF" },
   {
     ritualName: "Design proofs",
     href: "/design-proofs",

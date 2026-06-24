@@ -73,7 +73,7 @@ export default function StudioSetupPage() {
                     </p>
                   ) : step.id === "patch" ? (
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      Flag services that need a patch test — guests see the gate on /b.
+                      Flag services that need a patch test — guests see the gate on your booking page.
                     </p>
                   ) : null}
                 </div>

@@ -39,7 +39,7 @@ export function RetailProductImageField({
   return (
     <div className="space-y-2" data-testid="retail-product-image-field">
       <Label>Product photo</Label>
-      <p className="text-xs text-muted-foreground">Shown on your /b shop section and checkout page.</p>
+      <p className="text-xs text-muted-foreground">Shown in your shop section on the booking page and at checkout.</p>
       <div className="flex items-start gap-3">
         <div className="h-20 w-28 shrink-0 overflow-hidden rounded-lg border border-border bg-muted/40">
           {imageUrl ? (

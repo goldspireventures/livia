@@ -61,10 +61,12 @@ export function OwnerOperatingPulse({
   pulse,
   loading,
   className,
+  showPrimaryAction = true,
 }: {
   pulse?: OperatingPulseView | null;
   loading?: boolean;
   className?: string;
+  showPrimaryAction?: boolean;
 }) {
   if (loading) {
     return (
@@ -90,9 +92,11 @@ export function OwnerOperatingPulse({
           <h2 className="text-sm font-semibold">{pulse.headline}</h2>
           <p className="text-xs text-muted-foreground mt-0.5">{pulse.subline}</p>
         </div>
-        <Button size="sm" variant="outline" asChild className="shrink-0">
-          <Link href={pulse.primaryHref}>{pulse.primaryLabel}</Link>
-        </Button>
+        {showPrimaryAction ? (
+          <Button size="sm" variant="outline" asChild className="shrink-0">
+            <Link href={pulse.primaryHref}>{pulse.primaryLabel}</Link>
+          </Button>
+        ) : null}
       </div>
       <div className="p-3 flex flex-col sm:flex-row gap-2">
         <PulseStat bucket="liv_handling" count={livCount} active={needsCount === 0} />

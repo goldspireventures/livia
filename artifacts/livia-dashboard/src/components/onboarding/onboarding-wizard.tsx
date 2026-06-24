@@ -42,13 +42,14 @@ import {
   isOnboardingAppUnlocked,
   type OnboardingActId as PolicyActId,
   type OnboardingState,
+  type OnboardingChecklist,
 } from "@workspace/policy";
 
 export type OnboardingStatePayload = {
   currentAct: OnboardingActId;
   completedActs: OnboardingActId[];
   percentComplete: number;
-  checklist?: Record<string, boolean>;
+  checklist?: Partial<OnboardingChecklist>;
 };
 
 type Props = {
@@ -201,8 +202,8 @@ export function OnboardingWizard({
 
   const currentAct: OnboardingActId = useMemo(() => {
     if (!portalMode) return rawCurrentAct;
-    return resolvePortalCurrentAct(rawCurrentAct);
-  }, [portalMode, rawCurrentAct]);
+    return resolvePortalCurrentAct(rawCurrentAct, state?.checklist);
+  }, [portalMode, rawCurrentAct, state?.checklist]);
 
   const stepIndex = actIndex(currentAct);
   const tourPercent = state?.percentComplete ?? (businessId ? 8 : 0);
@@ -284,10 +285,10 @@ export function OnboardingWizard({
       });
       return;
     }
-    const autoDone = portalMode ? portalAutoCompleteActs(act) : [];
+    const autoDone = portalMode ? portalAutoCompleteActs(act, state?.checklist) : [];
     const completed = [...new Set([...(state?.completedActs ?? []), act, ...autoDone])];
     const nextAct = portalMode
-      ? (nextPortalNavAct(act) ?? act)
+      ? (nextPortalNavAct(act, state?.checklist) ?? act)
       : actIndex(act) >= 0 && actIndex(act) < ONBOARDING_ACT_IDS.length - 1
         ? ONBOARDING_ACT_IDS[actIndex(act) + 1]!
         : act;
@@ -310,13 +311,14 @@ export function OnboardingWizard({
     "a5_hours",
     "a6_liv",
     "a7_channels",
+    "a11_migration",
     "a12_go_live",
   ];
   const INLINE_PREVIEW_ACTS: OnboardingActId[] = ["a3_service_menu", "a4_team", "a9_billing"];
 
   const jumpToAct = (act: OnboardingActId) => {
     if (!businessId) return;
-    const target = portalMode ? resolvePortalCurrentAct(act) : act;
+    const target = portalMode ? resolvePortalCurrentAct(act, state?.checklist) : act;
     const idx = actIndex(target);
     const curIdx = actIndex(currentAct);
     const done = state?.completedActs?.includes(target);
@@ -331,7 +333,7 @@ export function OnboardingWizard({
 
   const goBack = () => {
     const prev = portalMode
-      ? prevPortalNavAct(currentAct, !!businessId)
+      ? prevPortalNavAct(currentAct, !!businessId, state?.checklist)
       : (() => {
           if (stepIndex <= 0) return null;
           let p = ONBOARDING_ACT_IDS[stepIndex - 1]!;
@@ -355,9 +357,9 @@ export function OnboardingWizard({
   };
 
   const hint = hints[currentAct];
-  const chapterMicro = portalMode ? portalVisibleStepInChapter(currentAct) : null;
+  const chapterMicro = portalMode ? portalVisibleStepInChapter(currentAct, state?.checklist) : null;
   const canGoBack = portalMode
-    ? !!prevPortalNavAct(currentAct, !!businessId)
+    ? !!prevPortalNavAct(currentAct, !!businessId, state?.checklist)
     : stepIndex > 0 && !(businessId && stepIndex === 1);
   const packLabel = tenantExperience?.vocabulary.label ?? vocab.label;
   const wideStep = currentAct === "a6_liv" || currentAct === "a8_public_link";
@@ -404,9 +406,20 @@ export function OnboardingWizard({
               ? "location"
               : "standalone"
           }
-          onCreated={(id, slug) => {
+          onCreated={(id, slug, extras) => {
             setPublicSlug(slug);
             onBusinessCreated(id, slug);
+            if (extras?.migrationIntent && extras.migrationIntent !== "unspecified") {
+              void persistState({
+                currentAct: "a2_shop_profile",
+                completedActs: ["a1_create_business"],
+                percentComplete: state?.percentComplete ?? 8,
+                checklist: {
+                  ...(state?.checklist ?? {}),
+                  migrationIntent: extras.migrationIntent,
+                },
+              });
+            }
           }}
         />
       ) : null}

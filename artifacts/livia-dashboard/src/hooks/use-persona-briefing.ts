@@ -65,20 +65,27 @@ function buildLivLineFallback(
 
     if ((persona === "owner" || persona === "manager") && data.summary) {
     const today = data.summary.todayBookings ?? 0;
-    const pending = data.summary.pendingCount ?? data.summary.pendingBookings ?? 0;
+    const studioPending =
+      (data.summary as { studioPendingCount?: number }).studioPendingCount ??
+      data.summary.pendingCount ??
+      data.summary.pendingBookings ??
+      0;
+    const inboxAttention =
+      (data.summary as { inboxAttentionCount?: number }).inboxAttentionCount ??
+      (data.summary.handedOffCount ?? 0);
     const handoffs = data.summary.handedOffCount ?? 0;
     const open = data.openConversations ?? 0;
-    if (handoffs > 0 && pending > 0) {
-      return `${shop}${today} today · ${pending} to confirm · ${handoffs} inbox handoff${handoffs === 1 ? "" : "s"}.`;
+    if (inboxAttention > 0 && studioPending > 0) {
+      return `${shop}${today} today · ${studioPending} to confirm · ${inboxAttention} inbox thread${inboxAttention === 1 ? "" : "s"}.`;
     }
-    if (handoffs > 0) {
-      return `${shop}${handoffs} inbox handoff${handoffs === 1 ? "" : "s"} need${handoffs === 1 ? "s" : ""} you — ${today} on the books today.`;
+    if (inboxAttention > 0) {
+      return `${shop}${inboxAttention} inbox thread${inboxAttention === 1 ? "" : "s"} need${inboxAttention === 1 ? "s" : ""} you — ${today} on the books today.`;
     }
     if (persona === "manager" && open > 0) {
       return `${shop}${open} conversation${open === 1 ? "" : "s"} need${open === 1 ? "s" : ""} you — ${today} on the books today.`;
     }
-    if (pending > 0) {
-      return `${shop}${today} today · ${pending} pending confirmation${pending === 1 ? "" : "s"}.`;
+    if (studioPending > 0) {
+      return `${shop}${today} today · ${studioPending} pending confirmation${studioPending === 1 ? "" : "s"}.`;
     }
     return today > 0
       ? `${shop}${today} appointment${today === 1 ? "" : "s"} today — you're on track.`

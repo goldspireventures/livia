@@ -49,7 +49,7 @@ export function layoutMorphLabel(morph: PresentationLayoutMorph | null): string 
     case "ledger":
       return "Voucher ledger";
     case "constellation":
-      return "Constellation";
+      return "Schedule";
     case "pipeline":
       return "Pipeline";
     case "split-inbox":

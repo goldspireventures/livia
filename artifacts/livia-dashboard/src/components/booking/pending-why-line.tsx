@@ -6,6 +6,8 @@ type Props = {
   reason?: string | null;
   vertical?: string | null;
   category?: string | null;
+  /** List rows — one short line only (detail page keeps full guidance). */
+  compact?: boolean;
   /** Show owner next-step guidance (Today / room board). */
   showGuidance?: boolean;
   /** Show why Liv did not auto-confirm (policy-driven). */
@@ -18,21 +20,25 @@ export function PendingWhyLine({
   reason,
   vertical,
   category,
+  compact = false,
   showGuidance = true,
   showLivBlocker = true,
   className,
 }: Props) {
   const label = pendingReasonLabel(reason, vertical, category);
-  const guidance = showGuidance
-    ? pendingApprovalGuidance(reason, vertical, category)
-    : null;
-  const livBlocker = showLivBlocker
-    ? livPendingAutoConfirmBlocker(reason, vertical, category)
-    : null;
+  const guidance =
+    !compact && showGuidance ? pendingApprovalGuidance(reason, vertical, category) : null;
+  const livBlocker =
+    !compact && showLivBlocker ? livPendingAutoConfirmBlocker(reason, vertical, category) : null;
 
   return (
-    <div className={cn("space-y-0.5 min-w-0", className)} data-testid="pending-why-line">
-      <p className="text-[10px] font-medium leading-snug text-[hsl(var(--wellness-pending-fg,38_92%_35%))] dark:text-amber-300">
+    <div className={cn(compact ? "min-w-0" : "space-y-0.5 min-w-0", className)} data-testid="pending-why-line">
+      <p
+        className={cn(
+          "text-[10px] font-medium leading-snug text-[hsl(var(--wellness-pending-fg,38_92%_35%))] dark:text-amber-300",
+          compact && "truncate",
+        )}
+      >
         {label}
       </p>
       {livBlocker ? (

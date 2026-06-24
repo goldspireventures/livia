@@ -30,12 +30,14 @@ export function InboxPreviewPanel({
   loading,
   attentionCount,
   compact = false,
+  hideAttentionBadge = false,
 }: {
   threads: Thread[];
   loading?: boolean;
   /** Threads that actually need a human (handoffs / needs-you). */
   attentionCount: number;
   compact?: boolean;
+  hideAttentionBadge?: boolean;
 }) {
   return (
     <section
@@ -47,7 +49,7 @@ export function InboxPreviewPanel({
     >
       <div className="flex items-center justify-between px-3 py-2 border-b border-border/60">
         <h2 className="text-sm font-semibold">Inbox</h2>
-        {attentionCount > 0 ? (
+        {!hideAttentionBadge && attentionCount > 0 ? (
           <Badge variant="secondary" className="text-[10px] font-mono tabular-nums">
             {attentionCount} need{attentionCount === 1 ? "s" : ""} you
           </Badge>

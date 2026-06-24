@@ -257,13 +257,48 @@ router.get("/import/oauth/callback", async (req, res): Promise<void> => {
     expiresAt: tokens.expiresAt,
   });
 
+  const onboardingReturn = `${dashboardBase}/onboarding?oauth=connected&broker=${parsed.brokerId}`;
+
   if (parsed.brokerId === "calendar_google") {
     void import("../services/google-calendar-sync.service").then((m) =>
       m.runGoogleCalendarSync(parsed.businessId),
     );
+    res.redirect(`${dashboardBase}/settings?tab=integrations&oauth=connected&broker=${parsed.brokerId}`);
+    return;
+  }
+
+  if (parsed.brokerId.startsWith("migration_")) {
+    res.redirect(`${onboardingReturn}&migration_oauth=1`);
+    return;
   }
 
   res.redirect(`${dashboardBase}/settings?tab=integrations&oauth=connected&broker=${parsed.brokerId}`);
 });
+
+router.get(
+  "/businesses/:businessId/migration/oauth-capabilities",
+  requireAuth,
+  requireRole("ADMIN"),
+  async (req, res): Promise<void> => {
+    const { listMigrationOAuthCapabilities } = await import(
+      "../services/migration-oauth-import.service"
+    );
+    res.json(await listMigrationOAuthCapabilities(bizId(req.params.businessId)));
+  },
+);
+
+router.post(
+  "/businesses/:businessId/import/oauth/pull",
+  requireAuth,
+  requireRole("ADMIN"),
+  async (req, res): Promise<void> => {
+    const brokerId = typeof req.body?.brokerId === "string" ? req.body.brokerId : undefined;
+    const incumbentId = typeof req.body?.incumbentId === "string" ? req.body.incumbentId : undefined;
+    const { runMigrationOAuthPull } = await import("../services/migration-oauth-import.service");
+    res.json(
+      await runMigrationOAuthPull(bizId(req.params.businessId), { brokerId, incumbentId }),
+    );
+  },
+);
 
 export default router;

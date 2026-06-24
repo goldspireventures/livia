@@ -30,6 +30,35 @@ export const OAUTH_BROKER_CONFIGS: Record<string, OAuthBrokerConfig> = {
     clientSecretEnv: "GOOGLE_OAUTH_CLIENT_SECRET",
     extraAuthParams: { access_type: "offline", prompt: "consent" },
   },
+  migration_acuity: {
+    authUrl: "https://acuityscheduling.com/oauth2/authorize",
+    tokenUrl: "https://acuityscheduling.com/oauth2/token",
+    scopes: ["api-v1"],
+    clientIdEnv: "ACUITY_CLIENT_ID",
+    clientSecretEnv: "ACUITY_CLIENT_SECRET",
+  },
+  migration_square: {
+    authUrl: "https://connect.squareup.com/oauth2/authorize",
+    tokenUrl: "https://connect.squareup.com/oauth2/token",
+    scopes: [
+      "APPOINTMENTS_READ",
+      "APPOINTMENTS_ALL_READ",
+      "CUSTOMERS_READ",
+      "ITEMS_READ",
+      "EMPLOYEES_READ",
+      "MERCHANT_PROFILE_READ",
+    ],
+    clientIdEnv: "SQUARE_APPLICATION_ID",
+    clientSecretEnv: "SQUARE_APPLICATION_SECRET",
+    extraAuthParams: { session: "false" },
+  },
+  migration_fresha: {
+    authUrl: "https://partners.fresha.com/oauth/authorize",
+    tokenUrl: "https://partners.fresha.com/oauth/token",
+    scopes: ["partner.read"],
+    clientIdEnv: "FRESHA_CLIENT_ID",
+    clientSecretEnv: "FRESHA_CLIENT_SECRET",
+  },
   messaging_whatsapp: {
     authUrl: "https://www.facebook.com/v21.0/dialog/oauth",
     tokenUrl: "https://graph.facebook.com/v21.0/oauth/access_token",
@@ -202,4 +231,70 @@ export async function tenantHasIntegrationConnection(
     )
     .limit(1);
   return Boolean(row);
+}
+
+async function refreshOAuthAccessToken(
+  brokerId: string,
+  refreshToken: string,
+): Promise<{ accessToken: string; expiresAt?: Date } | null> {
+  const cfg = OAUTH_BROKER_CONFIGS[brokerId];
+  if (!cfg) return null;
+  const clientId = process.env[cfg.clientIdEnv];
+  const clientSecret = process.env[cfg.clientSecretEnv];
+  if (!clientId || !clientSecret) return null;
+
+  const body = new URLSearchParams({
+    client_id: clientId,
+    client_secret: clientSecret,
+    refresh_token: refreshToken,
+    grant_type: "refresh_token",
+  });
+  const res = await fetch(cfg.tokenUrl, {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body,
+  });
+  if (!res.ok) return null;
+  const json = (await res.json()) as { access_token?: string; expires_in?: number };
+  if (!json.access_token) return null;
+  return {
+    accessToken: json.access_token,
+    expiresAt:
+      typeof json.expires_in === "number"
+        ? new Date(Date.now() + json.expires_in * 1000)
+        : undefined,
+  };
+}
+
+export async function getTenantAccessToken(
+  businessId: string,
+  brokerId: string,
+): Promise<string | null> {
+  const [row] = await db
+    .select()
+    .from(tenantIntegrationConnectionsTable)
+    .where(
+      and(
+        eq(tenantIntegrationConnectionsTable.businessId, businessId),
+        eq(tenantIntegrationConnectionsTable.brokerId, brokerId),
+      ),
+    )
+    .limit(1);
+  if (!row?.accessToken) return null;
+
+  if (row.expiresAt && row.expiresAt.getTime() < Date.now() + 60_000 && row.refreshToken) {
+    const refreshed = await refreshOAuthAccessToken(brokerId, row.refreshToken);
+    if (refreshed) {
+      await upsertTenantIntegrationConnection({
+        businessId,
+        brokerId,
+        accessToken: refreshed.accessToken,
+        refreshToken: row.refreshToken,
+        expiresAt: refreshed.expiresAt,
+        metadata: (row.metadata as Record<string, unknown>) ?? {},
+      });
+      return refreshed.accessToken;
+    }
+  }
+  return row.accessToken;
 }

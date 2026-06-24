@@ -19,6 +19,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { ShopLogoUploadField } from "@/components/ShopLogoUploadField";
 import { CollapsibleSettingsSection } from "@/components/settings/CollapsibleSettingsSection";
 import { OperationalScreen } from "@/components/OperationalScreen";
 import { fonts, type } from "@/constants/typography";
@@ -109,7 +110,6 @@ export default function SettingsScreen() {
 
   const { mutateAsync: patchBusiness, isPending } = useUpdateBusiness();
   const [aiOn, setAiOn] = useState<boolean | null>(null);
-  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [customDomain, setCustomDomain] = useState<string | null>(null);
   const [domainVerifying, setDomainVerifying] = useState(false);
   const canEditShopFields = canEditShop(persona);
@@ -119,7 +119,7 @@ export default function SettingsScreen() {
     return business ? aiEnabledFromBusiness(business.aiEnabled) : true;
   }, [aiOn, business]);
 
-  const resolvedLogo = logoUrl ?? business?.logoUrl ?? "";
+  const resolvedLogo = business?.logoUrl ?? "";
   const resolvedDomain =
     customDomain ?? (business as { customBookDomain?: string | null })?.customBookDomain ?? "";
   const { timeZone: tzLabel } = useBusinessTimezone();
@@ -134,16 +134,14 @@ export default function SettingsScreen() {
     setOpenSection((prev) => (prev === id ? null : id));
   };
 
-  const saveLogoUrl = async (next: string) => {
+  const saveLogoUrl = async (next: string | null) => {
     if (!bid || !canEditShopFields) return;
-    const trimmed = next.trim();
     try {
       await patchBusiness({
         businessId: bid,
-        data: { logoUrl: trimmed || undefined },
+        data: { logoUrl: next?.trim() || undefined },
       });
       await refetch();
-      setLogoUrl(null);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -384,38 +382,12 @@ export default function SettingsScreen() {
             resolvedDomain ? (
               <Text style={[styles.rowMeta, { color: colors.primary }]}>Domain verified</Text>
             ) : null}
-            <Pressable
-              onPress={() => router.push(asHref("/waitlist"))}
-              style={[styles.navBtn, { borderColor: colors.border, marginTop: 8 }]}
-            >
-              <Text style={[styles.navBtnText, { color: colors.primary }]}>Slot waitlist</Text>
-              <Feather name="chevron-right" size={18} color={colors.primary} />
-            </Pressable>
-            <Text style={[styles.rowMeta, { color: colors.mutedForeground, marginTop: 8 }]}>Logo URL</Text>
-            {canEditShopFields ? (
-              <TextInput
-                value={resolvedLogo}
-                onChangeText={(v) => setLogoUrl(v)}
-                onBlur={() => {
-                  if (logoUrl === null) return;
-                  void saveLogoUrl(logoUrl);
-                }}
-                placeholder="https://…"
-                placeholderTextColor={colors.mutedForeground}
-                autoCapitalize="none"
-                autoCorrect={false}
-                style={[
-                  styles.logoInput,
-                  {
-                    color: colors.foreground,
-                    borderColor: colors.border,
-                    backgroundColor: colors.background,
-                  },
-                ]}
-              />
-            ) : (
-              <Text style={[styles.rowValue, { color: colors.foreground }]}>{resolvedLogo || "—"}</Text>
-            )}
+            <ShopLogoUploadField
+              businessId={bid}
+              logoUrl={resolvedLogo || null}
+              canEdit={canEditShopFields}
+              onUploaded={(url) => saveLogoUrl(url)}
+            />
             {!canEditShopFields ? (
               <Pressable
                 onPress={() => void Linking.openURL(dashboardSettingsUrl("shop", bid))}

@@ -144,7 +144,7 @@ export default function SignInScreen() {
         haptics.success();
       } else if (isDemoLiviaEmail(identifier)) {
         setError(
-          "Demo account needs a ticket sign-in. Use password LiviaDemo2026! (from LIVIA_DEMO_PASSWORD) and ensure the API is running with demo provisioned.",
+          "Demo sign-in needs the demo password from your invite. Make sure you are online and try again.",
         );
       } else {
         setError("Almost there — extra verification needed. Try Google for now.");

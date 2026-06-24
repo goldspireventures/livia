@@ -101,7 +101,7 @@ function previewBody(hint: WedgeDemoBeat["cropHint"]) {
         <div className="space-y-1 text-[10px]">
           <p className="text-rose-200/90">Treatment consent</p>
           <p className="rounded border border-rose-500/25 bg-rose-950/30 px-1.5 py-1 text-[9px] text-white/50">
-            Signed on /b · audit trail
+            Signed on booking page · audit trail
           </p>
         </div>
       );

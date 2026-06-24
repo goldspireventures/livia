@@ -28,6 +28,37 @@ export function classifyPendingBookingAttention(
   }
 }
 
+export type PendingAttentionCounts = Record<OperatingAttentionBucket, number>;
+
+/** Count PENDING bookings by who must act next — guest/deposit waits are not studio queue. */
+export function countPendingBookingsByAttention(
+  bookings: Array<{ pendingReason?: string | null }>,
+): PendingAttentionCounts {
+  const out: PendingAttentionCounts = {
+    liv_handling: 0,
+    needs_you: 0,
+    guest_action: 0,
+  };
+  for (const b of bookings) {
+    out[classifyPendingBookingAttention(b.pendingReason)] += 1;
+  }
+  return out;
+}
+
+/** Bookings where the studio must confirm, review policy, or intervene. */
+export function studioPendingBookingCount(
+  bookings: Array<{ pendingReason?: string | null }>,
+): number {
+  return countPendingBookingsByAttention(bookings).needs_you;
+}
+
+/** Bookings waiting on guest deposit, continuity, or reply — not an inbox/studio action. */
+export function guestActionPendingBookingCount(
+  bookings: Array<{ pendingReason?: string | null }>,
+): number {
+  return countPendingBookingsByAttention(bookings).guest_action;
+}
+
 export type OperatingPulseCounts = {
   livHandling: number;
   needsYou: number;

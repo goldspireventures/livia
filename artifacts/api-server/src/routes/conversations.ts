@@ -75,20 +75,10 @@ router.get(
       ? await listUnifiedMessagesForGuest(businessId, conv.customerId)
       : null;
 
-    const replyTarget = unifiedMessages?.length
-      ? resolveUnifiedReplyTarget(
-          unifiedMessages.map((m) => ({
-            id: m.id,
-            conversationId: m.conversationId,
-            channel: m.channel,
-            role: m.role,
-            content: m.content,
-            createdAt: m.createdAt.toISOString(),
-          })),
-        )
-      : null;
+    const messageSource =
+      unifiedMessages && unifiedMessages.length > 0 ? unifiedMessages : messages;
 
-    const payloadMessages = (unifiedMessages ?? messages).map((m) => ({
+    const payloadMessages = messageSource.map((m) => ({
       id: m.id,
       conversationId: m.conversationId,
       role: m.role,
@@ -99,6 +89,20 @@ router.get(
       createdAt: m.createdAt instanceof Date ? m.createdAt.toISOString() : m.createdAt,
       channel: "channel" in m ? m.channel : conv.channel,
     }));
+
+    const replyTarget =
+      payloadMessages.length > 0
+        ? resolveUnifiedReplyTarget(
+            payloadMessages.map((m) => ({
+              id: m.id,
+              conversationId: m.conversationId,
+              channel: m.channel,
+              role: m.role,
+              content: m.content,
+              createdAt: m.createdAt,
+            })),
+          )
+        : null;
 
     res.json({
       conversation: { ...conv, lastMessage, messageCount, bookingCount },

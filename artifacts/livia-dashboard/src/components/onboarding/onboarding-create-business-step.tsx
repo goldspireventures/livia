@@ -33,6 +33,9 @@ import {
   onboardingHintForSubvertical,
   resolveOnboardingTierFromSubvertical,
   SHARED_PREMISES_ONBOARDING_NOTE,
+  shouldSeedStarterPackOnCreate,
+  MIGRATION_INTENT_OPTIONS,
+  type MigrationIntent,
 } from "@workspace/policy";
 import { verticalPackUi } from "@/lib/vertical-pack-ui";
 
@@ -95,7 +98,11 @@ type OnboardingPreview = {
 };
 
 type Props = {
-  onCreated: (businessId: string, slug: string) => void;
+  onCreated: (
+    businessId: string,
+    slug: string,
+    extras?: { migrationIntent?: MigrationIntent },
+  ) => void;
   onVerticalPreview?: (vertical: string | null) => void;
   parentBusinessId?: string;
   defaultStructureKind?: "standalone" | "location" | "brand_entity";
@@ -111,7 +118,8 @@ export function OnboardingCreateBusinessStep({
   const [saving, setSaving] = useState(false);
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [businessAttested, setBusinessAttested] = useState(false);
-  const [starterPack, setStarterPack] = useState(false);
+  const [migrationIntent, setMigrationIntent] = useState<MigrationIntent>("fresh");
+  const [starterPack, setStarterPack] = useState(true);
   const [preview, setPreview] = useState<OnboardingPreview | null>(null);
 
   useEffect(() => {
@@ -248,7 +256,7 @@ export function OnboardingCreateBusinessStep({
         subverticalProfileId: subvertical.id,
         tier: values.tier,
         seedDefaults: false,
-        starterPack: starterPack ? true : undefined,
+        starterPack: migrationIntent === "switching" ? false : starterPack ? true : undefined,
         parentBusinessId,
         structureKind: values.structureKind ?? defaultStructureKind,
         tenantAttestation: {
@@ -266,7 +274,7 @@ export function OnboardingCreateBusinessStep({
             ? `${starterOffer.label} applied — finish setup steps next.`
             : "Empty studio created — add your menu when you're ready.",
         });
-        onCreated(biz.id, biz.slug);
+        onCreated(biz.id, biz.slug, { migrationIntent });
       })
       .catch((err: unknown) => {
         toast({
@@ -285,6 +293,34 @@ export function OnboardingCreateBusinessStep({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-2" data-testid="migration-intent-picker">
+          <p className="text-sm font-medium">How are you starting?</p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {MIGRATION_INTENT_OPTIONS.map((opt) => {
+              const active = migrationIntent === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  data-testid={`migration-intent-${opt.id}`}
+                  onClick={() => {
+                    setMigrationIntent(opt.id);
+                    if (opt.id === "switching") setStarterPack(false);
+                    if (opt.id === "fresh" && shouldSeedStarterPackOnCreate("fresh")) setStarterPack(true);
+                  }}
+                  className={`rounded-lg border px-3 py-2.5 text-left transition-colors ${
+                    active
+                      ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+                      : "border-border/80 hover:border-border"
+                  }`}
+                >
+                  <p className="text-sm font-medium">{opt.title}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{opt.subtitle}</p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
         <FormField
           control={form.control}
           name="name"
@@ -536,6 +572,8 @@ export function OnboardingCreateBusinessStep({
             </FormItem>
           )}
         />
+        {migrationIntent === "fresh" ? (
+        <>
         <label className="flex items-start gap-3 cursor-pointer rounded-lg border border-primary/25 bg-primary/5 p-3">
           <Checkbox
             checked={starterPack}
@@ -571,6 +609,13 @@ export function OnboardingCreateBusinessStep({
             </p>
           </div>
         ) : null}
+        </>
+        ) : (
+          <p className="text-xs text-muted-foreground rounded-lg border border-dashed border-border/70 bg-muted/20 p-3">
+            Liv will walk you through exports from your current tool and apply menu, clients, and
+            upcoming bookings in one go — right after your shop profile.
+          </p>
+        )}
         {onboardingCommerceBlocksForVertical(watchVertical).length > 0 ? (
           <div className="rounded-lg border border-border/80 bg-muted/30 p-4 space-y-3" data-testid="onboarding-commerce-blocks">
             <p className="text-sm font-medium">Included in base · optional add-ons</p>

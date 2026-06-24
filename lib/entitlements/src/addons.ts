@@ -22,7 +22,7 @@ export const EVENT_OPERATOR_PACK_GRANTS = [
   "vertical_pack_event_vendors",
 ] as const satisfies readonly EntitlementKey[];
 
-/** Take-home retail — guest cart on /b, owner catalogue, post-session attach. */
+/** Take-home retail — guest cart on booking page, owner catalogue, post-session attach. */
 export const RETAIL_PACK_GRANTS = ["retail_pack"] as const satisfies readonly EntitlementKey[];
 
 export const ADDON_CATALOGUE: Record<string, AddonDefinition> = {
@@ -30,7 +30,7 @@ export const ADDON_CATALOGUE: Record<string, AddonDefinition> = {
     id: "event_operator_pack",
     name: "Event Operator",
     description:
-      "Consult-first inbox, quote generator, milestone deposits, event prep lifecycle, and optional full /e/ website. Public booking (/b) is on your base plan.",
+      "Consult-first inbox, quote generator, milestone deposits, event prep lifecycle, and optional full enquiry website. Public booking page is on your base plan.",
     eurCentsPerMonth: 4900,
     stripePriceEnv: "STRIPE_PRICE_EVENT_OPERATOR",
     grants: EVENT_OPERATOR_PACK_GRANTS,

@@ -1106,6 +1106,10 @@ export interface DashboardSummary {
   todayBookings: number;
   weekBookings: number;
   pendingCount: number;
+  /** PENDING bookings where the studio must confirm or review (excludes guest deposit waits) */
+  studioPendingCount?: number;
+  /** PENDING bookings waiting on guest deposit, continuity, or reply */
+  guestActionPendingCount?: number;
   confirmedCount: number;
   completedTodayCount: number;
   noShowTodayCount: number;
@@ -1130,6 +1134,8 @@ export interface DashboardSummary {
   wellnessTomorrowStress?: string | null;
   /** Owner operating pulse — Liv handling / guest completing / needs you */
   operatingPulse?: DashboardSummaryOperatingPulse;
+  /** Active slot waitlist entries — Liv nudges on Today when count reaches threshold */
+  activeWaitlistCount?: number;
 }
 
 export type ActivityItemLevel =

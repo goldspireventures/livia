@@ -56,7 +56,7 @@ export type TenantRetailPack = {
 };
 
 export const TENANT_RETAIL_PROGRAM = {
-  maxActiveProducts: 12,
+  maxActiveProducts: 50,
   publicMaxVisible: 6,
   defaultTitle: "Take home",
   inventoryHint: "Set starting stock per product — Liv tracks sold count as guests pay.",
@@ -493,7 +493,7 @@ const TENANT_RETAIL_PACKS: Record<Exclude<BusinessVertical, "event-vendors">, Te
     vertical: "hair",
     ownerTitle: "Shop & take-home",
     ownerSubtitle:
-      "Bundles, wigs, and home care on your /b page — Liv can text a pay link after visits.",
+      "Bundles, wigs, and home care on your booking page — Liv can text a pay link after visits.",
     defaultPublicTitle: "Take home",
     templateSeedLabel: "Load salon retail templates",
     attachTitle: "Take-home — shop",
@@ -511,7 +511,7 @@ const TENANT_RETAIL_PACKS: Record<Exclude<BusinessVertical, "event-vendors">, Te
     vertical: "beauty",
     ownerTitle: "Mini store",
     ownerSubtitle:
-      "Aftercare and take-home products on your /b page — Liv can text a pay link after sessions.",
+      "Aftercare and take-home products on your booking page — Liv can text a pay link after sessions.",
     defaultPublicTitle: "Take home",
     templateSeedLabel: "Load aftercare templates",
     attachTitle: "Aftercare — mini store",
@@ -523,7 +523,7 @@ const TENANT_RETAIL_PACKS: Record<Exclude<BusinessVertical, "event-vendors">, Te
     vertical: "wellness",
     ownerTitle: "Post-session retail",
     ownerSubtitle:
-      "Oils, balms, and gift sets on your /b page — calm inbox thread after checkout.",
+      "Oils, balms, and gift sets on your booking page — calm inbox thread after checkout.",
     defaultPublicTitle: "Take the ritual home",
     templateSeedLabel: "Load ritual templates",
     attachTitle: "Ritual at home",
@@ -534,7 +534,7 @@ const TENANT_RETAIL_PACKS: Record<Exclude<BusinessVertical, "event-vendors">, Te
   "body-art": {
     vertical: "body-art",
     ownerTitle: "Aftercare shop",
-    ownerSubtitle: "Healing products and jewellery on your /b page — pay link after sessions.",
+    ownerSubtitle: "Healing products and jewellery on your booking page — pay link after sessions.",
     defaultPublicTitle: "Aftercare",
     templateSeedLabel: "Load aftercare templates",
     attachTitle: "Aftercare products",
@@ -545,7 +545,7 @@ const TENANT_RETAIL_PACKS: Record<Exclude<BusinessVertical, "event-vendors">, Te
   medspa: {
     vertical: "medspa",
     ownerTitle: "Retail skincare",
-    ownerSubtitle: "Clinic-grade home care on your /b page — practitioner-approved only.",
+    ownerSubtitle: "Clinic-grade home care on your booking page — practitioner-approved only.",
     defaultPublicTitle: "Home care",
     templateSeedLabel: "Load skincare templates",
     attachTitle: "Home care retail",
@@ -556,7 +556,7 @@ const TENANT_RETAIL_PACKS: Record<Exclude<BusinessVertical, "event-vendors">, Te
   fitness: {
     vertical: "fitness",
     ownerTitle: "Studio shop",
-    ownerSubtitle: "Merch and recovery gear on your /b page — sell without a separate store.",
+    ownerSubtitle: "Merch and recovery gear on your booking page — sell without a separate store.",
     defaultPublicTitle: "Studio shop",
     templateSeedLabel: "Load studio shop templates",
     attachTitle: "Studio shop",
@@ -567,7 +567,7 @@ const TENANT_RETAIL_PACKS: Record<Exclude<BusinessVertical, "event-vendors">, Te
   "allied-health": {
     vertical: "allied-health",
     ownerTitle: "Support products",
-    ownerSubtitle: "Bands, rollers, and supports on your /b page — between-session continuity.",
+    ownerSubtitle: "Bands, rollers, and supports on your booking page — between-session continuity.",
     defaultPublicTitle: "Take home",
     templateSeedLabel: "Load support product templates",
     attachTitle: "Support products",
@@ -578,7 +578,7 @@ const TENANT_RETAIL_PACKS: Record<Exclude<BusinessVertical, "event-vendors">, Te
   "pet-grooming": {
     vertical: "pet-grooming",
     ownerTitle: "Pet retail",
-    ownerSubtitle: "Shampoo, treats, and grooming extras on your /b page.",
+    ownerSubtitle: "Shampoo, treats, and grooming extras on your booking page.",
     defaultPublicTitle: "Pet extras",
     templateSeedLabel: "Load pet retail templates",
     attachTitle: "Pet retail",
@@ -589,7 +589,7 @@ const TENANT_RETAIL_PACKS: Record<Exclude<BusinessVertical, "event-vendors">, Te
   "automotive-detailing": {
     vertical: "automotive-detailing",
     ownerTitle: "Detailing products",
-    ownerSubtitle: "Care kits and tools on your /b page — extend the detail at home.",
+    ownerSubtitle: "Care kits and tools on your booking page — extend the detail at home.",
     defaultPublicTitle: "Care products",
     templateSeedLabel: "Load care product templates",
     attachTitle: "Care products",
@@ -639,7 +639,7 @@ export function resolveTenantRetailPack(
       templates: pack.barber.templates,
       templateSeedLabel: "Load barber shop templates",
       ownerSubtitle:
-        "Clippers, kits, and grooming products on your /b page — Liv texts a pay link after cuts.",
+        "Clippers, kits, and grooming products on your booking page — Liv texts a pay link after cuts.",
     };
   }
   return pack;
@@ -831,7 +831,7 @@ export function buildTenantPostSessionInboxDraft(
     steps: [
       "Open the guest thread from today's completed visit.",
       `Edit the draft — add or swap a product from your ${pack?.ownerTitle.toLowerCase() ?? "shop"}.`,
-      "Send when ready; guest pays via the link on /b if Stripe is connected.",
+      "Send when ready; guest pays via the pay link on your booking page if Stripe is connected.",
     ],
   };
 }

@@ -17,7 +17,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Check } from "lucide-react";
 import { ChannelSetupWizard } from "@/components/channel-setup-wizard";
-import { UniversalImportPanel } from "@/components/settings/universal-import-panel";
+import { MigrationSwitchPanel } from "@/components/onboarding/migration-switch-panel";
+import type { MigrationSourceId } from "@workspace/policy";
 import { OnboardingLivReplyStep } from "@/components/onboarding/onboarding-liv-reply-step";
 import type { OnboardingActId } from "@/lib/onboarding-acts";
 import type { OnboardingStatePayload } from "./onboarding-wizard";
@@ -351,13 +352,27 @@ export function OnboardingActForms({
   if (act === "a11_migration") {
     return (
       <div data-testid="onboarding-migration-step">
-        <UniversalImportPanel
+        <MigrationSwitchPanel
           businessId={businessId}
+          businessVertical={businessVertical}
+          migrationSource={(checklist as { migrationSource?: string } | undefined)?.migrationSource}
           compact
-          onImported={() => {
-            onChecklistChange({ ...checklist, migrationImported: true });
-            onSaved?.();
+          onSourceChange={(sourceId: MigrationSourceId) => {
+            onChecklistChange({
+              ...checklist,
+              migrationIntent: "switching",
+              migrationSource: sourceId,
+            });
           }}
+          onImported={(total) => {
+            onChecklistChange({
+              ...checklist,
+              migrationImported: true,
+              migrationIntent: "switching",
+            });
+            if (total > 0) onSaved?.();
+          }}
+          onSkip={() => onSaved?.()}
         />
       </div>
     );

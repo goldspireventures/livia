@@ -32,6 +32,9 @@ export async function applyImportToOnboarding(
   if (kind === "staff" && importedCount > 0) {
     actsCompleted.push("a4_team");
   }
+  if (importedCount > 0) {
+    actsCompleted.push("a11_migration");
+  }
 
   const [biz] = await db
     .select({ onboardingState: businessesTable.onboardingState })

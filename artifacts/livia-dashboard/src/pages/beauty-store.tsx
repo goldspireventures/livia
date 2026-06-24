@@ -280,7 +280,7 @@ export default function TenantStorePage() {
             <div className="space-y-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-sm">
               <p className="text-destructive">{loadError}</p>
               <p className="text-xs text-muted-foreground">
-                If this persists, restart the API (`pnpm dev:api`) so retail routes are loaded.
+                If this persists, contact support — your retail add-on may need to be enabled on this shop.
               </p>
               <Button type="button" size="sm" variant="outline" onClick={() => void load()}>
                 Retry
@@ -290,7 +290,7 @@ export default function TenantStorePage() {
             <>
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-sm font-medium">Show on book page (/b)</p>
+                  <p className="text-sm font-medium">Show on public booking page</p>
                   <p className="text-xs text-muted-foreground">
                     Guests browse and buy aftercare on your public book page
                   </p>
@@ -304,7 +304,7 @@ export default function TenantStorePage() {
               {settingsReady.enabled ? (
                 visibleOnPublicBook ? (
                   <p className="text-xs text-primary">
-                    Live on /b with {activeProductCount} product{activeProductCount === 1 ? "" : "s"}
+                    Live on your booking page with {activeProductCount} product{activeProductCount === 1 ? "" : "s"}
                   </p>
                 ) : (
                   <p className="text-xs text-amber-700 dark:text-amber-400">
@@ -317,7 +317,7 @@ export default function TenantStorePage() {
                 </p>
               )}
               <div className="space-y-2">
-                <Label htmlFor="store-title">Section title on /b</Label>
+                <Label htmlFor="store-title">Section title on booking page</Label>
                 <Input
                   id="store-title"
                   value={settingsReady.title}

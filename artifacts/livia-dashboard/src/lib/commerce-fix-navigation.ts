@@ -10,9 +10,10 @@ function notifySettingsUrlSync(): void {
 /** Navigate to a settings href, then scroll once the target tab content mounts. */
 export function navigateSettingsHref(href: string, navigate: NavigateFn): void {
   if (typeof window === "undefined") return;
+  const hash = parseSettingsHref(href).hash;
   navigate(href);
   notifySettingsUrlSync();
-  window.setTimeout(() => scrollToSettingsAnchor(href), 220);
+  window.setTimeout(() => scrollToSettingsAnchor(href), hash === "channels-setup" ? 350 : 220);
 }
 
 /** Scroll to a settings anchor and open any parent disclosure. */

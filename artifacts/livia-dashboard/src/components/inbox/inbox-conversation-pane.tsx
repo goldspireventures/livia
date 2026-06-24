@@ -13,9 +13,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/api-fetch";
 import { invalidateOperationalState } from "@/lib/operational-cache";
-import { inboxReplyDeliveredOnChannel, inboxReplyPlaceholder, inboxNeedsOwnerReply } from "@workspace/policy";
-import { CheckCircle2, Globe, HandHelping, MessageSquare, Phone, Sparkles } from "lucide-react";
+import { inboxReplyPlaceholder, inboxNeedsOwnerReply } from "@workspace/policy";
+import { CheckCircle2, HandHelping, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { InboxChannelIcon } from "@/components/inbox/inbox-channel-icon";
 
 type ConversationHeader = {
   id: string;
@@ -27,19 +28,6 @@ type ConversationHeader = {
   customerPhone: string | null;
   aiHandled: boolean;
 };
-
-function channelIcon(channel: string) {
-  switch (channel) {
-    case "WEB":
-      return <Globe className="h-3 w-3" />;
-    case "WHATSAPP":
-      return <MessageSquare className="h-3 w-3 text-emerald-500" />;
-    case "SMS":
-      return <Phone className="h-3 w-3" />;
-    default:
-      return <MessageSquare className="h-3 w-3" />;
-  }
-}
 
 function formatTime(dateStr: string): string {
   return new Date(dateStr).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -133,7 +121,7 @@ export function InboxConversationPane({
         <div className="flex items-start justify-between gap-2 flex-wrap">
           <div className="min-w-0">
             <div className="font-semibold truncate flex items-center gap-2">
-              {channelIcon(conversation.channel)}
+              <InboxChannelIcon channel={conversation.channel} size="md" />
               {conversation.customerId ? (
                 <Link href={`/customers/${conversation.customerId}`} className="hover:text-primary truncate">
                   {conversation.customerName ?? "Client"}
@@ -145,8 +133,9 @@ export function InboxConversationPane({
             <p className="text-xs text-muted-foreground truncate">
               {conversation.customerEmail ?? conversation.customerPhone ?? "No contact on file"}
             </p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
-              {inboxReplyDeliveredOnChannel(conversation.channel)}
+            <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
+              <span>Replies send on</span>
+              <InboxChannelIcon channel={conversation.channel} size="sm" />
             </p>
           </div>
           <div className="flex flex-wrap gap-1">

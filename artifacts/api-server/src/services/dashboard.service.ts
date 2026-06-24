@@ -13,7 +13,8 @@ import { listAtRiskGuestPreviews } from "./relationship.service";
 import { listRecentVisitFeedback } from "./visit-feedback.service";
 import { formatCommerceMinor, getCommerceSnapshot } from "./commerce-intelligence.service";
 import { syncCommerceIntelligenceLoop } from "./commerce-signals.service";
-import { enrichActivityFeedItem, isConsultFirstVertical, resolveOperatingPulse } from "@workspace/policy";
+import { enrichActivityFeedItem, isConsultFirstVertical, resolveOperatingPulse, studioPendingBookingCount, guestActionPendingBookingCount } from "@workspace/policy";
+import { countActiveWaitlist } from "./waitlist.service";
 
 export async function getDashboardSummary(businessId: string) {
   const now = new Date();
@@ -67,12 +68,16 @@ export async function getDashboardSummary(businessId: string) {
       ),
     );
 
-  const [pendingCount] = await db
-    .select({ count: sql<number>`count(*)::int` })
+  const pendingRows = await db
+    .select({ pendingReason: bookingsTable.pendingReason })
     .from(bookingsTable)
     .where(
       and(eq(bookingsTable.businessId, businessId), eq(bookingsTable.status, "PENDING")),
     );
+
+  const pendingCount = pendingRows.length;
+  const studioPendingCount = studioPendingBookingCount(pendingRows);
+  const guestActionPendingCount = guestActionPendingBookingCount(pendingRows);
 
   const [handedOffCount] = await db
     .select({ count: sql<number>`count(*)::int` })
@@ -221,10 +226,14 @@ export async function getDashboardSummary(businessId: string) {
     inboxLivHandling: livHandlingInboxCount?.count ?? 0,
   });
 
+  const activeWaitlistCount = await countActiveWaitlist(businessId);
+
   return {
     todayBookings: todayCount?.count ?? 0,
     weekBookings: weekCount?.count ?? 0,
-    pendingCount: pendingCount?.count ?? 0,
+    pendingCount,
+    studioPendingCount,
+    guestActionPendingCount,
     handedOffCount: handedOffCount?.count ?? 0,
     needsYouCount: needsYouCount?.count ?? 0,
     newEnquiriesCount: consultFirst ? newEnquiriesCount : undefined,
@@ -254,6 +263,7 @@ export async function getDashboardSummary(businessId: string) {
     lowFeedbackCount: recentFeedback.filter((r) => r.score <= 3).length,
     commerce,
     operatingPulse,
+    activeWaitlistCount,
   };
 }
 

@@ -42,15 +42,19 @@ import { gatewayTheme } from "@/lib/gateway-theme";
 import { inboxLivSuggestions } from "@/lib/liv-inbox-suggestions";
 import { asHref } from "@/lib/navigation";
 import { useOperationalChrome } from "@/lib/operational-chrome";
+import { InboxChannelIcon, InboxChannelIconRow } from "@/components/inbox/InboxChannelIcon";
+import { InboxReplyChannelMessage } from "@/components/inbox/InboxReplyChannelMessage";
 import {
-  inboxChannelLabel,
-  inboxCrossChannelOperatorNote,
-  inboxReplyDeliveredOnChannel,
-  inboxReplyPlaceholder,
-  inboxSiblingThreadsBanner,
-  inboxUnifiedGuestChannelsLabel,
-  inboxUnifiedReplyHint,
   groupInboxThreadsByCustomer,
+  inboxCrossChannelOperatorNote,
+  inboxReplyPlaceholderForCompose,
+  resolveInboxComposeReplyChannel,
+  resolveInboxEffectiveReplyConversationId,
+  buildInboxGuestChannelContext,
+  resolveInboxMessageReplyRoute,
+  toggleInboxReplyChannelPick,
+  isInboxReplyChannelSelected,
+  inboxSiblingThreadsBanner,
 } from "@workspace/policy";
 
 function roleLabel(role: ConversationMessage["role"]): string {
@@ -116,6 +120,10 @@ export default function ConversationScreen() {
   const [replyDraft, setReplyDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [livAssisting, setLivAssisting] = useState(false);
+  const [replyChannelPick, setReplyChannelPick] = useState<{
+    conversationId: string;
+    channel: string;
+  } | null>(null);
   const { role } = useMembership();
   const canAskLiv = role === "OWNER" || role === "ADMIN" || role === "STAFF";
 
@@ -151,11 +159,50 @@ export default function ConversationScreen() {
   const replyConversationId = detail?.replyConversationId ?? conversationId;
   const replyChannel = detail?.replyChannel ?? summary?.channel;
   const guestGroups = useMemo(() => groupInboxThreadsByCustomer(threads), [threads]);
-  const unifiedChannelsLabel = useMemo(() => {
-    if (!isUnifiedView || !customerId) return null;
+  const guestChannelContext = useMemo(
+    () => buildInboxGuestChannelContext(customerId, guestGroups),
+    [customerId, guestGroups],
+  );
+  const showMergedTimeline = isUnifiedView || guestChannelContext.multi;
+  const replyDetailReady = !!detail && !detailLoading;
+  const effectiveReplyConversationId = resolveInboxEffectiveReplyConversationId(
+    replyChannelPick,
+    replyConversationId,
+    conversationId,
+  );
+  const effectiveReplyChannel = resolveInboxComposeReplyChannel({
+    pick: replyChannelPick,
+    apiReplyChannel: replyChannel,
+    threadChannel: summary?.channel,
+    multiChannel: guestChannelContext.multi,
+    detailReady: replyDetailReady,
+  });
+
+  useEffect(() => {
+    setReplyChannelPick(null);
+  }, [conversationId]);
+
+  function selectReplyChannelForMessage(m: ConversationMessage & { channel?: string }) {
+    if (!guestChannelContext.multi) return;
+    const route = resolveInboxMessageReplyRoute(
+      m,
+      guestChannelContext,
+      conversationId,
+      threads,
+      summary?.channel,
+    );
+    if (!route) return;
+    const next = toggleInboxReplyChannelPick(replyChannelPick, route);
+    if (next) haptics.selection();
+    setReplyChannelPick(next);
+  }
+
+  const unifiedChannels = useMemo(() => {
+    if (!showMergedTimeline || !customerId) return [] as string[];
+    if (guestChannelContext.channels.length > 0) return guestChannelContext.channels;
     const group = guestGroups.find((g) => g.customerId === customerId);
-    return group ? inboxUnifiedGuestChannelsLabel(group.channels) : null;
-  }, [isUnifiedView, customerId, guestGroups]);
+    return group?.activeChannels ?? group?.channels ?? [];
+  }, [showMergedTimeline, customerId, guestGroups, guestChannelContext.channels]);
   const siblingThreads = useMemo(() => {
     if (isUnifiedView) return [];
     if (detail?.siblingThreads?.length) return detail.siblingThreads;
@@ -216,13 +263,13 @@ export default function ConversationScreen() {
   };
 
   const sendReply = async () => {
-    if (!businessId || !replyConversationId || !replyDraft.trim()) return;
+    if (!businessId || !effectiveReplyConversationId || !replyDraft.trim()) return;
     const releaseAfterSend = convStatus === "HANDED_OFF";
     setSending(true);
     try {
       const token = await getToken();
       const res = await fetch(
-        `${getApiBaseUrl()}/api/businesses/${businessId}/conversations/${replyConversationId}/messages`,
+        `${getApiBaseUrl()}/api/businesses/${businessId}/conversations/${effectiveReplyConversationId}/messages`,
         {
           method: "POST",
           headers: {
@@ -252,22 +299,29 @@ export default function ConversationScreen() {
 
   const bubbleStyle = (role: ConversationMessage["role"]) => {
     if (role === "USER") {
-      return chrome.constellation
-        ? {
-            backgroundColor: "rgba(42,45,58,0.72)",
-            borderColor: "rgba(217,195,154,0.2)",
-            alignSelf: "flex-start" as const,
-          }
-        : { backgroundColor: colors.card, borderColor: colors.border, alignSelf: "flex-start" as const };
+      return {
+        colors: chrome.constellation
+          ? {
+              backgroundColor: "rgba(42,45,58,0.72)",
+              borderColor: "rgba(217,195,154,0.2)",
+            }
+          : { backgroundColor: colors.card, borderColor: colors.border },
+        alignSelf: "flex-start" as const,
+      };
     }
     if (role === "ASSISTANT") {
       return {
-        backgroundColor: aurora.cyan + "18",
-        borderColor: aurora.cyan + "44",
+        colors: {
+          backgroundColor: aurora.cyan + "18",
+          borderColor: aurora.cyan + "44",
+        },
         alignSelf: "flex-end" as const,
       };
     }
-    return { backgroundColor: colors.muted + "44", borderColor: colors.border, alignSelf: "center" as const };
+    return {
+      colors: { backgroundColor: colors.muted + "44", borderColor: colors.border },
+      alignSelf: "center" as const,
+    };
   };
 
   const headerCard = (
@@ -290,17 +344,30 @@ export default function ConversationScreen() {
           </Text>
           <StatusPill aiHandled={aiHandled} status={convStatus} accent={accent} colors={colors} />
         </View>
-        <Text style={[styles.sub, { color: colors.mutedForeground }]} numberOfLines={1}>
-          {isUnifiedView && unifiedChannelsLabel
-            ? `Liv active on ${unifiedChannelsLabel}`
-            : inboxChannelLabel(summary?.channel)}
-          {customerId ? " · tap for profile" : ""}
-        </Text>
-        <Text style={[styles.channelHint, { color: colors.mutedForeground }]}>
-          {isUnifiedView
-            ? inboxUnifiedReplyHint(replyChannel)
-            : inboxReplyDeliveredOnChannel(summary?.channel)}
-        </Text>
+        <View style={styles.headerChannelRow}>
+          {showMergedTimeline && unifiedChannels.length > 1 ? (
+            <>
+              <Text style={[styles.sub, { color: colors.mutedForeground }]}>Liv active on</Text>
+              <InboxChannelIconRow channels={unifiedChannels} size="sm" />
+            </>
+          ) : (
+            <InboxChannelIcon channel={summary?.channel} size="sm" />
+          )}
+          {customerId ? (
+            <Text style={[styles.sub, { color: colors.mutedForeground }]}> · tap for profile</Text>
+          ) : null}
+        </View>
+        <View style={styles.headerChannelRow}>
+          <Text style={[styles.channelHint, { color: colors.mutedForeground }]}>
+            {showMergedTimeline ? "Your reply sends on" : "Replies send on"}
+          </Text>
+          <InboxChannelIcon channel={effectiveReplyChannel ?? replyChannel} size="sm" />
+          {showMergedTimeline && guestChannelContext.multi ? (
+            <Text style={[styles.channelHint, { color: colors.mutedForeground }]}>
+              · swipe a message to change
+            </Text>
+          ) : null}
+        </View>
         {relationship?.headline ? (
           <Text style={[styles.relHeadline, { color: accent }]} numberOfLines={2}>
             {relationship.headline}
@@ -352,9 +419,7 @@ export default function ConversationScreen() {
                       style={[styles.siblingChip, { borderColor: accent + "55" }]}
                       contentStyle={styles.siblingChipInner}
                     >
-                      <Text style={[styles.siblingChipText, { color: colors.foreground }]}>
-                        {inboxChannelLabel(s.channel)}
-                      </Text>
+                      <InboxChannelIcon channel={s.channel} size="sm" />
                     </GlowPressable>
                   ))}
                 </View>
@@ -372,9 +437,7 @@ export default function ConversationScreen() {
                       style={[styles.siblingChip, { borderColor: accent + "55" }]}
                       contentStyle={styles.siblingChipInner}
                     >
-                      <Text style={[styles.siblingChipText, { color: colors.foreground }]}>
-                        {inboxChannelLabel(s.channel)}
-                      </Text>
+                      <InboxChannelIcon channel={s.channel} size="sm" />
                     </GlowPressable>
                   ))}
                 </View>
@@ -411,21 +474,59 @@ export default function ConversationScreen() {
               ) : null}
             </View>
           ) : (
-            messages.map((m, i) => (
-              <Animated.View
-                key={m.id}
-                entering={FadeInDown.delay(Math.min(i * 30, 240)).duration(280).springify()}
-                style={[styles.bubble, bubbleStyle(m.role)]}
-              >
-                <Text style={[styles.msgMeta, { color: colors.mutedForeground }]}>
-                  {roleLabel(m.role)}
-                  {isUnifiedView && m.channel ? ` · ${inboxChannelLabel(m.channel)}` : ""}
-                  {" · "}
-                  {formatTimeInZone(m.createdAt, businessTz)}
-                </Text>
-                <Text style={[styles.msg, { color: colors.foreground }]}>{m.content}</Text>
-              </Animated.View>
-            ))
+            messages.map((m, i) => {
+              const msgChannel =
+                m.channel ??
+                (m.conversationId
+                  ? threads.find((t) => t.id === m.conversationId)?.channel
+                  : undefined) ??
+                summary?.channel;
+              const isReplyTarget = isInboxReplyChannelSelected(
+                replyChannelPick,
+                m,
+                guestChannelContext,
+                conversationId,
+                threads,
+                summary?.channel,
+              );
+              const layout = bubbleStyle(m.role);
+              const bubble = (
+                <View
+                  style={[
+                    styles.bubble,
+                    layout.colors,
+                  ]}
+                >
+                  <View style={styles.msgMetaRow}>
+                    <Text style={[styles.msgMeta, { color: colors.mutedForeground }]}>
+                      {roleLabel(m.role)}
+                      {" · "}
+                      {formatTimeInZone(m.createdAt, businessTz)}
+                    </Text>
+                    {showMergedTimeline && msgChannel ? (
+                      <InboxChannelIcon channel={msgChannel} size="xs" />
+                    ) : null}
+                  </View>
+                  <Text style={[styles.msg, { color: colors.foreground }]}>{m.content}</Text>
+                </View>
+              );
+              return (
+                <Animated.View
+                  key={m.id}
+                  entering={FadeInDown.delay(Math.min(i * 30, 240)).duration(280).springify()}
+                >
+                  <InboxReplyChannelMessage
+                    enabled={guestChannelContext.multi && !!msgChannel && composing}
+                    selected={!!isReplyTarget}
+                    accent={accent}
+                    onSelectChannel={() => selectReplyChannelForMessage(m)}
+                    style={[styles.swipeMessageWrap, { alignSelf: layout.alignSelf }]}
+                  >
+                    {bubble}
+                  </InboxReplyChannelMessage>
+                </Animated.View>
+              );
+            })
           )}
         </ScrollView>
 
@@ -527,9 +628,16 @@ export default function ConversationScreen() {
 
             {composing ? (
               <View style={styles.composer}>
-                <Text style={[styles.crossChannelNote, { color: colors.mutedForeground }]}>
-                  {inboxCrossChannelOperatorNote()}
-                </Text>
+                {!guestChannelContext.multi ? (
+                  <Text style={[styles.crossChannelNote, { color: colors.mutedForeground }]}>
+                    {inboxCrossChannelOperatorNote()}
+                  </Text>
+                ) : null}
+                {guestChannelContext.multi ? (
+                  <Text style={[styles.swipeHint, { color: colors.mutedForeground }]}>
+                    Swipe a message left or right to route your reply on that channel.
+                  </Text>
+                ) : null}
                 {convStatus === "HANDED_OFF" ? (
                   <Text style={[styles.handoffHint, { color: colors.mutedForeground }]}>
                     Send when ready — Liv resumes after your message.
@@ -546,7 +654,11 @@ export default function ConversationScreen() {
                         backgroundColor: chrome.constellation ? "rgba(255,255,255,0.06)" : colors.input + "88",
                       },
                     ]}
-                    placeholder={inboxReplyPlaceholder(summary?.channel)}
+                    placeholder={inboxReplyPlaceholderForCompose(
+                      effectiveReplyChannel,
+                      guestChannelContext.multi,
+                      replyDetailReady,
+                    )}
                     placeholderTextColor={colors.mutedForeground}
                     value={replyDraft}
                     onChangeText={setReplyDraft}
@@ -606,6 +718,7 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
   headerBody: { flex: 1, minWidth: 0, gap: 4 },
   headerTitleRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  headerChannelRow: { flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" },
   title: { fontFamily: fonts.serifMedium, fontSize: 20, flex: 1, minWidth: 0 },
   sub: { ...type.caption },
   relHeadline: { ...type.caption, fontSize: 11, lineHeight: 15 },
@@ -628,6 +741,7 @@ const styles = StyleSheet.create({
   emptyPreview: { gap: 6 },
   bubble: { maxWidth: "88%", borderRadius: 16, borderWidth: 1, padding: 12 },
   msgMeta: { ...type.caption, fontSize: 10, marginBottom: 4 },
+  msgMetaRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 4 },
   msg: { ...type.body, fontSize: 15, lineHeight: 21 },
   footerWrap: {
     borderTopWidth: StyleSheet.hairlineWidth,
@@ -642,6 +756,8 @@ const styles = StyleSheet.create({
   chip: { borderWidth: 1, borderRadius: 12, maxWidth: "48%" },
   chipInner: { padding: 10 },
   chipText: { fontSize: 11, lineHeight: 15 },
+  swipeMessageWrap: { maxWidth: "88%" },
+  swipeHint: { ...type.caption, fontSize: 10, lineHeight: 14 },
   composer: { gap: 8 },
   composerRow: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
   handoffHint: { ...type.caption, fontSize: 11, lineHeight: 15 },

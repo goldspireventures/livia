@@ -23,6 +23,7 @@ import { OperationalPageShell } from "@/components/layout/operational-page-shell
 import { bookingExperienceCopy, verticalOperationalCopy, classifyPendingBookingAttention } from "@workspace/policy";
 import { useOperationalChrome } from "@/lib/operational-chrome";
 import { cn } from "@/lib/utils";
+import { bookingsListRowHeightClass, bookingsListScrollViewportClass } from "@/lib/bookings-list-layout";
 import { onContainedScrollWheel } from "@/lib/use-contained-scroll";
 import { usePresentationSurface } from "@/lib/presentation-surface";
 import {
@@ -314,8 +315,8 @@ export default function BookingsPage() {
         ) : null}
       </div>
 
-      <Card className={op.panel()}>
-        <CardContent className="p-0">
+      <Card className={cn(op.panel())}>
+        <CardContent className="p-0 flex flex-col">
           {listLoading ? (
             <div className="divide-y divide-border">
               {[1, 2, 3, 4, 5].map((i) => (
@@ -350,9 +351,12 @@ export default function BookingsPage() {
               )}
             </div>
           ) : (
-            <>
+            <div className="flex flex-col">
             {bookingsMorph ? (
-              <div className="p-4" data-testid={`bookings-morph-${bookingsMorph}`}>
+              <div
+                className="p-4 flex flex-col"
+                data-testid={`bookings-morph-${bookingsMorph}`}
+              >
                 <BookingsMorphList
                   morph={bookingsMorph}
                   vertical={businessVertical}
@@ -373,12 +377,15 @@ export default function BookingsPage() {
                 />
               </div>
             ) : (
-            <div className={op.listScroll()} onWheel={onContainedScrollWheel}>
+            <div
+              className={cn(op.listScroll(), bookingsListScrollViewportClass)}
+              onWheel={onContainedScrollWheel}
+            >
               {lensFiltered.map((booking: any) => (
                 <BookingsMorphFallbackRow
                   key={booking.id}
                   booking={booking}
-                  rowClass={op.row}
+                  rowClass={(pending) => cn(op.row(pending), bookingsListRowHeightClass)}
                   avatarClass={op.avatarRing}
                   bookingStatusClass={op.bookingStatus}
                   statusColors={STATUS_COLORS}
@@ -408,7 +415,7 @@ export default function BookingsPage() {
                 </Button>
               </div>
             )}
-            </>
+            </div>
           )}
         </CardContent>
       </Card>

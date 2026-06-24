@@ -5,7 +5,7 @@ import { LiviaLogoLink } from "@/components/brand/livia-logo-link";
 import { ConstellationPageShell } from "@/components/constellation/constellation-page-shell";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { MarketingFooter, W1_FOOTER_LINKS } from "@/components/marketing-footer";
-import { marketingDemoPath } from "@/lib/marketing-links";
+import { marketingDemoPath, marketingGetStartedPath } from "@/lib/marketing-links";
 import { applyMarketingPlatformTheme } from "@/lib/marketing-platform-theme";
 import { MarketingSkipLink } from "@/components/marketing-skip-link";
 import { MarketingBackLink, shouldShowMarketingBack } from "@/components/marketing-back-link";
@@ -71,15 +71,22 @@ export function MarketingLayout({
           <div className="justify-self-end flex items-center gap-3 sm:gap-4 shrink-0">
             <MarketingLocaleSwitch className="hidden sm:flex" />
             <Link
+              href={marketingGetStartedPath}
+              className="hidden sm:inline-flex text-sm font-medium text-aurora-cyan hover:text-white transition-colors min-h-[44px] items-center"
+              data-testid="marketing-get-started-link"
+            >
+              Get started
+            </Link>
+            <Link
               href={marketingDemoPath}
-              className="hidden sm:inline-flex text-sm font-medium text-muted-foreground hover:text-white transition-colors min-h-[44px] items-center"
+              className="hidden lg:inline-flex text-sm font-medium text-muted-foreground hover:text-white transition-colors min-h-[44px] items-center"
               data-testid="marketing-demo-link"
             >
               Book a demo
             </Link>
             <a
               href={`${homeHref}#waitlist`}
-              className="text-sm font-medium text-aurora-cyan hover:text-white transition-colors min-h-[44px] inline-flex items-center"
+              className="text-sm font-medium text-muted-foreground hover:text-white transition-colors min-h-[44px] inline-flex items-center"
             >
               Join beta
             </a>
@@ -101,6 +108,13 @@ export function MarketingLayout({
                   {NAV.map(navLink)}
                   <MarketingLocaleSwitch className="mt-2 px-0" />
                   <Link
+                    href={marketingGetStartedPath}
+                    className="min-h-[44px] inline-flex items-center text-sm text-aurora-cyan hover:text-white"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Get started
+                  </Link>
+                  <Link
                     href={marketingDemoPath}
                     className="min-h-[44px] inline-flex items-center text-sm text-muted-foreground hover:text-white"
                     onClick={() => setMenuOpen(false)}
@@ -109,7 +123,7 @@ export function MarketingLayout({
                   </Link>
                   <a
                     href={`${homeHref}#waitlist`}
-                    className="min-h-[44px] inline-flex items-center text-sm text-aurora-cyan hover:text-white"
+                    className="min-h-[44px] inline-flex items-center text-sm text-muted-foreground hover:text-white"
                     onClick={() => setMenuOpen(false)}
                   >
                     Join beta

@@ -56,7 +56,7 @@ const MORPH_LABEL: Partial<Record<PresentationLayoutMorph, string>> = {
   ledger: "Evening ledger morph",
   "timeline-rail": "Session rail morph",
   pipeline: "Pipeline morph",
-  constellation: "Constellation morph",
+  constellation: "Schedule",
   standard: "Standard layout",
 };
 

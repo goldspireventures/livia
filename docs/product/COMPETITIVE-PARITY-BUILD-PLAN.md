@@ -16,7 +16,8 @@ This plan closes the gap between **incumbent table stakes** and **Livia 100×** 
 | 0.2 | `integration-catalog.ts` — generic integration labels | policy → API → Settings |
 | 0.3 | `competitive-parity.ts` — capability matrix + score | policy → API |
 | 0.4 | Universal CSV import (clients, services, staff, appointments) | API + Settings + onboarding `a11` |
-| 0.5 | Magic setup bundle (`POST …/import/magic-setup`) | API |
+| 0.5 | Magic setup bundle (`POST …/import/magic-setup`) | API + onboarding + Settings UI |
+| 0.5b | Incumbent migration atlas + fast-track onboarding | policy + docs + web/mobile |
 | 0.6 | Onboarding side-effects (auto-complete acts on import) | API |
 | 0.7 | Event vendors in vertical E2E matrix | demo + e2e |
 | 0.8 | E2E `universal-import-api.spec.ts` | e2e |

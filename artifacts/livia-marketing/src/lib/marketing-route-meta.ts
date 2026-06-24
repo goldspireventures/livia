@@ -18,6 +18,10 @@ export const MARKETING_ROUTE_META: Record<
     title: "Book a demo — Livia",
     description: "Request a guided walkthrough of a live demo for your trade.",
   },
+  "/get-started": {
+    title: "Get started — Livia",
+    description: "Create your account and set up your shop on Livia.",
+  },
   "/demo": {
     title: "Live demo — Livia",
     description: "Invited guests — pick your trade and walk through a ready-made demo business.",

@@ -1,17 +1,15 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   CalendarCheck,
-  Globe,
   HandHelping,
-  MessageSquare,
-  Phone,
+  Sparkles,
   User as UserIcon,
 } from "lucide-react";
 import { inboxMultiChannelListHint, inboxThreadNeedsAttention } from "@workspace/policy";
 import { MOTION } from "@/lib/motion";
 import { cn } from "@/lib/utils";
+import { InboxChannelIcon } from "@/components/inbox/inbox-channel-icon";
 
 export type InboxThreadRow = {
   id: string;
@@ -35,19 +33,6 @@ function formatRelative(dateStr: string): string {
   const hrs = Math.floor(mins / 60);
   if (hrs < 24) return `${hrs}h`;
   return `${Math.floor(hrs / 24)}d`;
-}
-
-function channelIcon(channel: string) {
-  switch (channel) {
-    case "WEB":
-      return <Globe className="h-3 w-3" />;
-    case "WHATSAPP":
-      return <MessageSquare className="h-3 w-3 text-emerald-500" />;
-    case "SMS":
-      return <Phone className="h-3 w-3" />;
-    default:
-      return <MessageSquare className="h-3 w-3" />;
-  }
 }
 
 export function InboxThreadList({
@@ -150,9 +135,12 @@ export function InboxThreadList({
                 </p>
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {(c.channels?.length ? c.channels : [c.channel]).map((ch) => (
-                    <Badge key={ch} variant="outline" className="h-5 px-1.5 text-[10px] gap-1 font-normal">
-                      {channelIcon(ch)}
-                      {ch}
+                    <Badge
+                      key={ch}
+                      variant="outline"
+                      className="h-6 w-6 p-0 justify-center items-center shrink-0"
+                    >
+                      <InboxChannelIcon channel={ch} size="sm" />
                     </Badge>
                   ))}
                   {c.status === "HANDED_OFF" ? (

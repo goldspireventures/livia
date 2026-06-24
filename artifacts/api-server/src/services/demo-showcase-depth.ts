@@ -18,7 +18,7 @@ import { createStaff } from "./staff.service";
 import { createService } from "./services.service";
 import { createCustomer } from "./customers.service";
 import { createPet } from "./pets.service";
-import { resyncConsultFirstDemoInbox, seedExpandedBookings, seedDemoInbox } from "./demo-inbox.seed";
+import { resyncConsultFirstDemoInbox, seedExpandedBookings, seedDemoInbox, ensureDemoInboxAnchorCustomers, demoInboxPolicySatisfied, ensureMessagingInboxFromPolicy } from "./demo-inbox.seed";
 import { ensureLiveDayForBusiness } from "./demo-live-day.service";
 import { ensureWellnessShowcaseDepth } from "./wellness-demo-depth";
 import { ensureDemoOperationalCases } from "./demo-operational-cases.seed";
@@ -147,6 +147,8 @@ async function linkStaffToAllServices(businessId: string, staffIds: string[], se
 }
 
 export async function ensureShowcaseCustomers(businessId: string, minimum = 20): Promise<CustomerSeed[]> {
+  await ensureDemoInboxAnchorCustomers(businessId);
+
   const existing = await db
     .select({
       id: customersTable.id,
@@ -351,6 +353,13 @@ export async function refreshVerticalShowcaseShop(
       pendingBookingNotes: "Liv created — confirm when ready",
     });
     await ensureDemoOperationalCases(businessId, d.slug, bookingKeys);
+  } else if (!consultFirst && !(await demoInboxPolicySatisfied(businessId, d.vertical))) {
+    await ensureMessagingInboxFromPolicy(businessId, d.vertical);
+  }
+
+  if (d.slug === "luxe-salon-spa") {
+    const { ensureDemoAnchorGuestDepth } = await import("./demo-inbox.seed");
+    await ensureDemoAnchorGuestDepth(businessId);
   }
 
   await ensureLiveDayForBusiness(businessId, {
@@ -436,6 +445,7 @@ async function findDemoGuestBalanceBookingId(businessId: string): Promise<string
   const rows = await db
     .select({
       id: bookingsTable.id,
+      notes: bookingsTable.notes,
       depositPaidEurCents: bookingsTable.depositPaidEurCents,
       totalPaidEurCents: bookingsTable.totalPaidEurCents,
       priceMinor: servicesTable.priceMinor,
@@ -452,15 +462,19 @@ async function findDemoGuestBalanceBookingId(businessId: string): Promise<string
     )
     .orderBy(desc(bookingsTable.startAt));
 
-  for (const row of rows) {
+  const withBalance = rows.filter((row) => {
     const balanceDueMinor = computeBalanceDueFromBooking({
       priceMinor: row.priceMinor,
       depositPaidEurCents: row.depositPaidEurCents,
       totalPaidEurCents: row.totalPaidEurCents,
     });
-    if (balanceDueMinor > 0) return row.id;
-  }
-  return null;
+    return balanceDueMinor > 0;
+  });
+
+  const flagged = withBalance.find((row) => (row.notes ?? "").includes("Balance due at visit"));
+  if (flagged) return flagged.id;
+
+  return withBalance[0]?.id ?? null;
 }
 
 /** Backfill a balance-due booking for demos seeded before balance_due key existed. */
@@ -507,7 +521,58 @@ export async function ensureDemoGuestBalanceBooking(businessId: string): Promise
     depositPaidEurCents: depositMinor,
     totalPaidEurCents: depositMinor,
   });
+  const { ensureBookingGuestAccess } = await import("./booking-guest-access.service");
+  await ensureBookingGuestAccess(businessId, bookingId);
   return bookingId;
+}
+
+/** Idempotent — demo balance-due booking with guest token for copy links + E2E. */
+export async function ensureDemoGuestBalanceSurface(businessId: string): Promise<string | null> {
+  let bookingId = await findDemoGuestBalanceBookingId(businessId);
+  if (!bookingId) {
+    bookingId = await ensureDemoGuestBalanceBooking(businessId);
+  }
+  if (!bookingId) return null;
+
+  const [row] = await db
+    .select({
+      id: bookingsTable.id,
+      depositPaidEurCents: bookingsTable.depositPaidEurCents,
+      totalPaidEurCents: bookingsTable.totalPaidEurCents,
+      priceMinor: servicesTable.priceMinor,
+    })
+    .from(bookingsTable)
+    .innerJoin(servicesTable, eq(bookingsTable.serviceId, servicesTable.id))
+    .where(eq(bookingsTable.id, bookingId))
+    .limit(1);
+  if (!row) return null;
+
+  let balanceDueMinor = computeBalanceDueFromBooking({
+    priceMinor: row.priceMinor,
+    depositPaidEurCents: row.depositPaidEurCents,
+    totalPaidEurCents: row.totalPaidEurCents,
+  });
+  if (balanceDueMinor <= 0) {
+    const depositMinor = Math.min(6000, Math.max(2000, Math.round(row.priceMinor * 0.5)));
+    await db
+      .update(bookingsTable)
+      .set({
+        depositPaidEurCents: depositMinor,
+        totalPaidEurCents: depositMinor,
+        status: "CONFIRMED",
+        updatedAt: new Date(),
+      })
+      .where(eq(bookingsTable.id, bookingId));
+    balanceDueMinor = computeBalanceDueFromBooking({
+      priceMinor: row.priceMinor,
+      depositPaidEurCents: depositMinor,
+      totalPaidEurCents: depositMinor,
+    });
+  }
+  if (balanceDueMinor <= 0) return null;
+
+  const { ensureBookingGuestAccess } = await import("./booking-guest-access.service");
+  return ensureBookingGuestAccess(businessId, bookingId);
 }
 
 /** Confirmed booking with remainder due — for guest balance E2E. */
@@ -519,14 +584,7 @@ export async function getDemoGuestBalanceToken(slug: string): Promise<string | n
     .limit(1);
   if (!biz) return null;
 
-  let bookingId = await findDemoGuestBalanceBookingId(biz.id);
-  if (!bookingId) {
-    bookingId = await ensureDemoGuestBalanceBooking(biz.id);
-  }
-  if (!bookingId) return null;
-
-  const { ensureBookingGuestAccess } = await import("./booking-guest-access.service");
-  return ensureBookingGuestAccess(biz.id, bookingId);
+  return ensureDemoGuestBalanceSurface(biz.id);
 }
 
 /** Pending booking with deposit due — for guest pay E2E. */

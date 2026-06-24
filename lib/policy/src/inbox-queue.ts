@@ -20,6 +20,14 @@ export function inboxThreadNeedsYou(c: InboxQueueConversation): boolean {
   return c.status === "OPEN" && !c.aiHandled;
 }
 
+/**
+ * Inbox threads that require studio action (reply or explicit handoff).
+ * Excludes Liv-on threads and guest-deposit waits where Liv is still handling.
+ */
+export function inboxThreadStudioActionRequired(c: InboxQueueConversation): boolean {
+  return inboxThreadNeedsYou(c) || inboxThreadTakenOver(c);
+}
+
 /** Handed off to staff and still needs a reply. */
 export function inboxThreadTakenOver(c: InboxQueueConversation): boolean {
   return c.status === "HANDED_OFF";
@@ -27,7 +35,7 @@ export function inboxThreadTakenOver(c: InboxQueueConversation): boolean {
 
 /** Any thread that should pull owner/manager attention in the list. */
 export function inboxThreadNeedsAttention(c: InboxQueueConversation): boolean {
-  return inboxThreadNeedsYou(c) || inboxThreadTakenOver(c);
+  return inboxThreadStudioActionRequired(c);
 }
 
 export function sortInboxThreadsByAttention<T extends InboxQueueConversation & { lastMessageAt: string }>(

@@ -1098,6 +1098,12 @@ export async function syncDemoWorld(): Promise<{
     await seedOperatorLivWorld();
     const { ensureCrossChannelDemoThreadsForAurora } = await import("./demo-channels.seed");
     await ensureCrossChannelDemoThreadsForAurora();
+    const { ensureMessagingInboxFromPolicy } = await import("./demo-inbox.seed");
+    for (const biz of status.businesses) {
+      const v = biz.vertical ?? "beauty";
+      if (v !== "beauty" && v !== "wellness" && v !== "hair") continue;
+      await ensureMessagingInboxFromPolicy(biz.id, v);
+    }
     const { syncAllDemoShowcaseMetaAndRetail } = await import("./demo-showcase-sync.service");
     const showcaseSync = await syncAllDemoShowcaseMetaAndRetail();
     logger.info(showcaseSync, "demo.showcase_meta_retail.synced");

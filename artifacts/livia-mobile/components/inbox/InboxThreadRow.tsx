@@ -5,6 +5,7 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { GlowPressable } from "@/components/ui/GlowPressable";
+import { InboxChannelIcon } from "@/components/inbox/InboxChannelIcon";
 import { aurora } from "@/constants/colors";
 import { elevation } from "@/constants/elevation";
 import { fonts, type } from "@/constants/typography";
@@ -85,7 +86,7 @@ export function InboxThreadRow({
             </Text>
           ) : null}
           <View style={styles.metaRow}>
-            <Text style={[styles.meta, { color: colors.mutedForeground }]}>{t.channel}</Text>
+            <InboxChannelIcon channel={t.channel} size="sm" />
             {needsYou ? (
               <View
                 style={[

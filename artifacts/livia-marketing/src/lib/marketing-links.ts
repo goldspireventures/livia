@@ -12,6 +12,9 @@ export const dashboardDemoUrl =
   (import.meta.env.VITE_DASHBOARD_DEMO_URL as string | undefined)?.replace(/\/+$/, "") ??
   `${dashboardOrigin}/demo`;
 
+/** Self-serve registration handoff → dashboard Clerk sign-up. */
+export const marketingGetStartedPath = "/get-started";
+
 /** Primary CTA — demo request / interest capture (closed beta). */
 export const marketingBookDemoPath = "/book-demo";
 

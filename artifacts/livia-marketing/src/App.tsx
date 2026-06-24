@@ -16,6 +16,7 @@ import EuropePage from "@/pages/europe";
 import EuAiPage from "@/pages/eu-ai";
 import VerticalsIndexPage from "@/pages/verticals-index";
 import BookDemoPage from "@/pages/book-demo";
+import GetStartedPage from "@/pages/get-started";
 import DemoPage from "@/pages/demo";
 import { LegalDpaPage, LegalPrivacyPage, LegalTosPage } from "@/pages/legal";
 import { useEffect, useRef } from "react";
@@ -36,6 +37,7 @@ function Router() {
       <Route path="/verticals" component={VerticalsIndexPage} />
       <Route path="/verticals/:slug" component={VerticalPage} />
       <Route path="/book-demo" component={BookDemoPage} />
+      <Route path="/get-started" component={GetStartedPage} />
       <Route path="/demo" component={DemoPage} />
       <Route path="/for/chair-rental" component={ForChairRentalPage} />
       <Route path="/contact" component={ContactPage} />

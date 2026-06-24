@@ -375,7 +375,11 @@ html[data-presentation="platform-default"] .constellation-inbox-shell {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-color: rgba(217, 195, 154, 0.14);
-  min-height: min(720px, calc(100dvh - 6rem));
+  min-height: min(720px, calc(100dvh - 5rem));
+}
+
+html[data-presentation="platform-default"] .constellation-inbox-thread-list {
+  min-height: 0;
 }
 
 html[data-presentation="platform-default"] .constellation-inbox-grid {
