@@ -29,7 +29,7 @@ async function waitForDemoApi(request: APIRequestContext, attempts = 40): Promis
 
 async function waitForDemoProvisioned(
   request: APIRequestContext,
-  attempts = 45,
+  attempts = 60,
   intervalMs = 2_000,
 ): Promise<boolean> {
   for (let i = 0; i < attempts; i++) {

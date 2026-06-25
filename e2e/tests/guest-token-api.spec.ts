@@ -31,6 +31,7 @@ test.describe("Guest token API suite (R2-E7)", () => {
   test.describe.configure({ mode: "serial", timeout: 180_000 });
 
   test.beforeAll(async ({ request }) => {
+    test.setTimeout(300_000);
     await ensureDemoProvisioned(request);
   });
 
