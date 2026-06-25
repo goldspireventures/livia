@@ -1,7 +1,7 @@
 import { MarketingLayout } from "@/components/marketing-layout";
 import { ConstellationInnerPage } from "@/components/constellation/constellation-inner-page";
 import { ConstellationGlassCard } from "@/components/constellation/constellation-spine";
-import { dashboardSignUpUrl } from "@/lib/marketing-links";
+import { dashboardSignInUrl, dashboardSignUpUrl } from "@/lib/marketing-links";
 import { Link } from "wouter";
 import { ArrowRight, Check } from "lucide-react";
 
@@ -21,7 +21,7 @@ const INCLUDED = [
 ] as const;
 
 export default function GetStartedPage() {
-  const signUpHref = dashboardSignUpUrl;
+  const signUpHref = dashboardSignUpUrl();
 
   return (
     <MarketingLayout active="Get started">
@@ -58,7 +58,7 @@ export default function GetStartedPage() {
           </a>
           <p className="text-xs text-muted-foreground">
             Already have an account?{" "}
-            <a href={signUpHref.replace(/\/sign-up\/?$/, "/sign-in")} className="text-[#d9c39a] hover:underline">
+            <a href={dashboardSignInUrl()} className="text-[#d9c39a] hover:underline">
               Sign in
             </a>
           </p>

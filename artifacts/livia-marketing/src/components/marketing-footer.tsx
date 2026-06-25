@@ -93,7 +93,9 @@ export function MarketingFooter({
 }
 
 /** Default W1 constellation footer links. */
-export const W1_FOOTER_LINKS: MarketingFooterLink[] = [
+export function w1FooterLinks(): MarketingFooterLink[] {
+  const legal = legalBase();
+  return [
   { href: "/pricing", label: "Pricing" },
   { href: "/how-it-works", label: "How it works" },
   { href: "/verticals", label: "Verticals" },
@@ -101,6 +103,7 @@ export const W1_FOOTER_LINKS: MarketingFooterLink[] = [
   { href: "/changelog", label: "Changelog" },
   { href: "/status", label: "Status" },
   { href: "/eu-ai", label: "EU AI" },
-  { href: `${legalBase}/privacy`, label: "Privacy", external: true },
-  { href: `${legalBase}/tos`, label: "Terms", external: true },
+  { href: `${legal}/privacy`, label: "Privacy", external: true },
+  { href: `${legal}/tos`, label: "Terms", external: true },
 ];
+}

@@ -23,17 +23,18 @@ export default function StatusPage() {
   useEffect(() => {
     async function run() {
       const next: Check[] = [];
-      const api = await probe(`${apiBaseUrl}/api/healthz`);
+      const api = await probe(`${apiBaseUrl()}/api/healthz`);
       next.push({ name: "API", ...api });
-      const dash = await probe(dashboardDemoUrl.replace(/\/demo$/, "") || dashboardDemoUrl);
+      const dashOrigin = dashboardDemoUrl().replace(/\/demo$/, "");
+      const dash = await probe(dashOrigin || dashboardDemoUrl());
       next.push({ name: "Dashboard (app)", ...dash });
-      const demo = await probe(`${apiBaseUrl}/api/demo/status`);
+      const demo = await probe(`${apiBaseUrl()}/api/demo/status`);
       next.push({
         name: "Demo world",
         ok: demo.ok,
         detail: demo.ok ? "Provisioned" : demo.detail,
       });
-      next.push({ name: `Marketing (${marketingOrigin})`, ok: true, detail: "You are viewing it" });
+      next.push({ name: `Marketing (${marketingOrigin()})`, ok: true, detail: "You are viewing it" });
       setChecks(next);
       setLoading(false);
     }
@@ -56,12 +57,12 @@ export default function StatusPage() {
             <>
               EU platform health. Production incidents:{" "}
               <a
-                href={`${marketingOrigin}/status`}
+                href={`${marketingOrigin()}/status`}
                 className="cst-page-link"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                {marketingOrigin.replace(/^https?:\/\//, "")}/status
+                {marketingOrigin().replace(/^https?:\/\//, "")}/status
               </a>
             </>
           }

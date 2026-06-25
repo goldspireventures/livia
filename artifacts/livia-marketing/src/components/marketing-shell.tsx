@@ -129,8 +129,8 @@ export function MarketingShell({ locale, children, onJoinBeta }: MarketingShellP
             { href: "/changelog", label: "Changelog" },
             { href: "/status", label: "Status" },
             { href: "/for/chair-rental", label: "Chair rental" },
-            { href: `${legalBase}/privacy`, label: "Privacy", external: true },
-            { href: `${legalBase}/tos`, label: "Terms", external: true },
+            { href: `${legalBase()}/privacy`, label: "Privacy", external: true },
+            { href: `${legalBase()}/tos`, label: "Terms", external: true },
             { href: "/pricing", label: t.nav.pricing },
             { href: "/europe", label: "Europe" },
           ] satisfies MarketingFooterLink[]

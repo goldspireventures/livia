@@ -75,6 +75,7 @@ export * from "./wedge-demo-stories";
 export * from "./wedge-vertical-packs";
 export * from "./marketing-demo-concierge";
 export * from "./marketing-demo-gate";
+export * from "./marketing-surface-program";
 export * from "./guest-surfaces";
 export * from "./platform-surface-registry";
 export * from "./support-points";

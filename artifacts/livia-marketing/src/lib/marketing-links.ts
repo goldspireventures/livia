@@ -1,16 +1,13 @@
-/** Local dev defaults — override in `.env` for deploy. */
+/** Marketing routes + dashboard handoff — host-aware (prod vs staging vs local). */
 import { isMarketingDemoWedgeUnlocked, type BusinessVertical } from "@workspace/policy";
-const dashboardOrigin =
-  (import.meta.env.VITE_DASHBOARD_URL as string | undefined)?.replace(/\/+$/, "") ??
-  (import.meta.env.VITE_DASHBOARD_SIGN_IN_URL as string | undefined)?.replace(
-    /\/sign-in\/?$/,
-    "",
-  ) ??
-  "http://127.0.0.1:5173";
-
-export const dashboardDemoUrl =
-  (import.meta.env.VITE_DASHBOARD_DEMO_URL as string | undefined)?.replace(/\/+$/, "") ??
-  `${dashboardOrigin}/demo`;
+import {
+  resolveApiBaseUrl,
+  resolveDashboardDemoUrl,
+  resolveDashboardSignInUrl,
+  resolveDashboardSignUpUrl,
+  resolveLegalBase,
+  resolveMarketingOrigin,
+} from "@/lib/marketing-surface-urls";
 
 /** Self-serve registration handoff → dashboard Clerk sign-up (primary marketing CTA). */
 export const marketingGetStartedPath = "/get-started";
@@ -41,34 +38,36 @@ export function marketingBookDemoUrl(verticalSlug?: string): string {
 /** W2 demo stories with shipped wedge — link to card-stage (G2). */
 export function dashboardWedgeUrl(verticalSlug: string, gateKey?: string | null): string {
   const slug = verticalSlug.replace(/^\/+/, "") as BusinessVertical;
+  const demoBase = resolveDashboardDemoUrl();
   const base = isMarketingDemoWedgeUnlocked(slug)
-    ? `${dashboardDemoUrl}/wedge/${slug}`
-    : `${dashboardDemoUrl}?vertical=${encodeURIComponent(slug)}`;
+    ? `${demoBase}/wedge/${slug}`
+    : `${demoBase}?vertical=${encodeURIComponent(slug)}`;
   const key = gateKey?.trim();
   if (!key) return base;
   const sep = base.includes("?") ? "&" : "?";
   return `${base}${sep}key=${encodeURIComponent(key)}`;
 }
 
-export const dashboardSignInUrl =
-  (import.meta.env.VITE_DASHBOARD_SIGN_IN_URL as string | undefined)?.replace(/\/+$/, "") ??
-  `${dashboardOrigin}/sign-in`;
+export function dashboardDemoUrl(): string {
+  return resolveDashboardDemoUrl();
+}
 
-export const dashboardSignUpUrl =
-  (import.meta.env.VITE_DASHBOARD_SIGN_UP_URL as string | undefined)?.replace(/\/+$/, "") ??
-  `${dashboardOrigin}/sign-up`;
+export function dashboardSignInUrl(): string {
+  return resolveDashboardSignInUrl();
+}
 
-export const apiBaseUrl =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/+$/, "") ??
-  (typeof window !== "undefined" ? window.location.origin : "http://127.0.0.1:3000");
+export function dashboardSignUpUrl(): string {
+  return resolveDashboardSignUpUrl();
+}
 
-const marketingOrigin =
-  (import.meta.env.VITE_MARKETING_URL as string | undefined)?.replace(/\/+$/, "") ??
-  "https://livia-hq.com";
+export function apiBaseUrl(): string {
+  return resolveApiBaseUrl();
+}
 
-/** Production legal pages — local marketing shows draft notice until Gate 3. */
-export const legalBase =
-  (import.meta.env.VITE_LEGAL_BASE_URL as string | undefined)?.replace(/\/+$/, "") ??
-  `${marketingOrigin}/legal`;
+export function marketingOrigin(): string {
+  return resolveMarketingOrigin();
+}
 
-export { marketingOrigin };
+export function legalBase(): string {
+  return resolveLegalBase();
+}

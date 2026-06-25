@@ -76,6 +76,18 @@ test.describe("Marketing platform smoke", () => {
     await page.waitForURL(/\/get-started/, { timeout: 15_000 });
   });
 
+  test("get-started sign-in links to production app on livia-hq.com", async ({ page }) => {
+    if (!marketingBase.includes("livia-hq.com")) {
+      test.skip(true, "Production host assertion — set E2E_MARKETING_URL to livia-hq.com");
+    }
+    await page.goto(`${marketingBase}/get-started`);
+    const signIn = page.getByRole("link", { name: /^sign in$/i });
+    await expect(signIn).toBeVisible();
+    const href = await signIn.getAttribute("href");
+    expect(href).toMatch(/^https:\/\/app\.livia-hq\.com\/sign-in\/?$/);
+    expect(href).not.toContain("staging");
+  });
+
   test("how-it-works CTA points at get-started", async ({ page }) => {
     await page.goto(`${marketingBase}/how-it-works`);
     const cta = page.getByTestId("marketing-get-started-link").first();

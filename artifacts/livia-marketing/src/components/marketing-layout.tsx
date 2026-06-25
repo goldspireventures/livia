@@ -4,7 +4,7 @@ import { Menu } from "lucide-react";
 import { LiviaLogoLink } from "@/components/brand/livia-logo-link";
 import { ConstellationPageShell } from "@/components/constellation/constellation-page-shell";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { MarketingFooter, W1_FOOTER_LINKS } from "@/components/marketing-footer";
+import { MarketingFooter, w1FooterLinks } from "@/components/marketing-footer";
 import { marketingGetStartedPath } from "@/lib/marketing-links";
 import { applyMarketingPlatformTheme } from "@/lib/marketing-platform-theme";
 import { MarketingSkipLink } from "@/components/marketing-skip-link";
@@ -128,7 +128,7 @@ export function MarketingLayout({
         ) : null}
         <ConstellationPageShell tone={shellTone}>{children}</ConstellationPageShell>
       </main>
-      <MarketingFooter homeHref={homeHref} links={W1_FOOTER_LINKS} />
+      <MarketingFooter homeHref={homeHref} links={w1FooterLinks()} />
     </div>
   );
 }

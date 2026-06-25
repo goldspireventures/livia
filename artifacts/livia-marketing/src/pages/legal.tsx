@@ -30,14 +30,14 @@ export function LegalPage({ kind }: { kind: LegalKind }) {
             </p>
             <p>
               For product access:{" "}
-              <a href={dashboardSignUpUrl} className="cst-page-link">
+              <a href={dashboardSignUpUrl()} className="cst-page-link">
                 create an account
               </a>{" "}
               or{" "}
-              <a href={dashboardSignInUrl} className="cst-page-link">
+              <a href={dashboardSignInUrl()} className="cst-page-link">
                 sign in
               </a>{" "}
-              at {marketingOrigin.replace(/^https?:\/\//, "")}.
+              at {marketingOrigin().replace(/^https?:\/\//, "")}.
             </p>
             <p>
               Questions:{" "}
