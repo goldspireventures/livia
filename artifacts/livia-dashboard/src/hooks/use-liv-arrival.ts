@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   getGetLivSetupGuidedFlowQueryKey,
@@ -24,6 +25,7 @@ export function useLivArrival() {
   const { business } = useBusiness();
   const { effectiveRole } = useMembership();
   const qc = useQueryClient();
+  const [location] = useLocation();
   const bid = business?.id ?? "";
   const isOwnerOrAdmin = ["OWNER", "ADMIN"].includes(effectiveRole ?? "");
   const isDemo = business?.slug ? isDemoTenantSlug(business.slug) : false;
@@ -100,6 +102,19 @@ export function useLivArrival() {
     await refetchFlow();
     void qc.invalidateQueries({ queryKey: getGetLivSetupGuidedFlowQueryKey(bid) });
   }, [refetchFlow, qc, bid]);
+
+  // Phase B — refetch beat when owner returns from a "Show me" screen.
+  useEffect(() => {
+    if (!isConductorActive || !bid) return;
+    void advanceBeat();
+  }, [location, isConductorActive, bid, advanceBeat]);
+
+  useEffect(() => {
+    if (!isConductorActive || typeof window === "undefined") return;
+    const onFocus = () => void advanceBeat();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [isConductorActive, advanceBeat]);
 
   return {
     suppressDuplicateSetupBanners,

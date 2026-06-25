@@ -24,7 +24,7 @@ async function createShop(page: Page): Promise<string> {
   const unique = Date.now().toString(36);
   await page.getByLabel("Business name").fill(`Sacred Path ${unique}`);
   await page.waitForTimeout(500);
-  const slugInput = page.getByPlaceholder("kinvara-salon");
+  const slugInput = page.getByPlaceholder("your-business");
   let slug = (await slugInput.inputValue()).trim();
   if (!slug) {
     slug = `sacred-path-${unique}`;

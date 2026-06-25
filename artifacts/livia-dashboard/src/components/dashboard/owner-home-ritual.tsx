@@ -45,6 +45,7 @@ import { OwnerOperatingPulse } from "@/components/dashboard/owner-operating-puls
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-fetch";
 import { SoloOperatorCopilot } from "@/components/dashboard/solo-operator-copilot";
+import { useLivArrival } from "@/hooks/use-liv-arrival";
 import { cn } from "@/lib/utils";
 import { beautyNativeMorphForVertical, useBeautyChrome } from "@/lib/presentation-layout";
 import { resolvePresentationLayoutMorph } from "@workspace/policy";
@@ -389,6 +390,7 @@ export function OwnerHomeRitual({
 }) {
   const { business } = useBusiness();
   const bid = business?.id ?? "";
+  const { suppressDuplicateSetupBanners } = useLivArrival();
   const queryClient = useQueryClient();
   const [assigningBookingId, setAssigningBookingId] = useState<string | null>(null);
   const updateBooking = useUpdateBooking();
@@ -684,7 +686,7 @@ export function OwnerHomeRitual({
         <p className="text-xs text-muted-foreground font-mono tabular-nums">{formatHeaderDate(now)}</p>
       </header>
 
-      {operatorXp?.soloMode && operatorXp.showSoloCopilotCard ? (
+      {operatorXp?.soloMode && operatorXp.showSoloCopilotCard && !suppressDuplicateSetupBanners ? (
         <SoloOperatorCopilot pack={operatorXp} />
       ) : null}
 
@@ -719,7 +721,7 @@ export function OwnerHomeRitual({
             ) : (
               <>
                 <p className="text-sm leading-relaxed text-foreground/90 line-clamp-3">{displayLivLine}</p>
-                {operatorXp?.soloMode && operatorXp.showSoloCopilotCard && !briefingLoading ? (
+                {operatorXp?.soloMode && operatorXp.showSoloCopilotCard && !suppressDuplicateSetupBanners && !briefingLoading ? (
                   <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                     {operatorXp.livSubline}
                   </p>

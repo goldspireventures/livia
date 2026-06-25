@@ -134,6 +134,9 @@ export function LivArrivalConductor() {
         >
           {LIV_ARRIVAL_COPY.exploreAlone}
         </Button>
+        <Button size="sm" variant="outline" className="ml-auto" asChild>
+          <Link href="/settings?tab=liv">{GO_LIVE_RIBBON_COPY.askLiv}</Link>
+        </Button>
       </div>
     </aside>
   );

@@ -59,6 +59,7 @@ import { wellnessNativeMorphForVertical } from "@/lib/presentation-layout";
 import { effectivePresentationMorph } from "@/lib/appearance-preview-mode";
 import { GuestVaultOwnerCallout } from "@/components/customers/guest-vault-owner-callout";
 import { SoloOperatorCopilot } from "@/components/dashboard/solo-operator-copilot";
+import { useLivArrival } from "@/hooks/use-liv-arrival";
 
 // ------------ helpers ------------
 
@@ -149,6 +150,7 @@ export default function DashboardPage() {
   const qc = useQueryClient();
 
   const businessId = business?.id ?? "";
+  const { suppressDuplicateSetupBanners } = useLivArrival();
 
   const { data: summary, isLoading: isLoadingSummary } = useGetDashboardSummary(
     businessId,
@@ -376,7 +378,7 @@ export default function DashboardPage() {
         },
       ];
 
-  if (isFirstRun) {
+  if (isFirstRun && !suppressDuplicateSetupBanners) {
     return (
       <div
         className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500"

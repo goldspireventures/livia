@@ -6,11 +6,13 @@ import { useMembership } from "@/lib/membership-context";
 import { isDemoLoginEnabled } from "@/lib/persona";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { useLivArrival } from "@/hooks/use-liv-arrival";
 
 /** Setup-only banner — hides after activation (no permanent "first booking" toast). */
 export function ActivationMilestone({ className }: { className?: string }) {
   const { business } = useBusiness();
   const { effectiveRole } = useMembership();
+  const { suppressDuplicateSetupBanners } = useLivArrival();
   const bid = business?.id ?? "";
   const { data, isLoading } = useGetDashboardSummary(bid, {
     query: { enabled: !!bid } as never,
@@ -18,6 +20,7 @@ export function ActivationMilestone({ className }: { className?: string }) {
 
   if (!business || !["OWNER", "ADMIN"].includes(effectiveRole ?? "")) return null;
   if (isDemoLoginEnabled) return null;
+  if (suppressDuplicateSetupBanners) return null;
 
   if (isLoading) {
     return <Skeleton className={cn("h-12 w-full rounded-lg", className)} />;

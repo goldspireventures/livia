@@ -1,17 +1,16 @@
 /**
- * Production form placeholders — realistic appointment-business examples.
- * Not demo slugs (Aurora, Bloom) and not AI filler (Acme, example.com).
+ * Production form placeholders — neutral examples, not demo slugs or AI filler.
  */
 export const LIVIA_FORM_EXAMPLES = {
-  businessName: "Kinvara Salon",
-  businessSlug: "kinvara-salon",
-  businessNameWithArea: "Kinvara Salon — Rathmines",
-  emailFrom: "Kinvara Salon <hello@kinvara.ie>",
-  ownerEmail: "roisin@kinvara.ie",
-  partnerEmail: "partner@kinvara.ie",
-  staffInviteEmail: "lara@kinvara.ie",
-  guestEmail: "mary.walsh@gmail.com",
-  bookingDomain: "book.kinvara.ie",
+  businessName: "Your business name",
+  businessSlug: "your-business",
+  businessNameWithArea: "Your business — your area",
+  emailFrom: "Your business <hello@yourbusiness.com>",
+  ownerEmail: "you@yourbusiness.com",
+  partnerEmail: "partner@yourbusiness.com",
+  staffInviteEmail: "team@yourbusiness.com",
+  guestEmail: "guest@example.com",
+  bookingDomain: "book.yourbusiness.com",
   /** German locale waitlist / forms */
-  ownerEmailDe: "anna@mueller-salon.de",
+  ownerEmailDe: "name@ihr-salon.de",
 } as const;
