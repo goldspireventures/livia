@@ -137,7 +137,10 @@ export function prevPortalNavAct(
   const idx = nav.indexOf(act);
   if (idx <= 0) return null;
   const prev = nav[idx - 1]!;
-  if (hasBusiness && prev === "a1_create_business") return null;
+  if (hasBusiness && prev === "a1_create_business") {
+    if (isSwitchingMigration(checklist) && act === "a11_migration") return prev;
+    return null;
+  }
   return prev;
 }
 

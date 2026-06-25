@@ -59,7 +59,10 @@ export default function OnboardingPage() {
   const [businessSlug, setBusinessSlug] = useState<string | null>(null);
   const [onboardingState, setOnboardingState] = useState<OnboardingStatePayload | null>(null);
   const [previewVertical, setPreviewVertical] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => {
+    const i = readOnboardingIntent();
+    return !(i.secondShop || i.fresh);
+  });
   const [migrationIntent, setMigrationIntent] = useState<MigrationIntent | null>(() => {
     if (typeof window === "undefined") return null;
     const params = new URLSearchParams(window.location.search);
@@ -132,18 +135,18 @@ export default function OnboardingPage() {
   }, [toast, queryClient]);
 
   useEffect(() => {
-    if (!intent.fresh) return;
-    try {
-      window.localStorage.removeItem("livia.currentBusinessId");
-      window.localStorage.removeItem("livia_current_business_id");
-    } catch {
-      /* ignore */
+    if (intent.fresh) {
+      try {
+        window.localStorage.removeItem("livia.currentBusinessId");
+        window.localStorage.removeItem("livia_current_business_id");
+      } catch {
+        /* ignore */
+      }
     }
   }, [intent.fresh]);
 
   useEffect(() => {
-    // Second location or explicit fresh start = new business row — do not resume another shop.
-    if (intent.secondShop || intent.fresh) {
+    if (intent.secondShop) {
       setLoading(false);
       return;
     }
@@ -185,7 +188,7 @@ export default function OnboardingPage() {
         });
       })
       .finally(() => setLoading(false));
-  }, [intent.secondShop, intent.fresh, toast, user?.id, user?.primaryEmailAddress?.emailAddress]);
+  }, [intent.secondShop, toast, user?.id, user?.primaryEmailAddress?.emailAddress]);
 
   const loadDemoData = async () => {
     setSeedLoading(true);

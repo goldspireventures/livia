@@ -6,6 +6,11 @@ import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/api-fetch";
 import { parseUserFacingError } from "@/lib/user-facing-errors";
+import {
+  clearOnboardingFormDraft,
+  readOnboardingFormDraft,
+  writeOnboardingFormDraft,
+} from "@/lib/onboarding-form-draft";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -18,6 +23,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { defaultSubverticalProfile, businessVerticalSchema } from "@workspace/policy";
+
+const DRAFT_KEY = "import-shell";
 
 const formSchema = z.object({
   name: z.string().min(2, "Enter your shop name"),
@@ -33,7 +40,9 @@ type Catalog = {
 };
 
 type Props = {
+  businessId?: string | null;
   onCreated: (businessId: string, slug: string) => void;
+  onSaved?: () => void;
   onVerticalPreview?: (vertical: string | null) => void;
 };
 
@@ -44,10 +53,28 @@ function slugFromName(name: string): string {
     .replace(/(^-|-$)+/g, "");
 }
 
-export function OnboardingImportShellStep({ onCreated, onVerticalPreview }: Props) {
+export function OnboardingImportShellStep({
+  businessId,
+  onCreated,
+  onSaved,
+  onVerticalPreview,
+}: Props) {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [catalog, setCatalog] = useState<Catalog | null>(null);
+  const [loadingBusiness, setLoadingBusiness] = useState(!!businessId);
+  const editMode = !!businessId;
+
+  const draft = readOnboardingFormDraft<FormValues>(DRAFT_KEY);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema as never),
+    defaultValues: {
+      name: draft?.name ?? "",
+      vertical: draft?.vertical ?? "hair",
+      jurisdiction: (draft?.jurisdiction as FormValues["jurisdiction"]) ?? "IE",
+    },
+  });
 
   useEffect(() => {
     apiFetch<Catalog>("/onboarding/catalog")
@@ -63,19 +90,39 @@ export function OnboardingImportShellStep({ onCreated, onVerticalPreview }: Prop
       });
   }, []);
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema as never),
-    defaultValues: {
-      name: "",
-      vertical: "hair",
-      jurisdiction: "IE",
-    },
-  });
+  useEffect(() => {
+    if (!businessId) {
+      setLoadingBusiness(false);
+      return;
+    }
+    setLoadingBusiness(true);
+    apiFetch<{ name?: string; vertical?: string; jurisdiction?: string }>(`/businesses/${businessId}`)
+      .then((biz) => {
+        const next: FormValues = {
+          name: draft?.name ?? biz.name ?? "",
+          vertical: draft?.vertical ?? biz.vertical ?? "hair",
+          jurisdiction:
+            (draft?.jurisdiction as FormValues["jurisdiction"]) ??
+            (biz.jurisdiction as FormValues["jurisdiction"]) ??
+            "IE",
+        };
+        form.reset(next);
+      })
+      .catch(() => undefined)
+      .finally(() => setLoadingBusiness(false));
+  }, [businessId, form]);
 
   const watchVertical = form.watch("vertical");
   useEffect(() => {
     onVerticalPreview?.(watchVertical ?? null);
   }, [watchVertical, onVerticalPreview]);
+
+  useEffect(() => {
+    const sub = form.watch((values) => {
+      writeOnboardingFormDraft(DRAFT_KEY, values as Record<string, unknown>);
+    });
+    return () => sub.unsubscribe();
+  }, [form]);
 
   const onSubmit = (values: FormValues) => {
     const slug = slugFromName(values.name);
@@ -99,6 +146,36 @@ export function OnboardingImportShellStep({ onCreated, onVerticalPreview }: Prop
     }
     const subvertical = defaultSubverticalProfile(verticalParsed.data);
     setSaving(true);
+
+    if (editMode && businessId) {
+      apiFetch(`/businesses/${businessId}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          name: values.name,
+          timezone: jurisdiction?.defaultTimezone ?? "Europe/Dublin",
+          jurisdiction: values.jurisdiction,
+          vertical: verticalParsed.data,
+          category: subvertical.starterPackCategory ?? subvertical.label,
+          subverticalProfileId: subvertical.id,
+        }),
+      })
+        .then((biz) => {
+          clearOnboardingFormDraft(DRAFT_KEY);
+          toast({ title: "Saved", description: "Shop basics updated." });
+          onSaved?.();
+          return biz;
+        })
+        .catch((err: unknown) => {
+          toast({
+            title: "Could not save",
+            description: parseUserFacingError(err, "Try again in a moment."),
+            variant: "destructive",
+          });
+        })
+        .finally(() => setSaving(false));
+      return;
+    }
+
     apiFetch<{ id: string; slug: string }>("/businesses", {
       method: "POST",
       body: JSON.stringify({
@@ -120,6 +197,7 @@ export function OnboardingImportShellStep({ onCreated, onVerticalPreview }: Prop
       }),
     })
       .then((biz) => {
+        clearOnboardingFormDraft(DRAFT_KEY);
         onCreated(biz.id, biz.slug);
       })
       .catch((err: unknown) => {
@@ -134,6 +212,14 @@ export function OnboardingImportShellStep({ onCreated, onVerticalPreview }: Prop
 
   const jurisdictions = catalog?.jurisdictions ?? [];
   const verticals = catalog?.verticals ?? [];
+
+  if (loadingBusiness) {
+    return (
+      <div className="flex justify-center py-8" data-testid="onboarding-import-shell-loading">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <Form {...form}>
@@ -208,6 +294,8 @@ export function OnboardingImportShellStep({ onCreated, onVerticalPreview }: Prop
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               One moment…
             </>
+          ) : editMode ? (
+            "Save and return to import"
           ) : (
             "Continue to import"
           )}

@@ -443,7 +443,7 @@ export function OnboardingWizard({
 
   const stepBody = (
     <>
-      {currentAct === "a1_create_business" && !businessId ? (
+      {currentAct === "a1_create_business" && (!businessId || isImportTrack) ? (
         <>
           {activeChecklist?.migrationIntent ? (
             <div className="space-y-1">
@@ -459,6 +459,7 @@ export function OnboardingWizard({
           ) : null}
           {isImportTrack ? (
             <OnboardingImportShellStep
+              businessId={businessId}
               onVerticalPreview={onVerticalPreview}
               onCreated={async (id, slug) => {
                 setPublicSlug(slug);
@@ -471,6 +472,16 @@ export function OnboardingWizard({
                   ) as OnboardingStatePayload;
                   setState(next);
                   await persistState(next, id);
+                }
+              }}
+              onSaved={() => {
+                if (businessId && currentAct === "a1_create_business") {
+                  void persistState({
+                    currentAct: "a11_migration",
+                    completedActs: state?.completedActs ?? [],
+                    percentComplete: state?.percentComplete ?? percent,
+                    checklist: state?.checklist,
+                  });
                 }
               }}
             />
@@ -677,7 +688,7 @@ export function OnboardingWizard({
             : null
         }
         showProgressSpine={!!activeChecklist?.migrationIntent}
-        packLabel={isImportTrack ? "Import path" : "Fresh start"}
+        packLabel={null}
         wide={wideStep || currentAct === "a11_migration"}
         celebrate={celebrate}
         topSlot={

@@ -1,5 +1,5 @@
 import type { OnboardingActId } from "@/lib/onboarding-acts";
-import { portalNavStepLabels } from "@workspace/policy";
+import { portalNavStepLabels, portalTrackLabel } from "@workspace/policy";
 import type { OnboardingChecklist } from "@workspace/policy";
 import { cn } from "@/lib/utils";
 
@@ -12,12 +12,11 @@ type Props = {
 export function OnboardingPortalStepSpine({ currentAct, completedActs, checklist }: Props) {
   const steps = portalNavStepLabels(checklist);
   const done = new Set(completedActs);
-  const currentIndex = steps.findIndex((s) => s.act === currentAct);
 
   return (
     <div className="space-y-2" data-testid="onboarding-portal-step-spine">
       <p className="text-xs text-muted-foreground">
-        {checklist?.migrationIntent === "switching" ? "Import path" : "Fresh start"}
+        {portalTrackLabel(checklist)}
         {" · "}
         {steps.length} steps
       </p>
@@ -55,11 +54,6 @@ export function OnboardingPortalStepSpine({ currentAct, completedActs, checklist
           );
         })}
       </div>
-      {currentIndex >= 0 ? (
-        <p className="text-xs text-muted-foreground">
-          Step {currentIndex + 1} of {steps.length}: {steps[currentIndex]!.label}
-        </p>
-      ) : null}
     </div>
   );
 }

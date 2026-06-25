@@ -39,6 +39,13 @@ import {
   type MigrationIntent,
 } from "@workspace/policy";
 import { verticalPackUi } from "@/lib/vertical-pack-ui";
+import {
+  clearOnboardingFormDraft,
+  readOnboardingFormDraft,
+  writeOnboardingFormDraft,
+} from "@/lib/onboarding-form-draft";
+
+const CREATE_BUSINESS_DRAFT_KEY = "create-business";
 
 const EU_TIMEZONES = [
   { value: "Europe/Dublin", label: "Dublin" },
@@ -168,8 +175,16 @@ export function OnboardingCreateBusinessStep({
       entityKind: "sole_trader",
       vatNumber: "",
       subverticalProfileId: defaultSubverticalProfile("hair").id,
+      ...readOnboardingFormDraft<FormValues>(CREATE_BUSINESS_DRAFT_KEY),
     },
   });
+
+  useEffect(() => {
+    const sub = form.watch((values) => {
+      writeOnboardingFormDraft(CREATE_BUSINESS_DRAFT_KEY, values as Record<string, unknown>);
+    });
+    return () => sub.unsubscribe();
+  }, [form]);
 
   const watchVertical = form.watch("vertical");
   const watchSubverticalId = form.watch("subverticalProfileId");
@@ -292,6 +307,7 @@ export function OnboardingCreateBusinessStep({
             ? `${starterOffer.label} applied — finish setup steps next.`
             : "Empty studio created — add your menu when you're ready.",
         });
+        clearOnboardingFormDraft(CREATE_BUSINESS_DRAFT_KEY);
         onCreated(biz.id, biz.slug, { migrationIntent });
       })
       .catch((err: unknown) => {

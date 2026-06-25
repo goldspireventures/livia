@@ -85,6 +85,12 @@ const PORTAL_STEP_LABELS: Partial<Record<OnboardingActId, string>> = {
   a12_go_live: "Open",
 };
 
+export function portalTrackLabel(
+  checklist?: Partial<OnboardingChecklist> | null,
+): string {
+  return isSwitchingMigration(checklist) ? "Bring your data" : "New shop";
+}
+
 /** Step-1 label differs by path — import shell is lighter than fresh create. */
 export function portalFirstStepLabel(
   checklist?: Partial<OnboardingChecklist> | null,

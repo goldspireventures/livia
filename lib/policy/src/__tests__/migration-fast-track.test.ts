@@ -5,6 +5,7 @@ import {
   onboardingIntentFromTrack,
   onboardingTrackFromIntent,
   portalStepProgress,
+  portalTrackLabel,
   resolvePortalNavActs,
   shouldSeedStarterPackOnCreate,
 } from "../migration-fast-track-program";
@@ -34,5 +35,8 @@ assert.equal(onboardingTrackFromIntent("switching"), "import");
 const progress = portalStepProgress("a11_migration", { migrationIntent: "switching" });
 assert.equal(progress?.index, 2);
 assert.equal(progress?.total, 5);
+
+assert.equal(portalTrackLabel({ migrationIntent: "switching" }), "Bring your data");
+assert.equal(portalTrackLabel({ migrationIntent: "fresh" }), "New shop");
 
 console.log("migration-fast-track.test.ts ok");
