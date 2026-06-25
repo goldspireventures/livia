@@ -28,6 +28,7 @@ import {
   OWNERSHIP_SUCCESSION,
   rosterMemberRoleLabel,
   verticalOperationalCopy,
+  LIVIA_FORM_EXAMPLES,
 } from "@workspace/policy";
 import { useOperationalChrome } from "@/lib/operational-chrome";
 import { apiFetch, ApiFetchError } from "@/lib/api-fetch";
@@ -120,7 +121,7 @@ function InviteDialog({
             <Input
               type="email"
               {...register("email", { required: true })}
-              placeholder="them@yourshop.com"
+              placeholder={LIVIA_FORM_EXAMPLES.staffInviteEmail}
               data-testid="input-invite-email"
             />
           </div>

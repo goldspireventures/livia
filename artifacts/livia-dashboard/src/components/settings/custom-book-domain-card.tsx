@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { customFetch } from "@workspace/api-client-react";
-import { guestBookHostForSlug } from "@workspace/policy";
+import { guestBookHostForSlug, LIVIA_FORM_EXAMPLES } from "@workspace/policy";
 
 type Props = {
   businessId: string;
@@ -116,7 +116,7 @@ export function CustomBookDomainCard({
         <Input
           value={domain}
           onChange={(e) => setDomain(e.target.value)}
-          placeholder="book.yourstudio.ie"
+          placeholder={LIVIA_FORM_EXAMPLES.bookingDomain}
           className="font-mono text-xs"
         />
       </div>

@@ -22,6 +22,7 @@ import { PageFrame } from "@/components/ui/page-frame";
 import { VerticalBadge } from "@/components/ui/vertical-badge";
 import { verticalToneClass } from "@/lib/motion";
 import { cn } from "@/lib/utils";
+import { LIVIA_FORM_EXAMPLES } from "@workspace/policy";
 
 type PremisesTenant = {
   businessId: string;
@@ -328,7 +329,7 @@ export default function PremisesPage() {
                         type="email"
                         value={inviteEmail}
                         onChange={(e) => setInviteEmail(e.target.value)}
-                        placeholder="spa.owner@example.com"
+                        placeholder={LIVIA_FORM_EXAMPLES.ownerEmail}
                       />
                     </div>
                     <div className="space-y-2">

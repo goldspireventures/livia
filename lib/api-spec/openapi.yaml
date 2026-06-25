@@ -2776,7 +2776,7 @@ paths:
                 fromAddress:
                   type: string
                   nullable: true
-                  description: 'e.g. "Acme Salon <hi@acme.com>". Pass null to clear.'
+                  description: 'e.g. "Kinvara Salon <hello@kinvara.ie>". Pass null to clear.'
       responses:
         "200":
           description: Updated

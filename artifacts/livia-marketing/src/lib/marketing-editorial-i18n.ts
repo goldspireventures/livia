@@ -2,6 +2,7 @@
  * Editorial home copy — EN + DE. Single source for livia.io human-crafted surfaces.
  */
 import { marketingSoloFloorPrice } from "@/lib/pricing-catalog";
+import { LIVIA_FORM_EXAMPLES } from "@workspace/policy";
 export type MarketingLocale = "en" | "de";
 
 export type HomeConstellationCopy = {
@@ -412,7 +413,7 @@ const EN: EditorialCopy = {
     ctaSubtitle: "We invite in batches.",
   },
   form: {
-    placeholder: "you@yourstudio.ie",
+    placeholder: LIVIA_FORM_EXAMPLES.ownerEmail,
     submit: "Join the waitlist",
     success: "You're on the list. We'll be in touch when a batch opens.",
     error: "Something went wrong. Please try again.",
@@ -671,7 +672,7 @@ const DE: EditorialCopy = {
     ctaSubtitle: "Einladung in Wellen.",
   },
   form: {
-    placeholder: "sie@ihr-studio.de",
+    placeholder: LIVIA_FORM_EXAMPLES.ownerEmailDe,
     submit: "Auf die Warteliste",
     success: "Sie stehen auf der Liste. Wir melden uns, wenn eine Welle öffnet.",
     error: "Etwas ist schiefgelaufen. Bitte erneut versuchen.",

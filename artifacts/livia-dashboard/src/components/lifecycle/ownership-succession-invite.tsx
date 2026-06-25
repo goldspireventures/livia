@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { Mail } from "lucide-react";
-import { OWNERSHIP_SUCCESSION } from "@workspace/policy";
+import { OWNERSHIP_SUCCESSION, LIVIA_FORM_EXAMPLES } from "@workspace/policy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -78,7 +78,7 @@ export function OwnershipSuccessionInvite({ businessId, onSent }: Props) {
           <Input
             id="succession-invite-email"
             type="email"
-            placeholder="partner@yourshop.com"
+            placeholder={LIVIA_FORM_EXAMPLES.partnerEmail}
             data-testid="ownership-invite-email"
             {...register("email", { required: true })}
           />

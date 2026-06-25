@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GatewayAuthCard } from "@/components/gateway/gateway-auth-card";
 import { formatClerkAuthError, extractClerkError } from "@/lib/clerk-auth-errors";
-import { GATEWAY_PASSWORD_HINT } from "@workspace/policy";
+import { GATEWAY_PASSWORD_HINT, LIVIA_FORM_EXAMPLES } from "@workspace/policy";
 
 type Step = "form" | "verify";
 
@@ -175,7 +175,7 @@ export function LiviaEmailSignUpForm({
             id="signup-email"
             type="email"
             autoComplete="email"
-            placeholder="you@yourbusiness.com"
+            placeholder={LIVIA_FORM_EXAMPLES.ownerEmail}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required

@@ -39,7 +39,7 @@ export type EmailTransport = (args: {
   // Optional rendered HTML; when omitted the transport may build a simple
   // <pre>-wrapped HTML body from `body`.
   html?: string;
-  // Optional per-shop sender (e.g. "Acme <hi@acme.com>"). When omitted the
+  // Optional per-shop sender (e.g. "Kinvara Salon <hello@kinvara.ie>"). When omitted the
   // transport falls back to RESEND_DEFAULT_FROM.
   from?: string;
   replyTo?: string;
@@ -323,7 +323,7 @@ export async function sendAiEmail(args: {
   // Pre-rendered HTML body (e.g. from a React-Email-equivalent template).
   // When omitted the transport renders a <pre>-wrapped fallback from `body`.
   html?: string;
-  // Per-shop sender (e.g. "Acme Salon <hi@acme.salon>"). Falls back to
+  // Per-shop sender (e.g. "Kinvara Salon <hello@kinvara.ie>"). Falls back to
   // RESEND_DEFAULT_FROM in the transport.
   fromAddress?: string | null;
   replyTo?: string;

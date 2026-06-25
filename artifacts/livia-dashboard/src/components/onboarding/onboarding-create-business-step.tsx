@@ -37,6 +37,7 @@ import {
   shouldSeedStarterPackOnCreate,
   MIGRATION_INTENT_OPTIONS,
   type MigrationIntent,
+  LIVIA_FORM_EXAMPLES,
 } from "@workspace/policy";
 import { verticalPackUi } from "@/lib/vertical-pack-ui";
 import {
@@ -364,7 +365,7 @@ export function OnboardingCreateBusinessStep({
             <FormItem>
               <FormLabel>Business name</FormLabel>
               <FormControl>
-                <Input placeholder="Acme Studio" {...field} />
+                <Input placeholder={LIVIA_FORM_EXAMPLES.businessName} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -385,7 +386,7 @@ export function OnboardingCreateBusinessStep({
                   ) : null}
                   <Input
                     className={publicBookingSlugPrefix() ? "rounded-none" : "rounded-l-md"}
-                    placeholder="acme-studio"
+                    placeholder={LIVIA_FORM_EXAMPLES.businessSlug}
                     {...field}
                   />
                   {publicBookingSlugSuffix() ? (

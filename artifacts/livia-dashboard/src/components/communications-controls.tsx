@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Phone, Mail, Send, Trash2, MessageSquare } from "lucide-react";
 import { SocialChannelsControls } from "@/components/social-channels-controls";
 import { SettingsDisclosure } from "@/components/ui/settings-disclosure";
+import { LIVIA_FORM_EXAMPLES } from "@workspace/policy";
 
 interface CommsConfig {
   twilioPhoneNumber: string | null;
@@ -396,7 +397,7 @@ export default function CommunicationsControls({ businessId }: { businessId: str
             <Input
               value={fromAddress}
               onChange={(e) => setFromAddress(e.target.value)}
-              placeholder={config.providerStatus.emailDefaultFrom ?? "Acme Studio <hi@acme.studio>"}
+              placeholder={config.providerStatus.emailDefaultFrom ?? LIVIA_FORM_EXAMPLES.emailFrom}
             />
             <Button onClick={saveFrom} disabled={savingFrom} variant="secondary">
               {savingFrom ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
@@ -485,7 +486,7 @@ export default function CommunicationsControls({ businessId }: { businessId: str
               <Input
                 value={testTo}
                 onChange={(e) => setTestTo(e.target.value)}
-                placeholder={testChannel === "SMS" ? "+35315551234" : "you@example.com"}
+                placeholder={testChannel === "SMS" ? "+35315551234" : LIVIA_FORM_EXAMPLES.ownerEmail}
               />
             </div>
           </div>

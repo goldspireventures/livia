@@ -4182,7 +4182,7 @@ export const UpdateEmailFromAddressBody = zod.object({
   fromAddress: zod
     .string()
     .nullish()
-    .describe('e.g. \"Acme Salon <hi@acme.com>\". Pass null to clear.'),
+    .describe('e.g. \"Kinvara Salon <hello@kinvara.ie>\". Pass null to clear.'),
 });
 
 export const UpdateEmailFromAddressResponse = zod.object({

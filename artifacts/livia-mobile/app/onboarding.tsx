@@ -62,6 +62,7 @@ import {
   getVerticalStarterPackOffer,
   getVerticalPlaybook,
   verticalStarterPackIncludesRetail,
+  LIVIA_FORM_EXAMPLES,
 } from "@workspace/policy";
 
 const TIMEZONES = [
@@ -682,7 +683,7 @@ function FormSlide({
             <Text style={[styles.label, { color: colors.mutedForeground }]}>Business name</Text>
             <TextInput
               style={inputStyle}
-              placeholder="e.g. Studio Luxe"
+              placeholder={`e.g. ${LIVIA_FORM_EXAMPLES.businessName}`}
               placeholderTextColor={colors.mutedForeground}
               value={name}
               onChangeText={handlers.setName}
@@ -698,7 +699,7 @@ function FormSlide({
             </Text>
             <TextInput
               style={inputStyle}
-              placeholder="studio-luxe"
+              placeholder={LIVIA_FORM_EXAMPLES.businessSlug}
               placeholderTextColor={colors.mutedForeground}
               value={slug}
               onChangeText={(v) =>

@@ -9,6 +9,7 @@ import { GatewayAuthCard } from "@/components/gateway/gateway-auth-card";
 import { formatClerkAuthError } from "@/lib/clerk-auth-errors";
 import { readSignInRedirectPath } from "@/lib/local-dashboard-auth";
 import { fetchPostSignInLandingPath } from "@/lib/post-sign-in-landing";
+import { LIVIA_FORM_EXAMPLES } from "@workspace/policy";
 
 type Props = {
   redirectUrl?: string;
@@ -69,7 +70,7 @@ export function LiviaEmailSignInForm({ redirectUrl, onEmailChange, bare = false 
             id="signin-email"
             type="email"
             autoComplete="email"
-            placeholder="you@yourbusiness.com"
+            placeholder={LIVIA_FORM_EXAMPLES.ownerEmail}
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);

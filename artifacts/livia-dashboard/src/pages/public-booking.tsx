@@ -100,7 +100,7 @@ import {
 } from "@/lib/public-booking-helpers";
 import { PublicBookingTimePicker } from "@/components/public-booking/public-booking-time-picker";
 import { verticalPackUi } from "@/lib/vertical-pack-ui";
-import { businessVocabulary, guestPublicExperience, resolveWellnessExperience } from "@workspace/policy";
+import { businessVocabulary, guestPublicExperience, resolveWellnessExperience, LIVIA_FORM_EXAMPLES } from "@workspace/policy";
 import { cn } from "@/lib/utils";
 
 type Step = "services" | "slots" | "details" | "consent" | "confirmed";
@@ -1359,7 +1359,7 @@ export default function PublicBookingPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="jane@example.com"
+                  placeholder={LIVIA_FORM_EXAMPLES.guestEmail}
                   data-testid="input-email"
                 />
               </div>

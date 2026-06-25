@@ -40,7 +40,7 @@ import {
 } from "@/lib/demo-sign-in";
 import { clearDemoSession, persistDemoSession } from "@/lib/demo-session";
 import { isDemoLoginEnabled, setDevPersonaOverride } from "@/hooks/usePersona";
-import { GATEWAY_PASSWORD_HINT, humanizeGatewayAuthError, LIVIA_MOBILE_ENTRY_COPY } from "@workspace/policy";
+import { GATEWAY_PASSWORD_HINT, humanizeGatewayAuthError, LIVIA_MOBILE_ENTRY_COPY, LIVIA_FORM_EXAMPLES } from "@workspace/policy";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -364,7 +364,7 @@ export default function SignInScreen() {
                     borderColor: focused === "email" ? colors.primary : colors.border,
                   },
                 ]}
-                placeholder="you@studio.com or demo slug (conors-cut-co)"
+                placeholder={`${LIVIA_FORM_EXAMPLES.ownerEmail} or demo slug (conors-cut-co)`}
                 placeholderTextColor={colors.mutedForeground}
                 value={email}
                 onChangeText={setEmail}

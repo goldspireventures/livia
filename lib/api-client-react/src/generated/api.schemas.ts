@@ -2410,7 +2410,7 @@ export type ProvisionSmsNumber201 = {
 };
 
 export type UpdateEmailFromAddressBody = {
-  /** e.g. "Acme Salon <hi@acme.com>". Pass null to clear. */
+  /** e.g. "Kinvara Salon <hello@kinvara.ie>". Pass null to clear. */
   fromAddress?: string | null;
 };
 

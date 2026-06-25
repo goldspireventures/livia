@@ -46,6 +46,7 @@ import { asHref } from "@/lib/navigation";
 import { CommsChannelsBlock } from "@/components/CommsChannelsBlock";
 import { HelpSupportSheet } from "@/components/HelpSupportSheet";
 import { getPublicBookingLabel } from "@/lib/public-booking-url";
+import { LIVIA_FORM_EXAMPLES } from "@workspace/policy";
 import { dpaUrl, privacyPolicyUrl, termsOfServiceUrl } from "@/lib/marketing-legal-urls";
 import { LivCapabilitiesCard } from "@/components/LivCapabilitiesCard";
 import { BillingSummaryCard } from "@/components/BillingSummaryCard";
@@ -353,7 +354,7 @@ export default function SettingsScreen() {
                   if (customDomain === null) return;
                   void saveCustomDomain(customDomain);
                 }}
-                placeholder="book.yourstudio.ie"
+                placeholder={LIVIA_FORM_EXAMPLES.bookingDomain}
                 placeholderTextColor={colors.mutedForeground}
                 autoCapitalize="none"
                 autoCorrect={false}
