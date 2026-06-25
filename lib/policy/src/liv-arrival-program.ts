@@ -8,9 +8,12 @@ import type { OnboardingState } from "./onboarding-state";
 
 export const PLATFORM_TOUR_DISMISSED_KEY = "livia.platformTour.dismissed.v1";
 export const LIV_ARRIVAL_DISMISSED_KEY = "livia.livArrival.dismissed";
+export const LIV_ARRIVAL_INTRODUCED_KEY = "livia.livArrival.introduced";
 
 export const LIV_ARRIVAL_COPY = {
   eyebrow: "Liv",
+  introHeadline: "Hi — I'm Liv.",
+  introSubline: "I'll walk you through what's left, one step at a time.",
   showMe: "Show me",
   doneNext: "Done — next",
   exploreAlone: "Explore on my own",
@@ -97,5 +100,35 @@ export function isPlatformTourDismissed(
     return storage.getItem(PLATFORM_TOUR_DISMISSED_KEY) === "1";
   } catch {
     return true;
+  }
+}
+
+export function readLivArrivalIntroduced(
+  businessId: string,
+  storage: Pick<Storage, "getItem"> = typeof globalThis !== "undefined"
+    ? globalThis.localStorage
+    : { getItem: () => null },
+): boolean {
+  try {
+    const raw = storage.getItem(LIV_ARRIVAL_INTRODUCED_KEY);
+    if (!raw) return false;
+    const map = JSON.parse(raw) as Record<string, boolean>;
+    return map[businessId] === true;
+  } catch {
+    return false;
+  }
+}
+
+export function writeLivArrivalIntroduced(
+  businessId: string,
+  storage: Storage = typeof globalThis !== "undefined" ? globalThis.localStorage : (null as unknown as Storage),
+): void {
+  try {
+    const raw = storage.getItem(LIV_ARRIVAL_INTRODUCED_KEY);
+    const map = raw ? (JSON.parse(raw) as Record<string, boolean>) : {};
+    map[businessId] = true;
+    storage.setItem(LIV_ARRIVAL_INTRODUCED_KEY, JSON.stringify(map));
+  } catch {
+    // ignore
   }
 }
