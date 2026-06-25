@@ -4,6 +4,7 @@ import {
   ONBOARDING_TIERS,
   ONBOARDING_VERTICALS,
 } from "@/constants/onboarding";
+import { resolveOnboardingTierOptions } from "@workspace/policy";
 
 export type OnboardingCatalogJurisdiction = {
   jurisdiction: string;
@@ -23,19 +24,11 @@ export type OnboardingCatalog = {
   tiers: string[];
 };
 
-const TIER_HINTS: Record<string, string> = {
-  solo: "Just you on the chair",
-  studio: "Team + manager",
-  chain: "Multi-location",
-  "chair-host": "Host independent practitioners",
-  "white-label": "Multi-brand portfolio",
-};
-
 export function tierOptionsFromCatalog(tiers: string[]) {
-  return tiers.map((value) => ({
-    value,
-    label: value.charAt(0).toUpperCase() + value.slice(1).replace(/-/g, " "),
-    hint: TIER_HINTS[value] ?? "",
+  return resolveOnboardingTierOptions(tiers).map((o) => ({
+    value: o.value,
+    label: o.label,
+    hint: o.description,
   }));
 }
 

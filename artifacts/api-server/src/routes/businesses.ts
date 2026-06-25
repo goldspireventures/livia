@@ -48,7 +48,7 @@ import {
 
 const router: IRouter = Router();
 
-// Access: authenticated user with platform legal acceptance + beta invite (when configured).
+// Access: authenticated user with platform legal acceptance (beta gate when LIVIA_BETA_SIGNUP_MODE=invite|closed).
 router.post("/businesses", requireAuth, async (req, res): Promise<void> => {
   const userId = getUserId(req);
   const profile = await resolveClerkProfile(req);

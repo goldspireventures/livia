@@ -1,31 +1,8 @@
-/** Mirrors @workspace/policy lifecycle labels for dashboard UI. */
-export const TIER_OPTIONS = [
-  {
-    value: "solo",
-    label: "Solo practitioner",
-    description: "Just you — Liv runs ops while you work the chair.",
-  },
-  {
-    value: "studio",
-    label: "Small studio",
-    description: "Team with managers and front desk. Studio plan + seats.",
-  },
-  {
-    value: "chain",
-    label: "Multi-location",
-    description: "Two or more shops — chain glance and per-shop billing.",
-  },
-  {
-    value: "chair-host",
-    label: "Chair-rental host",
-    description: "Host independent stylists with scoped renter data.",
-  },
-  {
-    value: "white-label",
-    label: "Multi-brand portfolio",
-    description: "Distinct brands with strict customer isolation.",
-  },
-] as const;
+/** @deprecated Import ONBOARDING_TIER_OPTIONS / resolveOnboardingTierOptions from @workspace/policy */
+export {
+  ONBOARDING_TIER_OPTIONS as TIER_OPTIONS,
+  resolveOnboardingTierOptions,
+} from "@workspace/policy";
 
 export const VERTICAL_OPTIONS = [
   { value: "hair", label: "Hair & barbering" },

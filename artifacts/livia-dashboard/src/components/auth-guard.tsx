@@ -153,6 +153,7 @@ function BusinessDataLoader({
     query: {
       staleTime: onOnboarding ? 60_000 : 0,
       refetchOnMount: onOnboarding ? false : "always",
+      refetchOnWindowFocus: !onOnboarding,
       retry: onOnboarding ? 2 : 1,
     } as never,
   });
@@ -255,7 +256,7 @@ function BusinessDataLoader({
   return (
     <BusinessProvider
       businesses={list}
-      isLoading={isLoading || isFetching}
+      isLoading={onOnboarding ? isLoading : isLoading || isFetching}
       clerkUserId={clerkUserId}
       sessionEmail={email}
       initialBusinessId={initialBusiness?.id ?? null}

@@ -628,7 +628,7 @@ function FormSlide({
           <Text style={[styles.formSub, { color: colors.mutedForeground }]}>
             {secondShop
               ? "A new shop on your account — switch between locations from More (Glance appears when you have two+)."
-              : "Name your studio, pick your business type and team size — then we’ll walk through the essentials."}
+              : "Name your shop, pick your business type and team size — then we’ll walk through the essentials."}
           </Text>
         </View>
 

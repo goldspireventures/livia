@@ -18,9 +18,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { Loader2, CircleHelp } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { TIER_OPTIONS } from "@/lib/onboarding-labels";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   getVerticalStarterPackOffer,
   getVerticalOnboardingExtras,
@@ -32,12 +32,15 @@ import {
   defaultSubverticalProfile,
   getSubverticalProfile,
   onboardingHintForSubvertical,
+  onboardingSubverticalFieldLabel,
   resolveOnboardingTierFromSubvertical,
+  resolveOnboardingTierOptions,
   SHARED_PREMISES_ONBOARDING_NOTE,
   shouldSeedStarterPackOnCreate,
   MIGRATION_INTENT_OPTIONS,
   type MigrationIntent,
   LIVIA_FORM_EXAMPLES,
+  type BusinessVertical,
 } from "@workspace/policy";
 import { verticalPackUi } from "@/lib/vertical-pack-ui";
 import {
@@ -323,7 +326,7 @@ export function OnboardingCreateBusinessStep({
 
   const jurisdictions = catalog?.jurisdictions ?? [];
   const verticals = catalog?.verticals ?? [];
-  const tiers = catalog?.tiers ?? ["solo", "studio", "chain"];
+  const tierOptions = resolveOnboardingTierOptions(catalog?.tiers ?? ["solo", "studio", "chain"]);
 
   return (
     <Form {...form}>
@@ -460,7 +463,7 @@ export function OnboardingCreateBusinessStep({
             name="subverticalProfileId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>What kind of studio?</FormLabel>
+                <FormLabel>{onboardingSubverticalFieldLabel(watchVertical as BusinessVertical)}</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger data-testid="onboarding-subvertical">
@@ -504,7 +507,7 @@ export function OnboardingCreateBusinessStep({
                 </SelectContent>
               </Select>
               <FormDescription>
-                Not verified in closed beta — used for billing and DPA records later.
+                Self-declared for billing and DPA records — not verified during sign-up.
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -544,14 +547,31 @@ export function OnboardingCreateBusinessStep({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {tiers.map((t) => {
-                    const meta = TIER_OPTIONS.find((o) => o.value === t);
-                    return (
-                      <SelectItem key={t} value={t}>
-                        {meta?.label ?? t}
-                      </SelectItem>
-                    );
-                  })}
+                  {tierOptions.map((meta) => (
+                    <SelectItem key={meta.value} value={meta.value}>
+                      <span className="flex w-full items-center justify-between gap-2">
+                        <span>{meta.label}</span>
+                        {meta.description ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                className="inline-flex shrink-0 rounded-sm text-muted-foreground hover:text-foreground"
+                                aria-label={`About ${meta.label}`}
+                                onPointerDown={(e) => e.preventDefault()}
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <CircleHelp className="h-3.5 w-3.5" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="left" className="max-w-xs text-xs">
+                              {meta.description}
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : null}
+                      </span>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />

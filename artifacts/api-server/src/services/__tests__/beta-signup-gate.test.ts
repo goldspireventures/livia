@@ -48,8 +48,8 @@ try {
   process.env.NODE_ENV = "production";
   delete process.env.LIVIA_BETA_SIGNUP_MODE;
   resetWorkforceAccessConfigCache();
-  assert.equal(getBetaSignupMode(), "invite");
-  assert.ok(!evaluateBetaSignup("random@customer.ie").allowed);
+  assert.equal(getBetaSignupMode(), "open");
+  assert.ok(evaluateBetaSignup("random@customer.ie").allowed);
   delete process.env.NODE_ENV;
 
   process.env.LIVIA_BETA_SIGNUP_MODE = "closed";

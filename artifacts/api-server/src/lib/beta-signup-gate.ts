@@ -5,11 +5,10 @@ import { getWorkforceAccessConfig } from "./workforce-access-env.js";
 import { getCockpitWorkforceGrantsSync } from "./workforce-access-grants-cache.js";
 
 /**
- * Closed-beta signup control. Marketing copy promises invite-only batches;
- * this gate aligns product behaviour with ops (Clerk can still allow sign-up — we block shop creation).
+ * Public signup control. Default is open so founders can register and create a shop.
  *
  * Modes (LIVIA_BETA_SIGNUP_MODE):
- *   open    — default local/dev; any authenticated user can create a business
+ *   open    — any authenticated user can create a business (default)
  *   invite  — invite list, demo personas, @livia-hq.com staff, or cockpit-granted Goldspire
  *   closed  — no new customer businesses; demo + Livia staff + cockpit Goldspire still allowed
  */
@@ -19,7 +18,6 @@ export type BetaSignupMode = "open" | "invite" | "closed";
 export function getBetaSignupMode(): BetaSignupMode {
   const raw = (process.env.LIVIA_BETA_SIGNUP_MODE ?? "").trim().toLowerCase();
   if (raw === "invite" || raw === "closed" || raw === "open") return raw;
-  if (process.env.NODE_ENV === "production") return "invite";
   return "open";
 }
 

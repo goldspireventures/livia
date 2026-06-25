@@ -133,6 +133,11 @@ export function onboardingHintForSubvertical(profile: SubverticalProfile): strin
   return null;
 }
 
+/** Neutral label for subvertical picker — works for allied health, beauty, fitness, etc. */
+export function onboardingSubverticalFieldLabel(_vertical?: BusinessVertical): string {
+  return "What's your specialty?";
+}
+
 /** Cross-vertical shared premises (salon + spa in one building) — separate businesses, one brand. */
 export const SHARED_PREMISES_ONBOARDING_NOTE =
   "Different business types in the same building (e.g. salon + spa) are separate Livia businesses — pick one vertical here, then add linked locations or a brand entity for the group.";

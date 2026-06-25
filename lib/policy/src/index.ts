@@ -158,6 +158,7 @@ export * from "./platform-gating-program";
 export * from "./go-live-program";
 export * from "./registration-routing-program";
 export * from "./form-example-copy";
+export * from "./onboarding-tier-options";
 export * from "./commerce-addon-program";
 export * from "./commerce-signals";
 export * from "./event-vendor-quote-program";
