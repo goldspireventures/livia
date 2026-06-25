@@ -13,6 +13,7 @@ import {
   shouldShowActivationWelcomeCard,
   type OnboardingState,
 } from "@workspace/policy";
+import { useLivArrival } from "@/hooks/use-liv-arrival";
 
 const WELCOME_DISMISSED_KEY = "livia.activationWelcomeDismissed";
 
@@ -46,6 +47,7 @@ export function ActivationWelcome() {
   const { business } = useBusiness();
   const { effectiveRole } = useMembership();
   const { data: experience, isLoading } = useTenantExperience(business?.id);
+  const { suppressDuplicateSetupBanners } = useLivArrival();
 
   const resolved = useMemo(() => {
     if (experience) return experience;
@@ -67,6 +69,7 @@ export function ActivationWelcome() {
   }, [experience, business]);
 
   if (!business || !["OWNER", "ADMIN"].includes(effectiveRole ?? "")) return null;
+  if (suppressDuplicateSetupBanners) return null;
   if (readDismissed(business.id)) return null;
   if (isDemoLoginEnabled) return null;
 

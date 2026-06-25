@@ -83,6 +83,7 @@ import { KeysChangedRitual } from "@/components/lifecycle/keys-changed-ritual";
 import { GoLiveRibbon } from "@/components/dashboard/go-live-ribbon";
 import { OperatorMaturityBanner } from "@/components/operator-maturity-banner";
 import { PlatformTour } from "@/components/platform-tour";
+import { LivArrivalConductor } from "@/components/liv/liv-arrival-conductor";
 import { NotificationCenter } from "@/components/notification-center";
 import { LivNotificationToastBridge } from "@/components/liv/liv-notification-toast-bridge";
 import { useNavActionCounts } from "@/hooks/use-nav-action-counts";
@@ -538,6 +539,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           {!appearanceEmbed ? <GoLiveRibbon /> : null}
           {!appearanceEmbed && !wellnessNativeMorph ? <OperatorMaturityBanner /> : null}
           {!appearanceEmbed ? <PlatformTour /> : null}
+          {!appearanceEmbed ? <LivArrivalConductor /> : null}
           <ErrorBoundary key={location}>{children}</ErrorBoundary>
         </div>
         <KeysChangedRitual />

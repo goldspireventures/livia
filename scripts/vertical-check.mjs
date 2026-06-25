@@ -266,6 +266,7 @@ run("Setup guided flow (copilot v2)", [
   "--import",
   "tsx/esm",
   "../../lib/policy/src/__tests__/setup-guided-flow.test.ts",
+  "../../lib/policy/src/__tests__/liv-arrival-program.test.ts",
 ]);
 
 run("Vertical starter packs", [

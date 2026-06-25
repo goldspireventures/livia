@@ -18,6 +18,7 @@ import {
 } from "@workspace/policy";
 import { cn } from "@/lib/utils";
 import { publicBookingUrl } from "@/lib/surface-urls";
+import { useLivArrival } from "@/hooks/use-liv-arrival";
 
 /** Hero ribbon until sacred metric (first booking) — every owner surface. */
 export function GoLiveRibbon({ className }: { className?: string }) {
@@ -34,8 +35,10 @@ export function GoLiveRibbon({ className }: { className?: string }) {
   const { data: guidedFlow } = useGetLivSetupGuidedFlow(bid, {
     query: { enabled: !!bid } as never,
   });
+  const { suppressDuplicateSetupBanners } = useLivArrival();
 
   if (!business || !["OWNER", "ADMIN"].includes(effectiveRole ?? "")) return null;
+  if (suppressDuplicateSetupBanners) return null;
   if (isDemoTenantSlug(business.slug)) return null;
 
   const sacredMetricMet = dashboard?.activation?.sacredMetricMet === true;

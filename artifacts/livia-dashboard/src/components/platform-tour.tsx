@@ -48,7 +48,10 @@ import {
 
 
 
-const STORAGE_KEY = "livia.platformTour.dismissed.v1";
+import { PLATFORM_TOUR_DISMISSED_KEY } from "@workspace/policy";
+import { PLATFORM_TOUR_EVENT } from "@/hooks/use-liv-arrival";
+
+const STORAGE_KEY = PLATFORM_TOUR_DISMISSED_KEY;
 
 
 
@@ -254,6 +257,8 @@ export function PlatformTour() {
     try {
 
       window.localStorage.setItem(STORAGE_KEY, "1");
+
+      window.dispatchEvent(new CustomEvent(PLATFORM_TOUR_EVENT));
 
     } catch {
 

@@ -5,12 +5,14 @@ import { usePersona } from "@/lib/persona";
 import { shouldShowOnboardingMaturityBanner } from "@workspace/policy";
 import { maturityBannerCopy, resolveOperatorMaturity } from "@/lib/operator-maturity";
 import { Button } from "@/components/ui/button";
+import { useLivArrival } from "@/hooks/use-liv-arrival";
 
 type OnboardingState = { percentComplete?: number };
 
 export function OperatorMaturityBanner() {
   const { business, businesses } = useBusiness();
   const { kind: persona } = usePersona();
+  const { suppressDuplicateSetupBanners } = useLivArrival();
   const pct = (business as { onboardingState?: OnboardingState } | null)?.onboardingState
     ?.percentComplete;
 
@@ -22,6 +24,7 @@ export function OperatorMaturityBanner() {
   });
 
   if (!maturity || !business) return null;
+  if (suppressDuplicateSetupBanners) return null;
   if (!shouldShowOnboardingMaturityBanner(pct)) return null;
 
   const copy = maturityBannerCopy(maturity, persona);
