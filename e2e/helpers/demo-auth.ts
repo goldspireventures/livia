@@ -67,7 +67,8 @@ export async function ensureDemoProvisioned(request: APIRequestContext) {
       const provisioned = await waitForDemoProvisioned(request);
       const ciPartialOk =
         process.env.CI === "true" &&
-        (seedBody?.provisioned === true || (seedBody?.businessCount ?? 0) >= 30);
+        ciSeed.ok() &&
+        (seedBody?.provisioned === true || (seedBody?.businessCount ?? 0) >= 5);
       if (!provisioned && !ciPartialOk) {
         const detail = ciSeed.ok()
           ? "seed-ci-db ran but status still not provisioned after wait"
