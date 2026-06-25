@@ -61,7 +61,9 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     isLoading,
     isError,
     refetch,
-  } = useGetMyBusinesses({ query: { enabled: !inDemo } as never });
+  } = useGetMyBusinesses({
+    query: { enabled: !inDemo, retry: 2, staleTime: 30_000 } as never,
+  });
 
   const rawBusinesses: Business[] = data ?? [];
   const businesses = useMemo(() => {

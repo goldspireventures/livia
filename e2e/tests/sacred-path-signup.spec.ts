@@ -4,29 +4,9 @@
  *   pnpm sacred-path:signup
  */
 import { test, expect, type Page } from "@playwright/test";
-import { clerkTicketSignIn } from "../helpers/demo-auth";
+import { clerkTicketSignIn, apiBase } from "../helpers/demo-auth";
+import { provisionFreshSignupFounder } from "../helpers/fresh-founder";
 import { bookPublicSlot } from "../helpers/public-book";
-
-const apiBase = process.env.E2E_API_BASE ?? "http://127.0.0.1:3000";
-
-type FreshFounder = {
-  email: string;
-  password: string;
-  token: string;
-  userId: string;
-  landingPath: string;
-};
-
-export async function provisionFreshSignupFounder(
-  request: import("@playwright/test").APIRequestContext,
-  suffix = `pw-${Date.now()}`,
-): Promise<FreshFounder> {
-  const res = await request.post(`${apiBase}/api/dev/e2e/fresh-founder`, {
-    data: { suffix },
-  });
-  expect(res.ok(), `fresh-founder: ${await res.text()}`).toBeTruthy();
-  return (await res.json()) as FreshFounder;
-}
 
 async function dismissOnboardingIntro(page: Page) {
   const overlay = page.getByTestId("onboarding-arrival-overlay");

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useUser } from "@clerk/clerk-react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
+import { getMyBusinesses } from "@workspace/api-client-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,7 +60,10 @@ export default function LegalAcceptancePage() {
 
       let destination: "/onboarding" | "/dashboard" = "/onboarding";
       try {
-        const businesses = await apiFetch<BusinessRow[]>("/me/businesses");
+        const businesses = (await queryClient.fetchQuery({
+          queryKey: ["/me/businesses"],
+          queryFn: () => getMyBusinesses(),
+        })) as BusinessRow[];
         destination = resolvePostLegalDestination({
           businesses,
           clerkUserId,

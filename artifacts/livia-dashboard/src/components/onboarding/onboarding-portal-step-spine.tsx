@@ -1,5 +1,5 @@
 import type { OnboardingActId } from "@/lib/onboarding-acts";
-import { portalNavStepLabels, portalTrackLabel } from "@workspace/policy";
+import { portalNavStepLabels } from "@workspace/policy";
 import type { OnboardingChecklist } from "@workspace/policy";
 import { cn } from "@/lib/utils";
 
@@ -15,11 +15,6 @@ export function OnboardingPortalStepSpine({ currentAct, completedActs, checklist
 
   return (
     <div className="space-y-2" data-testid="onboarding-portal-step-spine">
-      <p className="text-xs text-muted-foreground">
-        {portalTrackLabel(checklist)}
-        {" · "}
-        {steps.length} steps
-      </p>
       <div
         className="grid gap-2"
         style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}

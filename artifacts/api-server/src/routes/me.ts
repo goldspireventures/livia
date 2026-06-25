@@ -158,22 +158,29 @@ router.get("/me/tenant-experience", requireAuth, async (req, res): Promise<void>
 });
 
 router.get("/me/businesses", requireAuth, async (req, res): Promise<void> => {
-  const userId = getUserId(req);
-  let businesses = await getBusinessesForUser(userId);
-  const user = await getUserById(userId);
-  const email = user?.email ?? null;
-  if (email && isDemoSessionEmail(email)) {
-    const def =
-      getDemoPersonaByEmail(email) ??
-      DEMO_SCENARIO_ACCOUNTS.find((p) => p.email.toLowerCase() === email.toLowerCase());
-    if (def?.businessSlugs?.length) {
-      const allowed = new Set(def.businessSlugs);
-      businesses = businesses.filter((b) => b.slug && allowed.has(b.slug));
+  try {
+    const userId = getUserId(req);
+    const { email: clerkEmail } = await resolveClerkProfile(req);
+    const user = await getOrCreateUser(userId, clerkEmail);
+    let businesses = await getBusinessesForUser(userId);
+    const email = user.email ?? clerkEmail ?? null;
+    if (email && isDemoSessionEmail(email)) {
+      const def =
+        getDemoPersonaByEmail(email) ??
+        DEMO_SCENARIO_ACCOUNTS.find((p) => p.email.toLowerCase() === email.toLowerCase());
+      if (def?.businessSlugs?.length) {
+        const allowed = new Set(def.businessSlugs);
+        businesses = businesses.filter((b) => b.slug && allowed.has(b.slug));
+      }
+    } else {
+      businesses = filterSessionBusinesses(businesses, email);
     }
-  } else {
-    businesses = filterSessionBusinesses(businesses, email);
+    res.json(businesses);
+  } catch (err) {
+    const { logRouteError } = await import("../lib/http-errors.js");
+    logRouteError(req, err, "[GET /me/businesses] failed");
+    sendError(res, req, 500, "Could not load businesses");
   }
-  res.json(businesses);
 });
 
 /** All workplaces for this Clerk user (multi-location staff + founders). */

@@ -26,14 +26,6 @@ import {
 } from "@/lib/onboarding-migration-intent";
 import type { MigrationIntent } from "@workspace/policy";
 
-type BusinessRow = {
-  id: string;
-  slug: string;
-  ownerId?: string;
-  vertical?: string | null;
-  onboardingState?: OnboardingStatePayload | null;
-};
-
 function readOnboardingIntent(): { secondShop?: boolean; fresh?: boolean; pathPick?: boolean } {
   if (typeof window === "undefined") return {};
   const params = new URLSearchParams(window.location.search);
@@ -49,7 +41,7 @@ export default function OnboardingPage() {
   const [location, navigate] = useLocation();
   const { user } = useUser();
   const demoAccount = isDemoAccountEmail(user?.primaryEmailAddress?.emailAddress);
-  const { businesses, setBusiness, setBusinessById } = useBusiness();
+  const { businesses, setBusiness, setBusinessById, isLoading: businessesLoading } = useBusiness();
   const parentBusinessId =
     intent.secondShop && businesses.length > 0 ? businesses[0]!.id : undefined;
   const { toast } = useToast();
@@ -59,10 +51,7 @@ export default function OnboardingPage() {
   const [businessSlug, setBusinessSlug] = useState<string | null>(null);
   const [onboardingState, setOnboardingState] = useState<OnboardingStatePayload | null>(null);
   const [previewVertical, setPreviewVertical] = useState<string | null>(null);
-  const [loading, setLoading] = useState(() => {
-    const i = readOnboardingIntent();
-    return !(i.secondShop || i.fresh);
-  });
+  const [resumeHydrated, setResumeHydrated] = useState(false);
   const [migrationIntent, setMigrationIntent] = useState<MigrationIntent | null>(() => {
     if (typeof window === "undefined") return null;
     const params = new URLSearchParams(window.location.search);
@@ -147,48 +136,46 @@ export default function OnboardingPage() {
 
   useEffect(() => {
     if (intent.secondShop) {
-      setLoading(false);
+      setResumeHydrated(true);
       return;
     }
-    apiFetch<BusinessRow[]>("/me/businesses")
-      .then((rows) => {
-        const clerkUserId = user?.id ?? "";
-        const email = user?.primaryEmailAddress?.emailAddress ?? null;
-        const latest = pickOnboardingResumeBusiness(
-          rows as Parameters<typeof pickOnboardingResumeBusiness>[0],
-          clerkUserId,
-          email,
-        );
-        if (latest) {
-          setBusinessId(latest.id);
-          setBusinessSlug(latest.slug);
-          const v = latest.vertical;
-          if (v) setPreviewVertical(v);
-          const raw = latest.onboardingState;
-          if (raw && typeof raw === "object" && "currentAct" in raw) {
-            setOnboardingState(raw as OnboardingStatePayload);
-            const intent = (raw as OnboardingStatePayload).checklist?.migrationIntent;
-            if (intent === "switching" || intent === "fresh") {
-              setMigrationIntent(intent);
-            }
-          } else {
-            setOnboardingState({
-              currentAct: "a2_shop_profile",
-              completedActs: ["a1_create_business"],
-              percentComplete: 8,
-            });
-          }
+    if (businessesLoading) return;
+
+    const clerkUserId = user?.id ?? "";
+    const email = user?.primaryEmailAddress?.emailAddress ?? null;
+    const latest = pickOnboardingResumeBusiness(
+      businesses as Parameters<typeof pickOnboardingResumeBusiness>[0],
+      clerkUserId,
+      email,
+    );
+    if (latest) {
+      setBusinessId(latest.id);
+      setBusinessSlug(latest.slug);
+      const v = latest.vertical;
+      if (v) setPreviewVertical(v);
+      const raw = latest.onboardingState;
+      if (raw && typeof raw === "object" && "currentAct" in raw) {
+        setOnboardingState(raw as OnboardingStatePayload);
+        const trackIntent = (raw as OnboardingStatePayload).checklist?.migrationIntent;
+        if (trackIntent === "switching" || trackIntent === "fresh") {
+          setMigrationIntent(trackIntent);
         }
-      })
-      .catch((err: unknown) => {
-        toast({
-          title: "Could not load your setup progress",
-          description: parseUserFacingError(err, "Try refreshing the page."),
-          variant: "destructive",
+      } else {
+        setOnboardingState({
+          currentAct: "a2_shop_profile",
+          completedActs: ["a1_create_business"],
+          percentComplete: 8,
         });
-      })
-      .finally(() => setLoading(false));
-  }, [intent.secondShop, toast, user?.id, user?.primaryEmailAddress?.emailAddress]);
+      }
+    }
+    setResumeHydrated(true);
+  }, [
+    intent.secondShop,
+    businesses,
+    businessesLoading,
+    user?.id,
+    user?.primaryEmailAddress?.emailAddress,
+  ]);
 
   const loadDemoData = async () => {
     setSeedLoading(true);
@@ -209,7 +196,10 @@ export default function OnboardingPage() {
     }
   };
 
-  if (loading) {
+  const showResumeSpinner =
+    !intent.fresh && !intent.secondShop && (!resumeHydrated || businessesLoading);
+
+  if (showResumeSpinner) {
     return (
       <div className="flex min-h-[100dvh] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />

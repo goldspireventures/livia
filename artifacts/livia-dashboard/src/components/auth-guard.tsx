@@ -145,10 +145,16 @@ function BusinessDataLoader({
   skipLegalGate?: boolean;
 }) {
   const queryClient = useQueryClient();
-  const { data: businesses, isLoading } = useGetMyBusinesses({
-    query: { staleTime: 0, refetchOnMount: "always" } as never,
-  });
   const [location] = useLocation();
+  const onOnboarding =
+    location === "/onboarding" || location.startsWith("/onboarding/");
+  const { data: businesses, isLoading, isError, isFetching, refetch } = useGetMyBusinesses({
+    query: {
+      staleTime: onOnboarding ? 60_000 : 0,
+      refetchOnMount: onOnboarding ? false : "always",
+      retry: onOnboarding ? 2 : 1,
+    } as never,
+  });
   const { user } = useUser();
   const demoEmail = isDemoAccountEmail(user?.primaryEmailAddress?.emailAddress);
   const clerkUserId = user?.id ?? "";
@@ -181,10 +187,29 @@ function BusinessDataLoader({
     });
   }, [initialBusiness, queryClient]);
 
-  if (isLoading) {
+  if (isLoading && !onOnboarding) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Spinner className="h-8 w-8 text-primary" />
+      </div>
+    );
+  }
+
+  if (isError && !onOnboarding && !businesses) {
+    return (
+      <div className="flex h-screen w-full flex-col items-center justify-center gap-4 bg-background px-6 text-center">
+        <p className="text-lg font-medium text-foreground">Could not load your account</p>
+        <p className="max-w-md text-sm text-muted-foreground">
+          Your session is valid but we could not reach your shop list. Check your connection and try
+          again.
+        </p>
+        <button
+          type="button"
+          className="text-sm font-medium text-primary underline underline-offset-2"
+          onClick={() => void refetch()}
+        >
+          Retry
+        </button>
       </div>
     );
   }
@@ -220,7 +245,7 @@ function BusinessDataLoader({
   return (
     <BusinessProvider
       businesses={list}
-      isLoading={isLoading}
+      isLoading={isLoading || isFetching}
       clerkUserId={clerkUserId}
       sessionEmail={email}
       initialBusinessId={initialBusiness?.id ?? null}

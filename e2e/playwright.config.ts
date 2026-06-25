@@ -54,7 +54,7 @@ export default defineConfig({
     {
       name: "dashboard",
       testMatch:
-        /(dashboard-gate|eu-owner-self-onboard|prod-onboarding-notifications|demo-owner-flow|visual-screen-p0|preset-public-parity|bloom-beauty-public|gateway-beauty-wedge|wellness-room-board|wellness-announcement-smoke|migration-import-path|onboarding-fast-track)\.spec\.ts/,
+        /(dashboard-gate|eu-owner-self-onboard|prod-onboarding-notifications|demo-owner-flow|visual-screen-p0|preset-public-parity|bloom-beauty-public|gateway-beauty-wedge|wellness-room-board|wellness-announcement-smoke|migration-import-path|onboarding-fast-track|onboarding-navigation-resilience|route-audit-cross-surface)\.spec\.ts/,
       testIgnore: /v3-preflight\.spec\.ts/,
       use: {
         ...devices["Desktop Chrome"],

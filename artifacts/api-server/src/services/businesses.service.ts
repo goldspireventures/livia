@@ -56,14 +56,45 @@ export async function getBusinessSlugByCustomBookHost(host: string) {
   return row?.slug ?? null;
 }
 
-export async function getBusinessesForUser(userId: string) {
+/** Columns safe for session bootstrap — avoids 500 when prod DB lags Drizzle schema. */
+const sessionBusinessColumns = {
+  id: businessesTable.id,
+  ownerId: businessesTable.ownerId,
+  name: businessesTable.name,
+  slug: businessesTable.slug,
+  description: businessesTable.description,
+  category: businessesTable.category,
+  email: businessesTable.email,
+  phone: businessesTable.phone,
+  city: businessesTable.city,
+  country: businessesTable.country,
+  currency: businessesTable.currency,
+  locale: businessesTable.locale,
+  timezone: businessesTable.timezone,
+  vertical: businessesTable.vertical,
+  tier: businessesTable.tier,
+  logoUrl: businessesTable.logoUrl,
+  presentationPresetId: businessesTable.presentationPresetId,
+  onboardingState: businessesTable.onboardingState,
+  structureKind: businessesTable.structureKind,
+  parentBusinessId: businessesTable.parentBusinessId,
+  createdAt: businessesTable.createdAt,
+  updatedAt: businessesTable.updatedAt,
+} as const;
+
+function isMissingColumnDbError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return /column .* does not exist/i.test(msg);
+}
+
+async function selectBusinessesForUser(userId: string, columns: typeof sessionBusinessColumns) {
   const memberships = await db
     .select({ businessId: businessMembershipsTable.businessId })
     .from(businessMembershipsTable)
     .where(eq(businessMembershipsTable.userId, userId));
 
   const ownedBusinesses = await db
-    .select()
+    .select(columns)
     .from(businessesTable)
     .where(eq(businessesTable.ownerId, userId));
 
@@ -72,16 +103,53 @@ export async function getBusinessesForUser(userId: string) {
     memberBusinessIds.length > 0
       ? await Promise.all(
           memberBusinessIds.map((id) =>
-            db.select().from(businessesTable).where(eq(businessesTable.id, id)),
+            db.select(columns).from(businessesTable).where(eq(businessesTable.id, id)),
           ),
         ).then((results) => results.flat())
       : [];
 
-  const allMap = new Map<string, typeof ownedBusinesses[0]>();
+  const allMap = new Map<string, (typeof ownedBusinesses)[0]>();
   for (const b of [...ownedBusinesses, ...memberBusinesses]) {
     allMap.set(b.id, b);
   }
   return Array.from(allMap.values());
+}
+
+export async function getBusinessesForUser(userId: string) {
+  try {
+    const memberships = await db
+      .select({ businessId: businessMembershipsTable.businessId })
+      .from(businessMembershipsTable)
+      .where(eq(businessMembershipsTable.userId, userId));
+
+    const ownedBusinesses = await db
+      .select()
+      .from(businessesTable)
+      .where(eq(businessesTable.ownerId, userId));
+
+    const memberBusinessIds = memberships.map((m) => m.businessId);
+    const memberBusinesses =
+      memberBusinessIds.length > 0
+        ? await Promise.all(
+            memberBusinessIds.map((id) =>
+              db.select().from(businessesTable).where(eq(businessesTable.id, id)),
+            ),
+          ).then((results) => results.flat())
+        : [];
+
+    const allMap = new Map<string, typeof ownedBusinesses[0]>();
+    for (const b of [...ownedBusinesses, ...memberBusinesses]) {
+      allMap.set(b.id, b);
+    }
+    return Array.from(allMap.values());
+  } catch (err) {
+    if (!isMissingColumnDbError(err)) throw err;
+    console.warn(
+      "[getBusinessesForUser] schema drift — falling back to session projection. Run pnpm db:migrate:sql:prod",
+      err,
+    );
+    return selectBusinessesForUser(userId, sessionBusinessColumns);
+  }
 }
 
 export async function createBusiness(
