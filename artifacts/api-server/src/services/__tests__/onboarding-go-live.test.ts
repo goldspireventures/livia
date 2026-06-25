@@ -15,7 +15,7 @@ const withoutTest = mergeOnboardingState(base, {
   checklist,
 });
 
-assert.ok(validateOnboardingGoLive(withoutTest), "should block go-live without test booking");
+assert.equal(validateOnboardingGoLive(withoutTest), null, "go-live is not blocked by test booking");
 
 const withTest = mergeOnboardingState(withoutTest, {
   checklist: onboardingChecklistSchema.parse({ ...withoutTest.checklist, testBooking: true }),

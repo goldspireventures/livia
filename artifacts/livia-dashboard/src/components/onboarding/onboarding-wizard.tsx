@@ -22,7 +22,6 @@ import {
   OnboardingArrivalOverlay,
   ONBOARDING_ARRIVAL_STORAGE_KEY,
 } from "./onboarding-arrival-overlay";
-import { CrossSurfaceContinueCard } from "./cross-surface-continue-card";
 import { playCelebrationChime } from "@/lib/celebrate";
 import { isOnboardingPortalExperienceEnabled } from "@/lib/onboarding-portal-enabled";
 import { ONBOARDING_PREVIEW_SHOP_NAME } from "@/lib/onboarding-preview-fixtures";
@@ -340,16 +339,6 @@ export function OnboardingWizard({
       });
       return;
     }
-
-    if (act === "a12_go_live" && !state?.checklist?.testBooking) {
-      toast({
-        title: "One more step",
-        description:
-          "Complete a test booking on your public page (/book link), then return here to open Livia.",
-        variant: "destructive",
-      });
-      return;
-    }
     const autoDone = portalMode ? portalAutoCompleteActs(act, activeChecklist) : [];
     const completed = [...new Set([...(state?.completedActs ?? []), act, ...autoDone])];
     const nextAct = portalMode
@@ -437,9 +426,6 @@ export function OnboardingWizard({
       : currentAct === "a11_migration"
         ? "Pick your old system or upload a file. Liv maps it into your shop."
         : onboardingLivHostLine(currentAct, vocab, businessName);
-  const checklistTicks = state?.checklist
-    ? Object.values(state.checklist).filter(Boolean).length
-    : 0;
 
   const stepBody = (
     <>
@@ -562,15 +548,7 @@ export function OnboardingWizard({
       ) : null}
 
       {currentAct === "a12_go_live" && businessId ? (
-        <>
-          <OnboardingCockpitTease readyCount={Math.min(3, Math.floor(checklistTicks / 2))} />
-          {portalMode ? (
-            <p className="text-xs text-muted-foreground">
-              Billing, team invites, and client import are in Settings — we marked them done so you can
-              launch now.
-            </p>
-          ) : null}
-        </>
+        <OnboardingCockpitTease readyCount={3} />
       ) : null}
 
       {businessId && !previewMode ? (
@@ -603,7 +581,7 @@ export function OnboardingWizard({
   const footerNav =
     currentAct !== "a1_create_business" ? (
       <div className="flex flex-col gap-3">
-        {appUnlocked && businessId ? (
+        {appUnlocked && businessId && currentAct !== "a12_go_live" ? (
           <Button
             variant="secondary"
             className="w-full"
@@ -691,12 +669,7 @@ export function OnboardingWizard({
         packLabel={null}
         wide={wideStep || currentAct === "a11_migration"}
         celebrate={celebrate}
-        topSlot={
-          <>
-            {arrivalSlot}
-            {businessId ? <CrossSurfaceContinueCard className="mt-4" /> : null}
-          </>
-        }
+        topSlot={arrivalSlot ?? null}
         footer={footerNav}
       >
         <div

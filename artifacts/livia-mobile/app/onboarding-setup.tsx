@@ -442,7 +442,6 @@ export default function OnboardingSetupScreen() {
         </View>
       )}
 
-      <CrossSurfaceContinueCard businessId={bid} variant="onboarding" />
     </KeyboardAwareScrollViewCompat>
   );
 }

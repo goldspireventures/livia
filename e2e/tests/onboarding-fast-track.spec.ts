@@ -32,14 +32,15 @@ test.describe("Onboarding fast track", () => {
     await expect(portal).toContainText(/import path|basics|import|hours|book link|open/i);
   });
 
-  test("a12 blocks without test booking in portal mode", async ({ page }) => {
+  test("a12 launch screen — no blocking checklist", async ({ page }) => {
     await page.goto("/onboarding?fresh=1&track=import");
     const goLive = page.getByTestId("onboarding-go-live-checklist");
     if (!(await goLive.isVisible({ timeout: 8_000 }).catch(() => false))) {
       test.skip(true, "Not on go-live step");
       return;
     }
-    const testBooking = page.locator("#testBooking");
-    await expect(testBooking).toBeDisabled();
+    await expect(goLive).toContainText(/ready to open Livia/i);
+    await expect(page.locator("#testBooking")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /open livia/i })).toBeVisible();
   });
 });

@@ -35,7 +35,7 @@ export function OnboardingLivHost({ act, message }: Props) {
       </div>
       <div className="space-y-1 pt-0.5 min-w-0">
         <p className="text-[11px] font-medium uppercase tracking-wider text-aurum-champagne/90">
-          Liv · {onboardingPortalChapterLabel(act)}
+          {onboardingPortalChapterLabel(act)}
         </p>
         <p className="text-base md:text-lg leading-snug text-foreground font-serif">{message}</p>
       </div>

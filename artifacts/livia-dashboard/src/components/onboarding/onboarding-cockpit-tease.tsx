@@ -13,7 +13,7 @@ export function OnboardingCockpitTease({ readyCount }: { readyCount: number }) {
       className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-violet-500/5 p-4"
       data-testid="onboarding-cockpit-tease"
     >
-      <p className="text-xs text-muted-foreground mb-3">Your cockpit wakes up when you finish</p>
+      <p className="text-xs text-muted-foreground mb-3">Today, Inbox, and Bookings — one tap away.</p>
       <div className="grid grid-cols-3 gap-2 opacity-90">
         {cards.map((c, i) => (
           <div

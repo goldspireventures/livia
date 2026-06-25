@@ -26,7 +26,7 @@ export function onboardingLivHostLine(
     a9_billing: "Beta is free. Billing is in Settings.",
     a10_invite_team: `Invite ${team} from Settings when you need help.`,
     a11_migration: "Pick your old system or upload a file — we map menu and clients for you.",
-    a12_go_live: "You are in. Liv will nudge you on anything still open.",
+    a12_go_live: "Open Livia — Liv will nudge you on Today for anything still open.",
   };
   return lines[act] ?? "Continue setup — you can change this later.";
 }

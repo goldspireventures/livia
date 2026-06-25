@@ -46,7 +46,7 @@ async function advanceOnboardingToGoLive(page: Page, slug: string) {
   for (let i = 0; i < 25; i++) {
     const onGoLive =
       (await page.getByTestId("onboarding-go-live-checklist").isVisible().catch(() => false)) ||
-      (await page.locator("#testBooking").isVisible().catch(() => false));
+      (await page.getByRole("button", { name: /open livia/i }).isVisible().catch(() => false));
     if (onGoLive) {
       const href = await page.locator('a[href*="/book/"]').first().getAttribute("href");
       const fromLink = href?.match(/\/book\/([^/?#]+)/)?.[1];
@@ -67,7 +67,7 @@ async function advanceOnboardingToGoLive(page: Page, slug: string) {
     await page.waitForTimeout(400);
   }
 
-  await expect(page.locator("#testBooking")).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByTestId("onboarding-go-live-checklist")).toBeVisible({ timeout: 20_000 });
   return slug;
 }
 

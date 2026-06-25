@@ -306,10 +306,10 @@ export function OnboardingCreateBusinessStep({
     })
       .then((biz) => {
         toast({
-          title: "Business created",
+          title: "Shop created",
           description: starterPack
             ? `${starterOffer.label} applied — finish setup steps next.`
-            : "Empty studio created — add your menu when you're ready.",
+            : "Keep going — add your menu and hours in the next steps.",
         });
         clearOnboardingFormDraft(CREATE_BUSINESS_DRAFT_KEY);
         onCreated(biz.id, biz.slug, { migrationIntent });

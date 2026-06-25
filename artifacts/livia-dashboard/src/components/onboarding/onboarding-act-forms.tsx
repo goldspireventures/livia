@@ -27,17 +27,12 @@ const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 type AvailRule = { dayOfWeek: number; startTime: string; endTime: string };
 
-const CHECKLIST_ITEMS: { key: keyof NonNullable<OnboardingStatePayload["checklist"]>; label: string }[] = [
-  { key: "testBooking", label: "Test booking on public page" },
-  { key: "livEnabled", label: "Liv enabled with greeting" },
-  { key: "servicesConfirmed", label: "Services confirmed" },
-  { key: "hoursConfirmed", label: "Opening hours set" },
-  { key: "smsOrVoiceConnected", label: "SMS or voice connected (or planned)" },
-  { key: "socialChannelsStarted", label: "WhatsApp or Instagram connected (or simulated in dev)" },
-  { key: "publicLinkShared", label: "Booking link shared with team" },
-  { key: "teamInvited", label: "Team invited (if not solo)" },
-  { key: "billingStarted", label: "Billing plan viewed" },
-];
+const LAUNCH_NEXT_STEPS = [
+  "Confirm your service menu in Settings",
+  "Run a test booking when your menu is ready",
+  "Connect SMS or social channels when you want Liv on the floor",
+  "Invite your team from Staff",
+] as const;
 
 export type OnboardingActSaveHandler = () => Promise<boolean>;
 
@@ -114,23 +109,6 @@ export function OnboardingActForms({
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [businessId, act, previewMode]);
-
-  useEffect(() => {
-    if (act !== "a12_go_live" || !businessId || previewMode) return;
-    const poll = () => {
-      void apiFetch<{ onboardingState?: OnboardingStatePayload }>(`/businesses/${businessId}`)
-        .then((b) => {
-          const cl = b.onboardingState?.checklist;
-          if (cl?.testBooking && !checklist?.testBooking) {
-            onChecklistChange({ ...checklist, ...cl });
-          }
-        })
-        .catch(() => {});
-    };
-    poll();
-    const id = window.setInterval(poll, 4000);
-    return () => window.clearInterval(id);
-  }, [act, businessId, previewMode, checklist, onChecklistChange]);
 
   useEffect(() => {
     if (act !== "a5_hours" || !businessId) return;
@@ -523,14 +501,27 @@ export function OnboardingActForms({
   }
 
   if (act === "a12_go_live") {
-    const cl = checklist ?? {};
-    const doneCount = CHECKLIST_ITEMS.filter((i) => cl[i.key]).length;
     const verticalExtras = getVerticalOnboardingExtras(businessVertical).goLiveExtras;
     return (
-      <div className="space-y-3" data-testid="onboarding-go-live-checklist">
+      <div className="space-y-4" data-testid="onboarding-go-live-checklist">
+        <p className="text-sm text-foreground font-medium">You are ready to open Livia.</p>
         <p className="text-sm text-muted-foreground">
-          {doneCount} of {CHECKLIST_ITEMS.length} ready — honest checklist before customers arrive.
+          Setup essentials are in place. Liv will remind you on Today about anything still open — you
+          do not need to tick boxes here.
         </p>
+        {businessSlug ? (
+          <p className="text-sm">
+            <a
+              href={`/book/${businessSlug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary underline-offset-2 hover:underline"
+            >
+              Open your booking page
+            </a>
+            <span className="text-muted-foreground"> — run a test booking when your menu is ready.</span>
+          </p>
+        ) : null}
         {verticalExtras.length > 0 ? (
           <ul className="text-sm text-muted-foreground list-disc pl-5 space-y-1 border border-border/60 rounded-lg p-3 bg-muted/30">
             {verticalExtras.map((line) => (
@@ -538,44 +529,21 @@ export function OnboardingActForms({
             ))}
           </ul>
         ) : null}
-        {CHECKLIST_ITEMS.map((item) => {
-          const isTestBooking = item.key === "testBooking";
-          const checked = Boolean(cl[item.key]);
-          return (
-            <div key={item.key} className="flex items-start gap-2">
-              <Checkbox
-                id={item.key}
-                checked={checked}
-                disabled={isTestBooking}
-                onCheckedChange={(v) => {
-                  if (isTestBooking) return;
-                  onChecklistChange({ ...cl, [item.key]: v === true });
-                }}
-              />
-              <div className="space-y-1">
-                <label
-                  htmlFor={item.key}
-                  className={`text-sm leading-snug ${isTestBooking ? "" : "cursor-pointer"}`}
-                >
-                  {item.label}
-                </label>
-                {isTestBooking && !checked && businessSlug ? (
-                  <a
-                    href={`/book/${businessSlug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-primary underline-offset-2 hover:underline block"
-                  >
-                    Open your book page and complete a test booking →
-                  </a>
-                ) : null}
-                {isTestBooking && checked ? (
-                  <p className="text-[11px] text-muted-foreground">Verified from a real booking.</p>
-                ) : null}
-              </div>
-            </div>
-          );
-        })}
+        <div className="space-y-2">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            After you open
+          </p>
+          <ul className="text-sm text-muted-foreground space-y-2">
+            {LAUNCH_NEXT_STEPS.map((line) => (
+              <li key={line} className="flex gap-2">
+                <span className="text-primary" aria-hidden>
+                  ·
+                </span>
+                <span>{line}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     );
   }

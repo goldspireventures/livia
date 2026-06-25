@@ -32,8 +32,8 @@ export const PORTAL_ONBOARDING_CHAPTERS: readonly PortalChapter[] = [
   },
   {
     id: "launch",
-    title: "Go live",
-    subtitle: "Checklist and cockpit",
+    title: "Open Livia",
+    subtitle: "Your cockpit",
     acts: ["a9_billing", "a10_invite_team", "a11_migration", "a12_go_live"],
   },
 ] as const;
