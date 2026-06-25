@@ -143,6 +143,42 @@ export async function signInOrgAdmin(page: Page) {
   await dismissPlatformTour(page);
 }
 
+/** Any demo persona from `demo-portal-config` (org_admin, owner, manager, …). */
+export async function signInDemoPersona(page: Page, personaId: string) {
+  await page.addInitScript((id: string) => {
+    try {
+      window.localStorage.setItem("livia.platformTour.dismissed.v1", "1");
+      window.localStorage.setItem("livia.devPersona", id);
+    } catch {
+      /* ignore */
+    }
+  }, personaId);
+
+  const signInRes = await page.request.post(`${apiBase}/api/demo/sign-in`, {
+    data: { persona: personaId },
+  });
+  if (!signInRes.ok()) {
+    throw new Error(
+      `demo sign-in ${personaId}: ${signInRes.status()} ${(await signInRes.text()).slice(0, 200)}`,
+    );
+  }
+  const { token, landingPath = "/dashboard", businessId, email } = (await signInRes.json()) as {
+    token?: string;
+    landingPath?: string;
+    businessId?: string;
+    email?: string;
+  };
+  if (!token) throw new Error(`No Clerk ticket for persona ${personaId}`);
+  await clerkTicketSignIn(page, token, {
+    businessId,
+    landingPath,
+    devPersona: personaId,
+    fallbackEmail: email,
+  });
+  await ensurePlatformLegalAccepted(page);
+  await dismissPlatformTour(page);
+}
+
 /** Default wellness owner login for vertical E2E. */
 export async function demoOwnerLogin(page: Page, slug = "harbour-wellness-cork") {
   await signInBusiness(page, slug);
@@ -305,7 +341,19 @@ export async function clerkTicketSignIn(
 export async function resetDemoBrowserSession(page: Page) {
   await page.context().clearCookies();
   await page.goto("/", { waitUntil: "domcontentloaded", timeout: 60_000 });
-  await page.evaluate(() => {
+  await page.waitForFunction(
+    () => (window as unknown as { Clerk?: { loaded?: boolean } }).Clerk?.loaded === true,
+    { timeout: 30_000 },
+  ).catch(() => undefined);
+  await page.evaluate(async () => {
+    try {
+      const clerk = (
+        window as unknown as { Clerk?: { signOut?: () => Promise<void> } }
+      ).Clerk;
+      if (clerk?.signOut) await clerk.signOut();
+    } catch {
+      /* ignore */
+    }
     try {
       localStorage.clear();
       sessionStorage.clear();
@@ -313,6 +361,7 @@ export async function resetDemoBrowserSession(page: Page) {
       /* ignore */
     }
   });
+  await page.reload({ waitUntil: "domcontentloaded", timeout: 60_000 });
 }
 
 export async function signInBusiness(

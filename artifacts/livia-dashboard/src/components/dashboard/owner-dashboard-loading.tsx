@@ -3,7 +3,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 /** w4.owner.dashboard.web — briefing + KPI + module skeletons. */
 export function OwnerDashboardLoading() {
   return (
-    <div className="space-y-6" data-testid="owner-dashboard-loading" aria-busy>
+    <div className="space-y-6" data-testid="owner-dashboard-loading" role="status" aria-live="polite">
+      <span className="sr-only">Loading dashboard</span>
       <div className="space-y-2">
         <Skeleton className="h-8 w-64" />
         <Skeleton className="h-4 w-40" />

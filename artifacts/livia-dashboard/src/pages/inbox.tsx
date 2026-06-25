@@ -23,6 +23,7 @@ import {
 } from "@/lib/presentation-layout";
 import { effectivePresentationMorph } from "@/lib/appearance-preview-mode";
 import { useTenantExperience } from "@/lib/tenant-experience-api";
+import { parseUserFacingError } from "@/lib/user-facing-errors";
 import { cn } from "@/lib/utils";
 import {
   beautyOutlineButton,
@@ -431,7 +432,7 @@ export default function InboxPage() {
     } catch (err: unknown) {
       toast({
         title: "Could not resolve case",
-        description: err instanceof Error ? err.message : undefined,
+        description: parseUserFacingError(err, "Could not resolve this case"),
         variant: "destructive",
       });
     } finally {
@@ -504,7 +505,7 @@ export default function InboxPage() {
     } catch (err: unknown) {
       toast({
         title: "Could not send reply",
-        description: err instanceof Error ? err.message : "Send failed",
+        description: parseUserFacingError(err, "Could not send your reply"),
         variant: "destructive",
       });
     } finally {

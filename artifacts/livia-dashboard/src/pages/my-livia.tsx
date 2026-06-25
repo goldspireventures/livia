@@ -463,7 +463,7 @@ function ShopSection({
                 }}
               >
                 {favoriteBusy === shop.businessId ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
                 ) : (
                   <Heart
                     className={`h-4 w-4 ${shop.isFavorite ? "text-primary fill-primary" : "text-muted-foreground"}`}

@@ -6,9 +6,10 @@ export function PublicIntakeLoading() {
     <div
       className="min-h-screen bg-[#fafafa]"
       data-testid="guest-intake-loading"
-      aria-busy
-      aria-label="Loading intake form"
+      role="status"
+      aria-live="polite"
     >
+      <span className="sr-only">Loading intake form</span>
       <Skeleton className="h-14 w-full rounded-none" />
       <div className="max-w-xl mx-auto px-5 py-6 space-y-4">
         <Skeleton className="h-6 w-48" />

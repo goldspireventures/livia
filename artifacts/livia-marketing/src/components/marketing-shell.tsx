@@ -4,7 +4,7 @@ import { Menu } from "lucide-react";
 import { LiviaLogoLink } from "@/components/brand/livia-logo-link";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { MarketingFooter, type MarketingFooterLink } from "@/components/marketing-footer";
-import { legalBase, marketingDemoPath } from "@/lib/marketing-links";
+import { legalBase, marketingGetStartedPath } from "@/lib/marketing-links";
 import { editorialCopy, type MarketingLocale } from "@/lib/marketing-editorial-i18n";
 import { applyMarketingPlatformTheme } from "@/lib/marketing-platform-theme";
 import { MarketingSkipLink } from "@/components/marketing-skip-link";
@@ -34,12 +34,12 @@ export function MarketingShell({ locale, children, onJoinBeta }: MarketingShellP
   const navLinks = (
     <>
       <Link
-        href={marketingDemoPath}
-        className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors min-h-[44px] inline-flex items-center"
-        data-testid="marketing-demo-link"
+        href={marketingGetStartedPath}
+        className="text-sm font-medium text-aurora-cyan hover:text-foreground transition-colors min-h-[44px] inline-flex items-center"
+        data-testid="marketing-get-started-link"
         onClick={() => setMenuOpen(false)}
       >
-        {t.nav.seeDemo}
+        {t.nav.getStarted}
       </Link>
       <Link
         href="/pricing"

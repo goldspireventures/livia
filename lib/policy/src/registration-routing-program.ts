@@ -57,7 +57,10 @@ export function pickPrimarySessionBusiness<T extends SessionBusinessLike>(
   if (allowed.length === 0) return null;
 
   const owned = ownedSessionBusinesses(allowed, clerkUserId);
-  const pool = owned.length > 0 ? owned : allowed;
+  // Demo roster accounts may land on provisioned worlds via staff membership.
+  // Real founders only resolve owned shops — staff rows must not become the active tenant.
+  const pool =
+    owned.length > 0 ? owned : isDemoSessionEmail(email) ? allowed : [];
 
   if (persistedBusinessId) {
     const fromPersisted = pool.find((b) => b.id === persistedBusinessId);
@@ -65,6 +68,26 @@ export function pickPrimarySessionBusiness<T extends SessionBusinessLike>(
   }
 
   return pool[0] ?? null;
+}
+
+/**
+ * Onboarding may only resume a shop the user owns — never a staff membership or demo world.
+ * Prefer an owned shop that still has blocking onboarding acts incomplete.
+ */
+export function pickOnboardingResumeBusiness<T extends SessionBusinessLike>(
+  businesses: T[],
+  clerkUserId: string,
+  email?: string | null,
+): T | null {
+  const allowed = filterSessionBusinesses(businesses, email);
+  const owned = ownedSessionBusinesses(allowed, clerkUserId);
+  if (owned.length === 0) return null;
+
+  const incomplete = owned.filter(
+    (b) => !isOnboardingAppUnlocked(b.onboardingState ?? null, b.vertical),
+  );
+  const pool = incomplete.length > 0 ? incomplete : owned;
+  return pool[pool.length - 1] ?? null;
 }
 
 export type PostLegalDestination = "/onboarding" | "/dashboard";

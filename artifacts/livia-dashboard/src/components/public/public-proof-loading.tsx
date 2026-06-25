@@ -6,9 +6,10 @@ export function PublicProofLoading() {
     <div
       className="min-h-screen bg-[#0a0a0b] text-zinc-200"
       data-testid="guest-proof-loading"
-      aria-busy
-      aria-label="Loading design proof"
+      role="status"
+      aria-live="polite"
     >
+      <span className="sr-only">Loading design proof</span>
       <Skeleton className="h-14 w-full rounded-none bg-zinc-800/80" />
       <Skeleton className="h-[55vh] w-full rounded-none bg-zinc-800/60" />
       <div className="space-y-3 p-4">

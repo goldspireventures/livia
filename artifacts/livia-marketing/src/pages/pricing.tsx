@@ -45,7 +45,7 @@ export default function PricingPage() {
   return (
     <MarketingLayout active="Pricing">
       <ConstellationPageHeader
-        eyebrow="Same OS · honest rates"
+        eyebrow="Pricing"
         title={
           <>
             Pricing that <em>scales with you</em>

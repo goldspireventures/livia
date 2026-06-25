@@ -2999,6 +2999,101 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  # ─── Migration ingest ────────────────────────────────────────────────────
+  /businesses/{businessId}/migration/source/{sourceId}/profile:
+    get:
+      operationId: getMigrationSourceProfile
+      tags: [import]
+      summary: Runtime migration profile and automation truth for an incumbent
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - in: path
+          name: sourceId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Profile, automation tier, OAuth/partner capability
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MigrationSourceProfileResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /businesses/{businessId}/migration/connection:
+    post:
+      operationId: storeMigrationConnection
+      tags: [import]
+      summary: Save migration source, booking URL, or external salon ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MigrationConnectionBody"
+      responses:
+        "200":
+          description: Saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MigrationConnectionResponse"
+
+  /businesses/{businessId}/migration/ingest:
+    post:
+      operationId: requestMigrationIngest
+      tags: [import]
+      summary: Unified migration ingest (OAuth, partner, file bundle, booking mirror)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MigrationIngestRequest"
+      responses:
+        "200":
+          description: Sync result or async job queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MigrationIngestResponse"
+
+  /businesses/{businessId}/migration/jobs/{jobId}:
+    get:
+      operationId: getMigrationImportJob
+      tags: [import]
+      summary: Poll async migration import job status
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/BusinessId"
+        - in: path
+          name: jobId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Job record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MigrationImportJob"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
   # ─── Internal cron ───────────────────────────────────────────────────────
   /internal/cron/send-reminders:
     post:
@@ -3467,6 +3562,117 @@ components:
         billingStarted: { type: boolean }
         servicesConfirmed: { type: boolean }
         hoursConfirmed: { type: boolean }
+        migrationIntent: { type: string, enum: [fresh, switching] }
+        migrationSource: { type: string }
+        migrationBookingUrl: { type: string }
+        migrationExternalId: { type: string }
+        migrationImported: { type: boolean }
+
+    MigrationIngestMode:
+      type: string
+      enum: [oauth_pull, partner_pull, file_bundle, booking_url_mirror]
+
+    MigrationImportJobStatus:
+      type: string
+      enum: [queued, running, succeeded, failed, partial]
+
+    MigrationIngestRequest:
+      type: object
+      required: [mode, sourceId]
+      properties:
+        mode:
+          $ref: "#/components/schemas/MigrationIngestMode"
+        sourceId: { type: string }
+        brokerId: { type: string }
+        incumbentId: { type: string }
+        externalId: { type: string }
+        bookingUrl: { type: string }
+        fileBundle:
+          type: object
+          properties:
+            clientsCsv: { type: string }
+            servicesCsv: { type: string }
+            appointmentsCsv: { type: string }
+            staffCsv: { type: string }
+
+    MigrationIngestResponse:
+      type: object
+      required: [jobId, status, async, message]
+      properties:
+        jobId: { type: string }
+        status:
+          $ref: "#/components/schemas/MigrationImportJobStatus"
+        async: { type: boolean }
+        message: { type: string }
+        totalImported: { type: integer }
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              kind: { type: string }
+              imported: { type: integer }
+              skipped: { type: integer }
+              errors:
+                type: array
+                items: { type: string }
+
+    MigrationImportJob:
+      type: object
+      required: [id, businessId, status, mode, sourceId, totalImported, message, createdAt]
+      properties:
+        id: { type: string }
+        businessId: { type: string }
+        status:
+          $ref: "#/components/schemas/MigrationImportJobStatus"
+        mode:
+          $ref: "#/components/schemas/MigrationIngestMode"
+        sourceId: { type: string }
+        totalImported: { type: integer }
+        results:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        message: { type: string }
+        error: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        completedAt: { type: string, format: date-time, nullable: true }
+
+    MigrationConnectionBody:
+      type: object
+      properties:
+        migrationSource: { type: string }
+        migrationBookingUrl: { type: string }
+        migrationExternalId: { type: string }
+
+    MigrationConnectionResponse:
+      type: object
+      required: [ok, message]
+      properties:
+        ok: { type: boolean }
+        message: { type: string }
+        automation:
+          type: object
+          additionalProperties: true
+
+    MigrationSourceProfileResponse:
+      type: object
+      properties:
+        profile:
+          type: object
+          additionalProperties: true
+        automation:
+          type: object
+          additionalProperties: true
+        oauth:
+          type: object
+          nullable: true
+          additionalProperties: true
+        partner:
+          type: object
+          nullable: true
+          additionalProperties: true
 
     SupportTicketCategory:
       type: string

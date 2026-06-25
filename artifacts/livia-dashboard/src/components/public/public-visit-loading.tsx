@@ -6,9 +6,10 @@ export function PublicVisitLoading() {
     <div
       className="min-h-screen bg-background max-w-xl mx-auto px-4 py-6"
       data-testid="guest-visit-loading"
-      aria-busy
-      aria-label="Loading visit"
+      role="status"
+      aria-live="polite"
     >
+      <span className="sr-only">Loading visit</span>
       <div className="flex items-center gap-3 mb-6">
         <Skeleton className="h-10 w-10 rounded-full" />
         <Skeleton className="h-5 flex-1 max-w-[160px]" />

@@ -446,4 +446,75 @@ router.post("/dev/meta/inbound", requireAuth, async (req, res): Promise<void> =>
   res.json(result);
 });
 
+/** E2E sacred path: non-demo founder with platform legal + Clerk sign-in ticket. */
+router.post("/dev/e2e/fresh-founder", async (req, res) => {
+  if (process.env.NODE_ENV === "production") {
+    res.status(404).json({ error: "Not available" });
+    return;
+  }
+  try {
+    const { provisionFreshSignupFounder } = await import(
+      "../services/e2e-fresh-founder.service.js"
+    );
+    const suffix =
+      typeof req.body?.suffix === "string" && req.body.suffix.trim()
+        ? req.body.suffix.trim()
+        : `${Date.now()}`;
+    const result = await provisionFreshSignupFounder(suffix);
+    res.json(result);
+  } catch (err) {
+    const code = (err as { code?: string }).code;
+    if (code === "CLERK_NOT_CONFIGURED") {
+      res.status(503).json({ error: "Clerk not configured" });
+      return;
+    }
+    console.error("[dev/e2e/fresh-founder]", err);
+    res.status(500).json({ error: "Failed to provision fresh founder" });
+  }
+});
+
+/** Ensure a new shop has a bookable public menu (E2E sacred path fallback). */
+router.post("/dev/e2e/ensure-bookable", async (req, res) => {
+  if (process.env.NODE_ENV === "production") {
+    res.status(404).json({ error: "Not available" });
+    return;
+  }
+  const slug = typeof req.body?.slug === "string" ? req.body.slug.trim() : "";
+  if (!slug) {
+    res.status(400).json({ error: "slug required" });
+    return;
+  }
+  try {
+    const { getBusinessBySlug } = await import("../services/businesses.service.js");
+    const { seedVerticalStarterPack } = await import(
+      "../services/vertical-starter-pack.service.js"
+    );
+    const { listStaff } = await import("../services/staff.service.js");
+    const { setAvailabilityRules } = await import("../services/availability.service.js");
+    const biz = await getBusinessBySlug(slug);
+    if (!biz) {
+      res.status(404).json({ error: "Business not found" });
+      return;
+    }
+    const seeded = await seedVerticalStarterPack(biz.id);
+    const staff = await listStaff(biz.id, { isActive: true });
+    const staffId = staff[0]?.id;
+    if (staffId) {
+      await setAvailabilityRules(
+        biz.id,
+        [1, 2, 3, 4, 5].map((dayOfWeek) => ({
+          dayOfWeek,
+          startTime: "09:00",
+          endTime: "17:00",
+        })),
+        staffId,
+      );
+    }
+    res.json({ businessId: biz.id, slug, staffId: staffId ?? null, ...seeded });
+  } catch (err) {
+    console.error("[dev/e2e/ensure-bookable]", err);
+    res.status(500).json({ error: "Failed to ensure bookable catalog" });
+  }
+});
+
 export default router;

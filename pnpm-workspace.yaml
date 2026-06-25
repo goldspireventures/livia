@@ -36,6 +36,7 @@ minimumReleaseAgeExclude:
 
 packages:
   - artifacts/*
+  - '!artifacts/goldspire-corporate'
   - lib/*
   - lib/integrations/*
   - scripts

@@ -42,15 +42,20 @@ export const tenantAttestationSchema = z.object({
 
 export type TenantAttestation = z.infer<typeof tenantAttestationSchema>;
 
-/** Gateway legal acceptance — shared copy for web + mobile (no vertical-specific salon wording). */
+/** Gateway legal acceptance — shared copy for web + mobile. */
 export const PLATFORM_LEGAL_ACCEPTANCE = {
-  title: "Before you set up your shop",
+  title: "Platform terms",
   description:
-    "Livia is a business platform for operators who run client-facing services — appointments, events, and bookings. Not a personal consumer app. Accept our platform terms to create your location — same step on web and mobile.",
+    "Read the documents below. You need to accept them before you set up your shop.",
   bullets: [
-    "No KYB in closed beta — you attest you operate a legitimate business when you create your shop.",
-    "You remain responsible for client-facing policies, insurance, and sector rules.",
+    "This is a business account, not a personal one.",
+    "You confirm you can agree to these terms for the business you are registering.",
+    "You are responsible for your own client policies and trade rules.",
   ],
+  checkboxLabel:
+    "I agree to the Terms of Service and Privacy Policy for the business I am registering.",
+  continueCta: "Continue",
+  footnote: "Next: how you are starting.",
 } as const;
 
 export function platformLegalAcceptanceTitle(): string {
@@ -63,4 +68,16 @@ export function platformLegalAcceptanceDescription(): string {
 
 export function platformLegalAcceptanceBullets(): readonly string[] {
   return PLATFORM_LEGAL_ACCEPTANCE.bullets;
+}
+
+export function platformLegalAcceptanceCheckboxLabel(): string {
+  return PLATFORM_LEGAL_ACCEPTANCE.checkboxLabel;
+}
+
+export function platformLegalAcceptanceContinueCta(): string {
+  return PLATFORM_LEGAL_ACCEPTANCE.continueCta;
+}
+
+export function platformLegalAcceptanceFootnote(): string {
+  return PLATFORM_LEGAL_ACCEPTANCE.footnote;
 }

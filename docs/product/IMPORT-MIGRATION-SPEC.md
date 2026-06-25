@@ -15,11 +15,18 @@ Productized switching for solo owners and small studios. **Sacred metric:** firs
 | Universal CSV (clients, services, staff, appointments) | Yes | |
 | Column auto-detect | Yes | Manual column map UI |
 | Magic setup (multi-CSV bundle) | Yes (API + UI) | |
+| File upload (.csv) in onboarding | Yes | |
 | Fast-track onboarding (fresh vs switching) | Yes | |
-| Platform source picker + Liv walkthrough | Yes | |
-| OAuth brokers (Fresha, Square, Acuity, …) | Stub | P1–P2 per atlas |
-| Background import jobs (Inngest) | No | P2 |
-| File upload (.csv) | No | P2 |
+| Platform source picker + honest automation truth | Yes | |
+| OAuth pull (Acuity, Square, Fresha, Google Calendar) | Yes when workspace env configured | |
+| OAuth callback auto-pull on connect | Yes | |
+| `GET …/migration/source/:id/profile` runtime truth | Yes | |
+| `POST …/migration/connection` (booking URL, salon ID) | Yes (store + honest messaging) | |
+| Background import jobs (Inngest) | Yes (`migration_import_jobs` + workflow) | |
+| Phorest / Zenoti partner API pull | Yes when partner env configured | Sandbox validation ongoing |
+| Booking-page menu mirror | Yes (`booking-url-mirror` + unified ingest) | Client PII never from public pages |
+| Unified `POST …/migration/ingest` | Yes | |
+| Job polling `GET …/migration/jobs/:id` | Yes (web) | Mobile uses web handoff for OAuth |
 
 ---
 
@@ -28,10 +35,12 @@ Productized switching for solo owners and small studios. **Sacred metric:** firs
 ### Onboarding (switching)
 
 1. Sign up (Clerk)  
-2. Create business → **Bringing my shop**  
-3. Shop profile (name, slug, phone)  
-4. **Bring your data** — pick Phorest / Fresha / Booksy / … → Liv export steps → paste CSV(s) → **Apply to my shop**  
-5. Hours → Liv → public link → go live  
+2. **How are you starting?** → Bringing my shop  
+3. **Basics** — shop name, trade, country (3 fields)  
+4. **Import** — top 5 + search → connect (when live) or upload files → honest limits shown per platform  
+5. **Hours** → **Open**  
+
+Liv finishes billing, team, channels, and menu gaps in-app after unlock.
 
 ### Settings (anytime)
 
@@ -53,6 +62,11 @@ POST /api/businesses/:id/import/booksy-csv # legacy clients-only
 GET  /api/businesses/:id/competitive-parity
 GET  /api/businesses/:id/migration/parallel-run?external=fresha|mindbody
 POST /api/businesses/:id/import/oauth/start
+POST /api/businesses/:id/import/oauth/pull
+GET  /api/businesses/:id/migration/oauth-capabilities
+GET  /api/businesses/:id/migration/source/:sourceId/profile
+POST /api/businesses/:id/migration/connection
+GET  /api/import/oauth/callback              # auto-pull for migration_* brokers
 GET  /api/businesses/:id/integration-brokers
 ```
 
@@ -75,6 +89,9 @@ Events: `import.completed`, `import.failed`
 |--------|------|
 | `import-formats.ts` | CSV parse, detect, normalize |
 | `incumbent-migration-atlas.ts` | Per-platform export paths + Liv copy |
+| `migration-ingest-program.ts` | Featured picker, search, ingest profiles |
+| `migration-automation-truth.ts` | Factual connect vs file-only per incumbent |
+| `migration-ingest-template.ts` | Standard partner entity bundle (v1.0) |
 | `migration-fast-track-program.ts` | Portal nav for switchers |
 | `integration-catalog.ts` | Generic integration labels (Settings) |
 | `import-onboarding.service.ts` | Act + checklist side-effects |

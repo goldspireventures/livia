@@ -1,6 +1,7 @@
 import { useRef } from "react";
 
 import { ConstellationHero } from "@/components/home/constellation-hero";
+import { ProductShowcase } from "@/components/home/product-showcase";
 import { ConstellationHomeFold } from "@/components/home/constellation-home-fold";
 import { DeContactBand } from "@/components/marketing-shell";
 import { editorialCopy, type MarketingLocale } from "@/lib/marketing-editorial-i18n";
@@ -16,6 +17,7 @@ export function MarketingHomeContent({ locale }: MarketingHomeContentProps) {
   return (
     <>
       <ConstellationHero locale={locale} />
+      <ProductShowcase locale={locale} />
       <ConstellationHomeFold locale={locale} formRef={formRef} />
       {locale === "de" ? <DeContactBand locale={locale} /> : null}
     </>

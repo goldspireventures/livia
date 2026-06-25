@@ -1,24 +1,48 @@
-import { useMemo, useState, useEffect } from "react";
-import { Sparkles, ChevronRight, Clock, Link2, Download } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { AlertTriangle, Link2, Loader2, Search, Sparkles, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
-  getMigrationSource,
-  listMigrationSourcesForVertical,
-  resolveMigrationLivWalkthrough,
+  listFeaturedMigrationSources,
+  migrationIngestCapabilityLine,
+  searchMigrationSources,
+  type MigrationAutomationTruth,
+  type MigrationConnectionFieldId,
+  type MigrationIngestProfile,
   type MigrationSourceId,
 } from "@workspace/policy";
-import { MagicSetupPanel } from "@/components/settings/magic-setup-panel";
+import { MigrationFileImportPanel } from "@/components/onboarding/migration-file-import-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { customFetch } from "@workspace/api-client-react";
+
+type RuntimeProfile = {
+  profile: MigrationIngestProfile;
+  automation: MigrationAutomationTruth | null;
+  oauth: {
+    brokerId: string;
+    live: boolean;
+    connected: boolean;
+  } | null;
+  partner: {
+    brokerId: string;
+    live: boolean;
+  } | null;
+};
 
 type Props = {
   businessId: string;
   businessVertical?: string | null;
   migrationSource?: string | null;
-  compact?: boolean;
+  migrationBookingUrl?: string | null;
+  migrationExternalId?: string | null;
   onSourceChange?: (sourceId: MigrationSourceId) => void;
+  onConnectionChange?: (fields: {
+    migrationBookingUrl?: string;
+    migrationExternalId?: string;
+  }) => void;
   onImported?: (totalImported: number) => void;
   onSkip?: () => void;
 };
@@ -27,109 +51,235 @@ export function MigrationSwitchPanel({
   businessId,
   businessVertical,
   migrationSource,
-  compact = false,
+  migrationBookingUrl,
+  migrationExternalId,
   onSourceChange,
+  onConnectionChange,
   onImported,
   onSkip,
 }: Props) {
-  const sources = useMemo(
-    () => listMigrationSourcesForVertical(businessVertical),
+  const featured = useMemo(
+    () => listFeaturedMigrationSources(businessVertical, 5),
     [businessVertical],
   );
+  const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<string>(
-    migrationSource && sources.some((s) => s.id === migrationSource)
-      ? migrationSource
-      : sources[0]?.id ?? "spreadsheet",
+    migrationSource ?? featured[0]?.id ?? "fresha",
   );
-  const [guideOpen, setGuideOpen] = useState(true);
-  const [oauthBusy, setOauthBusy] = useState<"connect" | "pull" | null>(null);
-  const [oauthCaps, setOauthCaps] = useState<
-    Array<{ brokerId: string; live: boolean; connected: boolean; incumbentIds: string[] }>
-  >([]);
+  const [runtime, setRuntime] = useState<RuntimeProfile | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(false);
+  const [connectionDraft, setConnectionDraft] = useState<Record<MigrationConnectionFieldId, string>>({
+    booking_url: migrationBookingUrl ?? "",
+    business_slug: "",
+    salon_id: migrationExternalId ?? "",
+    account_email: "",
+  });
+  const [fileOpen, setFileOpen] = useState(false);
+  const [oauthBusy, setOauthBusy] = useState(false);
+  const [jobPolling, setJobPolling] = useState(false);
   const { toast } = useToast();
 
-  const source = getMigrationSource(selected);
-  const walkthrough = resolveMigrationLivWalkthrough(selected);
-  const oauthBrokerId = source?.oauthBrokerId;
-  const oauthCap = oauthCaps.find((c) => c.brokerId === oauthBrokerId);
+  const searchHits = useMemo(
+    () => (query.trim() ? searchMigrationSources(query, businessVertical) : []),
+    [query, businessVertical],
+  );
 
   useEffect(() => {
-    if (!businessId) return;
-    void customFetch<
-      Array<{ brokerId: string; live: boolean; connected: boolean; incumbentIds: string[] }>
-    >(`/api/businesses/${businessId}/migration/oauth-capabilities`)
-      .then(setOauthCaps)
-      .catch(() => setOauthCaps([]));
-  }, [businessId]);
+    if (!businessId || !selected) return;
+    setLoadingProfile(true);
+    void customFetch<RuntimeProfile>(
+      `/api/businesses/${businessId}/migration/source/${selected}/profile`,
+    )
+      .then(setRuntime)
+      .catch(() => setRuntime(null))
+      .finally(() => setLoadingProfile(false));
+  }, [businessId, selected]);
 
-  async function connectOAuth() {
-    if (!oauthBrokerId || !businessId) return;
-    setOauthBusy("connect");
+  const automation = runtime?.automation;
+  const profile = runtime?.profile;
+  const oauth = runtime?.oauth;
+  const partner = runtime?.partner;
+
+  async function pollImportJob(jobId: string): Promise<number> {
+    setJobPolling(true);
     try {
-      const res = await customFetch<{
-        status: string;
-        message: string;
-        authorizeUrl?: string | null;
-      }>(`/api/businesses/${businessId}/import/oauth/start`, {
-        method: "POST",
-        body: JSON.stringify({ brokerId: oauthBrokerId }),
-      });
-      if (res.authorizeUrl) {
-        window.location.href = res.authorizeUrl;
-        return;
+      for (let i = 0; i < 60; i++) {
+        const job = await customFetch<{
+          status: string;
+          totalImported: number;
+          message: string;
+        }>(`/api/businesses/${businessId}/migration/jobs/${jobId}`);
+        if (job.status === "succeeded" || job.status === "partial") {
+          return job.totalImported;
+        }
+        if (job.status === "failed") {
+          throw new Error(job.message);
+        }
+        await new Promise((r) => setTimeout(r, 2000));
       }
-      toast({ title: source?.displayName ?? "Connect", description: res.message });
-    } catch {
-      toast({
-        title: "Connect failed",
-        description: "Use CSV import meanwhile.",
-        variant: "destructive",
-      });
+      throw new Error("Import timed out — check Settings later.");
     } finally {
-      setOauthBusy(null);
+      setJobPolling(false);
     }
   }
 
-  async function pullOAuth() {
-    if (!businessId) return;
-    setOauthBusy("pull");
+  async function runUnifiedIngest(body: Record<string, unknown>) {
+    const res = await customFetch<{
+      jobId: string;
+      async: boolean;
+      status: string;
+      message: string;
+      totalImported?: number;
+    }>(`/api/businesses/${businessId}/migration/ingest`, {
+      method: "POST",
+      body: JSON.stringify({ sourceId: selected, ...body }),
+    });
+    if (res.async) {
+      toast({ title: "Import queued", description: res.message });
+      const imported = await pollImportJob(res.jobId);
+      return imported;
+    }
+    return res.totalImported ?? 0;
+  }
+
+  function pick(id: string) {
+    setSelected(id);
+    setQuery("");
+    onSourceChange?.(id as MigrationSourceId);
+  }
+
+  async function saveConnection(field: MigrationConnectionFieldId, value: string) {
+    setConnectionDraft((d) => ({ ...d, [field]: value }));
+    const payload: {
+      migrationSource: string;
+      migrationBookingUrl?: string;
+      migrationExternalId?: string;
+    } = { migrationSource: selected };
+    if (field === "booking_url") payload.migrationBookingUrl = value || undefined;
+    if (field === "salon_id") payload.migrationExternalId = value || undefined;
+    onConnectionChange?.({
+      migrationBookingUrl: payload.migrationBookingUrl,
+      migrationExternalId: payload.migrationExternalId,
+    });
     try {
-      const res = await customFetch<{
+      const res = await customFetch<{ ok: boolean; message: string }>(
+        `/api/businesses/${businessId}/migration/connection`,
+        { method: "POST", body: JSON.stringify(payload) },
+      );
+      if (res.message) toast({ title: "Saved", description: res.message });
+    } catch {
+      /* checklist still updated locally */
+    }
+  }
+
+  async function connectAndImport() {
+    if (automation?.tier === "partner_live" && partner?.live) {
+      setOauthBusy(true);
+      try {
+        const imported = await runUnifiedIngest({
+          mode: "partner_pull",
+          brokerId: partner.brokerId,
+          incumbentId: selected,
+          externalId: connectionDraft.salon_id || migrationExternalId || undefined,
+        });
+        toast({
+          title: imported > 0 ? "Import complete" : "Import finished",
+          description:
+            imported > 0
+              ? `Imported ${imported} record(s) from partner API.`
+              : "No rows imported — check your identifier or upload files.",
+        });
+        if (imported > 0) onImported?.(imported);
+      } catch {
+        toast({
+          title: "Partner import failed",
+          description: "Try file upload below.",
+          variant: "destructive",
+        });
+      } finally {
+        setOauthBusy(false);
+      }
+      return;
+    }
+
+    if (!oauth?.brokerId) return;
+    setOauthBusy(true);
+    try {
+      if (!oauth.connected) {
+        const res = await customFetch<{
+          status: string;
+          authorizeUrl?: string | null;
+          message: string;
+        }>(`/api/businesses/${businessId}/import/oauth/start`, {
+          method: "POST",
+          body: JSON.stringify({ brokerId: oauth.brokerId }),
+        });
+        if (res.authorizeUrl) {
+          window.location.href = res.authorizeUrl;
+          return;
+        }
+        toast({ title: "Connect", description: res.message });
+        return;
+      }
+      const pull = await customFetch<{
         ok: boolean;
         message: string;
         totalImported: number;
       }>(`/api/businesses/${businessId}/import/oauth/pull`, {
         method: "POST",
-        body: JSON.stringify({ incumbentId: selected, brokerId: oauthBrokerId }),
+        body: JSON.stringify({ incumbentId: selected, brokerId: oauth.brokerId }),
       });
-      toast({
-        title: res.ok ? "Import complete" : "Pull finished",
-        description: res.message,
-      });
-      if (res.totalImported > 0) onImported?.(res.totalImported);
+      toast({ title: pull.ok ? "Import complete" : "Import finished", description: pull.message });
+      if (pull.totalImported > 0) onImported?.(pull.totalImported);
     } catch {
       toast({
-        title: "Pull failed",
-        description: "Try CSV import or reconnect.",
+        title: "Import failed",
+        description: "Try file upload below.",
         variant: "destructive",
       });
     } finally {
-      setOauthBusy(null);
+      setOauthBusy(false);
     }
   }
 
-  function pick(id: string) {
-    setSelected(id);
-    onSourceChange?.(id as MigrationSourceId);
-    setGuideOpen(true);
-  }
+  const showFileSection =
+    automation?.showFileUpload !== false &&
+    (automation?.tier !== "oauth_live" || fileOpen);
 
   return (
     <div className="space-y-5" data-testid="migration-switch-panel">
       <div className="space-y-2">
-        <p className="text-sm font-medium">Where are you coming from?</p>
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {sources.map((s) => {
+        <Label htmlFor="migration-search" className="text-sm font-medium">
+          Where are you coming from?
+        </Label>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            id="migration-search"
+            data-testid="migration-search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search other tools…"
+            className="pl-9"
+          />
+        </div>
+        {searchHits.length > 0 ? (
+          <ul className="rounded-lg border border-border/70 bg-card/80 divide-y divide-border/50 max-h-48 overflow-y-auto">
+            {searchHits.map((s) => (
+              <li key={s.id}>
+                <button
+                  type="button"
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-muted/40"
+                  onClick={() => pick(s.id)}
+                >
+                  {s.displayName}
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        <div className="grid gap-2 sm:grid-cols-2">
+          {featured.map((s) => {
             const active = s.id === selected;
             return (
               <button
@@ -146,99 +296,177 @@ export function MigrationSwitchPanel({
               >
                 <p className="text-sm font-medium leading-snug">{s.displayName}</p>
                 <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">
-                  {s.pickerSubtitle}
+                  {migrationIngestCapabilityLine(s.id)}
                 </p>
-                <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                  <Badge variant="outline" className="text-[10px] h-5 px-1.5">
-                    <Clock className="h-3 w-3 mr-0.5" />
-                    {s.selfServeMinutesEstimate.min}–{s.selfServeMinutesEstimate.max} min
-                  </Badge>
-                </div>
               </button>
             );
           })}
         </div>
       </div>
 
-      {source ? (
-        <div className="rounded-lg border border-violet-500/20 bg-violet-500/5 p-3 space-y-3">
+      {loadingProfile ? (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          Checking what we can import…
+        </div>
+      ) : null}
+
+      {profile && automation ? (
+        <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-4">
           <div className="flex items-start gap-2">
-            <Sparkles className="h-4 w-4 text-violet-500 shrink-0 mt-0.5" />
-            <div className="min-w-0 space-y-1">
-              <p className="text-xs font-medium text-foreground">Liv · {source.displayName}</p>
-              <p className="text-xs text-muted-foreground leading-relaxed">{walkthrough.intro}</p>
+            <Sparkles className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+            <div className="min-w-0 space-y-2 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-sm font-medium">{profile.displayName}</p>
+                <Badge variant="outline" className="text-[10px]">
+                  {automation.statusLine}
+                </Badge>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {profile.entities.map((e) => {
+                  if (e.unavailable) {
+                    return (
+                      <Badge key={e.kind} variant="outline" className="text-[10px] opacity-60">
+                        {e.label}: not in export
+                      </Badge>
+                    );
+                  }
+                  if (
+                    (automation.tier === "oauth_live" || automation.tier === "partner_live") &&
+                    e.automated
+                  ) {
+                    return (
+                      <Badge key={e.kind} variant="default" className="text-[10px]">
+                        <Zap className="h-3 w-3 mr-0.5" />
+                        {e.label}
+                      </Badge>
+                    );
+                  }
+                  if (e.file) {
+                    return (
+                      <Badge key={e.kind} variant="secondary" className="text-[10px]">
+                        {e.label}: file
+                      </Badge>
+                    );
+                  }
+                  return (
+                    <Badge key={e.kind} variant="outline" className="text-[10px]">
+                      {e.label}: in-app
+                    </Badge>
+                  );
+                })}
+              </div>
             </div>
           </div>
-          {guideOpen ? (
-            <ol className="space-y-2 pl-1">
-              {walkthrough.steps.map((step, i) => (
-                <li key={`${step.entity ?? "step"}-${i}`} className="flex gap-2 text-xs">
-                  <span className="font-mono text-[10px] text-muted-foreground w-4 shrink-0">
-                    {i + 1}.
-                  </span>
-                  <span className="text-muted-foreground leading-relaxed">{step.detail}</span>
-                </li>
-              ))}
-            </ol>
-          ) : null}
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-7 text-xs px-2"
-            onClick={() => setGuideOpen((v) => !v)}
+
+          <div
+            className="flex gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-muted-foreground"
+            data-testid="migration-honest-limit"
           >
-            {guideOpen ? "Hide steps" : "Show export steps"}
-            <ChevronRight className={cn("h-3 w-3 ml-1 transition-transform", guideOpen && "rotate-90")} />
-          </Button>
-        </div>
-      ) : null}
-
-      {oauthBrokerId && oauthCap?.live ? (
-        <div className="rounded-lg border border-emerald-500/25 bg-emerald-500/5 p-3 space-y-2">
-          <p className="text-xs font-medium text-foreground">
-            Live connect — Liv can pull your data directly
-          </p>
-          <p className="text-[11px] text-muted-foreground leading-relaxed">
-            {oauthCap.connected
-              ? "Connected. Pull clients, services, and upcoming bookings into Livia."
-              : "Connect once — then Liv imports from your previous tool automatically."}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {!oauthCap.connected ? (
-              <Button
-                type="button"
-                size="sm"
-                variant="default"
-                className="h-8 text-xs"
-                disabled={oauthBusy !== null}
-                onClick={() => void connectOAuth()}
-              >
-                <Link2 className="h-3.5 w-3.5 mr-1" />
-                {oauthBusy === "connect" ? "Connecting…" : "Connect & authorize"}
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                size="sm"
-                variant="default"
-                className="h-8 text-xs"
-                disabled={oauthBusy !== null}
-                onClick={() => void pullOAuth()}
-              >
-                <Download className="h-3.5 w-3.5 mr-1" />
-                {oauthBusy === "pull" ? "Pulling…" : "Pull into Livia"}
-              </Button>
-            )}
+            <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
+            <span>{automation.honestLimit}</span>
           </div>
+
+          {(automation.showConnectButton && oauth?.live) ||
+          (automation.tier === "partner_live" && partner?.live) ? (
+            <Button
+              type="button"
+              className="w-full"
+              disabled={oauthBusy || jobPolling}
+              onClick={() => void connectAndImport()}
+            >
+              {oauthBusy || jobPolling ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Working…
+                </>
+              ) : (
+                <>
+                  <Link2 className="h-4 w-4 mr-2" />
+                  {automation.primaryCta}
+                </>
+              )}
+            </Button>
+          ) : null}
+
+          {connectionDraft.booking_url?.trim() ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              disabled={oauthBusy || jobPolling}
+              onClick={() => {
+                void (async () => {
+                  setOauthBusy(true);
+                  try {
+                    const imported = await runUnifiedIngest({
+                      mode: "booking_url_mirror",
+                      bookingUrl: connectionDraft.booking_url,
+                    });
+                    toast({
+                      title: imported > 0 ? "Menu mirrored" : "Mirror finished",
+                      description:
+                        imported > 0
+                          ? `Imported ${imported} service name(s) from booking page.`
+                          : "No services detected — upload an export or set menu in Livia.",
+                    });
+                    if (imported > 0) onImported?.(imported);
+                  } catch {
+                    toast({
+                      title: "Mirror failed",
+                      description: "Upload a service export instead.",
+                      variant: "destructive",
+                    });
+                  } finally {
+                    setOauthBusy(false);
+                  }
+                })();
+              }}
+            >
+              Mirror menu from booking link
+            </Button>
+          ) : null}
+
+          {profile.connectionFields.length > 0 ? (
+            <div className="space-y-3">
+              {profile.connectionFields.map((field) => (
+                <div key={field.id} className="space-y-1.5">
+                  <Label htmlFor={field.id} className="text-xs">
+                    {field.label}
+                  </Label>
+                  <Input
+                    id={field.id}
+                    value={connectionDraft[field.id]}
+                    onChange={(e) => setConnectionDraft((d) => ({ ...d, [field.id]: e.target.value }))}
+                    onBlur={(e) => void saveConnection(field.id, e.target.value)}
+                    placeholder={field.placeholder}
+                  />
+                  <p className="text-[11px] text-muted-foreground">{field.help}</p>
+                </div>
+              ))}
+            </div>
+          ) : null}
         </div>
       ) : null}
 
-      <MagicSetupPanel
-        businessId={businessId}
-        compact={compact}
-        onImported={onImported}
-      />
+      {automation?.showFileUpload ? (
+        <div className="space-y-2">
+          {automation.tier === "oauth_live" ? (
+            <button
+              type="button"
+              className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
+              onClick={() => setFileOpen((v) => !v)}
+            >
+              {fileOpen ? "Hide file upload" : "Or upload export files instead"}
+            </button>
+          ) : (
+            <p className="text-xs font-medium text-foreground">Upload exports</p>
+          )}
+          {showFileSection ? (
+            <MigrationFileImportPanel businessId={businessId} onImported={onImported} />
+          ) : null}
+        </div>
+      ) : null}
 
       {onSkip ? (
         <button
@@ -246,7 +474,7 @@ export function MigrationSwitchPanel({
           className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
           onClick={onSkip}
         >
-          Skip for now — I'll import later from Settings
+          Skip for now — finish in Settings
         </button>
       ) : null}
     </div>

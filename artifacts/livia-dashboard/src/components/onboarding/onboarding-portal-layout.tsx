@@ -1,23 +1,21 @@
 import type { ReactNode } from "react";
 import { LiviaLogoLink } from "@/components/brand/livia-logo-link";
-import { OnboardingPortalChapterSpine } from "@/components/onboarding/onboarding-portal-chapter-spine";
-import type { PortalChapterId } from "@/lib/onboarding-portal-chapters";
+import { OnboardingPortalStepSpine } from "@/components/onboarding/onboarding-portal-step-spine";
 import { OnboardingLivHost } from "@/components/onboarding/onboarding-liv-host";
 import { OnboardingPortalAmbient } from "@/components/onboarding/onboarding-portal-ambient";
 import type { OnboardingActId } from "@/lib/onboarding-acts";
+import type { OnboardingChecklist } from "@workspace/policy";
 import { cn } from "@/lib/utils";
-import { MOTION } from "@/lib/motion";
 
 type Props = {
   children: ReactNode;
   footer?: ReactNode;
-  /** Liv's line for this chapter */
   livMessage: string;
   currentAct: OnboardingActId;
   completedActs: OnboardingActId[];
-  onJumpChapter?: (chapterId: PortalChapterId, targetAct: OnboardingActId) => void;
+  checklist?: Partial<OnboardingChecklist> | null;
   chapterStepHint?: string | null;
-  showChapterSpine: boolean;
+  showProgressSpine?: boolean;
   packLabel?: string | null;
   topSlot?: ReactNode;
   wide?: boolean;
@@ -30,9 +28,9 @@ export function OnboardingPortalLayout({
   livMessage,
   currentAct,
   completedActs,
-  onJumpChapter,
+  checklist,
   chapterStepHint,
-  showChapterSpine,
+  showProgressSpine = false,
   packLabel,
   topSlot,
   wide = false,
@@ -62,11 +60,11 @@ export function OnboardingPortalLayout({
       >
         {topSlot}
 
-        {showChapterSpine ? (
-          <OnboardingPortalChapterSpine
+        {showProgressSpine ? (
+          <OnboardingPortalStepSpine
             currentAct={currentAct}
             completedActs={completedActs}
-            onJumpChapter={onJumpChapter}
+            checklist={checklist}
           />
         ) : null}
         {chapterStepHint ? (

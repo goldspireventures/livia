@@ -1,4 +1,5 @@
 import { GUEST_HUB_COPY } from "@workspace/policy";
+import { isProductionCustomerSurface } from "./production-surface";
 
 export type GuestOtpRequestResult = {
   sessionToken: string;
@@ -40,7 +41,9 @@ export async function requestGuestHubOtpMobile(
   } catch (err) {
     if (isNetworkError(err)) {
       throw new Error(
-        `Can't reach the API at ${apiBase}. Start the API on port 3000 and check Wi‑Fi / Windows Firewall.`,
+        isProductionCustomerSurface()
+          ? "We could not reach Livia right now. Check your connection and try again."
+          : `Can't reach the API at ${apiBase}. Start the API on port 3000 and check Wi‑Fi / Windows Firewall.`,
       );
     }
     throw err;

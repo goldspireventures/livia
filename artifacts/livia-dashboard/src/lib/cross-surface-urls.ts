@@ -18,7 +18,13 @@ export const CROSS_SURFACE_WEB_COPY = {
   continueOnMobileTitle: "Continue on mobile",
   continueOnMobileBody:
     "Same shop and onboarding progress. Open the Livia app to finish essentials with push alerts, haptics, and floor-friendly flows.",
-  maryGuestTitle: "Demo guest Mary (My Livia)",
+  maryGuestTitle: "Demo guest (My Livia)",
+  maryGuestBody:
+    "Sign in with your mobile on /my — your visits and vault follow you on phone and browser.",
+} as const;
+
+/** Shown only in demo/staging operator builds — never in production customer surface. */
+export const CROSS_SURFACE_DEMO_COPY = {
   maryGuestBody:
     "Use +353 87 100 0001 on /my — same vault on phone and browser after OTP. Staging code 000000.",
 } as const;

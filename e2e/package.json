@@ -10,7 +10,7 @@
     "test:platform": "playwright test --project=platform --project=platform-commitment --project=guest-pay --project=guest-balance --workers=1",
     "test:marketing": "playwright test --project=marketing",
     "test:visual-capture": "playwright test --project=visual-capture",
-    "test:marketing-visual": "playwright test --project=marketing-visual",
+    "test:marketing-showcase": "playwright test --project=marketing-showcase",
     "test:founder-checklist": "playwright test --project=founder-checklist",
     "test:contextual-web": "playwright test --project=contextual-web",
     "test:full-visual-audit": "playwright test --project=full-visual-audit",
@@ -25,6 +25,7 @@
     "test:northstar-p0": "playwright test tests/northstar-p0-pixel.spec.ts --project=northstar-p0 --workers=1",
     "test:screen-card-p0": "playwright test tests/screen-card-p0-pixel.spec.ts --project=screen-card-p0 --workers=1",
     "test:founder-uat": "playwright test tests/founder-uat-p0.spec.ts --project=founder-uat-p0 --workers=1",
+    "test:sacred-path-signup": "playwright test tests/sacred-path-signup.spec.ts --project=sacred-path-signup --workers=1",
     "test:guest-care-aftercare": "playwright test tests/guest-care-aftercare.spec.ts --project=guest-care-aftercare --workers=1",
     "test:innovation-p0": "playwright test tests/innovation-p0-e2e.spec.ts --project=innovation-p0-e2e --workers=1",
     "install-browsers": "playwright install chromium --with-deps"

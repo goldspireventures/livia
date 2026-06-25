@@ -109,8 +109,8 @@ export function CommsChannelsBlock({
           </View>
           <Text style={[styles.rowMeta, { color: colors.mutedForeground, marginTop: 8 }]}>
             {metaReady
-              ? "Meta app credentials are configured on the server — finish linking your page IDs in the wizard."
-              : "Meta platform token not configured — your operator sets META_ACCESS_TOKEN on the server."}
+              ? "Finish linking your page IDs in Communications on the web dashboard."
+              : "Social inbox linking is not configured yet — your studio admin completes this in Settings."}
             {extended.metaDevSimulate ? " Dev simulate is on for demos." : ""}
           </Text>
           {extended.metaWebhookUrl ? (

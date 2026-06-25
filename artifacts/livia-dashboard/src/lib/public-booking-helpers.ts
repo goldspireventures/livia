@@ -54,24 +54,14 @@ export function dedupePublicSlotsByStartAt<T extends PublicSlotRow>(slots: T[]):
   return [...byStart.values()].sort((a, b) => a.startAt.localeCompare(b.startAt));
 }
 
+import { parseUserFacingError } from "@/lib/user-facing-errors";
+
 /** Strip HTTP status prefixes and support ref ids from generated API client errors. */
-export function parsePublicApiError(err: unknown, fallback = "Something went wrong — please try again."): string {
-  if (err && typeof err === "object") {
-    const e = err as { data?: unknown; response?: { data?: unknown }; message?: string };
-    const data = e.data ?? e.response?.data;
-    if (data && typeof data === "object" && "error" in data) {
-      const apiMsg = (data as { error: unknown }).error;
-      if (typeof apiMsg === "string" && apiMsg.trim()) return apiMsg.trim();
-    }
-    if (typeof e.message === "string" && e.message.trim()) {
-      const cleaned = e.message
-        .replace(/^HTTP \d+\s*[^:]*:\s*/i, "")
-        .replace(/\s*\(ref [0-9a-f-]+\)\s*$/i, "")
-        .trim();
-      if (cleaned) return cleaned;
-    }
-  }
-  return fallback;
+export function parsePublicApiError(
+  err: unknown,
+  fallback = "Something went wrong — please try again.",
+): string {
+  return parseUserFacingError(err, fallback);
 }
 
 export type PublicSlotDayPart = "morning" | "afternoon" | "evening";

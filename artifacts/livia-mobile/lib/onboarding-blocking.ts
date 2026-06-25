@@ -1,4 +1,5 @@
 import {
+  blockingOnboardingActsForSession,
   blockingOnboardingActsForVertical,
   mergePercentWithBlocking,
   nextRecommendedActWithReadiness,
@@ -16,6 +17,13 @@ export const DEFAULT_WEEKDAY_HOURS: AvailRule[] = [1, 2, 3, 4, 5].map((dayOfWeek
   endTime: "17:00",
 }));
 
+export function blockingActsForMobile(
+  state: OnboardingState | null | undefined,
+  vertical?: string | null,
+): OnboardingActId[] {
+  return blockingOnboardingActsForSession(vertical, state?.checklist);
+}
+
 export function nextBlockingAct(
   state: OnboardingState | null | undefined,
   readinessActHints: OnboardingActId[] = [],
@@ -24,7 +32,7 @@ export function nextBlockingAct(
   if (readinessActHints.length > 0) {
     return nextRecommendedActWithReadiness(state, readinessActHints);
   }
-  const blocking = blockingOnboardingActsForVertical(vertical);
+  const blocking = blockingActsForMobile(state, vertical);
   const completed = new Set(state?.completedActs ?? []);
   for (const act of blocking) {
     if (!completed.has(act)) return act;
@@ -64,7 +72,7 @@ export async function completeBlockingAct(
   vertical?: string | null,
 ): Promise<OnboardingState> {
   const completed = [...new Set([...(existing?.completedActs ?? []), act])] as OnboardingActId[];
-  const blocking = blockingOnboardingActsForVertical(vertical);
+  const blocking = blockingActsForMobile(existing, vertical);
   const idx = blocking.indexOf(act);
   const nextAct = idx >= 0 && idx < blocking.length - 1 ? blocking[idx + 1]! : act;
   return persistOnboardingState(
@@ -77,3 +85,6 @@ export async function completeBlockingAct(
     existing,
   );
 }
+
+/** @deprecated use blockingActsForMobile */
+export { blockingOnboardingActsForVertical };

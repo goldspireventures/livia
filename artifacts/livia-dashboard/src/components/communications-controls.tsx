@@ -241,7 +241,7 @@ export default function CommunicationsControls({ businessId }: { businessId: str
         },
       );
       setLastResult(r);
-      toast({ title: `Test ${testChannel} ${r.status}`, description: r.status === "SENT" ? "Check your inbox/phone." : "Logged as FAILED — see notification logs (transport not configured or send rejected)." });
+      toast({ title: `Test ${testChannel} ${r.status}`, description: r.status === "SENT" ? "Check your inbox or phone." : "Message could not be sent — check Communications settings or try again later." });
     } catch (e) {
       toast({ title: "Test send failed", description: String(e), variant: "destructive" });
     } finally {

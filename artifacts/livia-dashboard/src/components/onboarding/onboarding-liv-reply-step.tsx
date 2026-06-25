@@ -21,6 +21,7 @@ type Props = {
   onToneChange: (v: string) => void;
   onGreetingChange: (v: string) => void;
   onSave: () => void;
+  hideSaveButton?: boolean;
 };
 
 /** A6 — conversational “reply to Liv”, not a settings form. */
@@ -34,6 +35,7 @@ export function OnboardingLivReplyStep({
   onToneChange,
   onGreetingChange,
   onSave,
+  hideSaveButton = false,
 }: Props) {
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_minmax(200px,240px)]" data-testid="onboarding-liv-form">
@@ -77,9 +79,11 @@ export function OnboardingLivReplyStep({
           <Switch checked={aiEnabled} onCheckedChange={onEnabledChange} />
         </div>
 
-        <Button type="button" onClick={onSave} disabled={saving} className="w-full sm:w-auto">
-          {saving ? "Saving…" : "Save & continue"}
-        </Button>
+        {!hideSaveButton ? (
+          <Button type="button" onClick={onSave} disabled={saving} className="w-full sm:w-auto">
+            {saving ? "Saving…" : "Save & continue"}
+          </Button>
+        ) : null}
       </div>
 
       <OnboardingLivRehearsalPreview

@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import {
   filterSessionBusinesses,
   isDemoWorldSlug,
+  ownedSessionBusinesses,
+  pickOnboardingResumeBusiness,
   pickPrimarySessionBusiness,
   resolvePostLegalDestination,
 } from "../registration-routing-program";
@@ -45,5 +47,48 @@ const picked = pickPrimarySessionBusiness(
   "founder@gmail.com",
 );
 assert.equal(picked?.id, "b");
+
+const staffOnly = pickPrimarySessionBusiness(
+  [{ id: "staff-shop", slug: "some-salon", ownerId: "other-user" }],
+  "user-new",
+  "founder@gmail.com",
+);
+assert.equal(staffOnly, null);
+
+const demoStaff = pickPrimarySessionBusiness(
+  [{ id: "demo-shop", slug: "luxe-salon-spa", ownerId: "demo-owner" }],
+  "demo-user",
+  "owner@demo.livia-hq.com",
+);
+assert.equal(demoStaff?.id, "demo-shop");
+
+const resumeNone = pickOnboardingResumeBusiness(
+  [{ id: "1", slug: "dublin-barber-collective", ownerId: "user-1" }],
+  "user-1",
+  "founder@gmail.com",
+);
+assert.equal(resumeNone, null);
+
+const resumeOwned = pickOnboardingResumeBusiness(
+  [
+    {
+      id: "shop-1",
+      slug: "my-shop",
+      ownerId: "user-1",
+      onboardingState: { currentAct: "a2_shop_profile", completedActs: ["a1_create_business"], percentComplete: 8 },
+    },
+  ],
+  "user-1",
+  "founder@gmail.com",
+);
+assert.equal(resumeOwned?.id, "shop-1");
+
+assert.equal(
+  ownedSessionBusinesses(
+    filterSessionBusinesses(demoRows, "founder@gmail.com"),
+    "user-real",
+  ).length,
+  1,
+);
 
 console.log("registration-routing-program.test.ts OK");

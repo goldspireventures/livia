@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { customFetch } from "@workspace/api-client-react";
+import { parseUserFacingError } from "@/lib/user-facing-errors";
 import { useBillingState } from "@/hooks/use-billing-state";
 import { hasEffectiveEntitlement, ADDON_CATALOGUE, formatAddonPriceEur, lookupAddon, type EntitlementKey } from "@workspace/entitlements";
 import { commerceAddonsForVertical } from "@workspace/policy";
@@ -212,7 +213,7 @@ export default function BillingControls({ showRemediationStrip = true }: { showR
       const data = (err as { data?: { code?: string; error?: string } })?.data;
       toast({
         title: "Checkout failed",
-        description: data?.error ?? (err instanceof Error ? err.message : "Try again"),
+        description: parseUserFacingError(err, "Checkout could not start"),
         variant: "destructive",
       });
     } finally {

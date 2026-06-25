@@ -16,7 +16,7 @@ export default function VerticalsIndexPage() {
               Every <em>vertical</em>
             </>
           }
-          subtitle="Longer trade stories and pain points — when you want detail before you pick a demo card."
+          subtitle="Trade stories and pain points — when you want detail before you create your shop."
         />
 
         <ul className="cst-verticals__grid">
@@ -35,9 +35,9 @@ export default function VerticalsIndexPage() {
         </ul>
 
         <ConstellationPageFooter>
-          <p>Each page explains how Livia fits that trade. When you are ready, book once and walk a live studio.</p>
-          <Link href="/book-demo" className="cst-page-link" data-testid="marketing-demo-link">
-            Book a demo →
+          <p>Each page explains how Livia fits that trade. When you are ready, register your shop and publish your booking link.</p>
+          <Link href="/get-started" className="cst-page-link" data-testid="marketing-get-started-link">
+            Get started →
           </Link>
           <Link href="/" className="cst-page-link cst-page-link--muted">
             Back to home

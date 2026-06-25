@@ -6,9 +6,10 @@ export function PublicBookLoading() {
     <div
       className="min-h-screen bg-background max-w-6xl w-full mx-auto px-4 sm:px-6 py-0"
       data-testid="public-book-loading"
-      aria-busy
-      aria-label="Loading booking page"
+      role="status"
+      aria-live="polite"
     >
+      <span className="sr-only">Loading booking page</span>
       <Skeleton className="h-16 w-full rounded-none" />
       <Skeleton className="h-[220px] w-full rounded-b-3xl -mx-4 sm:mx-0 max-w-none" />
       <div className="space-y-3 mt-8 px-0">

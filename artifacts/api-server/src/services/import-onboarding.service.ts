@@ -1,6 +1,7 @@
 import { db, businessesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import {
+  afterMigrationImportOnboardingState,
   completeOnboardingAct,
   mergeOnboardingState,
   onboardingChecklistSchema,
@@ -50,15 +51,26 @@ export async function applyImportToOnboarding(
   if (!parsed.success) return { actsCompleted, checklistUpdates };
 
   let next = parsed.data;
-  for (const act of actsCompleted) {
-    next = completeOnboardingAct(next, act);
-  }
+  const switching = parsed.data.checklist?.migrationIntent === "switching";
 
-  const checklist = onboardingChecklistSchema.parse({
-    ...next.checklist,
-    ...checklistUpdates,
-  });
-  next = mergeOnboardingState(next, { checklist });
+  if (switching && importedCount > 0) {
+    next = afterMigrationImportOnboardingState({
+      ...next,
+      checklist: onboardingChecklistSchema.parse({
+        ...next.checklist,
+        ...checklistUpdates,
+      }),
+    });
+  } else {
+    for (const act of actsCompleted) {
+      next = completeOnboardingAct(next, act);
+    }
+    const checklist = onboardingChecklistSchema.parse({
+      ...next.checklist,
+      ...checklistUpdates,
+    });
+    next = mergeOnboardingState(next, { checklist });
+  }
 
   await db
     .update(businessesTable)
@@ -71,5 +83,8 @@ export async function applyImportToOnboarding(
     after: next,
   });
 
-  return { actsCompleted, checklistUpdates };
+  return {
+    actsCompleted: switching ? next.completedActs : actsCompleted,
+    checklistUpdates,
+  };
 }

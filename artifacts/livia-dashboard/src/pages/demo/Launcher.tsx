@@ -847,25 +847,33 @@ export default function DemoLauncher() {
                               ) : null}
                             </div>
                             <div className="flex flex-wrap gap-2 shrink-0">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const ownerEmail =
-                                    t.roster?.find((r) => r.role === "owner")?.email ?? t.ownerEmail;
-                                  void quickEnterEmail(ownerEmail, `${t.slug}:${ownerEmail}`);
-                                }}
-                                disabled={!!busy}
-                                className="inline-flex items-center gap-1.5 rounded-lg bg-[#06b6d4] text-black px-3 py-1.5 text-xs font-semibold hover:bg-[#22d3ee] disabled:opacity-60"
-                              >
-                                {loading ? (
-                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                ) : (
-                                  <>
-                                    {ownerPersona ? "Chain owner" : "Owner"}
-                                    <ArrowRight className="h-3.5 w-3.5" />
-                                  </>
-                                )}
-                              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const ownerEmail =
+                    t.roster?.find((r) => r.role === "owner")?.email ?? t.ownerEmail;
+                  void quickEnterEmail(ownerEmail, `${t.slug}:${ownerEmail}`);
+                }}
+                disabled={!!busy}
+                aria-label={
+                  loading
+                    ? `Signing in as owner of ${t.name}`
+                    : `Sign in as owner of ${t.name}`
+                }
+                className="inline-flex items-center gap-1.5 rounded-lg bg-[#06b6d4] text-black px-3 py-1.5 text-xs font-semibold hover:bg-[#22d3ee] disabled:opacity-60"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                    <span className="sr-only">Signing in</span>
+                  </>
+                ) : (
+                  <>
+                    {ownerPersona ? "Chain owner" : "Owner"}
+                    <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+                  </>
+                )}
+              </button>
                               <a
                                 href={t.publicBookingUrl}
                                 target="_blank"

@@ -26,12 +26,15 @@ type Props = {
   devPasswordHint?: string;
   /** When true, omit outer border — parent provides chrome. */
   embedded?: boolean;
+  /** Hide Luxe/demo tenant preview banner (founder sign-in page). */
+  showTenantPreview?: boolean;
 };
 
 export function DemoPasswordSignIn({
   defaultEmail = "owner-luxe@demo.livia-hq.com",
   devPasswordHint,
   embedded = false,
+  showTenantPreview = true,
 }: Props) {
   const { signIn, isLoaded } = useSignIn();
   const { signOut, session, setActive } = useClerk();
@@ -155,6 +158,8 @@ export function DemoPasswordSignIn({
   );
 
   if (!embedded) return form;
+
+  if (!showTenantPreview) return form;
 
   return (
     <SignInTenantPreview hint={appearanceHint} loading={appearanceLoading}>

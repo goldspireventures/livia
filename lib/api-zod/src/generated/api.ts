@@ -130,6 +130,11 @@ export const GetMyBusinessesResponseItem = zod.object({
           billingStarted: zod.boolean().optional(),
           servicesConfirmed: zod.boolean().optional(),
           hoursConfirmed: zod.boolean().optional(),
+          migrationIntent: zod.enum(["fresh", "switching"]).optional(),
+          migrationSource: zod.string().optional(),
+          migrationBookingUrl: zod.string().optional(),
+          migrationExternalId: zod.string().optional(),
+          migrationImported: zod.boolean().optional(),
         })
         .optional(),
       updatedAt: zod.coerce.date().optional(),
@@ -1231,6 +1236,11 @@ export const GetBusinessResponse = zod.object({
           billingStarted: zod.boolean().optional(),
           servicesConfirmed: zod.boolean().optional(),
           hoursConfirmed: zod.boolean().optional(),
+          migrationIntent: zod.enum(["fresh", "switching"]).optional(),
+          migrationSource: zod.string().optional(),
+          migrationBookingUrl: zod.string().optional(),
+          migrationExternalId: zod.string().optional(),
+          migrationImported: zod.boolean().optional(),
         })
         .optional(),
       updatedAt: zod.coerce.date().optional(),
@@ -1316,6 +1326,11 @@ export const UpdateBusinessBody = zod.object({
           billingStarted: zod.boolean().optional(),
           servicesConfirmed: zod.boolean().optional(),
           hoursConfirmed: zod.boolean().optional(),
+          migrationIntent: zod.enum(["fresh", "switching"]).optional(),
+          migrationSource: zod.string().optional(),
+          migrationBookingUrl: zod.string().optional(),
+          migrationExternalId: zod.string().optional(),
+          migrationImported: zod.boolean().optional(),
         })
         .optional(),
       updatedAt: zod.coerce.date().optional(),
@@ -1408,6 +1423,11 @@ export const UpdateBusinessResponse = zod.object({
           billingStarted: zod.boolean().optional(),
           servicesConfirmed: zod.boolean().optional(),
           hoursConfirmed: zod.boolean().optional(),
+          migrationIntent: zod.enum(["fresh", "switching"]).optional(),
+          migrationSource: zod.string().optional(),
+          migrationBookingUrl: zod.string().optional(),
+          migrationExternalId: zod.string().optional(),
+          migrationImported: zod.boolean().optional(),
         })
         .optional(),
       updatedAt: zod.coerce.date().optional(),
@@ -4284,6 +4304,114 @@ export const GetInternalTenantSupportContextResponse = zod.object({
   businessId: zod.string(),
   impersonationPolicy: zod.string(),
   note: zod.string(),
+});
+
+/**
+ * @summary Runtime migration profile and automation truth for an incumbent
+ */
+export const GetMigrationSourceProfileParams = zod.object({
+  businessId: zod.coerce.string(),
+  sourceId: zod.coerce.string(),
+});
+
+export const GetMigrationSourceProfileResponse = zod.object({
+  profile: zod.record(zod.string(), zod.unknown()).optional(),
+  automation: zod.record(zod.string(), zod.unknown()).optional(),
+  oauth: zod.record(zod.string(), zod.unknown()).nullish(),
+  partner: zod.record(zod.string(), zod.unknown()).nullish(),
+});
+
+/**
+ * @summary Save migration source, booking URL, or external salon ID
+ */
+export const StoreMigrationConnectionParams = zod.object({
+  businessId: zod.coerce.string(),
+});
+
+export const StoreMigrationConnectionBody = zod.object({
+  migrationSource: zod.string().optional(),
+  migrationBookingUrl: zod.string().optional(),
+  migrationExternalId: zod.string().optional(),
+});
+
+export const StoreMigrationConnectionResponse = zod.object({
+  ok: zod.boolean(),
+  message: zod.string(),
+  automation: zod.record(zod.string(), zod.unknown()).optional(),
+});
+
+/**
+ * @summary Unified migration ingest (OAuth, partner, file bundle, booking mirror)
+ */
+export const RequestMigrationIngestParams = zod.object({
+  businessId: zod.coerce.string(),
+});
+
+export const RequestMigrationIngestBody = zod.object({
+  mode: zod.enum([
+    "oauth_pull",
+    "partner_pull",
+    "file_bundle",
+    "booking_url_mirror",
+  ]),
+  sourceId: zod.string(),
+  brokerId: zod.string().optional(),
+  incumbentId: zod.string().optional(),
+  externalId: zod.string().optional(),
+  bookingUrl: zod.string().optional(),
+  fileBundle: zod
+    .object({
+      clientsCsv: zod.string().optional(),
+      servicesCsv: zod.string().optional(),
+      appointmentsCsv: zod.string().optional(),
+      staffCsv: zod.string().optional(),
+    })
+    .optional(),
+});
+
+export const RequestMigrationIngestResponse = zod.object({
+  jobId: zod.string(),
+  status: zod.enum(["queued", "running", "succeeded", "failed", "partial"]),
+  async: zod.boolean(),
+  message: zod.string(),
+  totalImported: zod.number().optional(),
+  results: zod
+    .array(
+      zod.object({
+        kind: zod.string().optional(),
+        imported: zod.number().optional(),
+        skipped: zod.number().optional(),
+        errors: zod.array(zod.string()).optional(),
+      }),
+    )
+    .optional(),
+});
+
+/**
+ * @summary Poll async migration import job status
+ */
+export const GetMigrationImportJobParams = zod.object({
+  businessId: zod.coerce.string(),
+  jobId: zod.coerce.string(),
+});
+
+export const GetMigrationImportJobResponse = zod.object({
+  id: zod.string(),
+  businessId: zod.string(),
+  status: zod.enum(["queued", "running", "succeeded", "failed", "partial"]),
+  mode: zod.enum([
+    "oauth_pull",
+    "partner_pull",
+    "file_bundle",
+    "booking_url_mirror",
+  ]),
+  sourceId: zod.string(),
+  totalImported: zod.number(),
+  results: zod.array(zod.record(zod.string(), zod.unknown())).optional(),
+  message: zod.string(),
+  error: zod.string().nullish(),
+  createdAt: zod.coerce.date(),
+  completedAt: zod.coerce.date().nullish(),
 });
 
 /**

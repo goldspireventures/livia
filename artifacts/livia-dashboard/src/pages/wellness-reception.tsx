@@ -10,6 +10,14 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { ScanLine, ShoppingBag, Tv } from "lucide-react";
 import { WELLNESS_ROOM_TURNOVER_MINUTES } from "@workspace/policy";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { parseUserFacingError } from "@/lib/user-facing-errors";
 
 type RedeemLookup = {
   ledgerId: string;
@@ -28,6 +36,7 @@ export default function WellnessReceptionPage() {
   const [walkIn, setWalkIn] = useState<string | null>(null);
   const [runSheet, setRunSheet] = useState<Array<{ guest: string; time: string; room: string }>>([]);
   const [serviceId, setServiceId] = useState("");
+  const [services, setServices] = useState<Array<{ id: string; name: string }>>([]);
   const [dutyRoom, setDutyRoom] = useState("Garden");
   const [dutyHour, setDutyHour] = useState("14");
   const [dutyResult, setDutyResult] = useState<string | null>(null);
@@ -37,6 +46,13 @@ export default function WellnessReceptionPage() {
     void apiFetch<{ rows: Array<{ guest: string; time: string; room: string }> }>(
       `/api/businesses/${bid}/wellness/run-sheet`,
     ).then((r) => setRunSheet(r.rows));
+    void apiFetch<Array<{ id: string; name: string; isActive?: boolean }>>(
+      `/businesses/${bid}/services`,
+    )
+      .then((rows) =>
+        setServices(rows.filter((s) => s.isActive !== false).map((s) => ({ id: s.id, name: s.name }))),
+      )
+      .catch(() => setServices([]));
   }, [bid]);
 
   async function proposeWalkIn() {
@@ -48,8 +64,8 @@ export default function WellnessReceptionPage() {
         { method: "POST", body: JSON.stringify({ serviceId }) },
       );
       setWalkIn(r.message);
-    } catch {
-      setWalkIn("No slot found");
+    } catch (err) {
+      setWalkIn(parseUserFacingError(err, "No slot available right now — try another treatment or time."));
     } finally {
       setBusy(false);
     }
@@ -78,11 +94,11 @@ export default function WellnessReceptionPage() {
       setDutyResult(`${r.message} — ${names}`);
     } catch (err: unknown) {
       if (err instanceof ApiFetchError && err.status === 404) {
-        setDutyResult("API route missing — restart the API server on port 3000, then try again.");
+        setDutyResult("This tool is not available yet — contact support if you need duty scheduling.");
       } else if (err instanceof ApiFetchError) {
-        setDutyResult(err.message || `Solver failed (${err.status})`);
+        setDutyResult(parseUserFacingError(err, "Could not run duty solver. Try again."));
       } else {
-        setDutyResult("Solver unavailable");
+        setDutyResult("Could not run duty solver. Try again.");
       }
     } finally {
       setBusy(false);
@@ -204,12 +220,29 @@ export default function WellnessReceptionPage() {
                 <CardDescription>Next slot respecting {WELLNESS_ROOM_TURNOVER_MINUTES}m turnover</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Input
-                  placeholder="Service ID from catalogue"
-                  value={serviceId}
-                  onChange={(e) => setServiceId(e.target.value)}
-                />
-                <Button onClick={() => void proposeWalkIn()} disabled={!serviceId || busy} className="w-full sm:w-auto">
+                {services.length > 0 ? (
+                  <Select value={serviceId} onValueChange={setServiceId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose a treatment" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {services.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Add treatments in Services first — then propose a walk-in slot here.
+                  </p>
+                )}
+                <Button
+                  onClick={() => void proposeWalkIn()}
+                  disabled={!serviceId || busy || services.length === 0}
+                  className="w-full sm:w-auto"
+                >
                   Propose slot
                 </Button>
                 {walkIn ? <p className="text-sm text-muted-foreground">{walkIn}</p> : null}

@@ -36,7 +36,15 @@ Billing no longer sits between publish and first booking.
 | Mobile Today | `SetupGuidedFlowCard` |
 | Lifecycle | `ActivationFunnelPanel` |
 
-## Staging for 5 clients
+## Registration integrity (2026-06-21)
+
+New sign-ups must **never** land in demo tenants (e.g. Dublin Barber Collective).
+
+- Policy: `registration-routing-program.ts` — filter demo slugs, owned-shop routing
+- API: `GET /me/businesses` strips demo worlds for non-demo emails
+- Dashboard: clears tenant localStorage + React Query cache on sign-out / account switch
+- Legal acceptance → `/onboarding` unless user **owns** a shop with onboarding complete
+
 
 - `LIVIA_BETA_SIGNUP_MODE=open` on Railway staging API
 - Funnel: [staging.livia-hq.com/get-started](https://staging.livia-hq.com/get-started)
@@ -47,7 +55,9 @@ Billing no longer sits between publish and first booking.
 2. Complete setup acts → publish phase shows copy/share link
 3. Book test visit on public page → ribbon disappears
 4. Repeat on mobile Today tab
-5. `pnpm founder:uat-preflight` + staging walkthrough per vertical
+5. `pnpm sacred-path:signup` (automated sign-up path) + `pnpm founder:uat-preflight` + staging walkthrough per vertical
+
+**Engineering closure (2026-06-21):** web visual/axe gates green; sacred-path signup E2E wired; mobile `SetupGuidedFlowCard` uses same `testBooking` checklist. Remaining: founder Bucket C sign-off + production secrets/DNS.
 
 ## Next engineering slices (R∞ toward “big fish”)
 

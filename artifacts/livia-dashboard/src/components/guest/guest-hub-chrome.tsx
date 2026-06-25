@@ -80,6 +80,7 @@ function GuestHubTopNav({
               size="sm"
               className="gap-1.5 text-muted-foreground"
               onClick={onSignOut}
+              aria-label={GUEST_HUB_COPY.signOutCta}
               data-testid="guest-hub-sign-out"
             >
               <LogOut className="h-3.5 w-3.5" />

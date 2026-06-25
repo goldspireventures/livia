@@ -9,13 +9,11 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SettingsDisclosure } from "@/components/ui/settings-disclosure";
-import { MigrationBrokersPanel } from "@/components/settings/migration-brokers-panel";
+import { MigrationSwitchPanel } from "@/components/onboarding/migration-switch-panel";
 import { CompetitiveParityPanel } from "@/components/settings/competitive-parity-panel";
 import { ParallelRunPanel } from "@/components/settings/parallel-run-panel";
 import { CalendarSyncPanel } from "@/components/settings/calendar-sync-panel";
 import { IntakeQueuePanel } from "@/components/settings/intake-queue-panel";
-import { UniversalImportPanel } from "@/components/settings/universal-import-panel";
-import { MagicSetupPanel } from "@/components/settings/magic-setup-panel";
 import { customFetch } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { invalidateOperationalState } from "@/lib/operational-cache";
@@ -190,27 +188,25 @@ export default function IntegrationsControls() {
 
   return (
     <div className="space-y-4">
-      <Card id="universal-import-panel" className="scroll-mt-24 border-primary/20">
+      <Card id="migration-import-panel" className="scroll-mt-24 border-primary/20">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <FileUp className="h-4 w-4" />
-            Import from your previous tool
+            Bring your shop from another tool
           </CardTitle>
           <CardDescription>
-            Paste CSV exports — clients, service menu, team, or upcoming appointments. Liv auto-detects
-            columns and completes setup steps for you.
+            Connect, partner import, or upload exports — same pipeline as onboarding. Honest limits per
+            platform.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <UniversalImportPanel businessId={bid} />
-          <div className="border-t border-border/60 pt-4">
-            <p className="text-sm font-medium mb-3">Magic setup — multiple files at once</p>
-            <MagicSetupPanel businessId={bid} compact />
-          </div>
+        <CardContent>
+          <MigrationSwitchPanel
+            businessId={bid}
+            businessVertical={(business as { vertical?: string })?.vertical}
+          />
         </CardContent>
       </Card>
 
-      <MigrationBrokersPanel brokers={brokers} />
       <IntakeQueuePanel businessId={bid} vertical={(business as { vertical?: string })?.vertical} />
       <CalendarSyncPanel
         businessId={bid}

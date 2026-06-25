@@ -194,6 +194,14 @@ export const OnboardingActId = {
   a12_go_live: "a12_go_live",
 } as const;
 
+export type OnboardingChecklistMigrationIntent =
+  (typeof OnboardingChecklistMigrationIntent)[keyof typeof OnboardingChecklistMigrationIntent];
+
+export const OnboardingChecklistMigrationIntent = {
+  fresh: "fresh",
+  switching: "switching",
+} as const;
+
 export interface OnboardingChecklist {
   testBooking?: boolean;
   livEnabled?: boolean;
@@ -203,6 +211,11 @@ export interface OnboardingChecklist {
   billingStarted?: boolean;
   servicesConfirmed?: boolean;
   hoursConfirmed?: boolean;
+  migrationIntent?: OnboardingChecklistMigrationIntent;
+  migrationSource?: string;
+  migrationBookingUrl?: string;
+  migrationExternalId?: string;
+  migrationImported?: boolean;
 }
 
 /**
@@ -263,6 +276,111 @@ export interface Business {
   /** @nullable */
   customBookDomain?: string | null;
   customBookDomainVerified?: boolean;
+}
+
+export type MigrationIngestMode =
+  (typeof MigrationIngestMode)[keyof typeof MigrationIngestMode];
+
+export const MigrationIngestMode = {
+  oauth_pull: "oauth_pull",
+  partner_pull: "partner_pull",
+  file_bundle: "file_bundle",
+  booking_url_mirror: "booking_url_mirror",
+} as const;
+
+export type MigrationImportJobStatus =
+  (typeof MigrationImportJobStatus)[keyof typeof MigrationImportJobStatus];
+
+export const MigrationImportJobStatus = {
+  queued: "queued",
+  running: "running",
+  succeeded: "succeeded",
+  failed: "failed",
+  partial: "partial",
+} as const;
+
+export type MigrationIngestRequestFileBundle = {
+  clientsCsv?: string;
+  servicesCsv?: string;
+  appointmentsCsv?: string;
+  staffCsv?: string;
+};
+
+export interface MigrationIngestRequest {
+  mode: MigrationIngestMode;
+  sourceId: string;
+  brokerId?: string;
+  incumbentId?: string;
+  externalId?: string;
+  bookingUrl?: string;
+  fileBundle?: MigrationIngestRequestFileBundle;
+}
+
+export type MigrationIngestResponseResultsItem = {
+  kind?: string;
+  imported?: number;
+  skipped?: number;
+  errors?: string[];
+};
+
+export interface MigrationIngestResponse {
+  jobId: string;
+  status: MigrationImportJobStatus;
+  async: boolean;
+  message: string;
+  totalImported?: number;
+  results?: MigrationIngestResponseResultsItem[];
+}
+
+export type MigrationImportJobResultsItem = { [key: string]: unknown };
+
+export interface MigrationImportJob {
+  id: string;
+  businessId: string;
+  status: MigrationImportJobStatus;
+  mode: MigrationIngestMode;
+  sourceId: string;
+  totalImported: number;
+  results?: MigrationImportJobResultsItem[];
+  message: string;
+  error?: string | null;
+  createdAt: string;
+  completedAt?: string | null;
+}
+
+export interface MigrationConnectionBody {
+  migrationSource?: string;
+  migrationBookingUrl?: string;
+  migrationExternalId?: string;
+}
+
+export type MigrationConnectionResponseAutomation = { [key: string]: unknown };
+
+export interface MigrationConnectionResponse {
+  ok: boolean;
+  message: string;
+  automation?: MigrationConnectionResponseAutomation;
+}
+
+export type MigrationSourceProfileResponseProfile = { [key: string]: unknown };
+
+export type MigrationSourceProfileResponseAutomation = {
+  [key: string]: unknown;
+};
+
+export type MigrationSourceProfileResponseOauth = {
+  [key: string]: unknown;
+} | null;
+
+export type MigrationSourceProfileResponsePartner = {
+  [key: string]: unknown;
+} | null;
+
+export interface MigrationSourceProfileResponse {
+  profile?: MigrationSourceProfileResponseProfile;
+  automation?: MigrationSourceProfileResponseAutomation;
+  oauth?: MigrationSourceProfileResponseOauth;
+  partner?: MigrationSourceProfileResponsePartner;
 }
 
 export type SupportTicketCategory =

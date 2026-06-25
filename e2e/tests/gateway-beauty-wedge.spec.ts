@@ -29,10 +29,10 @@ test.describe("Beauty demo gateway", () => {
     await expect(page.getByRole("link", { name: /owner/i }).first()).toBeVisible();
   });
 
-  test("marketing beauty vertical links book-demo with vertical", async ({ page }) => {
+  test("marketing beauty vertical links get-started with vertical", async ({ page }) => {
     const marketingBase = process.env.E2E_MARKETING_URL ?? "http://127.0.0.1:5174";
     await page.goto(`${marketingBase}/verticals/beauty`, { waitUntil: "domcontentloaded" });
-    const link = page.getByTestId("marketing-demo-link").filter({ hasText: /vertical/i });
-    await expect(link).toHaveAttribute("href", /\/book-demo\?vertical=beauty/);
+    const link = page.getByTestId("marketing-get-started-link").filter({ hasText: /beauty/i });
+    await expect(link).toHaveAttribute("href", /\/get-started\?vertical=beauty/);
   });
 });

@@ -103,7 +103,7 @@ export const REVENUE_STREAMS = [
   {
     id: "connect",
     title: "Stripe Connect (pass-through)",
-    body: "When deposits go live, card payments land in your connected account. Your Livia subscription stays separate — we do not take marketplace commission on appointments.",
+    body: "When deposits go live, card payments land in your connected account. Your Livia subscription stays separate — we don't take a cut of your appointments.",
   },
 ] as const;
 

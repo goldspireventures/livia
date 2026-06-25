@@ -10,9 +10,14 @@ import { apiFetch } from "@/lib/api-fetch";
 import { legalUrl } from "@/lib/surface-urls";
 import { Loader2 } from "lucide-react";
 import {
+  ownedSessionBusinesses,
+  filterSessionBusinesses,
   resolvePostLegalDestination,
   platformLegalAcceptanceBullets,
+  platformLegalAcceptanceCheckboxLabel,
+  platformLegalAcceptanceContinueCta,
   platformLegalAcceptanceDescription,
+  platformLegalAcceptanceFootnote,
   platformLegalAcceptanceTitle,
   type OnboardingState,
 } from "@workspace/policy";
@@ -60,11 +65,19 @@ export default function LegalAcceptancePage() {
           clerkUserId,
           email,
         });
+        if (destination === "/onboarding") {
+          const owned = ownedSessionBusinesses(
+            filterSessionBusinesses(businesses, email),
+            clerkUserId,
+          );
+          navigate(owned.length === 0 ? "/onboarding?fresh=1&path=1" : "/onboarding");
+          return;
+        }
       } catch {
         destination = "/onboarding";
       }
 
-      navigate(destination);
+      navigate(destination === "/onboarding" ? "/onboarding?fresh=1&path=1" : destination);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Could not save acceptance";
       setError(msg);
@@ -113,21 +126,17 @@ export default function LegalAcceptancePage() {
 
             <label className="flex items-start gap-3 cursor-pointer">
               <Checkbox checked={agreed} onCheckedChange={(v) => setAgreed(v === true)} />
-              <span className="text-sm leading-relaxed">
-                I agree to the Livia Terms of Service and Privacy Policy on behalf of the business I am setting
-                up, and I confirm I am authorised to do so.
-              </span>
+              <span className="text-sm leading-relaxed">{platformLegalAcceptanceCheckboxLabel()}</span>
             </label>
 
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
             <Button className="w-full" disabled={!agreed || saving} onClick={() => void submit()}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continue to shop setup"}
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : platformLegalAcceptanceContinueCta()}
             </Button>
 
             <p className="text-center text-xs text-muted-foreground">
-              New here? You&apos;ll name your shop on the next screen — we won&apos;t drop you into a demo
-              business.
+              {platformLegalAcceptanceFootnote()}
             </p>
           </CardContent>
         </Card>

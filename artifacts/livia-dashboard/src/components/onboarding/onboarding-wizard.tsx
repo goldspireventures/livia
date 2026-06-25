@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Link } from "wouter";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -9,12 +9,14 @@ import {
   type OnboardingActId,
 } from "@/lib/onboarding-acts";
 import { OnboardingCreateBusinessStep } from "./onboarding-create-business-step";
+import { OnboardingImportShellStep } from "./onboarding-import-shell-step";
 import { OnboardingInlinePanel } from "./onboarding-inline-panel";
 import { OnboardingReadinessHint } from "./onboarding-readiness-hint";
-import { OnboardingActForms } from "./onboarding-act-forms";
+import { OnboardingActForms, type OnboardingActSaveHandler } from "./onboarding-act-forms";
 import { OnboardingChapterSpine } from "./onboarding-chapter-spine";
 import { OnboardingPublicLinkSplit } from "./onboarding-public-link-split";
 import { OnboardingPortalLayout } from "./onboarding-portal-layout";
+import { OnboardingPortalStepSpine } from "./onboarding-portal-step-spine";
 import { OnboardingCockpitTease } from "./onboarding-cockpit-tease";
 import {
   OnboardingArrivalOverlay,
@@ -28,18 +30,23 @@ import { onboardingLivHostLine } from "@/lib/onboarding-portal-copy";
 import {
   nextPortalNavAct,
   portalAutoCompleteActs,
-  portalVisibleStepInChapter,
   prevPortalNavAct,
   resolvePortalCurrentAct,
-  type PortalChapterId,
+  resolvePortalNavActs,
 } from "@/lib/onboarding-portal-chapters";
 import { apiFetch, ApiFetchError } from "@/lib/api-fetch";
+import { parseUserFacingError } from "@/lib/user-facing-errors";
 import { useToast } from "@/hooks/use-toast";
+import { useBusiness } from "@/lib/business-context";
 import { verticalPackUi } from "@/lib/vertical-pack-ui";
 import { useTenantExperience } from "@/lib/tenant-experience-api";
 import {
   blockingOnboardingPercent,
+  afterPortalBusinessCreatedState,
   isOnboardingAppUnlocked,
+  portalStepProgress,
+  resolveFastTrackLivLine,
+  type MigrationIntent,
   type OnboardingActId as PolicyActId,
   type OnboardingState,
   type OnboardingChecklist,
@@ -66,6 +73,8 @@ type Props = {
   onPreviewStateChange?: (next: OnboardingStatePayload) => void;
   /** Full-bleed portal shell (default). Set false to opt out. */
   portalMode?: boolean;
+  /** Fresh founder path — chosen before create-business. */
+  initialMigrationIntent?: MigrationIntent;
   /** Cold open / welcome block above chapter spine (e.g. video). */
   arrivalSlot?: ReactNode;
 };
@@ -75,9 +84,7 @@ function actHints(
 ): Partial<Record<OnboardingActId, { body: string; href?: string; cta?: string }>> {
   return {
   a2_shop_profile: {
-    body: `Name your ${vocab.locationNoun.toLowerCase()}, phone, city, and description — customers see this on your booking page.`,
-    href: "/settings?tab=shop",
-    cta: `Edit ${vocab.locationNoun.toLowerCase()}`,
+    body: `Name your ${vocab.locationNoun.toLowerCase()}, phone, city, and a short description for your booking page.`,
   },
   a3_service_menu: {
     body: `We seeded a starter ${vocab.serviceNoun.toLowerCase()} menu — confirm or add more.`,
@@ -90,9 +97,7 @@ function actHints(
     cta: `Manage ${vocab.teamNoun.toLowerCase()}`,
   },
   a5_hours: {
-    body: "Set weekly opening hours so Liv knows when you take bookings.",
-    href: "/onboarding",
-    cta: "Set hours",
+    body: "Set when you take bookings — Liv only offers slots inside these hours.",
   },
   a6_liv: {
     body: "Choose Liv's tone, greeting, and when she can book for you.",
@@ -142,17 +147,59 @@ export function OnboardingWizard({
   onComplete,
   previewMode = false,
   onPreviewStateChange,
-  portalMode = isOnboardingPortalExperienceEnabled({ previewMode }),
+  initialMigrationIntent,
+  portalMode: portalModeProp,
   arrivalSlot,
 }: Props) {
   const { toast } = useToast();
-  const [state, setState] = useState<OnboardingStatePayload | null>(initialState);
+  const [, navigate] = useLocation();
+  const { businesses, setBusinessById } = useBusiness();
+  const actSaveHandlers = useRef<Partial<Record<OnboardingActId, OnboardingActSaveHandler>>>({});
+  const seededChecklist = useMemo((): Partial<OnboardingChecklist> | undefined => {
+    const fromState = initialState?.checklist;
+    if (fromState?.migrationIntent) return fromState;
+    if (initialMigrationIntent && initialMigrationIntent !== "unspecified") {
+      return { migrationIntent: initialMigrationIntent };
+    }
+    return fromState;
+  }, [initialMigrationIntent, initialState?.checklist]);
+  const [state, setState] = useState<OnboardingStatePayload | null>(() =>
+    initialState
+      ? { ...initialState, checklist: { ...seededChecklist, ...initialState.checklist } }
+      : seededChecklist
+        ? { currentAct: "a1_create_business", completedActs: [], percentComplete: 0, checklist: seededChecklist }
+        : null,
+  );
+
+  const activeChecklist = useMemo((): Partial<OnboardingChecklist> | undefined => {
+    const intent =
+      state?.checklist?.migrationIntent ??
+      (initialMigrationIntent && initialMigrationIntent !== "unspecified"
+        ? initialMigrationIntent
+        : undefined);
+    if (!intent) return state?.checklist;
+    return { ...state?.checklist, migrationIntent: intent };
+  }, [state?.checklist, initialMigrationIntent]);
+
+  const isImportTrack = activeChecklist?.migrationIntent === "switching";
+
+  const portalMode =
+    portalModeProp ??
+    (isOnboardingPortalExperienceEnabled({ previewMode }) ||
+      (initialMigrationIntent != null && initialMigrationIntent !== "unspecified") ||
+      isImportTrack);
+
   const [saving, setSaving] = useState(false);
   const [publicSlug, setPublicSlug] = useState<string | null>(businessSlug ?? null);
   const [businessName, setBusinessName] = useState<string>("");
   const [celebrate, setCelebrate] = useState(false);
   const [arrivalOpen, setArrivalOpen] = useState(() => {
-    if (!portalMode || previewMode) return false;
+    if (previewMode || initialMigrationIntent) return false;
+    const portalLikely =
+      portalModeProp ??
+      (isOnboardingPortalExperienceEnabled({ previewMode }) ||
+        (initialMigrationIntent != null && initialMigrationIntent !== "unspecified"));
+    if (!portalLikely) return false;
     try {
       return !localStorage.getItem(ONBOARDING_ARRIVAL_STORAGE_KEY);
     } catch {
@@ -202,13 +249,17 @@ export function OnboardingWizard({
 
   const currentAct: OnboardingActId = useMemo(() => {
     if (!portalMode) return rawCurrentAct;
-    return resolvePortalCurrentAct(rawCurrentAct, state?.checklist);
-  }, [portalMode, rawCurrentAct, state?.checklist]);
+    return resolvePortalCurrentAct(rawCurrentAct, activeChecklist);
+  }, [portalMode, rawCurrentAct, activeChecklist]);
 
   const stepIndex = actIndex(currentAct);
   const tourPercent = state?.percentComplete ?? (businessId ? 8 : 0);
   const blockingPct = state
-    ? blockingOnboardingPercent((state.completedActs ?? []) as PolicyActId[], businessVertical)
+    ? blockingOnboardingPercent(
+        (state.completedActs ?? []) as PolicyActId[],
+        businessVertical,
+        activeChecklist,
+      )
     : 0;
   const percent = Math.max(tourPercent, blockingPct);
   const appUnlocked = isOnboardingAppUnlocked(
@@ -223,8 +274,8 @@ export function OnboardingWizard({
     businessVertical,
   );
 
-  const persistState = async (next: OnboardingStatePayload) => {
-    if (!businessId) return;
+  const persistState = async (next: OnboardingStatePayload, targetBusinessId = businessId) => {
+    if (!targetBusinessId) return;
     if (previewMode) {
       setState(next);
       onPreviewStateChange?.(next);
@@ -232,7 +283,7 @@ export function OnboardingWizard({
     }
     setSaving(true);
     try {
-      await apiFetch(`/businesses/${businessId}`, {
+      await apiFetch(`/businesses/${targetBusinessId}`, {
         method: "PATCH",
         body: JSON.stringify({ onboardingState: next }),
       });
@@ -242,10 +293,8 @@ export function OnboardingWizard({
       toast({
         title: "Could not save progress",
         description: e?.requestId
-          ? `${e.message} (ref ${e.requestId})`
-          : err instanceof Error
-            ? err.message
-            : "Try again",
+          ? `${parseUserFacingError(err, "Could not save progress")} (ref ${e.requestId})`
+          : parseUserFacingError(err, "Could not save progress"),
         variant: "destructive",
       });
     } finally {
@@ -276,27 +325,50 @@ export function OnboardingWizard({
   };
 
   const completeAct = async (act: OnboardingActId) => {
-    if (act === "a12_go_live" && !state?.checklist?.testBooking) {
+    const save = actSaveHandlers.current[act];
+    if (save && !(await save())) return;
+
+    if (
+      act === "a11_migration" &&
+      isImportTrack &&
+      !state?.checklist?.migrationImported
+    ) {
       toast({
-        title: "One more step",
-        description:
-          "Book a test appointment on your public page or use New booking, then tick “Test booking” on the checklist.",
+        title: "Import your data first",
+        description: "Upload a file or connect your old system. Profile and menu fill in from there.",
         variant: "destructive",
       });
       return;
     }
-    const autoDone = portalMode ? portalAutoCompleteActs(act, state?.checklist) : [];
+
+    if (act === "a12_go_live" && !state?.checklist?.testBooking) {
+      toast({
+        title: "One more step",
+        description:
+          "Complete a test booking on your public page (/book link), then return here to open Livia.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const autoDone = portalMode ? portalAutoCompleteActs(act, activeChecklist) : [];
     const completed = [...new Set([...(state?.completedActs ?? []), act, ...autoDone])];
     const nextAct = portalMode
-      ? (nextPortalNavAct(act, state?.checklist) ?? act)
+      ? (nextPortalNavAct(act, activeChecklist) ?? act)
       : actIndex(act) >= 0 && actIndex(act) < ONBOARDING_ACT_IDS.length - 1
         ? ONBOARDING_ACT_IDS[actIndex(act) + 1]!
         : act;
+    const nav = portalMode ? resolvePortalNavActs(activeChecklist) : ONBOARDING_ACT_IDS;
+    const navDone = nav.filter((id) => completed.includes(id)).length;
     const next: OnboardingStatePayload = {
       currentAct: nextAct,
       completedActs: completed,
-      percentComplete: Math.min(100, Math.round((completed.length / ONBOARDING_ACT_IDS.length) * 100)),
-      checklist: state?.checklist,
+      percentComplete: Math.min(
+        100,
+        portalMode
+          ? Math.round((navDone / Math.max(nav.length, 1)) * 100)
+          : Math.round((completed.length / ONBOARDING_ACT_IDS.length) * 100),
+      ),
+      checklist: activeChecklist ?? state?.checklist,
     };
     await persistState(next);
     if (act === "a12_go_live") {
@@ -318,7 +390,7 @@ export function OnboardingWizard({
 
   const jumpToAct = (act: OnboardingActId) => {
     if (!businessId) return;
-    const target = portalMode ? resolvePortalCurrentAct(act, state?.checklist) : act;
+    const target = portalMode ? resolvePortalCurrentAct(act, activeChecklist) : act;
     const idx = actIndex(target);
     const curIdx = actIndex(currentAct);
     const done = state?.completedActs?.includes(target);
@@ -333,7 +405,7 @@ export function OnboardingWizard({
 
   const goBack = () => {
     const prev = portalMode
-      ? prevPortalNavAct(currentAct, !!businessId, state?.checklist)
+      ? prevPortalNavAct(currentAct, !!businessId, activeChecklist)
       : (() => {
           if (stepIndex <= 0) return null;
           let p = ONBOARDING_ACT_IDS[stepIndex - 1]!;
@@ -352,48 +424,61 @@ export function OnboardingWizard({
     });
   };
 
-  const jumpToChapter = (_chapterId: PortalChapterId, targetAct: OnboardingActId) => {
-    jumpToAct(targetAct);
-  };
-
   const hint = hints[currentAct];
-  const chapterMicro = portalMode ? portalVisibleStepInChapter(currentAct, state?.checklist) : null;
+  const stepProgress = portalMode ? portalStepProgress(currentAct, activeChecklist) : null;
   const canGoBack = portalMode
-    ? !!prevPortalNavAct(currentAct, !!businessId, state?.checklist)
+    ? !!prevPortalNavAct(currentAct, !!businessId, activeChecklist)
     : stepIndex > 0 && !(businessId && stepIndex === 1);
   const packLabel = tenantExperience?.vocabulary.label ?? vocab.label;
   const wideStep = currentAct === "a6_liv" || currentAct === "a8_public_link";
-  const livMessage = onboardingLivHostLine(currentAct, vocab, businessName);
+  const livMessage =
+    currentAct === "a1_create_business" && activeChecklist?.migrationIntent
+      ? resolveFastTrackLivLine({ intent: activeChecklist.migrationIntent })
+      : currentAct === "a11_migration"
+        ? "Pick your old system or upload a file. Liv maps it into your shop."
+        : onboardingLivHostLine(currentAct, vocab, businessName);
   const checklistTicks = state?.checklist
     ? Object.values(state.checklist).filter(Boolean).length
     : 0;
 
-  const preBusinessProgress = !businessId ? (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <span>
-          {portalMode
-            ? "Chapter 1 of 3 · Your shop"
-            : `Step ${Math.max(1, stepIndex + 1)} of ${ONBOARDING_ACT_IDS.length}`}
-        </span>
-        <span>
-          {blockingPct}% essentials · {tourPercent}% tour
-        </span>
-      </div>
-      <div className="h-1.5 w-full rounded-full bg-muted/80 overflow-hidden">
-        <div
-          className="h-full bg-primary transition-all duration-500"
-          style={{ width: `${percent}%` }}
-        />
-      </div>
-    </div>
-  ) : null;
-
   const stepBody = (
     <>
       {currentAct === "a1_create_business" && !businessId ? (
-        <OnboardingCreateBusinessStep
+        <>
+          {activeChecklist?.migrationIntent ? (
+            <div className="space-y-1">
+              <h2 className="font-serif text-xl tracking-tight">
+                {isImportTrack ? "Quick basics" : "Create your shop"}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {isImportTrack
+                  ? "Three fields. Your menu and clients come from the import next."
+                  : "A starter menu goes in automatically after this."}
+              </p>
+            </div>
+          ) : null}
+          {isImportTrack ? (
+            <OnboardingImportShellStep
+              onVerticalPreview={onVerticalPreview}
+              onCreated={async (id, slug) => {
+                setPublicSlug(slug);
+                onBusinessCreated(id, slug);
+                const intent = activeChecklist?.migrationIntent ?? initialMigrationIntent;
+                if (intent && intent !== "unspecified") {
+                  const next = afterPortalBusinessCreatedState(
+                    { ...(activeChecklist ?? {}), migrationIntent: intent },
+                    businessVertical,
+                  ) as OnboardingStatePayload;
+                  setState(next);
+                  await persistState(next, id);
+                }
+              }}
+            />
+          ) : (
+          <OnboardingCreateBusinessStep
           onVerticalPreview={onVerticalPreview}
+          initialMigrationIntent={activeChecklist?.migrationIntent ?? initialMigrationIntent}
+          hideMigrationIntentPicker
           parentBusinessId={
             parentBusinessId ??
             (typeof window !== "undefined"
@@ -406,22 +491,25 @@ export function OnboardingWizard({
               ? "location"
               : "standalone"
           }
-          onCreated={(id, slug, extras) => {
+          onCreated={async (id, slug, extras) => {
             setPublicSlug(slug);
             onBusinessCreated(id, slug);
-            if (extras?.migrationIntent && extras.migrationIntent !== "unspecified") {
-              void persistState({
-                currentAct: "a2_shop_profile",
-                completedActs: ["a1_create_business"],
-                percentComplete: state?.percentComplete ?? 8,
-                checklist: {
-                  ...(state?.checklist ?? {}),
-                  migrationIntent: extras.migrationIntent,
-                },
-              });
+            const intent =
+              extras?.migrationIntent ??
+              activeChecklist?.migrationIntent ??
+              initialMigrationIntent;
+            if (intent && intent !== "unspecified") {
+              const next = afterPortalBusinessCreatedState(
+                { ...(activeChecklist ?? {}), migrationIntent: intent },
+                businessVertical,
+              ) as OnboardingStatePayload;
+              setState(next);
+              await persistState(next, id);
             }
           }}
         />
+          )}
+        </>
       ) : null}
 
       {currentAct === "a8_public_link" && publicSlug ? (
@@ -442,9 +530,23 @@ export function OnboardingWizard({
         <OnboardingActForms
           act={currentAct}
           businessId={businessId}
+          businessSlug={publicSlug}
           checklist={state?.checklist}
           onChecklistChange={updateChecklist}
           previewMode={previewMode}
+          onRegisterSave={(actId, handler) => {
+            if (handler) actSaveHandlers.current[actId] = handler;
+            else delete actSaveHandlers.current[actId];
+          }}
+          onSaved={() => {
+            if (currentAct === "a2_shop_profile" && businessId && !previewMode) {
+              void apiFetch<{ name?: string }>(`/businesses/${businessId}`)
+                .then((b) => {
+                  if (b.name) setBusinessName(String(b.name));
+                })
+                .catch(() => {});
+            }
+          }}
         />
       ) : null}
 
@@ -476,7 +578,9 @@ export function OnboardingWizard({
 
       {hint?.href &&
       !previewMode &&
+      !portalMode &&
       currentAct !== "a1_create_business" &&
+      !INLINE_FORM_ACTS.includes(currentAct) &&
       !INLINE_PREVIEW_ACTS.includes(currentAct) ? (
         <Button variant="outline" asChild>
           <Link href={hint.href}>{hint.cta ?? "Open"}</Link>
@@ -488,9 +592,17 @@ export function OnboardingWizard({
   const footerNav =
     currentAct !== "a1_create_business" ? (
       <div className="flex flex-col gap-3">
-        {appUnlocked ? (
-          <Button variant="secondary" className="w-full" asChild>
-            <Link href="/dashboard">Enter Livia — finish the rest later</Link>
+        {appUnlocked && businessId ? (
+          <Button
+            variant="secondary"
+            className="w-full"
+            type="button"
+            onClick={() => {
+              setBusinessById(businessId);
+              navigate("/dashboard");
+            }}
+          >
+            Enter Livia — finish later
           </Button>
         ) : null}
         <div className="flex items-center justify-between gap-3">
@@ -508,7 +620,7 @@ export function OnboardingWizard({
             disabled={saving || !businessId}
             onClick={() => void completeAct(currentAct)}
           >
-            {currentAct === "a12_go_live" ? "Open your cockpit" : "Continue"}
+            {currentAct === "a12_go_live" ? "Open Livia" : "Continue"}
             <ChevronRight className="h-4 w-4 ml-1" />
           </Button>
         </div>
@@ -524,9 +636,13 @@ export function OnboardingWizard({
             completedActs={(state?.completedActs ?? []) as OnboardingActId[]}
             onJump={jumpToAct}
           />
-        ) : (
-          preBusinessProgress
-        )}
+        ) : activeChecklist?.migrationIntent ? (
+          <OnboardingPortalStepSpine
+            currentAct={currentAct}
+            completedActs={(state?.completedActs ?? []) as OnboardingActId[]}
+            checklist={activeChecklist}
+          />
+        ) : null}
         <Card className="border-primary/10 shadow-lg">
           <CardHeader>
             <CardTitle className="text-2xl font-serif tracking-tight">
@@ -554,26 +670,30 @@ export function OnboardingWizard({
         livMessage={livMessage}
         currentAct={currentAct}
         completedActs={(state?.completedActs ?? []) as OnboardingActId[]}
-        onJumpChapter={businessId ? jumpToChapter : undefined}
+        checklist={activeChecklist}
         chapterStepHint={
-          chapterMicro
-            ? `${chapterMicro.label} · ${chapterMicro.index} of ${chapterMicro.total} in this chapter`
+          stepProgress
+            ? `Step ${stepProgress.index} of ${stepProgress.total}: ${stepProgress.label}`
             : null
         }
-        showChapterSpine={!!businessId}
-        packLabel={packLabel}
-        wide={wideStep}
+        showProgressSpine={!!activeChecklist?.migrationIntent}
+        packLabel={isImportTrack ? "Import path" : "Fresh start"}
+        wide={wideStep || currentAct === "a11_migration"}
         celebrate={celebrate}
         topSlot={
           <>
             {arrivalSlot}
-            {preBusinessProgress}
             {businessId ? <CrossSurfaceContinueCard className="mt-4" /> : null}
           </>
         }
         footer={footerNav}
       >
-        {stepBody}
+        <div
+          data-testid={isImportTrack ? "onboarding-track-import" : "onboarding-track-fresh"}
+          className="contents"
+        >
+          {stepBody}
+        </div>
       </OnboardingPortalLayout>
     </>
   );

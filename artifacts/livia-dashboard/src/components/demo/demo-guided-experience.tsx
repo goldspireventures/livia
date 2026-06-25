@@ -202,10 +202,11 @@ export function DemoGuidedExperience({
                 type="button"
                 onClick={onProvision}
                 disabled={!!busy}
+                aria-label="Set up demo world"
                 className="mt-4 inline-flex items-center gap-2 rounded-full bg-amber-400/90 text-black px-4 py-2 text-sm font-semibold hover:bg-amber-300 disabled:opacity-60 w-fit"
                 data-testid="demo-guided-provision"
               >
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <RefreshCw className="h-4 w-4" aria-hidden />}
                 Set up demo world
               </button>
             ) : null}

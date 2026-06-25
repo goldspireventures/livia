@@ -133,8 +133,12 @@ export function CareSeriesPanel({
                   <Input value={sessionsTotal} onChange={(e) => setSessionsTotal(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Service ID</Label>
-                  <Input value={serviceId} onChange={(e) => setServiceId(e.target.value)} />
+                  <Label>Linked treatment</Label>
+                  <Input
+                    value={serviceId}
+                    onChange={(e) => setServiceId(e.target.value)}
+                    placeholder="Choose from Services list"
+                  />
                 </div>
               </div>
               <Button size="sm" onClick={() => void createSeries()}>

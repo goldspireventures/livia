@@ -7,6 +7,7 @@ import { SettingsDisclosure } from "@/components/ui/settings-disclosure";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WELLNESS_REPORT_LABELS, listReportsForAudience } from "@workspace/policy";
+import { parseUserFacingError } from "@/lib/user-facing-errors";
 import { WellnessEodCard } from "@/components/wellness/wellness-eod-card";
 import { ChevronRight } from "lucide-react";
 
@@ -66,10 +67,10 @@ export default function WellnessReportsPage() {
         setData(null);
         setDigest(null);
         if (err instanceof ApiFetchError && err.status === 404) {
-          setLoadError("Restart API on port 3000, then refresh.");
+          setLoadError("Reports are not available yet for this studio. Try again shortly.");
           return;
         }
-        setLoadError(err instanceof ApiFetchError ? err.message : "Could not load reports.");
+        setLoadError(parseUserFacingError(err, "Could not load reports."));
       })
       .finally(() => setLoading(false));
   }, [bid]);

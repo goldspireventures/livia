@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { ArrowRight } from "lucide-react";
 import { ConstellationSacredMap } from "@/components/home/constellation-sacred-map";
 import { editorialCopy, type MarketingLocale } from "@/lib/marketing-editorial-i18n";
-import { marketingDemoPath } from "@/lib/marketing-links";
+import { marketingGetStartedPath } from "@/lib/marketing-links";
 import { CONSTELLATION_ORBIT_VERTICALS } from "@/lib/marketing-verticals";
 import "@/styles/constellation-home.css";
 
@@ -29,8 +29,12 @@ export function ConstellationHero({ locale }: ConstellationHeroProps) {
           </h1>
           <p className="constellation-hero__sub">{t.subhead}</p>
           <div className="constellation-hero__actions">
-            <Link href={marketingDemoPath} className="constellation-hero__cta-primary" data-testid="marketing-hero-demo">
-              {t.bookDemo}
+            <Link
+              href={marketingGetStartedPath}
+              className="constellation-hero__cta-primary"
+              data-testid="marketing-hero-get-started"
+            >
+              {t.getStarted}
               <ArrowRight className="h-4 w-4 shrink-0" strokeWidth={1.75} />
             </Link>
           </div>

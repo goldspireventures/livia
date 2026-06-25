@@ -5,7 +5,7 @@ import { LiviaLogoLink } from "@/components/brand/livia-logo-link";
 import { ConstellationPageShell } from "@/components/constellation/constellation-page-shell";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { MarketingFooter, W1_FOOTER_LINKS } from "@/components/marketing-footer";
-import { marketingDemoPath, marketingGetStartedPath } from "@/lib/marketing-links";
+import { marketingGetStartedPath } from "@/lib/marketing-links";
 import { applyMarketingPlatformTheme } from "@/lib/marketing-platform-theme";
 import { MarketingSkipLink } from "@/components/marketing-skip-link";
 import { MarketingBackLink, shouldShowMarketingBack } from "@/components/marketing-back-link";
@@ -77,13 +77,6 @@ export function MarketingLayout({
             >
               Get started
             </Link>
-            <Link
-              href={marketingDemoPath}
-              className="hidden lg:inline-flex text-sm font-medium text-muted-foreground hover:text-white transition-colors min-h-[44px] items-center"
-              data-testid="marketing-demo-link"
-            >
-              Book a demo
-            </Link>
             <a
               href={`${homeHref}#waitlist`}
               className="text-sm font-medium text-muted-foreground hover:text-white transition-colors min-h-[44px] inline-flex items-center"
@@ -113,13 +106,6 @@ export function MarketingLayout({
                     onClick={() => setMenuOpen(false)}
                   >
                     Get started
-                  </Link>
-                  <Link
-                    href={marketingDemoPath}
-                    className="min-h-[44px] inline-flex items-center text-sm text-muted-foreground hover:text-white"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    Book a demo
                   </Link>
                   <a
                     href={`${homeHref}#waitlist`}

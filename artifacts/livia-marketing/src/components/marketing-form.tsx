@@ -154,7 +154,11 @@ export function MarketingForm({
               <FormItem>
                 <Select value={field.value ?? ""} onValueChange={field.onChange}>
                   <FormControl>
-                    <SelectTrigger className="min-h-[44px] bg-background/50 border-white/10" data-testid="waitlist-vertical">
+                    <SelectTrigger
+                      className="min-h-[44px] bg-background/50 border-white/10"
+                      aria-label={verticalLabel}
+                      data-testid="waitlist-vertical"
+                    >
                       <SelectValue placeholder={verticalLabel} />
                     </SelectTrigger>
                   </FormControl>
@@ -176,7 +180,11 @@ export function MarketingForm({
               <FormItem>
                 <Select value={field.value ?? "IE"} onValueChange={field.onChange}>
                   <FormControl>
-                    <SelectTrigger className="min-h-[44px] bg-background/50 border-white/10" data-testid="waitlist-country">
+                    <SelectTrigger
+                      className="min-h-[44px] bg-background/50 border-white/10"
+                      aria-label={countryLabel}
+                      data-testid="waitlist-country"
+                    >
                       <SelectValue placeholder={countryLabel} />
                     </SelectTrigger>
                   </FormControl>

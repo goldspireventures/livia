@@ -35,7 +35,11 @@ export const CROSS_SURFACE_COPY = {
   webToMobileTitle: "Continue on mobile",
   webToMobileBody:
     "Same shop, same progress — finish essentials on your phone with haptics, push alerts, and floor-friendly flows.",
-  maryGuestTitle: "Demo guest Mary",
+  maryGuestTitle: "Demo guest",
+  maryGuestBody: "Sign in to My Livia with your mobile — one vault on app and web.",
+} as const;
+
+export const CROSS_SURFACE_DEMO_COPY = {
   maryGuestBody:
-    "Sign in to My Livia with +353 87 100 0001 (staging code 000000). Works on mobile app and web — one vault.",
+    "Sign in with +353 87 100 0001 (staging code 000000). Works on mobile app and web.",
 } as const;

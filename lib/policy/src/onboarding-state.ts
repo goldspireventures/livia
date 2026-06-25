@@ -51,6 +51,10 @@ export const onboardingChecklistSchema = z.object({
   migrationIntent: z.enum(["fresh", "switching"]).optional(),
   /** IncumbentMigrationSource id when switching */
   migrationSource: z.string().optional(),
+  /** Public booking URL for menu mirror (Booksy, etc.) */
+  migrationBookingUrl: z.string().max(512).optional(),
+  /** Partner / external business identifier for future API ingest */
+  migrationExternalId: z.string().max(128).optional(),
 });
 
 export type OnboardingChecklist = z.infer<typeof onboardingChecklistSchema>;
@@ -137,6 +141,6 @@ export const ONBOARDING_ACT_LABELS: Record<OnboardingActId, string> = {
   a8_public_link: "Public booking link",
   a9_billing: "Choose your plan",
   a10_invite_team: "Invite your team",
-  a11_migration: "Import clients (optional)",
+  a11_migration: "Import your shop",
   a12_go_live: "Go-live checklist",
 };

@@ -5,8 +5,8 @@ import {
 } from "@workspace/policy";
 import {
   dashboardWedgeUrl,
-  marketingBookDemoPath,
-  marketingBookDemoUrl,
+  marketingGetStartedPath,
+  marketingGetStartedUrl,
   marketingDemoConciergePath,
 } from "@/lib/marketing-links";
 import { readDemoGateKeyFromLocation } from "@/lib/marketing-demo-gate-client";
@@ -23,7 +23,7 @@ export function normalizeMarketingVerticalSlug(raw?: string | null): BusinessVer
   return isMarketingDemoWedgeUnlocked(slug) ? slug : null;
 }
 
-/** Where a prospect goes next — book-demo, concierge, or straight into a wedge. */
+/** Where a prospect goes next — get-started, concierge, or straight into a wedge. */
 export function marketingDemoHandoffUrl(opts: {
   vertical?: string | null;
   gateKey?: string | null;
@@ -34,8 +34,8 @@ export function marketingDemoHandoffUrl(opts: {
   if (key) {
     return `${marketingDemoConciergePath}?${MARKETING_DEMO_GATE_QUERY_PARAM}=${encodeURIComponent(key)}`;
   }
-  if (vertical) return marketingBookDemoUrl(vertical);
-  return marketingBookDemoPath;
+  if (vertical) return marketingGetStartedUrl(vertical);
+  return marketingGetStartedPath;
 }
 
 export function marketingDemoHandoffUrlFromBrowser(vertical?: string | null): string {

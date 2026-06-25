@@ -7,7 +7,41 @@ Captures live under `e2e/visual-captures/` (gitignored). Re-run: `pnpm e2e:visua
 
 ---
 
-## 2026-06-15 — Guest book P0a (staging founder pass)
+## 2026-06-21 — Platform perfection pass (P0 trust + program)
+
+| Surface | Route | Finding | Fix | Status |
+|---------|-------|---------|-----|--------|
+| Guest hub OTP | `/my` sign-in | Staging/dev OTP codes visible when `magicOtp` set even without relaxed staging | Show codes only when `stagingRelaxed` | **Done** — re-capture prod build |
+| Cross-surface copy | onboarding handoff | Mary demo text with staging code in prod constant | Split `CROSS_SURFACE_DEMO_COPY` vs prod copy | **Done** |
+| Settings parallel-run | `/settings` integrations | "Compare salon bookings" — salon-default | "Compare previous bookings" | **Done** |
+| Settings integrations | `/settings` | Legacy broker grid with generic Connect | `MigrationSwitchPanel` (prior session) | **Done** |
+| Error surfaces | onboarding, inbox, billing, store | Raw `HTTP 4xx` / `err.message` in toasts | `parseUserFacingError()` wired across owner surfaces | **Done** |
+| Mobile guest hub | `my-livia` | Staging code + demo buttons in prod builds | `isProductionCustomerSurface()` gates | **Done** |
+| Mobile guest OTP | guest-hub-otp | "port 3000" dev message on network fail | Prod: connection message only | **Done** |
+| Mobile comms | settings comms block | `META_ACCESS_TOKEN` operator jargon | Customer-friendly linking copy | **Done** |
+| Wellness reports | `/wellness/reports` | "Restart API on port 3000" on 404 | Human reports-unavailable message | **Done** |
+| Care series | customers panel | "Service ID" operator label | "Linked treatment" + placeholder | **Done** |
+| Migration import | onboarding switch | "verify salon ID" generic error | "check your identifier" | **Done** |
+| Communications test | `/settings` comms | FAILED transport jargon in toast | Plain send-failed guidance | **Done** |
+
+**Program authority:** [`product/PLATFORM-PERFECTION-PROGRAM.md`](../product/PLATFORM-PERFECTION-PROGRAM.md)  
+**Next:** Full web re-capture `pnpm e2e:visual-audit:all:web` · founder Bucket C · sacred path script.
+
+## 2026-06-24 — Automated deep analysis closeout
+
+| Metric | Count |
+|--------|-------|
+| Routes scanned (automated) | 0 |
+| Hard error copy | 0 |
+| Serious a11y (axe) | 0 |
+| Layout overflow | 0 |
+
+**Result:** No automated findings — surfaces passed error-copy + serious axe gates.
+
+**PNG cleanup:** screenshots removed after analysis (findings JSON retained).
+
+---
+
 
 | Surface | Route | Finding | Fix | Status |
 |---------|-------|---------|-----|--------|

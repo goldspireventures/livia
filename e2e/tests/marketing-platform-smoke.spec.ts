@@ -30,7 +30,7 @@ const ROUTES = [
   "/eu-ai",
   "/contact",
   "/changelog",
-  "/book-demo",
+  "/get-started",
   "/demo",
   "/legal/privacy",
   "/status",
@@ -66,16 +66,21 @@ test.describe("Marketing platform smoke", () => {
     await expect(page.getByText(/dental/i)).toHaveCount(0);
   });
 
-  test("/demo without key redirects to book-demo", async ({ page }) => {
-    await page.goto(`${marketingBase}/demo`, { waitUntil: "domcontentloaded" });
-    await page.waitForURL(/\/book-demo/, { timeout: 15_000 });
+  test("/book-demo redirects to get-started", async ({ page }) => {
+    await page.goto(`${marketingBase}/book-demo`, { waitUntil: "domcontentloaded" });
+    await page.waitForURL(/\/get-started/, { timeout: 15_000 });
   });
 
-  test("demo CTA points at book-demo request page", async ({ page }) => {
+  test("/demo without key redirects to get-started", async ({ page }) => {
+    await page.goto(`${marketingBase}/demo`, { waitUntil: "domcontentloaded" });
+    await page.waitForURL(/\/get-started/, { timeout: 15_000 });
+  });
+
+  test("how-it-works CTA points at get-started", async ({ page }) => {
     await page.goto(`${marketingBase}/how-it-works`);
-    const demo = page.getByTestId("marketing-demo-link").first();
-    await expect(demo).toBeVisible();
-    await expect(demo).toHaveAttribute("href", "/book-demo");
+    const cta = page.getByTestId("marketing-get-started-link").first();
+    await expect(cta).toBeVisible();
+    await expect(cta).toHaveAttribute("href", "/get-started");
   });
 
   test("pricing shows F9 tiers from catalogue", async ({ page }) => {

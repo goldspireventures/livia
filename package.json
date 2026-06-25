@@ -29,6 +29,7 @@
     "screen-cards:status": "node scripts/screen-cards-status.mjs",
     "screen-cards:update": "pnpm e2e:prep && pnpm --filter @workspace/e2e run test:screen-card-p0 -- --update-snapshots",
     "founder:uat-preflight": "node scripts/founder-uat-preflight.mjs",
+    "sacred-path:signup": "node scripts/headless-sacred-path-signup.mjs",
     "founder:release-gate": "node scripts/founder-release-gate.mjs",
     "exec:hat-work": "node --env-file=.env scripts/exec-hat-work.mjs",
     "vertical:onboarding-kit": "node scripts/vertical-onboarding-kit.mjs",

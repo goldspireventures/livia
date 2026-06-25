@@ -23,6 +23,8 @@ console.log("\nManual / local (API :3001 + dashboard :5173 + Clerk):\n");
 console.log("  pnpm --filter @workspace/e2e run test:p0-visual");
 console.log("  pnpm --filter @workspace/e2e run test:founder-uat");
 console.log("  pnpm --filter @workspace/e2e run test:screen-card-p0");
+console.log("  pnpm sacred-path:signup");
+console.log("  pnpm --filter @workspace/e2e run test:sacred-path-signup");
 console.log("  pnpm --filter @workspace/e2e run test:preset-public-parity\n");
 
 if (!ok) process.exit(1);

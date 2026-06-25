@@ -23,6 +23,7 @@ import { refundLadderWorkflow } from "./refund-ladder";
 import { commerceIntelligenceDaily } from "./commerce-intelligence-daily";
 import { commerceWeeklyDigest } from "./commerce-weekly-digest";
 import { twinObservationsDaily } from "./twin-observations-daily";
+import { migrationImportJob } from "./migration-import-job";
 
 export const workflowFunctions = [
   bookingReminderT24,
@@ -50,4 +51,5 @@ export const workflowFunctions = [
   commerceIntelligenceDaily,
   commerceWeeklyDigest,
   twinObservationsDaily,
+  migrationImportJob,
 ];

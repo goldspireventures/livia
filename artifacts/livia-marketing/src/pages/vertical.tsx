@@ -1,11 +1,11 @@
-import { useRoute } from "wouter";
-import { Link } from "wouter";
+import { useRoute, Link } from "wouter";
 import { MarketingLayout } from "@/components/marketing-layout";
 import { ConstellationPageHeader } from "@/components/constellation/constellation-page-header";
 import { ConstellationInnerPage, ConstellationPainList } from "@/components/constellation/constellation-inner-page";
 import { ConstellationGlassCard } from "@/components/constellation/constellation-spine";
 import { MarketingForm } from "@/components/marketing-form";
-import { MarketingDemoEntryLink } from "@/components/marketing-demo-entry-link";
+import { VerticalProductShowcase } from "@/components/vertical/vertical-product-showcase";
+import { marketingGetStartedUrl } from "@/lib/marketing-links";
 
 const VERTICALS: Record<
   string,
@@ -113,6 +113,8 @@ export default function VerticalPage() {
           <ConstellationPainList items={v.pains} />
         </section>
 
+        <VerticalProductShowcase slug={slug} />
+
         <ConstellationGlassCard className="p-6 mb-10">
           <p className="cst-section-label">Liv</p>
           <h2 className="text-lg font-medium mb-3">How Liv helps</h2>
@@ -120,13 +122,13 @@ export default function VerticalPage() {
         </ConstellationGlassCard>
 
         <p className="mb-12">
-          <MarketingDemoEntryLink
-            vertical={demoVertical}
+          <Link
+            href={marketingGetStartedUrl(demoVertical)}
             className="cst-page-link"
-            testId="marketing-demo-link"
+            data-testid="marketing-get-started-link"
           >
-            Walk the {v.title.toLowerCase()} demo →
-          </MarketingDemoEntryLink>
+            Get started with {v.title.toLowerCase()} →
+          </Link>
         </p>
 
         <section className="cst-page-section pt-8">

@@ -14,28 +14,31 @@ import {
 
 function StepIndicator({ step }: { step: 1 | 2 }) {
   return (
-    <ol
+    <div
       className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest"
+      role="group"
       aria-label="Sign-in progress"
     >
-      <li
+      <span
         className={cn(
           "px-2 py-1 rounded-full",
           step === 1 ? "bg-primary/15 text-primary" : "text-muted-foreground",
         )}
       >
         1 · Phone
-      </li>
-      <span className="text-muted-foreground/50">→</span>
-      <li
+      </span>
+      <span className="text-muted-foreground/50" aria-hidden>
+        →
+      </span>
+      <span
         className={cn(
           "px-2 py-1 rounded-full",
           step === 2 ? "bg-primary/15 text-primary" : "text-muted-foreground",
         )}
       >
         2 · Code
-      </li>
-    </ol>
+      </span>
+    </div>
   );
 }
 
@@ -147,10 +150,17 @@ export function GuestHubSignIn({
                   <Button
                     className="w-full min-h-[48px]"
                     disabled={busy || !phone.trim() || resendSec > 0}
+                    aria-label={
+                      busy
+                        ? "Sending verification code"
+                        : resendSec > 0
+                          ? `Resend available in ${resendSec} seconds`
+                          : "Send verification code"
+                    }
                     onClick={onRequestOtp}
                   >
                     {busy ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
                     ) : resendSec > 0 ? (
                       `Resend in ${resendSec}s`
                     ) : (
@@ -166,10 +176,10 @@ export function GuestHubSignIn({
                   <p className="text-xs text-muted-foreground font-mono mt-1 truncate">{phone}</p>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {devOtp ? (
+                  {stagingRelaxed && devOtp ? (
                     <p className="text-xs text-muted-foreground font-mono">Session code: {devOtp}</p>
                   ) : null}
-                  {magicOtp ? (
+                  {stagingRelaxed && magicOtp ? (
                     <p className="text-xs text-muted-foreground font-mono">Staging code: {magicOtp}</p>
                   ) : null}
                   <Input
@@ -184,9 +194,10 @@ export function GuestHubSignIn({
                   <Button
                     className="w-full min-h-[48px]"
                     disabled={busy || code.length < 4}
+                    aria-label={busy ? "Verifying code" : GUEST_HUB_COPY.signInVerifyCta}
                     onClick={onVerifyOtp}
                   >
-                    {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : GUEST_HUB_COPY.signInVerifyCta}
+                    {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : GUEST_HUB_COPY.signInVerifyCta}
                   </Button>
                   <div className="flex gap-2">
                     <Button

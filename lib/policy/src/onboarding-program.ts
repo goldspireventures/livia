@@ -4,6 +4,7 @@ import {
   filterActivationStepsForOperator,
   type OperatorNavSignals,
 } from "./operator-nav-policy";
+import { blockingOnboardingActsForSession } from "./migration-fast-track-program";
 import type { OnboardingActId, OnboardingChecklist, OnboardingState } from "./onboarding-state";
 import {
   ONBOARDING_ACT_IDS,
@@ -41,8 +42,9 @@ export const AUTO_COMPLETED_ON_MENU_SEED_ACTS: OnboardingActId[] = [
 export function blockingOnboardingPercent(
   completed: OnboardingActId[],
   vertical?: string | null,
+  checklist?: Partial<OnboardingChecklist> | null,
 ): number {
-  const blocking = blockingOnboardingActsForVertical(vertical);
+  const blocking = blockingOnboardingActsForSession(vertical, checklist);
   const done = new Set(completed);
   const n = blocking.filter((a) => done.has(a)).length;
   return Math.min(100, Math.round((n / blocking.length) * 100));
@@ -55,7 +57,7 @@ export function isOnboardingAppUnlocked(
 ): boolean {
   if (!state) return true;
   const completed = new Set(state.completedActs ?? []);
-  const blocking = blockingOnboardingActsForVertical(vertical);
+  const blocking = blockingOnboardingActsForSession(vertical, state.checklist);
   if (blocking.every((a) => completed.has(a))) return true;
   if ((state.percentComplete ?? 0) >= 100) return true;
   return false;

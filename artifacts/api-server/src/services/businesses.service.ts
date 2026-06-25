@@ -9,6 +9,7 @@ import {
   type BusinessTier,
   type BusinessVertical,
   type OnboardingState,
+  onboardingStateSchema,
   validateBusinessNaming,
   defaultStructureKindForCreate,
   PLATFORM_DEFAULT_PRESET_ID,
@@ -224,7 +225,20 @@ export function parseOnboardingStatePatch(
 ): OnboardingStatePatchResult | undefined {
   if (raw === undefined) return undefined;
   if (raw === null || typeof raw !== "object") return undefined;
-  const state = mergeOnboardingState(existing, raw as Partial<OnboardingState>);
+  const incoming = raw as Partial<OnboardingState>;
+  if (incoming.checklist?.testBooking === true) {
+    const existingParsed = onboardingStateSchema.safeParse(existing);
+    const alreadyVerified =
+      existingParsed.success && existingParsed.data.checklist?.testBooking === true;
+    if (!alreadyVerified) {
+      return {
+        code: "GO_LIVE_REQUIRES_TEST_BOOKING",
+        message:
+          "Test booking must come from your public book page — complete a booking on /book first.",
+      };
+    }
+  }
+  const state = mergeOnboardingState(existing, incoming);
   if (validateOnboardingGoLive(state)) {
     return {
       code: "GO_LIVE_REQUIRES_TEST_BOOKING",

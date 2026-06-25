@@ -67,3 +67,18 @@ export function splitMobileNav(items: RitualNavItem[]): {
     overflow: items.slice(4),
   };
 }
+
+const MOBILE_NAV_SHORT: Record<string, string> = {
+  "Liv command": "Liv",
+  "The floor": "Floor",
+  Queue: "Inbox",
+  "My chair": "My day",
+  "Clinical hub": "Clinical",
+  "Design proofs": "Proofs",
+  "Care programmes": "Care",
+  "Host floor": "Host",
+};
+
+export function mobileBottomNavLabel(ritualName: string): string {
+  return MOBILE_NAV_SHORT[ritualName] ?? ritualName;
+}

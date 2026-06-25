@@ -453,11 +453,17 @@ export default function PublicEventVendorQuotePage() {
                 type="button"
                 onClick={() => void acceptQuote()}
                 disabled={acceptBusy || payBusy}
+                aria-label={
+                  acceptBusy || payBusy ? "Accepting quote" : "Accept quote and pay deposit"
+                }
                 className="ev-btn ev-btn--primary w-full"
                 data-testid="guest-quote-accept"
               >
                 {acceptBusy || payBusy ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                    <span className="sr-only">Accepting quote</span>
+                  </>
                 ) : (
                   "Accept quote & pay deposit"
                 )}
@@ -468,13 +474,21 @@ export default function PublicEventVendorQuotePage() {
                 className="ev-btn ev-btn--primary w-full"
                 onClick={() => void startCheckout()}
                 disabled={payBusy || acceptBusy}
+                aria-label={
+                  payBusy
+                    ? "Starting checkout"
+                    : `Pay ${paymentState.nextLabel.toLowerCase()} ${formatCurrency(depositDue, currency)}`
+                }
                 data-testid="guest-quote-pay-checkout"
               >
                 {payBusy ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                    <span className="sr-only">Starting checkout</span>
+                  </>
                 ) : (
                   <>
-                    <CreditCard className="h-4 w-4" />
+                    <CreditCard className="h-4 w-4" aria-hidden />
                     Pay {paymentState.nextLabel.toLowerCase()} {formatCurrency(depositDue, currency)}
                   </>
                 )}

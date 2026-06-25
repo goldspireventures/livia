@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@theme {
+  --color-navy: #050816;
+  --color-rich-black: #090909;
+  --color-gold: #d4af37;
+  --color-gold-dim: #b8942e;
+  --color-muted: #94a3b8;
+  --color-soft: #cbd5e1;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--color-navy);
+  color: white;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-gold) 35%, transparent);
+  color: white;
+}
+
+.gold-gradient-text {
+  background: linear-gradient(135deg, #f5e6b8 0%, #d4af37 45%, #9a7b1a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(212, 175, 55, 0.12);
+  backdrop-filter: blur(12px);
+}
+
+.glow-gold {
+  box-shadow: 0 0 60px rgba(212, 175, 55, 0.08);
+}
+
+.section-pad {
+  @apply px-5 sm:px-8 lg:px-12 py-24 sm:py-32;
+}
+
+.heading-display {
+  @apply text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-semibold tracking-tight leading-[1.05];
+}
+
+.heading-section {
+  @apply text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight;
+}

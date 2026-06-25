@@ -1,20 +1,30 @@
-import { useEffect, useState } from "react";
-import { Link } from "wouter";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useLocation } from "wouter";
 import { useUser } from "@clerk/clerk-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useBusiness } from "@/lib/business-context";
 import { isDemoAccountEmail } from "@/lib/demo-tenant";
 import { apiFetch } from "@/lib/api-fetch";
+import { parseUserFacingError } from "@/lib/user-facing-errors";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Sparkles } from "lucide-react";
 import { OnboardingWizard, type OnboardingStatePayload } from "@/components/onboarding/onboarding-wizard";
 import { isDemoLoginEnabled } from "@/lib/persona";
-import { afterBusinessCreatedState, pickPrimarySessionBusiness } from "@workspace/policy";
+import { pickOnboardingResumeBusiness } from "@workspace/policy";
 import { OnboardingExperienceShell } from "@/components/onboarding/onboarding-experience-shell";
 import { OnboardingWelcomePanel } from "@/components/onboarding-welcome-panel";
+import { OnboardingStartPathStep } from "@/components/onboarding/onboarding-start-path-step";
 import { marketingBookDemoUrl } from "@/lib/demo-routes";
 import { isOnboardingPortalExperienceEnabled } from "@/lib/onboarding-portal-enabled";
+import {
+  clearOnboardingMigrationIntent,
+  onboardingPathAfterTrackPick,
+  readOnboardingMigrationIntent,
+  writeOnboardingMigrationIntent,
+} from "@/lib/onboarding-migration-intent";
+import type { MigrationIntent } from "@workspace/policy";
 
 type BusinessRow = {
   id: string;
@@ -24,30 +34,116 @@ type BusinessRow = {
   onboardingState?: OnboardingStatePayload | null;
 };
 
-function readOnboardingIntent(): { secondShop?: boolean } {
+function readOnboardingIntent(): { secondShop?: boolean; fresh?: boolean; pathPick?: boolean } {
   if (typeof window === "undefined") return {};
   const params = new URLSearchParams(window.location.search);
-  return params.get("intent") === "second-shop" ? { secondShop: true } : {};
+  return {
+    secondShop: params.get("intent") === "second-shop",
+    fresh: params.get("fresh") === "1",
+    pathPick: params.get("path") === "1",
+  };
 }
 
 export default function OnboardingPage() {
   const intent = readOnboardingIntent();
+  const [location, navigate] = useLocation();
   const { user } = useUser();
   const demoAccount = isDemoAccountEmail(user?.primaryEmailAddress?.emailAddress);
-  const { businesses } = useBusiness();
+  const { businesses, setBusiness, setBusinessById } = useBusiness();
   const parentBusinessId =
     intent.secondShop && businesses.length > 0 ? businesses[0]!.id : undefined;
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [seedLoading, setSeedLoading] = useState(false);
   const [businessId, setBusinessId] = useState<string | null>(null);
   const [businessSlug, setBusinessSlug] = useState<string | null>(null);
   const [onboardingState, setOnboardingState] = useState<OnboardingStatePayload | null>(null);
   const [previewVertical, setPreviewVertical] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [migrationIntent, setMigrationIntent] = useState<MigrationIntent | null>(() => {
+    if (typeof window === "undefined") return null;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("path") === "1") return null;
+    return readOnboardingMigrationIntent();
+  });
+
+  const urlMigrationIntent = useMemo(() => readOnboardingMigrationIntent(), [location]);
 
   useEffect(() => {
-    // Second location = new business row — do not resume the first shop's onboarding.
-    if (intent.secondShop) {
+    if (intent.pathPick) return;
+    if (urlMigrationIntent && urlMigrationIntent !== migrationIntent) {
+      setMigrationIntent(urlMigrationIntent);
+    }
+  }, [intent.pathPick, urlMigrationIntent, migrationIntent]);
+
+  const needsStartPath =
+    intent.fresh && !intent.secondShop && !businessId && migrationIntent === null;
+
+  useEffect(() => {
+    if (!intent.fresh || !intent.pathPick) return;
+    clearOnboardingMigrationIntent();
+    setMigrationIntent(null);
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("path");
+      window.history.replaceState({}, "", url.pathname + url.search);
+    } catch {
+      /* ignore */
+    }
+  }, [intent.fresh, intent.pathPick]);
+
+  const portalExperience =
+    isOnboardingPortalExperienceEnabled() ||
+    migrationIntent === "switching" ||
+    intent.fresh;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("migration_oauth") !== "1") return;
+    const pull = params.get("pull");
+    const imported = Number(params.get("imported") ?? "0");
+    if (pull === "ok" && imported > 0) {
+      toast({
+        title: "Import complete",
+        description: `${imported} records applied. Set your hours next.`,
+      });
+    } else if (pull === "empty") {
+      toast({
+        title: "Connected — nothing new to import",
+        description: "Upload export files if data is missing.",
+        variant: "destructive",
+      });
+    } else if (pull === "error") {
+      toast({
+        title: "Auto-import failed",
+        description: "Use file upload on this step.",
+        variant: "destructive",
+      });
+    } else {
+      toast({ title: "Connected", description: "Continue import on this step." });
+    }
+    for (const key of ["migration_oauth", "pull", "imported", "broker", "oauth"]) {
+      params.delete(key);
+    }
+    const qs = params.toString();
+    window.history.replaceState({}, "", qs ? `${window.location.pathname}?${qs}` : window.location.pathname);
+    void queryClient.invalidateQueries({ queryKey: ["/me/businesses"] });
+  }, [toast, queryClient]);
+
+  useEffect(() => {
+    if (!intent.fresh) return;
+    try {
+      window.localStorage.removeItem("livia.currentBusinessId");
+      window.localStorage.removeItem("livia_current_business_id");
+    } catch {
+      /* ignore */
+    }
+  }, [intent.fresh]);
+
+  useEffect(() => {
+    // Second location or explicit fresh start = new business row — do not resume another shop.
+    if (intent.secondShop || intent.fresh) {
       setLoading(false);
       return;
     }
@@ -55,8 +151,8 @@ export default function OnboardingPage() {
       .then((rows) => {
         const clerkUserId = user?.id ?? "";
         const email = user?.primaryEmailAddress?.emailAddress ?? null;
-        const latest = pickPrimarySessionBusiness(
-          rows as Parameters<typeof pickPrimarySessionBusiness>[0],
+        const latest = pickOnboardingResumeBusiness(
+          rows as Parameters<typeof pickOnboardingResumeBusiness>[0],
           clerkUserId,
           email,
         );
@@ -68,6 +164,10 @@ export default function OnboardingPage() {
           const raw = latest.onboardingState;
           if (raw && typeof raw === "object" && "currentAct" in raw) {
             setOnboardingState(raw as OnboardingStatePayload);
+            const intent = (raw as OnboardingStatePayload).checklist?.migrationIntent;
+            if (intent === "switching" || intent === "fresh") {
+              setMigrationIntent(intent);
+            }
           } else {
             setOnboardingState({
               currentAct: "a2_shop_profile",
@@ -80,12 +180,12 @@ export default function OnboardingPage() {
       .catch((err: unknown) => {
         toast({
           title: "Could not load your setup progress",
-          description: err instanceof Error ? err.message : "Try refreshing the page.",
+          description: parseUserFacingError(err, "Try refreshing the page."),
           variant: "destructive",
         });
       })
       .finally(() => setLoading(false));
-  }, [intent.secondShop, toast, user?.id, user?.primaryEmailAddress?.emailAddress]);
+  }, [intent.secondShop, intent.fresh, toast, user?.id, user?.primaryEmailAddress?.emailAddress]);
 
   const loadDemoData = async () => {
     setSeedLoading(true);
@@ -99,7 +199,7 @@ export default function OnboardingPage() {
     } catch (err: unknown) {
       toast({
         title: "Could not load demo data",
-        description: err instanceof Error ? err.message : "Seed failed",
+        description: parseUserFacingError(err, "Demo data could not be loaded"),
         variant: "destructive",
       });
       setSeedLoading(false);
@@ -118,7 +218,21 @@ export default function OnboardingPage() {
     previewVertical ??
     (businessId ? undefined : "hair");
 
-  const portalExperience = isOnboardingPortalExperienceEnabled();
+  if (needsStartPath) {
+    return (
+      <OnboardingExperienceShell vertical={themeVertical} country="IE">
+        <div data-testid="onboarding-page" className="contents">
+          <OnboardingStartPathStep
+            onContinue={(next) => {
+              writeOnboardingMigrationIntent(next);
+              setMigrationIntent(next);
+              navigate(onboardingPathAfterTrackPick(next));
+            }}
+          />
+        </div>
+      </OnboardingExperienceShell>
+    );
+  }
 
   const arrivalSlot = (
     <>
@@ -197,6 +311,7 @@ export default function OnboardingPage() {
   const wizard = (
     <OnboardingWizard
       portalMode={portalExperience}
+      initialMigrationIntent={migrationIntent ?? undefined}
       businessId={businessId}
       businessSlug={businessSlug}
       parentBusinessId={parentBusinessId}
@@ -207,14 +322,26 @@ export default function OnboardingPage() {
       onBusinessCreated={(id, slug) => {
         setBusinessId(id);
         setBusinessSlug(slug);
-        setOnboardingState(afterBusinessCreatedState() as OnboardingStatePayload);
+        void queryClient.invalidateQueries({ queryKey: ["/me/businesses"] });
+        if (businesses.some((b) => b.id === id)) {
+          setBusinessById(id);
+        } else {
+          void apiFetch(`/businesses/${id}`)
+            .then((b) => setBusiness(b as Parameters<typeof setBusiness>[0]))
+            .catch(() => {});
+        }
       }}
       onComplete={() => {
-        window.location.href = intent.secondShop
-          ? "/lifecycle#chain"
-          : businessSlug
-            ? `/bookings?create=1`
-            : "/dashboard";
+        clearOnboardingMigrationIntent();
+        if (intent.secondShop) {
+          window.location.href = "/lifecycle#chain";
+          return;
+        }
+        if (businessSlug) {
+          window.location.href = `/book/${businessSlug}?welcome=1`;
+          return;
+        }
+        window.location.href = "/dashboard";
       }}
     />
   );
@@ -234,7 +361,7 @@ export default function OnboardingPage() {
               <p className="text-muted-foreground text-sm max-w-md mx-auto">
                 {intent.secondShop
                   ? "Chain tools activate when you own two shops."
-                  : "Self-serve setup — about 15 minutes to go live."}
+                  : "A few minutes to open your shop — Liv handles the rest after."}
               </p>
             </div>
             {!businessId && !intent.secondShop ? <OnboardingWelcomePanel /> : null}

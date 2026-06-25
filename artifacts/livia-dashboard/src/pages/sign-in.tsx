@@ -1,28 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, Redirect } from "wouter";
-import { SignIn } from "@clerk/clerk-react";
-import { useTheme } from "next-themes";
-import { ChevronDown, ArrowRight } from "lucide-react";
-import { LiviaLogoLink } from "@/components/brand/livia-logo-link";
+import { ChevronDown } from "lucide-react";
 import { DemoPasswordSignIn } from "@/components/demo-password-sign-in";
-import { GatewaySignInStory } from "@/components/gateway/gateway-sign-in-story";
+import { GatewayAuthPageShell } from "@/components/gateway/gateway-auth-page-shell";
+import { GatewayAuthSessionGate } from "@/components/gateway/gateway-auth-session-gate";
+import { LiviaEmailSignInForm } from "@/components/gateway/livia-email-sign-in-form";
 import { fetchDemoCatalog } from "@/lib/demo-portal";
+import { isDemoAccountEmail } from "@/lib/demo-tenant";
 import { isDemoLoginEnabled } from "@/lib/persona";
 import { isSignedOutLanding } from "@/lib/auth-routes";
-import { clerkGatewayAppearance } from "@/lib/clerk-gateway-appearance";
-import { marketingBookDemoUrl } from "@/lib/demo-routes";
 import { ProspectDemoRedirect } from "@/components/prospect-demo-redirect";
-import {
-  getMarketingDemoConciergeUrl,
-  hasMarketingDemoGateKey,
-} from "@/lib/marketing-demo-gate";
-import { getMarketingOrigin } from "@/lib/surface-urls";
+import { getMarketingDemoConciergeUrl } from "@/lib/marketing-demo-gate";
 import { isLocalDashboardDev, readSignInRedirectPath } from "@/lib/local-dashboard-auth";
 import { SignInTenantPreview } from "@/components/sign-in-tenant-preview";
-import {
-  useDebouncedClerkIdentifierEmail,
-  useSignInAppearanceHint,
-} from "@/lib/sign-in-appearance-hint";
+import { useSignInAppearanceHint } from "@/lib/sign-in-appearance-hint";
 
 function useBetaSignInMode(): boolean {
   return useMemo(() => {
@@ -32,150 +22,82 @@ function useBetaSignInMode(): boolean {
   }, []);
 }
 
-export default function SignInPage() {
-  const { theme } = useTheme();
-  const [devPassword, setDevPassword] = useState<string | undefined>();
-  const marketing = getMarketingOrigin();
+function useFounderSignInSurface(): boolean {
   const betaMode = useBetaSignInMode();
+  return betaMode || !isDemoLoginEnabled || isLocalDashboardDev();
+}
+
+export default function SignInPage() {
+  const [devPassword, setDevPassword] = useState<string | undefined>();
+  const [emailForHint, setEmailForHint] = useState("");
+  const founderSignIn = useFounderSignInSurface();
   const redirectAfterSignIn = readSignInRedirectPath();
-  const localDevSignIn = isLocalDashboardDev();
-  const clerkEmail = useDebouncedClerkIdentifierEmail();
-  const { hint: appearanceHint, loading: appearanceLoading } = useSignInAppearanceHint(clerkEmail);
+  const { hint: appearanceHint, loading: appearanceLoading } = useSignInAppearanceHint(emailForHint);
+  const tenantHint =
+    emailForHint.trim() && !isDemoAccountEmail(emailForHint) ? appearanceHint : null;
 
   useEffect(() => {
-    if (!isDemoLoginEnabled) return;
+    if (!isDemoLoginEnabled || !import.meta.env.DEV) return;
     fetchDemoCatalog()
       .then((c) => setDevPassword(c.sharedPassword ?? c.devPassword))
       .catch(() => undefined);
   }, []);
 
-  if (isDemoLoginEnabled && !betaMode && !isSignedOutLanding() && !isLocalDashboardDev()) {
+  if (isDemoLoginEnabled && !founderSignIn && !isSignedOutLanding()) {
     return <ProspectDemoRedirect />;
   }
 
-  const showProductionStory = !isDemoLoginEnabled;
-  const invitedDemo = isSignedOutLanding() || hasMarketingDemoGateKey();
   const invitedDemoUrl = getMarketingDemoConciergeUrl();
 
   return (
-    <div className="relative flex min-h-[100dvh] w-full flex-col overflow-hidden bg-background text-foreground">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute left-1/2 top-[18%] h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-aurora-cyan/10 blur-[120px] lg:left-[28%] lg:top-1/3 lg:h-[640px] lg:w-[640px] lg:blur-[140px]" />
-        <div className="absolute bottom-0 right-0 h-[280px] w-[280px] translate-x-1/4 translate-y-1/4 rounded-full bg-aurum-champagne/5 blur-[100px] lg:hidden" />
-      </div>
-
-      <header className="relative z-10 flex shrink-0 items-center justify-between px-5 py-5 sm:px-6 sm:py-6">
-        <LiviaLogoLink size="md" home="marketing" />
-        {isDemoLoginEnabled ? (
-          invitedDemo ? (
-            <a
-              href={invitedDemoUrl}
-              className="inline-flex min-h-[44px] items-center gap-1 text-xs text-primary transition-colors hover:text-primary/80"
-            >
-              Invited guest demo
-              <ArrowRight className="h-3.5 w-3.5" />
+    <GatewayAuthSessionGate mode="sign-in">
+    <GatewayAuthPageShell
+      title="Sign in"
+      headerAction={{ href: "/sign-up", label: "Create account" }}
+      above={
+        isSignedOutLanding() ? (
+          <p className="rounded-lg border border-border/60 bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
+            Signed out.{" "}
+            <a href={invitedDemoUrl} className="text-primary underline underline-offset-2">
+              Guest demo
             </a>
-          ) : (
-            <a
-              href={marketingBookDemoUrl()}
-              className="inline-flex min-h-[44px] items-center gap-1 text-xs text-primary transition-colors hover:text-primary/80"
-            >
-              Book a demo
-              <ArrowRight className="h-3.5 w-3.5" />
-            </a>
-          )
-        ) : (
-          <a
-            href={`${marketing}/#waitlist`}
-            className="inline-flex min-h-[44px] items-center text-xs text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Join beta
+          </p>
+        ) : null
+      }
+      footer={
+        <p className="text-sm text-muted-foreground">
+          No account?{" "}
+          <a href="/sign-up" className="font-medium text-primary underline underline-offset-2">
+            Create one
           </a>
-        )}
-      </header>
-
-      <main className="relative z-10 flex flex-1 flex-col lg:flex-row lg:items-stretch">
-        {showProductionStory ? (
-          <section className="flex shrink-0 flex-col justify-center px-5 pb-2 pt-2 sm:px-8 lg:w-[min(52%,560px)] lg:max-w-none lg:px-12 lg:pb-16 lg:pt-8 xl:px-16">
-            <GatewaySignInStory />
-          </section>
-        ) : null}
-
-        <section className="flex flex-1 flex-col justify-center px-4 pb-10 pt-2 sm:px-6 lg:px-10 lg:pb-16 xl:px-14">
-          <div className="mx-auto w-full max-w-md">
-            {isSignedOutLanding() ? (
-              <p className="mb-6 rounded-xl border border-border/60 bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
-                You&apos;re signed out.{" "}
-                <a href={invitedDemoUrl} className="font-medium text-primary underline underline-offset-2">
-                  Return to invited guest demo
-                </a>{" "}
-                to pick another business, or sign in with your beta account below.
-              </p>
-            ) : null}
-
-            {localDevSignIn && redirectAfterSignIn ? (
-              <p className="mb-4 rounded-xl border border-primary/25 bg-primary/5 px-4 py-3 text-sm text-muted-foreground">
-                Local dev — use demo sign-in below, then you&apos;ll land on{" "}
-                <span className="font-medium text-foreground">{redirectAfterSignIn}</span>.
-              </p>
-            ) : null}
-
-            {isDemoLoginEnabled && localDevSignIn ? (
-              <DemoPasswordSignIn devPasswordHint={devPassword} embedded />
-            ) : null}
-
-            {isDemoLoginEnabled && !localDevSignIn ? (
-              <p className="mb-6 text-sm text-muted-foreground">
-                {invitedDemo ? (
-                  <>
-                    Need a fresh invite?{" "}
-                    <a href={marketingBookDemoUrl()} className="text-primary underline underline-offset-2">
-                      Book a demo
-                    </a>
-                  </>
-                ) : (
-                  <>
-                    Prospects start at{" "}
-                    <a href={marketingBookDemoUrl()} className="text-primary underline underline-offset-2">
-                      book a demo
-                    </a>
-                    {" "}— this form is for real beta accounts only.
-                  </>
-                )}
-              </p>
-            ) : null}
-
-            <SignInTenantPreview hint={appearanceHint} loading={appearanceLoading}>
-              <SignIn
-                appearance={clerkGatewayAppearance(theme)}
-                routing="path"
-                path="/sign-in"
-                signUpUrl="/sign-up"
-                fallbackRedirectUrl={redirectAfterSignIn ?? "/dashboard"}
-              />
-            </SignInTenantPreview>
-
-            <p className="mt-4 text-center text-xs text-muted-foreground">
-              New here?{" "}
-              <a href="/sign-up" className="font-medium text-primary underline underline-offset-2">
-                Create an account
-              </a>
-            </p>
-
-            {isDemoLoginEnabled && !localDevSignIn ? (
-              <details className="group mt-6 rounded-xl border border-dashed border-border/70 bg-muted/10 open:bg-muted/20 transition-colors">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden">
-                  <span>Manual demo email + password</span>
-                  <ChevronDown className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" />
-                </summary>
-                <div className="border-t border-border/40 px-4 pb-4 pt-3">
-                  <DemoPasswordSignIn devPasswordHint={devPassword} embedded />
-                </div>
-              </details>
-            ) : null}
-          </div>
-        </section>
-      </main>
-    </div>
+        </p>
+      }
+      below={
+        import.meta.env.DEV && isDemoLoginEnabled ? (
+          <details className="group rounded-lg border border-dashed border-border/60 text-sm">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-muted-foreground [&::-webkit-details-marker]:hidden">
+              <span>Developer demo sign-in</span>
+              <ChevronDown className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" />
+            </summary>
+            <div className="border-t border-border/40 px-3 pb-3 pt-2">
+              <DemoPasswordSignIn devPasswordHint={devPassword} embedded showTenantPreview={false} />
+            </div>
+          </details>
+        ) : null
+      }
+    >
+      <SignInTenantPreview
+        hint={tenantHint}
+        loading={appearanceLoading && Boolean(emailForHint.trim())}
+        embedded
+      >
+        <LiviaEmailSignInForm
+          bare
+          redirectUrl={redirectAfterSignIn ?? "/dashboard"}
+          onEmailChange={setEmailForHint}
+        />
+      </SignInTenantPreview>
+    </GatewayAuthPageShell>
+    </GatewayAuthSessionGate>
   );
 }

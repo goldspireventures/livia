@@ -15,8 +15,8 @@ export const MARKETING_ROUTE_META: Record<
     description: "Clear EUR pricing. Closed beta is free.",
   },
   "/book-demo": {
-    title: "Book a demo — Livia",
-    description: "Request a guided walkthrough of a live demo for your trade.",
+    title: "Get started — Livia",
+    description: "Create your account and set up your shop on Livia.",
   },
   "/get-started": {
     title: "Get started — Livia",

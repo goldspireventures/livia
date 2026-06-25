@@ -8,6 +8,7 @@
 import { test, expect } from "@playwright/test";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { ensureDemoProvisioned, signInDemoPersona } from "../helpers/demo-auth";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUT_ROOT = path.join(__dirname, "..", "visual-captures", "web");
@@ -22,6 +23,16 @@ const CLERK_PERSONAS = [
   "staff-junior",
   "receptionist",
 ] as const;
+
+/** API persona ids (`demo-portal-config` uses `org_admin`, not `founder`). */
+const DEMO_API_PERSONA: Record<(typeof CLERK_PERSONAS)[number], string> = {
+  founder: "org_admin",
+  owner: "owner",
+  manager: "manager",
+  "staff-senior": "staff-senior",
+  "staff-junior": "staff-junior",
+  receptionist: "receptionist",
+};
 
 /** Paths each persona can see (from persona-rituals PERSONA_NAV_ORDER + common detail routes). */
 const ROUTES_BY_PERSONA: Record<(typeof CLERK_PERSONAS)[number], string[]> = {
@@ -74,23 +85,7 @@ async function signInAsPersona(
   page: import("@playwright/test").Page,
   persona: (typeof CLERK_PERSONAS)[number],
 ) {
-  const res = await page.request.post(`${apiBase}/api/demo/sign-in`, { data: { persona } });
-  if (!res.ok()) {
-    throw new Error(`demo sign-in ${persona} failed (${res.status()}): ${(await res.text()).slice(0, 200)}`);
-  }
-  const { token } = (await res.json()) as { token?: string };
-  if (!token) throw new Error(`No Clerk ticket for persona ${persona}`);
-  await page.goto(`/sign-in?__clerk_ticket=${encodeURIComponent(token)}`, {
-    waitUntil: "networkidle",
-  });
-  await page.waitForURL(/\/(chain|dashboard|inbox|bookings|my-day|settings|customers|staff|services|audit|lifecycle|onboarding)/, {
-    timeout: 45_000,
-  });
-  const skipTour = page.getByRole("button", { name: /skip tour/i });
-  if (await skipTour.isVisible().catch(() => false)) {
-    await skipTour.click();
-    await page.waitForTimeout(400);
-  }
+  await signInDemoPersona(page, DEMO_API_PERSONA[persona]);
   const body = await page.locator("body").innerText();
   expect(body).not.toMatch(/sign in to your command center/i);
 }
@@ -104,19 +99,7 @@ test.describe("Contextual audit — web (all personas)", () => {
   test.describe.configure({ mode: "serial", timeout: 360_000 });
 
   test.beforeAll(async ({ request }) => {
-    const statusRes = await request.get(`${apiBase}/api/demo/status`);
-    if (statusRes.ok()) {
-      const status = (await statusRes.json()) as { provisioned?: boolean };
-      if (status.provisioned) return;
-    }
-    const prov = await request.post(`${apiBase}/api/demo/provision`);
-    if (prov.ok()) return;
-    const body = await prov.text();
-    const retryStatus = await request.get(`${apiBase}/api/demo/status`);
-    if (retryStatus.ok() && (await retryStatus.json() as { provisioned?: boolean }).provisioned) {
-      return;
-    }
-    throw new Error(`Demo provision failed: ${prov.status()} — ${body.slice(0, 300)}`);
+    await ensureDemoProvisioned(request);
   });
 
   test("public booking", async ({ page }) => {

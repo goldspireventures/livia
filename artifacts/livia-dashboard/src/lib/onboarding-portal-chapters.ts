@@ -52,7 +52,7 @@ export { resolvePortalNavActs };
 
 const PORTAL_AUTO_COMPLETE_AFTER: Partial<Record<OnboardingActId, readonly OnboardingActId[]>> = {
   a2_shop_profile: ["a3_service_menu", "a4_team"],
-  a6_liv: ["a7_channels"],
+  a5_hours: ["a6_liv", "a7_channels", "a8_public_link", "a9_billing", "a10_invite_team"],
 };
 
 function actIndex(act: OnboardingActId): number {
@@ -99,6 +99,12 @@ export function portalAutoCompleteActs(
   checklist?: Partial<OnboardingChecklist> | null,
 ): OnboardingActId[] {
   const base = [...(PORTAL_AUTO_COMPLETE_AFTER[leavingAct] ?? [])];
+  if (leavingAct === "a11_migration" && isSwitchingMigration(checklist)) {
+    base.push("a2_shop_profile", "a3_service_menu", "a4_team");
+  }
+  if (leavingAct === "a5_hours" && !isSwitchingMigration(checklist)) {
+    base.push("a11_migration");
+  }
   if (leavingAct === "a8_public_link") {
     base.push("a9_billing", "a10_invite_team");
     if (!isSwitchingMigration(checklist)) base.push("a11_migration");
@@ -172,9 +178,7 @@ export function portalVisibleStepInChapter(
     a2_shop_profile: "Shop profile",
     a11_migration: "Bring your data",
     a5_hours: "Opening hours",
-    a6_liv: "Meet Liv",
-    a8_public_link: "Booking link",
-    a12_go_live: "Final checks",
+    a12_go_live: "You're in",
   };
   return {
     label: labels[resolved] ?? resolved,

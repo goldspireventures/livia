@@ -1,6 +1,6 @@
 # Livia — top-level status
 
-**Updated:** 2026-06-15 (Era 1 D0–D4 engineering wave)  
+**Updated:** 2026-06-21 (Era 1 activation proof — engineering closure)  
 **Readiness scores:** `pnpm readiness:score` · [`REPO-VS-BLUEPRINT-GAP-MATRIX.md`](product/REPO-VS-BLUEPRINT-GAP-MATRIX.md)  
 **Read this first** for “are we finished?” — execution sequencing: [`product/LIVIA-MASTER-EXECUTION-PLAN-V3.md`](product/LIVIA-MASTER-EXECUTION-PLAN-V3.md).  
 **GTM + vertical parity:** [`product/GTM-VERTICAL-DEPTH-PROGRAM.md`](product/GTM-VERTICAL-DEPTH-PROGRAM.md) · [`product/COMPETITIVE-PARITY-PROGRAM.md`](product/COMPETITIVE-PARITY-PROGRAM.md)  
@@ -21,7 +21,7 @@
 |--------|--------|------------------------|
 | **A — Platform engineering** | **Done** | APIs, policy hub, 9 verticals, guest `/b`, presets matrix, CI, demo seeds, support registry, mobile parity hooks |
 | **B — Screen implementation** | **Done** | Density + northstar gate — see **Bucket B checklist** below |
-| **C — Visual & founder acceptance** | **In progress (80%)** | UAT specs + staging checks green — **your walkthrough** closes this bucket |
+| **C — Visual & founder acceptance** | **In progress (85%)** | Automated gates green incl. sacred-path signup E2E — **your staging walkthrough** closes this bucket |
 | **D — Launch & field** | **Not done** | Gate 2 (10 Dublin shops), prod preset flag, App Store / Stripe prod evidence |
 
 **You are right to UAT now for feel and layout** — that is bucket **B + C**. There is no R4; only **R∞** (incremental polish toward north-star screens).
@@ -52,10 +52,12 @@
 | E2E `founder-uat-p0.spec.ts` (medspa + luxe, axe) | Done |
 | Screen-card pixel diff (`screen-card-p0-pixel.spec.ts`) | Done |
 | `preset-public-parity` in dashboard CI project | Done |
+| Sacred path signup E2E (`pnpm sacred-path:signup`) | Done — sign-up founder, not demo |
 | G-VISUAL: settings / bookings / medspa PNG mapped | Done |
 | Staging readiness: dashboard bundle API leak check | Done |
 | `/customers` + `/staff` + `/services` + client detail density | Done |
 | **Founder staging walkthrough signed** | **Not done** — you |
+| Plug real keys/secrets (Clerk prod, Stripe, Meta, DNS) | **Not done** — you |
 | Tighten northstar `maxDiffPixelRatio` after sign-off | Not started |
 
 **Bucket C is complete** when you reply **“Bucket C UAT passed”** (with any exceptions) after staging checklist.

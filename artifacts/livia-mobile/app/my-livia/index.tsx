@@ -28,6 +28,7 @@ import {
   type GuestPreferredModality,
 } from "@workspace/policy";
 import { DEMO_GUEST_PHONE, requestGuestHubOtpMobile } from "@/lib/guest-hub-otp";
+import { isProductionCustomerSurface } from "@/lib/production-surface";
 
 const GUEST_MODALITIES = Object.keys(GUEST_PREFERRED_MODALITY_LABELS) as GuestPreferredModality[];
 
@@ -249,9 +250,11 @@ export default function MyLiviaHubScreen() {
             Your bookings across every Livia shop — verify once with your mobile.
           </Text>
           <Text style={[type.caption, { color: colors.mutedForeground, marginTop: 6 }]}>
-            {DEMO_GUEST_CLIENT_COPY.phoneHint}
+            {isProductionCustomerSurface()
+              ? "We will text you a one-time code."
+              : DEMO_GUEST_CLIENT_COPY.phoneHint}
           </Text>
-          {magicOtp ? (
+          {!isProductionCustomerSurface() && magicOtp ? (
             <Text style={[type.caption, { color: colors.primary, marginTop: 12 }]}>
               Staging code: {magicOtp}
             </Text>
@@ -267,23 +270,27 @@ export default function MyLiviaHubScreen() {
                 onChangeText={setPhone}
                 testID="guest-hub-phone-input"
               />
-              <Pressable
-                onPress={() => void signInAsMaryDemo()}
-                style={[styles.demoFill, { borderColor: colors.primary, backgroundColor: colors.primary + "12" }]}
-                testID="guest-hub-demo-mary"
-                disabled={busy}
-              >
-                <Text style={[type.caption, { color: colors.primary, fontFamily: fonts.bodyMed }]}>
-                  Sign in as Mary (demo)
-                </Text>
-              </Pressable>
-              <Pressable
-                onPress={() => setPhone(DEMO_GUEST_PHONE)}
-                style={[styles.demoFill, { borderColor: colors.border }]}
-                testID="guest-hub-demo-phone"
-              >
-                <Text style={[type.caption, { color: colors.primary }]}>Use demo number only</Text>
-              </Pressable>
+              {!isProductionCustomerSurface() ? (
+                <>
+                  <Pressable
+                    onPress={() => void signInAsMaryDemo()}
+                    style={[styles.demoFill, { borderColor: colors.primary, backgroundColor: colors.primary + "12" }]}
+                    testID="guest-hub-demo-mary"
+                    disabled={busy}
+                  >
+                    <Text style={[type.caption, { color: colors.primary, fontFamily: fonts.bodyMed }]}>
+                      Sign in as Mary (demo)
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => setPhone(DEMO_GUEST_PHONE)}
+                    style={[styles.demoFill, { borderColor: colors.border }]}
+                    testID="guest-hub-demo-phone"
+                  >
+                    <Text style={[type.caption, { color: colors.primary }]}>Use demo number only</Text>
+                  </Pressable>
+                </>
+              ) : null}
               <Pressable
                 style={[styles.btn, { backgroundColor: colors.primary }, busy && { opacity: 0.7 }]}
                 onPress={() => void requestOtp()}

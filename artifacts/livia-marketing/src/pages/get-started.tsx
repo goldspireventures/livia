@@ -33,9 +33,8 @@ export default function GetStartedPage() {
             <em className="text-[#d9c39a] not-italic">in minutes</em>
           </h1>
           <p className="text-muted-foreground mt-4 max-w-xl leading-relaxed">
-            Create an account, finish setup, and publish your booking link. No demo required if you
-            already have an invite — otherwise join the waitlist and we&apos;ll onboard you in
-            batches.
+            Create your account, set up your shop, and share your booking link. Most owners are live within
+            an afternoon.
           </p>
         </header>
 
@@ -78,9 +77,13 @@ export default function GetStartedPage() {
         </section>
 
         <p className="text-sm text-muted-foreground max-w-xl">
-          Want a guided tour first?{" "}
-          <Link href="/book-demo" className="text-[#d9c39a] hover:underline">
-            Book a demo
+          Questions first?{" "}
+          <Link href="/contact" className="text-[#d9c39a] hover:underline">
+            Get in touch
+          </Link>
+          {" "}or{" "}
+          <Link href="/#waitlist" className="text-[#d9c39a] hover:underline">
+            join the waitlist
           </Link>
           . Retail and Event Operator add-ons unlock from Billing after you&apos;re live — see{" "}
           <Link href="/pricing" className="text-[#d9c39a] hover:underline">

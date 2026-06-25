@@ -45,7 +45,7 @@ export function ParallelRunPanel({ businessId }: Props) {
           Compare fitness bookings
         </Button>
         <Button size="sm" variant="outline" disabled={busy} onClick={() => void load("fresha")}>
-          Compare salon bookings
+          Compare previous bookings
         </Button>
       </div>
       {diff ? (

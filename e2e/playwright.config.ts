@@ -54,7 +54,7 @@ export default defineConfig({
     {
       name: "dashboard",
       testMatch:
-        /(dashboard-gate|eu-owner-self-onboard|prod-onboarding-notifications|demo-owner-flow|visual-screen-p0|preset-public-parity|bloom-beauty-public|gateway-beauty-wedge|wellness-room-board|wellness-announcement-smoke)\.spec\.ts/,
+        /(dashboard-gate|eu-owner-self-onboard|prod-onboarding-notifications|demo-owner-flow|visual-screen-p0|preset-public-parity|bloom-beauty-public|gateway-beauty-wedge|wellness-room-board|wellness-announcement-smoke|migration-import-path|onboarding-fast-track)\.spec\.ts/,
       testIgnore: /v3-preflight\.spec\.ts/,
       use: {
         ...devices["Desktop Chrome"],
@@ -184,6 +184,15 @@ export default defineConfig({
       },
     },
     {
+      name: "marketing-showcase",
+      testMatch: /marketing-showcase-capture\.spec\.ts/,
+      timeout: 180_000,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+      },
+    },
+    {
       name: "visual-capture",
       testMatch: /visual-audit-capture\.spec\.ts/,
       dependencies: ["founder-auth-setup"],
@@ -256,6 +265,26 @@ export default defineConfig({
     {
       name: "ux-quality-gate",
       testMatch: /ux-quality-gate\.spec\.ts/,
+      timeout: 300_000,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+      },
+    },
+    {
+      name: "visual-deep-analysis",
+      testMatch: /visual-deep-analysis\.spec\.ts/,
+      timeout: 900_000,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+      },
+    },
+    {
+      name: "sacred-path-signup",
+      testMatch: /sacred-path-signup\.spec\.ts/,
       timeout: 300_000,
       workers: 1,
       use: {

@@ -4,6 +4,7 @@ import { Lock, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { parseUserFacingError } from "@/lib/user-facing-errors";
 import { useBusiness } from "@/lib/business-context";
 import { customFetch } from "@workspace/api-client-react";
 import { invalidateOperationalState } from "@/lib/operational-cache";
@@ -100,7 +101,7 @@ export function FeatureUnlockPanel({
       const data = (err as { data?: { code?: string; error?: string; priceEnv?: string } })?.data;
       toast({
         title: "Could not start checkout",
-        description: data?.error ?? (err instanceof Error ? err.message : "Try again"),
+        description: parseUserFacingError(err, "Unlock could not start"),
         variant: "destructive",
       });
     } finally {

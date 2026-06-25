@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useLocation } from "wouter";
-import { marketingBookDemoPath } from "@/lib/marketing-links";
+import { marketingGetStartedPath } from "@/lib/marketing-links";
 import {
   clearDemoGateKey,
   persistDemoGateKey,
@@ -12,7 +12,7 @@ type DemoGateGuardProps = {
   children: ReactNode;
 };
 
-/** Blocks W1 /demo until API validates a gate key (from book-demo or invite email). */
+/** Blocks W1 /demo until API validates a gate key (from invite email). */
 export function DemoGateGuard({ children }: DemoGateGuardProps) {
   const [, setLocation] = useLocation();
   const [allowed, setAllowed] = useState<boolean | null>(null);
@@ -47,7 +47,7 @@ export function DemoGateGuard({ children }: DemoGateGuardProps) {
 
   useEffect(() => {
     if (allowed === false) {
-      setLocation(marketingBookDemoPath);
+      setLocation(marketingGetStartedPath);
     }
   }, [allowed, setLocation]);
 

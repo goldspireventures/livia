@@ -132,10 +132,11 @@ export function GuestHubLivChat({
               size="sm"
               className="min-h-9 h-9 shrink-0 px-4"
               disabled={busy || !message.trim()}
+              aria-label={busy ? "Sending message" : "Send message"}
               data-testid="guest-hub-liv-send"
               onClick={() => void send()}
             >
-              {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Send"}
+              {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden /> : "Send"}
             </Button>
           </div>
         </div>
@@ -201,10 +202,11 @@ export function GuestHubLivChat({
               type="button"
               className="min-h-[44px] shrink-0"
               disabled={busy || !message.trim()}
+              aria-label={busy ? "Sending message" : "Send message"}
               data-testid="guest-hub-liv-send"
               onClick={() => void send()}
             >
-              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send"}
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : "Send"}
             </Button>
           </div>
         </div>

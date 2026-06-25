@@ -23,14 +23,13 @@ test.describe("Marketing lifecycle", () => {
     }
   });
 
-  test("home hero book demo opens request page", async ({ page }) => {
+  test("home hero get started opens signup path", async ({ page }) => {
     await page.goto(`${marketingBase}/`, { waitUntil: "domcontentloaded" });
-    const cta = page.getByTestId("marketing-hero-demo");
-    await expect(cta).toHaveAttribute("href", "/book-demo");
+    const cta = page.getByTestId("marketing-hero-get-started");
+    await expect(cta).toHaveAttribute("href", "/get-started");
     await cta.click();
-    await page.waitForURL(/\/book-demo/, { timeout: 15_000 });
-    await expect(page.getByTestId("waitlist-email")).toBeVisible();
-    await expect(page.getByTestId("waitlist-submit")).toContainText(/demo room/i);
+    await page.waitForURL(/\/get-started/, { timeout: 15_000 });
+    await expect(page.getByTestId("marketing-get-started-sign-up")).toBeVisible();
   });
 
   test("wedge continues to demo launcher", async ({ page }) => {

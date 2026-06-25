@@ -102,7 +102,7 @@ export function EventVendorChrome({ slug, data, children }: Props) {
         <div
           id="ev-mobile-nav"
           className={`ev-mobile-nav ${menuOpen ? "ev-mobile-nav--open" : ""}`}
-          aria-hidden={!menuOpen}
+          inert={!menuOpen}
         >
           <nav className="ev-mobile-nav__inner" aria-label="Mobile">
             {NAV.map((item) => {

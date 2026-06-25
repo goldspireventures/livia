@@ -85,15 +85,21 @@ export function DemoPartnerTracks({ tracks, provisioned, devPassword, busy, onEn
                   type="button"
                   disabled={!provisioned || !!busy}
                   onClick={() => onEnter(track.enterEmail, `track:${track.id}`)}
+                  aria-label={
+                    loading ? `Signing in to ${track.title}` : `Enter as owner — ${track.title}`
+                  }
                   className="inline-flex items-center gap-1.5 rounded-full bg-[#06b6d4] text-black px-4 py-2 text-sm font-semibold hover:bg-[#22d3ee] disabled:opacity-50"
                   data-testid={`demo-partner-enter-${track.id}`}
                 >
                   {loading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                      <span className="sr-only">Signing in</span>
+                    </>
                   ) : (
                     <>
                       Enter as owner
-                      <ArrowRight className="h-4 w-4" />
+                      <ArrowRight className="h-4 w-4" aria-hidden />
                     </>
                   )}
                 </button>

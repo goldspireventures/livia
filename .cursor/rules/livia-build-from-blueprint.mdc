@@ -1,0 +1,49 @@
+---
+description: Before any build — dissect intent, blueprint, inside-out order; no surface patches
+alwaysApply: true
+---
+
+# Build from blueprint (no patches)
+
+One building, one plan, many trades. **Do not paint a room before plumbing is roughed in.**
+
+## Before writing code
+
+1. **Intention** — Ultimate goal in one line (V1 sacred metric: **first booking**). What “done” means for the owner/guest, not for the diff.
+2. **Decompose** — Checkpoints, flows, data, honest limits. Break down until nothing important is hand-waved. If unclear, read canonical docs first.
+3. **Blueprint** — Which doc owns this? (`LIVIA-STATUS.md`, program doc, screen card, `AGENTS.md` cascade). **Update the plan if wrong; then build.**
+4. **Trade scope** — Declare hat (`livia-session-hub`). Your branch must fit the main plan; cite the program doc in closeout.
+
+## Build order (inside-out)
+
+```text
+lib/policy → DB/schema → API + services/jobs → pnpm codegen → artifacts/* (thin) → demo/E2E
+```
+
+Never fix one surface when the flow is shared — see `livia-surfaces-cascade.mdc`.
+
+## Per trade (agent/session)
+
+| Trade | Owns | Must verify |
+|-------|------|-------------|
+| Architect (cpo) | Intent, checkpoints, UX contract | Matches north-star / screen card |
+| Structural (cto) | Policy, API, migrations, jobs | `typecheck`, cascade gates |
+| Electrician | Integrations, auth, webhooks | Env truth, no fake “Connect” |
+| Plumber | Tenant state, onboarding lifecycle | Resume + go-live gates |
+| Painter | Dashboard/mobile/marketing UI | Parity or documented handoff |
+| Inspector | E2E, UAT, readiness | Real user path, not happy-path only |
+
+## Definition of done (a room, not a tile)
+
+- [ ] Policy or program doc updated if behaviour changed
+- [ ] API/OpenAPI + `pnpm codegen` if contract changed
+- [ ] Sibling surfaces checked (web ↔ mobile ↔ `/b` ↔ demo)
+- [ ] `pnpm run typecheck`; relevant E2E or founder path noted
+- [ ] Honest limits in UI when automation is not live
+
+## When user says “build X”
+
+Default: short breakdown (intent → checkpoints → files → order) **then** implement.  
+Exception: explicit “hotfix only” — still note cascade risk in closeout.
+
+Authority: `AGENTS.md` · `docs/DOC-CANONICAL-INDEX.md` · `.cursor/skills/livia-session-hub`

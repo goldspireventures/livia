@@ -7,10 +7,13 @@ export function SignInTenantPreview({
   hint,
   loading,
   children,
+  embedded = false,
 }: {
   hint: SignInAppearanceHint | null;
   loading?: boolean;
   children: ReactNode;
+  /** Inside gateway auth card — skip extra outer frame. */
+  embedded?: boolean;
 }) {
   const shellRef = useRef<HTMLDivElement>(null);
 
@@ -33,10 +36,11 @@ export function SignInTenantPreview({
     <div
       ref={shellRef}
       className={cn(
-        "sign-in-tenant-preview rounded-2xl border transition-[border-color,background-color,box-shadow] duration-500 ease-out",
-        hint
-          ? "border-primary/25 shadow-lg shadow-primary/5"
-          : "border-border/50 bg-card/30 backdrop-blur-sm",
+        "sign-in-tenant-preview transition-[border-color,background-color,box-shadow] duration-500 ease-out",
+        embedded
+          ? "rounded-lg"
+          : "rounded-2xl border border-border/50 bg-card/30 backdrop-blur-sm",
+        !embedded && hint && "border-primary/25 shadow-lg shadow-primary/5",
         hint?.colorMode === "dark" && "text-foreground",
       )}
       data-testid="sign-in-tenant-preview"

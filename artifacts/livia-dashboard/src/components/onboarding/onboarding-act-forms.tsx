@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api-fetch";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,7 +14,6 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { Check } from "lucide-react";
 import { ChannelSetupWizard } from "@/components/channel-setup-wizard";
 import { MigrationSwitchPanel } from "@/components/onboarding/migration-switch-panel";
 import type { MigrationSourceId } from "@workspace/policy";
@@ -41,19 +39,25 @@ const CHECKLIST_ITEMS: { key: keyof NonNullable<OnboardingStatePayload["checklis
   { key: "billingStarted", label: "Billing plan viewed" },
 ];
 
+export type OnboardingActSaveHandler = () => Promise<boolean>;
+
 export function OnboardingActForms({
   act,
   businessId,
+  businessSlug,
   checklist,
   onChecklistChange,
   onSaved,
+  onRegisterSave,
   previewMode = false,
 }: {
   act: OnboardingActId;
   businessId: string;
+  businessSlug?: string | null;
   checklist?: OnboardingStatePayload["checklist"];
   onChecklistChange: (next: OnboardingStatePayload["checklist"]) => void;
   onSaved?: () => void;
+  onRegisterSave?: (act: OnboardingActId, handler: OnboardingActSaveHandler | null) => void;
   previewMode?: boolean;
 }) {
   const { toast } = useToast();
@@ -67,7 +71,10 @@ export function OnboardingActForms({
   const [aiEnabled, setAiEnabled] = useState(true);
   const [aiTone, setAiTone] = useState("FRIENDLY");
   const [aiGreeting, setAiGreeting] = useState("");
-  const [avail, setAvail] = useState<AvailRule[] | null>(null);
+  const [ownerStaffId, setOwnerStaffId] = useState<string | null>(null);
+  const [hoursByDay, setHoursByDay] = useState<Map<number, { startTime: string; endTime: string }>>(
+    new Map(),
+  );
   const [commsPhone, setCommsPhone] = useState<string | null>(null);
   const [commsFull, setCommsFull] = useState<{
     twilioPhoneNumber?: string | null;
@@ -80,7 +87,7 @@ export function OnboardingActForms({
   const [businessVertical, setBusinessVertical] = useState<string | undefined>();
 
   useEffect(() => {
-    if (!businessId || !["a2_shop_profile", "a6_liv"].includes(act)) return;
+    if (!businessId || !["a2_shop_profile", "a6_liv", "a11_migration", "a12_go_live"].includes(act)) return;
     if (previewMode) {
       setName(ONBOARDING_PREVIEW_SHOP_NAME);
       setPhone("+353 1 234 5678");
@@ -109,20 +116,69 @@ export function OnboardingActForms({
   }, [businessId, act, previewMode]);
 
   useEffect(() => {
+    if (act !== "a12_go_live" || !businessId || previewMode) return;
+    const poll = () => {
+      void apiFetch<{ onboardingState?: OnboardingStatePayload }>(`/businesses/${businessId}`)
+        .then((b) => {
+          const cl = b.onboardingState?.checklist;
+          if (cl?.testBooking && !checklist?.testBooking) {
+            onChecklistChange({ ...checklist, ...cl });
+          }
+        })
+        .catch(() => {});
+    };
+    poll();
+    const id = window.setInterval(poll, 4000);
+    return () => window.clearInterval(id);
+  }, [act, businessId, previewMode, checklist, onChecklistChange]);
+
+  useEffect(() => {
     if (act !== "a5_hours" || !businessId) return;
     if (previewMode) {
-      setAvail([
-        { dayOfWeek: 1, startTime: "09:00", endTime: "18:00" },
-        { dayOfWeek: 2, startTime: "09:00", endTime: "18:00" },
-        { dayOfWeek: 3, startTime: "09:00", endTime: "18:00" },
-      ]);
+      setHoursByDay(
+        new Map([
+          [1, { startTime: "09:00", endTime: "18:00" }],
+          [2, { startTime: "09:00", endTime: "18:00" }],
+          [3, { startTime: "09:00", endTime: "18:00" }],
+          [4, { startTime: "09:00", endTime: "18:00" }],
+          [5, { startTime: "09:00", endTime: "18:00" }],
+        ]),
+      );
       setLoading(false);
       return;
     }
     setLoading(true);
-    apiFetch<AvailRule[]>(`/businesses/${businessId}/availability`)
-      .then(setAvail)
-      .catch(() => setAvail([]))
+    Promise.all([
+      apiFetch<{ id: string }[]>(`/businesses/${businessId}/staff`),
+    ])
+      .then(async ([staff]) => {
+        const primaryStaffId = staff[0]?.id ?? null;
+        setOwnerStaffId(primaryStaffId);
+        const rules = await apiFetch<AvailRule[]>(
+          primaryStaffId
+            ? `/businesses/${businessId}/availability?staffId=${encodeURIComponent(primaryStaffId)}`
+            : `/businesses/${businessId}/availability`,
+        );
+        const byDay = new Map<number, { startTime: string; endTime: string }>();
+        for (const rule of rules) {
+          if (!byDay.has(rule.dayOfWeek)) {
+            byDay.set(rule.dayOfWeek, { startTime: rule.startTime, endTime: rule.endTime });
+          }
+        }
+        if (byDay.size === 0) {
+          for (let day = 1; day <= 5; day++) {
+            byDay.set(day, { startTime: "09:00", endTime: "17:00" });
+          }
+        }
+        setHoursByDay(byDay);
+      })
+      .catch(() => {
+        const fallback = new Map<number, { startTime: string; endTime: string }>();
+        for (let day = 1; day <= 5; day++) {
+          fallback.set(day, { startTime: "09:00", endTime: "17:00" });
+        }
+        setHoursByDay(fallback);
+      })
       .finally(() => setLoading(false));
   }, [act, businessId, previewMode]);
 
@@ -160,30 +216,63 @@ export function OnboardingActForms({
       .catch(() => setBusinessJurisdiction(undefined));
   }, [act, businessId]);
 
-  async function saveShop() {
+  const saveShop = useCallback(async (): Promise<boolean> => {
     if (previewMode) {
       toast({ title: "Preview only", description: "Shop profile was not saved." });
-      return;
+      return true;
+    }
+    if (!name.trim()) {
+      toast({ title: "Location name required", variant: "destructive" });
+      return false;
     }
     setSaving(true);
     try {
       await apiFetch(`/businesses/${businessId}`, {
         method: "PATCH",
-        body: JSON.stringify({ name: name.trim() || undefined, phone, city, description }),
+        body: JSON.stringify({ name: name.trim(), phone, city, description }),
       });
-      toast({ title: "Shop profile saved" });
       onSaved?.();
+      return true;
     } catch {
       toast({ title: "Save failed", variant: "destructive" });
+      return false;
     } finally {
       setSaving(false);
     }
-  }
+  }, [previewMode, name, phone, city, description, businessId, onSaved, toast]);
 
-  async function saveLiv() {
+  const saveHours = useCallback(async (): Promise<boolean> => {
+    if (previewMode) return true;
+    if (hoursByDay.size === 0) {
+      toast({ title: "Pick at least one open day", variant: "destructive" });
+      return false;
+    }
+    setSaving(true);
+    try {
+      const rules = Array.from(hoursByDay.entries()).map(([dayOfWeek, { startTime, endTime }]) => ({
+        dayOfWeek,
+        startTime,
+        endTime,
+      }));
+      await apiFetch(`/businesses/${businessId}/availability`, {
+        method: "PUT",
+        body: JSON.stringify({ rules, staffId: ownerStaffId ?? undefined }),
+      });
+      onChecklistChange({ ...checklist, hoursConfirmed: true });
+      onSaved?.();
+      return true;
+    } catch {
+      toast({ title: "Could not save hours", variant: "destructive" });
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  }, [previewMode, hoursByDay, businessId, ownerStaffId, checklist, onChecklistChange, onSaved, toast]);
+
+  const saveLiv = useCallback(async (): Promise<boolean> => {
     if (previewMode) {
       toast({ title: "Preview only", description: "Liv settings were not saved." });
-      return;
+      return true;
     }
     setSaving(true);
     try {
@@ -195,14 +284,50 @@ export function OnboardingActForms({
           aiGreeting: aiGreeting || undefined,
         }),
       });
-      toast({ title: "Liv settings saved" });
       onChecklistChange({ ...checklist, livEnabled: aiEnabled });
       onSaved?.();
+      return true;
     } catch {
       toast({ title: "Save failed", variant: "destructive" });
+      return false;
     } finally {
       setSaving(false);
     }
+  }, [previewMode, aiEnabled, aiTone, aiGreeting, businessId, checklist, onChecklistChange, onSaved, toast]);
+
+  useEffect(() => {
+    if (!onRegisterSave) return;
+    if (act === "a2_shop_profile") {
+      onRegisterSave(act, () => saveShop());
+      return () => onRegisterSave(act, null);
+    }
+    if (act === "a5_hours") {
+      onRegisterSave(act, () => saveHours());
+      return () => onRegisterSave(act, null);
+    }
+    if (act === "a6_liv") {
+      onRegisterSave(act, () => saveLiv());
+      return () => onRegisterSave(act, null);
+    }
+    onRegisterSave(act, null);
+    return undefined;
+  }, [act, onRegisterSave, saveShop, saveHours, saveLiv]);
+
+  function toggleHourDay(day: number) {
+    const next = new Map(hoursByDay);
+    if (next.has(day)) {
+      next.delete(day);
+    } else {
+      next.set(day, { startTime: "09:00", endTime: "17:00" });
+    }
+    setHoursByDay(next);
+  }
+
+  function updateHourTime(day: number, field: "startTime" | "endTime", value: string) {
+    const next = new Map(hoursByDay);
+    const cur = next.get(day) ?? { startTime: "09:00", endTime: "17:00" };
+    next.set(day, { ...cur, [field]: value });
+    setHoursByDay(next);
   }
 
   if (loading && ["a2_shop_profile", "a5_hours"].includes(act)) {
@@ -221,7 +346,7 @@ export function OnboardingActForms({
             required
           />
           <p className="text-xs text-muted-foreground">
-            Use your brand plus area or street — not a unrelated trading name.
+            Use your brand plus area or street — not an unrelated trading name.
           </p>
         </div>
         <div className="space-y-2">
@@ -230,53 +355,62 @@ export function OnboardingActForms({
         </div>
         <div className="space-y-2">
           <Label>City</Label>
-          <Input value={city} onChange={(e) => setCity(e.target.value)} />
+          <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="e.g. Dublin" />
         </div>
         <div className="space-y-2">
           <Label>Description</Label>
           <Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="What makes your shop special?"
+            placeholder="What you offer — shown on your booking page."
             rows={3}
           />
+          <p className="text-xs text-muted-foreground">Public. Keep it short.</p>
         </div>
-        <Button onClick={() => void saveShop()} disabled={saving}>
-          Save shop profile
-        </Button>
+        {saving ? <p className="text-xs text-muted-foreground">Saving…</p> : null}
       </div>
     );
   }
 
   if (act === "a5_hours") {
-    const byDay = new Map<number, AvailRule[]>();
-    for (const r of avail ?? []) {
-      const list = byDay.get(r.dayOfWeek) ?? [];
-      list.push(r);
-      byDay.set(r.dayOfWeek, list);
-    }
     return (
-      <div className="rounded-lg border bg-muted/30 p-4 space-y-3" data-testid="onboarding-hours-preview">
-        <p className="text-sm font-medium">Weekly hours ({avail?.length ?? 0} rules)</p>
-        {avail && avail.length > 0 ? (
-          <ul className="text-sm text-muted-foreground grid grid-cols-2 gap-1">
-            {DAYS.map((label, i) => {
-              const rules = byDay.get(i);
-              if (!rules?.length) return null;
-              return (
-                <li key={label}>
-                  <Check className="inline h-3 w-3 text-primary mr-1" />
-                  {label}: {rules.map((r) => `${r.startTime}–${r.endTime}`).join(", ")}
-                </li>
-              );
-            })}
-          </ul>
-        ) : (
-          <p className="text-sm text-amber-600">No hours yet — set them on a staff member.</p>
-        )}
-        <p className="text-xs text-muted-foreground">
-          Default seed may have added hours for the owner. Adjust per team member under Staff → Availability.
+      <div className="rounded-lg border bg-muted/30 p-4 space-y-3" data-testid="onboarding-hours-form">
+        <p className="text-sm text-muted-foreground">
+          When you&apos;re open for bookings. You can fine-tune per team member later in Staff.
         </p>
+        {DAYS.map((label, day) => {
+          const hasDay = hoursByDay.has(day);
+          const rule = hoursByDay.get(day);
+          return (
+            <div
+              key={label}
+              className={`flex flex-wrap items-center gap-3 rounded-md border p-3 ${
+                hasDay ? "border-primary/20 bg-primary/5" : "border-border"
+              }`}
+            >
+              <Switch checked={hasDay} onCheckedChange={() => toggleHourDay(day)} />
+              <span className="w-8 text-sm font-medium">{label}</span>
+              {hasDay && rule ? (
+                <div className="flex flex-1 items-center gap-2">
+                  <Input
+                    type="time"
+                    value={rule.startTime}
+                    onChange={(e) => updateHourTime(day, "startTime", e.target.value)}
+                    className="h-8 w-28"
+                  />
+                  <span className="text-sm text-muted-foreground">to</span>
+                  <Input
+                    type="time"
+                    value={rule.endTime}
+                    onChange={(e) => updateHourTime(day, "endTime", e.target.value)}
+                    className="h-8 w-28"
+                  />
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
+        {saving ? <p className="text-xs text-muted-foreground">Saving…</p> : null}
       </div>
     );
   }
@@ -293,6 +427,7 @@ export function OnboardingActForms({
         onToneChange={setAiTone}
         onGreetingChange={setAiGreeting}
         onSave={() => void saveLiv()}
+        hideSaveButton
       />
     );
   }
@@ -356,7 +491,8 @@ export function OnboardingActForms({
           businessId={businessId}
           businessVertical={businessVertical}
           migrationSource={(checklist as { migrationSource?: string } | undefined)?.migrationSource}
-          compact
+          migrationBookingUrl={checklist?.migrationBookingUrl}
+          migrationExternalId={checklist?.migrationExternalId}
           onSourceChange={(sourceId: MigrationSourceId) => {
             onChecklistChange({
               ...checklist,
@@ -364,15 +500,23 @@ export function OnboardingActForms({
               migrationSource: sourceId,
             });
           }}
+          onConnectionChange={(fields) => {
+            onChecklistChange({
+              ...checklist,
+              migrationIntent: "switching",
+              ...fields,
+            });
+          }}
           onImported={(total) => {
             onChecklistChange({
               ...checklist,
               migrationImported: true,
               migrationIntent: "switching",
+              servicesConfirmed: total > 0 ? true : checklist?.servicesConfirmed,
             });
             if (total > 0) onSaved?.();
           }}
-          onSkip={() => onSaved?.()}
+          onSkip={undefined}
         />
       </div>
     );
@@ -394,20 +538,44 @@ export function OnboardingActForms({
             ))}
           </ul>
         ) : null}
-        {CHECKLIST_ITEMS.map((item) => (
-          <div key={item.key} className="flex items-start gap-2">
-            <Checkbox
-              id={item.key}
-              checked={Boolean(cl[item.key])}
-              onCheckedChange={(v) =>
-                onChecklistChange({ ...cl, [item.key]: v === true })
-              }
-            />
-            <label htmlFor={item.key} className="text-sm leading-snug cursor-pointer">
-              {item.label}
-            </label>
-          </div>
-        ))}
+        {CHECKLIST_ITEMS.map((item) => {
+          const isTestBooking = item.key === "testBooking";
+          const checked = Boolean(cl[item.key]);
+          return (
+            <div key={item.key} className="flex items-start gap-2">
+              <Checkbox
+                id={item.key}
+                checked={checked}
+                disabled={isTestBooking}
+                onCheckedChange={(v) => {
+                  if (isTestBooking) return;
+                  onChecklistChange({ ...cl, [item.key]: v === true });
+                }}
+              />
+              <div className="space-y-1">
+                <label
+                  htmlFor={item.key}
+                  className={`text-sm leading-snug ${isTestBooking ? "" : "cursor-pointer"}`}
+                >
+                  {item.label}
+                </label>
+                {isTestBooking && !checked && businessSlug ? (
+                  <a
+                    href={`/book/${businessSlug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-primary underline-offset-2 hover:underline block"
+                  >
+                    Open your book page and complete a test booking →
+                  </a>
+                ) : null}
+                {isTestBooking && checked ? (
+                  <p className="text-[11px] text-muted-foreground">Verified from a real booking.</p>
+                ) : null}
+              </div>
+            </div>
+          );
+        })}
       </div>
     );
   }

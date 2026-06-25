@@ -40,7 +40,7 @@ import {
 } from "@/lib/demo-sign-in";
 import { clearDemoSession, persistDemoSession } from "@/lib/demo-session";
 import { isDemoLoginEnabled, setDevPersonaOverride } from "@/hooks/usePersona";
-import { LIVIA_MOBILE_ENTRY_COPY } from "@workspace/policy";
+import { GATEWAY_PASSWORD_HINT, humanizeGatewayAuthError, LIVIA_MOBILE_ENTRY_COPY } from "@workspace/policy";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -155,7 +155,7 @@ export default function SignInScreen() {
       setError(
         err instanceof Error && !first
           ? err.message
-          : humanizeAuthError(first?.code, first?.message),
+          : humanizeGatewayAuthError(first?.code, first?.message),
       );
       haptics.warning();
     } finally {
@@ -176,7 +176,7 @@ export default function SignInScreen() {
     } catch (err: unknown) {
       const e = err as { errors?: Array<{ message: string; code?: string }> };
       const first = e?.errors?.[0];
-      setError(humanizeAuthError(first?.code, first?.message));
+      setError(humanizeGatewayAuthError(first?.code, first?.message));
       haptics.warning();
     } finally {
       setLoading(false);
@@ -198,7 +198,7 @@ export default function SignInScreen() {
     } catch (err: unknown) {
       const e = err as { errors?: Array<{ message: string; code?: string }> };
       const first = e?.errors?.[0];
-      setError(humanizeAuthError(first?.code, first?.message));
+      setError(humanizeGatewayAuthError(first?.code, first?.message));
       haptics.warning();
     } finally {
       setLoading(false);
@@ -250,7 +250,7 @@ export default function SignInScreen() {
       if (/cancel|dismiss|user_cancel/i.test(raw)) {
         setError("Sign-in cancelled. Tap Continue with Google to try again.");
       } else {
-        setError(humanizeAuthError(first?.code, raw || "Google sign-in failed."));
+        setError(humanizeGatewayAuthError(first?.code, raw || "Google sign-in failed."));
         haptics.warning();
       }
     } finally {
@@ -392,7 +392,7 @@ export default function SignInScreen() {
                       paddingRight: 44,
                     },
                   ]}
-                  placeholder="At least 8 characters"
+                  placeholder={mode === "sign-up" ? "New password" : "Password"}
                   placeholderTextColor={colors.mutedForeground}
                   value={password}
                   onChangeText={setPassword}
@@ -419,6 +419,11 @@ export default function SignInScreen() {
                   />
                 </Pressable>
               </View>
+              {mode === "sign-up" ? (
+                <Text style={[styles.passwordHint, { color: colors.mutedForeground }]}>
+                  {GATEWAY_PASSWORD_HINT}
+                </Text>
+              ) : null}
             </>
           ) : (
             <>
@@ -576,29 +581,6 @@ function GoogleGlyph() {
     </View>
   );
 }
-
-function humanizeAuthError(code: string | undefined, fallback: string | undefined): string {
-  if (!code) return fallback || "Something went wrong.";
-  switch (code) {
-    case "form_identifier_not_found":
-      return "We couldn't find an account for that email. Try Continue with Google, or create an account.";
-    case "form_password_incorrect":
-      return "That password doesn't match. If you signed up with Google, use the Google button instead.";
-    case "form_password_pwned":
-      return "That password appears in known breaches — please pick a stronger one.";
-    case "form_password_length_too_short":
-      return "Password must be at least 8 characters.";
-    case "form_identifier_exists":
-      return "An account already exists for that email. Try signing in instead.";
-    case "form_code_incorrect":
-      return "That verification code is incorrect or expired.";
-    case "session_exists":
-      return "You're already signed in.";
-    default:
-      return fallback || "Authentication failed. Please try again.";
-  }
-}
-
 const styles = StyleSheet.create({
   root: { flex: 1 },
   scroll: { flex: 1 },
@@ -658,6 +640,12 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     fontSize: 15,
     fontFamily: fonts.body,
+  },
+  passwordHint: {
+    fontSize: 12,
+    fontFamily: fonts.body,
+    lineHeight: 16,
+    marginTop: 6,
   },
   codeInput: {
     fontSize: 22,

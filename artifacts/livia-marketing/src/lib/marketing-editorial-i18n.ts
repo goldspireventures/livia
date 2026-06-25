@@ -8,6 +8,7 @@ export type HomeConstellationCopy = {
   headline1: string;
   headline2: string;
   subhead: string;
+  getStarted: string;
   bookDemo: string;
   howItWorks: string;
   joinBeta: string;
@@ -47,8 +48,22 @@ export type HomeFoldCopy = {
   faqMore: string;
 };
 
+export type ProductShowcaseCopy = {
+  eyebrow: string;
+  title: string;
+  titleAccent: string;
+  subtitle: string;
+  webLabel: string;
+  mobileLabel: string;
+  bookingLabel: string;
+  webAlt: string;
+  mobileAlt: string;
+  bookingAlt: string;
+};
+
 export type EditorialCopy = {
   nav: {
+    getStarted: string;
     seeDemo: string;
     pricing: string;
     howItWorks: string;
@@ -76,6 +91,7 @@ export type EditorialCopy = {
   };
   homeConstellation: HomeConstellationCopy;
   homeFold: HomeFoldCopy;
+  productShowcase: ProductShowcaseCopy;
   homeOs: HomeOsCopy;
   homeTrust: { label: string; value: string }[];
   homeFeatures: { title: string; body: string }[];
@@ -166,7 +182,8 @@ export type EditorialCopy = {
 
 const EN: EditorialCopy = {
   nav: {
-    seeDemo: "Book demo",
+    getStarted: "Get started",
+    seeDemo: "How it works",
     pricing: "Pricing",
     howItWorks: "How it works",
     joinBeta: "Join beta",
@@ -189,57 +206,71 @@ const EN: EditorialCopy = {
     meetLiv: "Meet Liv",
     howItWorks: "How it works",
     photoAlt: "European service business interior in quiet morning light",
-    photoCaption: "09:14 · Dublin",
+    photoCaption: "09:14 · London",
   },
   homeConstellation: {
-    headline1: "One OS.",
-    headline2: "Built for how you work.",
-    subhead: "One platform for every appointment business. Liv handles the messages and bookings you miss after hours.",
+    headline1: "Software for",
+    headline2: "appointment businesses.",
+    subhead:
+      "Your calendar, messages, team, and booking page in one place. Liv picks up when you close for the night.",
+    getStarted: "Get started",
     bookDemo: "Book a demo",
     howItWorks: "How it works",
     joinBeta: "Join beta",
   },
   homeFold: {
     physicsEyebrow: "What every shop shares",
-    physicsHeadline: "Three things every appointment business needs to get right.",
-    livLine: "Replies, books, and morning summaries in Livia — your team can take over any conversation.",
+    physicsHeadline: "Three things you need to get right.",
+    livLine: "Liv replies, books, and sends you a morning summary — your team can jump in any time.",
     pricingFrom: "Chain, Host, and add-ons on the full pricing page.",
     verticalsEyebrow: "Your trade",
     verticalsHeadline: "Pick your trade",
-    verticalsSub: "Request access — we match your trade and send a demo invite.",
+    verticalsSub: "See how Livia fits your work — then create your shop.",
     faqMore: "More answers",
   },
+  productShowcase: {
+    eyebrow: "The product",
+    title: "Your shop,",
+    titleAccent: "on screen.",
+    subtitle:
+      "Livia on desktop and mobile — inbox, owner Today, and the public booking page your clients use.",
+    webLabel: "Inbox · web",
+    mobileLabel: "Today · mobile",
+    bookingLabel: "Booking page",
+    webAlt: "Livia inbox on desktop with Mary McNamara's thread open — Liv handling colour reschedule",
+    mobileAlt: "Livia Today view on mobile showing the day's appointments",
+    bookingAlt: "Livia public booking page branded for a beauty studio",
+  },
   homeOs: {
-    eyebrow: "Operating system · people-businesses",
-    headline: ["Demand arrives everywhere.", "Time is scarce."],
-    headlineAccent: "One floor holds it.",
+    eyebrow: "Built for your trade",
+    headline: ["Messages pile up.", "Time doesn't."],
+    headlineAccent: "Livia keeps both in check.",
     subhead:
-      "Salons, clinics, studios, groomers — any business where skilled humans sell scarce time to people who come back. Livia is the OS that unifies channels, calendar, memory, and policy.",
+      "Salons, clinics, studios, groomers — any business that sells time by appointment. One calendar, one inbox, one place for your team.",
     livIntro:
-      "<strong>Liv</strong> is the governed colleague on that floor — replying, booking, briefing, and leaving an audit trail you can trust.",
-    seeDemo: "Book a demo",
+      "<strong>Liv</strong> works inside Livia — replying, booking, and briefing you before the day starts.",
+    seeDemo: "Get started",
     howItWorks: "How it works",
     joinBeta: "Join beta",
-    convergenceLabel: "Every channel → one operating truth",
+    convergenceLabel: "Every channel in one inbox",
     channels: [
       { short: "DM", label: "Social" },
       { short: "SMS", label: "Text" },
       { short: "Web", label: "Booking" },
       { short: "Tel", label: "Phone" },
     ],
-    physicsTitle: "The physics every in-scope business shares",
-    physicsSubtitle:
-      "Hair was the microscope, not the organism. These invariants hold whether you run a chair, a room, a bay, or a class slot.",
+    physicsTitle: "What every appointment business shares",
+    physicsSubtitle: "Hair was our first trade — not our only one. The basics hold whether you run a chair, a room, or a class.",
     physics: [
-      { title: "Your calendar", body: "Scarce slots, buffers, and real availability — not a decorative calendar." },
-      { title: "Skill match", body: "Right practitioner, right service, right duration — using your booking rules." },
-      { title: "Relationship memory", body: "Formula, plan, pet profile, vehicle notes — continuity that compounds." },
-      { title: "Policy", body: "Deposits, cancel windows, consent — yours, enforced consistently." },
-      { title: "All channels, one place", body: "SMS, email, web chat — one schedule, one inbox, one source of truth." },
+      { title: "Your calendar", body: "Real slots, buffers, and availability — not a calendar that lies." },
+      { title: "Right person, right service", body: "Your rules for who does what, and how long it takes." },
+      { title: "Client history", body: "Notes, formulas, plans — so you don't start from zero each visit." },
+      { title: "Your policies", body: "Deposits, cancel windows, consent — set once, applied everywhere." },
+      { title: "One inbox", body: "SMS, email, and web chat in one thread — tied to your calendar." },
     ],
     livBand: {
-      title: "Liv is built into Livia — not a chat widget stuck on the side",
-      body: "She runs inside your software — with clear AI notices, handoff to your team, and you in control on every customer touchpoint.",
+      title: "Liv is part of Livia — not a chat widget on the side",
+      body: "She works inside your software. Customers know when they're talking to AI. You can take over any conversation.",
       bullets: [
         "Replies in your tone with real slot checks",
         "Books, reminds, and backfills against your rules",
@@ -256,7 +287,7 @@ const EN: EditorialCopy = {
     },
   },
   homeTrust: [
-    { label: "Verticals", value: "21+ in demo" },
+    { label: "Trades", value: "21+" },
     { label: "Markets", value: "IE · UK · EU" },
     { label: "Policies", value: "Yours" },
     { label: "Product", value: "Inbox + calendar + staff" },
@@ -291,7 +322,7 @@ const EN: EditorialCopy = {
       "Marie's 2:30 held for regular",
       "No deposit disputes this week",
     ],
-    tags: ["Phorest-class ops", "Fresha-simple booking", "European calm"],
+    tags: ["Calendar-first", "Inbox built in", "European calm"],
   },
   story: {
     chapter1: "Chapter one",
@@ -305,13 +336,13 @@ const EN: EditorialCopy = {
     chapter2: "Chapter two",
     creamTitle: "Liv answered. You slept.",
     creamBody:
-      "No-show recovery, waitlist backfill, and deposit-ready scheduling — policies you approve, not boilerplate you inherit from a marketplace.",
-    creamAside: "Empty chairs are a Tuesday problem. Livia is built for the Sunday night before.",
+      "No-show recovery, waitlist backfill, and deposit-ready scheduling — using rules you set, not templates from someone else's product.",
+    creamAside: "Empty chairs hurt on Tuesday. Livia is for the Sunday night before.",
     chapter3: "Chapter three",
     cockpitTitle: "One calm view of the day.",
-    cockpitLabel: "Your morning view · preview",
-    cockpitBody: "Every shop's day, week, and money — without opening three apps before 9am.",
-    cockpitNote: "Full product walkthrough on the demo — not a stock dashboard mockup.",
+    cockpitLabel: "Your morning view",
+    cockpitBody: "Your day, week, and revenue — without opening three apps before 9am.",
+    cockpitNote: "These are real Livia screens — not a stock mock-up.",
     trustIntro: "Liv",
     trustTitle: "She takes on more each month — with you still in control.",
     trustSteps: [
@@ -349,7 +380,7 @@ const EN: EditorialCopy = {
       },
       {
         q: "How is this different from Booksy or Fresha?",
-        a: "Not a marketplace. Not a bolt-on chatbot. Your software — Liv works the inbox and books your calendar.",
+        a: "We're not a marketplace and we're not a chatbot you bolt on. It's your software — your calendar, your clients, your rules. Liv works the inbox.",
       },
       {
         q: "What does Liv do?",
@@ -409,6 +440,7 @@ const EN: EditorialCopy = {
 
 const DE: EditorialCopy = {
   nav: {
+    getStarted: "Jetzt starten",
     seeDemo: "Demo ansehen",
     pricing: "Preise",
     howItWorks: "So funktioniert's",
@@ -435,54 +467,69 @@ const DE: EditorialCopy = {
     photoCaption: "09:14 · München",
   },
   homeConstellation: {
-    headline1: "Ein OS.",
-    headline2: "So gebaut, wie Sie arbeiten.",
-    subhead: "Eine Plattform für jedes Termingeschäft. Liv übernimmt Nachrichten und Buchungen außerhalb Ihrer Öffnungszeiten.",
+    headline1: "Software für",
+    headline2: "Termingeschäfte.",
+    subhead:
+      "Kalender, Nachrichten, Team und Buchungsseite an einem Ort. Liv antwortet, wenn Sie Feierabend haben.",
+    getStarted: "Jetzt starten",
     bookDemo: "Demo buchen",
     howItWorks: "So funktioniert's",
     joinBeta: "Beta beitreten",
   },
   homeFold: {
     physicsEyebrow: "Was jedes Studio teilt",
-    physicsHeadline: "Drei Grundlagen, die jedes Termingeschäft braucht.",
-    livLine: "Antwortet, bucht und briefed in Livia — Ihr Team kann jederzeit übernehmen.",
+    physicsHeadline: "Drei Dinge, die Sie richtig machen müssen.",
+    livLine: "Liv antwortet, bucht und schickt Ihnen morgens eine Zusammenfassung — Ihr Team kann jederzeit übernehmen.",
     pricingFrom: "Chain, Host und Add-ons auf der Preisseite.",
     verticalsEyebrow: "Ihr Gewerk",
     verticalsHeadline: "Wählen Sie Ihr Gewerk",
-    verticalsSub: "Zugang anfragen — wir schicken eine Demo-Einladung.",
+    verticalsSub: "Sehen Sie, wie Livia zu Ihrem Gewerk passt — dann legen Sie Ihr Studio an.",
     faqMore: "Mehr Antworten",
   },
+  productShowcase: {
+    eyebrow: "Das Produkt",
+    title: "Ihr Studio,",
+    titleAccent: "auf dem Bildschirm.",
+    subtitle:
+      "Echtes Livia — Inbox am Desktop, Today auf dem Handy und die Buchungsseite, die Ihre Kunden nutzen.",
+    webLabel: "Inbox · Web",
+    mobileLabel: "Today · Mobil",
+    bookingLabel: "Buchungsseite",
+    webAlt: "Livia-Inbox am Desktop mit Kundennachrichten und Buchungsaktionen",
+    mobileAlt: "Livia-Today-Ansicht auf dem Handy mit den Terminen des Tages",
+    bookingAlt: "Öffentliche Livia-Buchungsseite für ein Beauty-Studio",
+  },
   homeOs: {
-    eyebrow: "Betriebssystem · People-Businesses",
-    headline: ["Nachfrage kommt überall an.", "Zeit ist knapp."],
-    headlineAccent: "Ein Floor hält alles.",
+    eyebrow: "Für Ihr Gewerk gebaut",
+    headline: ["Nachrichten häufen sich.", "Zeit bleibt knapp."],
+    headlineAccent: "Livia hält beides im Griff.",
     subhead:
-      "Salons, Kliniken, Studios, Groomer — jedes Geschäft, in dem Menschen knappe Zeit an Stammkunden verkaufen. Livia ist das OS für Kanäle, Kalender, Gedächtnis und Policy.",
+      "Salons, Kliniken, Studios, Groomer — jedes Geschäft, das Zeit nach Termin verkauft. Ein Kalender, eine Inbox, ein Ort für Ihr Team.",
     livIntro:
-      "<strong>Liv</strong> ist die governierte Kollegin auf diesem Floor — antwortet, bucht, briefed und hinterlässt einen prüfbaren Trail.",
-    seeDemo: "Demo buchen",
+      "<strong>Liv</strong> arbeitet in Livia — antwortet, bucht und briefed Sie, bevor der Tag beginnt.",
+    seeDemo: "Jetzt starten",
     howItWorks: "So funktioniert's",
     joinBeta: "Beta beitreten",
-    convergenceLabel: "Jeder Kanal → eine operative Wahrheit",
+    convergenceLabel: "Jeder Kanal in einer Inbox",
     channels: [
       { short: "DM", label: "Social" },
       { short: "SMS", label: "Text" },
       { short: "Web", label: "Buchung" },
       { short: "Tel", label: "Telefon" },
     ],
-    physicsTitle: "Die Physik, die jedes passende Geschäft teilt",
+    physicsTitle: "Was jedes Termingeschäft teilt",
     physicsSubtitle:
-      "Friseur war das Mikroskop, nicht der Organismus. Diese Invarianten gelten für Stuhl, Raum, Box oder Kurs-Slot.",
+      "Friseur war unser erster Fokus — nicht unser einziger. Die Grundlagen gelten für Stuhl, Raum oder Kurs.",
     physics: [
-      { title: "Zeit-Inventar", body: "Knapp Slots, Puffer, echte Verfügbarkeit — kein Deko-Kalender." },
-      { title: "Skill-Match", body: "Richtige Person, richtiger Service, richtige Dauer — policy-aware." },
-      { title: "Beziehungsgedächtnis", body: "Formel, Plan, Tierprofil, Fahrzeugnotizen — Kontinuität, die wächst." },
-      { title: "Policy", body: "Anzahlungen, Storno, Einwilligung — Ihre Regeln, durchgängig." },
-      { title: "Kanäle konvergieren", body: "DM, SMS, Web, Telefon — ein Schedule, eine Inbox, eine Wahrheit." },
+      { title: "Ihr Kalender", body: "Echte Slots, Puffer und Verfügbarkeit — kein Schmuckkalender." },
+      { title: "Richtige Person, richtiger Service", body: "Ihre Regeln, wer was macht und wie lange es dauert." },
+      { title: "Kundenhistorie", body: "Notizen, Formeln, Pläne — nicht bei jedem Besuch von vorn." },
+      { title: "Ihre Regeln", body: "Anzahlungen, Storno, Einwilligung — einmal festlegen, überall anwenden." },
+      { title: "Eine Inbox", body: "SMS, E-Mail und Web-Chat in einem Thread — verbunden mit Ihrem Kalender." },
     ],
     livBand: {
-      title: "Liv ist kein Chatbot-Bolt-on",
-      body: "Sie läuft im Betriebssystem — mit Disclosure, Eskalation und Staff-Override auf jeder Kundenoberfläche.",
+      title: "Liv ist Teil von Livia — kein Chat-Widget am Rand",
+      body: "Sie arbeitet in Ihrer Software. Kunden wissen, wenn sie mit KI sprechen. Sie können jedes Gespräch übernehmen.",
       bullets: [
         "Antwortet in Ihrem Ton mit echten Slot-Checks",
         "Bucht, erinnert und füllt nach Ihren Regeln",
@@ -499,7 +546,7 @@ const DE: EditorialCopy = {
     },
   },
   homeTrust: [
-    { label: "Branchen", value: "21+ in der Demo" },
+    { label: "Gewerke", value: "21+" },
     { label: "Märkte", value: "DACH · EU" },
     { label: "Richtlinien", value: "Ihre" },
     { label: "Produkt", value: "Inbox + Kalender + Team" },
@@ -549,13 +596,13 @@ const DE: EditorialCopy = {
     chapter2: "Kapitel zwei",
     creamTitle: "Liv hat geantwortet. Sie haben geschlafen.",
     creamBody:
-      "No-Show-Recovery, Wartelisten-Nachrücken und Anzahlungs-Buchung — Richtlinien, die Sie freigeben, kein Marktplatz-Boilerplate.",
+      "No-Show-Recovery, Wartelisten-Nachrücken und Anzahlungs-Buchung — mit Regeln, die Sie festlegen, nicht mit Vorlagen aus fremder Software.",
     creamAside: "Leere Stühle sind ein Dienstag-Problem. Livia ist für den Sonntagabend davor gebaut.",
     chapter3: "Kapitel drei",
     cockpitTitle: "Ein ruhiger Blick auf den Tag.",
     cockpitLabel: "Ihr Morgenüberblick · Vorschau",
     cockpitBody: "Tag, Woche und Umsatz Ihres Studios — ohne drei Apps vor 9 Uhr.",
-    cockpitNote: "Vollständige Demo im Produkt — kein Stock-Dashboard.",
+    cockpitNote: "Echte Livia-Oberflächen — kein Stock-Mock-up.",
     trustIntro: "Liv",
     trustTitle: "Sie übernimmt jeden Monat mehr Verantwortung.",
     trustSteps: [
@@ -593,7 +640,7 @@ const DE: EditorialCopy = {
       },
       {
         q: "Unterschied zu Booksy oder Fresha?",
-        a: "Kein Marktplatz. Kein Chatbot-Anbau. Ihr OS — Liv arbeitet die Inbox und bucht.",
+        a: "Kein Marktplatz und kein Chatbot zum Anstecken. Ihre Software — Ihr Kalender, Ihre Kunden, Ihre Regeln. Liv arbeitet die Inbox.",
       },
       {
         q: "Was macht Liv?",

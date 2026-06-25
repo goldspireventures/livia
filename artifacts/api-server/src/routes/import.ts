@@ -257,8 +257,6 @@ router.get("/import/oauth/callback", async (req, res): Promise<void> => {
     expiresAt: tokens.expiresAt,
   });
 
-  const onboardingReturn = `${dashboardBase}/onboarding?oauth=connected&broker=${parsed.brokerId}`;
-
   if (parsed.brokerId === "calendar_google") {
     void import("../services/google-calendar-sync.service").then((m) =>
       m.runGoogleCalendarSync(parsed.businessId),
@@ -268,12 +266,80 @@ router.get("/import/oauth/callback", async (req, res): Promise<void> => {
   }
 
   if (parsed.brokerId.startsWith("migration_")) {
-    res.redirect(`${onboardingReturn}&migration_oauth=1`);
+    const { runMigrationOAuthPull } = await import("../services/migration-oauth-import.service");
+    const { getBusinessById } = await import("../services/businesses.service");
+    let pullSummary = "error";
+    let imported = 0;
+    try {
+      const pull = await runMigrationOAuthPull(parsed.businessId, {
+        brokerId: parsed.brokerId,
+      });
+      imported = pull.totalImported;
+      pullSummary = pull.ok ? "ok" : imported > 0 ? "partial" : "empty";
+    } catch {
+      pullSummary = "error";
+    }
+
+    const biz = await getBusinessById(parsed.businessId);
+    const switching =
+      biz?.onboardingState &&
+      typeof biz.onboardingState === "object" &&
+      (biz.onboardingState as { checklist?: { migrationIntent?: string } }).checklist
+        ?.migrationIntent === "switching";
+
+    const params = new URLSearchParams({
+      migration_oauth: "1",
+      broker: parsed.brokerId,
+      pull: pullSummary,
+      imported: String(imported),
+    });
+    if (switching) {
+      params.set("fresh", "1");
+      params.set("track", "import");
+    }
+    res.redirect(`${dashboardBase}/onboarding?${params.toString()}`);
     return;
   }
 
   res.redirect(`${dashboardBase}/settings?tab=integrations&oauth=connected&broker=${parsed.brokerId}`);
 });
+
+router.get(
+  "/businesses/:businessId/migration/source/:sourceId/profile",
+  requireAuth,
+  requireRole("ADMIN"),
+  async (req, res): Promise<void> => {
+    const { getMigrationSourceRuntimeProfile } = await import(
+      "../services/migration-ingest.service"
+    );
+    const sourceId = bizId(req.params.sourceId);
+    const profile = await getMigrationSourceRuntimeProfile(bizId(req.params.businessId), sourceId);
+    if (!profile.profile) {
+      sendError(res, req, 404, "Unknown migration source");
+      return;
+    }
+    res.json(profile);
+  },
+);
+
+router.post(
+  "/businesses/:businessId/migration/connection",
+  requireAuth,
+  requireRole("ADMIN"),
+  async (req, res): Promise<void> => {
+    const body = req.body ?? {};
+    const { storeMigrationConnection } = await import("../services/migration-ingest.service");
+    res.json(
+      await storeMigrationConnection(bizId(req.params.businessId), {
+        migrationSource: typeof body.migrationSource === "string" ? body.migrationSource : undefined,
+        migrationBookingUrl:
+          typeof body.migrationBookingUrl === "string" ? body.migrationBookingUrl : undefined,
+        migrationExternalId:
+          typeof body.migrationExternalId === "string" ? body.migrationExternalId : undefined,
+      }),
+    );
+  },
+);
 
 router.get(
   "/businesses/:businessId/migration/oauth-capabilities",
@@ -297,6 +363,95 @@ router.post(
     const { runMigrationOAuthPull } = await import("../services/migration-oauth-import.service");
     res.json(
       await runMigrationOAuthPull(bizId(req.params.businessId), { brokerId, incumbentId }),
+    );
+  },
+);
+
+router.post(
+  "/businesses/:businessId/migration/ingest",
+  requireAuth,
+  requireRole("ADMIN"),
+  async (req, res): Promise<void> => {
+    const body = req.body ?? {};
+    const mode = body.mode as string;
+    const validModes = new Set([
+      "oauth_pull",
+      "partner_pull",
+      "file_bundle",
+      "booking_url_mirror",
+    ]);
+    if (!validModes.has(mode)) {
+      sendError(res, req, 400, "Invalid ingest mode");
+      return;
+    }
+    const { runUnifiedMigrationIngest } = await import("../services/migration-ingest.service");
+    res.json(
+      await runUnifiedMigrationIngest(bizId(req.params.businessId), {
+        mode: mode as "oauth_pull" | "partner_pull" | "file_bundle" | "booking_url_mirror",
+        sourceId: typeof body.sourceId === "string" ? body.sourceId : "spreadsheet",
+        brokerId: typeof body.brokerId === "string" ? body.brokerId : undefined,
+        incumbentId: typeof body.incumbentId === "string" ? body.incumbentId : undefined,
+        externalId: typeof body.externalId === "string" ? body.externalId : undefined,
+        bookingUrl: typeof body.bookingUrl === "string" ? body.bookingUrl : undefined,
+        fileBundle:
+          body.fileBundle && typeof body.fileBundle === "object"
+            ? (body.fileBundle as {
+                clientsCsv?: string;
+                servicesCsv?: string;
+                appointmentsCsv?: string;
+                staffCsv?: string;
+              })
+            : undefined,
+      }),
+    );
+  },
+);
+
+router.get(
+  "/businesses/:businessId/migration/jobs/:jobId",
+  requireAuth,
+  requireRole("ADMIN"),
+  async (req, res): Promise<void> => {
+    const { getMigrationImportJob } = await import("../services/migration-ingest.service");
+    const job = await getMigrationImportJob(
+      bizId(req.params.businessId),
+      bizId(req.params.jobId),
+    );
+    if (!job) {
+      sendError(res, req, 404, "Import job not found");
+      return;
+    }
+    res.json(job);
+  },
+);
+
+router.get(
+  "/businesses/:businessId/migration/partner-capabilities",
+  requireAuth,
+  requireRole("ADMIN"),
+  async (req, res): Promise<void> => {
+    const { listMigrationPartnerCapabilities } = await import(
+      "../services/migration-partner-import.service"
+    );
+    res.json(await listMigrationPartnerCapabilities());
+  },
+);
+
+router.post(
+  "/businesses/:businessId/migration/partner/pull",
+  requireAuth,
+  requireRole("ADMIN"),
+  async (req, res): Promise<void> => {
+    const body = req.body ?? {};
+    const { runMigrationPartnerPull } = await import(
+      "../services/migration-partner-import.service"
+    );
+    res.json(
+      await runMigrationPartnerPull(bizId(req.params.businessId), {
+        brokerId: typeof body.brokerId === "string" ? body.brokerId : undefined,
+        incumbentId: typeof body.incumbentId === "string" ? body.incumbentId : undefined,
+        externalId: typeof body.externalId === "string" ? body.externalId : "",
+      }),
     );
   },
 );

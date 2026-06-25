@@ -3,11 +3,11 @@ import { Link } from "wouter";
 import { DemoGateShell } from "@/components/demo/demo-gate-shell";
 import { DemoGateGuard } from "@/components/demo/demo-gate-guard";
 import { DemoConciergeGrid } from "@/components/demo/demo-concierge-grid";
-import { marketingBookDemoPath } from "@/lib/marketing-links";
+import { marketingGetStartedPath } from "@/lib/marketing-links";
 import { readDemoGateKeyFromLocation } from "@/lib/marketing-demo-gate-client";
 import { marketingDemoHandoffUrl, normalizeMarketingVerticalSlug } from "@/lib/marketing-demo-handoff";
 
-/** Skip concierge grid when book-demo already named a trade. */
+/** Skip concierge grid when get-started already named a trade. */
 function DemoVerticalAutoHandoff() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -49,7 +49,7 @@ export default function DemoPage() {
             <span className="mx-2 text-muted-foreground/50" aria-hidden>
               ·
             </span>
-            <Link href={marketingBookDemoPath} className="cst-demo-concierge__all">
+            <Link href={marketingGetStartedPath} className="cst-demo-concierge__all">
               Share access with a colleague
             </Link>
           </p>

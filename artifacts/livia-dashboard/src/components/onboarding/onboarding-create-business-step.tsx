@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/api-fetch";
+import { parseUserFacingError } from "@/lib/user-facing-errors";
 import { publicBookingSlugPrefix, publicBookingSlugSuffix } from "@/lib/surface-urls";
 import { Button } from "@/components/ui/button";
 import {
@@ -106,6 +107,8 @@ type Props = {
   onVerticalPreview?: (vertical: string | null) => void;
   parentBusinessId?: string;
   defaultStructureKind?: "standalone" | "location" | "brand_entity";
+  initialMigrationIntent?: MigrationIntent;
+  hideMigrationIntentPicker?: boolean;
 };
 
 export function OnboardingCreateBusinessStep({
@@ -113,12 +116,18 @@ export function OnboardingCreateBusinessStep({
   onVerticalPreview,
   parentBusinessId,
   defaultStructureKind = "standalone",
+  initialMigrationIntent,
+  hideMigrationIntentPicker = false,
 }: Props) {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [businessAttested, setBusinessAttested] = useState(false);
-  const [migrationIntent, setMigrationIntent] = useState<MigrationIntent>("fresh");
+  const resolvedIntent: MigrationIntent =
+    initialMigrationIntent && initialMigrationIntent !== "unspecified"
+      ? initialMigrationIntent
+      : "unspecified";
+  const [migrationIntent, setMigrationIntent] = useState<MigrationIntent>(resolvedIntent);
   const [starterPack, setStarterPack] = useState(true);
   const [preview, setPreview] = useState<OnboardingPreview | null>(null);
 
@@ -136,6 +145,15 @@ export function OnboardingCreateBusinessStep({
         });
       });
   }, []);
+
+  useEffect(() => {
+    if (!initialMigrationIntent || initialMigrationIntent === "unspecified") return;
+    setMigrationIntent(initialMigrationIntent);
+    if (initialMigrationIntent === "switching") setStarterPack(false);
+    if (initialMigrationIntent === "fresh" && shouldSeedStarterPackOnCreate("fresh")) {
+      setStarterPack(true);
+    }
+  }, [initialMigrationIntent]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema as never),
@@ -279,7 +297,7 @@ export function OnboardingCreateBusinessStep({
       .catch((err: unknown) => {
         toast({
           title: "Could not create business",
-          description: err instanceof Error ? err.message : undefined,
+          description: parseUserFacingError(err, "Could not create your business"),
           variant: "destructive",
         });
       })
@@ -293,34 +311,36 @@ export function OnboardingCreateBusinessStep({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="space-y-2" data-testid="migration-intent-picker">
-          <p className="text-sm font-medium">How are you starting?</p>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {MIGRATION_INTENT_OPTIONS.map((opt) => {
-              const active = migrationIntent === opt.id;
-              return (
-                <button
-                  key={opt.id}
-                  type="button"
-                  data-testid={`migration-intent-${opt.id}`}
-                  onClick={() => {
-                    setMigrationIntent(opt.id);
-                    if (opt.id === "switching") setStarterPack(false);
-                    if (opt.id === "fresh" && shouldSeedStarterPackOnCreate("fresh")) setStarterPack(true);
-                  }}
-                  className={`rounded-lg border px-3 py-2.5 text-left transition-colors ${
-                    active
-                      ? "border-primary bg-primary/5 ring-1 ring-primary/30"
-                      : "border-border/80 hover:border-border"
-                  }`}
-                >
-                  <p className="text-sm font-medium">{opt.title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{opt.subtitle}</p>
-                </button>
-              );
-            })}
+        {!hideMigrationIntentPicker ? (
+          <div className="space-y-2" data-testid="migration-intent-picker">
+            <p className="text-sm font-medium">How are you starting?</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {MIGRATION_INTENT_OPTIONS.map((opt) => {
+                const active = migrationIntent === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    data-testid={`migration-intent-${opt.id}`}
+                    onClick={() => {
+                      setMigrationIntent(opt.id);
+                      if (opt.id === "switching") setStarterPack(false);
+                      if (opt.id === "fresh" && shouldSeedStarterPackOnCreate("fresh")) setStarterPack(true);
+                    }}
+                    className={`rounded-lg border px-3 py-2.5 text-left transition-colors ${
+                      active
+                        ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+                        : "border-border/80 hover:border-border"
+                    }`}
+                  >
+                    <p className="text-sm font-medium">{opt.title}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{opt.subtitle}</p>
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        ) : null}
         <FormField
           control={form.control}
           name="name"
@@ -612,8 +632,8 @@ export function OnboardingCreateBusinessStep({
         </>
         ) : (
           <p className="text-xs text-muted-foreground rounded-lg border border-dashed border-border/70 bg-muted/20 p-3">
-            Liv will walk you through exports from your current tool and apply menu, clients, and
-            upcoming bookings in one go — right after your shop profile.
+            After your profile, you will upload exports or a spreadsheet. Liv maps them into your
+            menu and client list.
           </p>
         )}
         {onboardingCommerceBlocksForVertical(watchVertical).length > 0 ? (
@@ -646,8 +666,10 @@ export function OnboardingCreateBusinessStep({
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Creating…
             </>
+          ) : migrationIntent === "switching" ? (
+            "Continue to import"
           ) : (
-            "Create & continue"
+            "Create shop"
           )}
         </Button>
       </form>

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useBusiness } from "@/lib/business-context";
-import { apiFetch, ApiFetchError } from "@/lib/api-fetch";
+import { apiFetch } from "@/lib/api-fetch";
+import { parseUserFacingError } from "@/lib/user-facing-errors";
 import { OperationalPageShell } from "@/components/layout/operational-page-shell";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,9 +40,7 @@ type RetailProductRow = RetailProductEditRow & {
 };
 
 function apiErrorMessage(err: unknown, fallback: string): string {
-  if (err instanceof ApiFetchError) return err.message || fallback;
-  if (err instanceof Error) return err.message;
-  return fallback;
+  return parseUserFacingError(err, fallback);
 }
 
 export default function TenantStorePage() {

@@ -84,7 +84,10 @@ export function GuestHubAccountSettings({
             <div className="grid gap-2">
               <Label>{GUEST_HUB_COPY.commsChannelLabel}</Label>
               <Select value={channel} onValueChange={(v) => setChannel(v as GuestPreferredModality)}>
-                <SelectTrigger data-testid="guest-channel-select">
+                <SelectTrigger
+                  aria-label={GUEST_HUB_COPY.commsChannelLabel}
+                  data-testid="guest-channel-select"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

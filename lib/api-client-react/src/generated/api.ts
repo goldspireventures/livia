@@ -114,6 +114,12 @@ import type {
   MarketingDemoGateVerifyResponse,
   MarketingLeadAck,
   Membership,
+  MigrationConnectionBody,
+  MigrationConnectionResponse,
+  MigrationImportJob,
+  MigrationIngestRequest,
+  MigrationIngestResponse,
+  MigrationSourceProfileResponse,
   MyDay,
   NotFoundResponse,
   OnboardingCatalogResponse,
@@ -11957,6 +11963,407 @@ export function useGetInternalTenantSupportContext<
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetInternalTenantSupportContextQueryOptions(
     businessId,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Runtime migration profile and automation truth for an incumbent
+ */
+export const getGetMigrationSourceProfileUrl = (
+  businessId: string,
+  sourceId: string,
+) => {
+  return `/api/businesses/${businessId}/migration/source/${sourceId}/profile`;
+};
+
+export const getMigrationSourceProfile = async (
+  businessId: string,
+  sourceId: string,
+  options?: RequestInit,
+): Promise<MigrationSourceProfileResponse> => {
+  return customFetch<MigrationSourceProfileResponse>(
+    getGetMigrationSourceProfileUrl(businessId, sourceId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetMigrationSourceProfileQueryKey = (
+  businessId: string,
+  sourceId: string,
+) => {
+  return [
+    `/api/businesses/${businessId}/migration/source/${sourceId}/profile`,
+  ] as const;
+};
+
+export const getGetMigrationSourceProfileQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMigrationSourceProfile>>,
+  TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+>(
+  businessId: string,
+  sourceId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMigrationSourceProfile>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getGetMigrationSourceProfileQueryKey(businessId, sourceId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getMigrationSourceProfile>>
+  > = ({ signal }) =>
+    getMigrationSourceProfile(businessId, sourceId, {
+      signal,
+      ...requestOptions,
+    });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!(businessId && sourceId),
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMigrationSourceProfile>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMigrationSourceProfileQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMigrationSourceProfile>>
+>;
+export type GetMigrationSourceProfileQueryError = ErrorType<
+  UnauthorizedResponse | NotFoundResponse
+>;
+
+/**
+ * @summary Runtime migration profile and automation truth for an incumbent
+ */
+
+export function useGetMigrationSourceProfile<
+  TData = Awaited<ReturnType<typeof getMigrationSourceProfile>>,
+  TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+>(
+  businessId: string,
+  sourceId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMigrationSourceProfile>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMigrationSourceProfileQueryOptions(
+    businessId,
+    sourceId,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Save migration source, booking URL, or external salon ID
+ */
+export const getStoreMigrationConnectionUrl = (businessId: string) => {
+  return `/api/businesses/${businessId}/migration/connection`;
+};
+
+export const storeMigrationConnection = async (
+  businessId: string,
+  migrationConnectionBody: MigrationConnectionBody,
+  options?: RequestInit,
+): Promise<MigrationConnectionResponse> => {
+  return customFetch<MigrationConnectionResponse>(
+    getStoreMigrationConnectionUrl(businessId),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(migrationConnectionBody),
+    },
+  );
+};
+
+export const getStoreMigrationConnectionMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof storeMigrationConnection>>,
+    TError,
+    { businessId: string; data: BodyType<MigrationConnectionBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof storeMigrationConnection>>,
+  TError,
+  { businessId: string; data: BodyType<MigrationConnectionBody> },
+  TContext
+> => {
+  const mutationKey = ["storeMigrationConnection"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof storeMigrationConnection>>,
+    { businessId: string; data: BodyType<MigrationConnectionBody> }
+  > = (props) => {
+    const { businessId, data } = props ?? {};
+
+    return storeMigrationConnection(businessId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type StoreMigrationConnectionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof storeMigrationConnection>>
+>;
+export type StoreMigrationConnectionMutationBody =
+  BodyType<MigrationConnectionBody>;
+export type StoreMigrationConnectionMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Save migration source, booking URL, or external salon ID
+ */
+export const useStoreMigrationConnection = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof storeMigrationConnection>>,
+    TError,
+    { businessId: string; data: BodyType<MigrationConnectionBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof storeMigrationConnection>>,
+  TError,
+  { businessId: string; data: BodyType<MigrationConnectionBody> },
+  TContext
+> => {
+  return useMutation(getStoreMigrationConnectionMutationOptions(options));
+};
+
+/**
+ * @summary Unified migration ingest (OAuth, partner, file bundle, booking mirror)
+ */
+export const getRequestMigrationIngestUrl = (businessId: string) => {
+  return `/api/businesses/${businessId}/migration/ingest`;
+};
+
+export const requestMigrationIngest = async (
+  businessId: string,
+  migrationIngestRequest: MigrationIngestRequest,
+  options?: RequestInit,
+): Promise<MigrationIngestResponse> => {
+  return customFetch<MigrationIngestResponse>(
+    getRequestMigrationIngestUrl(businessId),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(migrationIngestRequest),
+    },
+  );
+};
+
+export const getRequestMigrationIngestMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof requestMigrationIngest>>,
+    TError,
+    { businessId: string; data: BodyType<MigrationIngestRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof requestMigrationIngest>>,
+  TError,
+  { businessId: string; data: BodyType<MigrationIngestRequest> },
+  TContext
+> => {
+  const mutationKey = ["requestMigrationIngest"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof requestMigrationIngest>>,
+    { businessId: string; data: BodyType<MigrationIngestRequest> }
+  > = (props) => {
+    const { businessId, data } = props ?? {};
+
+    return requestMigrationIngest(businessId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RequestMigrationIngestMutationResult = NonNullable<
+  Awaited<ReturnType<typeof requestMigrationIngest>>
+>;
+export type RequestMigrationIngestMutationBody =
+  BodyType<MigrationIngestRequest>;
+export type RequestMigrationIngestMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Unified migration ingest (OAuth, partner, file bundle, booking mirror)
+ */
+export const useRequestMigrationIngest = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof requestMigrationIngest>>,
+    TError,
+    { businessId: string; data: BodyType<MigrationIngestRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof requestMigrationIngest>>,
+  TError,
+  { businessId: string; data: BodyType<MigrationIngestRequest> },
+  TContext
+> => {
+  return useMutation(getRequestMigrationIngestMutationOptions(options));
+};
+
+/**
+ * @summary Poll async migration import job status
+ */
+export const getGetMigrationImportJobUrl = (
+  businessId: string,
+  jobId: string,
+) => {
+  return `/api/businesses/${businessId}/migration/jobs/${jobId}`;
+};
+
+export const getMigrationImportJob = async (
+  businessId: string,
+  jobId: string,
+  options?: RequestInit,
+): Promise<MigrationImportJob> => {
+  return customFetch<MigrationImportJob>(
+    getGetMigrationImportJobUrl(businessId, jobId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetMigrationImportJobQueryKey = (
+  businessId: string,
+  jobId: string,
+) => {
+  return [`/api/businesses/${businessId}/migration/jobs/${jobId}`] as const;
+};
+
+export const getGetMigrationImportJobQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMigrationImportJob>>,
+  TError = ErrorType<NotFoundResponse>,
+>(
+  businessId: string,
+  jobId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMigrationImportJob>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getGetMigrationImportJobQueryKey(businessId, jobId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getMigrationImportJob>>
+  > = ({ signal }) =>
+    getMigrationImportJob(businessId, jobId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!(businessId && jobId),
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMigrationImportJob>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMigrationImportJobQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMigrationImportJob>>
+>;
+export type GetMigrationImportJobQueryError = ErrorType<NotFoundResponse>;
+
+/**
+ * @summary Poll async migration import job status
+ */
+
+export function useGetMigrationImportJob<
+  TData = Awaited<ReturnType<typeof getMigrationImportJob>>,
+  TError = ErrorType<NotFoundResponse>,
+>(
+  businessId: string,
+  jobId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMigrationImportJob>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMigrationImportJobQueryOptions(
+    businessId,
+    jobId,
     options,
   );
 
