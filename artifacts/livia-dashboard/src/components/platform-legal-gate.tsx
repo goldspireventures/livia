@@ -25,7 +25,25 @@ export function PlatformLegalGate({ children }: { children: ReactNode }) {
     );
   }
 
-  if (isError || !data?.platformLegalAccepted) {
+  if (isError) {
+    return (
+      <div className="flex h-screen w-full flex-col items-center justify-center gap-4 bg-background px-6 text-center">
+        <p className="text-lg font-medium text-foreground">Could not verify your account</p>
+        <p className="max-w-md text-sm text-muted-foreground">
+          Your session is valid but we could not reach Livia. Check your connection and try again.
+        </p>
+        <button
+          type="button"
+          className="text-sm font-medium text-primary underline underline-offset-2"
+          onClick={() => window.location.reload()}
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (!data?.platformLegalAccepted) {
     return <Redirect to="/legal-acceptance" />;
   }
 

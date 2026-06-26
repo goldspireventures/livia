@@ -149,13 +149,21 @@ function BusinessDataLoader({
   const [location] = useLocation();
   const onOnboarding =
     location === "/onboarding" || location.startsWith("/onboarding/");
+  const onLegalAcceptance = location === "/legal-acceptance";
   const { data: businesses, isLoading, isError, isFetching, refetch } = useGetMyBusinesses({
     query: {
-      staleTime: onOnboarding ? 60_000 : 0,
-      refetchOnMount: onOnboarding ? false : "always",
-      refetchOnWindowFocus: !onOnboarding,
-      retry: onOnboarding ? 2 : 1,
+      staleTime: onOnboarding || onLegalAcceptance ? 60_000 : 0,
+      refetchOnMount: onOnboarding || onLegalAcceptance ? false : "always",
+      refetchOnWindowFocus: !(onOnboarding || onLegalAcceptance),
+      retry: onOnboarding || onLegalAcceptance ? 2 : 1,
     } as never,
+  });
+  const { data: meLegal, isLoading: meLegalLoading } = useQuery({
+    queryKey: ["me-legal"],
+    queryFn: () => apiFetch<{ platformLegalAccepted?: boolean }>("/me"),
+    enabled: onLegalAcceptance,
+    staleTime: 60_000,
+    retry: 2,
   });
   const { user } = useUser();
   const demoEmail = isDemoAccountEmail(user?.primaryEmailAddress?.emailAddress);
@@ -189,7 +197,7 @@ function BusinessDataLoader({
     });
   }, [initialBusiness, queryClient]);
 
-  if (isLoading && !onOnboarding) {
+  if (isLoading && !onOnboarding && !onLegalAcceptance) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Spinner className="h-8 w-8 text-primary" />
@@ -197,7 +205,7 @@ function BusinessDataLoader({
     );
   }
 
-  if (isError && !onOnboarding && !businesses) {
+  if (isError && !onOnboarding && !onLegalAcceptance && !businesses) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center gap-4 bg-background px-6 text-center">
         <p className="text-lg font-medium text-foreground">Could not load your account</p>
@@ -239,6 +247,19 @@ function BusinessDataLoader({
       return <ProspectDemoRedirect />;
     }
     return <Redirect to="/onboarding" />;
+  }
+
+  if (
+    onLegalAcceptance &&
+    !meLegalLoading &&
+    meLegal?.platformLegalAccepted
+  ) {
+    const dest = resolvePostLegalDestination({
+      businesses: list as SessionBusinessLike[],
+      clerkUserId,
+      email,
+    });
+    return <Redirect to={dest} />;
   }
 
   if (
