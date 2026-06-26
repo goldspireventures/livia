@@ -27,6 +27,7 @@ import {
 import { generateId } from "../lib/id";
 import { resolveGuestBookUrl } from "../lib/guest-public-urls";
 import { getStagingRelaxations } from "../lib/staging-relaxations";
+import { deliverGuestHubOtp } from "./guest-hub-otp-delivery.service";
 const OTP_TTL_MS = 10 * 60 * 1000;
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
@@ -113,6 +114,8 @@ export async function requestGuestHubPhoneOtp(rawPhone: string, defaultCountry =
     otpExpiresAt: expires,
   });
 
+  await deliverGuestHubOtp({ channel: "phone", phoneE164, code });
+
   return {
     sessionToken: token,
     ...otpSessionPayload(relax, code, expires, { phoneE164, authChannel: "phone" }),
@@ -135,6 +138,8 @@ export async function requestGuestHubEmailOtp(rawEmail: string) {
     otpCode: code,
     otpExpiresAt: expires,
   });
+
+  await deliverGuestHubOtp({ channel: "email", email, code });
 
   return {
     sessionToken: token,

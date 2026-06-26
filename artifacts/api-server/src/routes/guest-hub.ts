@@ -9,6 +9,8 @@ import {
   verifyGuestHubOtp,
 } from "../services/guest-hub.service";
 import { buildPublicSurfaceConfig } from "../lib/staging-relaxations";
+import { GUEST_HUB_COPY } from "@workspace/policy";
+import { GuestHubOtpDeliveryError } from "../services/guest-hub-otp-delivery.service";
 
 const router: IRouter = Router();
 
@@ -36,6 +38,14 @@ router.post("/public/guest-hub/otp/request", async (req, res): Promise<void> => 
     }
     if (e instanceof Error && e.message === "INVALID_IDENTIFIER") {
       sendError(res, req, 400, "Enter a mobile number or email");
+      return;
+    }
+    if (e instanceof GuestHubOtpDeliveryError) {
+      const msg =
+        e.code === "OTP_DELIVERY_FAILED"
+          ? GUEST_HUB_COPY.otpDeliveryFailed
+          : GUEST_HUB_COPY.otpDeliveryNotConfigured;
+      sendError(res, req, e.code.startsWith("OTP_EMAIL") ? 503 : 503, msg);
       return;
     }
     throw e;

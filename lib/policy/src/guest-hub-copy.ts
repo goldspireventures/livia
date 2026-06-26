@@ -50,6 +50,13 @@ export const GUEST_HUB_COPY = {
   redeemSuccess: "Code applied — your session pack is in your vault.",
   redeemNotFound: "We couldn't find that code — check spelling or ask the studio.",
   redeemAlreadyUsed: "This code has no sessions left.",
+  otpSmsBody: (code: string) => `Your My Livia code is ${code}. It expires in 10 minutes.`,
+  otpEmailSubject: "Your My Livia sign-in code",
+  otpEmailBody: (code: string) =>
+    `Your My Livia sign-in code is ${code}.\n\nIt expires in 10 minutes. If you didn't request this, you can ignore this email.`,
+  otpDeliveryFailed: "We couldn't send your code — try again in a moment.",
+  otpDeliveryNotConfigured:
+    "Sign-in codes aren't available right now — try again later or contact support.",
   postBookVerifyTitle: "Saved to My Livia",
   postBookVerifyBody:
     "Sign in with your booking number to see this visit, message the studio, and rebook faster next time.",

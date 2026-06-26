@@ -33,6 +33,16 @@ export function getTransportStatus(): TransportStatus {
   return { ..._status };
 }
 
+/** Platform SMS for guest-hub OTP and other non-tenant sends. */
+export function getPlatformSmsTransport(): SmsTransport | null {
+  return smsTransportImpl;
+}
+
+/** Platform email for guest-hub OTP and transactional sends. */
+export function getPlatformEmailTransport(): EmailTransport | null {
+  return emailTransportImpl;
+}
+
 let smsTransportImpl: SmsTransport | null = null;
 let emailTransportImpl: EmailTransport | null = null;
 
