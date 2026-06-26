@@ -6,7 +6,7 @@ import {
 import {
   publicExperienceClassNames,
 } from "@/lib/experience-theme";
-import { applyAppearancePreviewFromSearch } from "@/lib/appearance-preview-mode";
+import { applyAppearancePreviewFromSearch, readAppearancePreviewParams } from "@/lib/appearance-preview-mode";
 import { playCelebrationChime, celebrationEnabled } from "@/lib/celebrate";
 import { publicGuestPwaEnabled, usePublicGuestPwa } from "@/lib/public-guest-pwa";
 import { Link } from "wouter";
@@ -406,6 +406,7 @@ export default function PublicBookingPage() {
 
   useLayoutEffect(() => {
     if (!slug) return;
+    if (readAppearancePreviewParams().isPreview) return;
     void warmPublicGuestSurfaceTheme({ slug });
     return () => clearPublicGuestSurfaceTheme();
   }, [slug]);

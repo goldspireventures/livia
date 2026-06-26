@@ -153,6 +153,10 @@ html[data-presentation="harbour-light"] .public-book-canvas {
   background: linear-gradient(180deg, hsl(174 35% 95%) 0%, hsl(var(--background)) 6rem);
 }
 
+html[data-presentation="clinical-calm"] .public-book-canvas {
+  background: linear-gradient(180deg, hsl(260 30% 96%) 0%, hsl(var(--background)) 6rem);
+}
+
 html[data-presentation="evening-ledger"] .public-book-canvas {
   background: linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 8rem);
 }

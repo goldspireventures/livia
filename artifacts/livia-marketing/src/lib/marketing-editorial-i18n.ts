@@ -60,6 +60,8 @@ export type ProductShowcaseCopy = {
   webAlt: string;
   mobileAlt: string;
   bookingAlt: string;
+  /** Marketing overlay on today-mobile.png — hides demo Clerk first name in capture. */
+  mobileGreeting: string;
 };
 
 export type EditorialCopy = {
@@ -241,6 +243,7 @@ const EN: EditorialCopy = {
     webAlt: "Livia inbox on desktop with Mary McNamara's thread open — Liv handling colour reschedule",
     mobileAlt: "Livia Today view on mobile showing the day's appointments",
     bookingAlt: "Livia public booking page branded for a beauty studio",
+    mobileGreeting: "Good afternoon, Aoife",
   },
   homeOs: {
     eyebrow: "Built for your trade",
@@ -499,6 +502,7 @@ const DE: EditorialCopy = {
     webAlt: "Livia-Inbox am Desktop mit Kundennachrichten und Buchungsaktionen",
     mobileAlt: "Livia-Today-Ansicht auf dem Handy mit den Terminen des Tages",
     bookingAlt: "Öffentliche Livia-Buchungsseite für ein Beauty-Studio",
+    mobileGreeting: "Guten Tag, Aoife",
   },
   homeOs: {
     eyebrow: "Für Ihr Gewerk gebaut",

@@ -55,11 +55,7 @@ test.describe("Marketing product showcase — live captures", () => {
     });
 
     test(`vertical — ${spec.folder} mobile`, async ({ page, request }) => {
-      if (spec.mobileIsPublic) {
-        const slug = spec.mobilePath.replace("/b/", "");
-        const res = await request.get(`http://127.0.0.1:3000/api/public/b/${slug}`);
-        if (!res.ok()) test.skip(true, `${slug} not seeded`);
-      } else if (!(await demoCanSignIn(request, spec.demoSlug))) {
+      if (!(await demoCanSignIn(request, spec.demoSlug))) {
         test.skip(true, `sign-in unavailable for ${spec.demoSlug}`);
       }
       const dir = verticalShowcaseDir(spec.folder);

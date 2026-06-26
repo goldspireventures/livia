@@ -70,11 +70,15 @@ type PendingBooking = PendingBookingActionBooking & {
   pendingReason?: string | null;
 };
 
+const PLACEHOLDER_GREETING_NAMES = /^(demo|test|owner|user|there|admin)$/i;
+
 function ownerGreeting(firstName: string | null | undefined): string {
   const t = timeGreeting();
   const prefix =
     t === "morning" ? "Good morning" : t === "afternoon" ? "Good afternoon" : "Good evening";
-  return `${prefix}, ${firstName?.trim() || "there"}`;
+  const name = firstName?.trim();
+  if (!name || PLACEHOLDER_GREETING_NAMES.test(name)) return prefix;
+  return `${prefix}, ${name}`;
 }
 
 function customerName(c: PendingBooking["customer"]): string {

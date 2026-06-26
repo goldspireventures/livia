@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { editorialCopy, type MarketingLocale } from "@/lib/marketing-editorial-i18n";
+import { ShowcaseTodayGreetingFix } from "@/components/showcase/showcase-today-greeting-fix";
 import "@/styles/constellation-product-showcase.css";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -99,6 +100,7 @@ export function ProductShowcase({ locale }: ProductShowcaseProps) {
                   width={390}
                   height={844}
                 />
+                <ShowcaseTodayGreetingFix greeting={t.mobileGreeting} />
               </div>
             </figure>
           </div>

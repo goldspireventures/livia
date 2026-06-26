@@ -1,4 +1,5 @@
 import { resolveVerticalShowcase } from "@/lib/marketing-vertical-showcase";
+import { ShowcaseTodayGreetingFix } from "@/components/showcase/showcase-today-greeting-fix";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -33,14 +34,19 @@ export function VerticalProductShowcase({ slug }: { slug: string }) {
         <figure className="cst-vertical-showcase__card">
           <p className="cst-showcase__label">{entry.mobile.label}</p>
           <div className="cst-vertical-showcase__frame cst-vertical-showcase__frame--phone">
-            <img
-              src={`${base}/showcase/verticals/${folder}/mobile.png`}
-              alt={entry.mobile.caption}
-              loading="lazy"
-              decoding="async"
-              width={390}
-              height={844}
-            />
+            <div className="cst-vertical-showcase__phone-screen">
+              <img
+                src={`${base}/showcase/verticals/${folder}/mobile.png`}
+                alt={entry.mobile.caption}
+                loading="lazy"
+                decoding="async"
+                width={390}
+                height={844}
+              />
+              {entry.mobile.greeting && !entry.mobile.fullPage ? (
+                <ShowcaseTodayGreetingFix greeting={entry.mobile.greeting} />
+              ) : null}
+            </div>
           </div>
           <figcaption className="cst-vertical-showcase__caption">{entry.mobile.caption}</figcaption>
         </figure>

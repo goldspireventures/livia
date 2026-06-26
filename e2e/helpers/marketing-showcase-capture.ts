@@ -1,7 +1,12 @@
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 import type { Page } from "@playwright/test";
-import { dismissPlatformTour, signInBusiness } from "./demo-auth";
+import {
+  demoShowcasePresentationPresetId,
+  resolvePresentationPreset,
+  type BusinessVertical,
+} from "@workspace/policy";
+import { apiBase, dismissPlatformTour, signInBusiness } from "./demo-auth";
 
 export const SHOWCASE_DIR = path.resolve(
   import.meta.dirname,
@@ -16,6 +21,8 @@ export const SHOWCASE_DIR = path.resolve(
 export type VerticalCaptureSpec = {
   /** Folder under showcase/verticals/ */
   folder: string;
+  /** Policy vertical — drives showcase preset for this capture */
+  vertical: BusinessVertical;
   demoSlug: string;
   webPath: string;
   /** Click a thread name before web capture (inbox only). */
@@ -24,98 +31,219 @@ export type VerticalCaptureSpec = {
   mobilePath: string;
   mobileIsPublic?: boolean;
   mobileReadySelector?: string;
+  /** One native skin per vertical (DEMO_SHOWCASE_PRESENTATION_PRESET_ID) */
+  presentationPresetId: string;
+  presentationCssPreset: string;
 };
 
-export const HOME_DEMO_SLUG = process.env.E2E_DEMO_SLUG ?? "luxe-salon-spa";
+function showcaseCaptureSpec(
+  folder: string,
+  vertical: BusinessVertical,
+  rest: Omit<VerticalCaptureSpec, "folder" | "vertical" | "presentationPresetId" | "presentationCssPreset">,
+): VerticalCaptureSpec {
+  const presetId = demoShowcasePresentationPresetId(vertical);
+  const preset = resolvePresentationPreset(vertical, presetId);
+  return {
+    folder,
+    vertical,
+    presentationPresetId: presetId,
+    presentationCssPreset: preset.cssPreset,
+    ...rest,
+  };
+}
 
 export const VERTICAL_CAPTURES: VerticalCaptureSpec[] = [
-  {
-    folder: "hair",
+  showcaseCaptureSpec("hair", "hair", {
     demoSlug: "luxe-salon-spa",
     webPath: "/inbox",
     openThread: "Mary McNamara",
     webReadySelector: '[data-testid="inbox-three-pane"]',
-    mobilePath: "/dashboard",
-    mobileReadySelector: '[data-testid="owner-home-ritual"]',
-  },
-  {
-    folder: "beauty",
+    mobilePath: "/b/luxe-salon-spa",
+    mobileIsPublic: true,
+    mobileReadySelector: '[data-testid="public-book-storefront"]',
+  }),
+  showcaseCaptureSpec("beauty", "beauty", {
     demoSlug: "bloom-beauty-dublin",
     webPath: "/bookings",
     webReadySelector: '[data-testid="bookings-page"]',
     mobilePath: "/b/bloom-beauty-dublin",
     mobileIsPublic: true,
     mobileReadySelector: '[data-testid="public-book-storefront"]',
-  },
-  {
-    folder: "wellness",
+  }),
+  showcaseCaptureSpec("wellness", "wellness", {
     demoSlug: "harbour-wellness-cork",
     webPath: "/bookings",
     webReadySelector: '[data-testid="bookings-page"]',
     mobilePath: "/b/harbour-wellness-cork",
     mobileIsPublic: true,
     mobileReadySelector: '[data-testid="public-book-storefront"]',
-  },
-  {
-    folder: "body-art",
+  }),
+  showcaseCaptureSpec("body-art", "body-art", {
     demoSlug: "ink-anchor-galway",
     webPath: "/design-proofs",
     webReadySelector: "main",
     mobilePath: "/b/ink-anchor-galway",
     mobileIsPublic: true,
     mobileReadySelector: '[data-testid="public-book-storefront"]',
-  },
-  {
-    folder: "medspa",
+  }),
+  showcaseCaptureSpec("medspa", "medspa", {
     demoSlug: "clarity-medspa-dublin",
     webPath: "/medspa",
     webReadySelector: "main",
     mobilePath: "/b/clarity-medspa-dublin",
     mobileIsPublic: true,
     mobileReadySelector: '[data-testid="public-book-storefront"]',
-  },
-  {
-    folder: "fitness",
+  }),
+  showcaseCaptureSpec("fitness", "fitness", {
     demoSlug: "peak-fitness-dublin",
     webPath: "/classes",
     webReadySelector: "main",
     mobilePath: "/b/peak-fitness-dublin",
     mobileIsPublic: true,
     mobileReadySelector: '[data-testid="public-book-storefront"]',
-  },
-  {
-    folder: "allied-health",
+  }),
+  showcaseCaptureSpec("allied-health", "allied-health", {
     demoSlug: "motion-physio-cork",
     webPath: "/customers",
     webReadySelector: "main",
     mobilePath: "/b/motion-physio-cork",
     mobileIsPublic: true,
     mobileReadySelector: '[data-testid="public-book-storefront"]',
-  },
-  {
-    folder: "pet-grooming",
+  }),
+  showcaseCaptureSpec("pet-grooming", "pet-grooming", {
     demoSlug: "paws-parlour-dublin",
     webPath: "/bookings",
     webReadySelector: '[data-testid="bookings-page"]',
     mobilePath: "/b/paws-parlour-dublin",
     mobileIsPublic: true,
     mobileReadySelector: '[data-testid="public-book-storefront"]',
-  },
-  {
-    folder: "automotive-detailing",
+  }),
+  showcaseCaptureSpec("automotive-detailing", "automotive-detailing", {
     demoSlug: "shine-studio-belfast",
     webPath: "/bookings",
     webReadySelector: '[data-testid="bookings-page"]',
     mobilePath: "/b/shine-studio-belfast",
     mobileIsPublic: true,
     mobileReadySelector: '[data-testid="public-book-storefront"]',
-  },
+  }),
 ];
 
 export function verticalShowcaseDir(folder: string) {
   const dir = path.join(SHOWCASE_DIR, "verticals", folder);
   mkdirSync(dir, { recursive: true });
   return dir;
+}
+
+export const HOME_DEMO_SLUG = process.env.E2E_DEMO_SLUG ?? "luxe-salon-spa";
+
+async function maskOwnerGreeting(page: Page) {
+  await page.evaluate(() => {
+    const el = document.querySelector('[data-testid="owner-dashboard-greeting"]');
+    if (el) el.textContent = "Good afternoon, Aoife";
+  });
+}
+
+async function patchBusinessPresentationPreset(page: Page, presetId: string) {
+  const businessId = await page.evaluate(() => localStorage.getItem("livia.currentBusinessId"));
+  if (!businessId) throw new Error("missing livia.currentBusinessId");
+  const res = await page.request.patch(`${apiBase}/api/businesses/${businessId}/presentation`, {
+    data: { presentationPresetId: presetId },
+  });
+  if (!res.ok()) {
+    throw new Error(`presentation patch ${res.status()}: ${(await res.text()).slice(0, 200)}`);
+  }
+}
+
+async function waitForPresentationSkin(page: Page, cssPreset: string) {
+  const matched = await page
+    .waitForFunction(
+      (expected) => document.documentElement.getAttribute("data-presentation") === expected,
+      cssPreset,
+      { timeout: 30_000 },
+    )
+    .then(() => true)
+    .catch(() => false);
+  if (!matched) {
+    await page.reload({ waitUntil: "networkidle", timeout: 60_000 });
+    await page
+      .waitForFunction(
+        (expected) => document.documentElement.getAttribute("data-presentation") === expected,
+        cssPreset,
+        { timeout: 15_000 },
+      )
+      .catch(() => undefined);
+  }
+  await page.waitForTimeout(400);
+}
+
+async function applyShowcasePreset(page: Page, spec: Pick<VerticalCaptureSpec, "presentationPresetId">) {
+  await page
+    .waitForFunction(() => localStorage.getItem("livia.currentBusinessId") != null, null, { timeout: 30_000 })
+    .catch(() => undefined);
+  const businessId = await page.evaluate(() => localStorage.getItem("livia.currentBusinessId"));
+  if (!businessId) return;
+  await patchBusinessPresentationPreset(page, spec.presentationPresetId);
+}
+
+function ownerPathWithPreview(spec: VerticalCaptureSpec): string {
+  const qs = new URLSearchParams({
+    preview: "1",
+    preset: spec.presentationCssPreset,
+    vertical: spec.vertical,
+  });
+  return `${spec.webPath}?${qs}`;
+}
+
+async function waitForWebShowcaseContent(page: Page, spec: VerticalCaptureSpec) {
+  switch (spec.webPath) {
+    case "/inbox":
+      await page.locator('[data-testid="inbox-three-pane"]').waitFor({ state: "visible", timeout: 60_000 });
+      await page
+        .locator('[data-testid="inbox-thread-list"] button, [data-testid="inbox-thread-row"]')
+        .first()
+        .waitFor({ state: "visible", timeout: 60_000 });
+      break;
+    case "/bookings":
+      await waitForBookingsLoaded(page);
+      await page
+        .getByRole("heading", { name: /Confirm|Schedule|Bookings|Today's rooms|Sessions|Grooms|Bay/i })
+        .first()
+        .waitFor({ state: "visible", timeout: 60_000 });
+      await page
+        .locator(
+          '[data-testid="wellness-atrium-schedule"], [data-testid="wellness-ledger-schedule"], [data-testid="bookings-morph-constellation"], [data-testid^="row-booking-"], a[href^="/bookings/"]',
+        )
+        .first()
+        .waitFor({ state: "visible", timeout: 90_000 });
+      break;
+    case "/design-proofs":
+      await page.locator('[data-testid="design-proof-desk"]').waitFor({ state: "visible", timeout: 60_000 });
+      await page.locator('[data-testid^="design-proof-card-"]').first().waitFor({ state: "visible", timeout: 60_000 });
+      break;
+    case "/medspa":
+      await page.locator('[data-testid="medspa-hub-page"]').waitFor({ state: "visible", timeout: 60_000 });
+      await page
+        .locator('[data-testid="medspa-hub-page"] .rounded-lg.border')
+        .first()
+        .waitFor({ state: "visible", timeout: 60_000 });
+      break;
+    case "/classes":
+      await page.locator('[data-testid="classes-page"]').waitFor({ state: "visible", timeout: 60_000 });
+      await page
+        .locator('[data-testid="classes-page"] ul li, [data-testid="classes-page"] .rounded-lg.border')
+        .first()
+        .waitFor({ state: "visible", timeout: 60_000 });
+      break;
+    case "/customers":
+      await page.locator('[data-testid="customers-page"]').waitFor({ state: "visible", timeout: 60_000 });
+      await page.locator('[data-testid^="row-customer-"]').first().waitFor({ state: "visible", timeout: 60_000 });
+      break;
+    default:
+      if (spec.webReadySelector) {
+        await page.locator(spec.webReadySelector).first().waitFor({ state: "visible", timeout: 60_000 });
+      }
+  }
+  await page.waitForTimeout(800);
 }
 
 export async function waitForBookingsLoaded(page: Page) {
@@ -136,23 +264,15 @@ export async function waitForTodayLoaded(page: Page) {
   await page.waitForTimeout(600);
 }
 
-export async function captureWebOwner(
-  page: Page,
-  spec: Pick<VerticalCaptureSpec, "demoSlug" | "webPath" | "openThread" | "webReadySelector">,
-  dest: string,
-) {
+export async function captureWebOwner(page: Page, spec: VerticalCaptureSpec, dest: string) {
   await signInBusiness(page, spec.demoSlug);
   await dismissPlatformTour(page);
+  await applyShowcasePreset(page, spec);
   await page.setViewportSize({ width: 1280, height: 720 });
-  await page.goto(spec.webPath, { waitUntil: "networkidle", timeout: 60_000 });
+  await page.goto(ownerPathWithPreview(spec), { waitUntil: "networkidle", timeout: 60_000 });
   await dismissPlatformTour(page);
-
-  if (spec.webPath === "/bookings") {
-    await waitForBookingsLoaded(page);
-  } else if (spec.webReadySelector) {
-    await page.locator(spec.webReadySelector).first().waitFor({ state: "visible", timeout: 60_000 });
-    await page.waitForTimeout(800);
-  }
+  await waitForPresentationSkin(page, spec.presentationCssPreset);
+  await waitForWebShowcaseContent(page, spec);
 
   if (spec.openThread) {
     const row = page.getByRole("button", { name: new RegExp(spec.openThread, "i") }).first();
@@ -173,25 +293,32 @@ export async function captureWebOwner(
 }
 
 export async function captureMobileOwner(page: Page, spec: VerticalCaptureSpec, dest: string) {
-  if (!spec.mobileIsPublic) {
-    await signInBusiness(page, spec.demoSlug);
-    await dismissPlatformTour(page);
-  }
-
   await page.setViewportSize({ width: 390, height: 844 });
 
   if (spec.mobileIsPublic) {
-    await page.goto(spec.mobilePath, { waitUntil: "networkidle", timeout: 60_000 });
+    const bookPath = spec.mobilePath.replace(/^\/b\//, "/book/");
+    const previewQs = new URLSearchParams({
+      preview: "1",
+      preset: spec.presentationCssPreset,
+      vertical: spec.vertical,
+    });
+    await page.goto(`${bookPath}?${previewQs}`, { waitUntil: "networkidle", timeout: 60_000 });
+    await waitForPresentationSkin(page, spec.presentationCssPreset);
     await page.locator(spec.mobileReadySelector ?? "main").first().waitFor({ state: "visible", timeout: 60_000 });
     await page.waitForTimeout(800);
     await page.screenshot({ path: dest, fullPage: false, animations: "disabled" });
     return;
   }
 
+  await signInBusiness(page, spec.demoSlug);
+  await dismissPlatformTour(page);
+  await applyShowcasePreset(page, spec);
   await page.goto(spec.mobilePath, { waitUntil: "networkidle", timeout: 60_000 });
   await dismissPlatformTour(page);
+  await waitForPresentationSkin(page, spec.presentationCssPreset);
   if (spec.mobilePath === "/dashboard") {
     await waitForTodayLoaded(page);
+    await maskOwnerGreeting(page);
   }
   await page.locator('[data-testid="mobile-bottom-nav"]').waitFor({ state: "visible", timeout: 30_000 });
   await page.waitForTimeout(500);
@@ -224,6 +351,7 @@ export async function captureHomeTodayMobile(page: Page, dest: string) {
   await page.goto("/dashboard", { waitUntil: "networkidle", timeout: 60_000 });
   await dismissPlatformTour(page);
   await waitForTodayLoaded(page);
+  await maskOwnerGreeting(page);
   await page.locator('[data-testid="mobile-bottom-nav"]').waitFor({ state: "visible" });
   await page.waitForTimeout(500);
   await page.screenshot({ path: dest, fullPage: false, animations: "disabled" });
