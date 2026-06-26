@@ -7,6 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GatewayAuthCard } from "@/components/gateway/gateway-auth-card";
 import { formatClerkAuthError } from "@/lib/clerk-auth-errors";
+import {
+  completeClerkPasswordSignIn,
+  incompleteClerkSignInMessage,
+} from "@/lib/clerk-password-sign-in";
 import { readSignInRedirectPath } from "@/lib/local-dashboard-auth";
 import { fetchPostSignInLandingPath } from "@/lib/post-sign-in-landing";
 import { LIVIA_FORM_EXAMPLES } from "@workspace/policy";
@@ -36,13 +40,10 @@ export function LiviaEmailSignInForm({ redirectUrl, onEmailChange, bare = false 
     setBusy(true);
     setError("");
     try {
-      const result = await signIn.create({
-        identifier: email.trim(),
-        password,
-      });
+      const outcome = await completeClerkPasswordSignIn(signIn, email, password);
 
-      if (result.status === "complete" && result.createdSessionId) {
-        await setActive({ session: result.createdSessionId });
+      if (outcome.ok) {
+        await setActive({ session: outcome.sessionId });
         const clerkUserId = clerkUser?.id ?? user?.id ?? "";
         const requested = redirectUrl ?? readSignInRedirectPath();
         const landing = await fetchPostSignInLandingPath({
@@ -54,7 +55,12 @@ export function LiviaEmailSignInForm({ redirectUrl, onEmailChange, bare = false 
         return;
       }
 
-      setError("Extra verification is required for this account. Contact support if this persists.");
+      if (outcome.reason === "incomplete") {
+        setError(incompleteClerkSignInMessage(outcome.status));
+        return;
+      }
+
+      setError("Could not sign in. Check your email and password.");
     } catch (err: unknown) {
       setError(formatClerkAuthError(err));
     } finally {

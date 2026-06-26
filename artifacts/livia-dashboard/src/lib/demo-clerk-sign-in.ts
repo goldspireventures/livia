@@ -1,5 +1,6 @@
-import { useSignIn } from "@clerk/clerk-react";
+import type { useSignIn } from "@clerk/clerk-react";
 import type { DemoSignInResult } from "@/lib/demo-portal";
+import { completeClerkPasswordSignIn } from "@/lib/clerk-password-sign-in";
 
 type SignInResource = NonNullable<ReturnType<typeof useSignIn>["signIn"]>;
 
@@ -23,42 +24,8 @@ async function tryPasswordSignIn(
   email: string,
   password: string,
 ): Promise<string | null> {
-  const trimmed = password.trim();
-  if (!trimmed) return null;
-
-  const direct = await signIn.create({
-    identifier: email.trim(),
-    password: trimmed,
-  });
-  if (direct.status === "complete" && direct.createdSessionId) {
-    return direct.createdSessionId;
-  }
-
-  if (direct.status === "needs_first_factor") {
-    const hasPassword = direct.supportedFirstFactors?.some((f) => f.strategy === "password");
-    if (hasPassword) {
-      const factor = await signIn.attemptFirstFactor({
-        strategy: "password",
-        password: trimmed,
-      });
-      if (factor.status === "complete" && factor.createdSessionId) {
-        return factor.createdSessionId;
-      }
-    }
-  }
-
-  const staged = await signIn.create({ identifier: email.trim() });
-  if (staged.status === "needs_first_factor") {
-    const factor = await signIn.attemptFirstFactor({
-      strategy: "password",
-      password: trimmed,
-    });
-    if (factor.status === "complete" && factor.createdSessionId) {
-      return factor.createdSessionId;
-    }
-  }
-
-  return null;
+  const outcome = await completeClerkPasswordSignIn(signIn, email, password);
+  return outcome.ok ? outcome.sessionId : null;
 }
 
 /**
