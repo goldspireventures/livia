@@ -23,9 +23,9 @@ export function webMyLiviaUrl(): string {
   return `${getDashboardBaseUrl()}/my`;
 }
 
-/** Expo dev / staging — open native app setup (universal link when configured). */
+/** Expo dev / staging — open native app setup (matches app.json scheme). */
 export function mobileOnboardingDeepLink(): string {
-  return "livia://onboarding-setup";
+  return "livia-mobile://onboarding-setup";
 }
 
 export const CROSS_SURFACE_COPY = {

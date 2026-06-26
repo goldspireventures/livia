@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Check } from "lucide-react";
 import type { OnboardingActId } from "@/lib/onboarding-acts";
+import { OnboardingBillingPanel } from "@/components/onboarding/onboarding-billing-panel";
 
 type Service = { id: string; name: string; durationMinutes: number };
 type Staff = { id: string; displayName: string; isActive: boolean };
@@ -78,15 +79,7 @@ export function OnboardingInlinePanel({
   }
 
   if (act === "a9_billing") {
-    return (
-      <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-        Closed beta is free. You can lock in Solo / Studio / Chain pricing before public launch in{" "}
-        <Link href="/settings" className="text-primary underline">
-          Settings → Billing
-        </Link>
-        .
-      </div>
-    );
+    return <OnboardingBillingPanel businessId={businessId} />;
   }
 
   return null;

@@ -4,7 +4,7 @@ import Stripe from "stripe";
 import { db, businessesTable, paymentsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { getStripe, planIdFromPriceId, stripeWebhookSecret } from "../lib/stripe";
-import { syncBusinessPlanFromStripe, grantAddonBundle } from "../services/billing.service";
+import { syncBusinessPlanFromStripe, grantAddonBundle, markBillingOnboardingComplete } from "../services/billing.service";
 import { logger } from "../lib/logger";
 import { redactObject } from "../lib/pii-redaction";
 import { sendError } from "../lib/http-errors";
@@ -239,6 +239,10 @@ async function handleSubscription(sub: Stripe.Subscription): Promise<void> {
     status: sub.status,
     billingPeriodStart: periodStart,
   });
+
+  if (sub.status === "active" || sub.status === "trialing") {
+    await markBillingOnboardingComplete(businessId);
+  }
 }
 
 export default router;

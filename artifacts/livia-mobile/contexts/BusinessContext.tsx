@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useUser } from "@clerk/clerk-expo";
+import { useUser, useAuth } from "@clerk/clerk-expo";
 import { useGetMyBusinesses } from "@workspace/api-client-react";
 import type { Business } from "@workspace/api-client-react";
 import { useSegments } from "expo-router";
@@ -11,6 +11,7 @@ import {
   type DemoSession,
 } from "@/lib/demo-session";
 import { isDemoRoute } from "@/lib/navigation";
+import { acceptPendingInvitations } from "@/lib/accept-invitations";
 import React, {
   ReactNode,
   createContext,
@@ -42,6 +43,7 @@ const LEGACY_KEYS = ["livia_current_business_id"];
 
 export function BusinessProvider({ children }: { children: ReactNode }) {
   const { user, isLoaded: clerkUserLoaded } = useUser();
+  const { isSignedIn } = useAuth();
   const clerkEmail = user?.primaryEmailAddress?.emailAddress ?? null;
   const [currentBusinessId, setCurrentBusinessId] = useState<string | null>(
     null
@@ -64,6 +66,19 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
   } = useGetMyBusinesses({
     query: { enabled: !inDemo, retry: 2, staleTime: 30_000 } as never,
   });
+
+  // Clerk invite → membership row (mirrors web AuthGuard accept-invitations).
+  useEffect(() => {
+    if (!clerkUserLoaded || !isSignedIn || inDemo) return;
+    void (async () => {
+      try {
+        await acceptPendingInvitations();
+        await refetch();
+      } catch {
+        /* no pending invite */
+      }
+    })();
+  }, [clerkUserLoaded, isSignedIn, inDemo, refetch]);
 
   const rawBusinesses: Business[] = data ?? [];
   const businesses = useMemo(() => {

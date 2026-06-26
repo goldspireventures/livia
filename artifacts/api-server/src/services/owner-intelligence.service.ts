@@ -1,6 +1,8 @@
 import {
   ownerHomeLivSuggestions,
   ownerOpsLivSuggestions,
+  ownerBillingAddonLivPrompts,
+  buildBillingAddonCatalogForOwner,
   topCommerceSignal,
   buildCommerceRemediationTasks,
   resolveCommerceCapabilityBlockers,
@@ -10,6 +12,7 @@ import {
   type CommerceRemediationTask,
   type CommerceCapabilityBlocker,
   type TwinRiskOrOpportunity,
+  type BillingAddonOwnerRow,
 } from "@workspace/policy";
 import {
   buildTwinHealthFromContext,
@@ -61,6 +64,7 @@ export type OwnerIntelligenceBundle = {
   policyEvolutionProposals?: import("@workspace/policy").PolicyEvolutionProposal[];
   qualityRegistry?: import("@workspace/policy").QualityRegistryEntry[];
   learningHypotheses?: import("./liv-hypothesis.service").LivHypothesis[];
+  billingAddons?: BillingAddonOwnerRow[];
 };
 
 /** Single Twin context load — commerce, capabilities, twin headline/recs. */
@@ -80,6 +84,11 @@ export async function getOwnerIntelligenceBundle(
 
   const caps = ctx.capabilities;
   if (!caps) return null;
+
+  const { getBusinessById } = await import("./businesses.service");
+  const { resolveBillingState } = await import("./billing.service");
+  const biz = await getBusinessById(businessId);
+  const billingState = await resolveBillingState(businessId);
 
   const summary = ctx.summary;
   const commerceBundle = {
@@ -116,11 +125,19 @@ export async function getOwnerIntelligenceBundle(
     },
   });
 
-  const livPrompts = ownerOpsLivSuggestions({
-    hasCommerceActSignal: commerceBundle.signals.some((s) => s.severity === "act"),
-    capabilityBlockers,
-    pendingCount,
-  });
+  const livPrompts = [
+    ...ownerOpsLivSuggestions({
+      hasCommerceActSignal: commerceBundle.signals.some((s) => s.severity === "act"),
+      capabilityBlockers,
+      pendingCount,
+    }),
+    ...ownerBillingAddonLivPrompts(
+      buildBillingAddonCatalogForOwner({
+        vertical: biz?.vertical,
+        activeEntitlements: [...billingState.entitlements],
+      }),
+    ),
+  ].slice(0, 5);
   const remediationTasks = buildCommerceRemediationTasks(commerceBundle.signals);
   const commerceCapabilityBlockers = resolveCommerceCapabilityBlockers(
     caps.platformCapabilities,
@@ -145,8 +162,6 @@ export async function getOwnerIntelligenceBundle(
   let colourDayBlocks = 0;
   let medspaConsentQueueCount = 0;
   try {
-    const { getBusinessById } = await import("./businesses.service");
-    const biz = await getBusinessById(businessId);
     if (biz?.vertical === "beauty") {
       const { getBeautyFillCycleRadar } = await import("./beauty-ops.service");
       const radar = await getBeautyFillCycleRadar(businessId);
@@ -209,5 +224,9 @@ export async function getOwnerIntelligenceBundle(
     policyEvolutionProposals,
     qualityRegistry,
     learningHypotheses,
+    billingAddons: buildBillingAddonCatalogForOwner({
+      vertical: biz?.vertical,
+      activeEntitlements: [...billingState.entitlements],
+    }),
   };
 }

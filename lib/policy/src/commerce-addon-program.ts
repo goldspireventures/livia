@@ -5,6 +5,7 @@
 import type { BusinessVertical } from "./types";
 import { PUBLIC_RETAIL_VERTICALS, verticalSupportsRetail } from "./tenant-retail-program";
 import { RETAIL_PACK_ADDON_EUR_CENTS, EVENT_OPERATOR_ADDON_EUR_CENTS } from "@workspace/entitlements";
+import { showPeerInsightsForTenant } from "./wedge-gate";
 
 export type CommerceAddonId = "event_operator_pack" | "retail_pack" | "peer_set_insights";
 
@@ -104,7 +105,7 @@ function addonOnboardingBlurb(id: CommerceAddonId): string {
   if (id === "event_operator_pack") {
     return "Quote-led workflow — enquiries, itemised quotes, milestone deposits, and optional full /e/ website. Public booking page is on your base plan.";
   }
-  return COMMERCE_ADDON_REGISTRY[id].name;
+  return "Anonymized benchmarks from similar shops when your peer segment has enough data (k≥10).";
 }
 
 /** Add-ons relevant to a vertical (for billing cards, mobile menu hints). */
@@ -154,4 +155,53 @@ export function validateCommerceAddonVerticalCoverage(): string[] {
     }
   }
   return errors;
+}
+
+/** Settings → Billing anchor for the unified add-ons card. */
+export const BILLING_ADDONS_SETTINGS_HREF = "/settings?tab=billing#billing-addons";
+
+export type BillingAddonOwnerRow = {
+  id: CommerceAddonId;
+  name: string;
+  description: string;
+  priceLabel: string;
+  active: boolean;
+  unlockHref: string;
+};
+
+/** Owner-facing add-on rows — one catalogue for billing UI and Liv coaching. */
+export function buildBillingAddonCatalogForOwner(args: {
+  vertical?: string | null;
+  activeEntitlements: readonly string[];
+}): BillingAddonOwnerRow[] {
+  const showPeer = showPeerInsightsForTenant(args.vertical);
+  return commerceAddonsForVertical(args.vertical)
+    .filter((entry) => entry.id !== "peer_set_insights" || showPeer)
+    .map((entry) => {
+      const active = args.activeEntitlements.includes(entry.primaryEntitlement);
+      return {
+        id: entry.id,
+        name: entry.name,
+        description: addonOnboardingBlurb(entry.id),
+        priceLabel: `€${Math.round(entry.eurCentsPerMonth / 100)}/mo`,
+        active,
+        unlockHref: BILLING_ADDONS_SETTINGS_HREF,
+      };
+    });
+}
+
+/** Liv prompts when owner asks about upgrades beyond base plan. */
+export function ownerBillingAddonLivPrompts(
+  rows: readonly BillingAddonOwnerRow[],
+): string[] {
+  const locked = rows.filter((r) => !r.active);
+  if (!locked.length) {
+    return ["Which add-ons do I have active and what do they unlock?"];
+  }
+  const names = locked.map((r) => r.name).join(", ");
+  return [
+    `Which add-on should I unlock first — ${names}?`,
+    "Walk me through unlocking an add-on from Settings → Billing.",
+    "What does each billing add-on unlock for my shop?",
+  ];
 }

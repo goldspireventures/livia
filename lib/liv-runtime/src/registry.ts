@@ -421,8 +421,8 @@ const CATALOG: RegisteredLivTool[] = [
     risk: "low",
     profiles: ["tenant_staff"],
     livModes: ["ops"],
-    description:
-      "Unified owner intelligence — commerce signals, capability health, Twin top recommendation, remediation tasks, and Liv prompts. Prefer this first when coaching owner strategy on Today.",
+      description:
+      "Unified owner intelligence — commerce signals, capability health, Twin top recommendation, remediation tasks, billing add-ons, and Liv prompts. Prefer this first when coaching owner strategy on Today.",
     input_schema: { type: "object", properties: {}, required: [] },
   },
   {

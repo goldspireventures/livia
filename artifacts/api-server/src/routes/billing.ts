@@ -33,12 +33,19 @@ import {
 
   billingLocalGrantMode,
 
+  stripeCheckoutAllowPromotionCodes,
+
 } from "../lib/stripe";
 
 import { CHECKOUT_PLAN_IDS } from "@workspace/entitlements";
 import { sendError, logRouteError, safeClientMessage } from "../lib/http-errors";
 import { replyDomainError } from "../lib/domain-errors";
 import { DEMO_WORLD_SLUGS, isDemoPortalEnabled } from "../lib/demo-portal-config";
+import {
+  redeemComplimentaryPromoCode,
+  validatePromoCodeForBusiness,
+} from "../services/promo-code.service";
+import { publicPaidOnboardingEnabled } from "@workspace/policy";
 
 
 
@@ -98,6 +105,13 @@ router.post(
     const shopCount = Math.max(2, Number(req.body?.shopCount) || 2);
 
     const renterCount = Math.max(1, Number(req.body?.renterCount) || 1);
+
+    const returnPath =
+      typeof req.body?.returnPath === "string" && req.body.returnPath.startsWith("/")
+        ? req.body.returnPath
+        : publicPaidOnboardingEnabled()
+          ? "/onboarding"
+          : "/settings?tab=billing";
 
 
 
@@ -248,9 +262,11 @@ router.post(
 
         line_items: [{ price: priceId, quantity }],
 
-        success_url: `${baseUrl}/settings?tab=billing&billing=success`,
+        success_url: `${baseUrl}${returnPath}${returnPath.includes("?") ? "&" : "?"}billing=success`,
 
-        cancel_url: `${baseUrl}/settings?tab=billing&billing=cancel`,
+        cancel_url: `${baseUrl}${returnPath}${returnPath.includes("?") ? "&" : "?"}billing=cancel`,
+
+        allow_promotion_codes: stripeCheckoutAllowPromotionCodes(),
 
         metadata: { businessId, planId, shopCount: String(shopCount), renterCount: String(renterCount) },
 
@@ -280,6 +296,58 @@ router.post(
 
   },
 
+);
+
+
+
+router.post(
+  "/businesses/:businessId/billing/validate-promo",
+  requireAuth,
+  requireRole("ADMIN"),
+  async (req, res): Promise<void> => {
+    const code = (req.body?.code as string | undefined)?.trim() ?? "";
+    if (!code) {
+      sendError(res, req, 400, "code is required");
+      return;
+    }
+    res.json(validatePromoCodeForBusiness(code));
+  },
+);
+
+router.post(
+  "/businesses/:businessId/billing/redeem-promo",
+  requireAuth,
+  requireRole("OWNER"),
+  async (req, res): Promise<void> => {
+    const businessId = getBizId(req.params.businessId);
+    const code = (req.body?.code as string | undefined)?.trim() ?? "";
+    if (!code) {
+      sendError(res, req, 400, "code is required");
+      return;
+    }
+    try {
+      const redeemed = await redeemComplimentaryPromoCode(businessId, code);
+      const billing = await resolveBillingState(businessId);
+      res.json({
+        mode: "complimentary",
+        message: "Partner code applied — your plan is active at no charge for this period.",
+        ...redeemed,
+        billing,
+      });
+    } catch (err: unknown) {
+      const e = err as Error & { code?: string };
+      if (e.code === "PROMO_INVALID") {
+        sendError(res, req, 400, e.message, { code: e.code });
+        return;
+      }
+      if (e.code === "PROMO_ALREADY_SUBSCRIBED") {
+        sendError(res, req, 409, e.message, { code: e.code });
+        return;
+      }
+      logRouteError(req, err, "redeem-promo failed", { businessId });
+      sendError(res, req, 502, safeClientMessage(err, "Could not apply promo code."));
+    }
+  },
 );
 
 

@@ -11,6 +11,8 @@ import {
   type InvitableRole,
 } from "../services/invitations.service";
 import { logger } from "../lib/logger";
+import { getDashboardUrl } from "../lib/public-urls";
+import { staffInviteClerkRedirectUrl } from "@workspace/policy";
 
 import { sendError } from "../lib/http-errors";
 const router: IRouter = Router();
@@ -51,7 +53,10 @@ router.post(
         role: role as InvitableRole,
         deskRole: role === "ADMIN" ? desk ?? "manager" : desk,
         inviterUserId: userId,
-        redirectUrl,
+        redirectUrl:
+          typeof redirectUrl === "string" && redirectUrl.trim()
+            ? redirectUrl.trim()
+            : staffInviteClerkRedirectUrl(getDashboardUrl()),
       });
       res.status(201).json(inv);
     } catch (err) {

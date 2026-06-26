@@ -22,7 +22,7 @@ import { useColors } from "@/hooks/useColors";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useBillingSummary } from "@/hooks/useBillingSummary";
 import { ADDON_CATALOGUE, formatAddonPriceEur, hasEffectiveEntitlement, type EntitlementKey } from "@workspace/entitlements";
-import { commerceAddonsForVertical } from "@workspace/policy";
+import { buildBillingAddonCatalogForOwner } from "@workspace/policy";
 
 const UPGRADE_PLANS = [
   { id: "solo" as const, name: "Solo", blurb: "One chair, full Liv on SMS and bookings." },
@@ -43,9 +43,10 @@ export default function PlanScreen() {
   const [error, setError] = useState("");
   const qc = useQueryClient();
   const vertical = (currentBusiness as { vertical?: string } | undefined)?.vertical;
-  const applicableAddons = commerceAddonsForVertical(vertical).filter(
-    (e) => e.id === "event_operator_pack" || e.id === "retail_pack",
-  );
+  const billingAddons = buildBillingAddonCatalogForOwner({
+    vertical,
+    activeEntitlements: data?.entitlements ?? [],
+  });
 
   const startAddonCheckout = async (addonId: string) => {
     if (!bid) return;
@@ -195,18 +196,26 @@ export default function PlanScreen() {
         );
       })}
 
-      {applicableAddons.length > 0 ? (
+      {billingAddons.length > 0 ? (
         <>
           <Text style={[styles.sectionTitle, { color: colors.mutedForeground, marginTop: 16 }]}>
             Add-ons
           </Text>
-          {applicableAddons.map((entry) => {
+          {billingAddons.map((entry) => {
             const catalogue = ADDON_CATALOGUE[entry.id];
             if (!catalogue) return null;
-            const entitled = hasEffectiveEntitlement(
-              (data?.entitlements ?? []) as EntitlementKey[],
-              entry.primaryEntitlement as EntitlementKey,
-            );
+            const entitled =
+              entry.id === "event_operator_pack"
+                ? hasEffectiveEntitlement(
+                    (data?.entitlements ?? []) as EntitlementKey[],
+                    "event_operator_pack",
+                  )
+                : entry.id === "retail_pack"
+                  ? hasEffectiveEntitlement(
+                      (data?.entitlements ?? []) as EntitlementKey[],
+                      "retail_pack",
+                    )
+                  : (data?.entitlements ?? []).includes("peer_set_insights");
             const loading = checkoutAddon === entry.id;
             return (
               <Pressable
@@ -229,7 +238,7 @@ export default function PlanScreen() {
                     {entitled ? " · active" : ""}
                   </Text>
                   <Text style={[styles.planBlurb, { color: colors.mutedForeground }]}>
-                    {catalogue.description}
+                    {entry.description}
                   </Text>
                 </View>
                 {loading ? (

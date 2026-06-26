@@ -1,6 +1,6 @@
 /** Operator app ↔ native mobile — same tenant session, shared API state. */
 
-const MOBILE_SCHEME = "livia://";
+const MOBILE_SCHEME = "livia-mobile://";
 
 export function mobileOnboardingSetupUrl(): string {
   return `${MOBILE_SCHEME}onboarding-setup`;

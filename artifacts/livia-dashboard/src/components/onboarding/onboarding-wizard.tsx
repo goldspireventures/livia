@@ -113,9 +113,8 @@ function actHints(
     cta: "Test booking page",
   },
   a9_billing: {
-    body: "Closed beta is on the house — pick a plan to lock in pricing for launch.",
-    href: "/settings?tab=billing",
-    cta: "Billing",
+    body: "Choose Solo or Studio and subscribe — or apply a partner code for complimentary access.",
+    cta: "Choose plan",
   },
   a10_invite_team: {
     body: "Invite your manager or front desk.",

@@ -7,6 +7,7 @@ import {
   pickPrimarySessionBusiness,
   resolvePostLegalDestination,
   resolvePostSignInLandingPath,
+  staffInviteClerkRedirectUrl,
 } from "../registration-routing-program";
 
 assert.equal(isDemoWorldSlug("dublin-barber-collective"), true);
@@ -37,6 +38,19 @@ assert.equal(
     email: "founder@gmail.com",
   }),
   "/onboarding",
+);
+
+assert.equal(
+  resolvePostLegalDestination({
+    businesses: [{ id: "shop-1", slug: "some-salon", ownerId: "other-user" }],
+    clerkUserId: "staff-user",
+    email: "stylist@gmail.com",
+  }),
+  "/dashboard",
+);
+
+assert.ok(
+  staffInviteClerkRedirectUrl("https://app.livia-hq.com").includes("legal-acceptance"),
 );
 
 const picked = pickPrimarySessionBusiness(

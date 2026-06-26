@@ -154,9 +154,10 @@ export function billingLocalGrantMode(): "dev" | "staging-demo" | "demo-override
 
 
 
-export function logStripeSkip(reason: string): void {
-
-  logger.info({ reason }, "Stripe action skipped");
-
+export function stripeCheckoutAllowPromotionCodes(): boolean {
+  return process.env.STRIPE_ALLOW_PROMOTION_CODES !== "false";
 }
 
+export function logStripeSkip(reason: string): void {
+  logger.info({ reason }, "Stripe action skipped");
+}

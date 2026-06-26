@@ -3,10 +3,11 @@ import { publicLivChatCopy, staffLivInboxSuggestions } from "../public-liv-chat-
 
 const wellness = publicLivChatCopy("wellness");
 assert.ok(!wellness.suggestedPrompts.some((s) => /haircut|cut tomorrow/i.test(s)));
-assert.ok(wellness.suggestedPrompts[0].includes("massage"));
+assert.ok(wellness.suggestedPrompts[0].includes("book"));
+assert.equal(wellness.assistantSubtitle, "Booking assistant");
 
 const hair = publicLivChatCopy("hair");
-assert.ok(hair.suggestedPrompts.some((s) => /cut/i.test(s)));
+assert.ok(hair.suggestedPrompts.some((s) => /book/i.test(s)));
 
 const inboxWellness = staffLivInboxSuggestions("wellness", null, "open");
 assert.ok(inboxWellness.some((s) => /guest/i.test(s)));

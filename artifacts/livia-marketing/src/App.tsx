@@ -22,6 +22,7 @@ import { LegalDpaPage, LegalPrivacyPage, LegalTosPage } from "@/pages/legal";
 import { useEffect, useRef } from "react";
 import { MarketingErrorBoundary } from "@/components/marketing-error-boundary";
 import { metaForPath } from "@/lib/marketing-route-meta";
+import { applyMarketingSocialMeta } from "@/lib/marketing-social-meta";
 
 const queryClient = new QueryClient();
 
@@ -57,11 +58,7 @@ function RouteDocumentMeta() {
   useEffect(() => {
     const pathOnly = location.split("#")[0]?.split("?")[0] ?? "/";
     const meta = metaForPath(pathOnly);
-    document.title = meta.title;
-    if (meta.description) {
-      let tag = document.querySelector('meta[name="description"]');
-      if (tag) tag.setAttribute("content", meta.description);
-    }
+    applyMarketingSocialMeta({ title: meta.title, description: meta.description });
     if (pathOnly === "/de") {
       document.documentElement.lang = "de";
     } else {

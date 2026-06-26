@@ -39,9 +39,13 @@ const LEGACY_DELETE = [
   "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
 ];
 
-function railway(args) {
+function railway(args, input) {
   const cli = process.env.RAILWAY_CLI ?? "railway";
-  const r = spawnSync(cli, args, { encoding: "utf8", shell: process.platform === "win32" });
+  const r = spawnSync(cli, args, {
+    encoding: "utf8",
+    input,
+    shell: process.platform === "win32",
+  });
   if (r.error) {
     if (r.error.code === "ENOENT") {
       console.error(
@@ -55,6 +59,14 @@ function railway(args) {
     throw new Error((r.stderr || r.stdout || "railway command failed").trim());
   }
   return (r.stdout || "").trim();
+}
+
+function setRailwayVariable(key, val) {
+  if (/[<>&|]/.test(val) || val.includes(" ")) {
+    railway(["variable", "set", key, "--stdin"], val);
+    return;
+  }
+  railway(["variable", "set", `${key}=${val}`]);
 }
 
 function parseEnvFile(path) {
@@ -101,7 +113,7 @@ for (const [key, val] of pairs) {
   const masked = /SECRET|KEY|PASSWORD|TOKEN|DATABASE_URL/i.test(key) ? "***" : val;
   console.log(`  set ${key}=${masked}`);
   if (!dryRun) {
-    railway(["variables", "set", `${key}=${val}`]);
+    setRailwayVariable(key, val);
   }
 }
 
@@ -111,7 +123,7 @@ if (pruneLegacy) {
     console.log(`  delete ${key}`);
     if (!dryRun) {
       try {
-        railway(["variables", "delete", key]);
+        railway(["variable", "delete", key]);
       } catch {
         console.log(`    (skip — ${key} not set)`);
       }

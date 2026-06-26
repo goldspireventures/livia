@@ -54,7 +54,16 @@ export function OwnerIntelligenceStack({ className, variant = "owner-home" }: St
   const skeletonHeight =
     variant === "embedded" ? "h-28" : variant === "commerce-only" || variant === "twin-only" ? "h-32" : "h-48";
   if (isLoading) return <Skeleton className={cn(`${skeletonHeight} w-full rounded-lg`, className)} />;
-  if (!data) return null;
+  if (!data) {
+    if (variant === "commerce-only") {
+      return (
+        <p className="text-sm text-muted-foreground px-1 py-2">
+          Commerce signals could not load — refresh the page or try again in a moment.
+        </p>
+      );
+    }
+    return null;
+  }
 
   if (variant === "commerce-only") {
     return <CommerceSignalsBody data={data} className={className} />;
@@ -218,7 +227,16 @@ type Bundle = OwnerIntelligenceBundle;
 
 function CommerceSignalsBody({ data, className }: { data: Bundle; className?: string }) {
   const actionable = data.commerce.signals.filter((s) => s.severity !== "info");
-  if (!data.commerce.signals.length) return null;
+  const signalsToShow = actionable.length > 0 ? actionable : data.commerce.signals;
+
+  if (!signalsToShow.length) {
+    return (
+      <p className="text-sm text-muted-foreground px-1 py-2" data-testid="commerce-signals-empty">
+        No revenue alerts for the last 30 days. Use the payment capture steps above if you are
+        still setting up deposits.
+      </p>
+    );
+  }
 
   return (
     <Card className={cn("border-primary/15", className)} data-testid="commerce-signals-panel">
@@ -234,7 +252,7 @@ function CommerceSignalsBody({ data, className }: { data: Bundle; className?: st
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">
-        {(actionable.length > 0 ? actionable : data.commerce.signals).map((signal) => (
+        {signalsToShow.map((signal) => (
           <div
             key={signal.id}
             className="flex flex-wrap items-start justify-between gap-2 rounded-md border border-border/60 px-3 py-2"

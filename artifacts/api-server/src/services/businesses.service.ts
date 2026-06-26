@@ -17,6 +17,7 @@ import {
   type TenantAttestation,
   getSubverticalProfile,
   suggestedTierFromSubvertical,
+  initialPlanIdForNewBusiness,
 } from "@workspace/policy";
 import { loadVerticalPack } from "@workspace/liv-runtime";
 import { generateId } from "../lib/id";
@@ -221,6 +222,8 @@ export async function createBusiness(
     : null;
   const resolvedTier =
     suggestedTier && (!data.tier || data.tier === packDefaults.tier) ? suggestedTier : packTier;
+  const trialPlan = initialPlanIdForNewBusiness();
+  const initialPlanId = trialPlan ?? resolvedTier;
 
   const [biz] = await db
     .insert(businessesTable)
@@ -251,7 +254,7 @@ export async function createBusiness(
       vertical,
       subverticalProfileId: data.subverticalProfileId ?? null,
       tier: resolvedTier,
-      planId: resolvedTier,
+      planId: initialPlanId,
       euRegion: packDefaults.euRegion,
       aiGreeting: packDefaults.aiGreeting,
       logoUrl: data.logoUrl,

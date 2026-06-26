@@ -4,6 +4,7 @@
 import type { OnboardingActId, OnboardingChecklist, OnboardingState } from "./onboarding-state";
 import { onboardingChecklistSchema } from "./onboarding-state";
 import { mergePercentWithBlocking, verticalRequiresMenuSetup } from "./onboarding-program";
+import { appendBillingBlockingAct, publicPaidOnboardingEnabled } from "./paid-onboarding-program";
 
 export type MigrationIntent = "fresh" | "switching" | "unspecified";
 
@@ -144,12 +145,12 @@ export function blockingOnboardingActsForSession(
   checklist?: Partial<OnboardingChecklist> | null,
 ): OnboardingActId[] {
   if (vertical === "event-vendors") {
-    return ["a2_shop_profile", "a3_service_menu", "a6_liv", "a8_public_link"];
+    return appendBillingBlockingAct(["a2_shop_profile", "a3_service_menu", "a6_liv", "a8_public_link"]);
   }
   if (isSwitchingMigration(checklist)) {
-    return ["a5_hours"];
+    return appendBillingBlockingAct(["a5_hours"]);
   }
-  return ["a2_shop_profile", "a5_hours"];
+  return appendBillingBlockingAct(["a2_shop_profile", "a5_hours"]);
 }
 
 const BASE_SKIPPED: OnboardingActId[] = [
@@ -167,6 +168,7 @@ export function isPortalSkippedUiAct(
   if (act === "a2_shop_profile" && isSwitchingMigration(checklist)) return true;
   if (act === "a11_migration" && isSwitchingMigration(checklist)) return false;
   if (act === "a11_migration") return true;
+  if (act === "a9_billing" && publicPaidOnboardingEnabled()) return false;
   return BASE_SKIPPED.includes(act);
 }
 

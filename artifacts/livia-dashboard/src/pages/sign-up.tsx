@@ -4,6 +4,7 @@ import { GatewayAuthPageShell } from "@/components/gateway/gateway-auth-page-she
 import { GatewayAuthSessionGate } from "@/components/gateway/gateway-auth-session-gate";
 import { LiviaEmailSignUpForm } from "@/components/gateway/livia-email-sign-up-form";
 import { captureOnboardingVerticalFromUrl } from "@/lib/onboarding-vertical-intent";
+import { BetaSignupNotice } from "@/components/gateway/beta-signup-notice";
 
 export default function SignUpPage() {
   const [step, setStep] = useState<"form" | "verify">("form");
@@ -30,6 +31,7 @@ export default function SignUpPage() {
         ) : null
       }
     >
+      <BetaSignupNotice />
       <LiviaEmailSignUpForm bare redirectUrl="/legal-acceptance" onStepChange={setStep} />
       </GatewayAuthPageShell>
     </GatewayAuthSessionGate>

@@ -5,7 +5,7 @@ import { getWorkforceAccessConfig } from "./workforce-access-env.js";
 import { getCockpitWorkforceGrantsSync } from "./workforce-access-grants-cache.js";
 
 /**
- * Public signup control. Default is open so founders can register and create a shop.
+ * Public signup control. Default is **invite** on production deploys; **open** locally.
  *
  * Modes (LIVIA_BETA_SIGNUP_MODE):
  *   open    — any authenticated user can create a business (default)

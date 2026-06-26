@@ -15,8 +15,14 @@ import { customFetch } from "@workspace/api-client-react";
 import { parseUserFacingError } from "@/lib/user-facing-errors";
 import { useBillingState } from "@/hooks/use-billing-state";
 import { hasEffectiveEntitlement, ADDON_CATALOGUE, formatAddonPriceEur, lookupAddon, type EntitlementKey } from "@workspace/entitlements";
-import { commerceAddonsForVertical } from "@workspace/policy";
-import { Sparkles } from "lucide-react";
+import {
+  buildBillingAddonCatalogForOwner,
+  ownerBillingAddonLivPrompts,
+  type CommerceAddonId,
+} from "@workspace/policy";
+import { Sparkles, MessageSquare } from "lucide-react";
+import { Link } from "wouter";
+import PeerInsightsControls from "@/components/peer-insights-controls";
 
 type BillingState = {
   planId: string;
@@ -46,6 +52,8 @@ export default function BillingControls({ showRemediationStrip = true }: { showR
   const qc = useQueryClient();
   const bid = business?.id ?? "";
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoLoading, setPromoLoading] = useState(false);
   const { data: billing, isLoading, isError, refetch } = useBillingState();
 
   useEffect(() => {
@@ -61,7 +69,9 @@ export default function BillingControls({ showRemediationStrip = true }: { showR
             ? "Consult-first inbox and quotes are live."
             : addon === "retail_pack"
               ? "Take-home retail is live on your book page."
-              : "Your add-on is active.",
+              : addon === "peer_set_insights"
+                ? "Peer insights is active — opt in below to see benchmarks."
+                : "Your add-on is active.",
       });
       params.delete("addon");
       params.delete("addon_status");
@@ -119,9 +129,19 @@ export default function BillingControls({ showRemediationStrip = true }: { showR
     "retail_pack",
   );
   const vertical = (business as { vertical?: string } | null)?.vertical;
-  const applicableAddons = commerceAddonsForVertical(vertical).filter(
-    (e) => e.id === "event_operator_pack" || e.id === "retail_pack",
-  );
+  const billingAddons = buildBillingAddonCatalogForOwner({
+    vertical,
+    activeEntitlements: billing.entitlements,
+  });
+  const addonLivPrompts = ownerBillingAddonLivPrompts(billingAddons);
+  const hasPeerInsights = billing.entitlements.includes("peer_set_insights");
+
+  function isAddonActive(addonId: CommerceAddonId): boolean {
+    if (addonId === "event_operator_pack") return hasEventOperator;
+    if (addonId === "retail_pack") return hasRetailPack;
+    if (addonId === "peer_set_insights") return hasPeerInsights;
+    return false;
+  }
   const bookingsDone = billing.usage.booking_completed ?? 0;
   const smsSent = billing.usage.sms_message_outbound ?? 0;
   const waSent = billing.usage.whatsapp_message_outbound ?? 0;
@@ -221,6 +241,34 @@ export default function BillingControls({ showRemediationStrip = true }: { showR
     }
   }
 
+  async function redeemPromo() {
+    const code = promoCode.trim();
+    if (!code) return;
+    setPromoLoading(true);
+    try {
+      const res = await customFetch<{ message?: string }>(
+        `/api/businesses/${bid}/billing/redeem-promo`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code }),
+        },
+      );
+      toast({ title: "Code applied", description: res.message });
+      setPromoCode("");
+      await refetch();
+      if (bid) invalidateOperationalState(qc, bid);
+    } catch (err: unknown) {
+      toast({
+        title: "Code not applied",
+        description: parseUserFacingError(err, "Check the code and try again."),
+        variant: "destructive",
+      });
+    } finally {
+      setPromoLoading(false);
+    }
+  }
+
   return (
     <div className="space-y-4">
       {showRemediationStrip ? <BillingRemediationStrip /> : null}
@@ -250,6 +298,29 @@ export default function BillingControls({ showRemediationStrip = true }: { showR
               ? ` · ${billing.activeStaffSeats} staff seats × ${eur(billing.seatEurCentsPerMonth)}`
               : null}
           </p>
+          <div className="flex flex-wrap gap-2 items-end border-b pb-4">
+            <div className="flex-1 min-w-[200px] space-y-1">
+              <label htmlFor="billing-promo" className="text-xs font-medium text-muted-foreground">
+                Partner / promo code
+              </label>
+              <input
+                id="billing-promo"
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value)}
+                placeholder="LIVIA-FRIEND"
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm font-mono shadow-sm"
+              />
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={promoLoading || !promoCode.trim()}
+              onClick={() => void redeemPromo()}
+            >
+              {promoLoading ? "Applying…" : "Apply code"}
+            </Button>
+          </div>
           <div className="flex flex-wrap gap-2">
             {billing.planId !== "solo" && (
               <Button
@@ -290,31 +361,26 @@ export default function BillingControls({ showRemediationStrip = true }: { showR
         </CardContent>
       </Card>
 
-      <Card data-testid="billing-addons-card">
+      <Card id="billing-addons" className="scroll-mt-24" data-testid="billing-addons-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Sparkles className="h-4 w-4" />
             Add-ons
           </CardTitle>
           <CardDescription>
-            Unlock vertical depth beyond your base plan — one tap checkout, active immediately.
+            One place to unlock optional depth beyond your base plan — checkout here or ask Liv below.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          {applicableAddons.length === 0 ? (
+          {billingAddons.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No vertical add-ons for this business type — base plan includes your core ops.
+              No optional add-ons for this business type — your base plan includes core ops.
             </p>
           ) : (
-            applicableAddons.map((entry) => {
+            billingAddons.map((entry) => {
               const catalogue = ADDON_CATALOGUE[entry.id];
               if (!catalogue) return null;
-              const active =
-                entry.id === "event_operator_pack"
-                  ? hasEventOperator
-                  : entry.id === "retail_pack"
-                    ? hasRetailPack
-                    : billing.entitlements.includes(entry.primaryEntitlement);
+              const active = isAddonActive(entry.id);
               return (
                 <div
                   key={entry.id}
@@ -322,7 +388,7 @@ export default function BillingControls({ showRemediationStrip = true }: { showR
                 >
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm">{catalogue.name}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{catalogue.description}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{entry.description}</p>
                   </div>
                   {active ? (
                     <Badge variant="secondary">Active</Badge>
@@ -343,8 +409,26 @@ export default function BillingControls({ showRemediationStrip = true }: { showR
               );
             })
           )}
+          {addonLivPrompts[0] ? (
+            <div className="flex flex-wrap gap-2 border-t pt-3">
+              {addonLivPrompts.slice(0, 2).map((prompt) => (
+                <Button key={prompt} size="sm" variant="outline" className="h-8 rounded-full gap-1" asChild>
+                  <Link href={`/toolkit?q=${encodeURIComponent(prompt)}`}>
+                    <MessageSquare className="h-3 w-3 opacity-60" />
+                    {prompt.length > 52 ? `${prompt.slice(0, 50)}…` : prompt}
+                  </Link>
+                </Button>
+              ))}
+            </div>
+          ) : null}
         </CardContent>
       </Card>
+
+      {hasPeerInsights ? (
+        <div id="peer-insights-data">
+          <PeerInsightsControls />
+        </div>
+      ) : null}
 
       <Card>
         <CardHeader>

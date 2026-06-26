@@ -4,7 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sparkles, Send, X, Loader2 } from "lucide-react";
 import { AI_DISCLOSURE } from "@workspace/ai-disclosure";
-import { publicLivChatCopy } from "@workspace/policy";
+import {
+  mergePublicLivChatOpening,
+  publicLivChatCopy,
+  PUBLIC_LIV_CHAT_HEADER_TITLE,
+} from "@workspace/policy";
 
 interface ChatMessage {
   id: string;
@@ -61,23 +65,10 @@ export default function ChatWidget({
 
   useEffect(() => {
     if (open && messages.length === 0) {
-      // EU AI Act Art. 50 — locked disclosure is ALWAYS the first message,
-      // before any per-business greeting. Order matters: customer must see
-      // the AI identity before the warmer greeting copy.
-      const seed: ChatMessage[] = [
-        {
-          id: "disclosure",
-          role: "assistant",
-          content: firstMessage,
-        },
-      ];
-      const customGreeting = greeting?.trim();
-      if (customGreeting) {
-        seed.push({ id: "greeting", role: "assistant", content: customGreeting });
-      }
-      setMessages(seed);
+      const opening = mergePublicLivChatOpening(firstMessage, greeting);
+      setMessages([{ id: "opening", role: "assistant", content: opening }]);
     }
-  }, [open, greeting, businessName, messages.length]);
+  }, [open, greeting, firstMessage, messages.length]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -163,7 +154,7 @@ export default function ChatWidget({
               <Sparkles className="h-4 w-4 text-primary-foreground" />
             </div>
             <div>
-              <div className="text-sm font-semibold leading-none">{businessName}</div>
+              <div className="text-sm font-semibold leading-none">{PUBLIC_LIV_CHAT_HEADER_TITLE}</div>
               <div className="text-[11px] text-muted-foreground mt-0.5">{livCopy.assistantSubtitle}</div>
             </div>
           </div>
@@ -215,7 +206,7 @@ export default function ChatWidget({
             </div>
           )}
 
-          {messages.length <= 2 && !sendMessage.isPending && (
+          {messages.length <= 1 && !sendMessage.isPending && (
             <div className="flex flex-wrap gap-2 pt-2">
               {livCopy.suggestedPrompts.map((s) => (
                 <button

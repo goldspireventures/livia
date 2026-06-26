@@ -120,7 +120,13 @@ export function resolvePostSignInLandingPath(args: {
   return sessionDest;
 }
 
-/** After platform legal — new founders always create a shop first. */
+/** Clerk invitation redirect — staff land on legal gate, then role-aware home. */
+export function staffInviteClerkRedirectUrl(dashboardBaseUrl: string): string {
+  const base = dashboardBaseUrl.replace(/\/+$/, "");
+  return `${base}/sign-in?redirect_url=${encodeURIComponent("/legal-acceptance")}`;
+}
+
+/** After platform legal — new founders create a shop; invited staff skip founder onboarding. */
 export function resolvePostLegalDestination(args: {
   businesses: SessionBusinessLike[];
   clerkUserId: string;
@@ -128,7 +134,9 @@ export function resolvePostLegalDestination(args: {
 }): PostLegalDestination {
   const allowed = filterSessionBusinesses(args.businesses, args.email);
   const owned = ownedSessionBusinesses(allowed, args.clerkUserId);
-  if (owned.length === 0) return "/onboarding";
+  if (owned.length === 0) {
+    return allowed.length > 0 ? "/dashboard" : "/onboarding";
+  }
 
   const primary = owned[0]!;
   if (!isOnboardingAppUnlocked(primary.onboardingState ?? null, primary.vertical)) {

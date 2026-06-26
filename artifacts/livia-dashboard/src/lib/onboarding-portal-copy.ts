@@ -23,7 +23,7 @@ export function onboardingLivHostLine(
     a6_liv: "Liv has a default voice. Tune her in Settings when you are ready.",
     a7_channels: "SMS and social connect in Settings — skip for now if you like.",
     a8_public_link: "Your booking link is live. Share it when you are ready.",
-    a9_billing: "Beta is free. Billing is in Settings.",
+    a9_billing: "Subscribe or apply a partner code.",
     a10_invite_team: `Invite ${team} from Settings when you need help.`,
     a11_migration: "Pick your old system or upload a file — we map menu and clients for you.",
     a12_go_live: "Open Livia — Liv will nudge you on Today for anything still open.",

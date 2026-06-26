@@ -41,6 +41,8 @@ export const onboardingChecklistSchema = z.object({
   smsOrVoiceConnected: z.boolean().default(false),
   teamInvited: z.boolean().default(false),
   billingStarted: z.boolean().default(false),
+  /** Livia partner / complimentary code redeemed at onboarding checkout */
+  promoCodeRedeemed: z.string().max(64).optional(),
   servicesConfirmed: z.boolean().default(false),
   hoursConfirmed: z.boolean().default(false),
   socialChannelsStarted: z.boolean().default(false),

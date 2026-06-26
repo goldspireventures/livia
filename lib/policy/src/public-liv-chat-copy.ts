@@ -5,99 +5,103 @@ import { resolveVerticalKey } from "./vocabulary";
 export type PublicLivChatCopy = {
   suggestedPrompts: readonly [string, string, string];
   inputPlaceholder: string;
+  /** Shown under the Liv header — context for this session, not a second brand. */
   assistantSubtitle: string;
 };
+
+/** Unified guest chat chrome — same Liv across every business. */
+export const PUBLIC_LIV_CHAT_HEADER_TITLE = "Liv";
 
 const PUBLIC_LIV_CHAT: Record<BusinessVertical, PublicLivChatCopy> = {
   wellness: {
     suggestedPrompts: [
-      "I'd like a 90 min massage this Saturday afternoon",
-      "What retail or gift items do you sell?",
-      "Do you have gift vouchers or couples sessions?",
+      "I'd like to book a treatment",
+      "What services do you offer?",
+      "Do you have availability this week?",
     ],
-    inputPlaceholder: "Ask about treatments, products, times, or packages…",
-    assistantSubtitle: "Liv · spa booking assistant",
+    inputPlaceholder: "Ask about treatments, times, or availability…",
+    assistantSubtitle: "Booking assistant",
   },
   medspa: {
     suggestedPrompts: [
-      "I'd like to book a consultation next week",
+      "I'd like to book a consultation",
       "What treatments do you offer?",
       "What should I know before my first visit?",
     ],
     inputPlaceholder: "Ask about treatments, prep, or availability…",
-    assistantSubtitle: "Liv · treatment booking assistant",
+    assistantSubtitle: "Booking assistant",
   },
   hair: {
     suggestedPrompts: [
-      "I need a cut tomorrow afternoon",
-      "What's in the take-home shop?",
-      "Can I book with my usual stylist?",
+      "I'd like to book an appointment",
+      "What services do you offer?",
+      "Do you have availability soon?",
     ],
-    inputPlaceholder: "Ask about services, products, stylists, or availability…",
-    assistantSubtitle: "Liv · booking assistant",
+    inputPlaceholder: "Ask about services, stylists, or availability…",
+    assistantSubtitle: "Booking assistant",
   },
   beauty: {
     suggestedPrompts: [
-      "I'd like gel nails this Friday",
-      "Help me find aftercare products",
+      "I'd like to book an appointment",
+      "What services do you offer?",
       "Do you have availability this weekend?",
     ],
-    inputPlaceholder: "Ask about treatments, products, times, or availability…",
-    assistantSubtitle: "Liv · booking assistant",
+    inputPlaceholder: "Ask about treatments, times, or availability…",
+    assistantSubtitle: "Booking assistant",
   },
   "body-art": {
     suggestedPrompts: [
-      "I'd like a consultation for a medium piece",
+      "I'd like to book a consultation",
       "What is your deposit policy?",
       "Do you have availability next month?",
     ],
     inputPlaceholder: "Ask about sessions, consults, or availability…",
-    assistantSubtitle: "Liv · studio assistant",
+    assistantSubtitle: "Booking assistant",
   },
   fitness: {
     suggestedPrompts: [
-      "I'd like a PT session this week",
-      "What classes do you have?",
-      "Do you offer intro packs?",
+      "I'd like to book a session",
+      "What classes or sessions do you offer?",
+      "Do you have availability this week?",
     ],
-    inputPlaceholder: "Ask about sessions, classes, or membership…",
-    assistantSubtitle: "Liv · booking assistant",
+    inputPlaceholder: "Ask about sessions, classes, or availability…",
+    assistantSubtitle: "Booking assistant",
   },
   "allied-health": {
     suggestedPrompts: [
-      "I'd like to book a follow-up appointment",
+      "I'd like to book an appointment",
       "What appointment types do you offer?",
       "Do you have availability next week?",
     ],
     inputPlaceholder: "Ask about appointments or availability…",
-    assistantSubtitle: "Liv · booking assistant",
+    assistantSubtitle: "Booking assistant",
   },
   "pet-grooming": {
     suggestedPrompts: [
-      "I'd like to book a groom for my dog",
-      "What services and sizes do you take?",
+      "I'd like to book a groom",
+      "What services do you offer?",
       "Do you have slots this weekend?",
     ],
-    inputPlaceholder: "Ask about groom services or availability…",
-    assistantSubtitle: "Liv · booking assistant",
+    inputPlaceholder: "Ask about services or availability…",
+    assistantSubtitle: "Booking assistant",
   },
   "automotive-detailing": {
     suggestedPrompts: [
-      "I'd like a full detail next week",
+      "I'd like to book a detail",
       "What packages do you offer?",
-      "How long does a ceramic coating take?",
+      "Do you have availability next week?",
     ],
-    inputPlaceholder: "Ask about services, bays, or availability…",
-    assistantSubtitle: "Liv · booking assistant",
+    inputPlaceholder: "Ask about services or availability…",
+    assistantSubtitle: "Booking assistant",
   },
   "event-vendors": {
     suggestedPrompts: [
-      "I'd like a quote for a birthday party",
-      "What decor packages do you offer?",
-      "Can you style a wedding reception?",
+      "I'd like a quote for an event",
+      "What packages do you offer?",
+      "How do I send an enquiry?",
     ],
-    inputPlaceholder: "Ask about your event, theme, or get the enquire link…",
-    assistantSubtitle: "Liv · enquiry assistant",
+    inputPlaceholder: "Ask about your event or how to enquire…",
+    assistantSubtitle: "Enquiry assistant",
   },
 };
 
@@ -146,7 +150,7 @@ export function staffLivInboxSuggestions(
     default:
       return [
         "Draft the next reply — warm, concise, on-brand.",
-        "Is there a pending booking in this thread? Confirm if policy allows.",
+        "Is there a pending booking in this thread? Confirm it if policy allows.",
         "Look up this customer and summarize their history.",
         "What should I prioritize today?",
       ];

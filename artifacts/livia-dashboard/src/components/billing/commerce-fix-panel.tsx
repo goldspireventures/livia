@@ -160,13 +160,6 @@ export function CommerceFixPanel() {
             Local dev: deposit checkout simulates without live Stripe keys once deposits are enabled.
           </p>
         ) : null}
-
-        {billing?.planId === "studio" || billing?.planId === "solo" ? (
-          <p className="text-xs text-muted-foreground">
-            You&apos;re on <span className="font-medium text-foreground">{billing.planName}</span> —
-            plan is not the blocker. Focus on deposits and a test capture above.
-          </p>
-        ) : null}
       </CardContent>
     </Card>
   );

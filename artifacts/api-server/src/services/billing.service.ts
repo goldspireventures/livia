@@ -21,8 +21,15 @@ import {
   type ProductPlan,
 } from "@workspace/entitlements";
 import type { MeterKey } from "@workspace/metering";
-import { verticalSupportsRetail } from "@workspace/policy";
-import { getBusinessById } from "./businesses.service";
+import {
+  completeOnboardingAct,
+  mergeOnboardingState,
+  mergePercentWithBlocking,
+  onboardingChecklistSchema,
+  onboardingStateSchema,
+  verticalSupportsRetail,
+} from "@workspace/policy";
+import { getBusinessById, updateBusiness } from "./businesses.service";
 
 export type BillingState = {
   businessId: string;
@@ -313,6 +320,78 @@ export async function setBusinessPlanForDev(
       updatedAt: new Date(),
     })
     .where(eq(businessesTable.id, businessId));
+}
+
+/** Partner / complimentary promo — no Stripe subscription; full plan entitlements for window. */
+export async function grantComplimentaryPlan(args: {
+  businessId: string;
+  planId: string;
+  endsAt: Date;
+  promoCode: string;
+}): Promise<void> {
+  if (
+    !CHECKOUT_PLAN_IDS.includes(args.planId as (typeof CHECKOUT_PLAN_IDS)[number]) &&
+    !SELF_SERVE_PLAN_IDS.includes(args.planId as (typeof SELF_SERVE_PLAN_IDS)[number])
+  ) {
+    throw new Error("UNKNOWN_PLAN");
+  }
+  const tier =
+    args.planId === "studio"
+      ? "studio"
+      : args.planId === "chain"
+        ? "chain"
+        : args.planId === "chair-host"
+          ? "chair-host"
+          : "solo";
+  await db
+    .update(businessesTable)
+    .set({
+      planId: args.planId,
+      tier,
+      stripeSubscriptionStatus: "complimentary",
+      designPartnerEndsAt: args.endsAt,
+      entitlementDenylist: [],
+      billingPeriodStart: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(eq(businessesTable.id, args.businessId));
+
+  const biz = await getBusinessById(args.businessId);
+  const parsed = onboardingStateSchema.safeParse(biz?.onboardingState);
+  const base = parsed.success ? parsed.data : mergeOnboardingState(null, {});
+  const next = completeOnboardingAct(
+    mergeOnboardingState(base, {
+      checklist: onboardingChecklistSchema.parse({
+        ...base.checklist,
+        billingStarted: true,
+        promoCodeRedeemed: args.promoCode,
+      }),
+    }),
+    "a9_billing",
+  );
+  await updateBusiness(args.businessId, {
+    onboardingState: mergePercentWithBlocking(next) as unknown as Record<string, unknown>,
+  });
+}
+
+export async function markBillingOnboardingComplete(businessId: string): Promise<void> {
+  const biz = await getBusinessById(businessId);
+  if (!biz) return;
+  const parsed = onboardingStateSchema.safeParse(biz.onboardingState);
+  const base = parsed.success ? parsed.data : mergeOnboardingState(null, {});
+  if (base.completedActs.includes("a9_billing")) return;
+  const next = completeOnboardingAct(
+    mergeOnboardingState(base, {
+      checklist: onboardingChecklistSchema.parse({
+        ...base.checklist,
+        billingStarted: true,
+      }),
+    }),
+    "a9_billing",
+  );
+  await updateBusiness(businessId, {
+    onboardingState: mergePercentWithBlocking(next) as unknown as Record<string, unknown>,
+  });
 }
 
 /** Estimate booking value in EUR cents for outcome metering. */

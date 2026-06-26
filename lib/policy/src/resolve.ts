@@ -91,8 +91,8 @@ export function resolveOnboardingDefaults(args: {
 
   const aiGreeting =
     verticalKey === "event-vendors"
-      ? `Hi! I'm Liv, the assistant for ${args.name}. Tell me about your event — I'll guide you to our enquire form or answer decor questions.`
-      : `Hi! I'm Liv, the AI assistant for ${args.name}. I can help you book an appointment — what are you looking for today?`;
+      ? `Tell me about your event — I'll guide you to our enquire form or answer questions.`
+      : `What are you looking to book today?`;
 
   return {
     country: jurisdiction.countryIso,

@@ -4,8 +4,8 @@ export const MARKETING_ROUTE_META: Record<
   { title: string; description?: string }
 > = {
   "/": {
-    title: "Livia — one platform built for how you work",
-    description: "Software for appointment businesses. Liv handles messages and bookings after hours.",
+    title: "Livia",
+    description: "Software for appointment businesses. Ireland, UK & EU.",
   },
   "/de": {
     title: "Livia — ein OS für jedes People-Business",
