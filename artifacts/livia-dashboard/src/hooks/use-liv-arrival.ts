@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   getGetLivSetupGuidedFlowQueryKey,
   useGetDashboardSummary,
   useGetLivSetupGuidedFlow,
+  type LivSetupGuidedFlow,
 } from "@workspace/api-client-react";
 import {
   buildSetupGuidedFlow,
@@ -58,8 +59,12 @@ export function useLivArrival() {
   const { data: dashboard } = useGetDashboardSummary(bid, {
     query: { enabled: !!bid && isOwnerOrAdmin } as never,
   });
-  const { data: guidedFlow, refetch: refetchFlow, isLoading } = useGetLivSetupGuidedFlow(bid, {
-    query: { enabled: !!bid && isOwnerOrAdmin } as never,
+  const { data: guidedFlow, refetch: refetchFlow, isPending, isFetching } = useGetLivSetupGuidedFlow(bid, {
+    query: {
+      enabled: !!bid && isOwnerOrAdmin,
+      staleTime: 60_000,
+      placeholderData: (prev: LivSetupGuidedFlow | undefined) => prev,
+    } as never,
   });
 
   const gateArgs = useMemo(
@@ -103,9 +108,13 @@ export function useLivArrival() {
     void qc.invalidateQueries({ queryKey: getGetLivSetupGuidedFlowQueryKey(bid) });
   }, [refetchFlow, qc, bid]);
 
-  // Phase B — refetch beat when owner returns from a "Show me" screen.
+  const locationRef = useRef(location);
+
+  // Refetch beat when owner returns from a "Show me" screen — not on first mount.
   useEffect(() => {
     if (!isConductorActive || !bid) return;
+    if (locationRef.current === location) return;
+    locationRef.current = location;
     void advanceBeat();
   }, [location, isConductorActive, bid, advanceBeat]);
 
@@ -125,7 +134,8 @@ export function useLivArrival() {
     currentPhase,
     stepIndex,
     totalSteps,
-    isLoading: isLoading && !guidedFlow,
+    isRefreshing: isFetching && !!guidedFlow,
+    isLoading: isPending && !guidedFlow,
     sacredMetricMet: dashboard?.activation?.sacredMetricMet === true,
   };
 }
