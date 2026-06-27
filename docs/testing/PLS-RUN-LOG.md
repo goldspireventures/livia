@@ -129,4 +129,24 @@ Append one section per PLS wave. Screenshots live in `artifacts/pls/<date>/` (gi
 
 ---
 
+### PLS run — 2026-06-27 (Wave 4)
+
+**Environment:** local demo world + internal ops  
+**Gates:** INTERNAL_OPS_SECRET set · demo provisioned · content audit strict
+
+| Pack | Variant | Steps | Pass | Fail | Notes |
+|------|---------|-------|------|------|-------|
+| G internal | happy | 14 | 14 | 0 | Support inbox/radar/board/investigate, monitoring, tenants, liv_error ticket |
+| G API | matrix | 5 | 5 | 0 | Monitoring flows/cascade, platform health, OTP 503 honest path |
+| G migration | happy | 2–3 | 2–3 | 0 | Onboarding switching + settings integrations |
+| G owner | happy | 1 | 1 | 0 | Help/support dialog (“Liv got it wrong”) |
+| G workflow | unhappy | 1–2 | 1–2 | 0 | Comms setup limits + parallel-run panel |
+
+**Captures:** `artifacts/pls/wave4-2026-06-27/manifest.json` — **17 steps, 0 contentHits**.
+
+**Next wave (W5):**
+- Remediation re-run of any P2 findings · mobile Maestro · prod sacred-path signup staging pass.
+
+---
+
 *(Wave 0 prep 2026-06-27.)*

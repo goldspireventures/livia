@@ -25,3 +25,9 @@ export function scanText(text, patterns = FORBIDDEN_CUSTOMER_PATTERNS) {
   }
   return hits;
 }
+
+/** Internal ops — leak checks only (operator jargon allowed). */
+export const INTERNAL_SURFACE_PATTERNS = [
+  { id: "object-object", re: /\[object Object\]/, hint: "Serialized error leaked to UI" },
+  { id: "http-raw", re: /\bHTTP \d{3}\b/, hint: "Raw HTTP status in UI" },
+];

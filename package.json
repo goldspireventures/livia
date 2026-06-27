@@ -107,6 +107,7 @@
     "pls:wave1": "pnpm --filter @workspace/e2e run test:pls-wave1",
     "pls:wave2": "pnpm --filter @workspace/e2e run test:pls-wave2",
     "pls:wave3": "pnpm --filter @workspace/e2e run test:pls-wave3",
+    "pls:wave4": "pnpm --filter @workspace/e2e run test:pls-wave4",
     "test:e2e:marketing": "pnpm --filter @workspace/e2e run test:marketing",
     "e2e:visual-capture": "pnpm --filter @workspace/e2e run test:visual-capture",
     "e2e:marketing-visual": "pnpm --filter @workspace/e2e run test:marketing-visual",

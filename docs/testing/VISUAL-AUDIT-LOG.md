@@ -94,6 +94,18 @@ Captures live under `e2e/visual-captures/` (gitignored). Re-run: `pnpm e2e:visua
 
 ---
 
+## 2026-06-27 — PLS Wave 4 (internal ops + migration + workflows)
+
+| Surface | Route | Finding | Fix | Status |
+|---------|-------|---------|-----|--------|
+| Wave 4 OTP probe | API test | Wrong guest-hub OTP path in spec | Use `/api/public/guest-hub/otp/request` | **Done** |
+
+**Captures:** 17 steps — internal support radar/board/trace, liv_error ticket thread, tenant detail, migration onboarding + integrations, owner help dialog, comms limits.
+
+**Next:** W5 remediation re-run + mobile Maestro.
+
+---
+
 ## 2026-06-15 — Gateway P2 (G1–G3 + sign-in)
 
 | Surface | Change |

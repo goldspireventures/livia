@@ -39,9 +39,16 @@ export class PlsCaptureRun {
     mkdirSync(outDir, { recursive: true });
   }
 
-  async capture(page: Page, meta: Omit<PlsStepRecord, "screenshot" | "contentHits" | "outcome" | "wave">) {
+  async capture(
+    page: Page,
+    meta: Omit<PlsStepRecord, "screenshot" | "contentHits" | "outcome" | "wave">,
+    opts?: { patterns?: Parameters<typeof scanText>[1] | null },
+  ) {
     await page.waitForTimeout(600);
-    const hits = scanText(await page.locator("body").innerText()).map((h) => h.id);
+    const hits =
+      opts?.patterns === null
+        ? []
+        : scanText(await page.locator("body").innerText(), opts?.patterns).map((h) => h.id);
     const file = `${meta.scenarioId}.png`;
     const outPath = path.join(this.outDir, file);
     await page.screenshot({ path: outPath, fullPage: true });
