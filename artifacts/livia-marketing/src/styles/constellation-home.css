@@ -353,7 +353,7 @@
   z-index: 1;
   width: 100%;
   height: 100%;
-  color: var(--c-champagne);
+  color: #f6f3ec;
   filter: drop-shadow(0 0 12px rgba(217, 195, 154, 0.45));
 }
 

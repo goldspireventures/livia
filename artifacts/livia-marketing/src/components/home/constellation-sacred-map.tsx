@@ -13,7 +13,13 @@ function getMobileHero() {
 
 function ConstellationCenterMark() {
   const mobile = useSyncExternalStore(subscribeMobileHero, getMobileHero, () => false);
-  return <LiviaMark className="constellation-map__mark" brightItalicV={mobile} />;
+  return (
+    <LiviaMark
+      className="constellation-map__mark"
+      fill="#f6f3ec"
+      brightItalicV={mobile}
+    />
+  );
 }
 
 const VIEW_PAD = 56;
