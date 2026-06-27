@@ -134,7 +134,7 @@
 .cst-showcase__frame--phone {
   border-radius: 28px;
   padding: 4px;
-  max-width: 185px;
+  max-width: 202px;
   margin-inline: auto;
   container-type: inline-size;
 }
@@ -186,14 +186,14 @@
 
 .cst-showcase__frame--phone img {
   border-radius: 24px;
-  max-height: min(41vh, 370px);
+  max-height: min(44vh, 403px);
 }
 
 .cst-showcase__phones {
   display: grid;
   gap: 0.75rem;
   grid-template-columns: 1fr;
-  max-width: 396px;
+  max-width: 432px;
   margin-inline: auto;
 }
 
