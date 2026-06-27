@@ -215,8 +215,17 @@ export function OnboardingWizard({
   };
 
   useEffect(() => {
-    if (previewMode && initialState) setState(initialState);
-  }, [previewMode, initialState]);
+    if (!initialState) return;
+    if (previewMode) {
+      setState(initialState);
+      return;
+    }
+    if (!businessId) return;
+    setState((prev) => ({
+      ...initialState,
+      checklist: { ...prev?.checklist, ...initialState.checklist },
+    }));
+  }, [previewMode, initialState, businessId]);
 
   useEffect(() => {
     if (businessId) setArrivalOpen(false);
@@ -428,7 +437,7 @@ export function OnboardingWizard({
 
   const stepBody = (
     <>
-      {currentAct === "a1_create_business" && (!businessId || isImportTrack) ? (
+      {currentAct === "a1_create_business" && !businessId ? (
         <>
           {activeChecklist?.migrationIntent ? (
             <div className="space-y-1">

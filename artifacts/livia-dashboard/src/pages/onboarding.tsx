@@ -127,15 +127,14 @@ export default function OnboardingPage() {
   }, [toast, queryClient]);
 
   useEffect(() => {
-    if (intent.fresh) {
-      try {
-        window.localStorage.removeItem("livia.currentBusinessId");
-        window.localStorage.removeItem("livia_current_business_id");
-      } catch {
-        /* ignore */
-      }
+    if (!intent.fresh || !resumeHydrated || businessId) return;
+    try {
+      window.localStorage.removeItem("livia.currentBusinessId");
+      window.localStorage.removeItem("livia_current_business_id");
+    } catch {
+      /* ignore */
     }
-  }, [intent.fresh]);
+  }, [intent.fresh, resumeHydrated, businessId]);
 
   useEffect(() => {
     if (intent.secondShop) {
@@ -184,6 +183,7 @@ export default function OnboardingPage() {
         const trackIntent = (raw as OnboardingStatePayload).checklist?.migrationIntent;
         if (trackIntent === "switching" || trackIntent === "fresh") {
           setMigrationIntent(trackIntent);
+          writeOnboardingMigrationIntent(trackIntent);
         }
       } else {
         setOnboardingState({
@@ -191,6 +191,24 @@ export default function OnboardingPage() {
           completedActs: ["a1_create_business"],
           percentComplete: 8,
         });
+      }
+      if (typeof window !== "undefined") {
+        try {
+          const url = new URL(window.location.href);
+          const hadFreshHandoff =
+            url.searchParams.get("fresh") === "1" ||
+            url.searchParams.has("track") ||
+            url.searchParams.has("path");
+          if (hadFreshHandoff) {
+            url.searchParams.delete("fresh");
+            url.searchParams.delete("track");
+            url.searchParams.delete("path");
+            const qs = url.searchParams.toString();
+            window.history.replaceState({}, "", qs ? `${url.pathname}?${qs}` : url.pathname);
+          }
+        } catch {
+          /* ignore */
+        }
       }
     }
     setResumeHydrated(true);
@@ -224,7 +242,7 @@ export default function OnboardingPage() {
   };
 
   const showResumeSpinner =
-    !intent.fresh && !intent.secondShop && (!resumeHydrated || businessesLoading || !user?.id);
+    !intent.secondShop && (!resumeHydrated || businessesLoading || !user?.id);
 
   if (showResumeSpinner) {
     return (

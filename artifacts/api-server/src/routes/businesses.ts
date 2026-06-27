@@ -9,6 +9,7 @@ import {
   createBusiness,
   updateBusiness,
   getBusinessBySlug,
+  getBusinessesForUser,
   parseOnboardingStatePatch,
   isOnboardingPatchBlocked,
 } from "../services/businesses.service";
@@ -35,6 +36,9 @@ import {
   jurisdictionCodeSchema,
   tenantAttestationSchema,
   hasCurrentPlatformLegal,
+  isOnboardingAppUnlocked,
+  rankOwnedSessionBusinesses,
+  type OnboardingState,
 } from "@workspace/policy";
 import { evaluateBetaSignup } from "../lib/beta-signup-gate";
 import { isLegalGateSkipped } from "../lib/platform-legal-gate";
@@ -117,6 +121,23 @@ router.post("/businesses", requireAuth, async (req, res): Promise<void> => {
       return;
     }
     sendError(res, req, 409, "Slug already taken", { code: "SLUG_TAKEN" });
+    return;
+  }
+
+  const ownedBusinesses = await getBusinessesForUser(userId);
+  const ownedIncomplete = ownedBusinesses.filter(
+    (b) =>
+      b.ownerId === userId &&
+      !isOnboardingAppUnlocked(
+        (b.onboardingState as OnboardingState | null) ?? null,
+        b.vertical,
+      ),
+  );
+  if (ownedIncomplete.length > 0) {
+    const resumeShop = rankOwnedSessionBusinesses(
+      ownedIncomplete as Parameters<typeof rankOwnedSessionBusinesses>[0],
+    )[0]!;
+    res.status(200).json(resumeShop);
     return;
   }
 

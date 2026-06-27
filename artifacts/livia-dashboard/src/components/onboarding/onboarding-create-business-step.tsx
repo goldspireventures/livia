@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { apiFetch } from "@/lib/api-fetch";
+import { apiFetch, ApiFetchError } from "@/lib/api-fetch";
 import { parseUserFacingError } from "@/lib/user-facing-errors";
 import { publicBookingSlugPrefix, publicBookingSlugSuffix } from "@/lib/surface-urls";
 import { Button } from "@/components/ui/button";
@@ -332,7 +332,29 @@ export function OnboardingCreateBusinessStep({
         clearOnboardingFormDraft(CREATE_BUSINESS_DRAFT_KEY);
         onCreated(biz.id, biz.slug, { migrationIntent });
       })
-      .catch((err: unknown) => {
+      .catch(async (err: unknown) => {
+        if (err instanceof ApiFetchError && err.status === 409) {
+          try {
+            const owned = await apiFetch<{ id: string; slug: string; onboardingState?: { completedActs?: string[] } }[]>(
+              "/me/businesses",
+            );
+            const match =
+              owned.find((b) => b.slug === values.slug) ??
+              owned[0];
+            if (match) {
+              const resumed = match.onboardingState?.completedActs?.includes("a1_create_business");
+              toast({
+                title: resumed ? "Continuing your shop" : "Shop ready",
+                description: "Pick up where you left off.",
+              });
+              clearOnboardingFormDraft(CREATE_BUSINESS_DRAFT_KEY);
+              onCreated(match.id, match.slug, { migrationIntent });
+              return;
+            }
+          } catch {
+            /* fall through to default error */
+          }
+        }
         toast({
           title: "Could not create business",
           description: parseUserFacingError(err, "Could not create your business"),
