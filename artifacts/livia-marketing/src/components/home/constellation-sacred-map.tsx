@@ -1,5 +1,20 @@
-import { useId } from "react";
+import { useId, useSyncExternalStore } from "react";
 import { LiviaMark } from "@/components/brand/LiviaMark";
+
+function subscribeMobileHero(onChange: () => void) {
+  const mq = window.matchMedia("(max-width: 1023px)");
+  mq.addEventListener("change", onChange);
+  return () => mq.removeEventListener("change", onChange);
+}
+
+function getMobileHero() {
+  return window.matchMedia("(max-width: 1023px)").matches;
+}
+
+function ConstellationCenterMark() {
+  const mobile = useSyncExternalStore(subscribeMobileHero, getMobileHero, () => false);
+  return <LiviaMark className="constellation-map__mark" brightItalicV={mobile} />;
+}
 
 const VIEW_PAD = 56;
 const DRAW = 560;
@@ -238,7 +253,7 @@ export function ConstellationSacredMap({ verticals }: ConstellationSacredMapProp
       <div className="constellation-map__core">
         <div className="constellation-map__core-ring" aria-hidden />
         <div className="constellation-map__mark-wrap">
-          <LiviaMark className="constellation-map__mark" />
+          <ConstellationCenterMark />
         </div>
       </div>
     </div>

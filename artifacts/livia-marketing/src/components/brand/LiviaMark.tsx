@@ -9,6 +9,8 @@ interface LiviaMarkProps {
   gradient?: boolean;
   /** Override the colour of the L glyph and ring. Defaults to currentColor. */
   fill?: string;
+  /** Constellation/mobile — skip the dark mid-stop so italic v stays champagne on small screens. */
+  brightItalicV?: boolean;
 }
 
 const champagneStops = (
@@ -21,7 +23,15 @@ const champagneStops = (
   </>
 );
 
-export function LiviaMark({ className = "h-8 w-8", fill }: LiviaMarkProps) {
+const brightChampagneStops = (
+  <>
+    <stop offset="0%" stopColor="#f6f3ec" />
+    <stop offset="50%" stopColor="#d9c39a" />
+    <stop offset="100%" stopColor="#f6f3ec" />
+  </>
+);
+
+export function LiviaMark({ className = "h-8 w-8", fill, brightItalicV = false }: LiviaMarkProps) {
   const id = useId().replace(/:/g, "");
   const champagne = `livia-${id}-champagne`;
   const glow = `livia-${id}-glow`;
@@ -42,7 +52,7 @@ export function LiviaMark({ className = "h-8 w-8", fill }: LiviaMarkProps) {
           y2="40"
           gradientUnits="userSpaceOnUse"
         >
-          {champagneStops}
+          {brightItalicV ? brightChampagneStops : champagneStops}
         </linearGradient>
         <radialGradient id={glow} cx="0.3" cy="0.3" r="0.7">
           <stop offset="0%" stopColor="#d9c39a" stopOpacity="0.18" />
