@@ -62,6 +62,7 @@ import {
   getVerticalStarterPackOffer,
   getVerticalPlaybook,
   verticalStarterPackIncludesRetail,
+  onboardingTierFieldLabel,
   LIVIA_FORM_EXAMPLES,
 } from "@workspace/policy";
 
@@ -132,7 +133,7 @@ export default function OnboardingScreen() {
   }, [bizLoading, isSecondShop, isDemoAccount, router]);
 
   const listRef = useRef<FlatList<SlideMeta>>(null);
-  // New founders land on the setup form — business type, team size, country, etc.
+  // New founders land on the setup form — trade, org shape, country, etc.
   const [page, setPage] = useState(FORM_PAGE);
   const scrollX = useSharedValue(FORM_PAGE * SCREEN_W);
   const isFormPage = page >= FORM_PAGE;
@@ -628,7 +629,7 @@ function FormSlide({
           <Text style={[styles.formSub, { color: colors.mutedForeground }]}>
             {secondShop
               ? "A new shop on your account — switch between locations from More (Glance appears when you have two+)."
-              : "Name your shop, pick your business type and team size — then we’ll walk through the essentials."}
+              : "Name your shop, pick your trade and how you're set up — then we'll walk through the essentials."}
           </Text>
         </View>
 
@@ -742,7 +743,7 @@ function FormSlide({
             </ScrollView>
           </View>
           <View style={styles.field}>
-            <Text style={[styles.label, { color: colors.mutedForeground }]}>Team size</Text>
+            <Text style={[styles.label, { color: colors.mutedForeground }]}>{onboardingTierFieldLabel()}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
               {tierOptions.map((t) => (
                 <Pressable

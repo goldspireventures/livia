@@ -33,6 +33,8 @@ import {
   getSubverticalProfile,
   onboardingHintForSubvertical,
   onboardingSubverticalFieldLabel,
+  onboardingTierFieldLabel,
+  onboardingTierFieldDescription,
   resolveOnboardingTierFromSubvertical,
   resolveOnboardingTierOptions,
   SHARED_PREMISES_ONBOARDING_NOTE,
@@ -546,7 +548,7 @@ export function OnboardingCreateBusinessStep({
           name="tier"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Team size</FormLabel>
+              <FormLabel>{onboardingTierFieldLabel()}</FormLabel>
               <Select
                 onValueChange={(v) => {
                   field.onChange(v);
@@ -586,6 +588,7 @@ export function OnboardingCreateBusinessStep({
                   ))}
                 </SelectContent>
               </Select>
+              <FormDescription>{onboardingTierFieldDescription()}</FormDescription>
               <FormMessage />
             </FormItem>
           )}

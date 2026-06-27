@@ -6,7 +6,7 @@ export type OnboardingTierOption = {
   description: string;
 };
 
-/** Alphabetical by label — used in onboarding team-size pickers (web + mobile). */
+/** Alphabetical by label — onboarding org-shape / plan picker (web + mobile). */
 export const ONBOARDING_TIER_OPTIONS: OnboardingTierOption[] = [
   {
     value: "chair-host",
@@ -44,6 +44,16 @@ export const ONBOARDING_TIER_OPTIONS: OnboardingTierOption[] = [
     description: "A team with managers or front desk on the Studio plan.",
   },
 ];
+
+/** Field label for tier picker — org shape and plan, not headcount. */
+export function onboardingTierFieldLabel(): string {
+  return "How you're set up";
+}
+
+/** Helper under the tier picker. */
+export function onboardingTierFieldDescription(): string {
+  return "Solo, team, multi-location, chair rental, franchise — sets your plan and features.";
+}
 
 function titleCaseTierSlug(slug: string): string {
   return slug

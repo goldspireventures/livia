@@ -122,13 +122,13 @@ export function resolveOnboardingTierFromSubvertical(
 
 export function onboardingHintForSubvertical(profile: SubverticalProfile): string | null {
   if (profile.defaultOrgShape === "chair_rental") {
-    return "Chair-rental host — renter dashboards, PII firewall, and /host. Team size switches to Host.";
+    return "Chair-rental host — renter dashboards, PII firewall, and /host. This switches to Host.";
   }
   if (isMultiSegmentProfile(profile)) {
     return "Multi-service under one roof — starter menu spans main categories; trim or add services anytime.";
   }
   if (profile.defaultOrgShape === "multi_site") {
-    return "Multi-site group — use Chain team size and add locations under one brand entity.";
+    return "Multi-site group — pick Multi-Location and add sites under one brand entity.";
   }
   return null;
 }
