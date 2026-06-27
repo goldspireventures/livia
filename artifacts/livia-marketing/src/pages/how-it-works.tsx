@@ -16,7 +16,7 @@ const CHAPTERS = [
   },
   {
     title: "Inbox",
-    body: "SMS, email, and your public booking chat land in one inbox today. Liv drafts replies; you take over any conversation in one tap. More channels (e.g. Instagram, WhatsApp) roll out with pilot shops.",
+    body: "SMS, email, web chat, and social DMs (Instagram, WhatsApp, Messenger) land in one inbox. Liv drafts replies; you take over any conversation in one tap.",
   },
   {
     title: "Today",

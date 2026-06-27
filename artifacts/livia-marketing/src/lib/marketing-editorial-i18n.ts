@@ -270,7 +270,7 @@ const EN: EditorialCopy = {
       { title: "Right person, right service", body: "Your rules for who does what, and how long it takes." },
       { title: "Client history", body: "Notes, formulas, plans — so you don't start from zero each visit." },
       { title: "Your policies", body: "Deposits, cancel windows, consent — set once, applied everywhere." },
-      { title: "One inbox", body: "SMS, email, and web chat in one thread — tied to your calendar." },
+      { title: "One inbox", body: "SMS, email, web chat, and social DMs in one thread — tied to your calendar." },
     ],
     livBand: {
       title: "Liv is part of Livia — not a chat widget on the side",
@@ -297,7 +297,7 @@ const EN: EditorialCopy = {
     { label: "Product", value: "Inbox + calendar + staff" },
   ],
   homeFeatures: [
-    { title: "Inbox", body: "SMS, email, web chat. One conversation history." },
+    { title: "Inbox", body: "SMS, email, web chat, and social DMs. One conversation history." },
     { title: "Calendar", body: "Real availability. Your rules." },
     { title: "Briefing", body: "The day, before you ask." },
   ],
@@ -332,7 +332,7 @@ const EN: EditorialCopy = {
     chapter1: "Chapter one",
     inboxTitle: "The inbox you never quite cleared.",
     inboxBody:
-      "Liv replies on SMS, email, and your public booking chat today — one inbox, real availability, and customers are told when they're talking to AI. More inbound channels (e.g. WhatsApp, Instagram) roll out with pilot shops.",
+      "Liv replies on SMS, email, web chat, Instagram, WhatsApp, and Messenger — one inbox, real availability, and customers are told when they're talking to AI.",
     smsTime: "SMS · 22:41",
     smsCustomer: "Hi — any chance for a colour Thursday? Used to come to Aoife.",
     smsLiv: "— Aoife has 2:30 Thursday. Want me to hold it?",
@@ -530,7 +530,7 @@ const DE: EditorialCopy = {
       { title: "Richtige Person, richtiger Service", body: "Ihre Regeln, wer was macht und wie lange es dauert." },
       { title: "Kundenhistorie", body: "Notizen, Formeln, Pläne — nicht bei jedem Besuch von vorn." },
       { title: "Ihre Regeln", body: "Anzahlungen, Storno, Einwilligung — einmal festlegen, überall anwenden." },
-      { title: "Eine Inbox", body: "SMS, E-Mail und Web-Chat in einem Thread — verbunden mit Ihrem Kalender." },
+      { title: "Eine Inbox", body: "SMS, E-Mail, Web-Chat und Social-DMs in einem Thread — verbunden mit Ihrem Kalender." },
     ],
     livBand: {
       title: "Liv ist Teil von Livia — kein Chat-Widget am Rand",
@@ -557,7 +557,7 @@ const DE: EditorialCopy = {
     { label: "Produkt", value: "Inbox + Kalender + Team" },
   ],
   homeFeatures: [
-    { title: "Inbox", body: "SMS, E-Mail, Web-Chat. Ein Thread." },
+    { title: "Inbox", body: "SMS, E-Mail, Web-Chat und Social-DMs. Ein Thread." },
     { title: "Kalender", body: "Echte Verfügbarkeit. Ihre Regeln." },
     { title: "Briefing", body: "Der Tag, bevor Sie fragen." },
   ],
@@ -593,7 +593,7 @@ const DE: EditorialCopy = {
     chapter1: "Kapitel eins",
     inboxTitle: "Die Inbox, die nie ganz leer wurde.",
     inboxBody:
-      "Liv antwortet heute per SMS, E-Mail und Ihrem öffentlichen Buchungs-Chat — eine Inbox, echte Verfügbarkeit, EU-KI-Kennzeichnung auf jeder Kundenoberfläche. Weitere Kanäle (z. B. WhatsApp, Instagram) mit Pilotstudios.",
+      "Liv antwortet per SMS, E-Mail, Web-Chat, Instagram, WhatsApp und Messenger — eine Inbox, echte Verfügbarkeit, EU-KI-Kennzeichnung auf jeder Kundenoberfläche.",
     smsTime: "SMS · 22:41",
     smsCustomer: "Hallo — geht am Donnerstag noch eine Farbe? War schon bei Aoife.",
     smsLiv: "— Aoife hat Donnerstag 14:30. Soll ich reservieren?",
