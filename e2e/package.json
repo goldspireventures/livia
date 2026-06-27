@@ -22,6 +22,7 @@
     "test:pls-wave8": "playwright test --project=pls-wave8",
     "test:pls-wave9": "playwright test --project=pls-wave9",
     "test:pls-wave10": "playwright test --project=pls-wave10",
+    "test:mobile-api-parity": "playwright test --project=mobile-api-parity",
     "test:full-visual-audit": "playwright test --project=full-visual-audit",
     "test:guest-retail-cart": "playwright test --project=guest-retail-cart --workers=1",
     "test:demo-depth": "playwright test --project=demo-live-day --project=demo-proof-token --project=demo-intake-token --project=demo-waitlist-token --project=guest-pay --project=guest-balance --project=public-booking-quality --workers=1",

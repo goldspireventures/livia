@@ -91,9 +91,18 @@ All routes in `MARKETING_ROUTES` captured: `/`, pricing, verticals index + all s
 
 ---
 
-## 7. Mobile — **Open (blocks mobile handoff)**
+## 7. Mobile — **Code + API parity (no emulator)**
 
-Entire Expo surface + Maestro flows — run when emulator available: `pnpm maestro:visual-capture`
+| Surface | Status | Command |
+|---------|--------|---------|
+| Screen file map vs web PLS (43 surfaces) | **Done** | `pnpm pls:mobile-parity` |
+| Maestro testID hooks in source | **Done** | same (3 legacy maestro ids warn-only) |
+| Forbidden copy scan (app/components) | **Done** | same |
+| Guest + operator API spine | **Done** | `mobile-entry-smoke` inside parity |
+| Authenticated mobile APIs | **Done** | `pnpm pls:mobile-api` |
+| Maestro screenshots | **Manual — you** | [`MOBILE-MANUAL-VISUAL-CHECKLIST.md`](MOBILE-MANUAL-VISUAL-CHECKLIST.md) |
+
+**Verdict:** Emulator not required for logic/API/code parity. Your device visual pass closes the last gap.
 
 ---
 
@@ -129,9 +138,10 @@ Entire Expo surface + Maestro flows — run when emulator available: `pnpm maest
 |------|--------|
 | PLS W1–W10 captures | **311 steps, 0 content failures** |
 | Prod persona UAT | **26/26** |
-| Mobile Maestro | **Not started** |
+| Mobile code + API parity | **`pnpm pls:mobile-parity` + `pnpm pls:mobile-api`** |
+| Mobile visual (device) | **Manual** — checklist |
 | Prod sacred path | **Not started** |
 
-**Verdict:** Web is **fully exercised in local demo world**. Mobile handoff can start after Maestro + staging sacred-path sign-off.
+**Verdict:** Web fully exercised locally. Mobile **logic parity automated**; you own the visual pass on device.
 
 Last updated: 2026-06-27 (Waves 6–10 gap closure).

@@ -110,10 +110,15 @@ Web uses sidebar ritual nav; mobile uses bottom tabs + **More** for staff/servic
 ## How to re-check
 
 ```powershell
-pnpm e2e:full-visual-audit
-# or separately:
-pnpm e2e:full-visual-audit:web
-pnpm e2e:full-visual-audit:mobile
+# Code + API parity (no emulator)
+pnpm pls:mobile-parity
+pnpm pls:mobile-api
+
+# Your visual pass (physical device / TestFlight)
+# → docs/testing/MOBILE-MANUAL-VISUAL-CHECKLIST.md
+
+# Full screenshots when emulator available
+pnpm maestro:visual-capture
 ```
 
 Demo data: `POST /api/demo/provision` or `pnpm e2e:prep`.

@@ -222,6 +222,16 @@ export default defineConfig({
       },
     },
     {
+      name: "mobile-api-parity",
+      testMatch: /mobile-api-parity\.spec\.ts/,
+      timeout: 180_000,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+      },
+    },
+    {
       name: "pls-wave10",
       testMatch: /pls-wave10-capture\.spec\.ts/,
       timeout: 1_320_000,

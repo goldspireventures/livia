@@ -98,6 +98,8 @@
     "headless:lifecycle:r1": "node scripts/headless-lifecycle-r1.mjs",
     "headless:lifecycle:r3": "node scripts/headless-lifecycle-r3.mjs",
     "mobile:parity-audit": "node scripts/mobile-parity-audit.mjs",
+    "pls:mobile-parity": "node scripts/mobile-pls-parity.mjs",
+    "pls:mobile-api": "pnpm --filter @workspace/e2e run test:mobile-api-parity",
     "evolution:v3-check": "node scripts/evolution-v3-tier-check.mjs",
     "r3:exit-verify": "node scripts/r3-exit-verify.mjs",
     "test:e2e:verticals:full": "node scripts/e2e-all-verticals.mjs --visual",

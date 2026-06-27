@@ -48,6 +48,9 @@ run("Founder UAT P0", pnpm, ["--filter", "@workspace/e2e", "run", "test:founder-
 run("Sacred path signup", pnpm, ["sacred-path:signup"], { optional: true });
 run("Contextual web audit", pnpm, ["--filter", "@workspace/e2e", "run", "test:contextual-web"], { optional: true });
 
+ok = run("Mobile PLS parity (code + API, no emulator)", "node", ["scripts/mobile-pls-parity.mjs"]) && ok;
+run("Mobile API parity (Playwright)", pnpm, ["pls:mobile-api"], { optional: true });
+
 const reportOk = run("Final PLS report (waves 1–10)", "node", ["scripts/pls-final-report.mjs"]);
 
 process.exit(ok && reportOk ? 0 : 1);
