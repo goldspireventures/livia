@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useUser } from "@clerk/clerk-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch, ApiFetchError } from "@/lib/api-fetch";
 import { parseUserFacingError } from "@/lib/user-facing-errors";
+import { useBusiness } from "@/lib/business-context";
 import { publicBookingSlugPrefix, publicBookingSlugSuffix } from "@/lib/surface-urls";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,6 +42,7 @@ import {
   SHARED_PREMISES_ONBOARDING_NOTE,
   shouldSeedStarterPackOnCreate,
   MIGRATION_INTENT_OPTIONS,
+  pickOnboardingResumeBusiness,
   type MigrationIntent,
   LIVIA_FORM_EXAMPLES,
   type BusinessVertical,
@@ -134,6 +137,9 @@ export function OnboardingCreateBusinessStep({
   hideMigrationIntentPicker = false,
 }: Props) {
   const { toast } = useToast();
+  const { user } = useUser();
+  const { businesses, isLoading: businessesLoading } = useBusiness();
+  const resumeHandled = useRef(false);
   const [saving, setSaving] = useState(false);
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [businessAttested, setBusinessAttested] = useState(false);
@@ -168,6 +174,24 @@ export function OnboardingCreateBusinessStep({
       setStarterPack(true);
     }
   }, [initialMigrationIntent]);
+
+  useEffect(() => {
+    if (resumeHandled.current || businessesLoading || !user?.id) return;
+    const email = user.primaryEmailAddress?.emailAddress ?? null;
+    const latest = pickOnboardingResumeBusiness(
+      businesses as Parameters<typeof pickOnboardingResumeBusiness>[0][number][],
+      user.id,
+      email,
+    );
+    if (!latest) return;
+    resumeHandled.current = true;
+    clearOnboardingFormDraft(CREATE_BUSINESS_DRAFT_KEY);
+    onCreated(latest.id, latest.slug, {
+      migrationIntent:
+        (latest.onboardingState as { checklist?: { migrationIntent?: MigrationIntent } } | null)
+          ?.checklist?.migrationIntent ?? migrationIntent,
+    });
+  }, [businesses, businessesLoading, user?.id, user?.primaryEmailAddress?.emailAddress, onCreated, migrationIntent]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema as never),

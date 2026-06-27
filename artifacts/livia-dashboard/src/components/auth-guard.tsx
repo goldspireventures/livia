@@ -284,7 +284,7 @@ function BusinessDataLoader({
   return (
     <BusinessProvider
       businesses={list}
-      isLoading={onOnboarding ? isLoading : isLoading || isFetching}
+      isLoading={isLoading || isFetching}
       clerkUserId={clerkUserId}
       sessionEmail={email}
       initialBusinessId={initialBusiness?.id ?? null}

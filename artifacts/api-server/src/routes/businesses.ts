@@ -114,16 +114,6 @@ router.post("/businesses", requireAuth, async (req, res): Promise<void> => {
     return;
   }
 
-  const existing = await getBusinessBySlug(slug);
-  if (existing) {
-    if (existing.ownerId === userId) {
-      res.status(200).json(existing);
-      return;
-    }
-    sendError(res, req, 409, "Slug already taken", { code: "SLUG_TAKEN" });
-    return;
-  }
-
   const ownedBusinesses = await getBusinessesForUser(userId);
   const ownedIncomplete = ownedBusinesses.filter(
     (b) =>
@@ -138,6 +128,16 @@ router.post("/businesses", requireAuth, async (req, res): Promise<void> => {
       ownedIncomplete as Parameters<typeof rankOwnedSessionBusinesses>[0],
     )[0]!;
     res.status(200).json(resumeShop);
+    return;
+  }
+
+  const existing = await getBusinessBySlug(slug);
+  if (existing) {
+    if (existing.ownerId === userId) {
+      res.status(200).json(existing);
+      return;
+    }
+    sendError(res, req, 409, "Slug already taken", { code: "SLUG_TAKEN" });
     return;
   }
 
