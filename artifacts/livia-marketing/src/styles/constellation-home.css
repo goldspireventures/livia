@@ -350,10 +350,35 @@
 
 .constellation-map__mark {
   position: relative;
+  z-index: 1;
   width: 100%;
   height: 100%;
-  color: var(--c-champagne);
-  filter: drop-shadow(0 0 12px rgba(217, 195, 154, 0.45));
+  color: var(--c-champagne-bright);
+  filter: drop-shadow(0 0 10px rgba(246, 243, 236, 0.28)) drop-shadow(0 0 16px rgba(217, 195, 154, 0.42));
+}
+
+@media (max-width: 1023px) {
+  .constellation-map__core {
+    min-width: 5.15rem;
+    min-height: 5.15rem;
+  }
+
+  .constellation-map__mark-wrap {
+    width: 68%;
+    height: 68%;
+  }
+
+  .constellation-map__mark-wrap::before {
+    background: radial-gradient(
+      circle at 35% 30%,
+      rgba(34, 30, 26, 0.82) 0%,
+      rgba(14, 14, 20, 0.9) 100%
+    );
+  }
+
+  .constellation-map__mark {
+    filter: drop-shadow(0 0 6px rgba(246, 243, 236, 0.42)) drop-shadow(0 0 12px rgba(217, 195, 154, 0.55));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -238,7 +238,7 @@ export function ConstellationSacredMap({ verticals }: ConstellationSacredMapProp
       <div className="constellation-map__core">
         <div className="constellation-map__core-ring" aria-hidden />
         <div className="constellation-map__mark-wrap">
-          <LiviaMark className="constellation-map__mark" />
+          <LiviaMark className="constellation-map__mark" legibility="hero" />
         </div>
       </div>
     </div>
