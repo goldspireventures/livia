@@ -136,11 +136,34 @@ export function verticalShowcaseDir(folder: string) {
 
 export const HOME_DEMO_SLUG = process.env.E2E_DEMO_SLUG ?? "luxe-salon-spa";
 
-async function maskOwnerGreeting(page: Page) {
-  await page.evaluate(() => {
+/** Marketing Today mobile — fixed greeting + Liv briefing time-of-day aligned. */
+export const SHOWCASE_TODAY_GREETING = "Good afternoon, Aoife";
+
+async function maskOwnerTodayShowcase(page: Page) {
+  await page.evaluate((greetingText) => {
     const el = document.querySelector('[data-testid="owner-dashboard-greeting"]');
-    if (el) el.textContent = "Good afternoon, Aoife";
-  });
+    if (el) el.textContent = greetingText;
+
+    const period = greetingText.startsWith("Good evening")
+      ? "evening"
+      : greetingText.startsWith("Good afternoon")
+        ? "afternoon"
+        : "morning";
+    const briefing = document.querySelector('[data-testid="owner-dashboard-briefing"]');
+    if (!briefing) return;
+
+    const walk = (node: Node) => {
+      if (node.nodeType === Node.TEXT_NODE && node.textContent) {
+        node.textContent = node.textContent
+          .replace(/\bGood morning\b/gi, `Good ${period}`)
+          .replace(/\bthis morning\b/gi, `this ${period}`)
+          .replace(/\bYour top priority this morning\b/gi, `Your top priority this ${period}`);
+      } else {
+        node.childNodes.forEach(walk);
+      }
+    };
+    walk(briefing);
+  }, SHOWCASE_TODAY_GREETING);
 }
 
 async function patchBusinessPresentationPreset(page: Page, presetId: string) {
@@ -325,7 +348,12 @@ export async function captureMobileOwner(page: Page, spec: VerticalCaptureSpec, 
   await waitForPresentationSkin(page, spec.presentationCssPreset);
   if (spec.mobilePath === "/dashboard") {
     await waitForTodayLoaded(page);
-    await maskOwnerGreeting(page);
+    await page
+      .locator('[data-testid="owner-dashboard-briefing"] p.text-sm')
+      .first()
+      .waitFor({ state: "visible", timeout: 60_000 })
+      .catch(() => undefined);
+    await maskOwnerTodayShowcase(page);
   }
   await page.locator('[data-testid="mobile-bottom-nav"]').waitFor({ state: "visible", timeout: 30_000 });
   await page.waitForTimeout(500);
@@ -358,7 +386,12 @@ export async function captureHomeTodayMobile(page: Page, dest: string) {
   await page.goto("/dashboard", { waitUntil: "networkidle", timeout: 60_000 });
   await dismissPlatformTour(page);
   await waitForTodayLoaded(page);
-  await maskOwnerGreeting(page);
+  await page
+    .locator('[data-testid="owner-dashboard-briefing"] p.text-sm')
+    .first()
+    .waitFor({ state: "visible", timeout: 60_000 })
+    .catch(() => undefined);
+  await maskOwnerTodayShowcase(page);
   await page.locator('[data-testid="mobile-bottom-nav"]').waitFor({ state: "visible" });
   await page.waitForTimeout(500);
   await page.screenshot({ path: dest, fullPage: false, animations: "disabled" });

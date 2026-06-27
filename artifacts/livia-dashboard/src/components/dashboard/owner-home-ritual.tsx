@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SettingsDisclosure } from "@/components/ui/settings-disclosure";
 import { usePersonaBriefing } from "@/hooks/use-persona-briefing";
+import { alignBriefingTimeOfDay } from "@/lib/briefing-display";
 import { timeGreeting } from "@/lib/persona-rituals";
 import { useListConversations, useUpdateBooking, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -565,7 +566,7 @@ export function OwnerHomeRitual({
       : null;
   const oneThingHref = consultCta?.href ?? soloFallback?.href ?? briefingCta.href;
   const oneThingLabel = consultCta?.label ?? soloFallback?.label ?? briefingCta.label;
-  const displayLivLine =
+  const displayLivLine = alignBriefingTimeOfDay(
     consultFirst && consultDash
       ? consultFirstBriefingLine({
           newEnquiries: consultDash.newEnquiries,
@@ -573,7 +574,8 @@ export function OwnerHomeRitual({
           staleQuotes: consultDash.staleQuotes,
           handoffs: handoffCount,
         })
-      : livLine;
+      : livLine,
+  );
   const beauty = useBeautyChrome(tenantVertical);
   const beautyMorph =
     tenantVertical === "beauty" && tenantXp?.presentation
