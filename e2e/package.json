@@ -17,6 +17,7 @@
     "test:pls-wave2": "playwright test --project=pls-wave2",
     "test:pls-wave3": "playwright test --project=pls-wave3",
     "test:pls-wave4": "playwright test --project=pls-wave4",
+    "test:pls-wave5": "playwright test --project=pls-wave5",
     "test:full-visual-audit": "playwright test --project=full-visual-audit",
     "test:guest-retail-cart": "playwright test --project=guest-retail-cart --workers=1",
     "test:demo-depth": "playwright test --project=demo-live-day --project=demo-proof-token --project=demo-intake-token --project=demo-waitlist-token --project=guest-pay --project=guest-balance --project=public-booking-quality --workers=1",

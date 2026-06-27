@@ -222,6 +222,16 @@ export default defineConfig({
       },
     },
     {
+      name: "pls-wave5",
+      testMatch: /pls-wave5-capture\.spec\.ts/,
+      timeout: 660_000,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+      },
+    },
+    {
       name: "pls-wave4",
       testMatch: /pls-wave4-capture\.spec\.ts/,
       timeout: 960_000,

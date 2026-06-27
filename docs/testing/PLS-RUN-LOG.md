@@ -149,4 +149,22 @@ Append one section per PLS wave. Screenshots live in `artifacts/pls/<date>/` (gi
 
 ---
 
+### PLS run — 2026-06-27 (Wave 5 — program closeout)
+
+**Environment:** local + prod URL probes  
+**Gates:** content audit strict · persona:uat 26/26 · waves 1–4 manifests
+
+| Check | Result |
+|-------|--------|
+| Content audit (strict) | pass |
+| Persona UAT (prod) | 26/26 |
+| Sacred re-capture | 10 steps (guest, gateway, owner+axe, founder) |
+| Aggregate PLS steps | **145 total, 0 content failures** |
+| Mobile Maestro | skipped (no device/CLI) |
+| Final report | `artifacts/pls/PLS-FINAL-REPORT-2026-06-27.json` — **pass** |
+
+**Program status:** Waves 1–5 complete. Ready for push + founder staging sacred-path pass (mobile when emulator available).
+
+---
+
 *(Wave 0 prep 2026-06-27.)*

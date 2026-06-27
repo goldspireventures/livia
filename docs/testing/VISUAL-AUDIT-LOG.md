@@ -106,6 +106,21 @@ Captures live under `e2e/visual-captures/` (gitignored). Re-run: `pnpm e2e:visua
 
 ---
 
+## 2026-06-27 — PLS Wave 5 (program closeout)
+
+| Metric | Value |
+|--------|-------|
+| Total PLS steps (waves 1–5) | 145 |
+| Content failures | 0 |
+| Persona UAT (prod) | 26/26 |
+| Serious axe (owner dashboard + billing) | pass |
+
+**Deliverables:** `pnpm pls:wave5` orchestrator · `PLS-FINAL-REPORT-2026-06-27.json` · mobile skip documented (no emulator).
+
+**Remaining (non-blocking):** Maestro mobile capture when device available · sacred-path signup E2E on staging.
+
+---
+
 ## 2026-06-15 — Gateway P2 (G1–G3 + sign-in)
 
 | Surface | Change |
