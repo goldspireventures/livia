@@ -23,14 +23,6 @@ const champagneStops = (
   </>
 );
 
-const heroChampagneStops = (
-  <>
-    <stop offset="0%" stopColor="#fff9f0" />
-    <stop offset="50%" stopColor="#f6f3ec" />
-    <stop offset="100%" stopColor="#e8d4b0" />
-  </>
-);
-
 export function LiviaMark({ className = "h-8 w-8", fill, legibility = "default" }: LiviaMarkProps) {
   const id = useId().replace(/:/g, "");
   const champagne = `livia-${id}-champagne`;
