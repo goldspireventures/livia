@@ -169,4 +169,32 @@ Append one section per PLS wave. Screenshots live in `artifacts/pls/<date>/` (gi
 
 ---
 
+### PLS run — 2026-06-27 (Waves 6–10 — gap closure)
+
+**Environment:** local demo world + prod persona:uat  
+**Command:** `pnpm pls:gaps-closeout` (waves 6–10 + contextual-web)  
+**Agent:** Cursor inspector (PLS gap packs H–O)
+
+| Wave | Pack | Steps (approx) | Content fail | Notes |
+|------|------|----------------|--------------|-------|
+| W6 | H guest depth | 19+ | 0 | Book landings, tokens, visit, event `/e`, retail, `/my` OTP, Liv chat |
+| W7 | I owner ops | 25+ | 0 | Core routes, settings tabs, detail pages, inbox thread, founder chain borrow |
+| W8 | J vertical matrix | 45+ | 0 | All vertical owner hubs + franchise/premises |
+| W9 | K marketing + gateway | 35+ | 0 | All marketing routes, 10 wedge G2/G3, demo showcase |
+| W10 | M/N/O | 12+ | 0 | Unhappy tokens, mid-book reload, onboarding fresh, internal voice/access/monitoring |
+| — | contextual-web | — | — | All 6 personas × routes × settings (parallel audit) |
+
+| Check | Result |
+|-------|--------|
+| Content audit (strict) | pass |
+| Persona UAT (prod) | 26/26 |
+| **Aggregate PLS steps (W1–W10)** | **311 total, 0 content failures** |
+| Final report | `artifacts/pls/PLS-FINAL-REPORT-2026-06-27.json` — **pass** |
+
+**Still before mobile handoff:** Maestro flows (Pack L), prod sacred-path signup screenshot trail (Pack M prod), live Stripe checkout, `pnpm sacred-path:signup` green on staging.
+
+**Program status:** **Web gap closure complete** for local demo world. Mobile is next surface.
+
+---
+
 *(Wave 0 prep 2026-06-27.)*

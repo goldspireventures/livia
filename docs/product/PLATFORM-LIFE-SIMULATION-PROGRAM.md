@@ -151,7 +151,7 @@ Score each screen **1–5** on:
 | **W3** | Pack C, E, F | 1 session | Staff + chain + gateway |
 | **W4** | Pack G + unhappy matrix | 1 session | Workflow + integration failure modes |
 | **W5** | Remediation + re-run | ongoing | P1 closed, P2 scheduled |
-| **W6+** | Gap closure | see [`PLS-COVERAGE-GAPS.md`](../testing/PLS-COVERAGE-GAPS.md) | Every route ≥ Partial |
+| **W6+** | Gap closure (H–O) | see [`PLS-COVERAGE-GAPS.md`](../testing/PLS-COVERAGE-GAPS.md) | `pnpm pls:gaps-closeout` |
 
 ---
 

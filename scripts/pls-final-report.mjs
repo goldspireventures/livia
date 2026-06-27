@@ -12,7 +12,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const runDate = process.env.PLS_RUN_DATE ?? new Date().toISOString().slice(0, 10);
 const plsRoot = join(root, "artifacts", "pls");
 
-const waves = [1, 2, 3, 4, 5];
+const waves = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const all = [];
 const byWave = {};
 

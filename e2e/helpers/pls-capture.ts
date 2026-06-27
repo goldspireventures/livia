@@ -98,7 +98,7 @@ export function publicBookPath(biz: DemoBusiness): string | null {
 export function mergeManifest(wave: number, runDate: string) {
   const root = path.join(process.cwd(), "..", "artifacts", "pls");
   const combinedPath = path.join(root, runDate, "manifest-all-waves.json");
-  const waveDirs = [1, 2, 3, 4, 5]
+  const waveDirs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     .map((w) => path.join(root, `wave${w}-${runDate}`, "manifest.json"))
     .filter((p) => existsSync(p));
   const all: PlsStepRecord[] = [];

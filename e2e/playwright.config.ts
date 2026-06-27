@@ -222,6 +222,56 @@ export default defineConfig({
       },
     },
     {
+      name: "pls-wave10",
+      testMatch: /pls-wave10-capture\.spec\.ts/,
+      timeout: 1_320_000,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+      },
+    },
+    {
+      name: "pls-wave9",
+      testMatch: /pls-wave9-capture\.spec\.ts/,
+      timeout: 960_000,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+      },
+    },
+    {
+      name: "pls-wave8",
+      testMatch: /pls-wave8-capture\.spec\.ts/,
+      timeout: 1_920_000,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+      },
+    },
+    {
+      name: "pls-wave7",
+      testMatch: /pls-wave7-capture\.spec\.ts/,
+      timeout: 1_320_000,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+      },
+    },
+    {
+      name: "pls-wave6",
+      testMatch: /pls-wave6-capture\.spec\.ts/,
+      timeout: 1_320_000,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+      },
+    },
+    {
       name: "pls-wave5",
       testMatch: /pls-wave5-capture\.spec\.ts/,
       timeout: 660_000,
