@@ -78,7 +78,7 @@ export const REVENUE_STREAMS = [
   {
     id: "subscriptions",
     title: "Platform subscription",
-    body: "Solo, Studio, Chain, and Host plans — EUR list prices, VAT ex. where applicable. You are not charged during closed beta; rates lock at public launch.",
+    body: "Solo, Studio, Chain, and Host plans — EUR list prices, VAT ex. where applicable. Partner promo codes available during setup and checkout.",
   },
   {
     id: "seats",

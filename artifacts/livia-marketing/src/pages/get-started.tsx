@@ -40,6 +40,12 @@ export default function GetStartedPage() {
           </p>
         </header>
 
+        <section className="mb-8 max-w-xl rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-muted-foreground">
+          <strong className="text-foreground font-medium">Partner or promo code?</strong> Enter it in Billing
+          during setup — for example <span className="font-mono text-[#d9c39a]/90">LIVIA-FRIEND</span> for
+          complimentary Solo access from a design partner.
+        </section>
+
         <ConstellationGlassCard className="p-6 sm:p-8 mb-8 space-y-4">
           <h2 className="font-serif text-xl text-white">What happens next</h2>
           <ol className="space-y-3 text-sm text-muted-foreground">

@@ -3,7 +3,7 @@ import { MarketingLayout } from "@/components/marketing-layout";
 import { ConstellationPageHeader } from "@/components/constellation/constellation-page-header";
 import { ConstellationInnerPage } from "@/components/constellation/constellation-inner-page";
 import { ConstellationGlassCard } from "@/components/constellation/constellation-spine";
-import { MarketingForm } from "@/components/marketing-form";
+import { MarketingGetStartedCta } from "@/components/marketing-get-started-cta";
 import { EU_MARKETS, REVENUE_STREAMS } from "@/lib/pricing-catalog";
 
 export default function EuropePage() {
@@ -69,13 +69,7 @@ export default function EuropePage() {
         </section>
       </ConstellationInnerPage>
 
-      <section className="cst-waitlist" id="waitlist">
-        <div className="cst-waitlist__inner">
-          <h2 className="cst-waitlist__title">Join the closed beta</h2>
-          <p className="cst-waitlist__sub">IE · UK · EU. Invite batches.</p>
-          <MarketingForm />
-        </div>
-      </section>
+      <MarketingGetStartedCta subtitle="Create your account from IE, UK, or EU. Have a partner code? Enter it in Billing during setup." />
     </MarketingLayout>
   );
 }

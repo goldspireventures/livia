@@ -6,6 +6,49 @@
  *   node scripts/prod-smoke.mjs
  *   node scripts/prod-smoke.mjs --app https://app.livia-hq.com --api https://api.livia-hq.com
  */
+import { existsSync, readFileSync } from "node:fs";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+
+function readRootEnvKey(key) {
+  const envPath = resolve(repoRoot, ".env");
+  if (!existsSync(envPath)) return undefined;
+  for (const line of readFileSync(envPath, "utf8").split("\n")) {
+    const m = line.match(new RegExp(`^\\s*${key}=(.*)$`));
+    if (m) return m[1].trim().replace(/^["']|["']$/g, "");
+  }
+  return undefined;
+}
+
+function clerkKeyEnv(k) {
+  if (!k) return "missing";
+  if (k.startsWith("sk_live_") || k.startsWith("pk_live_")) return "live";
+  if (k.startsWith("sk_test_") || k.startsWith("pk_test_")) return "test";
+  return "unknown";
+}
+
+async function clerkSessionJwt(secret, userId) {
+  const headers = { Authorization: `Bearer ${secret}` };
+  const sessionsRes = await fetch(
+    `https://api.clerk.com/v1/sessions?user_id=${encodeURIComponent(userId)}&status=active&limit=1`,
+    { headers },
+  );
+  if (!sessionsRes.ok) throw new Error(`Clerk sessions HTTP ${sessionsRes.status}`);
+  const sessions = await sessionsRes.json();
+  const sessionId = sessions?.[0]?.id;
+  if (!sessionId) throw new Error("no active Clerk session for probe user");
+  const tokenRes = await fetch(`https://api.clerk.com/v1/sessions/${sessionId}/tokens`, {
+    method: "POST",
+    headers: { ...headers, "content-type": "application/json" },
+    body: "{}",
+  });
+  if (!tokenRes.ok) throw new Error(`Clerk token HTTP ${tokenRes.status}`);
+  const tokenJson = await tokenRes.json();
+  return tokenJson.jwt;
+}
+
 const appBase = (
   process.argv.find((a, i) => process.argv[i - 1] === "--app") ??
   "https://app.livia-hq.com"
@@ -104,6 +147,28 @@ await check("Clerk proxy /api/__clerk (optional)", async () => {
   }
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${text.slice(0, 160)}`);
   return "proxy OK";
+});
+
+await check("Railway Clerk keys match Vercel pk_live (needs repo .env)", async () => {
+  if (clerkKeyMode !== "live") return "skipped — app bundle is not pk_live_";
+  const secret = readRootEnvKey("CLERK_SECRET_KEY");
+  if (!secret) return "skipped — no repo-root CLERK_SECRET_KEY to probe with";
+  const secretEnv = clerkKeyEnv(secret);
+  if (secretEnv === "live") return "local secret is sk_live_ — sync same pair to Railway if not already";
+
+  // App ships pk_live; if API still verifies sk_test JWTs, founders get 401 after sign-in.
+  const probeUserId = readRootEnvKey("LIVIA_PROD_CLERK_PROBE_USER_ID") ?? "user_3Fa2cJWMEw5IuG34ksUITMJDRVN";
+  const jwt = await clerkSessionJwt(secret, probeUserId);
+  const { res } = await fetchText(`${apiBase}/api/me`, {
+    headers: { Authorization: `Bearer ${jwt}` },
+  });
+  if (res.status === 200) {
+    throw new Error(
+      "API accepts test Clerk JWT while Vercel bundle is pk_live_ — set sk_live_ + pk_live_ on Railway livia-api and redeploy",
+    );
+  }
+  if (res.status === 401) return "API rejects test JWT (expected when Railway uses live keys)";
+  throw new Error(`unexpected /api/me HTTP ${res.status}`);
 });
 
 console.log("");

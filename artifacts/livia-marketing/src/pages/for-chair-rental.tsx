@@ -3,14 +3,14 @@ import { Link } from "wouter";
 import { MarketingLayout } from "@/components/marketing-layout";
 import { ConstellationPageHeader } from "@/components/constellation/constellation-page-header";
 import { ConstellationInnerPage, ConstellationPainList } from "@/components/constellation/constellation-inner-page";
-import { MarketingForm } from "@/components/marketing-form";
+import { MarketingGetStartedCta } from "@/components/marketing-get-started-cta";
 import { planMarketingCard } from "@/lib/pricing-catalog";
 
 const hostCard = planMarketingCard("chair-host");
 
 const HOST_POINTS = [
   "Your landlord dashboard — chairs, rent cycles, and reminders",
-  `Per-renter billing (${hostCard.priceLabel.replace("/mo", "")}/mo base) aligned with closed-beta pricing`,
+  `Per-renter billing (${hostCard.priceLabel.replace("/mo", "")}/mo base) on the Host plan`,
   "Aggregate occupancy — no downstream customer PII on your host view",
   "Renters use Solo/Studio tiers with their own Liv inbox and booking page",
 ];
@@ -47,10 +47,7 @@ export default function ForChairRentalPage() {
           vertical.
         </p>
 
-        <section className="cst-page-section pt-8">
-          <h2 className="cst-waitlist__title">Join the beta</h2>
-          <MarketingForm />
-        </section>
+        <MarketingGetStartedCta title="Start as a host" />
       </ConstellationInnerPage>
     </MarketingLayout>
   );

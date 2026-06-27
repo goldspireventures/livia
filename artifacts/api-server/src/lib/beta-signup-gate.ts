@@ -61,7 +61,7 @@ export function evaluateBetaSignup(email: string | null | undefined): BetaSignup
     return {
       allowed: false,
       code: "BETA_SIGNUP_CLOSED",
-      message: `New sign-ups are paused for the closed beta. Join the waitlist at ${marketingHost} — we invite studios in batches.`,
+      message: `New sign-ups are paused. Contact us at ${marketingHost} or redeem a partner promo code during setup.`,
     };
   }
 
@@ -71,6 +71,6 @@ export function evaluateBetaSignup(email: string | null | undefined): BetaSignup
   return {
     allowed: false,
     code: "BETA_SIGNUP_INVITE_ONLY",
-    message: `This email is not on the beta invite list yet. Request access via the waitlist at ${marketingHost} or reply to your invite email.`,
+    message: `This email is not on the invite list. Use a partner promo code during setup, or contact us at ${marketingHost}.`,
   };
 }

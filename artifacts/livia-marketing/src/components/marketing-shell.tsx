@@ -13,10 +13,9 @@ import { MarketingLocaleSwitch } from "@/components/marketing-locale-switch";
 type MarketingShellProps = {
   locale: MarketingLocale;
   children: ReactNode;
-  onJoinBeta?: (e: React.MouseEvent) => void;
 };
 
-export function MarketingShell({ locale, children, onJoinBeta }: MarketingShellProps) {
+export function MarketingShell({ locale, children }: MarketingShellProps) {
   const t = editorialCopy(locale);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -25,11 +24,6 @@ export function MarketingShell({ locale, children, onJoinBeta }: MarketingShellP
   }, []);
   const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   const homeHref = locale === "de" ? "/de" : base || "/";
-
-  const joinHandler = onJoinBeta ?? ((e: React.MouseEvent) => {
-    e.preventDefault();
-    window.location.href = "/contact";
-  });
 
   const navLinks = (
     <>
@@ -55,16 +49,13 @@ export function MarketingShell({ locale, children, onJoinBeta }: MarketingShellP
       >
         {t.nav.howItWorks}
       </Link>
-      <button
-        type="button"
-        onClick={(e) => {
-          setMenuOpen(false);
-          joinHandler(e);
-        }}
-        className="text-sm font-medium text-aurora-cyan hover:text-foreground transition-colors min-h-[44px] inline-flex items-center"
+      <Link
+        href="/contact"
+        className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors min-h-[44px] inline-flex items-center"
+        onClick={() => setMenuOpen(false)}
       >
         {t.nav.joinBeta}
-      </button>
+      </Link>
     </>
   );
 
@@ -88,13 +79,12 @@ export function MarketingShell({ locale, children, onJoinBeta }: MarketingShellP
 
           <div className="flex items-center gap-2 md:hidden ml-auto">
             <MarketingLocaleSwitch />
-            <button
-              type="button"
-              onClick={joinHandler}
-              className="text-sm font-medium text-aurora-cyan min-h-[44px] px-2"
+            <Link
+              href="/contact"
+              className="text-sm font-medium text-muted-foreground min-h-[44px] px-2 inline-flex items-center"
             >
               {t.nav.joinBeta}
-            </button>
+            </Link>
             <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
               <SheetTrigger asChild>
                 <button

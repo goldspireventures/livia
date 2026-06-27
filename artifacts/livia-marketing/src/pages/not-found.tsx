@@ -25,7 +25,7 @@ export default function NotFound() {
               </span>
             </h1>
             <p className="cst-page-header__sub">
-              The link may be old, or we moved things during the closed beta. Head home and pick a path from there.
+              The link may be old, or we moved things as the site evolved. Head home and pick a path from there.
             </p>
           </header>
           <div className="px-4 sm:px-6 pb-20 max-w-lg mx-auto">

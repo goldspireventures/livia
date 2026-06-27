@@ -77,12 +77,6 @@ export function MarketingLayout({
             >
               Get started
             </Link>
-            <a
-              href={`${homeHref}#waitlist`}
-              className="text-sm font-medium text-muted-foreground hover:text-white transition-colors min-h-[44px] inline-flex items-center"
-            >
-              Join beta
-            </a>
             <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
               <SheetTrigger asChild>
                 <button
@@ -107,13 +101,6 @@ export function MarketingLayout({
                   >
                     Get started
                   </Link>
-                  <a
-                    href={`${homeHref}#waitlist`}
-                    className="min-h-[44px] inline-flex items-center text-sm text-muted-foreground hover:text-white"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    Join beta
-                  </a>
                 </div>
               </SheetContent>
             </Sheet>

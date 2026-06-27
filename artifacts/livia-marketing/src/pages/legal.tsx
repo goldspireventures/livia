@@ -26,7 +26,7 @@ export function LegalPage({ kind }: { kind: LegalKind }) {
           <div className="prose prose-invert max-w-none text-sm text-muted-foreground space-y-4">
             <p>
               Full privacy, terms, and DPA documents are maintained for EU appointment businesses.
-              Contact us for the current version during closed beta.
+              Contact us for the current version.
             </p>
             <p>
               For product access:{" "}

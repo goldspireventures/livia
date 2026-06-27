@@ -12,7 +12,7 @@ export const MARKETING_ROUTE_META: Record<
   },
   "/pricing": {
     title: "Pricing — Livia",
-    description: "Clear EUR pricing. Closed beta is free.",
+    description: "Clear EUR pricing. Open registration — partner promo codes at checkout.",
   },
   "/book-demo": {
     title: "Get started — Livia",

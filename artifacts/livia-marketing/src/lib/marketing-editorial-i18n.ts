@@ -190,7 +190,7 @@ const EN: EditorialCopy = {
     pricing: "Pricing",
     howItWorks: "How it works",
     joinBeta: "Contact",
-    tryBeta: "Try beta",
+    tryBeta: "Get started",
     product: "Product",
     solutions: "Solutions",
     resources: "Resources",
@@ -201,7 +201,7 @@ const EN: EditorialCopy = {
     closeMenu: "Close",
   },
   hero: {
-    eyebrow: "Closed beta",
+    eyebrow: "Now live",
     headline: ["Appointment businesses", "deserve better", "software."],
     livLine: "Her name is Liv.",
     body: "Calendar, inbox, team, deposits — one place.",
@@ -317,7 +317,7 @@ const EN: EditorialCopy = {
   proof: {
     statHead: "Sunday night",
     statBody: "back in your hands — not lost to unread messages and half-answered booking requests.",
-    cohort: "Design partner cohort · IE & UK · closed beta",
+    cohort: "Design partners · IE & UK",
     quote: "I stopped checking Instagram at 10pm.",
     quoteAttribution: "— salon owner, Cork",
     briefingLabel: "Tuesday briefing · 07:02",
@@ -359,7 +359,7 @@ const EN: EditorialCopy = {
   },
   pricing: {
     title: "Pricing",
-    subtitle: "EUR, clear VAT. Closed beta is free.",
+    subtitle: "EUR, clear VAT. Monthly tiers from launch.",
     morePlans: "Chain, Host, and add-ons on the",
     fullPricing: "full pricing page",
     compareAll: "Compare all plans",
@@ -376,7 +376,7 @@ const EN: EditorialCopy = {
     items: [
       {
         q: "What is Livia?",
-        a: `Software for appointment businesses — your calendar, inbox, team, and booking page in one place. From ${marketingSoloFloorPrice()}/mo at launch; closed beta is free for you.`,
+        a: `Software for appointment businesses — your calendar, inbox, team, and booking page in one place. From ${marketingSoloFloorPrice()}/mo on Solo. Partner promo codes available at checkout.`,
       },
       {
         q: "Who is it for?",
@@ -400,7 +400,7 @@ const EN: EditorialCopy = {
       },
       {
         q: "Pricing and VAT?",
-        a: "Flat monthly tiers at launch. Beta free. EU VAT ID → reverse charge.",
+        a: "Flat monthly tiers. EU VAT ID → reverse charge. Have a partner code? Enter it in Billing during setup.",
       },
       {
         q: "How do I apply?",
@@ -413,16 +413,16 @@ const EN: EditorialCopy = {
       "Better software for businesses that run on appointments. You shouldn't lose revenue because you were working.",
     attribution: "— Livia",
     ctaTitle: "Ready to start?",
-    ctaSubtitle: "Create your account — setup takes an afternoon.",
+    ctaSubtitle: "Create your account — setup takes an afternoon. Partner promo codes go in Billing during setup.",
   },
   form: {
     placeholder: LIVIA_FORM_EXAMPLES.ownerEmail,
-    submit: "Join the waitlist",
-    success: "You're on the list. We'll be in touch when a batch opens.",
+    submit: "Send message",
+    success: "Thanks — we'll reply within one business day.",
     error: "Something went wrong. Please try again.",
   },
   bookDemoPage: {
-    eyebrow: "Closed beta",
+    eyebrow: "Live demo",
     titleLead: "Book a",
     titleAccent: "demo",
     subtitle:
@@ -448,8 +448,8 @@ const DE: EditorialCopy = {
     seeDemo: "Demo ansehen",
     pricing: "Preise",
     howItWorks: "So funktioniert's",
-    joinBeta: "Beta beitreten",
-    tryBeta: "Beta testen",
+    joinBeta: "Kontakt",
+    tryBeta: "Jetzt starten",
     product: "Produkt",
     solutions: "Lösungen",
     resources: "Ressourcen",
@@ -460,7 +460,7 @@ const DE: EditorialCopy = {
     closeMenu: "Schließen",
   },
   hero: {
-    eyebrow: "Geschlossene Beta",
+    eyebrow: "Jetzt live",
     headline: ["Termingeschäfte verdienen", "bessere", "Software."],
     livLine: "Sie heißt Liv.",
     body: "Kalender, Inbox, Team, Anzahlungen — ein Ort.",
@@ -478,7 +478,7 @@ const DE: EditorialCopy = {
     getStarted: "Jetzt starten",
     bookDemo: "Demo buchen",
     howItWorks: "So funktioniert's",
-    joinBeta: "Beta beitreten",
+    joinBeta: "Kontakt",
   },
   homeFold: {
     physicsEyebrow: "Was jedes Studio teilt",
@@ -514,7 +514,7 @@ const DE: EditorialCopy = {
       "<strong>Liv</strong> arbeitet in Livia — antwortet, bucht und briefed Sie, bevor der Tag beginnt.",
     seeDemo: "Jetzt starten",
     howItWorks: "So funktioniert's",
-    joinBeta: "Beta beitreten",
+    joinBeta: "Kontakt",
     convergenceLabel: "Jeder Kanal in einer Inbox",
     channels: [
       { short: "DM", label: "Social" },
@@ -652,8 +652,8 @@ const DE: EditorialCopy = {
         a: "Antwortet in Ihrem Ton. Prüft Slots. Bucht. Team kann übernehmen.",
       },
       {
-        q: "Wann rein?",
-        a: "Warteliste unten. Einladung in Wellen — DACH und EU.",
+        q: "Wann starten?",
+        a: "Jetzt starten — Konto anlegen und Setup durchlaufen. Partner-Code in Billing eingeben.",
       },
       {
         q: "DSGVO und EU AI Act?",
@@ -661,28 +661,28 @@ const DE: EditorialCopy = {
       },
       {
         q: "Preise und MwSt.?",
-        a: "Flatrate zum Launch. Beta kostenlos. EU-USt-IdNr. → Reverse-Charge.",
+        a: "Flatrate ab Launch. EU-USt-IdNr. → Reverse-Charge. Partner-Code in Billing eingeben.",
       },
       {
         q: "Bewerbung?",
-        a: "E-Mail ins Formular. Wir melden uns, wenn es passt.",
+        a: "Get started — Konto anlegen und Setup durchlaufen. Fragen? Kontaktformular.",
       },
     ],
   },
   founder: {
     quote: "Bessere Software für Termingeschäfte. Kein Umsatzverlust, weil Sie arbeiten.",
     attribution: "— Livia",
-    ctaTitle: "Beta beitreten",
-    ctaSubtitle: "Einladung in Wellen.",
+    ctaTitle: "Jetzt starten",
+    ctaSubtitle: "Konto anlegen — Setup dauert einen Nachmittag. Partner-Codes in Billing eingeben.",
   },
   form: {
     placeholder: LIVIA_FORM_EXAMPLES.ownerEmailDe,
-    submit: "Auf die Warteliste",
-    success: "Sie stehen auf der Liste. Wir melden uns, wenn eine Welle öffnet.",
+    submit: "Nachricht senden",
+    success: "Danke — wir melden uns innerhalb eines Werktags.",
     error: "Etwas ist schiefgelaufen. Bitte erneut versuchen.",
   },
   bookDemoPage: {
-    eyebrow: "Geschlossene Beta",
+    eyebrow: "Live-Demo",
     titleLead: "Demo",
     titleAccent: "buchen",
     subtitle:

@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { MarketingLayout } from "@/components/marketing-layout";
 import { ConstellationGlassCard } from "@/components/constellation/constellation-spine";
 import { ConstellationPageHeader } from "@/components/constellation/constellation-page-header";
-import { MarketingForm } from "@/components/marketing-form";
+import { MarketingGetStartedCta } from "@/components/marketing-get-started-cta";
 import {
   ADD_ONS,
   CORE_PLANS,
@@ -51,7 +51,7 @@ export default function PricingPage() {
             Pricing that <em>scales with you</em>
           </>
         }
-        subtitle="EUR list prices. Closed beta is on the house — your rate locks at launch. No commission on your appointments."
+        subtitle="EUR list prices. Monthly tiers — no commission on your appointments. Partner promo codes available at checkout."
       >
         <p className="text-sm text-muted-foreground/80 mt-4">
           <Link href="/europe" className="cst-page-link">
@@ -154,15 +154,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <section className="cst-waitlist" id="waitlist">
-        <div className="cst-waitlist__inner">
-          <h2 className="cst-waitlist__title">Join the closed beta</h2>
-          <p className="cst-waitlist__sub">
-            Design partners: 12 months at 50% off your tier + free migration concierge.
-          </p>
-          <MarketingForm />
-        </div>
-      </section>
+      <MarketingGetStartedCta />
     </MarketingLayout>
   );
 }
