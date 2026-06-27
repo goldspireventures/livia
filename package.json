@@ -39,6 +39,8 @@
     "wellness:depth": "pnpm --filter @workspace/api-server exec cross-env DOTENV_CONFIG_PATH=../../.env node --import dotenv/config --import tsx/esm scripts/wellness-depth-cli.ts",
     "demo:clerk-prune": "node --env-file=.env scripts/prune-clerk-demo-users.mjs",
     "demo:clerk-rebuild": "node --env-file=.env scripts/rebuild-demo-clerk.mjs",
+    "clerk:prod:prune": "node --env-file=.env scripts/clerk-prod-test-prune.mjs",
+    "clerk:prod:prune:execute": "node --env-file=.env scripts/clerk-prod-test-prune.mjs --execute",
     "capture:platform-default-book": "node scripts/capture-platform-default-wedge-book.mjs",
     "capture:event-vendor-wedge": "node scripts/capture-event-vendor-wedge-beats.mjs",
     "capture:vertical-wedge-beats": "node scripts/capture-vertical-wedge-beats.mjs",
