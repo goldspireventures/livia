@@ -5,6 +5,7 @@
  */
 import { listDemoWorldSlugs } from "./demo-subvertical-roster";
 import { isOnboardingAppUnlocked } from "./onboarding-program";
+import { blockingOnboardingActsForSession } from "./migration-fast-track-program";
 import type { OnboardingState } from "./onboarding-state";
 
 const DEMO_SESSION_EMAIL_DOMAINS = new Set(["livia.io", "demo.livia-hq.com"]);
@@ -15,7 +16,35 @@ export type SessionBusinessLike = {
   ownerId?: string;
   vertical?: string | null;
   onboardingState?: OnboardingState | null;
+  updatedAt?: string | Date | null;
 };
+
+function onboardingProgressScore(business: SessionBusinessLike): number {
+  const state = business.onboardingState;
+  if (!state) return 0;
+  const blocking = blockingOnboardingActsForSession(business.vertical, state.checklist);
+  const completed = new Set(state.completedActs ?? []);
+  const blockingDone = blocking.filter((act) => completed.has(act)).length;
+  return blockingDone * 1_000 + (state.percentComplete ?? 0);
+}
+
+/** Prefer unlocked shops, then most onboarding progress, then most recently touched. */
+export function rankOwnedSessionBusinesses<T extends SessionBusinessLike>(
+  businesses: T[],
+): T[] {
+  return [...businesses].sort((a, b) => {
+    const aUnlocked = isOnboardingAppUnlocked(a.onboardingState ?? null, a.vertical);
+    const bUnlocked = isOnboardingAppUnlocked(b.onboardingState ?? null, b.vertical);
+    if (aUnlocked !== bUnlocked) return aUnlocked ? -1 : 1;
+
+    const progressDelta = onboardingProgressScore(b) - onboardingProgressScore(a);
+    if (progressDelta !== 0) return progressDelta;
+
+    const aUpdated = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+    const bUpdated = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+    return bUpdated - aUpdated;
+  });
+}
 
 export function isDemoSessionEmail(email: string | null | undefined): boolean {
   if (!email) return false;
@@ -67,7 +96,7 @@ export function pickPrimarySessionBusiness<T extends SessionBusinessLike>(
     if (fromPersisted) return fromPersisted;
   }
 
-  return pool[0] ?? null;
+  return rankOwnedSessionBusinesses(pool)[0] ?? null;
 }
 
 /**
@@ -87,7 +116,7 @@ export function pickOnboardingResumeBusiness<T extends SessionBusinessLike>(
     (b) => !isOnboardingAppUnlocked(b.onboardingState ?? null, b.vertical),
   );
   const pool = incomplete.length > 0 ? incomplete : owned;
-  return pool[pool.length - 1] ?? null;
+  return rankOwnedSessionBusinesses(pool)[0] ?? null;
 }
 
 export type PostLegalDestination = "/onboarding" | "/dashboard";
@@ -138,11 +167,11 @@ export function resolvePostLegalDestination(args: {
     return allowed.length > 0 ? "/dashboard" : "/onboarding";
   }
 
-  const primary = owned[0]!;
-  if (!isOnboardingAppUnlocked(primary.onboardingState ?? null, primary.vertical)) {
-    return "/onboarding";
+  const ranked = rankOwnedSessionBusinesses(owned);
+  if (ranked.some((b) => isOnboardingAppUnlocked(b.onboardingState ?? null, b.vertical))) {
+    return "/dashboard";
   }
-  return "/dashboard";
+  return "/onboarding";
 }
 
 export function shouldSkipLegalToDashboard(args: {

@@ -91,7 +91,11 @@ export function resolvePortalCurrentAct(
   for (const id of ONBOARDING_ACT_IDS) {
     if (actIndex(id) >= start && nav.includes(id)) return id;
   }
-  return "a12_go_live";
+  // e.g. fresh path stored on skipped a11 — resume first visible portal step
+  for (const step of nav) {
+    if (!isPortalSkippedUiAct(step, checklist)) return step;
+  }
+  return nav[nav.length - 1] ?? "a12_go_live";
 }
 
 export function portalAutoCompleteActs(

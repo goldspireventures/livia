@@ -15,7 +15,16 @@ assert.equal(isDemoWorldSlug("my-real-shop"), false);
 
 const demoRows = [
   { id: "1", slug: "dublin-barber-collective", ownerId: "owner-demo" },
-  { id: "2", slug: "my-salon", ownerId: "user-real" },
+  {
+    id: "2",
+    slug: "my-salon",
+    ownerId: "user-real",
+    onboardingState: {
+      currentAct: "a2_shop_profile",
+      completedActs: ["a1_create_business"],
+      percentComplete: 8,
+    },
+  },
 ];
 
 const filtered = filterSessionBusinesses(demoRows, "founder@gmail.com");
@@ -97,6 +106,54 @@ const resumeOwned = pickOnboardingResumeBusiness(
   "founder@gmail.com",
 );
 assert.equal(resumeOwned?.id, "shop-1");
+
+const multiOwned = pickOnboardingResumeBusiness(
+  [
+    {
+      id: "shop-stale",
+      slug: "stale-shop",
+      ownerId: "user-1",
+      onboardingState: { currentAct: "a2_shop_profile", completedActs: ["a1_create_business"], percentComplete: 8 },
+    },
+    {
+      id: "shop-progress",
+      slug: "main-shop",
+      ownerId: "user-1",
+      onboardingState: {
+        currentAct: "a5_hours",
+        completedActs: ["a1_create_business", "a2_shop_profile"],
+        percentComplete: 40,
+      },
+      vertical: "allied-health",
+    },
+  ],
+  "user-1",
+  "founder@gmail.com",
+);
+assert.equal(multiOwned?.id, "shop-progress");
+
+assert.equal(
+  resolvePostLegalDestination({
+    businesses: [
+      {
+        id: "shop-done",
+        slug: "live-shop",
+        ownerId: "user-1",
+        onboardingState: { currentAct: "a12_go_live", completedActs: ["a1_create_business", "a2_shop_profile", "a5_hours"], percentComplete: 100 },
+        vertical: "allied-health",
+      },
+      {
+        id: "shop-draft",
+        slug: "draft-shop",
+        ownerId: "user-1",
+        onboardingState: { currentAct: "a2_shop_profile", completedActs: ["a1_create_business"], percentComplete: 8 },
+      },
+    ],
+    clerkUserId: "user-1",
+    email: "founder@gmail.com",
+  }),
+  "/dashboard",
+);
 
 assert.equal(
   ownedSessionBusinesses(

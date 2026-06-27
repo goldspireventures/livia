@@ -142,7 +142,9 @@ export async function getBusinessesForUser(userId: string) {
     for (const b of [...ownedBusinesses, ...memberBusinesses]) {
       allMap.set(b.id, b);
     }
-    return Array.from(allMap.values());
+    return Array.from(allMap.values()).sort(
+      (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime(),
+    );
   } catch (err) {
     if (!isMissingColumnDbError(err)) throw err;
     console.warn(
