@@ -165,6 +165,8 @@ Append one section per PLS wave. Screenshots live in `artifacts/pls/<date>/` (gi
 
 **Program status:** Waves 1–5 complete. Ready for push + founder staging sacred-path pass (mobile when emulator available).
 
+**Coverage gaps (nothing left untouched):** [`PLS-COVERAGE-GAPS.md`](PLS-COVERAGE-GAPS.md) — routes/flows not yet exercised or landing-only.
+
 ---
 
 *(Wave 0 prep 2026-06-27.)*
