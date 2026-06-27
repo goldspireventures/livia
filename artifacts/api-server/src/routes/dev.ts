@@ -12,8 +12,9 @@ import {
   availabilityRulesTable,
   staffServicesTable,
   businessesTable,
+  livEntityMemoryTable,
 } from "@workspace/db";
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { generateId } from "../lib/id";
 import { getMessagingChannels, updateMessagingChannels } from "../services/messaging-channels.service";
 import { processInboundMetaMessage } from "../services/meta-inbound.service";
@@ -514,6 +515,145 @@ router.post("/dev/e2e/ensure-bookable", async (req, res) => {
   } catch (err) {
     console.error("[dev/e2e/ensure-bookable]", err);
     res.status(500).json({ error: "Failed to ensure bookable catalog" });
+  }
+});
+
+/**
+ * PLS Wave — simulate months of completed visits + learning signal (local/dev only).
+ * Inserts backdated COMPLETED bookings, correction memory rows, and schedules learning passes.
+ */
+router.post("/dev/pls/fast-forward", async (req, res) => {
+  if (process.env.NODE_ENV === "production") {
+    res.status(404).json({ error: "Not available" });
+    return;
+  }
+
+  const slug = typeof req.body?.slug === "string" ? req.body.slug.trim() : "";
+  const months = Math.min(24, Math.max(1, Number(req.body?.months) || 12));
+  const triggerLearning = req.body?.triggerLearning !== false;
+
+  if (!slug) {
+    res.status(400).json({ error: "slug required" });
+    return;
+  }
+
+  try {
+    const { getBusinessBySlug } = await import("../services/businesses.service.js");
+    const { listStaff } = await import("../services/staff.service.js");
+    const { listServices } = await import("../services/services.service.js");
+    const { scheduleLearningPass } = await import("../services/liv-learning-triggers.service.js");
+    const { formatLivLearningMemory } = await import("@workspace/policy");
+
+    const biz = await getBusinessBySlug(slug);
+    if (!biz) {
+      res.status(404).json({ error: "Business not found" });
+      return;
+    }
+
+    const [staff, services, customers] = await Promise.all([
+      listStaff(biz.id, { isActive: true }),
+      listServices(biz.id, true),
+      db.select().from(customersTable).where(eq(customersTable.businessId, biz.id)).limit(8),
+    ]);
+
+    if (staff.length === 0 || services.length === 0 || customers.length === 0) {
+      res.status(400).json({ error: "Business needs staff, services, and customers" });
+      return;
+    }
+
+    const targetCompleted = 52;
+    const [existingRow] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(bookingsTable)
+      .where(and(eq(bookingsTable.businessId, biz.id), eq(bookingsTable.status, "COMPLETED")));
+
+    const existing = existingRow?.count ?? 0;
+    const toInsert = Math.max(0, targetCompleted - existing);
+    const base = new Date();
+
+    const bookingRows = Array.from({ length: toInsert }, (_, i) => {
+      const dayOffset = -Math.floor((i / targetCompleted) * months * 30);
+      const hour = 9 + (i % 7);
+      const start = makeDt(base, dayOffset, hour);
+      const end = new Date(start.getTime() + 60 * 60_000);
+      return {
+        id: generateId(),
+        businessId: biz.id,
+        customerId: customers[i % customers.length]!.id,
+        staffId: staff[i % staff.length]!.id,
+        serviceId: services[i % services.length]!.id,
+        status: "COMPLETED" as BookingStatus,
+        startAt: start,
+        endAt: end,
+        channelType: "WEB" as const,
+        notes: i % 5 === 0 ? "Guest loved the result — rebook in 6 weeks" : null,
+      };
+    });
+
+    if (bookingRows.length > 0) {
+      await db.insert(bookingsTable).values(bookingRows);
+    }
+
+    const correctionRows = [
+      formatLivLearningMemory({
+        source: "correction",
+        summary: "Prefer morning slots for colour clients — afternoon runs late",
+        entityType: "business",
+        entityId: biz.id,
+      }),
+      formatLivLearningMemory({
+        source: "override_staff",
+        summary: "Reassigned booking when preferred stylist was off",
+        entityType: "staff",
+        entityId: staff[0]!.id,
+      }),
+      formatLivLearningMemory({
+        source: "override_time",
+        summary: "Moved visit 30 minutes later per guest request",
+        entityType: "customer",
+        entityId: customers[0]!.id,
+      }),
+    ].map((content) => ({
+      id: generateId(),
+      businessId: biz.id,
+      entityType: "business" as const,
+      entityId: biz.id,
+      kind: "liv_learning",
+      content,
+      createdBy: "pls-simulation",
+    }));
+
+    await db.insert(livEntityMemoryTable).values(correctionRows);
+
+    const learning: Array<{ scheduled: boolean; detail?: string }> = [];
+    if (triggerLearning) {
+      for (const reason of [
+        "milestone_completed_bookings",
+        "correction_recorded",
+        "override_recorded",
+      ] as const) {
+        learning.push(
+          await scheduleLearningPass({ businessId: biz.id, reason }),
+        );
+      }
+      const { generateMorningBriefingForBusiness } = await import(
+        "../services/morning-briefing.service.js"
+      );
+      await generateMorningBriefingForBusiness(biz.id).catch(() => undefined);
+    }
+
+    res.json({
+      slug,
+      businessId: biz.id,
+      monthsSimulated: months,
+      completedBookingsAdded: bookingRows.length,
+      totalCompletedTarget: targetCompleted,
+      learningMemoryRows: correctionRows.length,
+      learningPasses: learning,
+    });
+  } catch (err) {
+    console.error("[dev/pls/fast-forward]", err);
+    res.status(500).json({ error: "PLS fast-forward failed" });
   }
 });
 

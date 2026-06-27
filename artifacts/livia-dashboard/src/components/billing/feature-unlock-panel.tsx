@@ -85,14 +85,8 @@ export function FeatureUnlockPanel({
         window.location.href = res.url;
         return;
       }
-      const modeLabel =
-        res.mode === "staging-demo"
-          ? "Unlocked (staging demo)"
-          : res.mode === "dev"
-            ? "Unlocked (dev)"
-            : `${addon?.name ?? "Add-on"} active`;
       toast({
-        title: modeLabel,
+        title: `${addon?.name ?? "Add-on"} active`,
         description: res.message,
       });
       invalidateOperationalState(qc, bid);

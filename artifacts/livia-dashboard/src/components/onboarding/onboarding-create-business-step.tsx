@@ -759,7 +759,7 @@ export function OnboardingCreateBusinessStep({
           <Checkbox checked={businessAttested} onCheckedChange={(v) => setBusinessAttested(v === true)} />
           <span className="text-sm text-muted-foreground leading-relaxed">
             I confirm I operate a legitimate business at this location and am authorised to bind it to Livia.
-            Livia does not perform KYB or licence checks in the closed beta.
+            You remain responsible for licences and regulatory compliance — Livia does not perform KYB checks.
           </span>
         </label>
         <Button type="submit" className="w-full" disabled={saving || !businessAttested}>

@@ -51,6 +51,37 @@ Captures live under `e2e/visual-captures/` (gitignored). Re-run: `pnpm e2e:visua
 
 ---
 
+## 2026-06-27 — PLS Wave 1 (content + capture)
+
+| Surface | Route | Finding | Fix | Status |
+|---------|-------|---------|-----|--------|
+| Onboarding attestation | `/onboarding` create shop | “closed beta” in KYB copy | Plain compliance — owner responsible for licences | **Done** |
+| Billing toasts | `/settings` billing | “Add-on active (staging demo)” | Neutral “Add-on active” + API message | **Done** |
+| Feature unlock | billing panels | “Unlocked (staging demo)” | Use add-on name in title | **Done** |
+| Event vendor 503 | `/e/*` | “staging demo link” on unavailable | `isProductionCustomerSurface` branch | **Done** |
+| Chain borrow | `/chain` | Placeholder “Staff row id” | “Staff member ID from roster” | **Done** |
+| Comms wizard | settings comms | `META_ACCESS_TOKEN` env jargon | Meta credentials configured copy | **Done** |
+
+**Automation added:** `pnpm pls:wave1` · `pnpm pls:content-audit` · `pnpm pls:simulate` · `POST /api/dev/pls/fast-forward`
+
+**Captures:** 14 steps in `artifacts/pls/2026-06-27/` — 0 runtime content hits. Internal: 12 tabs in `e2e/visual-captures/internal/`.
+
+**Next:** W2 vertical expansion · mobile Maestro · unhappy-path matrix · Liv learning UI evidence check post-simulation.
+
+---
+
+## 2026-06-27 — PLS Wave 2 (vertical matrix + staff)
+
+| Surface | Route | Finding | Fix | Status |
+|---------|-------|---------|-----|--------|
+| Staff pack E2E | Pack C sign-in | Clerk identifier field missing after prior owner sessions | `resetDemoBrowserSession` before each persona in `pls-wave2` | **Done** |
+
+**Captures:** 77 steps in `artifacts/pls/wave2-2026-06-27/` — all vertical public books, 5 owner slices, 4 staff personas, founder chain, guest 404.
+
+**Next:** W3 gateway + unhappy matrix · Maestro mobile when device available.
+
+---
+
 ## 2026-06-15 — Gateway P2 (G1–G3 + sign-in)
 
 | Surface | Change |

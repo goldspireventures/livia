@@ -6,6 +6,7 @@ import {
   PublicSurfaceLoading,
   PublicSurfaceNotFound,
 } from "@/components/public/public-surface-chrome";
+import { isProductionCustomerSurface } from "@/lib/production-surface";
 import type { ReactNode } from "react";
 
 type Props = {
@@ -25,7 +26,9 @@ export function EventVendorPageShell({ children }: Props) {
         title={errorKind === "unavailable" ? "Website temporarily unavailable" : "Event vendor not found"}
         detail={
           errorKind === "unavailable"
-            ? "We could not load this public site right now. Try again in a few minutes, or use the staging demo link if you are testing."
+            ? isProductionCustomerSurface
+              ? "We could not load this site right now. Please try again in a few minutes."
+              : "We could not load this public site right now. Try again in a few minutes, or open the demo vendor from the demo portal."
             : "This website doesn't exist or the link may be outdated."
         }
       />

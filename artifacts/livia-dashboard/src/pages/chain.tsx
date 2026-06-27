@@ -327,7 +327,7 @@ function StaffBorrowPanel({
       </div>
       <div className="space-y-1 sm:col-span-2">
         <label className="text-xs text-muted-foreground">Staff id</label>
-        <Input value={staffId} onChange={(e) => setStaffId(e.target.value)} placeholder="Staff row id" />
+        <Input value={staffId} onChange={(e) => setStaffId(e.target.value)} placeholder="Staff member ID from roster" />
       </div>
       <div className="space-y-1">
         <label className="text-xs text-muted-foreground">From</label>

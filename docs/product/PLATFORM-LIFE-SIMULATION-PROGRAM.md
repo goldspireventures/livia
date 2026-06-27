@@ -192,7 +192,65 @@ Skill: `.cursor/skills/livia-visual-audit` + this doc.
 
 ---
 
-## 10. Open decisions (founder)
+## 10. Extended scope (founder brief — Wave 1+)
+
+### 10.1 Twelve-month usage simulation
+
+Local/dev only: **`POST /api/dev/pls/fast-forward`** + **`pnpm pls:simulate --slug <demo-slug>`**
+
+| Signal | What it simulates |
+|--------|-------------------|
+| 52 completed visits | Spread across N months of calendar |
+| Correction + override memory | Owner/staff teaching Liv |
+| Learning pass scheduling | Milestones 5/10/25/50 + correction triggers |
+| Morning briefing refresh | Post-simulation owner dashboard |
+
+**Not simulated in Wave 1:** Stripe renewal webhooks, real SMS volume, chain rollup at 50 locations.
+
+### 10.2 Content & tone audit
+
+| Tool | Purpose |
+|------|---------|
+| `pnpm pls:content-audit` | Static scan — forbidden patterns in customer UI sources |
+| PLS capture `auditPageText()` | Runtime scan on every screenshot step |
+| Patterns hub | `scripts/pls-forbidden-copy.mjs` |
+
+**Rules:** No closed beta, staging demo, dev ports, operator IDs, raw HTTP in customer copy. Demo-only surfaces may use beta links when `isDemoLoginEnabled`.
+
+### 10.3 Internal ops (Pack G extended)
+
+Capture: `pnpm --filter @workspace/e2e run test:internal-visual` (requires `INTERNAL_OPS_SECRET`).
+
+Review rubric additions for support:
+
+1. **Ticket → tenant context** — one click to business + recent Liv errors?
+2. **Auto-triage hints** — priority, vertical, likely root cause visible?
+3. **Suggested fixes** — runbook links, not raw stack traces?
+4. **Impersonation audit trail** — clear who opened what?
+5. **Monitoring ↔ support** — alert count matches ticket spike?
+
+### 10.4 Competitive pain-point lens (quick reference)
+
+| Incumbent pain | Livia must win on |
+|----------------|-------------------|
+| Fresha marketplace ownership | Guest belongs to salon; no platform cut copy |
+| Phorest admin-role leak | Role boundaries + calm staff UX |
+| Booksy flaky notifications | Comms status honest + requestId on errors |
+| Generic “AI bolt-on” | Liv learns from corrections — show evidence in settings/Liv tab |
+| Migration terror | Import honest limits + resume, not fake “instant” |
+
+### 10.5 Capture → fix → re-capture loop
+
+```text
+capture (pls:wave1) → manifest contentHits + human review
+  → fix P1 copy/UX → pls:content-audit:strict
+  → re-capture affected scenarios only
+  → append VISUAL-AUDIT-LOG + PLS-RUN-LOG
+```
+
+---
+
+## 11. Open decisions (founder)
 
 1. **Environment:** PLS Wave 1 on **local demo world** vs **staging** vs **prod** (recommend: local + prod probes, staging for sacred signup).
 2. **Mobile native:** include Maestro in W2 or defer to W3?

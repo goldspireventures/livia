@@ -455,7 +455,7 @@ export function ChannelSetupWizard({
 
           {!comms?.metaConfigured ? (
             <p className="text-xs text-amber-600">
-              Live outbound requires <code>META_ACCESS_TOKEN</code> on the API server. Inbound still works once IDs are saved.
+              Live outbound replies need Meta credentials configured on your Livia account. Inbound still works once channel IDs are saved.
             </p>
           ) : null}
 

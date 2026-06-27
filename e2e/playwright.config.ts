@@ -222,6 +222,26 @@ export default defineConfig({
       },
     },
     {
+      name: "pls-wave2",
+      testMatch: /pls-wave2-capture\.spec\.ts/,
+      timeout: 960_000,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+      },
+    },
+    {
+      name: "pls-wave1",
+      testMatch: /pls-wave1-capture\.spec\.ts/,
+      timeout: 480_000,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: dashboardBase,
+      },
+    },
+    {
       name: "contextual-web",
       testMatch: /contextual-audit-web\.spec\.ts/,
       timeout: 300_000,
