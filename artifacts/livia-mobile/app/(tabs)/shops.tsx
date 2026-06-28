@@ -15,6 +15,7 @@ import { aurum } from "@/constants/colors";
 import { elevation } from "@/constants/elevation";
 import { fonts, type } from "@/constants/typography";
 import { useBusiness } from "@/contexts/BusinessContext";
+import { usePersona } from "@/hooks/usePersona";
 import { useChainRollup } from "@/hooks/useChainRollup";
 import { useColors } from "@/hooks/useColors";
 import { useContentInsets } from "@/hooks/useContentInsets";
@@ -153,7 +154,9 @@ export default function ShopsScreen() {
   const haptics = useHaptics();
   const { horizontalPad, maxContentWidth } = useContentInsets();
   const { businesses, currentBusiness, setCurrentBusiness } = useBusiness();
-  const useRollup = businesses.length >= 2;
+  const { kind: persona } = usePersona();
+  const isLead = persona === "owner" || persona === "org_admin";
+  const useRollup = isLead && businesses.length >= 1;
   const { rollup, loading, reload } = useChainRollup(useRollup);
 
   const verticalById = React.useMemo(
@@ -242,8 +245,8 @@ export default function ShopsScreen() {
       {!useRollup && businesses.length === 1 ? (
         <EmptyState
           icon="grid"
-          title="One shop for now"
-          subtitle="Add another location in web settings to see cross-shop pulse here."
+          title={currentBusiness?.name ?? "Your shop"}
+          subtitle="Glance pulse loads for owners with one or more locations. Open Today for your daily briefing."
         />
       ) : null}
 

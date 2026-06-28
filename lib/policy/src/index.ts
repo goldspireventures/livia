@@ -26,6 +26,7 @@ export * from "./platform-resilience-program";
 export * from "./platform-delivery-program";
 export * from "./platform-legal";
 export * from "./gateway-auth-copy";
+export * from "./clerk-password-sign-in";
 export * from "./vertical-onboarding";
 export * from "./vertical-playbooks";
 export * from "./onboarding-program";
@@ -164,6 +165,19 @@ export * from "./commerce-entitlements-program";
 export * from "./platform-gating-program";
 export * from "./go-live-program";
 export * from "./registration-routing-program";
+export {
+  STAFF_INVITE_JOBS,
+  staffInviteJobToMembership,
+  membershipToStaffInviteJob,
+  personaFromInvitedMembership,
+  resolveStaffInviteHandoff,
+  resolveStaffInviteLandingPath,
+  resolveStaffInviteLandingFromSession,
+  type AcceptedStaffInvite,
+  type StaffInviteJobKind,
+  type StaffInviteSurface,
+  type InvitedMemberPersona,
+} from "./staff-invite-program";
 export * from "./paid-onboarding-program";
 export * from "./promo-code-program";
 export * from "./form-example-copy";

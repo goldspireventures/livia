@@ -30,11 +30,17 @@ async function guestPath() {
   const otpReq = await fetch(`${api}/api/public/guest-hub/otp/request`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ phone: guestPhone, country: "IE" }),
+    body: JSON.stringify({ email: "mobile-smoke@example.com", country: "IE" }),
   });
-  await assertOk(otpReq, "guest otp/request");
+  await assertOk(otpReq, "guest otp/request (email)");
   const { sessionToken, magicOtpCode, devOtp } = await otpReq.json();
-  const code = devOtp ?? magicOtpCode ?? "000000";
+  const code = devOtp ?? magicOtpCode;
+  if (!code) {
+    console.log("⚠ Guest OTP strict mode — skipping verify (use real inbox on device)");
+    const pub = await fetch(`${api}/api/public/b/bloom-beauty-dublin`);
+    await assertOk(pub, "public book bloom");
+    return null;
+  }
 
   const verify = await fetch(`${api}/api/public/guest-hub/otp/verify`, {
     method: "POST",
@@ -86,11 +92,12 @@ async function operatorPath() {
 }
 
 async function main() {
+  const guestOnly = process.argv.includes("--guest-only");
   console.log("\n▶ Mobile entry smoke (API simulation)\n");
   const health = await fetch(`${api}/api/healthz`);
   await assertOk(health, "healthz");
   await guestPath();
-  await operatorPath();
+  if (!guestOnly) await operatorPath();
   console.log("\n✓ Mobile entry smoke passed\n");
 }
 

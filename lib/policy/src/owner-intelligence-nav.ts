@@ -72,9 +72,11 @@ export function ownerIntelBadgesForMobileTabs(
 ): Partial<Record<"index" | "more" | "inbox", number>> {
   const b = ownerIntelligenceNavBadges(intel);
   const out: Partial<Record<"index" | "more" | "inbox", number>> = {};
-  if (b.homeActCount > 0) out.index = b.homeActCount;
+  // Today: Liv + handed-off only — billing/setup act items belong on More → Settings.
+  const todayCount = b.livActCount + (intel?.ops?.handedOffCount ?? 0);
+  if (todayCount > 0) out.index = todayCount;
   if (b.settingsActCount > 0) out.more = b.settingsActCount;
-  const handedOff = intel?.ops?.handedOffCount ?? 0;
-  if (handedOff > 0) out.inbox = handedOff;
+  const inboxHandedOff = intel?.ops?.handedOffCount ?? 0;
+  if (inboxHandedOff > 0) out.inbox = inboxHandedOff;
   return out;
 }

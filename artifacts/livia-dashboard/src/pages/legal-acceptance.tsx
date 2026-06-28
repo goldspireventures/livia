@@ -26,6 +26,7 @@ import {
   clearOnboardingMigrationIntent,
   writeOnboardingFreshSession,
 } from "@/lib/onboarding-migration-intent";
+import { resolveStaffInviteLandingForUser } from "@/lib/staff-invite-landing";
 
 const TOS_URL = legalUrl("tos");
 const PRIVACY_URL = legalUrl("privacy");
@@ -41,6 +42,9 @@ type BusinessRow = {
 
 export default function LegalAcceptancePage() {
   const [, navigate] = useLocation();
+  const fromStaffInvite =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("from") === "staff-invite";
   const queryClient = useQueryClient();
   const { user } = useUser();
   const [agreed, setAgreed] = useState(false);
@@ -61,6 +65,15 @@ export default function LegalAcceptancePage() {
 
       const clerkUserId = user?.id ?? "";
       const email = user?.primaryEmailAddress?.emailAddress ?? null;
+
+      if (fromStaffInvite) {
+        const path = await resolveStaffInviteLandingForUser({
+          surface: "web",
+          clerkEmail: email,
+        });
+        navigate(path);
+        return;
+      }
 
       let destination: "/onboarding" | "/dashboard" = "/onboarding";
       try {

@@ -187,7 +187,13 @@ export async function acceptPendingInvitations(userId: string) {
       {
         businessId: biz.id,
         businessName: biz.name,
-        role: existing?.role ?? livia.role,
+        role: (existing?.role ?? livia.role) as InvitableRole,
+        deskRole:
+          (scope as { deskRole?: DeskRole } | undefined)?.deskRole ??
+          (livia.deskRole === "reception" || livia.deskRole === "manager"
+            ? livia.deskRole
+            : null),
+        vertical: biz.vertical ?? null,
       },
     ],
   };

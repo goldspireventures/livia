@@ -149,11 +149,11 @@ export function resolvePostSignInLandingPath(args: {
   return sessionDest;
 }
 
-/** Clerk invitation redirect — staff land on legal gate, then role-aware home. */
-export function staffInviteClerkRedirectUrl(dashboardBaseUrl: string): string {
-  const base = dashboardBaseUrl.replace(/\/+$/, "");
-  return `${base}/sign-in?redirect_url=${encodeURIComponent("/legal-acceptance")}`;
-}
+export {
+  staffInviteWebRedirectUrl,
+  staffInviteMobileRedirectUrl,
+  staffInviteClerkRedirectUrl,
+} from "./staff-invite-program";
 
 /** After platform legal — new founders create a shop; invited staff skip founder onboarding. */
 export function resolvePostLegalDestination(args: {

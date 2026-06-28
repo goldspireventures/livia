@@ -18,7 +18,7 @@ import {
   type PresentationPresetOption,
 } from "@/hooks/usePresentationSettings";
 import { fonts, type } from "@/constants/typography";
-import { dashboardSettingsUrl } from "@/lib/dashboard-url";
+import { dashboardAppearanceUrl } from "@/lib/dashboard-url";
 import { presentationPresetsUiEnabled } from "@/lib/presentation-presets-enabled";
 
 type Props = {
@@ -115,7 +115,7 @@ export function MobilePresentationCard({ businessId, canEdit }: Props) {
 
   if (!presetsEnabled && !isLoading) return null;
 
-  const webSettings = dashboardSettingsUrl("shop", businessId);
+  const webSettings = dashboardAppearanceUrl(businessId);
   const presetLabel = data?.preset.label ?? skin.effectiveCssPreset;
   const accent = data?.brandAccentHex ?? draftAccent;
 
@@ -217,9 +217,9 @@ export function MobilePresentationCard({ businessId, canEdit }: Props) {
         onPress={() => void Linking.openURL(webSettings)}
         style={[styles.btn, { borderColor: colors.border }]}
       >
-        <Text style={[styles.btnText, { color: colors.primary }]}>
-          Logo, cover & live booking page preview
-        </Text>
+          <Text style={[styles.btnText, { color: colors.primary }]}>
+            Edit look & live booking preview on web
+          </Text>
         <Feather name="external-link" size={16} color={colors.primary} />
       </Pressable>
     </View>

@@ -16,6 +16,7 @@ import { usePersona, type PersonaKind } from "@/hooks/usePersona";
 import { useBusiness } from "@/contexts/BusinessContext";
 import { useTenantExperience } from "@/hooks/useTenantExperience";
 import { useMobileOwnerIntelTabBadges } from "@/hooks/useMobileOwnerIntelTabBadges";
+import { formatMobileTabBadge } from "@/lib/mobile-tab-badge";
 import { verticalOperationalCopy } from "@workspace/policy";
 import { GatewayHandoffVeil } from "@/components/gateway/GatewayHandoffVeil";
 import { MobileOperatorChrome } from "@/components/shell/MobileOperatorChrome";
@@ -179,8 +180,9 @@ function TabLayoutInner() {
           options={{
             title: isLoading ? t.title : ritualTitle,
             href: visible.has(t.name) ? undefined : null,
-            tabBarBadge:
-              intelTabBadges[t.name as keyof typeof intelTabBadges] ?? undefined,
+            tabBarBadge: formatMobileTabBadge(
+              intelTabBadges[t.name as keyof typeof intelTabBadges],
+            ),
             tabBarIcon: ({ color, focused }) =>
               isIOS ? (
                 <SymbolView

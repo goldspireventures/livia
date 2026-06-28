@@ -1,7 +1,8 @@
 import { customFetch } from "@workspace/api-client-react";
 import { Feather } from "@expo/vector-icons";
+import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AuroraHalo } from "@/components/brand/AuroraHalo";
@@ -11,6 +12,7 @@ import { aurora, aurum } from "@/constants/colors";
 import { elevation } from "@/constants/elevation";
 import { useColors } from "@/hooks/useColors";
 import { fonts, type } from "@/constants/typography";
+import { dashboardSettingsUrl } from "@/lib/dashboard-url";
 
 type Report = {
   slug: string;
@@ -18,23 +20,94 @@ type Report = {
   sections: Array<{ heading: string; body?: string; bullets?: string[] }>;
 };
 
+type WellnessDigest = {
+  slug: string;
+  title: string;
+  lines: string[];
+};
+
+type ExportPreview = {
+  preview: Report extends infer _ ? {
+    businessName: string;
+    revenue: { completedBookings: number; grossMinor: number; currency: string };
+    payroll: { preflightOk: boolean; issueCount: number; csvPreviewLines: string[] };
+    disclaimer: string;
+  } : never;
+};
+
+async function loadAccountantReport(bid: string, vertical?: string | null): Promise<Report | null> {
+  try {
+    return await customFetch<Report>(`/api/businesses/${bid}/reports/accountant_preview`);
+  } catch {
+    // Wellness digest fallback (package liability view)
+    if (vertical === "wellness") {
+      try {
+        const digest = await customFetch<WellnessDigest>(
+          `/api/businesses/${bid}/wellness/digest/accountant_preview`,
+        );
+        return {
+          slug: digest.slug,
+          title: digest.title,
+          sections: [{ heading: "Summary", bullets: digest.lines }],
+        };
+      } catch {
+        /* try export next */
+      }
+    }
+    try {
+      const exported = await customFetch<ExportPreview>(
+        `/api/businesses/${bid}/reports/accountant_preview/export`,
+      );
+      const p = exported.preview;
+      if (!p) return null;
+      return {
+        slug: "accountant_preview",
+        title: "Accountant preview",
+        sections: [
+          {
+            heading: "Revenue (7 days)",
+            body: `${p.revenue.completedBookings} completed · ${(p.revenue.grossMinor / 100).toFixed(2)} ${p.revenue.currency}`,
+          },
+          {
+            heading: "Payroll preflight",
+            body: p.payroll.preflightOk
+              ? "Shifts look clean for export."
+              : `${p.payroll.issueCount} issue(s) — resolve before payroll export.`,
+          },
+          { heading: "Preview", bullets: p.payroll.csvPreviewLines },
+          { heading: "Note", body: p.disclaimer },
+        ],
+      };
+    } catch {
+      return null;
+    }
+  }
+}
+
 export default function AccountantPreviewScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { currentBusiness } = useBusiness();
   const bid = currentBusiness?.id ?? "";
+  const vertical = (currentBusiness as { vertical?: string } | undefined)?.vertical;
   const [report, setReport] = useState<Report | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
 
-  useEffect(() => {
+  const reload = useCallback(async () => {
     if (!bid) return;
     setLoading(true);
-    customFetch<Report>(`/api/businesses/${bid}/reports/accountant_preview`)
-      .then(setReport)
-      .catch(() => setReport(null))
-      .finally(() => setLoading(false));
-  }, [bid]);
+    setLoadFailed(false);
+    const data = await loadAccountantReport(bid, vertical);
+    setReport(data);
+    setLoadFailed(!data);
+    setLoading(false);
+  }, [bid, vertical]);
+
+  useEffect(() => {
+    void reload();
+  }, [reload]);
 
   return (
     <ScrollView
@@ -67,7 +140,27 @@ export default function AccountantPreviewScreen() {
         <ActivityIndicator style={{ marginTop: 32 }} color={colors.primary} />
       ) : !report ? (
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Text style={{ color: colors.mutedForeground }}>Could not load preview.</Text>
+          <Text style={{ color: colors.mutedForeground }}>
+            {loadFailed
+              ? "Preview is still building for this shop — pull to retry or open the full report on web."
+              : "No preview data yet."}
+          </Text>
+          <Pressable
+            onPress={() => void reload()}
+            style={[styles.retryBtn, { borderColor: colors.border }]}
+          >
+            <Feather name="refresh-cw" size={14} color={colors.primary} />
+            <Text style={[styles.retryText, { color: colors.primary }]}>Retry</Text>
+          </Pressable>
+          {bid ? (
+            <Pressable
+              onPress={() => void Linking.openURL(dashboardSettingsUrl("billing", bid))}
+              style={[styles.retryBtn, { borderColor: colors.primary }]}
+            >
+              <Text style={[styles.retryText, { color: colors.primary }]}>Open on web</Text>
+              <Feather name="external-link" size={14} color={colors.primary} />
+            </Pressable>
+          ) : null}
         </View>
       ) : (
         report.sections.map((s, i) => (
@@ -130,4 +223,15 @@ const styles = StyleSheet.create({
   bulletRow: { flexDirection: "row", gap: 8, paddingLeft: 4 },
   bulletDot: { fontSize: 16, lineHeight: 20 },
   bullet: { flex: 1, fontSize: 14, lineHeight: 20 },
+  retryBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 10,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingVertical: 10,
+  },
+  retryText: { fontFamily: fonts.bodySemi, fontSize: 14 },
 });

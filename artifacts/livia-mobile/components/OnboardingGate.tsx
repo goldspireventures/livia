@@ -11,6 +11,7 @@ const EXEMPT_ROOTS = new Set([
   "onboarding-setup",
   "onboarding-continue",
   "legal-acceptance",
+  "staff-invite",
   "sign-in",
   "settings",
   "demo",

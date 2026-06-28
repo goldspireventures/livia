@@ -1,0 +1,40 @@
+<svg width="512" height="640" viewBox="0 0 512 640" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Livia">
+  <defs>
+    <style type="text/css">
+      @import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;1,400&amp;display=swap");
+      .livia-serif { font-family: "Cormorant Garamond", Georgia, "Times New Roman", serif; font-weight: 400; }
+    </style>
+    <linearGradient id="livia-ink-bg" x1="0" y1="0" x2="0" y2="640" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0e0e16"/>
+      <stop offset="100%" stop-color="#06060c"/>
+    </linearGradient>
+    <linearGradient id="livia-champagne-mark" x1="256" y1="150" x2="256" y2="330" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#f6f3ec"/>
+      <stop offset="45%" stop-color="#d9c39a"/>
+      <stop offset="60%" stop-color="#8a7549"/>
+      <stop offset="78%" stop-color="#d9c39a"/>
+      <stop offset="100%" stop-color="#f6f3ec"/>
+    </linearGradient>
+    <linearGradient id="livia-champagne-word" x1="256" y1="500" x2="256" y2="580" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#f6f3ec"/>
+      <stop offset="45%" stop-color="#d9c39a"/>
+      <stop offset="60%" stop-color="#8a7549"/>
+      <stop offset="78%" stop-color="#d9c39a"/>
+      <stop offset="100%" stop-color="#f6f3ec"/>
+    </linearGradient>
+    <radialGradient id="livia-glow" cx="0.35" cy="0.35" r="0.7">
+      <stop offset="0%" stop-color="#d9c39a" stop-opacity="0.22"/>
+      <stop offset="70%" stop-color="#d9c39a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="640" rx="48" fill="url(#livia-ink-bg)"/>
+  <g transform="translate(56 56)">
+    <rect width="400" height="400" rx="88" fill="url(#livia-glow)"/>
+    <rect x="1" y="1" width="398" height="398" rx="87" fill="none" stroke="#d9c39a" stroke-opacity="0.28" stroke-width="2"/>
+    <text class="livia-serif" x="106" y="266" font-size="234" fill="#f6f3ec" letter-spacing="-0.08em">L</text>
+    <text class="livia-serif" x="216" y="266" font-size="234" font-style="italic" fill="url(#livia-champagne-mark)">v</text>
+  </g>
+  <text class="livia-serif" x="168" y="560" font-size="112" fill="#f6f3ec" letter-spacing="0.01em">Li</text>
+  <text class="livia-serif" x="252" y="560" font-size="112" font-style="italic" fill="url(#livia-champagne-word)">v</text>
+  <text class="livia-serif" x="288" y="560" font-size="112" fill="#f6f3ec" letter-spacing="0.01em">ia</text>
+</svg>

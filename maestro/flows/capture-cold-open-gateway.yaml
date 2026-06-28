@@ -26,7 +26,7 @@ appId: host.exp.exponent
       id: "app-entry-gateway"
     timeout: 30000
 - tapOn:
-    id: "entry-gateway-operator"
+    id: "entry-gateway-operator-register"
 - extendedWaitUntil:
     visible:
       id: "email-input"
@@ -67,7 +67,7 @@ appId: host.exp.exponent
           id: "mobile-demo-back-entry"
 
 - tapOn:
-    id: "entry-gateway-operator"
+    id: "entry-gateway-operator-register"
 - runFlow:
     when:
       visible:

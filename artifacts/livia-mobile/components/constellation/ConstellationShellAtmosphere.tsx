@@ -142,7 +142,7 @@ export function ConstellationShellAtmosphere() {
   }));
 
   return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+    <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.clip]}>
       <View style={[StyleSheet.absoluteFill, { backgroundColor: gatewayTheme.platformInk }]} />
       <LinearGradient
         colors={["#373a48", "#323542", gatewayTheme.platformInk, "#252830"]}
@@ -170,15 +170,8 @@ export function ConstellationShellAtmosphere() {
       </Animated.View>
       <Animated.View style={[styles.nebulaCyan, nebulaStyle, cyanStyle]}>
         <LinearGradient
-          colors={["rgba(6,182,212,0.38)", "rgba(6,182,212,0.12)", "transparent"]}
+          colors={["rgba(6,182,212,0.22)", "rgba(6,182,212,0.06)", "transparent"]}
           locations={[0, 0.5, 1]}
-          style={StyleSheet.absoluteFill}
-        />
-      </Animated.View>
-      <Animated.View style={[styles.nebulaCyanLower, nebulaStyle, cyanStyle]}>
-        <LinearGradient
-          colors={["rgba(6,182,212,0.32)", "rgba(6,182,212,0.1)", "transparent"]}
-          locations={[0, 0.55, 1]}
           style={StyleSheet.absoluteFill}
         />
       </Animated.View>
@@ -188,6 +181,9 @@ export function ConstellationShellAtmosphere() {
 }
 
 const styles = StyleSheet.create({
+  clip: {
+    overflow: "hidden",
+  },
   nebulaViolet: {
     position: "absolute",
     top: "-8%",
@@ -200,14 +196,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -40,
     right: -40,
-    width: 280,
-    height: 220,
-    borderRadius: 140,
-  },
-  nebulaCyanLower: {
-    position: "absolute",
-    bottom: "8%",
-    left: "8%",
     width: 280,
     height: 220,
     borderRadius: 140,

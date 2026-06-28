@@ -15,6 +15,7 @@ import { StatusBar } from "expo-status-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import { useBusiness } from "@/contexts/BusinessContext";
+import { ensureFreshClerkInstance } from "@/lib/clerk-storage-reset";
 import { fetchOperatorSurface } from "@/lib/operator-surface";
 import {
   setAuthTokenGetter,
@@ -22,14 +23,14 @@ import {
 } from "@workspace/api-client-react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useRouter, useSegments } from "expo-router";
-import { isDemoRoute, isGatewayRoute, isGuestPublicRoute } from "@/lib/navigation";
+import { isDemoRoute, isGatewayRoute, isGuestPublicRoute, isStaffInviteRoute } from "@/lib/navigation";
 import { GUEST_HUB_TOKEN_KEY } from "@/lib/guest-hub";
 import { consumeMobileHomeRoute } from "@/lib/demo-session";
 import { isDemoMobileSurface } from "@/lib/production-surface";
 import { resolveMobileEntryRedirect, setForceColdOpen } from "@/lib/mobile-entry-routing";
 import { fetchMeProfile } from "@/lib/platform-legal";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { LogBox } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { isPushSupportedInThisBuild } from "@/lib/push-notifications";
@@ -94,6 +95,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     const onExecDesk = segments[0] === "_internal";
     const onDemo = isDemoRoute(segments);
     const onGuestPublic = isGuestPublicRoute(segments);
+    const onStaffInvite = isStaffInviteRoute(segments);
     const allowDemo = onDemo && isDemoMobileSurface();
     if (onDemo && !allowDemo) {
       router.replace("/");
@@ -113,7 +115,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
       })();
       return;
     }
-    if (!isSignedIn && !onGateway && !onSignIn && !allowDemo && !onGuestPublic) {
+    if (!isSignedIn && !onGateway && !onSignIn && !allowDemo && !onGuestPublic && !onStaffInvite) {
       router.replace("/");
       return;
     }
@@ -207,7 +209,8 @@ function RootLayoutNav() {
         >
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="sign-in" options={{ headerShown: false }} />
+          <Stack.Screen name="sign-in" options={{ headerShown: false, gestureEnabled: true }} />
+          <Stack.Screen name="staff-invite" options={{ headerShown: false, gestureEnabled: false }} />
           <Stack.Screen name="legal-acceptance" options={{ headerShown: false }} />
           <Stack.Screen name="my" options={{ headerShown: false }} />
           <Stack.Screen name="demo/index" options={{ headerShown: false }} />
@@ -219,7 +222,7 @@ function RootLayoutNav() {
           <Stack.Screen name="experience" options={{ title: "Experience" }} />
           <Stack.Screen name="demo-guide" options={{ headerShown: false }} />
           <Stack.Screen name="public-book/[slug]" options={{ headerShown: false }} />
-          <Stack.Screen name="my-livia/index" options={{ headerShown: false }} />
+          <Stack.Screen name="my-livia/index" options={{ headerShown: false, gestureEnabled: true }} />
           <Stack.Screen name="my-livia/[slug]" options={{ headerShown: false }} />
           <Stack.Screen name="my-livia/[slug]/visit/[bookingId]" options={{ headerShown: false }} />
           <Stack.Screen name="guest-surface" options={{ headerShown: false }} />
@@ -263,6 +266,8 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
+  const clerkPublishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
+  const [clerkStorageReady, setClerkStorageReady] = useState(false);
   const [fontsLoaded, fontError] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
@@ -275,19 +280,24 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
+    void ensureFreshClerkInstance(clerkPublishableKey).finally(() => setClerkStorageReady(true));
+  }, [clerkPublishableKey]);
+
+  useEffect(() => {
     if (fontsLoaded || fontError) {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontError]);
 
   if (!fontsLoaded && !fontError) return null;
+  if (!clerkStorageReady) return null;
 
   return (
     <SafeAreaProvider>
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
           <ClerkProvider
-            publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? ""}
+            publishableKey={clerkPublishableKey}
             tokenCache={tokenCache}
           >
             <GestureHandlerRootView style={{ flex: 1, backgroundColor: "#2c2f3a" }}>

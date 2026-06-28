@@ -872,9 +872,22 @@ export const CreateInvitationBodyRole = {
   STAFF: "STAFF",
 } as const;
 
+/**
+ * Admin scope — manager (ops) or reception (front desk). Ignored for STAFF role.
+ */
+export type CreateInvitationBodyDeskRole =
+  (typeof CreateInvitationBodyDeskRole)[keyof typeof CreateInvitationBodyDeskRole];
+
+export const CreateInvitationBodyDeskRole = {
+  manager: "manager",
+  reception: "reception",
+} as const;
+
 export interface CreateInvitationBody {
   email: string;
   role: CreateInvitationBodyRole;
+  /** Admin scope — manager (ops) or reception (front desk). Ignored for STAFF role. */
+  deskRole?: CreateInvitationBodyDeskRole;
   /**
    * Optional URL Clerk redirects to after the invitee accepts.
    * @nullable

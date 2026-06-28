@@ -6,13 +6,50 @@
 
  */
 
+const http = require("http");
 const { spawn } = require("child_process");
-
 const net = require("net");
-
 const os = require("os");
 
+function warmMetroBundle(port) {
+  const path =
+    "/node_modules/expo-router/entry.bundle?platform=ios&dev=true&hot=false&lazy=true";
+  console.log("");
+  console.log("  ⏳ Pre-building bundle on PC first (2–5 min on Windows)…");
+  console.log("     Do NOT open Expo Go until you see: Ready for device");
+  console.log("");
 
+  const started = Date.now();
+  const maxMs = 15 * 60 * 1000;
+
+  function attempt() {
+    if (Date.now() - started > maxMs) {
+      console.warn("  Bundle warmup timed out after 15m — try scanning anyway.");
+      return;
+    }
+    const req = http.get(
+      { hostname: "127.0.0.1", port, path, timeout: 600000 },
+      (res) => {
+        res.resume();
+        if (res.statusCode === 200) {
+          const mins = ((Date.now() - started) / 60000).toFixed(1);
+          console.log("");
+          console.log(`  ✓ Ready for device (${mins} min) — scan QR / open Expo Go now.`);
+          console.log("");
+          return;
+        }
+        setTimeout(attempt, 8000);
+      },
+    );
+    req.on("error", () => setTimeout(attempt, 8000));
+    req.on("timeout", () => {
+      req.destroy();
+      setTimeout(attempt, 8000);
+    });
+  }
+
+  setTimeout(attempt, 15000);
+}
 
 function getLanIPv4() {
 
@@ -155,6 +192,13 @@ async function main() {
   // Expo hides the QR code and disables watch mode when CI=true (often set by IDEs).
   const { CI: _ci, ...processEnv } = process.env;
 
+  if (clearCache) {
+    console.log("  Note: --clear = slow first bundle. Omit --clear on restarts unless cache is broken.");
+    console.log("");
+  }
+
+  const useTunnel = process.argv.includes("--tunnel");
+
   const env = {
     ...processEnv,
     EXPO_PUBLIC_API_BASE_URL: apiBase,
@@ -167,15 +211,26 @@ async function main() {
     EXPO_PUBLIC_DOMAIN: useProd ? "api.livia-hq.com" : `${ip}:3000`,
     REACT_NATIVE_PACKAGER_HOSTNAME: ip,
     EXPO_OFFLINE: "1",
+    LIVIA_DEV_FAST_BUNDLE: "1",
+    ...(process.platform === "win32" ? { CHOKIDAR_USEPOLLING: "1" } : {}),
   };
 
-
+  if (useTunnel) {
+    console.log("  Tunnel mode — works when LAN/firewall blocks device ↔ PC.");
+    console.log("");
+  }
 
   const child = spawn(
-
     "pnpm",
-
-    ["exec", "expo", "start", "--port", String(port), "--lan", ...(clearCache ? ["--clear"] : [])],
+    [
+      "exec",
+      "expo",
+      "start",
+      "--port",
+      String(port),
+      ...(useTunnel ? ["--tunnel"] : ["--lan"]),
+      ...(clearCache ? ["--clear"] : []),
+    ],
 
     {
 
@@ -191,7 +246,7 @@ async function main() {
 
   );
 
-
+  warmMetroBundle(port);
 
   child.on("exit", (code) => process.exit(code ?? 0));
 

@@ -25,7 +25,7 @@ import { GatewayAuthShell } from "@/components/gateway/GatewayAuthShell";
 import { GatewayScreenShell } from "@/components/gateway/GatewayScreenShell";
 import { GUEST_HUB_COPY, LIVIA_MOBILE_ENTRY_COPY, guestHubContactLabel, type GuestPreferredModality } from "@workspace/policy";
 import { DEMO_GUEST_PHONE, requestGuestHubOtpMobile } from "@/lib/guest-hub-otp";
-import { rememberGuestDoor, setForceColdOpen } from "@/lib/mobile-entry-routing";
+import { goToColdOpen, rememberGuestDoor, setForceColdOpen } from "@/lib/mobile-entry-routing";
 import { isDemoMobileSurface } from "@/lib/production-surface";
 import { GuestHubLivChat } from "@/components/guest/GuestHubLivChat";
 import { GuestHubWelcome } from "@/components/guest/GuestHubWelcome";
@@ -268,8 +268,17 @@ export default function MyLiviaHubScreen() {
         subtitle={GUEST_HUB_COPY.signInBody}
         testID="guest-hub-sign-in"
         headerAction={
-          <Pressable onPress={() => router.replace("/" as never)} hitSlop={12} testID="guest-hub-back">
+          <Pressable onPress={() => void goToColdOpen(router)} hitSlop={12} testID="guest-hub-back">
             <Feather name="arrow-left" size={22} color={colors.foreground} />
+          </Pressable>
+        }
+        below={
+          <Pressable onPress={() => router.push("/sign-in" as never)} hitSlop={8} testID="guest-hub-business-link">
+            <Text style={[type.caption, { color: colors.mutedForeground, textAlign: "center" }]}>
+              <Text style={{ color: colors.primary, fontFamily: fonts.bodySemi }}>
+                {LIVIA_MOBILE_ENTRY_COPY.guestStaffLink}
+              </Text>
+            </Text>
           </Pressable>
         }
       >
@@ -303,7 +312,7 @@ export default function MyLiviaHubScreen() {
 
   return (
     <GatewayScreenShell surfaceId="guest-hub">
-      <Pressable onPress={() => router.replace("/" as never)} style={styles.back}>
+      <Pressable onPress={() => void goToColdOpen(router)} style={styles.back}>
         <Feather name="arrow-left" size={22} color={colors.foreground} />
       </Pressable>
       <ScrollView contentContainerStyle={styles.pad} testID="guest-hub-home">

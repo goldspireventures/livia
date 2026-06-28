@@ -36,6 +36,21 @@ import {
   prefetchTenantDashboardShell,
   applyTenantShellFromCache,
 } from "@/lib/prefetch-tenant-dashboard";
+import { resolveStaffInviteLandingForUser } from "@/lib/staff-invite-landing";
+
+function StaffInviteLegalRedirect({ email }: { email: string | null }) {
+  const [, navigate] = useLocation();
+  useEffect(() => {
+    void resolveStaffInviteLandingForUser({ surface: "web", clerkEmail: email }).then((path) => {
+      navigate(path, { replace: true });
+    });
+  }, [email, navigate]);
+  return (
+    <div className="flex h-screen w-full items-center justify-center bg-background">
+      <Spinner className="h-8 w-8 text-primary" />
+    </div>
+  );
+}
 
 // On first authenticated load, sweep up any pending Clerk invitations
 // and turn them into business_memberships rows. Idempotent + cheap, so
@@ -261,6 +276,14 @@ function BusinessDataLoader({
     !meLegalLoading &&
     meLegal?.platformLegalAccepted
   ) {
+    const fromStaffInvite =
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("from") === "staff-invite";
+    if (fromStaffInvite) {
+      return (
+        <StaffInviteLegalRedirect email={email} />
+      );
+    }
     const dest = resolvePostLegalDestination({
       businesses: list as SessionBusinessLike[],
       clerkUserId,

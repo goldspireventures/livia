@@ -164,6 +164,8 @@ export default function DashboardScreen() {
       router.replace(asHref("/my-day"));
     } else if (persona === "manager") {
       router.replace(asHref("/approvals"));
+    } else if (persona === "receptionist") {
+      router.replace(asHref("/bookings"));
     }
   }, [
     currentBusiness,

@@ -1,6 +1,5 @@
 import { customFetch } from "@workspace/api-client-react";
 import { Feather } from "@expo/vector-icons";
-import * as WebBrowser from "expo-web-browser";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -23,12 +22,15 @@ import { useHaptics } from "@/hooks/useHaptics";
 import { useBillingSummary } from "@/hooks/useBillingSummary";
 import { ADDON_CATALOGUE, formatAddonPriceEur, hasEffectiveEntitlement, type EntitlementKey } from "@workspace/entitlements";
 import { buildBillingAddonCatalogForOwner } from "@workspace/policy";
+import { openStripeCheckoutSession } from "@/lib/stripe-checkout";
 
 const UPGRADE_PLANS = [
   { id: "solo" as const, name: "Solo", blurb: "One chair, full Liv on SMS and bookings." },
   { id: "studio" as const, name: "Studio", blurb: "Team, WhatsApp, and manager queue." },
   { id: "chain" as const, name: "Chain", blurb: "Multi-location, Glance, and franchise tools." },
 ];
+
+const BILLING_RETURN = "/settings?tab=billing";
 
 export default function PlanScreen() {
   const colors = useColors();
@@ -40,6 +42,7 @@ export default function PlanScreen() {
   const { data, isLoading, refetch } = useBillingSummary(bid);
   const [checkoutPlan, setCheckoutPlan] = useState<string | null>(null);
   const [checkoutAddon, setCheckoutAddon] = useState<string | null>(null);
+  const [checkoutNote, setCheckoutNote] = useState("");
   const [error, setError] = useState("");
   const qc = useQueryClient();
   const vertical = (currentBusiness as { vertical?: string } | undefined)?.vertical;
@@ -48,9 +51,16 @@ export default function PlanScreen() {
     activeEntitlements: data?.entitlements ?? [],
   });
 
+  const refreshBilling = async () => {
+    await refetch();
+    void qc.invalidateQueries({ queryKey: ["entitlements", bid] });
+    void qc.invalidateQueries({ queryKey: ["billing-state", bid] });
+  };
+
   const startAddonCheckout = async (addonId: string) => {
     if (!bid) return;
     setCheckoutAddon(addonId);
+    setCheckoutNote("Complete checkout in your browser — we'll refresh your plan when you return.");
     setError("");
     haptics.tap();
     try {
@@ -59,18 +69,25 @@ export default function PlanScreen() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ addonId, returnPath: "/plan" }),
+          body: JSON.stringify({ addonId, returnPath: BILLING_RETURN }),
         },
       );
       if (res.url) {
-        await WebBrowser.openBrowserAsync(res.url);
-        await refetch();
-        void qc.invalidateQueries({ queryKey: ["entitlements", bid] });
-        haptics.success();
+        const outcome = await openStripeCheckoutSession(res.url, {
+          returnPath: BILLING_RETURN,
+        });
+        await refreshBilling();
+        if (outcome === "success") {
+          haptics.success();
+          setCheckoutNote("Plan updated — add-on is active.");
+        } else if (outcome === "cancel") {
+          setCheckoutNote("Checkout cancelled — no charge.");
+        }
         return;
       }
-      await refetch();
+      await refreshBilling();
       haptics.success();
+      setCheckoutNote(res.message ?? "Add-on updated.");
     } catch (err: unknown) {
       const e = err as { message?: string };
       setError(e.message ?? "Add-on checkout failed.");
@@ -83,6 +100,7 @@ export default function PlanScreen() {
   const startCheckout = async (planId: "solo" | "studio" | "chain") => {
     if (!bid) return;
     setCheckoutPlan(planId);
+    setCheckoutNote("Complete checkout in your browser — we'll refresh your plan when you return.");
     setError("");
     haptics.tap();
     try {
@@ -91,18 +109,23 @@ export default function PlanScreen() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ planId }),
+          body: JSON.stringify({ planId, returnPath: BILLING_RETURN }),
         },
       );
       if (res.url) {
-        await WebBrowser.openBrowserAsync(res.url);
-        await refetch();
-        haptics.success();
+        const outcome = await openStripeCheckoutSession(res.url, { returnPath: BILLING_RETURN });
+        await refreshBilling();
+        if (outcome === "success") {
+          haptics.success();
+          setCheckoutNote("Plan updated — thank you.");
+        } else if (outcome === "cancel") {
+          setCheckoutNote("Checkout cancelled — no charge.");
+        }
         return;
       }
-      await refetch();
+      await refreshBilling();
       haptics.success();
-      setError(res.message ?? "Plan updated.");
+      setCheckoutNote(res.message ?? "Plan updated.");
     } catch (err: unknown) {
       const e = err as { message?: string };
       setError(e.message ?? "Checkout failed — try again or use web billing.");
@@ -157,6 +180,9 @@ export default function PlanScreen() {
         </View>
       ) : null}
 
+      {checkoutNote ? (
+        <Text style={[styles.note, { color: colors.mutedForeground }]}>{checkoutNote}</Text>
+      ) : null}
       {error ? <Text style={[styles.error, { color: colors.destructive }]}>{error}</Text> : null}
 
       <Text style={[styles.sectionTitle, { color: colors.mutedForeground }]}>Upgrade</Text>
@@ -283,5 +309,6 @@ const styles = StyleSheet.create({
   },
   planName: { fontFamily: fonts.bodySemi, fontSize: 16 },
   planBlurb: { fontSize: 13, marginTop: 4, lineHeight: 18 },
+  note: { fontSize: 13, marginBottom: 12, lineHeight: 18 },
   error: { fontSize: 13, marginBottom: 12 },
 });

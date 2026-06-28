@@ -61,6 +61,7 @@ import {
 
 import NotFound from "@/pages/not-found";
 import SignInPage from "@/pages/sign-in";
+import StaffInvitePage from "@/pages/staff-invite";
 import SignUpPage from "@/pages/sign-up";
 import OnboardingPage from "@/pages/onboarding";
 import OnboardingPreviewPage from "@/pages/dev/onboarding-preview";
@@ -401,6 +402,7 @@ function AppRouter() {
   return (
     <Switch>
       <Route path="/sign-in" component={SignInPage} />
+      <Route path="/staff-invite" component={StaffInvitePage} />
       <Route path="/sign-up" component={SignUpPage} />
       <Route path="/my-livia/:slug/visit/:bookingId" component={MyLiviaAliasRedirect} />
       <Route path="/my-livia/account" component={MyLiviaAliasRedirect} />

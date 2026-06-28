@@ -8,6 +8,7 @@ import {
   resolvePostLegalDestination,
   resolvePostSignInLandingPath,
   staffInviteClerkRedirectUrl,
+  staffInviteMobileRedirectUrl,
 } from "../registration-routing-program";
 
 assert.equal(isDemoWorldSlug("dublin-barber-collective"), true);
@@ -58,8 +59,9 @@ assert.equal(
   "/dashboard",
 );
 
-assert.ok(
-  staffInviteClerkRedirectUrl("https://app.livia-hq.com").includes("legal-acceptance"),
+assert.equal(
+  staffInviteClerkRedirectUrl("https://app.livia-hq.com"),
+  "https://app.livia-hq.com/staff-invite",
 );
 
 const picked = pickPrimarySessionBusiness(
@@ -190,5 +192,8 @@ assert.equal(
   }),
   "/dashboard",
 );
+
+assert.equal(staffInviteMobileRedirectUrl(), "livia-mobile://staff-invite");
+assert.equal(staffInviteMobileRedirectUrl("livia"), "livia://staff-invite");
 
 console.log("registration-routing-program.test.ts OK");

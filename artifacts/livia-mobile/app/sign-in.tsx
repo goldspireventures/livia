@@ -1,9 +1,9 @@
 import { useOAuth, useSignIn, useSignUp } from "@clerk/clerk-expo";
 import { Feather } from "@expo/vector-icons";
 import * as AuthSession from "expo-auth-session";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Platform,
@@ -29,16 +29,26 @@ import {
   GATEWAY_PASSWORD_HINT,
   GATEWAY_SIGN_IN_SUBTITLE,
   GATEWAY_SIGN_UP_SUBTITLE,
+  GATEWAY_EMAIL_VERIFY_SUBTITLE,
+  GATEWAY_EMAIL_VERIFY_RESEND,
+  GATEWAY_SIGN_IN_DEVICE_VERIFY_SUBTITLE,
+  attemptClerkDeviceVerification,
+  beginClerkDeviceVerification,
+  completeClerkPasswordSignIn,
+  getClerkDeviceVerificationStatus,
   humanizeGatewayAuthError,
+  incompleteClerkSignInMessage,
+  isClerkDeviceVerificationStatus,
   LIVIA_MOBILE_ENTRY_COPY,
   LIVIA_FORM_EXAMPLES,
 } from "@workspace/policy";
 import { isDemoMobileSurface } from "@/lib/production-surface";
-import { rememberOperatorDoor } from "@/lib/mobile-entry-routing";
+import { goToColdOpen, rememberOperatorDoor, markSignUpFormReset, consumeSignUpFormReset } from "@/lib/mobile-entry-routing";
 
 WebBrowser.maybeCompleteAuthSession();
 
 type Mode = "sign-in" | "sign-up" | "verify";
+type VerifyPurpose = "signup" | "signin-device";
 
 export default function SignInScreen() {
   const { tokens: colors } = useMobileSurface("gateway-auth");
@@ -61,10 +71,15 @@ export default function SignInScreen() {
   const [oauthLoading, setOauthLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [focused, setFocused] = useState<"email" | "password" | "code" | null>(null);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [verifyPurpose, setVerifyPurpose] = useState<VerifyPurpose>("signup");
 
   const emailRef = React.useRef<TextInput>(null);
   const passwordRef = React.useRef<TextInput>(null);
   const codeRef = React.useRef<TextInput>(null);
+  const verifyInFlightRef = React.useRef(false);
+
+  const EMAIL_CODE_LENGTH = 6;
 
   function normalizeIdentifier(raw: string): string {
     return normalizeDemoSignInIdentifier(raw);
@@ -74,6 +89,56 @@ export default function SignInScreen() {
     if (params.mode === "sign-up") setMode("sign-up");
   }, [params.mode]);
 
+  /** Fresh registration entry from cold open — drop stale verify UI / focus state. */
+  useFocusEffect(
+    useCallback(() => {
+      if (consumeSignUpFormReset()) {
+        resetToSignUpForm();
+        return;
+      }
+      if (params.mode === "sign-up") {
+        setFocused(null);
+      }
+    }, [params.mode]),
+  );
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setTimeout(() => setResendCooldown((s) => Math.max(0, s - 1)), 1000);
+    return () => clearTimeout(t);
+  }, [resendCooldown]);
+
+  function resetToSignUpForm() {
+    setMode("sign-up");
+    setCode("");
+    setError("");
+    setFocused(null);
+  }
+
+  function leaveToColdOpen() {
+    resetToSignUpForm();
+    setEmail("");
+    setPassword("");
+    markSignUpFormReset();
+    void goToColdOpen(router);
+  }
+
+  function handleHeaderBack() {
+    haptics.selection();
+    if (mode === "verify") {
+      if (verifyPurpose === "signin-device") {
+        setMode("sign-in");
+        setCode("");
+        setError("");
+        setFocused(null);
+        return;
+      }
+      resetToSignUpForm();
+      return;
+    }
+    leaveToColdOpen();
+  }
+
   useEffect(() => {
     if (Platform.OS !== "web") {
       WebBrowser.warmUpAsync();
@@ -82,6 +147,16 @@ export default function SignInScreen() {
       };
     }
   }, []);
+
+  async function enterDeviceVerifyStep() {
+    if (!signIn) return;
+    await beginClerkDeviceVerification(signIn);
+    setVerifyPurpose("signin-device");
+    setMode("verify");
+    setResendCooldown(30);
+    setError("");
+    haptics.success();
+  }
 
   const handleSignIn = async () => {
     if (!signInLoaded || loading) return;
@@ -105,20 +180,44 @@ export default function SignInScreen() {
         }
       }
 
-      const result = await signIn.create({ identifier, password });
-      if (result.status === "complete") {
+      const outcome = await completeClerkPasswordSignIn(signIn!, identifier, password);
+      if (outcome.ok) {
         await clearDemoSession();
         await rememberOperatorDoor();
-        await setActiveSignIn({ session: result.createdSessionId });
+        await setActiveSignIn({ session: outcome.sessionId });
         haptics.success();
-      } else if (isDemoLiviaEmail(identifier)) {
-        setError(
-          "Demo sign-in needs the demo password from your invite. Make sure you are online and try again.",
-        );
-      } else {
-        setError("Extra verification is required. Contact support@goldspireventures.com if you need help.");
+        return;
       }
+
+      if (
+        outcome.reason === "needs_device_verification" ||
+        (outcome.reason === "incomplete" && isClerkDeviceVerificationStatus(outcome.status))
+      ) {
+        await enterDeviceVerifyStep();
+        return;
+      }
+
+      if (outcome.reason === "incomplete") {
+        if (isDemoLiviaEmail(identifier)) {
+          setError(
+            "Demo sign-in needs the demo password from your invite. Make sure you are online and try again.",
+          );
+        } else {
+          setError(incompleteClerkSignInMessage(outcome.status));
+        }
+        return;
+      }
+
+      setError("Could not sign in. Check your email and password.");
     } catch (err: unknown) {
+      if (signIn && getClerkDeviceVerificationStatus(signIn)) {
+        try {
+          await enterDeviceVerifyStep();
+          return;
+        } catch {
+          /* fall through */
+        }
+      }
       const e = err as { errors?: Array<{ message: string; code?: string }> };
       const first = e?.errors?.[0];
       setError(
@@ -133,15 +232,23 @@ export default function SignInScreen() {
   };
 
   const handleSignUp = async () => {
-    if (!signUpLoaded || loading) return;
+    if (!signUpLoaded || !signUp || loading) return;
     haptics.tap();
     setLoading(true);
     setError("");
     try {
       await clearDemoSession();
-      await signUp.create({ emailAddress: email.trim(), password });
+      const result = await signUp.create({ emailAddress: email.trim(), password });
+      if (result.status === "complete") {
+        await rememberOperatorDoor();
+        await setActiveSignUp({ session: result.createdSessionId });
+        haptics.success();
+        return;
+      }
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      setVerifyPurpose("signup");
       setMode("verify");
+      setResendCooldown(30);
     } catch (err: unknown) {
       const e = err as { errors?: Array<{ message: string; code?: string }> };
       const first = e?.errors?.[0];
@@ -152,13 +259,65 @@ export default function SignInScreen() {
     }
   };
 
-  const handleVerify = async () => {
-    if (!signUpLoaded || loading) return;
+  const handleResendCode = async () => {
+    if (loading || resendCooldown > 0) return;
     haptics.tap();
     setLoading(true);
     setError("");
     try {
-      const result = await signUp.attemptEmailAddressVerification({ code: code.trim() });
+      if (verifyPurpose === "signin-device") {
+        if (!signInLoaded || !signIn) return;
+        const strategy = signIn.supportedSecondFactors?.some((f) => f.strategy === "email_code")
+          ? "email_code"
+          : "phone_code";
+        await signIn.prepareSecondFactor({ strategy });
+      } else {
+        if (!signUpLoaded || !signUp) return;
+        await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      }
+      setResendCooldown(30);
+      haptics.success();
+    } catch (err: unknown) {
+      const e = err as { errors?: Array<{ message: string; code?: string }> };
+      const first = e?.errors?.[0];
+      setError(humanizeGatewayAuthError(first?.code, first?.message));
+      haptics.warning();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerify = async (codeOverride?: string) => {
+    if (loading || verifyInFlightRef.current) return;
+    const trimmed = (codeOverride ?? code).replace(/\D/g, "").trim();
+    if (trimmed.length !== EMAIL_CODE_LENGTH) return;
+    verifyInFlightRef.current = true;
+    haptics.tap();
+    setLoading(true);
+    setError("");
+    try {
+      if (verifyPurpose === "signin-device") {
+        if (!signInLoaded || !signIn) return;
+        const strategy = signIn.supportedSecondFactors?.some((f) => f.strategy === "email_code")
+          ? "email_code"
+          : "phone_code";
+        const outcome = await attemptClerkDeviceVerification(signIn, trimmed, strategy);
+        if (outcome.ok) {
+          await clearDemoSession();
+          await rememberOperatorDoor();
+          await setActiveSignIn({ session: outcome.sessionId });
+          haptics.success();
+          return;
+        }
+        setError(
+          outcome.reason === "incomplete"
+            ? "Wrong code or it expired. Resend and try again."
+            : "Could not verify this device.",
+        );
+        return;
+      }
+      if (!signUpLoaded || !signUp) return;
+      const result = await signUp.attemptEmailAddressVerification({ code: trimmed });
       if (result.status === "complete") {
         await clearDemoSession();
         await rememberOperatorDoor();
@@ -172,8 +331,18 @@ export default function SignInScreen() {
       haptics.warning();
     } finally {
       setLoading(false);
+      verifyInFlightRef.current = false;
     }
   };
+
+  function handleCodeChange(raw: string) {
+    const digits = raw.replace(/\D/g, "").slice(0, EMAIL_CODE_LENGTH);
+    setCode(digits);
+    if (error) setError("");
+    if (digits.length === EMAIL_CODE_LENGTH) {
+      void handleVerify(digits);
+    }
+  }
 
   const handleGoogle = async () => {
     if (oauthLoading) return;
@@ -228,17 +397,30 @@ export default function SignInScreen() {
     }
   };
 
-  const submit = mode === "verify" ? handleVerify : mode === "sign-in" ? handleSignIn : handleSignUp;
+  const submit =
+    mode === "verify"
+      ? () => void handleVerify()
+      : mode === "sign-in"
+        ? handleSignIn
+        : handleSignUp;
   const submitLabel = mode === "verify" ? "Verify email" : mode === "sign-in" ? "Sign in" : "Create account";
   const emailPlaceholder =
     mode === "sign-up" || !isDemoMobileSurface()
       ? LIVIA_FORM_EXAMPLES.ownerEmail
       : "Email or demo slug";
   const screenTitle =
-    mode === "verify" ? "Verify email" : mode === "sign-up" ? "Create account" : "Sign in";
+    mode === "verify"
+      ? verifyPurpose === "signin-device"
+        ? "Confirm this device"
+        : "Verify email"
+      : mode === "sign-up"
+        ? "Create account"
+        : "Sign in";
   const subtitle =
     mode === "verify"
-      ? "We just sent a 6-digit code to your inbox."
+      ? verifyPurpose === "signin-device"
+        ? GATEWAY_SIGN_IN_DEVICE_VERIFY_SUBTITLE
+        : GATEWAY_EMAIL_VERIFY_SUBTITLE
       : mode === "sign-in"
         ? GATEWAY_SIGN_IN_SUBTITLE
         : GATEWAY_SIGN_UP_SUBTITLE;
@@ -363,8 +545,11 @@ export default function SignInScreen() {
                 placeholder="123456"
                 placeholderTextColor={colors.mutedForeground}
                 value={code}
-                onChangeText={setCode}
+                onChangeText={handleCodeChange}
                 keyboardType="number-pad"
+                textContentType="oneTimeCode"
+                autoComplete="one-time-code"
+                maxLength={EMAIL_CODE_LENGTH}
                 autoFocus
                 returnKeyType="done"
                 onSubmitEditing={submit}
@@ -372,6 +557,18 @@ export default function SignInScreen() {
                 onBlur={() => setFocused(null)}
                 testID="otp-input"
               />
+              <Pressable
+                onPress={() => void handleResendCode()}
+                disabled={loading || resendCooldown > 0}
+                style={styles.resendRow}
+                testID="sign-up-resend-code"
+              >
+                <Text style={[styles.resendText, { color: colors.primary }]}>
+                  {resendCooldown > 0
+                    ? `Resend code in ${resendCooldown}s`
+                    : GATEWAY_EMAIL_VERIFY_RESEND}
+                </Text>
+              </Pressable>
             </>
           )}
 
@@ -420,7 +617,7 @@ export default function SignInScreen() {
       testID="sign-in-form"
       keyboardAware
       headerAction={
-        <Pressable onPress={() => router.replace("/" as never)} hitSlop={12} testID="sign-in-back">
+        <Pressable onPress={handleHeaderBack} hitSlop={12} testID="sign-in-back">
           <Feather name="arrow-left" size={22} color={colors.foreground} />
         </Pressable>
       }
@@ -442,22 +639,7 @@ export default function SignInScreen() {
               </Text>
             </Text>
           </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            onPress={() => {
-              haptics.selection();
-              setMode("sign-up");
-              setCode("");
-              setError("");
-            }}
-            style={styles.toggle}
-            hitSlop={8}
-          >
-            <Text style={[styles.toggleText, { color: colors.mutedForeground }]}>
-              <Text style={{ color: colors.primary, fontFamily: fonts.bodySemi }}>← Back</Text>
-            </Text>
-          </TouchableOpacity>
-        )
+        ) : null
       }
       below={
         <>
@@ -465,7 +647,7 @@ export default function SignInScreen() {
             activeOpacity={0.85}
             onPress={() => {
               haptics.selection();
-              router.replace("/" as never);
+              leaveToColdOpen();
             }}
             style={styles.guestEntry}
             testID="sign-in-back-to-gateway"
@@ -571,6 +753,15 @@ const styles = StyleSheet.create({
   toggleText: {
     fontSize: 13.5,
     fontFamily: fonts.body,
+  },
+  resendRow: {
+    alignItems: "center",
+    paddingVertical: 4,
+    marginTop: 2,
+  },
+  resendText: {
+    fontSize: 13.5,
+    fontFamily: fonts.bodySemi,
   },
   googleBtn: {
     borderRadius: 14,

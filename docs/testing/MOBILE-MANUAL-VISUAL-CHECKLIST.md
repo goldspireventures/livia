@@ -8,14 +8,14 @@
 
 ---
 
-## A. Cold open & gateway (Maestro: `capture-cold-open-gateway.yaml`)
+## A. Cold open & gateway (Maestro: `capture-prod-cold-open.yaml` or `capture-cold-open-gateway.yaml`)
 
 | Step | What to verify | testID / cue |
 |------|----------------|--------------|
-| A1 | App opens to **Guest / Operator / Demo** gateway | `app-entry-gateway` |
+| A1 | App opens to **Set up My Livia** + **Business registration** (prod) or Guest/Operator/Demo (demo build) | `app-entry-gateway` |
 | A2 | **Guest** → My Livia sign-in (phone/email) | `entry-gateway-guest` → `guest-hub-send-code` |
-| A3 | Back → **Operator** → email sign-in | `entry-gateway-operator` → `email-input` |
-| A4 | **Demo** → wedge grid → beauty story | `entry-gateway-demo` → `mobile-demo-launcher` |
+| A3 | Back → **Business registration** → create account | `entry-gateway-operator-register` → `email-input` |
+| A4 | **Demo only** (`EXPO_PUBLIC_DEMO_LOGIN=true`) → wedge grid | `entry-gateway-demo` |
 | A5 | Sign in as **owner** → lands on **Today** | Tab label "Today" |
 
 **Pass if:** No dev errors, no "staging demo" copy, gateway matches web G1 intent.
@@ -109,5 +109,6 @@ Sign in as owner for each demo slug; open **More** and confirm vertical hub appe
 | E Verticals | ☐ | |
 | F Onboarding | ☐ | |
 | CI `pnpm pls:mobile-parity` green | ☐ | |
+| CI `pnpm mobile:path-audit` green | ☐ | |
 
 Log issues in support with `surfaceId: mobile` + screenshot + route (e.g. `/(tabs)/index`).

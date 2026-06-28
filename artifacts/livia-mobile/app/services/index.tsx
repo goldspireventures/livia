@@ -18,6 +18,7 @@ import { useBusiness } from "@/contexts/BusinessContext";
 import { useColors } from "@/hooks/useColors";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useMembership } from "@/hooks/useMembership";
+import { formatServicePriceLine } from "@/lib/format-money";
 import { businessVocabulary } from "@workspace/policy";
 
 export default function ServicesScreen() {
@@ -30,6 +31,11 @@ export default function ServicesScreen() {
   const canEdit = role === "OWNER" || role === "ADMIN";
   const vertical = (currentBusiness as { vertical?: string } | undefined)?.vertical;
   const serviceNoun = businessVocabulary(vertical, currentBusiness?.category).serviceNoun;
+  const serviceLabel =
+    serviceNoun === "service"
+      ? "Services"
+      : `${serviceNoun.charAt(0).toUpperCase()}${serviceNoun.slice(1)}`;
+  const currency = currentBusiness?.currency ?? "EUR";
 
   const { data: services, isLoading, refetch, isRefetching } = useListServices(
     currentBusiness?.id ?? "",
@@ -41,7 +47,7 @@ export default function ServicesScreen() {
     <OperationalScreen
       scroll={false}
       ritualPage
-      title={serviceNoun === "service" ? "Services" : `${serviceNoun.charAt(0).toUpperCase()}${serviceNoun.slice(1)}`}
+      title={serviceLabel}
       subtitle="Duration and price shape availability and what Liv can book confidently."
       headerExtra={
         canEdit ? (
@@ -57,7 +63,9 @@ export default function ServicesScreen() {
             ]}
           >
             <Feather name="plus" size={18} color={colors.primaryForeground} />
-            <Text style={[styles.addRowText, { color: colors.primaryForeground }]}>New service</Text>
+            <Text style={[styles.addRowText, { color: colors.primaryForeground }]}>
+              New {serviceNoun}
+            </Text>
           </Pressable>
         ) : null
       }
@@ -82,7 +90,9 @@ export default function ServicesScreen() {
               <Text style={[styles.name, { color: colors.foreground }]}>{item.name}</Text>
               <Text style={[styles.meta, { color: colors.mutedForeground }]}>
                 {item.durationMinutes} min
-                {item.priceMinor ? ` · $${(item.priceMinor / 100).toFixed(2)}` : ""}
+                {formatServicePriceLine(item.priceMinor, item.currency ?? currency)
+                  ? ` · ${formatServicePriceLine(item.priceMinor, item.currency ?? currency)}`
+                  : ""}
               </Text>
               {item.description ? (
                 <Text style={[styles.desc, { color: colors.mutedForeground }]} numberOfLines={2}>

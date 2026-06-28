@@ -22,14 +22,18 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { UsersRound, UserPlus, ChevronRight, Mail } from "lucide-react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { useMembership } from "@/lib/membership-context";
 import {
   OWNERSHIP_SUCCESSION,
+  STAFF_INVITE_JOBS,
   rosterMemberRoleLabel,
+  staffInviteJobToMembership,
+  type StaffInviteJobKind,
   verticalOperationalCopy,
   LIVIA_FORM_EXAMPLES,
 } from "@workspace/policy";
+import { getStaffInviteRedirectUrl } from "@/lib/staff-invite-redirect";
 import { useOperationalChrome } from "@/lib/operational-chrome";
 import { apiFetch, ApiFetchError } from "@/lib/api-fetch";
 import { useMutation } from "@tanstack/react-query";
@@ -37,13 +41,6 @@ import { invalidateOperationalState } from "@/lib/operational-cache";
 import { OperationalPageShell } from "@/components/layout/operational-page-shell";
 import { cn } from "@/lib/utils";
 import { onContainedScrollWheel } from "@/lib/use-contained-scroll";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 interface StaffForm {
   firstName: string;
@@ -55,34 +52,38 @@ interface StaffForm {
 
 interface InviteForm {
   email: string;
-  role: "ADMIN" | "STAFF";
+  job: StaffInviteJobKind;
 }
 
 function InviteDialog({
   businessId,
   outlineButton,
-  roleStaffLabel,
-  roleAdminLabel,
   inviteCta,
 }: {
   businessId: string;
   outlineButton: (extra?: string) => string;
-  roleStaffLabel: string;
-  roleAdminLabel: string;
   inviteCta: string;
 }) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
-  const { register, handleSubmit, reset, control } = useForm<InviteForm>({
-    defaultValues: { email: "", role: "STAFF" },
+  const { register, handleSubmit, reset, watch, setValue } = useForm<InviteForm>({
+    defaultValues: { email: "", job: "floor" },
   });
+  const job = watch("job");
 
   const invite = useMutation({
-    mutationFn: (vals: InviteForm) =>
-      apiFetch(`/businesses/${businessId}/invitations`, {
+    mutationFn: (vals: InviteForm) => {
+      const payload = staffInviteJobToMembership(vals.job);
+      return apiFetch(`/businesses/${businessId}/invitations`, {
         method: "POST",
-        body: JSON.stringify(vals),
-      }),
+        body: JSON.stringify({
+          email: vals.email.trim().toLowerCase(),
+          role: payload.role,
+          ...(payload.deskRole ? { deskRole: payload.deskRole } : {}),
+          redirectUrl: getStaffInviteRedirectUrl(),
+        }),
+      });
+    },
     onSuccess: () => {
       toast({ title: "Invitation sent", description: "They'll receive an email shortly." });
       reset();
@@ -126,22 +127,29 @@ function InviteDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label>Role *</Label>
-            <Controller
-              control={control}
-              name="role"
-              render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger data-testid="select-invite-role">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="STAFF">{roleStaffLabel}</SelectItem>
-                    <SelectItem value="ADMIN">{roleAdminLabel}</SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
-            />
+            <Label>{OWNERSHIP_SUCCESSION.teamInvite.rolePickerLabel}</Label>
+            <p className="text-xs text-muted-foreground">
+              {OWNERSHIP_SUCCESSION.teamInvite.rolePickerHint}
+            </p>
+            <div className="space-y-2">
+              {STAFF_INVITE_JOBS.map((j) => (
+                <button
+                  key={j.id}
+                  type="button"
+                  data-testid={`invite-job-${j.id}`}
+                  onClick={() => setValue("job", j.id)}
+                  className={cn(
+                    "w-full rounded-lg border p-3 text-left transition-colors",
+                    job === j.id
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/40",
+                  )}
+                >
+                  <p className="text-sm font-medium text-foreground">{j.title}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{j.body}</p>
+                </button>
+              ))}
+            </div>
           </div>
           <div className="flex gap-2 justify-end">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
@@ -205,8 +213,6 @@ export default function StaffPage() {
         <InviteDialog
           businessId={bid}
           outlineButton={op.outlineButton}
-          roleStaffLabel={opCopy.teamInviteRoleStaff}
-          roleAdminLabel={opCopy.teamInviteRoleAdmin}
           inviteCta={opCopy.teamInviteCta}
         />
       ) : null}

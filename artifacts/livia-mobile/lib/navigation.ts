@@ -22,3 +22,8 @@ export function isGuestPublicRoute(segments: readonly string[]): boolean {
   const root = routeRoot(segments);
   return root === "public-book" || root === "my-livia" || root === "my" || root === "guest-surface";
 }
+
+/** Clerk staff invitation deep link — pre-auth or mid-ticket. */
+export function isStaffInviteRoute(segments: readonly string[]): boolean {
+  return routeRoot(segments) === "staff-invite";
+}

@@ -197,6 +197,14 @@ export default function BookingsScreen() {
       : bookings;
   const pendingCount = lensFiltered.filter((b) => b.status === "PENDING").length;
   const completedCount = lensFiltered.filter((b) => b.status === "COMPLETED").length;
+  const publicBookSlug = currentBusiness?.slug;
+  const bookingsEmptySubtitle = isLoading
+    ? undefined
+    : statusFilter === "PENDING"
+      ? `${pendingApprovalsEmptyLine()} ${pendingApprovalsEmptyHint()}`
+      : publicBookSlug
+        ? `No ${pack.serviceNoun.toLowerCase()}s for this period. Share your booking link to get the first one.`
+        : `No ${pack.serviceNoun.toLowerCase()}s for this period. Try week view or tap + to book.`;
   const useMorphList = Boolean(nativeMorph);
   const { refreshing: pullRefreshing, onRefresh: onPullRefresh } = useManualRefresh(refetch);
 
@@ -372,14 +380,14 @@ export default function BookingsScreen() {
             <EmptyState
               icon="calendar"
               title={isLoading ? "Loading…" : "No appointments in this view"}
-              subtitle={
-                isLoading
-                  ? undefined
-                  : statusFilter === "PENDING"
-                    ? `${pendingApprovalsEmptyLine()} ${pendingApprovalsEmptyHint()}`
-                    : `No ${pack.serviceNoun.toLowerCase()}s for this period. Try week view or tap + to book.`
-              }
+              subtitle={bookingsEmptySubtitle}
               isLoading={isLoading}
+              actionLabel={publicBookSlug && !isLoading ? "Open booking page" : undefined}
+              onAction={
+                publicBookSlug && !isLoading
+                  ? () => router.push(`/public-book/${publicBookSlug}` as never)
+                  : undefined
+              }
             />
           ) : (
             <MobileBookingsMorphLayout
@@ -426,14 +434,14 @@ export default function BookingsScreen() {
           <EmptyState
             icon="calendar"
             title={isLoading ? "Loading…" : "No appointments in this view"}
-            subtitle={
-              isLoading
-                ? undefined
-                : statusFilter === "PENDING"
-                  ? `${pendingApprovalsEmptyLine()} ${pendingApprovalsEmptyHint()}`
-                  : `No ${pack.serviceNoun.toLowerCase()}s for this period. Try week view or tap + to book.`
-            }
+            subtitle={bookingsEmptySubtitle}
             isLoading={isLoading}
+            actionLabel={publicBookSlug && !isLoading ? "Open booking page" : undefined}
+            onAction={
+              publicBookSlug && !isLoading
+                ? () => router.push(`/public-book/${publicBookSlug}` as never)
+                : undefined
+            }
           />
         }
         refreshControl={

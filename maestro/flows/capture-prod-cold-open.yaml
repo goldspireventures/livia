@@ -1,0 +1,39 @@
+# Production cold open — no demo card when EXPO_PUBLIC_DEMO_LOGIN=false.
+# Prereqs: pnpm dev:device:prod, device on same LAN as Metro.
+appId: host.exp.exponent
+---
+- openLink: exp://127.0.0.1:8083
+- waitForAnimationToEnd:
+    timeout: 15000
+- extendedWaitUntil:
+    visible:
+      id: "app-entry-gateway"
+    timeout: 180000
+- takeScreenshot: e2e/visual-captures/mobile/prod-01-entry-gateway
+
+- tapOn:
+    id: "entry-gateway-guest"
+- extendedWaitUntil:
+    visible:
+      id: "guest-hub-send-code"
+    timeout: 30000
+- takeScreenshot: e2e/visual-captures/mobile/prod-02-my-livia
+- back
+
+- extendedWaitUntil:
+    visible:
+      id: "app-entry-gateway"
+    timeout: 30000
+- tapOn:
+    id: "entry-gateway-operator-register"
+- extendedWaitUntil:
+    visible:
+      id: "email-input"
+    timeout: 30000
+- takeScreenshot: e2e/visual-captures/mobile/prod-03-business-register
+- tapOn:
+    id: "sign-in-back-to-gateway"
+- extendedWaitUntil:
+    visible:
+      id: "app-entry-gateway"
+    timeout: 30000

@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import React, { useEffect, useState } from "react";
 import {
@@ -19,6 +19,7 @@ import { useColors } from "@/hooks/useColors";
 import { useHaptics } from "@/hooks/useHaptics";
 import { dpaUrl, privacyPolicyUrl, termsOfServiceUrl } from "@/lib/marketing-legal-urls";
 import { acceptPlatformLegal, fetchMeProfile } from "@/lib/platform-legal";
+import { resolveStaffInviteLandingForUser } from "@/lib/staff-invite-landing";
 import {
   platformLegalAcceptanceBullets,
   platformLegalAcceptanceCheckboxLabel,
@@ -31,6 +32,8 @@ export default function LegalAcceptanceScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const params = useLocalSearchParams<{ from?: string }>();
+  const fromStaffInvite = params.from === "staff-invite";
   const haptics = useHaptics();
   const { user } = useUser();
   const clerkEmail = user?.primaryEmailAddress?.emailAddress;
@@ -41,16 +44,23 @@ export default function LegalAcceptanceScreen() {
 
   useEffect(() => {
     void fetchMeProfile()
-      .then((me) => {
-        if (me.platformLegalAccepted) {
-          router.replace("/onboarding");
+      .then(async (me) => {
+        if (!me.platformLegalAccepted) return;
+        if (fromStaffInvite) {
+          const path = await resolveStaffInviteLandingForUser({
+            surface: "mobile",
+            clerkEmail: clerkEmail ?? null,
+          });
+          router.replace(path as never);
+          return;
         }
+        router.replace("/onboarding");
       })
       .catch(() => {
         /* stay on screen — user can retry accept */
       })
       .finally(() => setChecking(false));
-  }, [router]);
+  }, [router, fromStaffInvite, clerkEmail]);
 
   const openLink = (url: string) => {
     haptics.selection();
@@ -65,7 +75,15 @@ export default function LegalAcceptanceScreen() {
     try {
       await acceptPlatformLegal(clerkEmail ?? undefined);
       haptics.success();
-      router.replace("/onboarding");
+      if (fromStaffInvite) {
+        const path = await resolveStaffInviteLandingForUser({
+          surface: "mobile",
+          clerkEmail: clerkEmail ?? null,
+        });
+        router.replace(path as never);
+      } else {
+        router.replace("/onboarding");
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Could not save acceptance";
       setError(msg);

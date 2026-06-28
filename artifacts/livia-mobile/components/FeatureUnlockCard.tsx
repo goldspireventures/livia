@@ -10,8 +10,10 @@ import { useHaptics } from "@/hooks/useHaptics";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { fonts } from "@/constants/typography";
 import { aurora } from "@/constants/colors";
-import * as WebBrowser from "expo-web-browser";
+import { openStripeCheckoutSession } from "@/lib/stripe-checkout";
 import { getDashboardBaseUrl } from "@/lib/dashboard-url";
+
+const BILLING_RETURN = "/settings?tab=billing";
 
 const FEATURE_ENTITLEMENT: Record<CommerceFeatureId, EntitlementKey> = {
   consult_first_inbox: "consult_first_inbox",
@@ -66,17 +68,17 @@ function FeatureUnlockCard({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             addonId: copy.addonId,
-            returnPath: copy.successReturnPath,
+            returnPath: BILLING_RETURN,
           }),
         },
       );
       if (res.url) {
-        await WebBrowser.openBrowserAsync(res.url);
+        await openStripeCheckoutSession(res.url, { returnPath: BILLING_RETURN });
+        void qc.invalidateQueries({ queryKey: ["billing-state", businessId] });
+        void qc.invalidateQueries({ queryKey: ["entitlements", businessId] });
+        haptics.success();
         return;
       }
-      haptics.success();
-      void qc.invalidateQueries({ queryKey: ["billing-state", businessId] });
-      void qc.invalidateQueries({ queryKey: ["entitlements", businessId] });
     } catch {
       haptics.warning();
     } finally {

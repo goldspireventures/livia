@@ -15,6 +15,74 @@ import {
 } from "@workspace/db";
 import { eq } from "drizzle-orm";
 
+async function reassignUserForeignKeys(
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  fromId: string,
+  toId: string,
+): Promise<void> {
+  await tx.update(businessesTable).set({ ownerId: toId }).where(eq(businessesTable.ownerId, fromId));
+  await tx
+    .update(businessMembershipsTable)
+    .set({ userId: toId })
+    .where(eq(businessMembershipsTable.userId, fromId));
+  await tx.update(premisesTable).set({ ownerUserId: toId }).where(eq(premisesTable.ownerUserId, fromId));
+  await tx.update(staffTable).set({ userId: toId }).where(eq(staffTable.userId, fromId));
+  await tx.update(supportTicketsTable).set({ userId: toId }).where(eq(supportTicketsTable.userId, fromId));
+  await tx
+    .update(userNotificationsTable)
+    .set({ userId: toId })
+    .where(eq(userNotificationsTable.userId, fromId));
+  await tx.update(deviceTokensTable).set({ userId: toId }).where(eq(deviceTokensTable.userId, fromId));
+  await tx.update(aiInteractionsTable).set({ userId: toId }).where(eq(aiInteractionsTable.userId, fromId));
+  await tx
+    .update(remediationActionsTable)
+    .set({ approvedByUserId: toId })
+    .where(eq(remediationActionsTable.approvedByUserId, fromId));
+  await tx
+    .update(apiCredentialsTable)
+    .set({ createdByUserId: toId })
+    .where(eq(apiCredentialsTable.createdByUserId, fromId));
+  await tx
+    .update(livActionProposalsTable)
+    .set({ resolvedBy: toId })
+    .where(eq(livActionProposalsTable.resolvedBy, fromId));
+}
+
+/** Same email, new Clerk user id — current row already exists (often placeholder email). */
+export async function mergeClerkUserRows(staleId: string, currentId: string): Promise<void> {
+  if (staleId === currentId) return;
+
+  const [stale] = await db.select().from(usersTable).where(eq(usersTable.id, staleId));
+  const [current] = await db.select().from(usersTable).where(eq(usersTable.id, currentId));
+  if (!stale || !current) return;
+
+  await db.transaction(async (tx) => {
+    await tx
+      .update(usersTable)
+      .set({
+        email: `${stale.email}.clerk-stale.${staleId.slice(-8)}`,
+        updatedAt: new Date(),
+      })
+      .where(eq(usersTable.id, staleId));
+
+    await reassignUserForeignKeys(tx, staleId, currentId);
+
+    await tx
+      .update(usersTable)
+      .set({
+        email: stale.email,
+        fullName: current.fullName ?? stale.fullName,
+        avatarUrl: current.avatarUrl ?? stale.avatarUrl,
+        role: current.role ?? stale.role,
+        platformLegal: current.platformLegal ?? stale.platformLegal,
+        updatedAt: new Date(),
+      })
+      .where(eq(usersTable.id, currentId));
+
+    await tx.delete(usersTable).where(eq(usersTable.id, staleId));
+  });
+}
+
 /** Re-key a user row when Clerk user id changes but email stays the same (app migration, re-provision). */
 export async function reconcileClerkUserId(oldId: string, newId: string): Promise<void> {
   if (oldId === newId) return;
@@ -23,7 +91,10 @@ export async function reconcileClerkUserId(oldId: string, newId: string): Promis
   if (!oldUser) return;
 
   const [existingNew] = await db.select().from(usersTable).where(eq(usersTable.id, newId));
-  if (existingNew) return;
+  if (existingNew) {
+    await mergeClerkUserRows(oldId, newId);
+    return;
+  }
 
   await db.transaction(async (tx) => {
     await tx
@@ -40,32 +111,7 @@ export async function reconcileClerkUserId(oldId: string, newId: string): Promis
       platformLegal: oldUser.platformLegal,
     });
 
-    await tx.update(businessesTable).set({ ownerId: newId }).where(eq(businessesTable.ownerId, oldId));
-    await tx
-      .update(businessMembershipsTable)
-      .set({ userId: newId })
-      .where(eq(businessMembershipsTable.userId, oldId));
-    await tx.update(premisesTable).set({ ownerUserId: newId }).where(eq(premisesTable.ownerUserId, oldId));
-    await tx.update(staffTable).set({ userId: newId }).where(eq(staffTable.userId, oldId));
-    await tx.update(supportTicketsTable).set({ userId: newId }).where(eq(supportTicketsTable.userId, oldId));
-    await tx
-      .update(userNotificationsTable)
-      .set({ userId: newId })
-      .where(eq(userNotificationsTable.userId, oldId));
-    await tx.update(deviceTokensTable).set({ userId: newId }).where(eq(deviceTokensTable.userId, oldId));
-    await tx.update(aiInteractionsTable).set({ userId: newId }).where(eq(aiInteractionsTable.userId, oldId));
-    await tx
-      .update(remediationActionsTable)
-      .set({ approvedByUserId: newId })
-      .where(eq(remediationActionsTable.approvedByUserId, oldId));
-    await tx
-      .update(apiCredentialsTable)
-      .set({ createdByUserId: newId })
-      .where(eq(apiCredentialsTable.createdByUserId, oldId));
-    await tx
-      .update(livActionProposalsTable)
-      .set({ resolvedBy: newId })
-      .where(eq(livActionProposalsTable.resolvedBy, oldId));
+    await reassignUserForeignKeys(tx, oldId, newId);
 
     await tx.delete(usersTable).where(eq(usersTable.id, oldId));
   });
@@ -85,6 +131,20 @@ export async function getOrCreateUser(clerkUserId: string, email?: string, fullN
       isPlaceholderUserEmail(existing.email) &&
       existing.email !== normalizedEmail
     ) {
+      const [byEmail] = await db
+        .select()
+        .from(usersTable)
+        .where(eq(usersTable.email, normalizedEmail));
+      if (byEmail && byEmail.id !== clerkUserId) {
+        await mergeClerkUserRows(byEmail.id, clerkUserId);
+        const [merged] = await db.select().from(usersTable).where(eq(usersTable.id, clerkUserId));
+        if (merged) {
+          if (fullName && merged.fullName !== fullName) {
+            await updateUser(clerkUserId, { fullName });
+          }
+          return merged;
+        }
+      }
       const [patched] = await db
         .update(usersTable)
         .set({ email: normalizedEmail, updatedAt: new Date() })

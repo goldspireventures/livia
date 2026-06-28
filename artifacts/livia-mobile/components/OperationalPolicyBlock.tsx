@@ -91,7 +91,7 @@ export function OperationalPolicyBlock({
           style={[styles.btn, { borderColor: colors.primary }]}
           testID="policy-edit-on-web"
         >
-          <Text style={[styles.btnText, { color: colors.primary }]}>Edit policy on web</Text>
+          <Text style={[styles.btnText, { color: colors.primary }]}>Edit booking rules on web</Text>
           <Feather name="external-link" size={14} color={colors.primary} />
         </Pressable>
       ) : null}

@@ -18,41 +18,14 @@ import { useBusiness } from "@/contexts/BusinessContext";
 import { useColors } from "@/hooks/useColors";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useMembership } from "@/hooks/useMembership";
+import { getStaffInviteRedirectUrl } from "@/lib/mobile-staff-invite";
 import { fonts, type } from "@/constants/typography";
-
-/** What they will do in Livia — maps to Clerk membership + app shell. */
-type JobKind = "floor" | "manager" | "desk";
-
-function jobToApi(job: JobKind): {
-  role: "STAFF" | "ADMIN";
-  deskRole?: "manager" | "reception";
-} {
-  if (job === "floor") return { role: "STAFF" };
-  if (job === "desk") return { role: "ADMIN", deskRole: "reception" };
-  return { role: "ADMIN", deskRole: "manager" };
-}
-
-const JOBS: Array<{
-  id: JobKind;
-  title: string;
-  body: string;
-}> = [
-  {
-    id: "floor",
-    title: "Works on the floor",
-    body: "Stylist, therapist, coach, etc. Sees My chair and their own calendar — not your billing or roster settings.",
-  },
-  {
-    id: "manager",
-    title: "Runs day-to-day ops",
-    body: "Approves bookings, inbox, team rota. Cannot change ownership or Stripe.",
-  },
-  {
-    id: "desk",
-    title: "Front desk",
-    body: "Books for everyone, messages, floor view. Same trust as manager without owner-only settings.",
-  },
-];
+import {
+  OWNERSHIP_SUCCESSION,
+  STAFF_INVITE_JOBS,
+  staffInviteJobToMembership,
+  type StaffInviteJobKind,
+} from "@workspace/policy";
 
 export default function InviteStaffScreen() {
   const colors = useColors();
@@ -64,7 +37,7 @@ export default function InviteStaffScreen() {
   const { mutateAsync: invite, isPending } = useCreateInvitation();
 
   const [email, setEmail] = useState("");
-  const [job, setJob] = useState<JobKind>("floor");
+  const [job, setJob] = useState<StaffInviteJobKind>("floor");
   const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
 
@@ -83,15 +56,16 @@ export default function InviteStaffScreen() {
       return;
     }
     setError("");
-    const api = jobToApi(job);
+    const api = staffInviteJobToMembership(job);
     try {
       await invite({
         businessId: currentBusiness.id,
         data: {
           email: email.trim().toLowerCase(),
           role: api.role,
+          redirectUrl: getStaffInviteRedirectUrl(),
           ...(api.deskRole ? { deskRole: api.deskRole } : {}),
-        } as { email: string; role: "STAFF" | "ADMIN"; deskRole?: "manager" | "reception" },
+        } as { email: string; role: "STAFF" | "ADMIN"; deskRole?: "manager" | "reception"; redirectUrl: string },
       });
       haptics.success();
       setSent(true);
@@ -142,7 +116,7 @@ export default function InviteStaffScreen() {
             <ScreenPurpose
               icon="mail"
               title="Why pick a role?"
-              body="One email invite. Their role decides what they can see after sign-up (My chair vs approvals vs settings). It is not a job title for payroll — just Livia permissions."
+              body={OWNERSHIP_SUCCESSION.teamInvite.rolePickerHint}
             />
 
             <TextInput
@@ -156,9 +130,9 @@ export default function InviteStaffScreen() {
             />
 
             <Text style={[styles.help, { color: colors.mutedForeground }]}>
-              What will they do in Livia?
+              {OWNERSHIP_SUCCESSION.teamInvite.rolePickerLabel}
             </Text>
-            {JOBS.map((j) => (
+            {STAFF_INVITE_JOBS.map((j) => (
               <Pressable
                 key={j.id}
                 onPress={() => {

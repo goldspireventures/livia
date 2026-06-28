@@ -857,6 +857,12 @@ export const CreateInvitationParams = zod.object({
 export const CreateInvitationBody = zod.object({
   email: zod.string().email(),
   role: zod.enum(["ADMIN", "STAFF"]),
+  deskRole: zod
+    .enum(["manager", "reception"])
+    .optional()
+    .describe(
+      "Admin scope — manager (ops) or reception (front desk). Ignored for STAFF role.",
+    ),
   redirectUrl: zod
     .string()
     .nullish()

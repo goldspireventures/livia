@@ -42,9 +42,10 @@ export const OWNERSHIP_SUCCESSION = {
   teamInvite: {
     dialogTitle: "Invite team member",
     dialogDescription:
-      "For day-to-day work on your calendar and inbox. To hand over legal ownership of this studio, use Settings → Ownership instead.",
-    roleStaff: "Staff — own calendar & bookings",
-    roleAdmin: "Admin — full access except billing & ownership",
+      "Pick what they'll do in Livia — their role is set now, not at sign-up. For legal ownership handover, use Settings → Ownership instead.",
+    rolePickerLabel: "What will they do in Livia?",
+    rolePickerHint:
+      "One email invite. Their role decides what they see after sign-up (My chair vs approvals vs front desk).",
   } as const,
   membershipRoleLabels: {
     ADMIN: "Manager (Admin)",

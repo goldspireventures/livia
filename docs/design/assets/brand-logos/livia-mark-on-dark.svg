@@ -1,0 +1,28 @@
+<svg width="512" height="512" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Livia">
+  <defs>
+    <style type="text/css">
+      @import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;1,400&amp;display=swap");
+      .livia-serif { font-family: "Cormorant Garamond", Georgia, "Times New Roman", serif; font-weight: 400; }
+    </style>
+    <linearGradient id="livia-ink-bg" x1="0" y1="0" x2="0" y2="180" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0e0e16"/>
+      <stop offset="100%" stop-color="#06060c"/>
+    </linearGradient>
+    <linearGradient id="livia-champagne" x1="0" y1="20" x2="0" y2="160" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#f6f3ec"/>
+      <stop offset="45%" stop-color="#d9c39a"/>
+      <stop offset="60%" stop-color="#8a7549"/>
+      <stop offset="78%" stop-color="#d9c39a"/>
+      <stop offset="100%" stop-color="#f6f3ec"/>
+    </linearGradient>
+    <radialGradient id="livia-glow" cx="0.35" cy="0.35" r="0.7">
+      <stop offset="0%" stop-color="#d9c39a" stop-opacity="0.22"/>
+      <stop offset="70%" stop-color="#d9c39a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="180" height="180" rx="40" fill="url(#livia-ink-bg)"/>
+  <rect width="180" height="180" rx="40" fill="url(#livia-glow)"/>
+  <rect x="0.5" y="0.5" width="179" height="179" rx="39.5" fill="none" stroke="#d9c39a" stroke-opacity="0.28" stroke-width="1"/>
+  <text class="livia-serif" x="48" y="120" font-size="106" fill="#f6f3ec" letter-spacing="-0.08em">L</text>
+  <text class="livia-serif" x="98" y="120" font-size="106" font-style="italic" fill="url(#livia-champagne)">v</text>
+</svg>

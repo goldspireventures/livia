@@ -3997,6 +3997,10 @@ components:
         role:
           type: string
           enum: [ADMIN, STAFF]
+        deskRole:
+          type: string
+          enum: [manager, reception]
+          description: Admin scope — manager (ops) or reception (front desk). Ignored for STAFF role.
         redirectUrl:
           type: ["string", "null"]
           description: Optional URL Clerk redirects to after the invitee accepts.

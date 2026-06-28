@@ -8,6 +8,7 @@ import {
   CROSS_SURFACE_COPY,
   webOnboardingUrl,
   webOnboardingSettingsUrl,
+  webSettingsAppearanceUrl,
 } from "@/lib/cross-surface-handoff";
 
 type Variant = "onboarding" | "settings" | "appearance";
@@ -22,9 +23,11 @@ export function CrossSurfaceContinueCard({ businessId, variant = "onboarding" }:
   const haptics = useHaptics();
 
   const url =
-    variant === "settings" || variant === "appearance"
-      ? webOnboardingSettingsUrl(variant === "appearance" ? "shop" : "shop", businessId)
-      : webOnboardingUrl(businessId);
+    variant === "appearance"
+      ? webSettingsAppearanceUrl(businessId)
+      : variant === "settings"
+        ? webOnboardingSettingsUrl("shop", businessId)
+        : webOnboardingUrl(businessId);
 
   const title =
     variant === "appearance"

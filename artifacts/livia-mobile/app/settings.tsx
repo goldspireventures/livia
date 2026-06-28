@@ -52,6 +52,7 @@ import { LivCapabilitiesCard } from "@/components/LivCapabilitiesCard";
 import { BillingSummaryCard } from "@/components/BillingSummaryCard";
 import { CrossSurfaceContinueCard } from "@/components/CrossSurfaceContinueCard";
 import { MobilePresentationCard } from "@/components/MobilePresentationCard";
+import { MobileSettingsAttentionStrip } from "@/components/settings/MobileSettingsAttentionStrip";
 import { dashboardSettingsUrl } from "@/lib/dashboard-url";
 import { useOperationalChrome } from "@/lib/operational-chrome";
 
@@ -125,11 +126,11 @@ export default function SettingsScreen() {
     customDomain ?? (business as { customBookDomain?: string | null })?.customBookDomain ?? "";
   const { timeZone: tzLabel } = useBusinessTimezone();
 
-  const pack = verticalPackUi(
+  const vertical =
     (business as { vertical?: string } | undefined)?.vertical ??
-      (currentBusiness as { vertical?: string } | undefined)?.vertical,
-    (business as { category?: string } | undefined)?.category,
-  );
+    (currentBusiness as { vertical?: string } | undefined)?.vertical;
+
+  const pack = verticalPackUi(vertical, (business as { category?: string } | undefined)?.category);
 
   const toggleSection = (id: MobileSettingsSectionId) => {
     setOpenSection((prev) => (prev === id ? null : id));
@@ -255,6 +256,8 @@ export default function SettingsScreen() {
         </View>
       ) : null}
 
+      {bid ? <MobileSettingsAttentionStrip businessId={bid} /> : null}
+
       <Pressable
         onPress={() => setAboutOpen((v) => !v)}
         style={[styles.aboutToggle, { borderColor: colors.border }]}
@@ -278,6 +281,7 @@ export default function SettingsScreen() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.jumpRow}
       >
+        <Text style={[styles.jumpHint, { color: colors.mutedForeground }]}>Swipe →</Text>
         {sections.map((s) => {
           const active = openSection === s.id;
           return (
@@ -455,6 +459,17 @@ export default function SettingsScreen() {
               chrome={chrome}
             >
               <CommsChannelsBlock businessId={bid} comms={comms} loading={commsLoading} />
+              {vertical === "wellness" ? (
+                <Pressable
+                  onPress={() => void Linking.openURL(dashboardSettingsUrl("shop", bid))}
+                  style={[styles.navBtn, { borderColor: colors.border, marginTop: 8 }]}
+                >
+                  <Text style={[styles.navBtnText, { color: colors.primary }]}>
+                    Wellness integrations & settlement export
+                  </Text>
+                  <Feather name="external-link" size={18} color={colors.primary} />
+                </Pressable>
+              ) : null}
               <Pressable
                 onPress={() => void Linking.openURL(dashboardSettingsUrl("integrations", bid))}
                 style={[styles.navBtn, { borderColor: colors.border, marginTop: 8 }]}
@@ -494,8 +509,15 @@ export default function SettingsScreen() {
             {showLiv ? (
               <>
                 <Text style={[styles.rowMeta, { color: colors.mutedForeground }]}>
-                  Tone, greeting, and knowledge — web Settings → Liv.
+                  Tone, greeting, and knowledge — read-only here. Edit on web Settings → Liv.
                 </Text>
+                <Pressable
+                  onPress={() => void Linking.openURL(dashboardSettingsUrl("liv", bid))}
+                  style={[styles.navBtn, { borderColor: colors.border }]}
+                >
+                  <Text style={[styles.navBtnText, { color: colors.primary }]}>Tune Liv on web</Text>
+                  <Feather name="external-link" size={16} color={colors.primary} />
+                </Pressable>
                 {bid ? <LivCapabilitiesCard businessId={bid} /> : null}
               </>
             ) : (
@@ -568,7 +590,8 @@ const styles = StyleSheet.create({
   },
   aboutToggleText: { ...type.caption, flex: 1, fontSize: 12 },
   aboutBody: { ...type.caption, fontSize: 12, lineHeight: 18, marginTop: -4 },
-  jumpRow: { gap: 8, paddingVertical: 4 },
+  jumpRow: { gap: 8, paddingVertical: 4, alignItems: "center" },
+  jumpHint: { ...type.caption, fontSize: 11, marginRight: 4 },
   jumpChip: {
     borderWidth: 1,
     borderRadius: 999,

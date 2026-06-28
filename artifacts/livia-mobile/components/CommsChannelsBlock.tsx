@@ -110,7 +110,7 @@ export function CommsChannelsBlock({
           <Text style={[styles.rowMeta, { color: colors.mutedForeground, marginTop: 8 }]}>
             {metaReady
               ? "Finish linking your page IDs in Communications on the web dashboard."
-              : "Social inbox linking is not configured yet — your team completes this in Settings."}
+              : "SMS and social inbox setup uses the web dashboard — same shop, same channels."}
             {extended.metaDevSimulate ? " Dev simulate is on for demos." : ""}
           </Text>
           <Text style={[styles.rowMeta, { color: colors.mutedForeground, marginTop: 6 }]}>
@@ -125,7 +125,7 @@ export function CommsChannelsBlock({
           >
             <Feather name="external-link" size={16} color={colors.primaryForeground} />
             <Text style={[styles.ctaText, { color: colors.primaryForeground }]}>
-              Open channel setup on web
+              Continue channel setup on web
             </Text>
           </Pressable>
     </View>

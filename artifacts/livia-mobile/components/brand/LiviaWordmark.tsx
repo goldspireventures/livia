@@ -76,11 +76,11 @@ export function LiviaWordmark({
   size = "md",
   color = "#ffffff",
 }: {
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
   color?: string;
 }) {
-  const markPx = size === "lg" ? 36 : size === "sm" ? 22 : 28;
-  const fontSize = size === "lg" ? 32 : size === "sm" ? 20 : 26;
+  const markPx = size === "xl" ? 48 : size === "lg" ? 36 : size === "sm" ? 22 : 28;
+  const fontSize = size === "xl" ? 40 : size === "lg" ? 32 : size === "sm" ? 20 : 26;
 
   const v =
     Platform.OS === "web" ? (

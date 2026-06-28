@@ -135,16 +135,16 @@ export const DEMO_CONSULT_FIRST_GUEST_COPY = {
   hint: "Same path couples take from Instagram or your website link.",
 } as const;
 
-/** Native app cold open — operator vs guest split (W4 + W6). */
+/** Native app cold open — guest vs business registration (W4 + W6). */
 export const LIVIA_MOBILE_ENTRY_COPY = {
-  titleLead: "Who is Livia for you",
-  titleAccent: "today?",
-  guestTitle: "I'm here for my bookings & visits",
-  operatorTitle: "I run or work at a business",
-  staffBackLink: "Not staff? Back to home",
+  subtitle: "Tell us why you're here.",
+  guestTitle: "Set up My Livia",
+  guestBody: "Book appointments and visits — verify with phone or email.",
+  operatorTitle: "Business registration",
+  operatorBody: "For owners starting on Livia — create your business, then invite your team.",
+  operatorRegisterCta: "Register my business",
+  staffBackLink: "Back to home",
   guestStaffLink: "Work at a business? Sign in",
-  createAccountLead: "New to Livia?",
-  createAccountCta: "Create your account",
   /** Demo-only — routes gated by `EXPO_PUBLIC_DEMO_LOGIN=true`. */
   demoTitle: "Walk the demo",
   demoBody: "Pick a trade world, set up once, then sign in as owner or staff — same G1 flow as web /demo.",

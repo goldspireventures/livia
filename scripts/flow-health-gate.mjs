@@ -44,6 +44,8 @@ console.log("\n══ Livia flow health gate ══\n");
 const steps = [];
 steps.push(run("Typecheck", "pnpm", ["run", "typecheck"]));
 steps.push(run("Vertical registry", "pnpm", ["vertical:check"]));
+steps.push(run("Scenario gap check", "pnpm", ["scenario:gap-check"]));
+steps.push(run("Propagation check", "pnpm", ["propagation:check"]));
 steps.push(run("API unit tests", "pnpm", ["--filter", "@workspace/api-server", "run", "test"]));
 steps.push(
   run("Persona UAT probe (production)", "node", ["scripts/persona-uat-probe.mjs"], {

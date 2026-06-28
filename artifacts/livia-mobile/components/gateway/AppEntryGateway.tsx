@@ -3,18 +3,19 @@ import { useRouter } from "expo-router";
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { LiviaMark, LiviaWordmark } from "@/components/brand/LiviaWordmark";
+import { LiviaWordmark } from "@/components/brand/LiviaWordmark";
 import { ConstellationGlassCard } from "@/components/constellation/ConstellationGlassCard";
 import { GatewayScreenShell } from "@/components/gateway/GatewayScreenShell";
 import { GlowPressable } from "@/components/ui/GlowPressable";
-import { fonts } from "@/constants/typography";
+import { fonts, type } from "@/constants/typography";
 import { useMobileSurface } from "@/hooks/useMobileSurface";
 import { GATEWAY_LAYOUT, MIN_TOUCH, usePhoneLayout } from "@/lib/mobile-layout";
-import { rememberGuestDoor, rememberOperatorDoor } from "@/lib/mobile-entry-routing";
+import { markSignUpFormReset } from "@/lib/mobile-entry-routing";
 import { LIVIA_MOBILE_ENTRY_COPY } from "@workspace/policy";
 
 /**
- * Production cold open — constellation preset, question + two answer cards.
+ * Production cold open — guest My Livia setup vs business registration only.
+ * Staff sign-in lives on the sign-in screen (secondary) or invite deep link.
  */
 export function AppEntryGateway() {
   const { tokens: colors } = useMobileSurface("gateway-cold-open");
@@ -24,15 +25,12 @@ export function AppEntryGateway() {
   const champagne = colors.primary;
 
   function goGuest() {
-    void rememberGuestDoor().then(() => router.push("/my-livia" as never));
+    router.push("/my-livia" as never);
   }
 
-  function goOperator() {
-    void rememberOperatorDoor().then(() => router.push("/sign-in" as never));
-  }
-
-  function goCreateAccount() {
-    void rememberOperatorDoor().then(() => router.push("/sign-in?mode=sign-up" as never));
+  function goOperatorRegister() {
+    markSignUpFormReset();
+    router.replace("/sign-in?mode=sign-up" as never);
   }
 
   return (
@@ -41,7 +39,7 @@ export function AppEntryGateway() {
         contentContainerStyle={[
           styles.scroll,
           {
-            paddingTop: short ? 16 : 28,
+            paddingTop: short ? 20 : 32,
             paddingBottom: GATEWAY_LAYOUT.contentBottomPad,
             flexGrow: 1,
             justifyContent: (short ? "flex-start" : "center") as "flex-start" | "center",
@@ -50,14 +48,8 @@ export function AppEntryGateway() {
         showsVerticalScrollIndicator={false}
       >
         <Animated.View entering={FadeInDown.duration(420).springify().damping(18)} style={styles.brand}>
-          <View style={[styles.markRing, { borderColor: champagne + "33", backgroundColor: champagne + "0d" }]}>
-            <LiviaMark size={compact ? 40 : 48} fill={colors.foreground} />
-          </View>
-          <LiviaWordmark size={compact ? "md" : "lg"} color={colors.foreground} />
-          <Text style={[styles.title, { color: colors.foreground }]}>
-            {copy.titleLead}{" "}
-            <Text style={[styles.titleAccent, { color: champagne }]}>{copy.titleAccent}</Text>
-          </Text>
+          <LiviaWordmark size={compact ? "lg" : "xl"} color={colors.foreground} />
+          <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>{copy.subtitle}</Text>
         </Animated.View>
 
         <View style={[styles.cards, { maxWidth: cardMaxWidth, alignSelf: "center", width: "100%" }]}>
@@ -70,13 +62,16 @@ export function AppEntryGateway() {
               style={styles.cardPressable}
             >
               <ConstellationGlassCard style={styles.doorCard}>
-                <View style={styles.cardRow}>
+                <View style={styles.cardHeader}>
                   <View
                     style={[styles.iconWrap, { backgroundColor: champagne + "18", borderColor: champagne + "40" }]}
                   >
                     <Feather name="calendar" size={22} color={champagne} />
                   </View>
-                  <Text style={[styles.cardTitle, { color: colors.foreground }]}>{copy.guestTitle}</Text>
+                  <View style={styles.cardTextCol}>
+                    <Text style={[styles.cardTitle, { color: colors.foreground }]}>{copy.guestTitle}</Text>
+                    <Text style={[styles.cardBody, { color: colors.mutedForeground }]}>{copy.guestBody}</Text>
+                  </View>
                   <Feather name="arrow-right" size={18} color={champagne} />
                 </View>
               </ConstellationGlassCard>
@@ -85,33 +80,29 @@ export function AppEntryGateway() {
 
           <Animated.View entering={FadeInDown.delay(140).duration(400).springify()}>
             <GlowPressable
-              onPress={goOperator}
-              testID="entry-gateway-operator"
+              onPress={goOperatorRegister}
+              testID="entry-gateway-operator-register"
               glowColor={champagne}
               haptic="impact"
               style={styles.cardPressable}
             >
               <ConstellationGlassCard style={styles.doorCard}>
-                <View style={styles.cardRow}>
+                <View style={styles.cardHeader}>
                   <View
                     style={[styles.iconWrap, { backgroundColor: champagne + "18", borderColor: champagne + "40" }]}
                   >
                     <Feather name="briefcase" size={22} color={champagne} />
                   </View>
-                  <Text style={[styles.cardTitle, { color: colors.foreground }]}>{copy.operatorTitle}</Text>
+                  <View style={styles.cardTextCol}>
+                    <Text style={[styles.cardTitle, { color: colors.foreground }]}>{copy.operatorTitle}</Text>
+                    <Text style={[styles.cardBody, { color: colors.mutedForeground }]}>{copy.operatorBody}</Text>
+                  </View>
                   <Feather name="arrow-right" size={18} color={champagne} />
                 </View>
               </ConstellationGlassCard>
             </GlowPressable>
           </Animated.View>
         </View>
-
-        <Animated.View entering={FadeInDown.delay(220).duration(380).springify()} style={styles.createRow}>
-          <Text style={[styles.createLead, { color: colors.mutedForeground }]}>{copy.createAccountLead}</Text>
-          <Pressable onPress={goCreateAccount} hitSlop={8} testID="entry-gateway-create-account">
-            <Text style={[styles.createCta, { color: champagne }]}>{copy.createAccountCta} →</Text>
-          </Pressable>
-        </Animated.View>
       </ScrollView>
     </GatewayScreenShell>
   );
@@ -124,29 +115,15 @@ const styles = StyleSheet.create({
   },
   brand: {
     alignItems: "center",
-    gap: 10,
-    marginBottom: 4,
+    gap: 14,
+    marginBottom: 8,
   },
-  markRing: {
-    width: 72,
-    height: 72,
-    borderRadius: 20,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 4,
-  },
-  title: {
-    fontFamily: fonts.serifMedium,
-    fontSize: 30,
-    lineHeight: 36,
+  subtitle: {
+    ...type.body,
+    fontSize: 16,
+    lineHeight: 22,
     textAlign: "center",
-    maxWidth: 320,
-    letterSpacing: -0.4,
-    marginTop: 8,
-  },
-  titleAccent: {
-    fontFamily: fonts.serifItalic,
+    maxWidth: 300,
   },
   cards: {
     gap: GATEWAY_LAYOUT.cardGap,
@@ -159,10 +136,14 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     paddingHorizontal: 16,
   },
-  cardRow: {
+  cardHeader: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: 14,
+  },
+  cardTextCol: {
+    flex: 1,
+    gap: 4,
   },
   iconWrap: {
     width: 44,
@@ -173,22 +154,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   cardTitle: {
-    flex: 1,
     fontFamily: fonts.bodySemi,
     fontSize: 17,
     lineHeight: 22,
   },
-  createRow: {
-    alignItems: "center",
-    gap: 6,
-    marginTop: 4,
-  },
-  createLead: {
-    fontSize: 13,
+  cardBody: {
     fontFamily: fonts.body,
-  },
-  createCta: {
-    fontFamily: fonts.bodySemi,
-    fontSize: 14,
+    fontSize: 13,
+    lineHeight: 18,
   },
 });

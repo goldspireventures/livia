@@ -31,6 +31,7 @@ import { menuItemsForPersona } from "@/lib/mobile-menu";
 import { getPublicBookingLabel } from "@/lib/public-booking-url";
 import { setForceColdOpen } from "@/lib/mobile-entry-routing";
 import { useMobileOwnerIntelTabBadges } from "@/hooks/useMobileOwnerIntelTabBadges";
+import { formatMobileTabBadge } from "@/lib/mobile-tab-badge";
 
 export default function MoreScreen() {
   const colors = useColors();
@@ -53,7 +54,7 @@ export default function MoreScreen() {
   };
   const showWorkforceNav = operatorNeedsWorkforceNav(operatorSignals);
   const intelTabBadges = useMobileOwnerIntelTabBadges();
-  const settingsBadge = intelTabBadges.more ?? 0;
+  const settingsBadge = formatMobileTabBadge(intelTabBadges.more ?? 0) ?? 0;
 
   const menuItems = filterMobileMenuItemsByOperatorShape(
     filterMobileMenuItems(

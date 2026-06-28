@@ -68,17 +68,22 @@ const SURFACE_MAP = [
   { id: "notifications", web: "/inbox", mobile: "app/notifications.tsx", pls: "W7" },
 ];
 
-/** Maestro-critical testIDs (from maestro/flows/*.yaml) — must exist in mobile source. */
-const MAESTRO_CRITICAL_IDS = [
+function readMobileDemoFlag() {
+  const envPath = join(mobileRoot, ".env");
+  if (!existsSync(envPath)) return false;
+  const text = readFileSync(envPath, "utf8");
+  return /EXPO_PUBLIC_DEMO_LOGIN\s*=\s*true/.test(text);
+}
+
+/** Maestro-critical testIDs — production cold open (always required). */
+const MAESTRO_PROD_IDS = [
   "app-entry-gateway",
   "entry-gateway-guest",
-  "entry-gateway-operator",
-  "entry-gateway-demo",
+  "entry-gateway-operator-register",
+  "staff-invite-screen",
   "guest-hub-send-code",
   "email-input",
   "sign-in-back-to-gateway",
-  "mobile-demo-launcher",
-  "mobile-demo-back-entry",
   "menu-settings",
   "menu-staff",
   "menu-services",
@@ -87,6 +92,13 @@ const MAESTRO_CRITICAL_IDS = [
   "guest-hub-home",
   "guest-hub-account-link",
   "migration-switch-panel",
+];
+
+/** Demo-only Maestro IDs — required only when EXPO_PUBLIC_DEMO_LOGIN=true. */
+const MAESTRO_DEMO_IDS = [
+  "entry-gateway-demo",
+  "mobile-demo-launcher",
+  "mobile-demo-back-entry",
 ];
 
 /** Maestro IDs that are web-only or legacy — warn only. */
@@ -190,12 +202,22 @@ function checkPolicyImports(files) {
 }
 
 function runMobileEntrySmoke() {
-  const r = spawnSync(process.execPath, [join(root, "scripts", "mobile-entry-smoke.mjs")], {
+  const mobileEnvPath = join(mobileRoot, ".env");
+  let apiFromMobile = "";
+  if (existsSync(mobileEnvPath)) {
+    const m = readFileSync(mobileEnvPath, "utf8").match(/EXPO_PUBLIC_API_BASE_URL=(.+)/);
+    if (m) apiFromMobile = m[1].trim();
+  }
+  const api = process.env.E2E_API_BASE ?? apiFromMobile ?? "";
+  const guestOnly = api.includes("livia-hq.com") || process.argv.includes("--guest-only");
+  const args = [join(root, "scripts", "mobile-entry-smoke.mjs")];
+  if (guestOnly) args.push("--guest-only");
+  const r = spawnSync(process.execPath, args, {
     cwd: root,
     encoding: "utf8",
-    env: process.env,
+    env: { ...process.env, E2E_API_BASE: api || "http://127.0.0.1:3000" },
   });
-  return { ok: r.status === 0, output: (r.stdout ?? "") + (r.stderr ?? "") };
+  return { ok: r.status === 0, output: (r.stdout ?? "") + (r.stderr ?? ""), guestOnly };
 }
 
 function main() {
@@ -207,6 +229,12 @@ function main() {
     console.log(`${pass ? "✓" : "✗"} ${s.id} — ${s.mobile}${s.note ? ` (${s.note})` : ""}`);
     return { ...s, pass, mobilePath: s.mobile };
   });
+
+  const demoEnabled = readMobileDemoFlag();
+  const MAESTRO_CRITICAL_IDS = [...MAESTRO_PROD_IDS, ...(demoEnabled ? MAESTRO_DEMO_IDS : [])];
+  if (!demoEnabled) {
+    console.log("ℹ Demo off — skipping entry-gateway-demo Maestro ID requirement");
+  }
 
   const maestroIds = extractMaestroIds();
   const mobileFiles = walkTsx(mobileRoot);

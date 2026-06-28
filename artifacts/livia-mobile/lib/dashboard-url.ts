@@ -49,6 +49,10 @@ export function dashboardSettingsUrl(tab: string, businessId?: string): string {
   return `${base}/settings?${q.toString()}`;
 }
 
+export function dashboardAppearanceUrl(businessId?: string): string {
+  return dashboardSettingsUrl("appearance", businessId);
+}
+
 export function dashboardLifecycleUrl(): string {
   return `${getDashboardBaseUrl()}/lifecycle`;
 }

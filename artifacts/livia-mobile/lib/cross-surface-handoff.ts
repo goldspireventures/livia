@@ -19,6 +19,10 @@ export function webOnboardingSettingsUrl(tab = "shop", businessId?: string): str
   return webFounderHandoffUrl(`/settings?${q.toString()}`);
 }
 
+export function webSettingsAppearanceUrl(businessId?: string): string {
+  return webOnboardingSettingsUrl("appearance", businessId);
+}
+
 export function webMyLiviaUrl(): string {
   return `${getDashboardBaseUrl()}/my`;
 }
