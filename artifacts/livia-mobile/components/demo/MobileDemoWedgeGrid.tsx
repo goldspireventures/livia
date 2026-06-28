@@ -64,6 +64,8 @@ export function MobileDemoWedgeGrid() {
               disabled={!unlocked}
               glowColor={gatewayTheme.primaryChampagne}
               haptic="impact"
+              fill
+              contentStyle={{ width: CARD_W, height: CARD_H }}
               testID={`mobile-demo-wedge-${world.key}`}
               accessibilityLabel={`${world.title} — ${unlocked ? "open demo" : "coming soon"}`}
               style={[

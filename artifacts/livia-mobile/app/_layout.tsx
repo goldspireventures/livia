@@ -25,6 +25,8 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import { isDemoRoute, isGatewayRoute, isGuestPublicRoute } from "@/lib/navigation";
 import { GUEST_HUB_TOKEN_KEY } from "@/lib/guest-hub";
 import { consumeMobileHomeRoute } from "@/lib/demo-session";
+import { isDemoMobileSurface } from "@/lib/production-surface";
+import { resolveMobileEntryRedirect, setForceColdOpen } from "@/lib/mobile-entry-routing";
 import { fetchMeProfile } from "@/lib/platform-legal";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
@@ -92,9 +94,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     const onExecDesk = segments[0] === "_internal";
     const onDemo = isDemoRoute(segments);
     const onGuestPublic = isGuestPublicRoute(segments);
-    const allowDemo =
-      onDemo &&
-      (process.env.EXPO_PUBLIC_DEMO_LOGIN === "true" || __DEV__);
+    const allowDemo = onDemo && isDemoMobileSurface();
     if (onDemo && !allowDemo) {
       router.replace("/");
       return;
@@ -104,6 +104,11 @@ function AuthGate({ children }: { children: React.ReactNode }) {
         const hubToken = await AsyncStorage.getItem(GUEST_HUB_TOKEN_KEY);
         if (hubToken) {
           router.replace("/my-livia" as never);
+          return;
+        }
+        const dest = await resolveMobileEntryRedirect();
+        if (dest !== "stay") {
+          router.replace(dest as never);
         }
       })();
       return;
@@ -285,7 +290,7 @@ export default function RootLayout() {
             publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? ""}
             tokenCache={tokenCache}
           >
-            <GestureHandlerRootView style={{ flex: 1, backgroundColor: "#09090b" }}>
+            <GestureHandlerRootView style={{ flex: 1, backgroundColor: "#2c2f3a" }}>
               <KeyboardProvider>
                 <StatusBar style="light" />
                 <ClerkAuthBridge />

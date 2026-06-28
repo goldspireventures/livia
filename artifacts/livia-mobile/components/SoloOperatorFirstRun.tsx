@@ -28,7 +28,7 @@ export function SoloOperatorFirstRun({
       <View style={styles.head}>
         <Feather name="compass" size={18} color={colors.primary} />
         <Text style={[styles.title, { color: colors.foreground }]}>
-          {pack.soloMode ? "Get your studio live" : "Get something on screen"}
+          {pack.soloMode ? "Get your business live" : "Get something on screen"}
         </Text>
       </View>
       {pack.soloMode ? (

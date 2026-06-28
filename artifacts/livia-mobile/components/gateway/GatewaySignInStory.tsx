@@ -4,8 +4,20 @@ import { fonts, type } from "@/constants/typography";
 import { useColors } from "@/hooks/useColors";
 
 /** W2 mobile sign-in story — stacked Liv colleague (gateway-default-mobile.target). */
-export function GatewaySignInStory() {
+export function GatewaySignInStory({ compact = false }: { compact?: boolean }) {
   const colors = useColors();
+
+  if (compact) {
+    return (
+      <View style={styles.wrapCompact} testID="gateway-sign-in-story">
+        <Text style={[styles.kicker, { color: colors.primary }]}>Your people-business OS</Text>
+        <Text style={[styles.headlineCompact, { color: colors.foreground }]}>
+          <Text style={{ color: aurum.champagne }}>Tuesday morning, </Text>
+          handled.
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.wrap} testID="gateway-sign-in-story">
@@ -36,7 +48,14 @@ export function GatewaySignInStory() {
 
 const styles = StyleSheet.create({
   wrap: {
-    marginBottom: 20,
+    marginBottom: 12,
+    width: "100%",
+  },
+  wrapCompact: {
+    marginBottom: 4,
+    width: "100%",
+    alignItems: "center",
+    gap: 6,
   },
   kicker: {
     ...type.caption,
@@ -49,6 +68,12 @@ const styles = StyleSheet.create({
     fontSize: 28,
     lineHeight: 34,
     marginTop: 8,
+  },
+  headlineCompact: {
+    fontFamily: fonts.serifMedium,
+    fontSize: 24,
+    lineHeight: 30,
+    textAlign: "center",
   },
   body: {
     ...type.body,

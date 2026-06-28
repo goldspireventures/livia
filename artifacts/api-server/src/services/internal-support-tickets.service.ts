@@ -374,7 +374,12 @@ export async function getLivIncidentBundleForTicket(
     const [conv] = await db
       .select()
       .from(conversationsTable)
-      .where(eq(conversationsTable.id, conversationId))
+      .where(
+        and(
+          eq(conversationsTable.id, conversationId),
+          eq(conversationsTable.businessId, ticket.businessId),
+        ),
+      )
       .limit(1);
     if (conv) {
       conversation = {

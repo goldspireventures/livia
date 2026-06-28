@@ -1,4 +1,6 @@
 import { Router, type IRouter } from "express";
+import { and, eq } from "drizzle-orm";
+import { bookingsTable, conversationsTable, db } from "@workspace/db";
 import { requireAuth, requireRole, getUserId } from "../lib/auth";
 import { createSupportTicket, listSupportTickets } from "../services/support-tickets.service";
 import { sendSupportTicketAckEmails } from "../services/support-ticket-notifications.service";
@@ -36,6 +38,42 @@ router.post(
       return;
     }
 
+    const ctx =
+      context && typeof context === "object" && !Array.isArray(context)
+        ? (context as Record<string, unknown>)
+        : {};
+
+    if (typeof ctx.conversationId === "string" && ctx.conversationId.trim()) {
+      const [conv] = await db
+        .select({ id: conversationsTable.id })
+        .from(conversationsTable)
+        .where(
+          and(
+            eq(conversationsTable.id, ctx.conversationId.trim()),
+            eq(conversationsTable.businessId, businessId),
+          ),
+        )
+        .limit(1);
+      if (!conv) {
+        sendError(res, req, 400, "Conversation not found for this business");
+        return;
+      }
+    }
+
+    if (typeof ctx.bookingId === "string" && ctx.bookingId.trim()) {
+      const [booking] = await db
+        .select({ id: bookingsTable.id })
+        .from(bookingsTable)
+        .where(
+          and(eq(bookingsTable.id, ctx.bookingId.trim()), eq(bookingsTable.businessId, businessId)),
+        )
+        .limit(1);
+      if (!booking) {
+        sendError(res, req, 400, "Booking not found for this business");
+        return;
+      }
+    }
+
     const reqId = (req as { id?: string }).id;
     const ticket = await createSupportTicket({
       businessId,
@@ -44,13 +82,9 @@ router.post(
       severity,
       description,
       context: {
-        ...(context && typeof context === "object" && !Array.isArray(context)
-          ? (context as Record<string, unknown>)
-          : {}),
+        ...ctx,
         requestId: reqId,
-        route: typeof context === "object" && context && "route" in (context as object)
-          ? (context as { route?: string }).route
-          : undefined,
+        route: typeof ctx.route === "string" ? ctx.route : undefined,
       },
       consentLogsAccess: Boolean(consentLogsAccess),
     });
@@ -71,10 +105,6 @@ router.post(
     });
 
     if (category === "liv_error") {
-      const ctx =
-        context && typeof context === "object" && !Array.isArray(context)
-          ? (context as Record<string, unknown>)
-          : {};
       const payload = {
         businessId,
         ticketId: ticket.id,

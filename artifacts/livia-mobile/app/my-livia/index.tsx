@@ -12,24 +12,21 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { fonts, type } from "@/constants/typography";
-import { useColors } from "@/hooks/useColors";
+import { useMobileSurface } from "@/hooks/useMobileSurface";
 import { getApiBaseUrl } from "@/lib/api-base";
 import {
   GUEST_HUB_TOKEN_KEY,
   guestVisitMobilePath,
   openGuestBookUrl,
 } from "@/lib/guest-hub";
-import {
-  DEMO_GUEST_CLIENT_COPY,
-  GUEST_HUB_COPY,
-  LIVIA_MOBILE_ENTRY_COPY,
-  guestHubContactLabel,
-  type GuestPreferredModality,
-} from "@workspace/policy";
+import { GuestHubSignInPanel } from "@/components/guest/GuestHubSignInPanel";
+import { GatewayAuthShell } from "@/components/gateway/GatewayAuthShell";
+import { GatewayScreenShell } from "@/components/gateway/GatewayScreenShell";
+import { GUEST_HUB_COPY, LIVIA_MOBILE_ENTRY_COPY, guestHubContactLabel, type GuestPreferredModality } from "@workspace/policy";
 import { DEMO_GUEST_PHONE, requestGuestHubOtpMobile } from "@/lib/guest-hub-otp";
-import { isProductionCustomerSurface } from "@/lib/production-surface";
+import { rememberGuestDoor, setForceColdOpen } from "@/lib/mobile-entry-routing";
+import { isDemoMobileSurface } from "@/lib/production-surface";
 import { GuestHubLivChat } from "@/components/guest/GuestHubLivChat";
 import { GuestHubWelcome } from "@/components/guest/GuestHubWelcome";
 import { GuestHubRedeemPanel } from "@/components/guest/GuestHubRedeemPanel";
@@ -74,7 +71,8 @@ type HubView = {
 };
 
 export default function MyLiviaHubScreen() {
-  const colors = useColors();
+  const { tokens: guestColors } = useMobileSurface("guest-hub");
+  const colors = guestColors;
   const router = useRouter();
   const api = getApiBaseUrl();
   const [hubToken, setHubToken] = useState<string | null>(null);
@@ -132,7 +130,7 @@ export default function MyLiviaHubScreen() {
         authMethod === "email" ? { email } : { phone: forPhone, country: "IE" },
       );
       setOtpSession(j.sessionToken);
-      const shownCode = j.magicOtpCode ?? j.devOtp ?? null;
+      const shownCode = isDemoMobileSurface() ? (j.magicOtpCode ?? j.devOtp ?? null) : null;
       setMagicOtp(shownCode);
       if (shownCode) setCode(shownCode);
       return { sessionToken: j.sessionToken, code: shownCode };
@@ -161,13 +159,14 @@ export default function MyLiviaHubScreen() {
         if (!r.ok) throw new Error("Incorrect code");
         const j = (await r.json()) as { hubToken: string };
         await AsyncStorage.setItem(GUEST_HUB_TOKEN_KEY, j.hubToken);
+        await rememberGuestDoor();
         setHubToken(j.hubToken);
         const v = await loadView(j.hubToken);
         setView(v);
         setDisplayName(v.displayName ?? "");
         setOtpSession(null);
       } catch {
-        setErr("Could not sign in — try Verify manually with code 000000");
+        setErr("Could not sign in — check the code and try again.");
       } finally {
         setBusy(false);
       }
@@ -187,6 +186,7 @@ export default function MyLiviaHubScreen() {
       if (!r.ok) throw new Error("Incorrect code");
       const j = (await r.json()) as { hubToken: string };
       await AsyncStorage.setItem(GUEST_HUB_TOKEN_KEY, j.hubToken);
+      await rememberGuestDoor();
       setHubToken(j.hubToken);
       const v = await loadView(j.hubToken);
       setView(v);
@@ -236,6 +236,7 @@ export default function MyLiviaHubScreen() {
 
   async function signOutGuest() {
     await AsyncStorage.removeItem(GUEST_HUB_TOKEN_KEY);
+    await setForceColdOpen();
     setHubToken(null);
     setView(null);
     router.replace("/" as never);
@@ -252,144 +253,56 @@ export default function MyLiviaHubScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]}>
-        <ActivityIndicator style={{ marginTop: 80 }} color={colors.primary} />
-      </SafeAreaView>
+      <GatewayScreenShell surfaceId="guest-hub">
+        <ActivityIndicator style={{ marginTop: 80, alignSelf: "center" }} color={colors.primary} />
+      </GatewayScreenShell>
     );
   }
 
   if (!hubToken || !view) {
     return (
-      <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]}>
-        <Pressable onPress={() => router.replace("/" as never)} style={styles.back}>
-          <Feather name="arrow-left" size={22} color={colors.foreground} />
-        </Pressable>
-        <ScrollView contentContainerStyle={styles.pad}>
-          <Text style={[type.title, { color: colors.foreground }]}>{GUEST_HUB_COPY.productName}</Text>
-          <Text style={[type.caption, { color: colors.mutedForeground, marginTop: 8 }]}>
-            {authMethod === "email" ? GUEST_HUB_COPY.signInBodyEmail : GUEST_HUB_COPY.signInBody}
-          </Text>
-          <Text style={[type.caption, { color: colors.mutedForeground, marginTop: 6 }]}>
-            {GUEST_HUB_COPY.signInBodyColdStart}
-          </Text>
-          <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
-            {(["phone", "email"] as const).map((m) => (
-              <Pressable
-                key={m}
-                disabled={Boolean(otpSession)}
-                onPress={() => setAuthMethod(m)}
-                style={[
-                  styles.chip,
-                  {
-                    borderColor: authMethod === m ? colors.primary : colors.border,
-                    backgroundColor: authMethod === m ? colors.primary + "18" : "transparent",
-                  },
-                ]}
-                testID={m === "phone" ? "guest-hub-auth-phone" : "guest-hub-auth-email"}
-              >
-                <Text style={[type.caption, { color: authMethod === m ? colors.primary : colors.mutedForeground }]}>
-                  {m === "phone" ? GUEST_HUB_COPY.signInMethodPhone : GUEST_HUB_COPY.signInMethodEmail}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-          {!isProductionCustomerSurface() && magicOtp ? (
-            <Text style={[type.caption, { color: colors.primary, marginTop: 12 }]}>
-              Staging code: {magicOtp}
-            </Text>
-          ) : null}
-          {!otpSession ? (
-            <>
-              {authMethod === "email" ? (
-                <TextInput
-                  style={[styles.input, { borderColor: colors.border, color: colors.foreground }]}
-                  placeholder="you@example.com"
-                  placeholderTextColor={colors.mutedForeground}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  value={email}
-                  onChangeText={setEmail}
-                  testID="guest-hub-email-input"
-                />
-              ) : (
-                <TextInput
-                  style={[styles.input, { borderColor: colors.border, color: colors.foreground }]}
-                  placeholder="e.g. +353 87 100 0001"
-                  placeholderTextColor={colors.mutedForeground}
-                  keyboardType="phone-pad"
-                  value={phone}
-                  onChangeText={setPhone}
-                  testID="guest-hub-phone-input"
-                />
-              )}
-              {!isProductionCustomerSurface() && authMethod === "phone" ? (
-                <>
-                  <Pressable
-                    onPress={() => void signInAsMaryDemo()}
-                    style={[styles.demoFill, { borderColor: colors.primary, backgroundColor: colors.primary + "12" }]}
-                    testID="guest-hub-demo-mary"
-                    disabled={busy}
-                  >
-                    <Text style={[type.caption, { color: colors.primary, fontFamily: fonts.bodyMed }]}>
-                      Sign in as Mary (demo)
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    onPress={() => setPhone(DEMO_GUEST_PHONE)}
-                    style={[styles.demoFill, { borderColor: colors.border }]}
-                    testID="guest-hub-demo-phone"
-                  >
-                    <Text style={[type.caption, { color: colors.primary }]}>Use demo number only</Text>
-                  </Pressable>
-                </>
-              ) : !isProductionCustomerSurface() ? (
-                <Text style={[type.caption, { color: colors.mutedForeground, marginTop: 8 }]}>
-                  {DEMO_GUEST_CLIENT_COPY.phoneHint}
-                </Text>
-              ) : null}
-              <Pressable
-                style={[styles.btn, { backgroundColor: colors.primary }, busy && { opacity: 0.7 }]}
-                onPress={() => void requestOtp()}
-                disabled={busy || (authMethod === "email" ? !email.trim() : !phone.trim())}
-                testID="guest-hub-send-code"
-              >
-                {busy ? (
-                  <ActivityIndicator color={colors.primaryForeground} />
-                ) : (
-                  <Text style={[type.body, { color: colors.primaryForeground, fontFamily: fonts.bodyMed }]}>
-                    Send code
-                  </Text>
-                )}
-              </Pressable>
-            </>
-          ) : (
-            <>
-              <TextInput
-                style={[styles.input, { borderColor: colors.border, color: colors.foreground }]}
-                placeholder="6-digit code"
-                keyboardType="number-pad"
-                value={code}
-                onChangeText={setCode}
-              />
-              <Pressable
-                style={[styles.btn, { backgroundColor: colors.primary }]}
-                onPress={() => void verifyOtp()}
-                disabled={busy}
-              >
-                <Text style={[type.body, { color: colors.primaryForeground, fontFamily: fonts.bodyMed }]}>
-                  Verify
-                </Text>
-              </Pressable>
-            </>
-          )}
-          {err ? <Text style={{ color: colors.destructive, marginTop: 8 }}>{err}</Text> : null}
-        </ScrollView>
-      </SafeAreaView>
+      <GatewayAuthShell
+        surfaceId="guest-hub"
+        keyboardAware
+        title={authMethod === "email" ? GUEST_HUB_COPY.signInTitleEmail : GUEST_HUB_COPY.signInTitle}
+        subtitle={GUEST_HUB_COPY.signInBody}
+        testID="guest-hub-sign-in"
+        headerAction={
+          <Pressable onPress={() => router.replace("/" as never)} hitSlop={12} testID="guest-hub-back">
+            <Feather name="arrow-left" size={22} color={colors.foreground} />
+          </Pressable>
+        }
+      >
+        <GuestHubSignInPanel
+          embedded
+          authMethod={authMethod}
+          onAuthMethodChange={setAuthMethod}
+          phone={phone}
+          onPhoneChange={setPhone}
+          email={email}
+          onEmailChange={setEmail}
+          otpSession={otpSession}
+          code={code}
+          onCodeChange={setCode}
+          magicOtp={magicOtp}
+          busy={busy}
+          err={err}
+          onRequestOtp={() => void requestOtp()}
+          onVerifyOtp={() => void verifyOtp()}
+          onSignInAsMaryDemo={() => void signInAsMaryDemo()}
+          onUseDemoNumber={() => setPhone(DEMO_GUEST_PHONE)}
+          onChangeIdentifier={() => {
+            setOtpSession(null);
+            setCode("");
+            setErr(null);
+          }}
+        />
+      </GatewayAuthShell>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]}>
+    <GatewayScreenShell surfaceId="guest-hub">
       <Pressable onPress={() => router.replace("/" as never)} style={styles.back}>
         <Feather name="arrow-left" size={22} color={colors.foreground} />
       </Pressable>
@@ -548,35 +461,19 @@ export default function MyLiviaHubScreen() {
           </Text>
         </Pressable>
       </ScrollView>
-    </SafeAreaView>
+    </GatewayScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
   back: { padding: 16 },
   pad: { padding: 16, paddingBottom: 40, gap: 12 },
   input: {
     borderWidth: 1,
     borderRadius: 10,
     padding: 14,
-    marginTop: 16,
     fontFamily: fonts.body,
     fontSize: 16,
-  },
-  btn: {
-    borderRadius: 10,
-    padding: 14,
-    alignItems: "center",
-    marginTop: 12,
-  },
-  demoFill: {
-    alignSelf: "flex-start",
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginTop: 8,
   },
   btnSm: {
     borderWidth: 1,
@@ -590,6 +487,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 14,
     marginTop: 8,
+    backgroundColor: "rgba(42, 45, 58, 0.45)",
   },
   row: { flexDirection: "row", alignItems: "center", gap: 10 },
   rowBetween: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12 },
@@ -602,11 +500,5 @@ const styles = StyleSheet.create({
   shopAvatarFallback: {
     alignItems: "center",
     justifyContent: "center",
-  },
-  chip: {
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
   },
 });

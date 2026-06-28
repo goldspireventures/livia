@@ -120,12 +120,18 @@ async function main() {
 
 
 
-  const apiBase = `http://${ip}:3000`;
-  const dashboardBase = `http://${ip}:5173`;
+  const useProd = process.argv.includes("--prod");
+
+  const apiBase = useProd
+    ? "https://api.livia-hq.com"
+    : `http://${ip}:3000`;
+  const dashboardBase = useProd
+    ? "https://app.livia-hq.com"
+    : `http://${ip}:5173`;
 
   console.log("");
 
-  console.log("  Physical device dev");
+  console.log(`  Physical device dev${useProd ? " (production API)" : ""}`);
 
   console.log(`  API:       ${apiBase}`);
   console.log(`  Dashboard: ${dashboardBase}`);
@@ -153,7 +159,12 @@ async function main() {
     ...processEnv,
     EXPO_PUBLIC_API_BASE_URL: apiBase,
     EXPO_PUBLIC_DASHBOARD_URL: dashboardBase,
-    EXPO_PUBLIC_DOMAIN: `${ip}:3000`,
+    EXPO_PUBLIC_MARKETING_URL: useProd ? "https://livia-hq.com" : processEnv.EXPO_PUBLIC_MARKETING_URL,
+    EXPO_PUBLIC_GATEWAY_ASSETS_URL: useProd
+      ? "https://app.livia-hq.com"
+      : "https://app.staging.livia-hq.com",
+    EXPO_PUBLIC_DEMO_LOGIN: useProd ? "false" : processEnv.EXPO_PUBLIC_DEMO_LOGIN,
+    EXPO_PUBLIC_DOMAIN: useProd ? "api.livia-hq.com" : `${ip}:3000`,
     REACT_NATIVE_PACKAGER_HOSTNAME: ip,
     EXPO_OFFLINE: "1",
   };

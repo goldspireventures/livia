@@ -61,7 +61,6 @@ import { VisitFeedbackCard } from "@/components/VisitFeedbackCard";
 import { OwnerIntelligenceHub } from "@/components/OwnerIntelligenceHub";
 import { OwnerOperatingPulseCard } from "@/components/OwnerOperatingPulseCard";
 import { LivWaitlistNudge } from "@/components/LivWaitlistNudge";
-import { ActNotificationBanner } from "@/components/ActNotificationBanner";
 import { OwnerLivOpsCard } from "@/components/OwnerLivOpsCard";
 import { SoloOperatorLivStrip } from "@/components/SoloOperatorLivStrip";
 import { SoloOperatorFirstRun } from "@/components/SoloOperatorFirstRun";
@@ -88,7 +87,6 @@ import { VerticalHomeShortcuts } from "@/components/VerticalHomeShortcuts";
 import { LivProposalsCard } from "@/components/LivProposalsCard";
 import { ChainCommerceCard } from "@/components/ChainCommerceCard";
 import { ActivityFeedCard } from "@/components/ActivityFeedCard";
-import { OwnerLivAssistFab } from "@/components/OwnerLivAssistFab";
 import { CapabilityReadinessCard } from "@/components/CapabilityReadinessCard";
 import { BeautyTodayHandoffStrip } from "@/components/beauty/BeautyTodayHandoffStrip";
 import { MobileTodayMorphStrip } from "@/components/today/MobileTodayMorphStrip";
@@ -108,6 +106,7 @@ import { WellnessMorphTodayHome } from "@/components/wellness/WellnessMorphToday
 import { MorphOwnerSignalsFooter } from "@/components/today/MorphOwnerSignalsFooter";
 import { ConstellationTodayHome } from "@/components/constellation/ConstellationTodayHome";
 import { TENANT_SHELL_LAYOUT, tenantScreenBackground } from "@/lib/tenant-shell-layout";
+import { tabBarScrollPadding } from "@/lib/mobile-layout";
 import { useManualRefresh } from "@/lib/manual-refresh";
 import {
   isConsultFirstVertical,
@@ -452,7 +451,7 @@ export default function DashboardScreen() {
       style={styles.scroll}
       contentContainerStyle={[
         styles.content,
-        { paddingTop: topPad + 12, gap: contentGap },
+        { paddingTop: topPad + 12, gap: contentGap, paddingBottom: tabBarScrollPadding(insets.bottom, 36) },
       ]}
       contentInsetAdjustmentBehavior="automatic"
       refreshControl={
@@ -976,7 +975,6 @@ export default function DashboardScreen() {
       currentBusiness?.id &&
       (livStack.showSectionLabel ||
         livStack.showBriefing ||
-        livStack.showActBanner ||
         livStack.showMoments ||
         livStack.showIncidents ||
         livStack.showProposals ||
@@ -1012,7 +1010,6 @@ export default function DashboardScreen() {
               />
             </View>
           ) : null}
-          {livStack.showActBanner ? <ActNotificationBanner /> : null}
           {livStack.showMoments ? <LivMomentsCard businessId={currentBusiness.id} /> : null}
           {livStack.showIncidents ? <LivIncidentsCard businessId={currentBusiness.id} /> : null}
           {livStack.showProposals ? <LivProposalsCard businessId={currentBusiness.id} /> : null}
@@ -1103,13 +1100,6 @@ export default function DashboardScreen() {
         />
       ) : null}
     </ScrollView>
-    {(role === "OWNER" || role === "ADMIN") && currentBusiness?.id ? (
-      <OwnerLivAssistFab
-        businessId={currentBusiness.id}
-        starters={operatorXp?.livOpsStarters ?? []}
-        soloMode={operatorXp?.soloMode}
-      />
-    ) : null}
     </View>
   );
 }
@@ -1119,7 +1109,6 @@ const styles = StyleSheet.create({
   scroll: { backgroundColor: "transparent" },
   content: {
     paddingHorizontal: TENANT_SHELL_LAYOUT.contentPadX,
-    paddingBottom: TENANT_SHELL_LAYOUT.tabBarClearance + 52,
   },
   livSection: { gap: 12, marginTop: 4 },
   livSectionTitle: {

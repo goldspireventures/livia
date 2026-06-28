@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { useInAppNotifications } from "@/hooks/useInAppNotifications";
 import { useColors } from "@/hooks/useColors";
+import { elevation } from "@/constants/elevation";
 import { fonts } from "@/constants/typography";
 
 const TOAST_KINDS = new Set([
@@ -59,6 +60,7 @@ export function ActNotificationBanner() {
       }}
       style={[
         styles.wrap,
+        elevation.floating,
         {
           backgroundColor: isRisk ? "#7f1d1d" : isProof || isQuote ? colors.primary + "18" : colors.card,
           borderColor: isRisk ? "#b91c1c" : colors.primary + "44",
@@ -94,10 +96,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     gap: 10,
-    marginHorizontal: 12,
-    marginBottom: 8,
     padding: 12,
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
   },
   copy: { flex: 1, gap: 2 },

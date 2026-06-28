@@ -19,7 +19,10 @@ type Props = PressableProps & {
   children: React.ReactNode;
   glowColor?: string;
   style?: StyleProp<ViewStyle>;
+  /** Inner layout — default column; pass row for icon + text cards. */
   contentStyle?: StyleProp<ViewStyle>;
+  /** Size content wrapper to fill pressable (required for absolute-fill card layouts). */
+  fill?: boolean;
   haptic?: "tap" | "selection" | "impact" | "none";
 };
 
@@ -31,6 +34,7 @@ export function GlowPressable({
   glowColor,
   style,
   contentStyle,
+  fill = false,
   haptic = "tap",
   onPressIn,
   onPressOut,
@@ -80,13 +84,14 @@ export function GlowPressable({
           ]}
         />
       ) : null}
-      <View style={[styles.content, contentStyle]}>{children}</View>
+      <View style={[styles.content, fill && styles.fill, contentStyle]}>{children}</View>
     </AnimatedPressable>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { flexDirection: "row", alignItems: "center", justifyContent: "center" },
+  content: { flexDirection: "column", alignItems: "stretch" },
+  fill: { flex: 1, alignSelf: "stretch" },
   glow: {
     ...StyleSheet.absoluteFillObject,
     borderRadius: 20,

@@ -27,21 +27,19 @@ export function getDashboardBaseUrl(): string {
 
 /**
  * Static W2 gateway assets (`/w2-gateway/cards/*`) — served by the dashboard app.
- * On a physical device, local :5173 is often offline; use staging/prod for card photos.
+ * On a physical device, local :5173 is often offline; prefer staging/prod CDN for photos.
  */
 export function getGatewayAssetsBaseUrl(): string {
   const explicit = process.env.EXPO_PUBLIC_GATEWAY_ASSETS_URL?.replace(/\/+$/, "");
   if (explicit) return explicit;
-  const dash = process.env.EXPO_PUBLIC_DASHBOARD_URL?.replace(/\/+$/, "");
-  if (dash) return dash;
-  const api = getApiBaseUrl().replace(/\/+$/, "");
-  if (isLocalDevApi(api)) {
+  const dash = getDashboardBaseUrl().replace(/\/+$/, "");
+  if (isLocalDevApi(dash) || dash.includes(":5173")) {
     return "https://app.staging.livia-hq.com";
   }
-  if (api.includes("api.staging.")) {
-    return "https://app.staging.livia-hq.com";
+  if (dash.includes("app.livia-hq.com") || getApiBaseUrl().includes("api.livia-hq.com")) {
+    return "https://app.livia-hq.com";
   }
-  return "https://app.livia-hq.com";
+  return dash;
 }
 
 export function dashboardSettingsUrl(tab: string, businessId?: string): string {

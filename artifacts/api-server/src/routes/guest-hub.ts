@@ -1,5 +1,9 @@
 import { Router, type IRouter } from "express";
-import { publicChatRateLimitOk } from "../lib/public-chat-rate-limit";
+import {
+  guestHubOtpRequestRateLimitOk,
+  guestHubOtpVerifyRateLimitOk,
+  publicChatRateLimitOk,
+} from "../lib/public-chat-rate-limit";
 import { logRouteError, safeClientMessage, sendError } from "../lib/http-errors";
 import {
   getGuestHubView,
@@ -14,11 +18,24 @@ import { GuestHubOtpDeliveryError } from "../services/guest-hub-otp-delivery.ser
 
 const router: IRouter = Router();
 
+function clientIp(req: { headers: Record<string, unknown>; socket: { remoteAddress?: string | null } }): string {
+  const forwarded = req.headers["x-forwarded-for"];
+  if (typeof forwarded === "string" && forwarded.trim()) {
+    return forwarded.split(",")[0]!.trim();
+  }
+  return req.socket.remoteAddress ?? "unknown";
+}
+
 router.get("/public/surface-config", (_req, res): void => {
   res.json(buildPublicSurfaceConfig());
 });
 
 router.post("/public/guest-hub/otp/request", async (req, res): Promise<void> => {
+  const limit = await guestHubOtpRequestRateLimitOk(clientIp(req));
+  if (!limit.ok) {
+    sendError(res, req, 429, "Too many code requests — try again in a few minutes.");
+    return;
+  }
   try {
     const phone = typeof req.body?.phone === "string" ? req.body.phone : "";
     const email = typeof req.body?.email === "string" ? req.body.email : "";
@@ -57,6 +74,11 @@ router.post("/public/guest-hub/otp/verify", async (req, res): Promise<void> => {
   const code = typeof req.body?.code === "string" ? req.body.code : "";
   if (!sessionToken || !code) {
     sendError(res, req, 400, "sessionToken and code required");
+    return;
+  }
+  const limit = await guestHubOtpVerifyRateLimitOk(sessionToken);
+  if (!limit.ok) {
+    sendError(res, req, 429, "Too many attempts — request a new code.");
     return;
   }
   const result = await verifyGuestHubOtp(sessionToken, code);
@@ -335,8 +357,15 @@ router.post("/public/guest-hub/redeem", async (req, res): Promise<void> => {
           ? "Code not found"
           : result.reason === "depleted"
             ? "No sessions left on this code"
-            : "Session expired";
-      sendError(res, req, result.reason === "session" ? 401 : 404, msg);
+            : result.reason === "not_for_account"
+              ? GUEST_HUB_COPY.redeemNotForAccount
+              : "Session expired";
+      sendError(
+        res,
+        req,
+        result.reason === "session" ? 401 : result.reason === "not_for_account" ? 403 : 404,
+        msg,
+      );
       return;
     }
     res.json({

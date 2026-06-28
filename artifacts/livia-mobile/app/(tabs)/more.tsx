@@ -29,6 +29,7 @@ import {
 import { canViewDayPackages, canViewPremises } from "@/lib/settings-persona";
 import { menuItemsForPersona } from "@/lib/mobile-menu";
 import { getPublicBookingLabel } from "@/lib/public-booking-url";
+import { setForceColdOpen } from "@/lib/mobile-entry-routing";
 import { useMobileOwnerIntelTabBadges } from "@/hooks/useMobileOwnerIntelTabBadges";
 
 export default function MoreScreen() {
@@ -247,7 +248,11 @@ export default function MoreScreen() {
           ]}
           onPress={() => {
             haptics.warning();
-            signOut();
+            void (async () => {
+              await setForceColdOpen();
+              await signOut();
+              router.replace("/" as never);
+            })();
           }}
           testID="sign-out-button"
         >

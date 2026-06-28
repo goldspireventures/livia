@@ -1,81 +1,85 @@
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { GatewayG1Ambient } from "@/components/gateway/GatewayG1Ambient";
-import { LiviaWordmark } from "@/components/brand/LiviaWordmark";
+import { LiviaMark, LiviaWordmark } from "@/components/brand/LiviaWordmark";
+import { ConstellationGlassCard } from "@/components/constellation/ConstellationGlassCard";
+import { GatewayScreenShell } from "@/components/gateway/GatewayScreenShell";
 import { GlowPressable } from "@/components/ui/GlowPressable";
-import { aurora } from "@/constants/colors";
-import { elevation } from "@/constants/elevation";
-import { fonts, type } from "@/constants/typography";
-import { useColors } from "@/hooks/useColors";
-import { isDemoLoginEnabled } from "@/hooks/usePersona";
-import { gatewayTheme } from "@/lib/gateway-theme";
+import { fonts } from "@/constants/typography";
+import { useMobileSurface } from "@/hooks/useMobileSurface";
+import { GATEWAY_LAYOUT, MIN_TOUCH, usePhoneLayout } from "@/lib/mobile-layout";
+import { rememberGuestDoor, rememberOperatorDoor } from "@/lib/mobile-entry-routing";
 import { LIVIA_MOBILE_ENTRY_COPY } from "@workspace/policy";
 
+/**
+ * Production cold open — constellation preset, question + two answer cards.
+ */
 export function AppEntryGateway() {
-  const colors = useColors();
-  const insets = useSafeAreaInsets();
+  const { tokens: colors } = useMobileSurface("gateway-cold-open");
+  const { compact, short, cardMaxWidth } = usePhoneLayout();
   const router = useRouter();
   const copy = LIVIA_MOBILE_ENTRY_COPY;
-  const gold = gatewayTheme.primaryChampagne;
-
-  function goOperator() {
-    router.push("/sign-in" as never);
-  }
+  const champagne = colors.primary;
 
   function goGuest() {
-    router.push("/my-livia" as never);
+    void rememberGuestDoor().then(() => router.push("/my-livia" as never));
   }
 
-  function goDemo() {
-    router.push("/demo" as never);
+  function goOperator() {
+    void rememberOperatorDoor().then(() => router.push("/sign-in" as never));
+  }
+
+  function goCreateAccount() {
+    void rememberOperatorDoor().then(() => router.push("/sign-in?mode=sign-up" as never));
   }
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.background }]} testID="app-entry-gateway">
-      <GatewayG1Ambient />
-
+    <GatewayScreenShell surfaceId="gateway-cold-open" testID="app-entry-gateway">
       <ScrollView
         contentContainerStyle={[
           styles.scroll,
-          { paddingTop: insets.top + 28, paddingBottom: insets.bottom + 24 },
+          {
+            paddingTop: short ? 16 : 28,
+            paddingBottom: GATEWAY_LAYOUT.contentBottomPad,
+            flexGrow: 1,
+            justifyContent: (short ? "flex-start" : "center") as "flex-start" | "center",
+          },
         ]}
         showsVerticalScrollIndicator={false}
       >
         <Animated.View entering={FadeInDown.duration(420).springify().damping(18)} style={styles.brand}>
-          <LiviaWordmark size="lg" color={colors.foreground} />
-          <Text style={[styles.kicker, { color: gold }]}>{copy.kicker}</Text>
-          <Text style={[styles.title, { color: colors.foreground }]}>{copy.title}</Text>
+          <View style={[styles.markRing, { borderColor: champagne + "33", backgroundColor: champagne + "0d" }]}>
+            <LiviaMark size={compact ? 40 : 48} fill={colors.foreground} />
+          </View>
+          <LiviaWordmark size={compact ? "md" : "lg"} color={colors.foreground} />
+          <Text style={[styles.title, { color: colors.foreground }]}>
+            {copy.titleLead}{" "}
+            <Text style={[styles.titleAccent, { color: champagne }]}>{copy.titleAccent}</Text>
+          </Text>
         </Animated.View>
 
-        <View style={styles.cards}>
+        <View style={[styles.cards, { maxWidth: cardMaxWidth, alignSelf: "center", width: "100%" }]}>
           <Animated.View entering={FadeInDown.delay(80).duration(400).springify()}>
             <GlowPressable
               onPress={goGuest}
               testID="entry-gateway-guest"
-              glowColor={gold}
+              glowColor={champagne}
               haptic="impact"
-              style={[
-                styles.card,
-                elevation.floating,
-                {
-                  backgroundColor: colors.card + "f2",
-                  borderColor: gold + "55",
-                },
-              ]}
+              style={styles.cardPressable}
             >
-              <View style={[styles.iconWrap, { backgroundColor: gold + "22" }]}>
-                <Feather name="calendar" size={22} color={gold} />
-              </View>
-              <View style={styles.cardText}>
-                <Text style={[styles.cardTitle, { color: colors.foreground }]}>{copy.guestTitle}</Text>
-                <Text style={[styles.cardBody, { color: colors.mutedForeground }]}>{copy.guestBody}</Text>
-                <Text style={[styles.cardCta, { color: gold }]}>{copy.guestCta} →</Text>
-                <Text style={[styles.cardHint, { color: colors.mutedForeground }]}>{copy.guestPhoneHint}</Text>
-              </View>
+              <ConstellationGlassCard style={styles.doorCard}>
+                <View style={styles.cardRow}>
+                  <View
+                    style={[styles.iconWrap, { backgroundColor: champagne + "18", borderColor: champagne + "40" }]}
+                  >
+                    <Feather name="calendar" size={22} color={champagne} />
+                  </View>
+                  <Text style={[styles.cardTitle, { color: colors.foreground }]}>{copy.guestTitle}</Text>
+                  <Feather name="arrow-right" size={18} color={champagne} />
+                </View>
+              </ConstellationGlassCard>
             </GlowPressable>
           </Animated.View>
 
@@ -83,135 +87,108 @@ export function AppEntryGateway() {
             <GlowPressable
               onPress={goOperator}
               testID="entry-gateway-operator"
-              glowColor={aurora.violet}
+              glowColor={champagne}
               haptic="impact"
-              style={[
-                styles.card,
-                elevation.floating,
-                {
-                  backgroundColor: colors.card + "f2",
-                  borderColor: colors.border,
-                },
-              ]}
+              style={styles.cardPressable}
             >
-              <View style={[styles.iconWrap, { backgroundColor: aurora.violet + "22" }]}>
-                <Feather name="briefcase" size={22} color={aurora.violet} />
-              </View>
-              <View style={styles.cardText}>
-                <Text style={[styles.cardTitle, { color: colors.foreground }]}>{copy.operatorTitle}</Text>
-                <Text style={[styles.cardBody, { color: colors.mutedForeground }]}>{copy.operatorBody}</Text>
-                <Text style={[styles.cardCta, { color: aurora.violet }]}>{copy.operatorCta} →</Text>
-              </View>
+              <ConstellationGlassCard style={styles.doorCard}>
+                <View style={styles.cardRow}>
+                  <View
+                    style={[styles.iconWrap, { backgroundColor: champagne + "18", borderColor: champagne + "40" }]}
+                  >
+                    <Feather name="briefcase" size={22} color={champagne} />
+                  </View>
+                  <Text style={[styles.cardTitle, { color: colors.foreground }]}>{copy.operatorTitle}</Text>
+                  <Feather name="arrow-right" size={18} color={champagne} />
+                </View>
+              </ConstellationGlassCard>
             </GlowPressable>
           </Animated.View>
-
-          {isDemoLoginEnabled ? (
-            <Animated.View entering={FadeInDown.delay(200).duration(400).springify()}>
-              <GlowPressable
-                onPress={goDemo}
-                testID="entry-gateway-demo"
-                glowColor={gold}
-                haptic="tap"
-                style={styles.demoLink}
-              >
-                <Text style={[styles.demoLinkTitle, { color: colors.foreground }]}>
-                  {copy.demoTitle}
-                </Text>
-                <Text style={[styles.demoLinkBody, { color: colors.mutedForeground }]}>
-                  {copy.demoBody}
-                </Text>
-                <Text style={[styles.cardCta, { color: gold }]}>{copy.demoCta} →</Text>
-              </GlowPressable>
-            </Animated.View>
-          ) : null}
         </View>
+
+        <Animated.View entering={FadeInDown.delay(220).duration(380).springify()} style={styles.createRow}>
+          <Text style={[styles.createLead, { color: colors.mutedForeground }]}>{copy.createAccountLead}</Text>
+          <Pressable onPress={goCreateAccount} hitSlop={8} testID="entry-gateway-create-account">
+            <Text style={[styles.createCta, { color: champagne }]}>{copy.createAccountCta} →</Text>
+          </Pressable>
+        </Animated.View>
       </ScrollView>
-    </View>
+    </GatewayScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
   scroll: {
-    paddingHorizontal: 22,
-    flexGrow: 1,
-    justifyContent: "center",
-    gap: 28,
+    paddingHorizontal: GATEWAY_LAYOUT.padX,
+    gap: GATEWAY_LAYOUT.sectionGap,
   },
   brand: {
     alignItems: "center",
     gap: 10,
+    marginBottom: 4,
   },
-  kicker: {
-    ...type.caption,
-    fontFamily: fonts.bodyMed,
-    letterSpacing: 1.2,
-    textTransform: "uppercase",
-    marginTop: 16,
+  markRing: {
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 4,
   },
   title: {
     fontFamily: fonts.serifMedium,
-    fontSize: 26,
-    lineHeight: 32,
+    fontSize: 30,
+    lineHeight: 36,
     textAlign: "center",
-    maxWidth: 300,
+    maxWidth: 320,
+    letterSpacing: -0.4,
+    marginTop: 8,
+  },
+  titleAccent: {
+    fontFamily: fonts.serifItalic,
   },
   cards: {
-    gap: 14,
+    gap: GATEWAY_LAYOUT.cardGap,
   },
-  card: {
-    borderRadius: 20,
-    borderWidth: 1,
-    padding: 18,
+  cardPressable: {
+    width: "100%",
+    minHeight: MIN_TOUCH,
+  },
+  doorCard: {
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+  },
+  cardRow: {
     flexDirection: "row",
+    alignItems: "center",
     gap: 14,
-    alignItems: "flex-start",
   },
   iconWrap: {
     width: 44,
     height: 44,
     borderRadius: 12,
+    borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
   },
-  cardText: {
-    flex: 1,
-    gap: 6,
-  },
   cardTitle: {
+    flex: 1,
     fontFamily: fonts.bodySemi,
     fontSize: 17,
+    lineHeight: 22,
   },
-  cardBody: {
-    ...type.caption,
-    lineHeight: 18,
-  },
-  cardCta: {
-    fontFamily: fonts.bodySemi,
-    fontSize: 14,
+  createRow: {
+    alignItems: "center",
+    gap: 6,
     marginTop: 4,
   },
-  cardHint: {
-    fontSize: 11,
+  createLead: {
+    fontSize: 13,
     fontFamily: fonts.body,
   },
-  demoLink: {
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "transparent",
-    paddingVertical: 14,
-    paddingHorizontal: 4,
-    gap: 4,
-    alignItems: "center",
-  },
-  demoLinkTitle: {
+  createCta: {
     fontFamily: fonts.bodySemi,
-    fontSize: 15,
-  },
-  demoLinkBody: {
-    ...type.caption,
-    textAlign: "center",
-    lineHeight: 18,
-    maxWidth: 300,
+    fontSize: 14,
   },
 });

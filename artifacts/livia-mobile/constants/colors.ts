@@ -3,11 +3,11 @@
  * Mirrors artifacts/livia-dashboard/src/index.css token semantics.
  *
  * Two-layer brand:
- *   - Aurora (product surface): midnight base + violet/cyan/mint gradient.
- *     Cyan is the primary action color; violet signals automated/assistant moments.
- *   - Aurum (wordmark accent): champagne/cream/bronze used for the Livia wordmark
- *     and the italic v. Reserved for brand-level moments — never for action buttons.
+ *   - Aurora (product surface): nebula accents; cyan/violet for Liv assistant moments.
+ *   - Aurum (platform default): champagne primary on constellation ink — matches web.
  */
+
+import { gatewayTheme } from "@/lib/gateway-theme";
 
 const aurora = {
   violet: "#8b5cf6",
@@ -51,24 +51,24 @@ const colors = {
     auroraMint: aurora.mint,
   },
   dark: {
-    text: "#ffffff",
-    tint: aurora.cyan,
-    background: aurora.midnight,
-    foreground: "#ffffff",
-    card: "#111114",
-    cardForeground: "#ffffff",
-    primary: aurora.cyan,
-    primaryForeground: aurora.midnight,
-    secondary: "#1c1c20",
+    text: "#f7f5f0",
+    tint: aurum.champagne,
+    background: gatewayTheme.platformInk,
+    foreground: "#f7f5f0",
+    card: "rgba(42, 45, 58, 0.72)",
+    cardForeground: "#f7f5f0",
+    primary: aurum.champagne,
+    primaryForeground: gatewayTheme.platformInk,
+    secondary: "#252830",
     secondaryForeground: "#fafafa",
-    muted: "#1c1c20",
-    mutedForeground: "#a1a1aa",
+    muted: "#252830",
+    mutedForeground: "rgba(247, 245, 240, 0.55)",
     accent: "#1f1535",
     accentForeground: "#c4b5fd",
     destructive: "#ef4444",
     destructiveForeground: "#ffffff",
-    border: "#222229",
-    input: "#222229",
+    border: "rgba(217, 195, 154, 0.18)",
+    input: "rgba(217, 195, 154, 0.22)",
     success: aurora.mint,
     warning: "#f59e0b",
     info: aurora.cyan,

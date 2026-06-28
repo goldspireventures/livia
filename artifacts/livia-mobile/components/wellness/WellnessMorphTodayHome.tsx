@@ -110,7 +110,7 @@ export function WellnessMorphTodayHome({
           {livLine}
         </Text>
         <Text style={[styles.meta, { color: colors.mutedForeground }]}>
-          {businessName ?? "Your studio"} · Rooms · {headerDate ?? "today"}
+          {businessName ?? "Your business"} · Rooms · {headerDate ?? "today"}
         </Text>
         {(pendingCount > 0 || handoffCount > 0) && (
           <View style={styles.signalRow}>

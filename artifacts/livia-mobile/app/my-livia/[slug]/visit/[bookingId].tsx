@@ -18,6 +18,7 @@ import { useColors } from "@/hooks/useColors";
 import { getApiBaseUrl } from "@/lib/api-base";
 import { GUEST_HUB_TOKEN_KEY, openGuestBookUrl } from "@/lib/guest-hub";
 import { GuestDesignProofPanel } from "@/components/guest/GuestDesignProofPanel";
+import { GUEST_HUB_COPY } from "@workspace/policy";
 import { verticalAccentHex } from "@/lib/vertical-theme";
 
 type GuestProofArtifact = {
@@ -100,7 +101,7 @@ export default function MyLiviaVisitScreen() {
           body: JSON.stringify({ minutesLate: 10 }),
         },
       );
-      setMessage("Studio notified — thanks for the heads up.");
+      setMessage("Team notified — thanks for the heads up.");
     } finally {
       setBusy(false);
     }
@@ -255,7 +256,7 @@ export default function MyLiviaVisitScreen() {
 
         <TextInput
           style={[styles.input, { borderColor: colors.border, color: colors.foreground, marginTop: 16 }]}
-          placeholder="Message the studio"
+          placeholder={GUEST_HUB_COPY.messagePlaceholder}
           placeholderTextColor={colors.mutedForeground}
           value={reply}
           onChangeText={setReply}

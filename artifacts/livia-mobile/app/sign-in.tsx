@@ -1,9 +1,9 @@
 import { useOAuth, useSignIn, useSignUp } from "@clerk/clerk-expo";
 import { Feather } from "@expo/vector-icons";
 import * as AuthSession from "expo-auth-session";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Platform,
@@ -14,24 +14,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withDelay,
-  withSpring,
-  withTiming,
-} from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AuroraHalo } from "@/components/brand/AuroraHalo";
-import { LiviaWordmark } from "@/components/brand/LiviaWordmark";
-import { GatewaySignInStory } from "@/components/gateway/GatewaySignInStory";
-import { aurora, aurum } from "@/constants/colors";
-import { elevation } from "@/constants/elevation";
-import { SPRING_GENTLE } from "@/constants/motion";
+import { GatewayAuthShell } from "@/components/gateway/GatewayAuthShell";
+import { useMobileSurface } from "@/hooks/useMobileSurface";
 import { fonts, type } from "@/constants/typography";
-import { useColors } from "@/hooks/useColors";
 import { useHaptics } from "@/hooks/useHaptics";
 import {
   fetchDemoSignInTicket,
@@ -39,25 +24,35 @@ import {
   normalizeDemoSignInIdentifier,
 } from "@/lib/demo-sign-in";
 import { clearDemoSession, persistDemoSession } from "@/lib/demo-session";
-import { isDemoLoginEnabled, setDevPersonaOverride } from "@/hooks/usePersona";
-import { GATEWAY_PASSWORD_HINT, humanizeGatewayAuthError, LIVIA_MOBILE_ENTRY_COPY, LIVIA_FORM_EXAMPLES } from "@workspace/policy";
-import { isProductionCustomerSurface } from "@/lib/production-surface";
+import { setDevPersonaOverride } from "@/hooks/usePersona";
+import {
+  GATEWAY_PASSWORD_HINT,
+  GATEWAY_SIGN_IN_SUBTITLE,
+  GATEWAY_SIGN_UP_SUBTITLE,
+  humanizeGatewayAuthError,
+  LIVIA_MOBILE_ENTRY_COPY,
+  LIVIA_FORM_EXAMPLES,
+} from "@workspace/policy";
+import { isDemoMobileSurface } from "@/lib/production-surface";
+import { rememberOperatorDoor } from "@/lib/mobile-entry-routing";
 
 WebBrowser.maybeCompleteAuthSession();
 
 type Mode = "sign-in" | "sign-up" | "verify";
 
 export default function SignInScreen() {
-  const colors = useColors();
-  const insets = useSafeAreaInsets();
+  const { tokens: colors } = useMobileSurface("gateway-auth");
   const router = useRouter();
+  const params = useLocalSearchParams<{ mode?: string }>();
   const haptics = useHaptics();
 
   const { signIn, setActive: setActiveSignIn, isLoaded: signInLoaded } = useSignIn();
   const { signUp, setActive: setActiveSignUp, isLoaded: signUpLoaded } = useSignUp();
   const { startOAuthFlow: startGoogleFlow } = useOAuth({ strategy: "oauth_google" });
 
-  const [mode, setMode] = useState<Mode>("sign-in");
+  const [mode, setMode] = useState<Mode>(
+    params.mode === "sign-up" ? "sign-up" : "sign-in",
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
@@ -75,37 +70,9 @@ export default function SignInScreen() {
     return normalizeDemoSignInIdentifier(raw);
   }
 
-  const wordmarkY = useSharedValue(-12);
-  const wordmarkOpacity = useSharedValue(0);
-  const headlineOpacity = useSharedValue(0);
-  const headlineY = useSharedValue(14);
-  const taglineOpacity = useSharedValue(0);
-  const cardOpacity = useSharedValue(0);
-  const cardY = useSharedValue(20);
-
   useEffect(() => {
-    wordmarkOpacity.value = withTiming(1, { duration: 540, easing: Easing.out(Easing.cubic) });
-    wordmarkY.value = withSpring(0, SPRING_GENTLE);
-    headlineOpacity.value = withDelay(180, withTiming(1, { duration: 480, easing: Easing.out(Easing.cubic) }));
-    headlineY.value = withDelay(180, withSpring(0, SPRING_GENTLE));
-    taglineOpacity.value = withDelay(360, withTiming(1, { duration: 460 }));
-    cardOpacity.value = withDelay(440, withTiming(1, { duration: 460 }));
-    cardY.value = withDelay(440, withSpring(0, SPRING_GENTLE));
-  }, []);
-
-  const wordmarkStyle = useAnimatedStyle(() => ({
-    opacity: wordmarkOpacity.value,
-    transform: [{ translateY: wordmarkY.value }],
-  }));
-  const headlineStyle = useAnimatedStyle(() => ({
-    opacity: headlineOpacity.value,
-    transform: [{ translateY: headlineY.value }],
-  }));
-  const taglineStyle = useAnimatedStyle(() => ({ opacity: taglineOpacity.value }));
-  const cardStyle = useAnimatedStyle(() => ({
-    opacity: cardOpacity.value,
-    transform: [{ translateY: cardY.value }],
-  }));
+    if (params.mode === "sign-up") setMode("sign-up");
+  }, [params.mode]);
 
   useEffect(() => {
     if (Platform.OS !== "web") {
@@ -123,7 +90,7 @@ export default function SignInScreen() {
     setError("");
     const identifier = normalizeIdentifier(email);
     try {
-      if (isDemoLiviaEmail(identifier)) {
+      if (isDemoMobileSurface() && isDemoLiviaEmail(identifier)) {
         const ticket = await fetchDemoSignInTicket(identifier, password);
         await persistDemoSession(ticket);
         await setDevPersonaOverride(null);
@@ -141,6 +108,7 @@ export default function SignInScreen() {
       const result = await signIn.create({ identifier, password });
       if (result.status === "complete") {
         await clearDemoSession();
+        await rememberOperatorDoor();
         await setActiveSignIn({ session: result.createdSessionId });
         haptics.success();
       } else if (isDemoLiviaEmail(identifier)) {
@@ -193,6 +161,7 @@ export default function SignInScreen() {
       const result = await signUp.attemptEmailAddressVerification({ code: code.trim() });
       if (result.status === "complete") {
         await clearDemoSession();
+        await rememberOperatorDoor();
         await setActiveSignUp({ session: result.createdSessionId });
         haptics.success();
       }
@@ -261,73 +230,21 @@ export default function SignInScreen() {
 
   const submit = mode === "verify" ? handleVerify : mode === "sign-in" ? handleSignIn : handleSignUp;
   const submitLabel = mode === "verify" ? "Verify email" : mode === "sign-in" ? "Sign in" : "Create account";
-  const emailPlaceholder = isProductionCustomerSurface()
-    ? LIVIA_FORM_EXAMPLES.ownerEmail
-    : `${LIVIA_FORM_EXAMPLES.ownerEmail} or demo slug (conors-cut-co)`;
-  const tagline =
+  const emailPlaceholder =
+    mode === "sign-up" || !isDemoMobileSurface()
+      ? LIVIA_FORM_EXAMPLES.ownerEmail
+      : "Email or demo slug";
+  const screenTitle =
+    mode === "verify" ? "Verify email" : mode === "sign-up" ? "Create account" : "Sign in";
+  const subtitle =
     mode === "verify"
       ? "We just sent a 6-digit code to your inbox."
       : mode === "sign-in"
-        ? "Welcome back. Your day is already in motion."
-        : "Two minutes to set up. Hours back every week.";
+        ? GATEWAY_SIGN_IN_SUBTITLE
+        : GATEWAY_SIGN_UP_SUBTITLE;
 
-  const formFocused = focused !== null;
-
-  return (
-    <View style={[styles.root, { backgroundColor: colors.background }]}>
-      {/* ADR 0004 / marketing bible: single soft cyan halo */}
-      <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
-        <AuroraHalo tone="primary" size={480} intensity={0.85} style={{ top: -100, left: -60 }} />
-      </View>
-
-      <KeyboardAwareScrollViewCompat
-        style={styles.scroll}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="interactive"
-        showsVerticalScrollIndicator={false}
-        bottomOffset={insets.bottom + 20}
-        extraKeyboardSpace={24}
-        contentContainerStyle={[
-          styles.container,
-          {
-            paddingTop: insets.top + (formFocused ? 12 : 28),
-            paddingBottom: insets.bottom + 32,
-          },
-        ]}
-      >
-        <View style={[styles.brand, formFocused && styles.brandCompact]}>
-          <Animated.View style={wordmarkStyle}>
-            <LiviaWordmark size={formFocused ? "md" : "lg"} color={colors.foreground} />
-          </Animated.View>
-
-          {!formFocused ? (
-            <>
-              <Animated.View style={headlineStyle}>
-                <GatewaySignInStory />
-              </Animated.View>
-
-              <Animated.Text
-                style={[styles.tagline, { color: colors.mutedForeground }, taglineStyle]}
-              >
-                {tagline}
-              </Animated.Text>
-            </>
-          ) : (
-            <Text style={[styles.tagline, { color: colors.mutedForeground }]}>{tagline}</Text>
-          )}
-        </View>
-
-        <Animated.View
-          style={[
-            styles.card,
-            {
-              backgroundColor: colors.card + "f0",
-              borderColor: colors.border,
-            },
-            elevation.floating,
-            cardStyle,
-          ]}
-        >
+  const formBody = (
+    <>
           {mode !== "verify" && (
             <>
               <TouchableOpacity
@@ -493,84 +410,80 @@ export default function SignInScreen() {
             )}
           </TouchableOpacity>
 
-          {mode !== "verify" && (
-            <TouchableOpacity
-              onPress={() => {
-                haptics.selection();
-                setError("");
-                setMode(mode === "sign-in" ? "sign-up" : "sign-in");
-              }}
-              style={styles.toggle}
-              hitSlop={8}
-            >
-              <Text style={[styles.toggleText, { color: colors.mutedForeground }]}>
-                {mode === "sign-in" ? "New to Livia? " : "Already on Livia? "}
-                <Text style={{ color: colors.primary, fontFamily: fonts.bodySemi }}>
-                  {mode === "sign-in" ? "Create an account" : "Sign in"}
-                </Text>
-              </Text>
-            </TouchableOpacity>
-          )}
+    </>
+  );
 
-          {mode === "verify" && (
-            <TouchableOpacity
-              onPress={() => {
-                haptics.selection();
-                setMode("sign-up");
-                setCode("");
-                setError("");
-              }}
-              style={styles.toggle}
-              hitSlop={8}
-            >
-              <Text style={[styles.toggleText, { color: colors.mutedForeground }]}>
-                <Text style={{ color: colors.primary, fontFamily: fonts.bodySemi }}>
-                  ← Back
-                </Text>
+  return (
+    <GatewayAuthShell
+      title={screenTitle}
+      subtitle={subtitle}
+      testID="sign-in-form"
+      keyboardAware
+      headerAction={
+        <Pressable onPress={() => router.replace("/" as never)} hitSlop={12} testID="sign-in-back">
+          <Feather name="arrow-left" size={22} color={colors.foreground} />
+        </Pressable>
+      }
+      footer={
+        mode !== "verify" ? (
+          <TouchableOpacity
+            onPress={() => {
+              haptics.selection();
+              setError("");
+              setMode(mode === "sign-in" ? "sign-up" : "sign-in");
+            }}
+            style={styles.toggle}
+            hitSlop={8}
+          >
+            <Text style={[styles.toggleText, { color: colors.mutedForeground }]}>
+              {mode === "sign-in" ? "New to Livia? " : "Already on Livia? "}
+              <Text style={{ color: colors.primary, fontFamily: fonts.bodySemi }}>
+                {mode === "sign-in" ? "Create an account" : "Sign in"}
               </Text>
-            </TouchableOpacity>
-          )}
-        </Animated.View>
-
-        <TouchableOpacity
-          activeOpacity={0.85}
-          onPress={() => {
-            haptics.selection();
-            router.replace("/" as never);
-          }}
-          style={styles.guestEntry}
-          testID="sign-in-back-to-gateway"
-        >
-          <Text style={[styles.guestEntryText, { color: colors.mutedForeground }]}>
-            <Text style={{ color: colors.primary, fontFamily: fonts.bodySemi }}>
-              ← {LIVIA_MOBILE_ENTRY_COPY.staffBackLink}
             </Text>
-          </Text>
-        </TouchableOpacity>
-
-        {isDemoLoginEnabled ? (
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            onPress={() => {
+              haptics.selection();
+              setMode("sign-up");
+              setCode("");
+              setError("");
+            }}
+            style={styles.toggle}
+            hitSlop={8}
+          >
+            <Text style={[styles.toggleText, { color: colors.mutedForeground }]}>
+              <Text style={{ color: colors.primary, fontFamily: fonts.bodySemi }}>← Back</Text>
+            </Text>
+          </TouchableOpacity>
+        )
+      }
+      below={
+        <>
           <TouchableOpacity
             activeOpacity={0.85}
             onPress={() => {
               haptics.selection();
-              router.push("/demo" as never);
+              router.replace("/" as never);
             }}
             style={styles.guestEntry}
-            testID="sign-in-demo-gateway"
+            testID="sign-in-back-to-gateway"
           >
             <Text style={[styles.guestEntryText, { color: colors.mutedForeground }]}>
               <Text style={{ color: colors.primary, fontFamily: fonts.bodySemi }}>
-                {LIVIA_MOBILE_ENTRY_COPY.demoCta} →
+                ← {LIVIA_MOBILE_ENTRY_COPY.staffBackLink}
               </Text>
             </Text>
           </TouchableOpacity>
-        ) : null}
-
-        <Text style={[styles.legal, { color: colors.mutedForeground }]}>
-          By continuing you agree to Livia's Terms & Privacy Policy.
-        </Text>
-      </KeyboardAwareScrollViewCompat>
-    </View>
+          <Text style={[styles.legal, { color: colors.mutedForeground }]}>
+            By continuing you agree to Livia&apos;s Terms & Privacy Policy.
+          </Text>
+        </>
+      }
+    >
+      {formBody}
+    </GatewayAuthShell>
   );
 }
 
@@ -586,51 +499,6 @@ function GoogleGlyph() {
   );
 }
 const styles = StyleSheet.create({
-  root: { flex: 1 },
-  scroll: { flex: 1 },
-  container: {
-    paddingHorizontal: 22,
-    gap: 20,
-  },
-  brand: {
-    alignItems: "center",
-    gap: 16,
-    paddingTop: 24,
-  },
-  brandCompact: {
-    gap: 10,
-    paddingTop: 4,
-  },
-  headline: {
-    fontFamily: fonts.serifMedium,
-    fontSize: 36,
-    lineHeight: 42,
-    letterSpacing: -0.6,
-    textAlign: "center",
-    marginTop: 18,
-  },
-  headlineItalic: {
-    fontFamily: fonts.serifMediumItalic,
-    fontStyle: "italic",
-  },
-  livLine: {
-    ...type.serifSm,
-    textAlign: "center",
-    marginTop: 8,
-    marginBottom: 4,
-    opacity: 0.9,
-  },
-  tagline: {
-    ...type.body,
-    textAlign: "center",
-    maxWidth: 320,
-  },
-  card: {
-    borderRadius: 24,
-    borderWidth: 1,
-    padding: 18,
-    gap: 10,
-  },
   label: {
     ...type.label,
     fontSize: 12,
@@ -689,10 +557,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 6,
     minHeight: 50,
-    shadowColor: aurora.cyan,
-    shadowOpacity: 0.4,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 4 },
   },
   submitText: {
     fontSize: 15,

@@ -2,6 +2,7 @@
 export const TENANT_SHELL_LAYOUT = {
   contentPadX: 16,
   contentGap: 12,
+  /** Tab bar height + label — use `tabBarScrollPadding()` from `@/lib/mobile-layout`. */
   tabBarClearance: 88,
 } as const;
 

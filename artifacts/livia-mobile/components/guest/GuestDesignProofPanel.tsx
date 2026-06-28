@@ -182,7 +182,7 @@ export function GuestDesignProofPanel({
         </Pressable>
       ) : isLatest && proof.status === "rejected" ? (
         <Text style={[type.caption, { color: colors.mutedForeground, textAlign: "center", marginTop: 8 }]}>
-          You asked for changes — the studio is revising the artwork.
+          You asked for changes — the team is revising the artwork.
         </Text>
       ) : null}
     </View>

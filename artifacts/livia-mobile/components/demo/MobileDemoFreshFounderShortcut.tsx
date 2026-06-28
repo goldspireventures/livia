@@ -8,17 +8,21 @@ import { fonts } from "@/constants/typography";
 import { useHaptics } from "@/hooks/useHaptics";
 import { gatewayTheme } from "@/lib/gateway-theme";
 
-/** Cyan founder path — parity with `demo-fresh-founder-shortcut.tsx`. */
+/** G1 founder path — parity with web `demo-fresh-founder-shortcut.tsx` (champagne primary). */
 export function MobileDemoFreshFounderShortcut() {
   const router = useRouter();
   const haptics = useHaptics();
 
   return (
     <LinearGradient
-      colors={["rgba(6,182,212,0.2)", "rgba(6,78,99,0.25)", "transparent"]}
+      colors={[
+        `${gatewayTheme.primaryChampagne}33`,
+        `${gatewayTheme.primaryChampagne}14`,
+        "transparent",
+      ]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
-      style={[styles.wrap, { borderColor: "rgba(6,182,212,0.4)" }]}
+      style={[styles.wrap, { borderColor: `${gatewayTheme.primaryChampagne}59` }]}
       testID="demo-fresh-founder-shortcut"
     >
       <View style={{ gap: 6 }}>
@@ -40,7 +44,7 @@ export function MobileDemoFreshFounderShortcut() {
           testID="demo-fresh-founder-sign-up"
         >
           <Text style={styles.primaryBtnText}>{DEMO_FRESH_FOUNDER_COPY.ctaSignUp}</Text>
-          <Feather name="arrow-right" size={14} color="#0c0a09" />
+          <Feather name="arrow-right" size={14} color={gatewayTheme.platformInk} />
         </Pressable>
         <Pressable
           onPress={() => {
@@ -71,10 +75,10 @@ const styles = StyleSheet.create({
     fontFamily: fonts.mono,
     letterSpacing: 1.2,
     textTransform: "uppercase",
-    color: "rgba(34,211,238,0.9)",
+    color: `${gatewayTheme.primaryChampagne}e6`,
   },
   title: { fontSize: 16, fontFamily: fonts.bodySemi, color: "#fff" },
-  body: { fontSize: 12, fontFamily: fonts.body, color: "rgba(255,255,255,0.65)", lineHeight: 18 },
+  body: { fontSize: 12, fontFamily: fonts.body, color: "rgba(255,255,255,0.6)", lineHeight: 18 },
   hint: { fontSize: 10, fontFamily: fonts.mono, color: "rgba(255,255,255,0.4)" },
   actions: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   primaryBtn: {
@@ -86,7 +90,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 999,
   },
-  primaryBtnText: { fontSize: 13, fontFamily: fonts.bodySemi, color: "#0c0a09" },
+  primaryBtnText: { fontSize: 13, fontFamily: fonts.bodySemi, color: gatewayTheme.platformInk },
   secondaryBtn: {
     paddingHorizontal: 16,
     paddingVertical: 10,

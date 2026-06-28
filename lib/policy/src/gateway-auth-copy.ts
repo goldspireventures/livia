@@ -1,5 +1,10 @@
 /** Gateway sign-up / sign-in copy — web + mobile. Plain product voice. */
 
+export const GATEWAY_SIGN_IN_SUBTITLE = "Welcome back — your day is already in motion.";
+
+export const GATEWAY_SIGN_UP_SUBTITLE =
+  "Register with your work email. We’ll send a verification code to confirm it.";
+
 export const GATEWAY_PASSWORD_HINT =
   "At least 8 characters. Three unrelated words usually works (e.g. cedar-plover-mist).";
 

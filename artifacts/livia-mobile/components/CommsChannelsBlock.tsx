@@ -110,7 +110,7 @@ export function CommsChannelsBlock({
           <Text style={[styles.rowMeta, { color: colors.mutedForeground, marginTop: 8 }]}>
             {metaReady
               ? "Finish linking your page IDs in Communications on the web dashboard."
-              : "Social inbox linking is not configured yet — your studio admin completes this in Settings."}
+              : "Social inbox linking is not configured yet — your team completes this in Settings."}
             {extended.metaDevSimulate ? " Dev simulate is on for demos." : ""}
           </Text>
           <Text style={[styles.rowMeta, { color: colors.mutedForeground, marginTop: 6 }]}>

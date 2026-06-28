@@ -85,7 +85,7 @@ async function findLedgerByRedemptionCode(code: string) {
     return {
       ledger: brand.ledger,
       businessId: brand.businessId,
-      businessName: biz?.name ?? "Studio",
+      businessName: biz?.name ?? "Business",
       slug: biz?.slug ?? "",
     };
   }
@@ -114,7 +114,7 @@ async function findLedgerByRedemptionCode(code: string) {
 
 export type GuestHubRedeemResult =
   | { ok: true; view: NonNullable<Awaited<ReturnType<typeof getGuestHubView>>>; packageName: string; businessName: string }
-  | { ok: false; reason: "session" | "invalid" | "not_found" | "depleted" };
+  | { ok: false; reason: "session" | "invalid" | "not_found" | "depleted" | "not_for_account" };
 
 export async function redeemGuestHubPackCode(
   hubToken: string,
@@ -146,7 +146,12 @@ export async function redeemGuestHubPackCode(
     email: guest.email ?? session.email,
   });
 
-  if (match.ledger.customerId !== customerId) {
+  const ledgerOwnerId = match.ledger.customerId;
+  if (ledgerOwnerId && ledgerOwnerId !== customerId) {
+    return { ok: false, reason: "not_for_account" };
+  }
+
+  if (!ledgerOwnerId) {
     await db
       .update(packageCreditLedgerTable)
       .set({ customerId, updatedAt: new Date() })

@@ -48,9 +48,10 @@ function normalizeStoredPersona(raw: string | null): PersonaKind | null {
   return null;
 }
 
-export const isDemoLoginEnabled =
-  process.env.EXPO_PUBLIC_DEMO_LOGIN === "true" ||
-  process.env.NODE_ENV !== "production";
+import { isDemoMobileSurface } from "@/lib/production-surface";
+
+/** Demo gateway, demo sign-in, persona override — opt-in via env only. */
+export const isDemoLoginEnabled = isDemoMobileSurface();
 
 let cachedOverride: PersonaKind | null = null;
 const overrideListeners = new Set<(p: PersonaKind | null) => void>();

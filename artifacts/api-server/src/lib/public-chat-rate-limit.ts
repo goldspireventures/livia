@@ -68,3 +68,26 @@ export async function publicChatRateLimitOk(
   if (!w5.ok) return w5;
   return bumpWindow(ipKey, "1h", LIMIT_1H, WINDOW_1H_MS);
 }
+
+const OTP_REQUEST_5M = 8;
+const OTP_REQUEST_1H = 24;
+const OTP_VERIFY_10M = 8;
+const OTP_VERIFY_WINDOW_MS = 10 * 60_000;
+
+/** Guest hub OTP request — stricter than public chat (8 / 5m, 24 / 1h per IP). */
+export async function guestHubOtpRequestRateLimitOk(
+  ip: string,
+): Promise<{ ok: boolean; retryAfter?: number }> {
+  const ipKey = `otp-req:${(ip.slice(0, 120) || "unknown")}`;
+  const w5 = await bumpWindow(ipKey, "5m", OTP_REQUEST_5M, WINDOW_5M_MS);
+  if (!w5.ok) return w5;
+  return bumpWindow(ipKey, "1h", OTP_REQUEST_1H, WINDOW_1H_MS);
+}
+
+/** Per OTP session token — limit verify brute-force (8 / 10m). */
+export async function guestHubOtpVerifyRateLimitOk(
+  sessionToken: string,
+): Promise<{ ok: boolean; retryAfter?: number }> {
+  const key = `otp-ver:${sessionToken.slice(0, 96)}`;
+  return bumpWindow(key, "5m", OTP_VERIFY_10M, OTP_VERIFY_WINDOW_MS);
+}

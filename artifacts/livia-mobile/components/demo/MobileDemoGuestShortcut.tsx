@@ -1,66 +1,67 @@
 import { Feather } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { DEMO_GUEST_CLIENT_COPY, GUEST_HUB_COPY } from "@workspace/policy";
 import { fonts } from "@/constants/typography";
 import { useHaptics } from "@/hooks/useHaptics";
-import { DEMO_GUEST_CLIENT_COPY, GUEST_HUB_COPY } from "@workspace/policy";
+import { gatewayTheme } from "@/lib/gateway-theme";
 
 type Props = {
   embedded?: boolean;
 };
 
-/** Rose guest path — parity with `demo-guest-client-shortcut.tsx`. */
+/** G1 guest path — parity with web `demo-guest-client-shortcut.tsx` (glass, not rose). */
 export function MobileDemoGuestShortcut({ embedded }: Props) {
   const router = useRouter();
   const haptics = useHaptics();
 
   return (
-    <LinearGradient
-      colors={["rgba(251,113,133,0.22)", "rgba(76,5,25,0.35)", "transparent"]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
+    <View
       style={[
         styles.wrap,
         embedded ? styles.embedded : styles.standalone,
-        { borderColor: "rgba(251,113,133,0.4)" },
+        { borderColor: "rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.04)" },
       ]}
       testID="demo-guest-client-shortcut"
     >
-      <View style={{ flex: 1, gap: 6 }}>
-        <View style={styles.eyebrowRow}>
-          <Feather name="heart" size={12} color="#fecdd3" />
-          <Text style={styles.eyebrow}>
-            {GUEST_HUB_COPY.productName} · end client
-          </Text>
+      <View style={styles.row}>
+        <View style={{ flex: 1, gap: 6 }}>
+          <View style={styles.eyebrowRow}>
+            <Feather name="heart" size={12} color="rgba(254,205,211,0.8)" />
+            <Text style={styles.eyebrow}>{GUEST_HUB_COPY.productName} · guest</Text>
+          </View>
+          <Text style={[styles.title, embedded && styles.titleEmbedded]}>{DEMO_GUEST_CLIENT_COPY.title}</Text>
+          {!embedded ? (
+            <Text style={styles.body}>{DEMO_GUEST_CLIENT_COPY.body}</Text>
+          ) : (
+            <Text style={styles.hint}>{DEMO_GUEST_CLIENT_COPY.phoneHint}</Text>
+          )}
+          {!embedded ? (
+            <>
+              <Text style={styles.hint}>{DEMO_GUEST_CLIENT_COPY.phoneHint}</Text>
+              <Text style={styles.hint}>{DEMO_GUEST_CLIENT_COPY.nameHint}</Text>
+            </>
+          ) : null}
         </View>
-        <Text style={[styles.title, embedded && styles.titleEmbedded]}>
-          {DEMO_GUEST_CLIENT_COPY.title}
-        </Text>
-        <Text style={[styles.body, embedded && styles.bodyEmbedded]}>
-          {DEMO_GUEST_CLIENT_COPY.body}
-        </Text>
-        <Text style={styles.hint}>{DEMO_GUEST_CLIENT_COPY.phoneHint}</Text>
-        {!embedded ? (
-          <Text style={styles.hint}>{DEMO_GUEST_CLIENT_COPY.nameHint}</Text>
-        ) : null}
+        <Pressable
+          onPress={() => {
+            haptics.tap();
+            router.push("/my-livia" as never);
+          }}
+          testID="demo-guest-client-open"
+          style={({ pressed }) => [styles.cta, { opacity: pressed ? 0.9 : 1 }]}
+        >
+          <Text style={styles.ctaText}>{DEMO_GUEST_CLIENT_COPY.cta}</Text>
+          <Feather name="arrow-right" size={14} color="#fff" />
+        </Pressable>
       </View>
-      <Pressable
-        onPress={() => {
-          haptics.tap();
-          router.push("/my-livia" as never);
-        }}
-        testID="demo-guest-client-open"
-        style={({ pressed }) => [styles.cta, { opacity: pressed ? 0.9 : 1 }]}
-      >
-        <Text style={styles.ctaText}>{DEMO_GUEST_CLIENT_COPY.cta}</Text>
-        <Feather name="arrow-right" size={14} color="#4c0519" />
-      </Pressable>
-      <Text style={styles.footerHint}>
-        Opens My Livia in-app — return here to try staff roles too
-      </Text>
-    </LinearGradient>
+      {!embedded ? (
+        <Text style={styles.footerHint}>
+          Opens My Livia in-app — return here to try staff roles too
+        </Text>
+      ) : null}
+    </View>
   );
 }
 
@@ -69,34 +70,34 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 16,
     padding: 16,
-    gap: 12,
+    gap: 10,
   },
   standalone: { marginTop: 24 },
   embedded: { borderRadius: 12, padding: 14 },
+  row: { flexDirection: "column", gap: 12 },
   eyebrowRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   eyebrow: {
     fontSize: 10,
     fontFamily: fonts.mono,
     letterSpacing: 1,
     textTransform: "uppercase",
-    color: "rgba(254,205,211,0.85)",
+    color: "rgba(255,255,255,0.45)",
   },
   title: {
     fontFamily: fonts.bodySemi,
-    fontSize: 18,
+    fontSize: 16,
     color: "#fff",
   },
-  titleEmbedded: { fontSize: 15 },
+  titleEmbedded: { fontSize: 14 },
   body: {
-    fontSize: 13,
+    fontSize: 12,
     lineHeight: 18,
-    color: "rgba(255,255,255,0.65)",
+    color: "rgba(255,255,255,0.55)",
   },
-  bodyEmbedded: { fontSize: 12 },
   hint: {
     fontSize: 11,
     fontFamily: fonts.mono,
-    color: "rgba(255,255,255,0.45)",
+    color: "rgba(255,255,255,0.4)",
     lineHeight: 15,
   },
   cta: {
@@ -104,7 +105,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: "rgba(251,113,133,0.9)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
+    backgroundColor: "rgba(255,255,255,0.1)",
     borderRadius: 999,
     paddingVertical: 12,
     paddingHorizontal: 18,
@@ -113,7 +116,7 @@ const styles = StyleSheet.create({
   ctaText: {
     fontFamily: fonts.bodySemi,
     fontSize: 13,
-    color: "#4c0519",
+    color: "#fff",
   },
   footerHint: {
     fontSize: 10,

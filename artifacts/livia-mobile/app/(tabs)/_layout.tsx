@@ -18,6 +18,7 @@ import { useTenantExperience } from "@/hooks/useTenantExperience";
 import { useMobileOwnerIntelTabBadges } from "@/hooks/useMobileOwnerIntelTabBadges";
 import { verticalOperationalCopy } from "@workspace/policy";
 import { GatewayHandoffVeil } from "@/components/gateway/GatewayHandoffVeil";
+import { MobileOperatorChrome } from "@/components/shell/MobileOperatorChrome";
 
 type TabKey =
   | "index"
@@ -104,6 +105,7 @@ function TabLayoutInner() {
     <>
       <StatusBar style={isDark ? "light" : "dark"} />
       <GatewayHandoffVeil />
+      <MobileOperatorChrome />
       <Tabs
       screenOptions={{
         headerShown: false,
