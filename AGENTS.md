@@ -79,3 +79,21 @@ lib/policy (vertical, onboarding, presets, guest surfaces)
 ## Cursor agent skills & rules
 
 Repeatable workflows live in **`.cursor/skills/`** (start with `livia-session-hub`). Always-on surface cascade: **`.cursor/rules/livia-surfaces-cascade.mdc`**. Policy edits: **`livia-policy-first.mdc`** when touching `lib/policy/`.
+
+## Cursor Cloud specific instructions
+
+Standard dev commands live in [`README.md`](README.md) and [`docs/LOCAL_DEV.md`](docs/LOCAL_DEV.md); ports/services are listed there. The startup snapshot already has Node 22, pnpm 10.33, and a local PostgreSQL 16 installed. The update script only runs `pnpm install`. The notes below are the **non-obvious** gotchas for this environment — they are not in the standard docs.
+
+**Postgres (local, not Docker):** start the cluster each session with `sudo pg_ctlcluster 16 main start` (no systemd in the VM). A superuser role + db already exist: `DATABASE_URL=postgresql://livia:livia@localhost:5432/livia`. If missing on a fresh VM, recreate with `sudo -u postgres psql -c "CREATE ROLE livia LOGIN PASSWORD 'livia' SUPERUSER;"` then `... -c "CREATE DATABASE livia OWNER livia;"`.
+
+**`.env` files are gitignored — must exist before running anything.** Create `cp .env.example .env` and `cp artifacts/livia-dashboard/.env.example artifacts/livia-dashboard/.env`.
+
+**CRITICAL Clerk gotcha:** the Clerk publishable/secret placeholders shipped in the `.env.example` files (the values that stop at the `pk_test_` / `sk_test_` prefix) are **malformed**. They make the API return `500 "Publishable key not valid."` on every route and stop the dashboard React app from mounting. Replace them with the **valid-format placeholders used by CI** — copy the Clerk publishable + secret values from the `env:` block in `.github/workflows/ci.yml` into root `.env`, and reuse the same publishable value in the dashboard `.env` (the var names are in each `.env.example`). That is enough for the API to boot and for the guest page React tree to mount.
+
+**Clerk + the in-browser dashboard UI:** with the malformed placeholders the **API + public guest-booking endpoints work fully**, but the dashboard's in-browser UI hangs on a skeleton forever — the api client `await getToken()`s a Clerk session and the fake instance's dev-browser handshake never completes. To exercise any browser UI (sign-in, dashboard, or the `/book/<slug>` guest page) you need a real Clerk **development** publishable key whose instance allows `http://localhost` (a standard Clerk dev instance does by default). Put it in the dashboard `.env` publishable var (never commit — `.env` is gitignored); the browser only needs the publishable key for the guest flow. Get it from the project's Clerk dashboard (Development instance → API keys). This was verified working: the guest page renders and a booking submits end-to-end. For signed-in dashboard testing, also set the matching development publishable + secret keys (same instance) in root `.env`.
+
+**Do NOT use production Clerk keys for local dev.** Clerk blocks `pk_live_`/`sk_live_` keys on `http://localhost` (console: "Production keys are only allowed in HTTPS or 'https://localhost' environments") and the production origin allowlist excludes localhost — the page stays stuck on skeletons. The Clerk secrets injected into this VM are **production** keys; ignore them for local browser testing and use a development publishable key. The backend booking flow can always be driven directly via `POST /api/public/b/<slug>/book` without any Clerk key.
+
+**DB schema + seed (run once per fresh DB):** `DATABASE_URL=postgresql://livia:livia@localhost:5432/livia bash scripts/deploy-migrate.sh` then `pnpm db:seed`. Note `deploy-migrate.sh` requires `DATABASE_URL` exported in the shell even though its sub-steps load `.env`. Seed creates business `luxe-salon-spa` (public booking at `/book/luxe-salon-spa`).
+
+**Tests / gates that work offline:** `pnpm run typecheck` (the build/lint gate) and `pnpm --filter @workspace/api-server run test` (set `DATABASE_URL` for the latter). The full Playwright E2E suite (`pnpm e2e:prep` / `pnpm test:e2e`) needs real Clerk keys and is not runnable with placeholders.
