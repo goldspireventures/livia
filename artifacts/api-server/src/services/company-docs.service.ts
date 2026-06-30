@@ -1,11 +1,34 @@
 import fs from "node:fs/promises";
+import { existsSync, statSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const DOC_ROOT = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "../../../../docs",
-);
+/**
+ * Resolve the repo `docs/` directory. The `../../../../docs` offset is correct
+ * for the TS source location (src/services), but the API ships bundled to
+ * `dist/index.mjs` (one level shallower), so a single hardcoded relative path
+ * resolves above the repo root at runtime and the ops-console doc index comes
+ * back empty. Probe the plausible locations and use the first that exists.
+ */
+function resolveDocRoot(): string {
+  const here = path.dirname(fileURLToPath(import.meta.url));
+  const candidates = [
+    path.resolve(here, "../../../../docs"), // tsx from src/services
+    path.resolve(here, "../../../docs"), // bundled dist/
+    path.resolve(process.cwd(), "docs"), // cwd = repo root
+    path.resolve(process.cwd(), "../../docs"), // cwd = artifacts/api-server
+  ];
+  for (const candidate of candidates) {
+    try {
+      if (existsSync(candidate) && statSync(candidate).isDirectory()) return candidate;
+    } catch {
+      /* try next */
+    }
+  }
+  return candidates[0]!;
+}
+
+const DOC_ROOT = resolveDocRoot();
 
 const ALLOWED_EXTENSIONS = new Set([".md", ".mdx", ".txt"]);
 

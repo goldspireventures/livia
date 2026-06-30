@@ -281,12 +281,15 @@ export function OnboardingWizard({
     businessVertical,
   );
 
-  const persistState = async (next: OnboardingStatePayload, targetBusinessId = businessId) => {
-    if (!targetBusinessId) return;
+  const persistState = async (
+    next: OnboardingStatePayload,
+    targetBusinessId = businessId,
+  ): Promise<boolean> => {
+    if (!targetBusinessId) return false;
     if (previewMode) {
       setState(next);
       onPreviewStateChange?.(next);
-      return;
+      return true;
     }
     setSaving(true);
     try {
@@ -295,6 +298,7 @@ export function OnboardingWizard({
         body: JSON.stringify({ onboardingState: next }),
       });
       setState(next);
+      return true;
     } catch (err: unknown) {
       const e = err instanceof ApiFetchError ? err : null;
       toast({
@@ -304,6 +308,7 @@ export function OnboardingWizard({
           : parseUserFacingError(err, "Could not save progress"),
         variant: "destructive",
       });
+      return false;
     } finally {
       setSaving(false);
     }
@@ -367,7 +372,13 @@ export function OnboardingWizard({
       ),
       checklist: activeChecklist ?? state?.checklist,
     };
-    await persistState(next);
+    // Only finalize/redirect when the save actually succeeds. The go-live
+    // PATCH is rejected server-side (GO_LIVE_REQUIRES_TEST_BOOKING) until a
+    // test booking exists; without this guard we'd play the celebration and
+    // redirect to /dashboard, which then bounces back to /onboarding because
+    // the state was never persisted as complete.
+    const saved = await persistState(next);
+    if (!saved) return;
     if (act === "a12_go_live") {
       playCelebrationChime();
       setCelebrate(true);

@@ -136,6 +136,32 @@ if (!PUBLISHABLE_KEY) {
   throw new Error("Missing Publishable Key");
 }
 
+// Clerk rejects production keys (pk_live_) on plain http:// origins, which
+// otherwise manifests as a blank/skeleton page with the real reason buried in
+// the console. Detect the common local-dev footgun and explain it up front.
+const CLERK_PROD_KEY_ON_HTTP =
+  PUBLISHABLE_KEY.startsWith("pk_live_") &&
+  typeof window !== "undefined" &&
+  window.location.protocol === "http:";
+
+function ClerkProdKeyOnHttpScreen() {
+  return (
+    <div className="flex min-h-[100dvh] w-full flex-col items-center justify-center gap-4 bg-background px-6 text-center">
+      <p className="text-lg font-medium text-foreground">Clerk production key on http://localhost</p>
+      <p className="max-w-xl text-sm text-muted-foreground">
+        <code className="rounded bg-muted px-1 py-0.5 text-xs">VITE_CLERK_PUBLISHABLE_KEY</code> is a
+        production key (<code className="rounded bg-muted px-1 py-0.5 text-xs">pk_live_…</code>), but
+        Clerk only allows production keys over HTTPS. Local dev runs on{" "}
+        <code className="rounded bg-muted px-1 py-0.5 text-xs">http://localhost</code>, so auth can&apos;t
+        load. Use a <strong>development</strong> instance key (
+        <code className="rounded bg-muted px-1 py-0.5 text-xs">pk_test_…</code>) in{" "}
+        <code className="rounded bg-muted px-1 py-0.5 text-xs">artifacts/livia-dashboard/.env</code>{" "}
+        (Clerk dashboard → Development → API keys), then restart the dev server.
+      </p>
+    </div>
+  );
+}
+
 /**
  * Optional Frontend API proxy (/api/__clerk → Railway).
  * Default off: production uses Clerk CNAME `clerk.livia-hq.com` (Domains → DNS).
@@ -558,6 +584,9 @@ function ClerkProviderWithTheme({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
+  if (CLERK_PROD_KEY_ON_HTTP) {
+    return <ClerkProdKeyOnHttpScreen />;
+  }
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>

@@ -106,6 +106,29 @@ import { cn } from "@/lib/utils";
 
 type Step = "services" | "slots" | "details" | "consent" | "confirmed";
 
+/** Phone input example matched to the business jurisdiction (avoids showing an
+ *  Irish +353 hint to, say, a UK shop). Falls back to a neutral E.164 hint. */
+function phoneExamplePlaceholder(country?: string | null): string {
+  switch ((country ?? "").toUpperCase()) {
+    case "IE":
+      return "+353 87 123 4567";
+    case "GB":
+    case "UK":
+      return "+44 7700 900123";
+    case "DE":
+      return "+49 151 23456789";
+    case "FR":
+      return "+33 6 12 34 56 78";
+    case "DK":
+      return "+45 12 34 56 78";
+    case "US":
+    case "CA":
+      return "+1 555 123 4567";
+    default:
+      return "+353 87 123 4567";
+  }
+}
+
 interface MedspaProcedure {
   code: string;
   label: string;
@@ -525,6 +548,7 @@ export default function PublicBookingPage() {
     (step === "details" || step === "consent") && !!selectedService && !!selectedSlot;
   const layout = publicBookingLayout(b?.vertical);
   const heroCta = verticalHeroCta(b?.vertical, b?.publicCta);
+  const phonePlaceholder = phoneExamplePlaceholder(b?.country);
   const staffForward = layout === "staff-forward";
   const presentationPreset = b?.experienceSkin?.presentation ?? null;
   const beautyCssPreset = presentationPreset;
@@ -1241,12 +1265,19 @@ export default function PublicBookingPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <Input
                         placeholder="First name"
+                        aria-label="First name"
+                        name="firstName"
+                        autoComplete="given-name"
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
                       />
                       <Input
                         placeholder="Mobile"
+                        aria-label="Mobile number"
+                        name="phone"
                         type="tel"
+                        autoComplete="tel"
+                        inputMode="tel"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                       />
@@ -1376,6 +1407,8 @@ export default function PublicBookingPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder={LIVIA_FORM_EXAMPLES.guestEmail}
                   data-testid="input-email"
+                  autoComplete="email"
+                  inputMode="email"
                 />
               </div>
               <div className="space-y-2">
@@ -1387,8 +1420,10 @@ export default function PublicBookingPage() {
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+353 87 123 4567"
+                  placeholder={phonePlaceholder}
                   data-testid="input-phone"
+                  autoComplete="tel"
+                  inputMode="tel"
                 />
               </div>
               <p className="text-xs text-muted-foreground">

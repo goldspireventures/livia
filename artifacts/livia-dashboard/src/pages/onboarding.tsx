@@ -150,7 +150,12 @@ export default function OnboardingPage() {
       clearOnboardingFormDraft("create-business");
       setBusinessId(latest.id);
       setBusinessSlug(latest.slug);
-      setBusinessById(latest.id);
+      // Only switch the active tenant when it actually differs. Re-selecting the
+      // same business would trigger a global query invalidate and re-enter this
+      // effect on the resulting refetch (infinite loop).
+      if (latest.id !== business?.id) {
+        setBusinessById(latest.id);
+      }
       const v = latest.vertical;
       if (v) setPreviewVertical(v);
       const raw = latest.onboardingState;
@@ -204,13 +209,44 @@ export default function OnboardingPage() {
   const showResumeSpinner =
     !sessionIntent.secondShop && (!resumeHydrated || businessesLoading || !user?.id);
 
+  // Escape hatch: if resume never settles (e.g. the shop list can't load), don't
+  // trap the owner on an endless spinner — surface an error with a way out.
+  const [resumeStuck, setResumeStuck] = useState(false);
+  useEffect(() => {
+    if (!showResumeSpinner) {
+      setResumeStuck(false);
+      return;
+    }
+    const t = window.setTimeout(() => setResumeStuck(true), 15_000);
+    return () => window.clearTimeout(t);
+  }, [showResumeSpinner]);
+
   if (showResumeSpinner) {
     return (
       <div
         data-testid="onboarding-page"
-        className="flex min-h-[100dvh] items-center justify-center"
+        className="flex min-h-[100dvh] flex-col items-center justify-center gap-4 px-6 text-center"
       >
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        {resumeStuck ? (
+          <>
+            <p className="text-lg font-medium text-foreground">This is taking longer than expected</p>
+            <p className="max-w-md text-sm text-muted-foreground">
+              We couldn&apos;t finish loading your setup. Check your connection, then retry — your
+              shop is saved, so you won&apos;t lose progress.
+            </p>
+            <div className="flex items-center gap-3">
+              <Button onClick={() => window.location.reload()}>Retry</Button>
+              <Link
+                href="/dashboard"
+                className="text-sm font-medium text-primary underline underline-offset-2"
+              >
+                Go to dashboard
+              </Link>
+            </div>
+          </>
+        ) : (
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        )}
       </div>
     );
   }

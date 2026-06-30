@@ -2,6 +2,7 @@ import { createClerkClient } from "@clerk/express";
 import type { Request } from "express";
 import { getAuth } from "@clerk/express";
 import { getUserId } from "./auth.js";
+import { cachedClerkGetUser, noteClerkRateLimit } from "./clerk-user-cache.js";
 
 export function clerkProfileFromClaims(req: Request): {
   email?: string;
@@ -40,7 +41,8 @@ export async function resolveClerkProfile(req: Request): Promise<{
 
   try {
     const clerk = createClerkClient({ secretKey });
-    const user = await clerk.users.getUser(getUserId(req));
+    const userId = getUserId(req);
+    const user = await cachedClerkGetUser(userId, () => clerk.users.getUser(userId));
     const primary =
       user.emailAddresses.find((e) => e.id === user.primaryEmailAddressId) ??
       user.emailAddresses[0];
@@ -51,7 +53,10 @@ export async function resolveClerkProfile(req: Request): Promise<{
       email: email || fromClaims.email,
       fullName: fullName || fromClaims.fullName,
     };
-  } catch {
+  } catch (err) {
+    if ((err as { status?: number } | null)?.status === 429) {
+      noteClerkRateLimit((err as { retryAfter?: number }).retryAfter ?? 10);
+    }
     return fromClaims;
   }
 }

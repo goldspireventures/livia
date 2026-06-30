@@ -192,9 +192,15 @@ export function afterBusinessCreatedStateForVertical(
   vertical: BusinessVertical,
 ): OnboardingState {
   const needsMenu = verticalRequiresMenuSetup(vertical);
-  const completed = [...AUTO_COMPLETED_ON_CREATE_ACTS];
+  // The create form (onboarding Chapter 1 "Your Shop") captures the full shop
+  // profile — name, trade/vertical, location, timezone, legal entity — so the
+  // a2_shop_profile act is satisfied on create. Marking it here is essential:
+  // a2_shop_profile is a *blocking* act, but the portal wizard's nav skips the
+  // separate "Profile" step, so without this a fresh owner can never unlock the
+  // app (isOnboardingAppUnlocked stays false) and gets trapped on /onboarding.
+  const completed = [...AUTO_COMPLETED_ON_CREATE_ACTS, "a2_shop_profile" as const];
   return mergePercentWithBlocking({
-    currentAct: needsMenu ? "a3_service_menu" : "a2_shop_profile",
+    currentAct: needsMenu ? "a3_service_menu" : "a5_hours",
     completedActs: completed,
     percentComplete: 0,
     checklist: onboardingChecklistSchema.parse({

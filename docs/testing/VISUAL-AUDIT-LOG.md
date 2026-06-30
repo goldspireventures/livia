@@ -7,6 +7,18 @@ Captures live under `e2e/visual-captures/` (gitignored). Re-run: `pnpm e2e:visua
 
 ---
 
+## 2026-06-30 — Onboarding/dashboard reliability + guest booking review
+
+| # | Surface / route | What we saw | Severity | Change | Verified |
+|---|-----------------|-------------|----------|--------|----------|
+| 1 | Dashboard (any shop with Liv conductor active) | Full-viewport Liv arrival scrim kept `pointer-events:auto` during the persistent `active` phase, silently swallowing every click (header buttons like "New service" appeared dead) | **P1** | `liv-arrival-scrim.tsx`: capture pointer events only during the brief `enter` flourish | **Y** — New-service dialog opens with a normal click |
+| 2 | `/onboarding` (fresh shop) | Infinite render/refetch loop → stuck spinner, ~thousands req/s | **P1** | `business-context.tsx` idempotent `setBusiness`; `onboarding.tsx` id guard; `auth-guard.tsx` prefetch keyed on id | **Y** — idle req rate 0; wizard renders |
+| 3 | `/onboarding` "Open Livia" final step | Rejected go-live (test-booking gate) faked success → celebrated + redirected, then bounced back | **P1** | `onboarding-wizard.tsx`: `persistState` returns success; only finalize on success | **Y** (typecheck; clear error toast instead of false redirect) |
+| 4 | `/book/:slug` guest details | Phone field showed Irish `+353…` placeholder for a GB business | **P2** | `public-booking.tsx`: `phoneExamplePlaceholder(country)` | **Y** |
+| 5 | `/book/:slug` various | Progress tabs (SERVICE/TIME/DETAILS) low-contrast active state; subtle selected-slot state; dim hero on shops without a cover image; small footer | **P2** | Logged for a dedicated design pass (brand-token changes) — not changed to respect brand discipline | N |
+
+---
+
 ## 2026-06-21 — Platform perfection pass (P0 trust + program)
 
 | Surface | Route | Finding | Fix | Status |
@@ -329,3 +341,11 @@ pnpm maestro:visual-capture
 |---|------------|-------------|----------|--------|----------|
 | 1 | `path.png` | … | P1/P2 | `file.tsx`: … | Y/N |
 ```
+
+## 2026-06-30 — Verticals + ops console sweep
+
+| # | Surface / route | What we saw | Severity | Change | Verified |
+|---|-----------------|-------------|----------|--------|----------|
+| 1 | Internal ops console → Docs | Doc index empty (canonical 0, categories 0); "Start here" had nothing to click | **P1** | `company-docs.service.ts`: robust `DOC_ROOT` resolution (bundled dist offset was wrong) | **Y** — 4 canonical + 57 categories, docs open |
+| 2 | `/book/:slug` details + waitlist | Email/phone lacked `autoComplete`; waitlist inputs missing label/name/autocomplete (a11y) | **P2** | `public-booking.tsx`: add autoComplete/inputMode + aria-label/name | **Y** — typecheck |
+| 3 | Verticals (event-vendors, medspa, pet-grooming, etc.) | Vertical framing verified correct (quote-first / clinical-consent / pet copy) — no wrong-"salon" leakage | — | None needed (confirmed good) | Y |

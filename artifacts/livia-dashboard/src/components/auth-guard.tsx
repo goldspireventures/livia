@@ -210,14 +210,26 @@ function BusinessDataLoader({
     );
   }, [list, clerkUserId, email]);
 
+  // Depend on the business *id* (primitive), not the `initialBusiness` object.
+  // `prefetchTenantDashboardShell` refetches `/me/businesses` (staleTime: 0),
+  // which yields a new `businesses` reference and therefore a new
+  // `initialBusiness` object on each pass. Keying this effect on the object
+  // re-fires the prefetch in an infinite feedback loop (thousands of
+  // `/me/businesses` + `tenant-experience` + dashboard requests per second)
+  // whenever structural sharing can't keep the list stable (e.g. a shop whose
+  // onboarding is still in progress). Keying on the id only re-runs when the
+  // selected business actually changes.
+  const initialBusinessId = initialBusiness?.id ?? null;
   useEffect(() => {
-    const businessId = initialBusiness?.id;
-    if (!businessId) return;
-    warmTenantPresentationSkin(queryClient, businessId, initialBusiness, "owner");
-    void prefetchTenantDashboardShell(queryClient, businessId).then(() => {
-      applyTenantShellFromCache(queryClient, businessId);
+    if (!initialBusinessId) return;
+    warmTenantPresentationSkin(queryClient, initialBusinessId, initialBusiness, "owner");
+    void prefetchTenantDashboardShell(queryClient, initialBusinessId).then(() => {
+      applyTenantShellFromCache(queryClient, initialBusinessId);
     });
-  }, [initialBusiness, queryClient]);
+    // initialBusiness is intentionally read but not a dependency: the id drives
+    // re-runs; the object for that id is current within the same render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialBusinessId, queryClient]);
 
   if (isLoading && !onOnboarding && !onLegalAcceptance) {
     return (

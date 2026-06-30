@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode, useState, useEffect, useMemo, useCallback } from "react";
+import { createContext, useContext, ReactNode, useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Business } from "@workspace/api-client-react";
 import {
@@ -82,6 +82,14 @@ export function BusinessProvider({
     resolveInitialBusiness(businesses, clerkUserId, sessionEmail, initialBusinessId),
   );
 
+  // Track the currently-active business id without widening `setBusiness`'s
+  // dependency list (keeps its identity stable). Used to make switching
+  // idempotent: re-selecting the already-active business must NOT run a global
+  // invalidate, otherwise callers that fire on every render/refetch (e.g. the
+  // onboarding resume effect) create an infinite invalidate → refetch loop.
+  const activeBusinessIdRef = useRef<string | null>(business?.id ?? null);
+  activeBusinessIdRef.current = business?.id ?? null;
+
   // Re-resolve whenever the membership list changes (e.g. after invite accept).
   useEffect(() => {
     setBusinessState((prev) => {
@@ -101,6 +109,12 @@ export function BusinessProvider({
 
   const setBusiness = useCallback(
     (b: Business | null) => {
+      // Idempotent: selecting the business that is already active is a no-op.
+      // This is the loop-breaker — without it, a same-id "switch" triggers a
+      // global invalidate that refetches everything and re-triggers the caller.
+      if (b && b.id === activeBusinessIdRef.current) {
+        return;
+      }
       setBusinessState(b);
       persist(b);
       // Reset persona when switching tenants — viewing-as-staff doesn't carry across.
