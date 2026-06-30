@@ -27,6 +27,7 @@ import {
 import { and, eq } from "drizzle-orm";
 import { generateId } from "../lib/id";
 import { logger } from "../lib/logger";
+import { cachedClerkGetUser, noteClerkRateLimit } from "../lib/clerk-user-cache";
 
 export type InvitableRole = "ADMIN" | "STAFF";
 export type DeskRole = "manager" | "reception";
@@ -108,8 +109,11 @@ export async function acceptPendingInvitations(userId: string) {
 
   let user;
   try {
-    user = await clerk.users.getUser(userId);
+    user = await cachedClerkGetUser(userId, () => clerk.users.getUser(userId));
   } catch (err) {
+    if ((err as { status?: number } | null)?.status === 429) {
+      noteClerkRateLimit((err as { retryAfter?: number }).retryAfter ?? 10);
+    }
     logger.warn({ err, userId }, "Could not fetch Clerk user for invitation accept");
     return { accepted: [] };
   }
