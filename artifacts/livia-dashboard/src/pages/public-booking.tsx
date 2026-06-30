@@ -1265,12 +1265,19 @@ export default function PublicBookingPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <Input
                         placeholder="First name"
+                        aria-label="First name"
+                        name="firstName"
+                        autoComplete="given-name"
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
                       />
                       <Input
                         placeholder="Mobile"
+                        aria-label="Mobile number"
+                        name="phone"
                         type="tel"
+                        autoComplete="tel"
+                        inputMode="tel"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                       />
@@ -1400,6 +1407,8 @@ export default function PublicBookingPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder={LIVIA_FORM_EXAMPLES.guestEmail}
                   data-testid="input-email"
+                  autoComplete="email"
+                  inputMode="email"
                 />
               </div>
               <div className="space-y-2">
@@ -1413,6 +1422,8 @@ export default function PublicBookingPage() {
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder={phonePlaceholder}
                   data-testid="input-phone"
+                  autoComplete="tel"
+                  inputMode="tel"
                 />
               </div>
               <p className="text-xs text-muted-foreground">
