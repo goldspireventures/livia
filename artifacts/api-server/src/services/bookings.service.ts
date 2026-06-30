@@ -23,6 +23,10 @@ import { businessesTable, bookingResourcesTable } from "@workspace/db";
 import { ensureBookingGuestAccess } from "./booking-guest-access.service";
 import { resolveGuestTokenUrl } from "../lib/guest-public-urls";
 import {
+  activationSourceFromBookingSource,
+  markOnboardingTestBooking,
+} from "./onboarding-progress.service";
+import {
   resolveResourceForService,
   resourceCapacityAvailable,
   resolveResourceTurnoverMinutes,
@@ -580,6 +584,12 @@ export async function createBooking(
       }),
     );
   }
+
+  void markOnboardingTestBooking({
+    businessId,
+    bookingId: inserted.id,
+    source: activationSourceFromBookingSource(source),
+  }).catch(() => undefined);
 
   return result;
 }

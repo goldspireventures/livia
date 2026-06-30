@@ -17,8 +17,8 @@ type Turn = { role: "user" | "assistant"; content: string };
 
 const FALLBACK_PROMPTS = [
   "What's worth my attention today?",
-  "Summarise inbox and bookings I should handle first.",
-  "Tune how Liv greets guests on my booking page.",
+  "What should I confirm on the calendar first?",
+  "How do I tune how Liv greets guests on my booking page?",
 ];
 
 export function LivSettingsOperationalPanel({

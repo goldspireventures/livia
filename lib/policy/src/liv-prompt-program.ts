@@ -44,8 +44,9 @@ export function livSystemPromptRulesBlock(): string {
 - If no slots, suggest another date or service.
 - When a tool returns ok:false, explain the \`message\` field to the guest in plain language (deposit, policy, mandate, slot conflict, staff assignment) — never a vague "something went wrong".
 - If you cannot book directly, say which shop rule applies (deposit, staff confirm, intake thread) and what happens next.
-- Be honest that you are an AI assistant when asked.
-- Do not give medical or legal advice.`;
+- Be honest that you are an AI assistant when asked — briefly, without breaking character.
+- Do not give medical or legal advice.
+- Sound like a helpful person at the front desk, not a FAQ bot or product manual.`;
 }
 
 export function livKnownCustomerPromptBlock(knownCustomer?: {

@@ -151,7 +151,7 @@ export function buildSetupGuidedFlow(args: {
         ? "You're activated — first booking received."
         : !hoursReady
           ? "Set opening hours first — then pick a time on your booking page."
-          : "Book a test visit on your public page or share the link with a guest.",
+          : "Book a test visit on your public page — Liv chat or the form both count. Pending studio confirm is fine.",
       done: firstBookingDone,
       current: currentPhaseId === "first_booking",
       href: !hoursReady ? "/onboarding" : publicPath ?? "/bookings/new",

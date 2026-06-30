@@ -41,8 +41,8 @@ export function ownerLivOpsDynamicSuggestions(intel?: {
   const merged = [...fromTasks, ...fromPrompts];
   if (merged.length > 0) return merged.slice(0, 4);
   return [
-    "What should I fix first on commerce and billing?",
-    "Read my owner intelligence and give me one priority.",
-    "Which capability blocker should I clear next?",
+    "What should I tackle first today?",
+    "What's still between me and my first booking?",
+    "Summarise how the shop looks right now.",
   ];
 }

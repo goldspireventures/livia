@@ -1,7 +1,7 @@
 import type { BusinessVertical } from "./types";
 import { resolveVerticalKey } from "./vocabulary";
 
-/** Guest-facing Liv chat on `/b` — chips and placeholders must match tenant vertical. */
+/** Guest-facing Liv chat on `/b` — chips sound like real guest messages, not FAQ templates. */
 export type PublicLivChatCopy = {
   suggestedPrompts: readonly [string, string, string];
   inputPlaceholder: string;
@@ -15,90 +15,90 @@ export const PUBLIC_LIV_CHAT_HEADER_TITLE = "Liv";
 const PUBLIC_LIV_CHAT: Record<BusinessVertical, PublicLivChatCopy> = {
   wellness: {
     suggestedPrompts: [
-      "I'd like to book a treatment",
-      "What services do you offer?",
-      "Do you have availability this week?",
+      "I'd like to book something relaxing this week — what do you have?",
+      "How long are your massage sessions?",
+      "Any evening slots coming up?",
     ],
     inputPlaceholder: "Ask about treatments, times, or availability…",
     assistantSubtitle: "Booking assistant",
   },
   medspa: {
     suggestedPrompts: [
-      "I'd like to book a consultation",
-      "What treatments do you offer?",
-      "What should I know before my first visit?",
+      "I'm interested in a consultation — can we book one?",
+      "What's involved in a first visit?",
+      "Do you have morning slots next week?",
     ],
     inputPlaceholder: "Ask about treatments, prep, or availability…",
     assistantSubtitle: "Booking assistant",
   },
   hair: {
     suggestedPrompts: [
-      "I'd like to book an appointment",
-      "What services do you offer?",
-      "Do you have availability soon?",
+      "I need a cut and colour — when could I come in?",
+      "Who's available this Saturday?",
+      "Roughly how much is a blow-dry?",
     ],
     inputPlaceholder: "Ask about services, stylists, or availability…",
     assistantSubtitle: "Booking assistant",
   },
   beauty: {
     suggestedPrompts: [
-      "I'd like to book an appointment",
-      "What services do you offer?",
-      "Do you have availability this weekend?",
+      "I'd like to book nails — what's free this week?",
+      "Do I need a patch test before lashes?",
+      "What times do you have on Saturday?",
     ],
     inputPlaceholder: "Ask about treatments, times, or availability…",
     assistantSubtitle: "Booking assistant",
   },
   "body-art": {
     suggestedPrompts: [
-      "I'd like to book a consultation",
-      "What is your deposit policy?",
-      "Do you have availability next month?",
+      "I'd like to book a consult for a new piece",
+      "How does your deposit work?",
+      "Any consult slots in the next few weeks?",
     ],
     inputPlaceholder: "Ask about sessions, consults, or availability…",
     assistantSubtitle: "Booking assistant",
   },
   fitness: {
     suggestedPrompts: [
-      "I'd like to book a session",
-      "What classes or sessions do you offer?",
-      "Do you have availability this week?",
+      "I'd like to book a PT session",
+      "What classes run on weekdays?",
+      "Anything free tomorrow morning?",
     ],
     inputPlaceholder: "Ask about sessions, classes, or availability…",
     assistantSubtitle: "Booking assistant",
   },
   "allied-health": {
     suggestedPrompts: [
-      "I'd like to book an appointment",
-      "What appointment types do you offer?",
-      "Do you have availability next week?",
+      "I need an initial assessment — what times do you have?",
+      "How long is a follow-up appointment?",
+      "Anything early next week?",
     ],
     inputPlaceholder: "Ask about appointments or availability…",
     assistantSubtitle: "Booking assistant",
   },
   "pet-grooming": {
     suggestedPrompts: [
-      "I'd like to book a groom",
-      "What services do you offer?",
-      "Do you have slots this weekend?",
+      "I'd like to book a groom for my dog",
+      "How long does a full groom take?",
+      "Any slots this weekend?",
     ],
     inputPlaceholder: "Ask about services or availability…",
     assistantSubtitle: "Booking assistant",
   },
   "automotive-detailing": {
     suggestedPrompts: [
-      "I'd like to book a detail",
-      "What packages do you offer?",
-      "Do you have availability next week?",
+      "I'd like to book a full detail",
+      "What's included in your packages?",
+      "Do you have anything mid-week?",
     ],
     inputPlaceholder: "Ask about services or availability…",
     assistantSubtitle: "Booking assistant",
   },
   "event-vendors": {
     suggestedPrompts: [
-      "I'd like a quote for an event",
-      "What packages do you offer?",
-      "How do I send an enquiry?",
+      "We're planning a wedding — can I get a quote?",
+      "What's in your standard package?",
+      "How do I send you our date and guest count?",
     ],
     inputPlaceholder: "Ask about your event or how to enquire…",
     assistantSubtitle: "Enquiry assistant",

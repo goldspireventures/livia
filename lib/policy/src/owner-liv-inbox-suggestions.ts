@@ -11,12 +11,12 @@ export function ownerLivInboxSuggestions(args: {
 
   const out: string[] = [];
   if (args.hasCommerceActSignal) {
-    out.push("Summarize commerce signals and what I should fix in billing today.");
-    out.push("Why is payment capture low — walk me through deposits step by step.");
+    out.push("Summarise money in vs bookings — what should I fix?");
+    out.push("Walk me through getting deposits working, step by step.");
   }
   if ((args.capabilityBlockers ?? 0) > 0) {
-    out.push("Which capability blocker should I clear next to go live?");
+    out.push("What's still blocking me from going live?");
   }
-  out.push("Read owner intelligence and give me one priority besides inbox.");
+  out.push("Give me one priority besides inbox.");
   return out.slice(0, 3);
 }

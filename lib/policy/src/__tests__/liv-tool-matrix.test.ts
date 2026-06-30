@@ -14,5 +14,6 @@ assert.equal(resolveLivChannelModality("SMS"), "sms");
 assert.equal(resolveLivChannelModality("WEB"), "text");
 assert.ok(livVoiceCharacterBlock("voice").includes("VOICE LINE RULES"));
 assert.ok(livVoiceCharacterBlock("sms").includes("SMS RULES"));
+assert.ok(livVoiceCharacterBlock("text").includes("first-person"));
 
 console.log("liv-tool-matrix.test.ts: ok");

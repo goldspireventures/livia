@@ -363,7 +363,18 @@ export function LivArrivalConductor() {
                             data-testid="liv-arrival-done-next"
                             onClick={() => {
                               clearIntro();
-                              void advanceBeat();
+                              void (async () => {
+                                const result = await advanceBeat();
+                                if (
+                                  !result.sacredMetricMet &&
+                                  flow.currentPhaseId === "first_booking"
+                                ) {
+                                  toast({
+                                    title: "Still waiting on your first booking",
+                                    description: LIV_ARRIVAL_COPY.noBookingYet,
+                                  });
+                                }
+                              })();
                             }}
                           >
                             {LIV_ARRIVAL_COPY.doneNext}

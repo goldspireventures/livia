@@ -6,6 +6,7 @@ import {
   onboardingStateSchema,
   type BusinessActivationSnapshot,
 } from "@workspace/policy";
+import { markOnboardingTestBooking } from "./onboarding-progress.service";
 
 export async function getBusinessActivationSnapshot(
   businessId: string,
@@ -24,7 +25,7 @@ export async function getBusinessActivationSnapshot(
   if (!biz) return null;
 
   const parsed = onboardingStateSchema.safeParse(biz.onboardingState);
-  const state = parsed.success ? parsed.data : null;
+  let state = parsed.success ? parsed.data : null;
 
   let fallbackFirstBookingAt: string | null = null;
   let fallbackFirstBookingId: string | null = null;
@@ -39,6 +40,23 @@ export async function getBusinessActivationSnapshot(
     if (first?.createdAt) {
       fallbackFirstBookingAt = first.createdAt.toISOString();
       fallbackFirstBookingId = first.id;
+    }
+  }
+
+  if (!state?.checklist?.testBooking && fallbackFirstBookingId) {
+    const marked = await markOnboardingTestBooking({
+      businessId,
+      bookingId: fallbackFirstBookingId,
+      source: "unknown",
+    });
+    if (marked) {
+      const [fresh] = await db
+        .select({ onboardingState: businessesTable.onboardingState })
+        .from(businessesTable)
+        .where(eq(businessesTable.id, businessId))
+        .limit(1);
+      const reparsed = onboardingStateSchema.safeParse(fresh?.onboardingState);
+      if (reparsed.success) state = reparsed.data;
     }
   }
 

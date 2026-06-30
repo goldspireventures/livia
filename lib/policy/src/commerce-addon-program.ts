@@ -196,12 +196,12 @@ export function ownerBillingAddonLivPrompts(
 ): string[] {
   const locked = rows.filter((r) => !r.active);
   if (!locked.length) {
-    return ["Which add-ons do I have active and what do they unlock?"];
+    return ["Which add-ons do I have on, and what do they do?"];
   }
   const names = locked.map((r) => r.name).join(", ");
   return [
-    `Which add-on should I unlock first — ${names}?`,
-    "Walk me through unlocking an add-on from Settings → Billing.",
-    "What does each billing add-on unlock for my shop?",
+    `Worth unlocking first — ${names}?`,
+    "Walk me through turning on an add-on in Billing.",
+    "What does each add-on actually change day to day?",
   ];
 }

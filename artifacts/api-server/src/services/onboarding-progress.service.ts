@@ -24,6 +24,28 @@ export type MarkFirstBookingOpts = {
   userId?: string;
 };
 
+/** Map booking.source / channel to onboarding activation source. */
+export function activationSourceFromBookingSource(source: string | null | undefined): ActivationSource {
+  switch (source) {
+    case "owner-manual":
+      return "owner-manual";
+    case "walk-in":
+      return "walk-in";
+    case "staff":
+      return "staff";
+    case "web":
+    case "voice":
+    case "sms":
+    case "whatsapp":
+    case "instagram":
+    case "messenger":
+    case "partner-api":
+      return "public";
+    default:
+      return "unknown";
+  }
+}
+
 /** First real booking — marks sacred V1 activation metric. */
 export async function markOnboardingTestBooking(opts: MarkFirstBookingOpts): Promise<boolean> {
   const { businessId, bookingId, source = "unknown", userId } = opts;

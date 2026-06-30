@@ -45,7 +45,7 @@ const LIV_RUNTIME_DEFAULTS: Record<LivRuntimeCopyKey, string> = {
   assistant_unavailable:
     "Our booking assistant is not available right now. Please use the booking steps on this page or contact the studio directly.",
   default_greeting_booking:
-    "What are you looking to book today?",
+    "What can I help you with today?",
   default_greeting_consult:
     "Tell me about your event — I'll help you enquire or answer questions.",
   booking_rules_can_book:

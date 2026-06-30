@@ -33,7 +33,7 @@ const ALLIED_PACK: VerticalPackManifest = {
   id: "allied-health",
   label: "Allied health",
   promptModule:
-    "Physio or clinical practice. Use patient-appropriate language. Never promise outcomes; suggest speaking to the clinician for clinical questions.",
+    "Allied health or physio practice. Warm, professional tone — patient/client language, not salon language. Use practitioner names when booking. Never promise clinical outcomes; for injury or treatment advice say the clinician will discuss at the appointment. Initial assessment vs follow-up: clarify which they need if unclear. Keep replies concise — name the appointment type, duration, and next available times.",
   extraToolIds: [],
 };
 

@@ -16,6 +16,8 @@ export const LIV_ARRIVAL_COPY = {
   introSubline: "I'll walk you through what's left, one step at a time.",
   showMe: "Show me",
   doneNext: "Done — next",
+  noBookingYet:
+    "No booking on file yet — finish one on your public page (Liv chat or the booking form both count). Pending is fine.",
   exploreAlone: "Explore on my own",
   stepOf: (current: number, total: number) => `Step ${current} of ${total}`,
   minimizedLabel: (current: number, total: number) => `Liv · ${current}/${total}`,

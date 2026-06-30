@@ -6,15 +6,15 @@ export function ownerOpsLivSuggestions(args: {
 }): string[] {
   const out: string[] = [];
   if ((args.pendingCount ?? 0) > 0) {
-    out.push("What should I confirm first on today's calendar?");
+    out.push("What on today's calendar needs my eye first?");
   }
   if (args.hasCommerceActSignal) {
-    out.push("Why is payment capture low and what should I fix in billing?");
-    out.push("Summarize commerce signals for the last 30 days.");
+    out.push("Why aren't payments landing and what should I fix?");
+    out.push("Summarise money in vs bookings this month — plain English.");
   }
   if ((args.capabilityBlockers ?? 0) > 0) {
-    out.push("Which capability blocker should I fix next to go live?");
+    out.push("What's still blocking me from going live?");
   }
-  out.push("Read my Business Twin and give me one priority for today.");
+  out.push("Give me one priority for today.");
   return out.slice(0, 4);
 }

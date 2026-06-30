@@ -29,6 +29,7 @@ import { resolveLivToolsForBusiness } from "./liv-tool-catalog.service";
 import { getActivePromptOverrides } from "./prompt-store.service";
 import {
   livConversationalFallbackCopy,
+  livGuestPublicChatModeBlock,
   mergePublicLivChatOpening,
   resolveLivRuntimeCopy,
 } from "@workspace/policy";
@@ -261,7 +262,7 @@ export async function handlePublicChat(args: {
     };
   }
 
-  const [services, staff, history, memoryBlock, learningBlock, awarenessBlock, observatoryBlock] = await Promise.all([
+  const [services, staff, history, memoryBlock] = await Promise.all([
     listServices(business.id, true),
     listStaff(business.id, { isActive: true }),
     listMessagesForConversation(conversation.id),
@@ -270,15 +271,6 @@ export async function handlePublicChat(args: {
           buildLivMemoryBlockForCustomer(business.id, conversation!.customerId!),
         )
       : Promise.resolve(""),
-    import("./liv-memory.service").then(({ buildLivLearningPromptBlock }) =>
-      buildLivLearningPromptBlock(business.id),
-    ),
-    import("./liv-platform-awareness.service").then(({ buildLivPlatformAwarenessPromptBlock }) =>
-      buildLivPlatformAwarenessPromptBlock({ businessId: business.id, profile: "tenant_public" }),
-    ),
-    import("./liv-observatory.service").then(({ buildLivObservatoryPromptBlock }) =>
-      buildLivObservatoryPromptBlock(business.id),
-    ),
   ]);
 
   const pack = loadVerticalPack(businessRow.vertical, cached.packConfig);
@@ -325,7 +317,7 @@ export async function handlePublicChat(args: {
         phone: conversation.customerPhone ?? args.customerPhone ?? null,
       },
       channelType,
-    }) + memoryBlock + learningBlock + awarenessBlock + observatoryBlock;
+    }) + memoryBlock + livGuestPublicChatModeBlock();
 
   const anthropicMessages: Anthropic.MessageParam[] = [];
   for (const m of history) {

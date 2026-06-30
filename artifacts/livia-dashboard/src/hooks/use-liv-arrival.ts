@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import {
+  getDashboardSummary,
+  getGetDashboardSummaryQueryKey,
   getGetLivSetupGuidedFlowQueryKey,
   useGetDashboardSummary,
   useGetLivSetupGuidedFlow,
@@ -103,9 +105,14 @@ export function useLivArrival() {
     setArrivalDismissed(true);
   }, [bid]);
 
-  const advanceBeat = useCallback(async () => {
+  const advanceBeat = useCallback(async (): Promise<{ sacredMetricMet: boolean }> => {
     await refetchFlow();
-    void qc.invalidateQueries({ queryKey: getGetLivSetupGuidedFlowQueryKey(bid) });
+    await qc.invalidateQueries({ queryKey: getGetLivSetupGuidedFlowQueryKey(bid) });
+    const summary = await qc.fetchQuery({
+      queryKey: getGetDashboardSummaryQueryKey(bid),
+      queryFn: () => getDashboardSummary(bid),
+    });
+    return { sacredMetricMet: summary.activation?.sacredMetricMet === true };
   }, [refetchFlow, qc, bid]);
 
   const locationRef = useRef(location);

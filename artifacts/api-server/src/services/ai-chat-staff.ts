@@ -5,7 +5,7 @@ import {
   loadVerticalPack,
   STAFF_LIV_ACTION_SUGGESTIONS,
 } from "@workspace/liv-runtime";
-import { ownerLivOpsDynamicSuggestions, staffLivInboxSuggestions } from "@workspace/policy";
+import { livOwnerAdvisorModeBlock, ownerLivOpsDynamicSuggestions, staffLivInboxSuggestions } from "@workspace/policy";
 import { appendHumanAudit } from "../lib/audit";
 import { buildLivToolDeps } from "../lib/liv-runtime-deps";
 import { executeMandateGatedTool } from "./mandate-gated-tool.service";
@@ -240,9 +240,9 @@ export async function handleStaffLivAssist(args: {
 }
 
 const SETUP_COPILOT_SUGGESTIONS = [
-  "What's left before I'm live?",
-  "Which presentation presets can I use?",
-  "Walk me through my setup checklist.",
+  "What still needs doing before I'm live?",
+  "What should I set up first?",
+  "Talk me through publishing my booking link.",
 ];
 
 /** Owner setup copilot — no customer thread required. */
@@ -310,7 +310,7 @@ export async function handleSetupLivCopilot(args: {
       })),
       staff: staff.map((s) => ({ id: s.id, displayName: s.displayName })),
     }) +
-    `\n\nSETUP COPILOT MODE: Help the owner finish shop setup — presets, onboarding acts, activation status. Guided flow phases: (1) set up shop essentials, (2) publish booking link via confirm_public_link, (3) optional billing, (4) first booking. Current phase: ${guidedFlow?.currentPhaseId ?? "setup"}. Use get_setup_checklist, get_activation_status, get_business_twin, list_capability_blockers, get_commerce_signals, and get_commerce_snapshot to orient. get_owner_intelligence includes billingAddons — coach unlocks via Settings → Billing (#billing-addons) or checkout-addon when owner is ready to pay. Use preview_presentation before apply_presentation_preset; always pass confirm: true only after owner explicitly approves. patch_liv_persona, patch_brand_assets, patch_operational_policy, patch_business_hours, invite_staff, and assign_service require confirm: true. Use propose_policy_patch before patch_operational_policy. start_channel_connect is read-only — hand off to Settings → Communications.${briefingBlock}${capabilityBlock}${twinBlock}`;
+    `\n\nSETUP COPILOT MODE: Help the owner finish shop setup — presets, onboarding acts, activation status. Guided flow phases: (1) set up shop essentials, (2) publish booking link via confirm_public_link, (3) optional billing, (4) first booking. Current phase: ${guidedFlow?.currentPhaseId ?? "setup"}. Use get_setup_checklist, get_activation_status, get_business_twin, list_capability_blockers, get_commerce_signals, and get_commerce_snapshot to orient. get_owner_intelligence includes billingAddons — coach unlocks via Settings → Billing (#billing-addons) or checkout-addon when owner is ready to pay. Use preview_presentation before apply_presentation_preset; always pass confirm: true only after owner explicitly approves. patch_liv_persona, patch_brand_assets, patch_operational_policy, patch_business_hours, invite_staff, and assign_service require confirm: true. Use propose_policy_patch before patch_operational_policy. start_channel_connect is read-only — hand off to Settings → Communications.${briefingBlock}${capabilityBlock}${twinBlock}\n\n${livOwnerAdvisorModeBlock()}`;
 
   const anthropicTools: Anthropic.Tool[] = tools.map((t) => ({
     name: t.name,
@@ -494,7 +494,7 @@ export async function handleOwnerLivOps(args: {
       })),
       staff: staff.map((s) => ({ id: s.id, displayName: s.displayName })),
     }) +
-    `\n\nLIV ADVISOR MODE (Era 2): Coach the owner using Business Twin only — start with get_business_twin when facts are stale. Every recommendation must cite evidence and confidence. Do not message customers. Link to Settings → Billing for deposit/Stripe fixes.${briefingBlock}${twinIntelBlock}${learningBlock}${awarenessBlock}${observatoryBlock}${twinBlock}`;
+    `\n\nLIV ADVISOR MODE (Era 2): Coach the owner using Business Twin — start with get_business_twin when facts are stale. Recommendations should be actionable and plain-spoken; cite evidence only when useful, not as jargon. Do not message customers. Link to Settings → Billing for deposit/Stripe fixes.${briefingBlock}${twinIntelBlock}${learningBlock}${awarenessBlock}${observatoryBlock}${twinBlock}\n\n${livOwnerAdvisorModeBlock()}`;
 
   const anthropicTools: Anthropic.Tool[] = tools.map((t) => ({
     name: t.name,
@@ -558,7 +558,7 @@ export async function handleOwnerLivOps(args: {
   }
 
   if (!finalText) {
-    finalText = "Here's what I see in your shop — ask me about commerce, setup, or today's priority.";
+    finalText = "Tell me what's on your mind — calendar, setup, or billing.";
   }
 
   await appendHumanAudit(
