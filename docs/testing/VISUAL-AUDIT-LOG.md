@@ -341,3 +341,11 @@ pnpm maestro:visual-capture
 |---|------------|-------------|----------|--------|----------|
 | 1 | `path.png` | … | P1/P2 | `file.tsx`: … | Y/N |
 ```
+
+## 2026-06-30 — Verticals + ops console sweep
+
+| # | Surface / route | What we saw | Severity | Change | Verified |
+|---|-----------------|-------------|----------|--------|----------|
+| 1 | Internal ops console → Docs | Doc index empty (canonical 0, categories 0); "Start here" had nothing to click | **P1** | `company-docs.service.ts`: robust `DOC_ROOT` resolution (bundled dist offset was wrong) | **Y** — 4 canonical + 57 categories, docs open |
+| 2 | `/book/:slug` details + waitlist | Email/phone lacked `autoComplete`; waitlist inputs missing label/name/autocomplete (a11y) | **P2** | `public-booking.tsx`: add autoComplete/inputMode + aria-label/name | **Y** — typecheck |
+| 3 | Verticals (event-vendors, medspa, pet-grooming, etc.) | Vertical framing verified correct (quote-first / clinical-consent / pet copy) — no wrong-"salon" leakage | — | None needed (confirmed good) | Y |
