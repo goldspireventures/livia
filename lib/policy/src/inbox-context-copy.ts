@@ -41,3 +41,10 @@ export function inboxContextBookingStatusLabel(status: string): string {
 export function bookingsListScheduleTitle(): string {
   return "Schedule";
 }
+
+/** Operator inbox — strip regulatory SMS prefix from stored bodies (guest still sees full text). */
+export function inboxOperatorMessageText(content: string | null | undefined): string {
+  if (!content?.trim()) return content?.trim() ?? "";
+  const stripped = content.replace(/^\(Liv, AI assistant for [^)]+?\) — /, "").trim();
+  return stripped || content.trim();
+}

@@ -19,6 +19,27 @@ export interface ContinuityMessageArgs {
   instagramHandle?: string | null;
   /** Link-first guest surface (G3) — thick Livia page for replies & day-of. */
   visitUrl?: string | null;
+  /** When PENDING, smsBody uses request/hold copy — never "You're booked". */
+  bookingStatus?: string | null;
+  pendingReason?: string | null;
+}
+
+function isPendingBooking(args: ContinuityMessageArgs): boolean {
+  return (args.bookingStatus ?? "CONFIRMED").toUpperCase() === "PENDING";
+}
+
+function slotLine(args: ContinuityMessageArgs): string {
+  return `${args.serviceName} at ${args.businessName} on ${args.startAtLocal}${
+    args.staffDisplayName ? ` with ${args.staffDisplayName}` : ""
+  }. Ref ${args.bookingRef}.`;
+}
+
+function continuityLead(
+  args: ContinuityMessageArgs,
+  confirmedLead: string,
+  pendingLead: string,
+): string {
+  return isPendingBooking(args) ? pendingLead : confirmedLead;
 }
 
 function visitLinkSuffix(args: ContinuityMessageArgs): string {
@@ -26,10 +47,15 @@ function visitLinkSuffix(args: ContinuityMessageArgs): string {
   return ` Manage your visit: ${args.visitUrl}`;
 }
 
-const BASE_SMS = (args: ContinuityMessageArgs, extra: string) =>
-  `You're booked for ${args.serviceName} at ${args.businessName} on ${args.startAtLocal}${
-    args.staffDisplayName ? ` with ${args.staffDisplayName}` : ""
-  }. Ref ${args.bookingRef}. ${extra}${visitLinkSuffix(args)}`;
+const BASE_SMS = (args: ContinuityMessageArgs, extra: string, pendingExtra?: string) => {
+  const lead = continuityLead(
+    args,
+    `You're booked for ${slotLine(args)}`,
+    `We've requested ${slotLine(args)}`,
+  );
+  const tail = isPendingBooking(args) ? (pendingExtra ?? extra) : extra;
+  return `${lead} ${tail}${visitLinkSuffix(args)}`;
+};
 
 const HAIR: ContinuityTemplate = {
   smsBody: (a) =>
@@ -93,14 +119,42 @@ const MEDSPA_CALM: ContinuityTemplate = {
   smsBody: (a) =>
     BASE_SMS(
       a,
-      "Reply only if you have pre-treatment questions — we'll confirm once intake is complete.",
+      "Reply only if you have pre-treatment questions.",
+      "The clinic will confirm shortly — reply with any health notes if needed.",
     ),
   emailSubject: (a) => `Treatment booking — ${a.businessName}`,
-  emailBody: (a) => `${BASE_SMS(a, "Our team will follow up if intake or consent is required.")}`,
-  publicNextSteps: () => [
-    "Your clinic may contact you for intake or consent before the appointment is fully confirmed.",
-    "Check your messages for any forms or replies needed.",
-  ],
+  emailBody: (a) => MEDSPA_CALM.smsBody(a),
+  publicNextSteps: (a) =>
+    isPendingBooking(a)
+      ? [
+          "Your clinic will confirm your appointment shortly.",
+          "Check your messages for any intake or consent questions.",
+        ]
+      : [
+          "Your appointment is confirmed — reply if you have pre-treatment questions.",
+          "Check your messages for any forms if the clinic sent them.",
+        ],
+};
+
+const ALLIED_HEALTH: ContinuityTemplate = {
+  smsBody: (a) =>
+    BASE_SMS(
+      a,
+      "Reply if you have questions before your visit.",
+      "The practice will confirm your appointment shortly — reply with any health notes if needed.",
+    ),
+  emailSubject: (a) => `Appointment — ${a.businessName}`,
+  emailBody: (a) => ALLIED_HEALTH.smsBody(a),
+  publicNextSteps: (a) =>
+    isPendingBooking(a)
+      ? [
+          `${a.businessName} will confirm your appointment shortly.`,
+          "Reply in this thread with any health notes or accessibility needs.",
+        ]
+      : [
+          "Your appointment is confirmed.",
+          "Reply if you have questions before you visit.",
+        ],
 };
 
 const BEAUTY: ContinuityTemplate = {
@@ -155,7 +209,7 @@ export const CONTINUITY_TEMPLATES: Record<BusinessVertical, ContinuityTemplate> 
     ],
   },
   medspa: MEDSPA_CALM,
-  "allied-health": MEDSPA_CALM,
+  "allied-health": ALLIED_HEALTH,
   "pet-grooming": PET,
   "automotive-detailing": {
     smsBody: (a) =>
@@ -209,9 +263,11 @@ export function getContinuityTemplate(
   if (locale?.toLowerCase().startsWith("de")) {
     if (vertical === "medspa" || vertical === "allied-health") {
       return {
-        ...MEDSPA_CALM,
+        ...(vertical === "allied-health" ? ALLIED_HEALTH : MEDSPA_CALM),
         smsBody: (a) =>
-          `Termin: ${a.serviceName} bei ${a.businessName} am ${a.startAtLocal}. Ref ${a.bookingRef}. Bei Fragen vor der Behandlung antworten Sie bitte hier.`,
+          isPendingBooking(a)
+            ? `Termin angefragt: ${a.serviceName} bei ${a.businessName} am ${a.startAtLocal}. Ref ${a.bookingRef}. Die Praxis bestätigt in Kürze.`
+            : `Termin: ${a.serviceName} bei ${a.businessName} am ${a.startAtLocal}. Ref ${a.bookingRef}. Bei Fragen vor dem Termin antworten Sie bitte hier.`,
         publicNextSteps: () => [
           "Ihre Praxis kann Sie zu Aufnahme oder Einwilligung kontaktieren.",
           "Prüfen Sie Ihre Nachrichten auf erforderliche Antworten.",

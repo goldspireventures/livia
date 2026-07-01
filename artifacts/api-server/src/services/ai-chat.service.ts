@@ -23,13 +23,14 @@ import {
 } from "./conversations.service";
 import { sendAiEmail, sendAiSms } from "./ai-outbound.service";
 import { logger } from "../lib/logger";
-import { policiesFromBusiness } from "./policies.service";
+import { policiesFromBusiness, getPoliciesForBusinessId } from "./policies.service";
 import { getCachedTenantRuntime } from "../lib/tenant-runtime-pool";
 import { resolveLivToolsForBusiness } from "./liv-tool-catalog.service";
 import { getActivePromptOverrides } from "./prompt-store.service";
 import {
   livConversationalFallbackCopy,
   livGuestPublicChatModeBlock,
+  livGuestBookingChatReply,
   mergePublicLivChatOpening,
   resolveLivRuntimeCopy,
 } from "@workspace/policy";
@@ -97,6 +98,10 @@ async function afterCreateBookingNotifications(args: {
     return;
   }
 
+  const policies = await getPoliciesForBusinessId(business.id);
+  const continuityHandlesSms =
+    ch === "WEB" && policies?.operational.bookingContinuityEnabled === true;
+
   const firstName = String(toolInput.customerFirstName ?? "there");
   const startLocalFull = new Date(startAt).toLocaleString("en-IE", {
     dateStyle: "full",
@@ -137,7 +142,7 @@ async function afterCreateBookingNotifications(args: {
       .catch((err) => {
         logger.warn({ err }, "[ai-chat] sendAiEmail failed");
       });
-  } else if (toolInput.customerPhone) {
+  } else if (toolInput.customerPhone && !continuityHandlesSms) {
     resolveLivOutboundForBusiness(business.id, "booking_confirm_sms", {
       ...copyVars,
       startLocal: startLocalShort,
@@ -334,6 +339,7 @@ export async function handlePublicChat(args: {
 
   let lastBookingId: string | undefined;
   let finalText = "";
+  let bookingGuestReply: string | undefined;
 
   for (let hop = 0; hop < MAX_TOOL_HOPS; hop++) {
     const response = await getAnthropic().messages.create({
@@ -402,6 +408,25 @@ export async function handlePublicChat(args: {
               pendingReason:
                 typeof exec.result.pendingReason === "string" ? exec.result.pendingReason : null,
             });
+            const bookingStatus =
+              typeof result.status === "string" ? result.status : "CONFIRMED";
+            const startLocal = new Date(String(result.startAt ?? exec.result.startAt)).toLocaleString(
+              "en-IE",
+              { dateStyle: "medium", timeStyle: "short" },
+            );
+            bookingGuestReply = livGuestBookingChatReply({
+              businessName: businessRow.name,
+              serviceName:
+                typeof result.serviceName === "string" && result.serviceName.trim()
+                  ? result.serviceName.trim()
+                  : "your appointment",
+              staffDisplayName:
+                typeof result.staffName === "string" ? result.staffName : null,
+              startAtLocal: startLocal,
+              bookingRef: exec.bookingId.slice(-8).toUpperCase(),
+              status: bookingStatus,
+              vertical: businessRow.vertical,
+            });
           }
         }
 
@@ -432,6 +457,10 @@ export async function handlePublicChat(args: {
 
   if (!finalText) {
     finalText = livConversationalFallbackCopy("tool_hop_exhausted");
+  }
+
+  if (bookingGuestReply?.trim()) {
+    finalText = bookingGuestReply.trim();
   }
 
   if (!args.skipPersistence) {

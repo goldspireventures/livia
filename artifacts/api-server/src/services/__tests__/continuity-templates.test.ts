@@ -29,4 +29,17 @@ for (const vertical of VERTICALS) {
   assert.ok(de.smsBody(sampleArgs).length > 10, `${vertical} de locale`);
 }
 
+const alliedPending = getContinuityTemplate("allied-health").smsBody({
+  ...sampleArgs,
+  bookingStatus: "PENDING",
+});
+assert.ok(alliedPending.includes("requested"), "allied-health pending uses request copy");
+assert.ok(!alliedPending.match(/You're booked/i), "allied-health pending must not say booked");
+
+const alliedConfirmed = getContinuityTemplate("allied-health").smsBody({
+  ...sampleArgs,
+  bookingStatus: "CONFIRMED",
+});
+assert.ok(alliedConfirmed.includes("You're booked"), "allied-health confirmed uses booked copy");
+
 console.log("continuity-templates.test.ts: ok");

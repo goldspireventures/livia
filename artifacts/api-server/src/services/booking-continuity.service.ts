@@ -15,7 +15,7 @@ import {
   type ContinuityMode,
 } from "@workspace/policy";
 import { generateId } from "../lib/id";
-import { createConversation, attachCustomer } from "./conversations.service";
+import { createConversation, attachCustomer, getConversation } from "./conversations.service";
 import { sendAiSms, sendAiEmail } from "./ai-outbound.service";
 import { getPoliciesForBusinessId } from "./policies.service";
 import { getBookingById } from "./bookings.service";
@@ -81,21 +81,33 @@ export async function runBookingContinuityBridge(
     bookingRef,
     instagramHandle: biz.instagramHandle,
     visitUrl,
+    bookingStatus: enriched.status,
+    pendingReason: enriched.pendingReason ?? null,
   };
 
-  const conversation = await createConversation({
-    businessId,
-    channel: mode === "whatsapp_thread" ? "WHATSAPP" : mode === "email_only" ? "EMAIL" : "SMS",
-    customerName: [customer.firstName, customer.lastName].filter(Boolean).join(" ") || undefined,
-    customerEmail: customer.email ?? undefined,
-    customerPhone: customer.phone ?? undefined,
-  });
-
-  await attachCustomer(conversation.id, customer.id, {
-    name: [customer.firstName, customer.lastName].filter(Boolean).join(" "),
-    email: customer.email ?? undefined,
-    phone: customer.phone ?? undefined,
-  });
+  const existingSourceId = enriched.sourceConversationId?.trim() || null;
+  let conversation =
+    existingSourceId ? await getConversation(existingSourceId).catch(() => null) : null;
+  if (!conversation || conversation.businessId !== businessId) {
+    conversation = await createConversation({
+      businessId,
+      channel: mode === "whatsapp_thread" ? "WHATSAPP" : mode === "email_only" ? "EMAIL" : "SMS",
+      customerName: [customer.firstName, customer.lastName].filter(Boolean).join(" ") || undefined,
+      customerEmail: customer.email ?? undefined,
+      customerPhone: customer.phone ?? undefined,
+    });
+    await attachCustomer(conversation.id, customer.id, {
+      name: [customer.firstName, customer.lastName].filter(Boolean).join(" "),
+      email: customer.email ?? undefined,
+      phone: customer.phone ?? undefined,
+    });
+  } else if (!conversation.customerId) {
+    await attachCustomer(conversation.id, customer.id, {
+      name: [customer.firstName, customer.lastName].filter(Boolean).join(" "),
+      email: customer.email ?? undefined,
+      phone: customer.phone ?? undefined,
+    });
+  }
 
   const body = template.smsBody(msgArgs);
 

@@ -863,3 +863,26 @@ export function publicPendingReasonLine(
     ? `${businessName} is reviewing your session request.`
     : `${businessName} is reviewing your booking.`;
 }
+
+/** Guest-facing Liv web-chat reply immediately after create_booking — matches booking status. */
+export function livGuestBookingChatReply(args: {
+  businessName: string;
+  serviceName: string;
+  staffDisplayName?: string | null;
+  startAtLocal: string;
+  bookingRef: string;
+  status: string;
+  vertical?: string | null;
+  visitUrl?: string | null;
+}): string {
+  const withWho = args.staffDisplayName ? ` with ${args.staffDisplayName}` : "";
+  const slot = `${args.serviceName} on ${args.startAtLocal}${withWho}`;
+  const ref = args.bookingRef ? ` Ref ${args.bookingRef}.` : "";
+  const visit = args.visitUrl?.trim() ? ` Manage your visit: ${args.visitUrl.trim()}` : "";
+  const pending = args.status.toUpperCase() === "PENDING";
+
+  if (pending) {
+    return `I've sent your request for ${slot} to ${args.businessName} — they'll confirm shortly.${ref} Reply here with any questions.${visit}`;
+  }
+  return `You're booked for ${slot} at ${args.businessName}.${ref} Reply if you have questions before your visit.${visit}`;
+}

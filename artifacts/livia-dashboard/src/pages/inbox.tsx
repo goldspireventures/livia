@@ -61,6 +61,7 @@ import {
   toggleInboxReplyChannelPick,
   isInboxReplyChannelSelected,
   inboxNeedsOwnerReply,
+  inboxOperatorMessageText,
   type InboxQueueLens,
 } from "@workspace/policy";
 import { InboxThreadList, type InboxThreadRow } from "@/components/inbox/inbox-thread-list";
@@ -262,7 +263,7 @@ export default function InboxPage() {
         ...aggregate,
         channels: g.activeChannels.length ? g.activeChannels : g.channels,
         customerName: g.customerName ?? null,
-        lastMessage: aggregate.lastMessage ?? null,
+        lastMessage: inboxOperatorMessageText(aggregate.lastMessage ?? null) || null,
         bookingCount: aggregate.bookingCount ?? 0,
       };
     });
@@ -1054,7 +1055,7 @@ export default function InboxPage() {
                               Team
                             </p>
                           ) : null}
-                          <div>{m.content}</div>
+                          <div>{inboxOperatorMessageText(m.content)}</div>
                           {m.bookingId && (
                             <div className="mt-1 pt-1 border-t border-foreground/10 text-[10px] font-mono opacity-70">
                               ✓ Booking #{m.bookingId.slice(-6)}
