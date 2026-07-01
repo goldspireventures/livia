@@ -28,7 +28,7 @@ export const PORTAL_ONBOARDING_CHAPTERS: readonly PortalChapter[] = [
     id: "liv_link",
     title: "Liv & your link",
     subtitle: "Voice and public booking page",
-    acts: ["a6_liv", "a7_channels", "a8_public_link"],
+    acts: ["a6_liv", "a8_public_link"],
   },
   {
     id: "launch",

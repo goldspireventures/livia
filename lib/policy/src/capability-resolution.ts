@@ -74,10 +74,9 @@ function readinessForCapability(
       else if (!facts.hasAvailabilityRules) blockers.push("Set opening hours");
       break;
     case "payments":
-      if (!facts.paymentsConnected) blockers.push("Connect Stripe");
-      break;
+    case "deposits":
     case "messaging":
-      if (!facts.messagingConfigured) blockers.push("Configure SMS or channels");
+      // Billing and channels are optional for V1 launch — web + Liv chat work without them.
       break;
     case "reviews":
     case "portfolio":

@@ -1,9 +1,9 @@
 import type { BusinessVertical } from "./types";
-import { SETTINGS_CHANNELS_SETUP_HREF } from "./capability-instances";
 import {
   filterActivationStepsForOperator,
   type OperatorNavSignals,
 } from "./operator-nav-policy";
+import { OPTIONAL_ACTIVATION_STEP_IDS } from "./store-setup-essentials";
 import { blockingOnboardingActsForSession } from "./migration-fast-track-program";
 import type { OnboardingActId, OnboardingChecklist, OnboardingState } from "./onboarding-state";
 import {
@@ -124,12 +124,6 @@ export function activationStepsFromState(
             done: checklist.testBooking === true,
             href: "/inbox",
           },
-          {
-            id: "channels",
-            label: "Connect WhatsApp or SMS",
-            done: completed.has("a7_channels") || checklist.smsOrVoiceConnected === true,
-            href: SETTINGS_CHANNELS_SETUP_HREF,
-          },
         ]
       : [
           {
@@ -162,20 +156,9 @@ export function activationStepsFromState(
             done: checklist.testBooking === true,
             href: "/onboarding",
           },
-          {
-            id: "channels",
-            label: "Connect WhatsApp or SMS",
-            done: completed.has("a7_channels") || checklist.smsOrVoiceConnected === true,
-            href: SETTINGS_CHANNELS_SETUP_HREF,
-          },
-          {
-            id: "team",
-            label: "Invite your team",
-            done: completed.has("a10_invite_team") || checklist.teamInvited === true,
-            href: "/staff",
-          },
         ];
-  return filterActivationStepsForOperator(steps, operatorSignals ?? null);
+  const filtered = filterActivationStepsForOperator(steps, operatorSignals ?? null);
+  return filtered.filter((s) => !OPTIONAL_ACTIVATION_STEP_IDS.has(s.id));
 }
 
 export function mergePercentWithBlocking(state: OnboardingState): OnboardingState {

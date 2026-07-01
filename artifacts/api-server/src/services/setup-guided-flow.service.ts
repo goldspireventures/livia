@@ -2,6 +2,7 @@ import {
   buildSetupGuidedFlow,
   onboardingStateSchema,
   readinessActHintsFromCapabilities,
+  flattenLaunchEssentialCapabilityBlockers,
   type ResolvedPlatformCapability,
 } from "@workspace/policy";
 import { getBusinessById } from "./businesses.service";
@@ -17,13 +18,7 @@ export type SetupCapabilityBlocker = {
 function flattenCapabilityBlockers(
   platformCapabilities: ResolvedPlatformCapability[],
 ): SetupCapabilityBlocker[] {
-  return platformCapabilities.flatMap((cap) =>
-    cap.readinessBlockers.map((blocker) => ({
-      capabilityId: cap.id,
-      capabilityName: cap.name,
-      blocker,
-    })),
-  );
+  return flattenLaunchEssentialCapabilityBlockers(platformCapabilities);
 }
 
 export async function getSetupGuidedFlowForBusiness(businessId: string) {

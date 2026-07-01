@@ -14,7 +14,7 @@ export type CommerceCapabilityBlocker = {
   href: string;
 };
 
-/** Payment-related capability blockers — link to billing remediation. */
+/** Payment-related capability blockers — only when Stripe connect is actually required. */
 export function resolveCommerceCapabilityBlockers(
   capabilities: ResolvedPlatformCapability[],
 ): CommerceCapabilityBlocker[] {
@@ -26,14 +26,6 @@ export function resolveCommerceCapabilityBlockers(
         capabilityId: cap.id,
         capabilityName: cap.name,
         blocker,
-        href: COMMERCE_BILLING_FIX_HREF,
-      });
-    }
-    if (cap.readinessBlockers.length === 0 && cap.state !== "active" && cap.state !== "configured") {
-      out.push({
-        capabilityId: cap.id,
-        capabilityName: cap.name,
-        blocker: `${cap.name} not fully active`,
         href: COMMERCE_BILLING_FIX_HREF,
       });
     }

@@ -7,6 +7,8 @@ import {
   buildCommerceRemediationTasks,
   resolveCommerceCapabilityBlockers,
   capabilityBlockerHref,
+  countLaunchEssentialBlockers,
+  flattenLaunchEssentialCapabilityBlockers,
   type CapabilityHealthScore,
   type CommerceSignal,
   type CommerceRemediationTask,
@@ -104,10 +106,7 @@ export async function getOwnerIntelligenceBundle(
   const handedOffCount = summary.handedOffCount ?? 0;
   const lowFeedbackCount = feedback.filter((r) => r.score <= 3).length;
   const topSignal = topCommerceSignal(commerceBundle.signals);
-  const capabilityBlockers = caps.platformCapabilities.reduce(
-    (n, c) => n + c.readinessBlockers.length,
-    0,
-  );
+  const capabilityBlockers = countLaunchEssentialBlockers(caps.platformCapabilities);
 
   const livSuggestions = ownerHomeLivSuggestions({
     pendingCount,
@@ -142,14 +141,14 @@ export async function getOwnerIntelligenceBundle(
   const commerceCapabilityBlockers = resolveCommerceCapabilityBlockers(
     caps.platformCapabilities,
   );
-  const platformReadinessBlockers = caps.platformCapabilities.flatMap((cap) =>
-    cap.readinessBlockers.map((blocker) => ({
-      capabilityId: cap.id,
-      capabilityName: cap.name,
-      blocker,
-      href: capabilityBlockerHref(cap.id, blocker),
-    })),
-  );
+  const platformReadinessBlockers = flattenLaunchEssentialCapabilityBlockers(
+    caps.platformCapabilities,
+  ).map((blocker) => ({
+    capabilityId: blocker.capabilityId,
+    capabilityName: blocker.capabilityName,
+    blocker: blocker.blocker,
+    href: capabilityBlockerHref(blocker.capabilityId, blocker.blocker),
+  }));
 
   const twinTop = twinRecs?.recommendations?.[0] ?? null;
   const { twinRisks, twinOpportunities } = twinRisksAndOpportunitiesFromObservations(twinObservations);

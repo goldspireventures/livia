@@ -60,7 +60,7 @@ const acts = onboardingActsFromCapabilityBlockers([
   { capabilityId: "messaging", blocker: "Configure SMS or channels" },
 ]);
 assert.ok(acts.includes("a3_service_menu"));
-assert.ok(acts.includes("a7_channels"));
+assert.equal(acts.includes("a7_channels"), false, "channels are optional — not mapped from messaging blockers");
 assert.equal(acts[0], "a3_service_menu");
 
 assert.equal(

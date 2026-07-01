@@ -6,6 +6,10 @@ import { z } from "zod/v4";
 import type { CapabilityState, ResolvedPlatformCapability, CapabilityReadinessFacts } from "./capability-resolution";
 import type { OnboardingActId, OnboardingChecklist, OnboardingState } from "./onboarding-state";
 import { COMMERCE_BILLING_FIX_HREF } from "./commerce-signals";
+import {
+  countLaunchEssentialBlockers,
+  isLaunchEssentialCapability,
+} from "./store-setup-essentials";
 
 /** Settings → Channels → SMS / WhatsApp / Instagram setup (not message templates). */
 export const SETTINGS_CHANNELS_SETUP_HREF = "/settings?tab=comms#channels-setup";
@@ -147,6 +151,7 @@ export function onboardingActsFromCapabilityBlockers(
 ): OnboardingActId[] {
   const acts = new Set<OnboardingActId>();
   for (const b of blockers) {
+    if (!isLaunchEssentialCapability(b.capabilityId)) continue;
     const text = b.blocker.toLowerCase();
     if (text.includes("service")) acts.add("a3_service_menu");
     if (text.includes("team member") || text.includes("staff")) acts.add("a4_team");
@@ -214,7 +219,7 @@ export function summarizeCapabilityHealth(
     configured: platformCapabilities.filter((c) => c.state === "configured").length,
     installed: platformCapabilities.filter((c) => c.state === "installed").length,
     suspended: platformCapabilities.filter((c) => c.state === "suspended").length,
-    blockerCount: platformCapabilities.reduce((n, c) => n + c.readinessBlockers.length, 0),
+    blockerCount: countLaunchEssentialBlockers(platformCapabilities),
   };
 }
 

@@ -45,6 +45,7 @@ import {
   BLOCKING_ONBOARDING_ACTS,
   buildSetupGuidedFlow,
   capabilityBlockerHref,
+  flattenLaunchEssentialCapabilityBlockers,
   isOnboardingAppUnlocked,
   nextRecommendedAct,
   onboardingStateSchema,
@@ -408,14 +409,9 @@ export function buildLivToolDeps(args: {
         slug: business.slug,
         sacredMetricMet,
       });
-      const capabilityBlockers =
-        capabilities?.platformCapabilities.flatMap((cap) =>
-          cap.readinessBlockers.map((blocker) => ({
-            capabilityId: cap.id,
-            capabilityName: cap.name,
-            blocker,
-          })),
-        ) ?? [];
+      const capabilityBlockers = flattenLaunchEssentialCapabilityBlockers(
+        capabilities?.platformCapabilities ?? [],
+      );
       return {
         percentComplete: state?.percentComplete ?? 0,
         appUnlocked: isOnboardingAppUnlocked(state),

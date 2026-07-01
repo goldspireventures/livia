@@ -90,6 +90,7 @@ import {
   SettingsAttentionStrip,
   useSettingsAttentionRows,
 } from "@/components/settings/settings-attention-strip";
+import { SettingsEnhancementSection } from "@/components/settings/settings-enhancement-section";
 import { AuditLogPanel } from "@/components/audit/audit-log-panel";
 import { Users, FileText } from "lucide-react";
 import {
@@ -288,6 +289,13 @@ export default function SettingsPage() {
       />
 
       <SettingsAttentionStrip />
+
+      {(persona === "owner" || persona === "org_admin") && (
+        <SettingsEnhancementSection
+          canViewComms={showComms}
+          canViewBilling={showBilling}
+        />
+      )}
 
       {isLoading ? (
         <div className="space-y-4">

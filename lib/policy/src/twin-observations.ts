@@ -133,7 +133,7 @@ export function resolveTwinObservationDrafts(
       observationKey: "capability:setup-blockers",
       domain: "capability",
       title: "Setup blockers on capability graph",
-      body: `${input.capabilityBlockerCount} readiness blocker${input.capabilityBlockerCount === 1 ? "" : "s"} — commerce and messaging may stay limited until resolved.`,
+      body: `${input.capabilityBlockerCount} launch blocker${input.capabilityBlockerCount === 1 ? "" : "s"} — finish shop essentials (services, hours, booking link) before your first booking.`,
       confidence: "high",
       evidence: [
         {

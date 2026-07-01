@@ -35,6 +35,20 @@ const blocked = resolveTenantCapabilityGraph({
 const bookings = blocked.platformCapabilities.find((c) => c.id === "bookings");
 assert.ok(bookings?.readinessBlockers.length >= 2);
 
+const allied = resolveTenantCapabilityGraph({
+  vertical: "allied-health",
+  facts: {
+    serviceCount: 2,
+    staffCount: 1,
+    hasPublicSlug: true,
+    hasAvailabilityRules: true,
+    paymentsConnected: false,
+    messagingConfigured: false,
+  },
+});
+const messaging = allied.platformCapabilities.find((c) => c.id === "messaging");
+assert.equal(messaging?.readinessBlockers.length ?? 0, 0, "messaging must not block launch");
+
 assert.ok(VERTICAL_PLATFORM_CAPABILITY_MAP.hair.includes("bookings"));
 
 console.log("capability-resolution.test.ts OK");
